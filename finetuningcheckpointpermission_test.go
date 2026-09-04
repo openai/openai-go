@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -24,6 +24,7 @@ func TestFineTuningCheckpointPermissionNew(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.FineTuning.Checkpoints.Permissions.New(
 		context.TODO(),
@@ -52,6 +53,7 @@ func TestFineTuningCheckpointPermissionGetWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.FineTuning.Checkpoints.Permissions.Get(
 		context.TODO(),
@@ -60,6 +62,38 @@ func TestFineTuningCheckpointPermissionGetWithOptionalParams(t *testing.T) {
 			After:     openai.String("after"),
 			Limit:     openai.Int(0),
 			Order:     openai.FineTuningCheckpointPermissionGetParamsOrderAscending,
+			ProjectID: openai.String("project_id"),
+		},
+	)
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestFineTuningCheckpointPermissionListWithOptionalParams(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
+	)
+	_, err := client.FineTuning.Checkpoints.Permissions.List(
+		context.TODO(),
+		"ft-AF1WoRqd3aJAHsqc9NY7iL8F",
+		openai.FineTuningCheckpointPermissionListParams{
+			After:     openai.String("after"),
+			Limit:     openai.Int(0),
+			Order:     openai.FineTuningCheckpointPermissionListParamsOrderAscending,
 			ProjectID: openai.String("project_id"),
 		},
 	)
@@ -83,6 +117,7 @@ func TestFineTuningCheckpointPermissionDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.FineTuning.Checkpoints.Permissions.Delete(
 		context.TODO(),

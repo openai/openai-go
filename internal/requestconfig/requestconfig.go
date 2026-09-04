@@ -1,11 +1,10 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package requestconfig
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -16,6 +15,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/openai/openai-go/v3/internal"
@@ -25,21 +25,48 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+// DefaultMaxServerDelay bounds server-directed retry and polling waits unless
+// the caller explicitly opts into a different retry limit.
+const DefaultMaxServerDelay = 8 * time.Second
+
 func getDefaultHeaders() map[string]string {
 	return map[string]string{
 		"User-Agent": fmt.Sprintf("OpenAI/Go %s", internal.PackageVersion),
 	}
 }
 
+func encodePathParam(value string) string {
+	switch value {
+	case ".":
+		return "%2E"
+	case "..":
+		return "%2E%2E"
+	}
+	return url.PathEscape(value)
+}
+
+// FormatPath escapes path parameters and inserts them into a request path.
+func FormatPath(format string, params ...string) string {
+	args := make([]any, len(params))
+	for i, param := range params {
+		args[i] = encodePathParam(param)
+	}
+	return fmt.Sprintf(format, args...)
+}
+
 func getNormalizedOS() string {
-	switch runtime.GOOS {
+	return normalizeOS(runtime.GOOS)
+}
+
+func normalizeOS(goos string) string {
+	switch goos {
 	case "ios":
 		return "iOS"
 	case "android":
 		return "Android"
 	case "darwin":
 		return "MacOS"
-	case "window":
+	case "windows":
 		return "Windows"
 	case "freebsd":
 		return "FreeBSD"
@@ -48,7 +75,7 @@ func getNormalizedOS() string {
 	case "linux":
 		return "Linux"
 	default:
-		return fmt.Sprintf("Other:%s", runtime.GOOS)
+		return fmt.Sprintf("Other:%s", goos)
 	}
 }
 
@@ -85,10 +112,91 @@ type RequestOption interface {
 type RequestOptionFunc func(*RequestConfig) error
 type PreRequestOptionFunc func(*RequestConfig) error
 
+// requestFinalizer is an internal extension point for provider integrations
+// that must inspect the fully configured request and install middleware after
+// all client- and method-level options have been applied.
+type requestFinalizer func(*RequestConfig) error
+
+type requestFinalizerOption struct {
+	finalize func(*RequestConfig) error
+}
+
+// noRetryError marks deterministic request setup or policy failures that
+// cannot be fixed by replaying the same request. It deliberately remains an
+// internal implementation detail so public error strings and wrapping stay
+// unchanged.
+type noRetryError struct {
+	err error
+}
+
+func (e *noRetryError) Error() string { return e.err.Error() }
+func (e *noRetryError) Unwrap() error { return e.err }
+func (e *noRetryError) noRetry()      {}
+
+// WithNoRetryError marks err as deterministic for the generic request retry
+// loop while preserving its message and unwrap chain. This function is
+// internal API and may change without notice.
+func WithNoRetryError(err error) error {
+	if err == nil {
+		return nil
+	}
+	return &noRetryError{err: err}
+}
+
+func (o requestFinalizerOption) Apply(cfg *RequestConfig) error {
+	cfg.finalizers = append(cfg.finalizers, o.finalize)
+	return nil
+}
+
+// WithRequestFinalizer registers an internal provider finalizer. Finalizers run
+// after every RequestOption has been applied and before request security is
+// selected. This keeps provider authentication closest to the wire, including
+// when callers add method-level middleware.
+//
+// This function is internal API and may change without notice.
+func WithRequestFinalizer(finalize func(*RequestConfig) error) RequestOption {
+	return requestFinalizerOption{finalize: finalize}
+}
+
+type environmentDefaultsDisabledOption []RequestOption
+
+func (opts environmentDefaultsDisabledOption) Apply(cfg *RequestConfig) error {
+	return cfg.Apply(opts...)
+}
+
+// WithEnvironmentDefaultsDisabled marks a provider-owned client that must not
+// inherit ambient OPENAI_* configuration. The regular transport defaults still
+// apply.
+//
+// This function is internal API and may change without notice.
+func WithEnvironmentDefaultsDisabled(opts ...RequestOption) RequestOption {
+	return environmentDefaultsDisabledOption(append([]RequestOption(nil), opts...))
+}
+
+// EnvironmentDefaultsDisabled reports whether opts contains the internal
+// provider marker returned by WithEnvironmentDefaultsDisabled.
+func EnvironmentDefaultsDisabled(opts ...RequestOption) bool {
+	for _, opt := range opts {
+		switch opt := opt.(type) {
+		case environmentDefaultsDisabledOption:
+			return true
+		case optionLayer:
+			if EnvironmentDefaultsDisabled(opt...) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (s RequestOptionFunc) Apply(r *RequestConfig) error    { return s(r) }
 func (s PreRequestOptionFunc) Apply(r *RequestConfig) error { return s(r) }
 
 func NewRequestConfig(ctx context.Context, method string, u string, body any, dst any, opts ...RequestOption) (*RequestConfig, error) {
+	if err := validateRequestReference(u); err != nil {
+		return nil, err
+	}
+
 	var reader io.Reader
 
 	contentType := "application/json"
@@ -122,7 +230,13 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 		}
 		params := q.Encode()
 		if params != "" {
-			u = u + "?" + params
+			parsed, _ := url.Parse(u)
+			if parsed.RawQuery != "" {
+				parsed.RawQuery = parsed.RawQuery + "&" + params
+				u = parsed.String()
+			} else {
+				u = u + "?" + params
+			}
 		}
 	}
 	if body, ok := body.([]byte); ok {
@@ -165,17 +279,33 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 		req.Header.Add(k, v)
 	}
 	cfg := RequestConfig{
-		MaxRetries: 2,
-		Context:    ctx,
-		Request:    req,
-		HTTPClient: http.DefaultClient,
-		Body:       reader,
+		MaxRetries:    2,
+		MaxRetryDelay: DefaultMaxServerDelay,
+		Context:       ctx,
+		Request:       req,
+		HTTPClient:    http.DefaultClient,
+		Body:          reader,
 	}
 	cfg.ResponseBodyInto = dst
+	cfg.Security = Security{
+		BearerAuth:      true,
+		AdminAPIKeyAuth: true,
+	}
 	err = cfg.Apply(opts...)
 	if err != nil {
 		return nil, err
 	}
+
+	// Provider finalizers intentionally run after every regular option so they
+	// can sign the final URL, headers, and serialized body on each attempt.
+	for _, finalizer := range cfg.finalizers {
+		if err := finalizer(&cfg); err != nil {
+			return nil, err
+		}
+	}
+
+	// This must run after `cfg.Apply(...)` above so we know which specific security scheme to add
+	ApplySecurity(cfg)
 
 	// This must run after `cfg.Apply(...)` above in case the request timeout gets modified. We also only
 	// apply our own logic for it if it's still "0" from above. If it's not, then it was deleted or modified
@@ -202,11 +332,18 @@ type HTTPDoer interface {
 // Editing the variables inside RequestConfig directly is unstable api. Prefer
 // composing the RequestOption instead if possible.
 type RequestConfig struct {
-	MaxRetries     int
-	RequestTimeout time.Duration
-	Context        context.Context
-	Request        *http.Request
-	BaseURL        *url.URL
+	MaxRetries                 int
+	MaxRetryDelay              time.Duration
+	RequestTimeout             time.Duration
+	Context                    context.Context
+	Request                    *http.Request
+	BaseURL                    *url.URL
+	endpointSelector           string
+	endpointProvider           string
+	configuredProviderEndpoint string
+	dataResidencyEndpoint      bool
+	authentication             authenticationState
+	cloneError                 error
 	// DefaultBaseURL will be used if BaseURL is not explicitly overridden using
 	// WithBaseURL.
 	DefaultBaseURL *url.URL
@@ -214,9 +351,13 @@ type RequestConfig struct {
 	HTTPClient     *http.Client
 	Middlewares    []middleware
 	APIKey         string
+	AdminAPIKey    string
 	Organization   string
 	Project        string
 	WebhookSecret  string
+	finalizers     []requestFinalizer
+	// Configure which security scheme(s) should be enabled for this request
+	Security Security
 	// If ResponseBodyInto not nil, then we will attempt to deserialize into
 	// ResponseBodyInto. If Destination is a []byte, then it will return the body as
 	// is.
@@ -241,9 +382,14 @@ func applyMiddleware(middleware middleware, next middlewareNext) middlewareNext 
 	}
 }
 
-func shouldRetry(req *http.Request, res *http.Response) bool {
+func shouldRetry(req *http.Request, res *http.Response, err error) bool {
 	// If there is no way to recover the Body, then we shouldn't retry.
-	if req.Body != nil && req.GetBody == nil {
+	if !requestBodyReplayable(req) {
+		return false
+	}
+
+	var deterministic interface{ noRetry() }
+	if errors.As(err, &deterministic) {
 		return false
 	}
 
@@ -268,9 +414,16 @@ func shouldRetry(req *http.Request, res *http.Response) bool {
 		res.StatusCode >= http.StatusInternalServerError
 }
 
-func parseRetryAfterHeader(resp *http.Response) (time.Duration, bool) {
+func requestBodyReplayable(request *http.Request) bool {
+	return request.Body == nil || request.Body == http.NoBody || request.GetBody != nil
+}
+
+func parseRetryAfterHeader(resp *http.Response, maxDelay time.Duration) (time.Duration, bool) {
 	if resp == nil {
 		return 0, false
+	}
+	if maxDelay <= 0 {
+		maxDelay = DefaultMaxServerDelay
 	}
 
 	type retryData struct {
@@ -313,10 +466,19 @@ func parseRetryAfterHeader(resp *http.Response) (time.Duration, bool) {
 			continue
 		}
 		if retryAfter, err := strconv.ParseFloat(v, 64); err == nil {
+			if math.IsNaN(retryAfter) || math.IsInf(retryAfter, 0) || retryAfter < 0 {
+				continue
+			}
+			if retryAfter >= float64(maxDelay)/float64(retry.units) {
+				return maxDelay, true
+			}
 			return time.Duration(retryAfter * float64(retry.units)), true
 		}
 		if d, ok := retry.custom(v); ok {
-			return d, true
+			if d <= 0 {
+				return 0, true
+			}
+			return min(d, maxDelay), true
 		}
 	}
 
@@ -358,26 +520,68 @@ func (b *bodyWithTimeout) Close() error {
 	return err
 }
 
-func retryDelay(res *http.Response, retryCount int) time.Duration {
-	// If the API asks us to wait a certain amount of time (and it's a reasonable amount),
-	// just do what it says.
+// closeOnceReadCloser lets Execute clean up bodies when middleware returns an
+// error before reaching the transport, without double-closing bodies that a
+// transport has already closed.
+type closeOnceReadCloser struct {
+	io.ReadCloser
+	once sync.Once
+	err  error
+}
 
-	if retryAfterDelay, ok := parseRetryAfterHeader(res); ok && 0 <= retryAfterDelay && retryAfterDelay < time.Minute {
+func (b *closeOnceReadCloser) Close() error {
+	b.once.Do(func() {
+		b.err = b.ReadCloser.Close()
+	})
+	return b.err
+}
+
+func retryDelay(res *http.Response, retryCount int, maxDelay time.Duration) time.Duration {
+	if maxDelay <= 0 {
+		maxDelay = DefaultMaxServerDelay
+	}
+
+	// If the backend tells us to wait a certain amount of time, use that value
+	if retryAfterDelay, ok := parseRetryAfterHeader(res, maxDelay); ok {
 		return retryAfterDelay
 	}
 
-	maxDelay := 8 * time.Second
-	delay := time.Duration(0.5 * float64(time.Second) * math.Pow(2, float64(retryCount)))
-	if delay > maxDelay {
+	backoff := 0.5 * float64(time.Second) * math.Pow(2, float64(retryCount))
+	var delay time.Duration
+	if math.IsInf(backoff, 0) || backoff >= float64(maxDelay) {
 		delay = maxDelay
+	} else {
+		delay = time.Duration(backoff)
 	}
 
-	jitter := rand.Int63n(int64(delay / 4))
-	delay -= time.Duration(jitter)
+	if jitterRange := int64(delay / 4); jitterRange > 0 {
+		delay -= time.Duration(rand.Int63n(jitterRange))
+	}
 	return delay
 }
 
+// WaitForDelay waits for delay to elapse or for ctx to be cancelled, whichever
+// happens first. The timer is always released before returning.
+func WaitForDelay(ctx context.Context, delay time.Duration) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
+}
+
 func (cfg *RequestConfig) Execute() (err error) {
+	if cfg.cloneError != nil {
+		return cfg.cloneError
+	}
 	if cfg.BaseURL == nil {
 		if cfg.DefaultBaseURL != nil {
 			cfg.BaseURL = cfg.DefaultBaseURL
@@ -401,8 +605,8 @@ func (cfg *RequestConfig) Execute() (err error) {
 		case *bytes.Reader:
 			cfg.Request.ContentLength = int64(body.Len())
 			cfg.Request.GetBody = func() (io.ReadCloser, error) {
-				_, err := body.Seek(0, 0)
-				return io.NopCloser(body), err
+				_, seekErr := body.Seek(0, 0)
+				return io.NopCloser(body), seekErr
 			}
 			cfg.Request.Body, _ = cfg.Request.GetBody()
 		default:
@@ -414,9 +618,22 @@ func (cfg *RequestConfig) Execute() (err error) {
 		}
 	}
 
-	handler := cfg.HTTPClient.Do
+	client := *cfg.HTTPClient
+	transport := client.Transport
+	if transport == nil {
+		transport = http.DefaultTransport
+	}
+	if hasCredentialRedirectGuard(transport) {
+		client.Transport = transport
+	} else {
+		client.Transport = originTransport{origin: cfg.BaseURL, next: transport}
+	}
+	// Provider transports may implement a narrower, explicitly configured
+	// redirect policy. Every initial request must still retain the configured
+	// origin after all SDK and caller middleware has run.
+	handler := enforceRequestOrigin(cfg.BaseURL, client.Do)
 	if cfg.CustomHTTPDoer != nil {
-		handler = cfg.CustomHTTPDoer.Do
+		handler = enforceRequestOrigin(cfg.BaseURL, cfg.CustomHTTPDoer.Do)
 	}
 	for i := len(cfg.Middlewares) - 1; i >= 0; i -= 1 {
 		handler = applyMiddleware(cfg.Middlewares[i], handler)
@@ -440,20 +657,32 @@ func (cfg *RequestConfig) Execute() (err error) {
 		}
 
 		req := cfg.Request.Clone(ctx)
+		if req.Body != nil && req.Body != http.NoBody {
+			req.Body = &closeOnceReadCloser{ReadCloser: req.Body}
+		}
 		if shouldSendRetryCount {
 			req.Header.Set("X-Stainless-Retry-Count", strconv.Itoa(retryCount))
 		}
 
+		attemptBody := req.Body
 		res, err = handler(req)
+		if err != nil {
+			if req.Body != nil {
+				_ = req.Body.Close()
+			}
+			if attemptBody != nil {
+				_ = attemptBody.Close()
+			}
+		}
 		if ctx != nil && ctx.Err() != nil {
 			return ctx.Err()
 		}
-		if !shouldRetry(cfg.Request, res) || retryCount >= cfg.MaxRetries {
+		if !shouldRetry(cfg.Request, res, err) || retryCount >= cfg.MaxRetries {
 			break
 		}
 
 		// Prepare next request and wait for the retry delay
-		if cfg.Request.GetBody != nil {
+		if cfg.Request.Body != nil && cfg.Request.Body != http.NoBody && cfg.Request.GetBody != nil {
 			cfg.Request.Body, err = cfg.Request.GetBody()
 			if err != nil {
 				return err
@@ -461,16 +690,18 @@ func (cfg *RequestConfig) Execute() (err error) {
 		}
 
 		// Can't actually refresh the body, so we don't attempt to retry here
-		if cfg.Request.GetBody == nil && cfg.Request.Body != nil {
+		if !requestBodyReplayable(cfg.Request) {
 			break
 		}
 
 		// Close the response body before retrying to prevent connection leaks
 		if res != nil && res.Body != nil {
-			res.Body.Close()
+			_ = res.Body.Close()
 		}
 
-		time.Sleep(retryDelay(res, retryCount))
+		if waitErr := WaitForDelay(ctx, retryDelay(res, retryCount, cfg.MaxRetryDelay)); waitErr != nil {
+			return waitErr
+		}
 	}
 
 	// Save *http.Response if it is requested to, even if there was an error making the request. This is
@@ -490,10 +721,10 @@ func (cfg *RequestConfig) Execute() (err error) {
 	}
 
 	if res.StatusCode >= 400 {
-		contents, err := io.ReadAll(res.Body)
-		res.Body.Close()
-		if err != nil {
-			return err
+		contents, readErr := io.ReadAll(res.Body)
+		_ = res.Body.Close()
+		if readErr != nil {
+			return readErr
 		}
 
 		// If there is an APIError, re-populate the response body so that debugging
@@ -523,7 +754,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 	}
 
 	contents, err := io.ReadAll(res.Body)
-	res.Body.Close()
+	_ = res.Body.Close()
 	if err != nil {
 		return fmt.Errorf("error reading response body: %w", err)
 	}
@@ -569,33 +800,29 @@ func ExecuteNewRequest(ctx context.Context, method string, u string, body any, d
 	return cfg.Execute()
 }
 
-func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
-	if cfg == nil {
-		return nil
-	}
-	req := cfg.Request.Clone(ctx)
-	var err error
-	if req.Body != nil {
-		req.Body, err = req.GetBody()
-	}
-	if err != nil {
-		return nil
-	}
-	new := &RequestConfig{
-		MaxRetries:     cfg.MaxRetries,
-		RequestTimeout: cfg.RequestTimeout,
-		Context:        ctx,
-		Request:        req,
-		BaseURL:        cfg.BaseURL,
-		HTTPClient:     cfg.HTTPClient,
-		Middlewares:    cfg.Middlewares,
-		APIKey:         cfg.APIKey,
-		Organization:   cfg.Organization,
-		Project:        cfg.Project,
-		WebhookSecret:  cfg.WebhookSecret,
-	}
+func (cfg *RequestConfig) SetHeader(key, value string) {
+	cfg.Request.Header.Set(key, value)
+	cfg.authentication.recordHeader(key)
+}
 
-	return new
+func (cfg *RequestConfig) AddHeader(key, value string) {
+	cfg.Request.Header.Add(key, value)
+	cfg.authentication.recordHeader(key)
+}
+
+func (cfg *RequestConfig) DelHeader(key string) {
+	cfg.Request.Header.Del(key)
+	cfg.authentication.recordHeader(key)
+}
+
+func (cfg *RequestConfig) SetAPIKey(value string) {
+	cfg.APIKey = value
+	cfg.authentication.recordAPIKey()
+}
+
+func (cfg *RequestConfig) SetAdminAPIKey(value string) {
+	cfg.AdminAPIKey = value
+	cfg.authentication.recordAdminAPIKey()
 }
 
 func (cfg *RequestConfig) Apply(opts ...RequestOption) error {
@@ -616,15 +843,28 @@ func (cfg *RequestConfig) Apply(opts ...RequestOption) error {
 // Only request option functions of type [PreRequestOptionFunc] are applied.
 func PreRequestOptions(opts ...RequestOption) (RequestConfig, error) {
 	cfg := RequestConfig{}
+	err := applyPreRequestOptions(&cfg, opts)
+	return cfg, err
+}
+
+func applyPreRequestOptions(cfg *RequestConfig, opts []RequestOption) error {
 	for _, opt := range opts {
-		if opt, ok := opt.(PreRequestOptionFunc); ok {
-			err := opt.Apply(&cfg)
-			if err != nil {
-				return cfg, err
+		switch opt := opt.(type) {
+		case PreRequestOptionFunc:
+			if err := opt.Apply(cfg); err != nil {
+				return err
+			}
+		case optionLayer:
+			if err := applyPreRequestOptions(cfg, opt); err != nil {
+				return err
+			}
+		case environmentDefaultsDisabledOption:
+			if err := applyPreRequestOptions(cfg, opt); err != nil {
+				return err
 			}
 		}
 	}
-	return cfg, nil
+	return nil
 }
 
 // WithDefaultBaseURL returns a RequestOption that sets the client's default Base URL.
@@ -639,4 +879,82 @@ func WithDefaultBaseURL(baseURL string) RequestOption {
 		r.DefaultBaseURL = u
 		return nil
 	})
+}
+
+type Security struct {
+	BearerAuth      bool
+	AdminAPIKeyAuth bool
+}
+
+type authCredentialPreference int
+
+const (
+	authCredentialPreferenceNone authCredentialPreference = iota
+	authCredentialPreferenceBearer
+	authCredentialPreferenceAdmin
+)
+
+func WithSecurity(security Security) RequestOption {
+	return RequestOptionFunc(func(r *RequestConfig) error {
+		r.Security = security
+		return nil
+	})
+}
+
+// WithBearerAuthSecurity() should only be used within a method, not provided to at
+// the client-level.
+func WithBearerAuthSecurity() RequestOption {
+	return RequestOptionFunc(func(r *RequestConfig) error {
+		r.Security = Security{
+			BearerAuth:      true,
+			AdminAPIKeyAuth: false,
+		}
+		return nil
+	})
+}
+
+// WithAdminAPIKeyAuthSecurity() should only be used within a method, not provided
+// to at the client-level.
+func WithAdminAPIKeyAuthSecurity() RequestOption {
+	return RequestOptionFunc(func(r *RequestConfig) error {
+		r.Security = Security{
+			BearerAuth:      false,
+			AdminAPIKeyAuth: true,
+		}
+		return nil
+	})
+}
+
+// WithBearerAuthPreference() should only be used when a request supports multiple
+// auth schemes and has no endpoint-specific security preference.
+func WithBearerAuthPreference() RequestOption {
+	return RequestOptionFunc(func(r *RequestConfig) error {
+		r.authentication.preference = authCredentialPreferenceBearer
+		return nil
+	})
+}
+
+func ApplySecurity(r RequestConfig) {
+	if r.authentication.headerOverride {
+		return
+	}
+
+	if r.authentication.preference == authCredentialPreferenceBearer && r.Security.BearerAuth && r.APIKey != "" {
+		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.APIKey))
+		return
+	}
+
+	if r.authentication.preference == authCredentialPreferenceAdmin && r.Security.AdminAPIKeyAuth && r.AdminAPIKey != "" {
+		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.AdminAPIKey))
+		return
+	}
+
+	if r.Security.AdminAPIKeyAuth && r.AdminAPIKey != "" {
+		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.AdminAPIKey))
+		return
+	}
+
+	if r.Security.BearerAuth && r.APIKey != "" {
+		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.APIKey))
+	}
 }

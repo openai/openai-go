@@ -14,6 +14,7 @@ TEST_PATHS=(
 	embedding_test.go
 	file_test.go
 	image_test.go
+	contentprovenancecheck_test.go
 	audiotranscription_test.go
 	audiotranslation_test.go
 	audiospeech_test.go
@@ -27,6 +28,9 @@ TEST_PATHS=(
 	vectorstorefile_test.go
 	vectorstorefilebatch_test.go
 	webhooks/webhook_test.go
+	betaresponse_test.go
+	betaresponseinputitem_test.go
+	betaresponseinputtoken_test.go
 	betachatkitsession_test.go
 	betachatkitthread_test.go
 	betaassistant_test.go
@@ -37,6 +41,36 @@ TEST_PATHS=(
 	batch_test.go
 	upload_test.go
 	uploadpart_test.go
+	adminorganizationauditlog_test.go
+	adminorganizationadminapikey_test.go
+	adminorganizationusage_test.go
+	adminorganizationinvite_test.go
+	adminorganizationuser_test.go
+	adminorganizationuserrole_test.go
+	adminorganizationgroup_test.go
+	adminorganizationgroupuser_test.go
+	adminorganizationgrouprole_test.go
+	adminorganizationrole_test.go
+	adminorganizationdataretention_test.go
+	adminorganizationspendlimit_test.go
+	adminorganizationspendalert_test.go
+	adminorganizationcertificate_test.go
+	adminorganizationproject_test.go
+	adminorganizationprojectuser_test.go
+	adminorganizationprojectuserrole_test.go
+	adminorganizationprojectserviceaccount_test.go
+	adminorganizationprojectserviceaccountapikey_test.go
+	adminorganizationprojectapikey_test.go
+	adminorganizationprojectratelimit_test.go
+	adminorganizationprojectmodelpermission_test.go
+	adminorganizationprojecthostedtoolpermission_test.go
+	adminorganizationprojectgroup_test.go
+	adminorganizationprojectgrouprole_test.go
+	adminorganizationprojectrole_test.go
+	adminorganizationprojectdataretention_test.go
+	adminorganizationprojectspendlimit_test.go
+	adminorganizationprojectspendalert_test.go
+	adminorganizationprojectcertificate_test.go
 	responses/response_test.go
 	responses/inputitem_test.go
 	responses/inputtoken_test.go
@@ -47,6 +81,10 @@ TEST_PATHS=(
 	container_test.go
 	containerfile_test.go
 	containerfilecontent_test.go
+	skill_test.go
+	skillcontent_test.go
+	skillversion_test.go
+	skillversioncontent_test.go
 	video_test.go
 	usage_test.go
 	paginationauto_test.go

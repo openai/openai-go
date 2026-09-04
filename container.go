@@ -1,11 +1,10 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -17,6 +16,7 @@ import (
 	"github.com/openai/openai-go/v3/packages/pagination"
 	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/responses"
 )
 
 // ContainerService contains methods and other services that help with interacting
@@ -35,35 +35,38 @@ type ContainerService struct {
 // there is one), and before any request-specific options.
 func NewContainerService(opts ...option.RequestOption) (r ContainerService) {
 	r = ContainerService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Files = NewContainerFileService(opts...)
 	return
 }
 
 // Create Container
 func (r *ContainerService) New(ctx context.Context, body ContainerNewParams, opts ...option.RequestOption) (res *ContainerNewResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "containers"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieve Container
 func (r *ContainerService) Get(ctx context.Context, containerID string, opts ...option.RequestOption) (res *ContainerGetResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if containerID == "" {
 		err = errors.New("missing required container_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("containers/%s", containerID)
+	path := requestconfig.FormatPath("containers/%s", containerID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // List Containers
 func (r *ContainerService) List(ctx context.Context, query ContainerListParams, opts ...option.RequestOption) (res *pagination.CursorPage[ContainerListResponse], err error) {
 	var raw *http.Response
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	path := "containers"
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -85,42 +88,54 @@ func (r *ContainerService) ListAutoPaging(ctx context.Context, query ContainerLi
 
 // Delete Container
 func (r *ContainerService) Delete(ctx context.Context, containerID string, opts ...option.RequestOption) (err error) {
-	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if containerID == "" {
 		err = errors.New("missing required container_id parameter")
-		return
+		return err
 	}
-	path := fmt.Sprintf("containers/%s", containerID)
+	path := requestconfig.FormatPath("containers/%s", containerID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
-	return
+	return err
 }
 
 type ContainerNewResponse struct {
 	// Unique identifier for the container.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// Unix timestamp (in seconds) when the container was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Name of the container.
-	Name string `json:"name,required"`
+	Name string `json:"name" api:"required"`
 	// The type of this object.
-	Object string `json:"object,required"`
+	Object string `json:"object" api:"required"`
 	// Status of the container (e.g., active, deleted).
-	Status string `json:"status,required"`
+	Status string `json:"status" api:"required"`
 	// The container will expire after this time period. The anchor is the reference
 	// point for the expiration. The minutes is the number of minutes after the anchor
 	// before the container expires.
 	ExpiresAfter ContainerNewResponseExpiresAfter `json:"expires_after"`
+	// Unix timestamp (in seconds) when the container was last active.
+	LastActiveAt int64 `json:"last_active_at" format:"unixtime"`
+	// The memory limit configured for the container.
+	//
+	// Any of "1g", "4g", "16g", "64g".
+	MemoryLimit ContainerNewResponseMemoryLimit `json:"memory_limit"`
+	// Network access policy for the container.
+	NetworkPolicy ContainerNewResponseNetworkPolicy `json:"network_policy"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID           respjson.Field
-		CreatedAt    respjson.Field
-		Name         respjson.Field
-		Object       respjson.Field
-		Status       respjson.Field
-		ExpiresAfter respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		ID            respjson.Field
+		CreatedAt     respjson.Field
+		Name          respjson.Field
+		Object        respjson.Field
+		Status        respjson.Field
+		ExpiresAfter  respjson.Field
+		LastActiveAt  respjson.Field
+		MemoryLimit   respjson.Field
+		NetworkPolicy respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -155,31 +170,75 @@ func (r *ContainerNewResponseExpiresAfter) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The memory limit configured for the container.
+type ContainerNewResponseMemoryLimit string
+
+const (
+	ContainerNewResponseMemoryLimit1g  ContainerNewResponseMemoryLimit = "1g"
+	ContainerNewResponseMemoryLimit4g  ContainerNewResponseMemoryLimit = "4g"
+	ContainerNewResponseMemoryLimit16g ContainerNewResponseMemoryLimit = "16g"
+	ContainerNewResponseMemoryLimit64g ContainerNewResponseMemoryLimit = "64g"
+)
+
+// Network access policy for the container.
+type ContainerNewResponseNetworkPolicy struct {
+	// The network policy mode.
+	//
+	// Any of "allowlist", "disabled".
+	Type string `json:"type" api:"required"`
+	// Allowed outbound domains when `type` is `allowlist`.
+	AllowedDomains []string `json:"allowed_domains"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type           respjson.Field
+		AllowedDomains respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ContainerNewResponseNetworkPolicy) RawJSON() string { return r.JSON.raw }
+func (r *ContainerNewResponseNetworkPolicy) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type ContainerGetResponse struct {
 	// Unique identifier for the container.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// Unix timestamp (in seconds) when the container was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Name of the container.
-	Name string `json:"name,required"`
+	Name string `json:"name" api:"required"`
 	// The type of this object.
-	Object string `json:"object,required"`
+	Object string `json:"object" api:"required"`
 	// Status of the container (e.g., active, deleted).
-	Status string `json:"status,required"`
+	Status string `json:"status" api:"required"`
 	// The container will expire after this time period. The anchor is the reference
 	// point for the expiration. The minutes is the number of minutes after the anchor
 	// before the container expires.
 	ExpiresAfter ContainerGetResponseExpiresAfter `json:"expires_after"`
+	// Unix timestamp (in seconds) when the container was last active.
+	LastActiveAt int64 `json:"last_active_at" format:"unixtime"`
+	// The memory limit configured for the container.
+	//
+	// Any of "1g", "4g", "16g", "64g".
+	MemoryLimit ContainerGetResponseMemoryLimit `json:"memory_limit"`
+	// Network access policy for the container.
+	NetworkPolicy ContainerGetResponseNetworkPolicy `json:"network_policy"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID           respjson.Field
-		CreatedAt    respjson.Field
-		Name         respjson.Field
-		Object       respjson.Field
-		Status       respjson.Field
-		ExpiresAfter respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		ID            respjson.Field
+		CreatedAt     respjson.Field
+		Name          respjson.Field
+		Object        respjson.Field
+		Status        respjson.Field
+		ExpiresAfter  respjson.Field
+		LastActiveAt  respjson.Field
+		MemoryLimit   respjson.Field
+		NetworkPolicy respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -214,31 +273,75 @@ func (r *ContainerGetResponseExpiresAfter) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The memory limit configured for the container.
+type ContainerGetResponseMemoryLimit string
+
+const (
+	ContainerGetResponseMemoryLimit1g  ContainerGetResponseMemoryLimit = "1g"
+	ContainerGetResponseMemoryLimit4g  ContainerGetResponseMemoryLimit = "4g"
+	ContainerGetResponseMemoryLimit16g ContainerGetResponseMemoryLimit = "16g"
+	ContainerGetResponseMemoryLimit64g ContainerGetResponseMemoryLimit = "64g"
+)
+
+// Network access policy for the container.
+type ContainerGetResponseNetworkPolicy struct {
+	// The network policy mode.
+	//
+	// Any of "allowlist", "disabled".
+	Type string `json:"type" api:"required"`
+	// Allowed outbound domains when `type` is `allowlist`.
+	AllowedDomains []string `json:"allowed_domains"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type           respjson.Field
+		AllowedDomains respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ContainerGetResponseNetworkPolicy) RawJSON() string { return r.JSON.raw }
+func (r *ContainerGetResponseNetworkPolicy) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type ContainerListResponse struct {
 	// Unique identifier for the container.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// Unix timestamp (in seconds) when the container was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Name of the container.
-	Name string `json:"name,required"`
+	Name string `json:"name" api:"required"`
 	// The type of this object.
-	Object string `json:"object,required"`
+	Object string `json:"object" api:"required"`
 	// Status of the container (e.g., active, deleted).
-	Status string `json:"status,required"`
+	Status string `json:"status" api:"required"`
 	// The container will expire after this time period. The anchor is the reference
 	// point for the expiration. The minutes is the number of minutes after the anchor
 	// before the container expires.
 	ExpiresAfter ContainerListResponseExpiresAfter `json:"expires_after"`
+	// Unix timestamp (in seconds) when the container was last active.
+	LastActiveAt int64 `json:"last_active_at" format:"unixtime"`
+	// The memory limit configured for the container.
+	//
+	// Any of "1g", "4g", "16g", "64g".
+	MemoryLimit ContainerListResponseMemoryLimit `json:"memory_limit"`
+	// Network access policy for the container.
+	NetworkPolicy ContainerListResponseNetworkPolicy `json:"network_policy"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID           respjson.Field
-		CreatedAt    respjson.Field
-		Name         respjson.Field
-		Object       respjson.Field
-		Status       respjson.Field
-		ExpiresAfter respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		ID            respjson.Field
+		CreatedAt     respjson.Field
+		Name          respjson.Field
+		Object        respjson.Field
+		Status        respjson.Field
+		ExpiresAfter  respjson.Field
+		LastActiveAt  respjson.Field
+		MemoryLimit   respjson.Field
+		NetworkPolicy respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -273,13 +376,54 @@ func (r *ContainerListResponseExpiresAfter) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The memory limit configured for the container.
+type ContainerListResponseMemoryLimit string
+
+const (
+	ContainerListResponseMemoryLimit1g  ContainerListResponseMemoryLimit = "1g"
+	ContainerListResponseMemoryLimit4g  ContainerListResponseMemoryLimit = "4g"
+	ContainerListResponseMemoryLimit16g ContainerListResponseMemoryLimit = "16g"
+	ContainerListResponseMemoryLimit64g ContainerListResponseMemoryLimit = "64g"
+)
+
+// Network access policy for the container.
+type ContainerListResponseNetworkPolicy struct {
+	// The network policy mode.
+	//
+	// Any of "allowlist", "disabled".
+	Type string `json:"type" api:"required"`
+	// Allowed outbound domains when `type` is `allowlist`.
+	AllowedDomains []string `json:"allowed_domains"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type           respjson.Field
+		AllowedDomains respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ContainerListResponseNetworkPolicy) RawJSON() string { return r.JSON.raw }
+func (r *ContainerListResponseNetworkPolicy) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type ContainerNewParams struct {
 	// Name of the container to create.
-	Name string `json:"name,required"`
+	Name string `json:"name" api:"required"`
 	// Container expiration time in seconds relative to the 'anchor' time.
 	ExpiresAfter ContainerNewParamsExpiresAfter `json:"expires_after,omitzero"`
 	// IDs of files to copy to the container.
 	FileIDs []string `json:"file_ids,omitzero"`
+	// Optional memory limit for the container. Defaults to "1g".
+	//
+	// Any of "1g", "4g", "16g", "64g".
+	MemoryLimit ContainerNewParamsMemoryLimit `json:"memory_limit,omitzero"`
+	// Network access policy for the container.
+	NetworkPolicy ContainerNewParamsNetworkPolicyUnion `json:"network_policy,omitzero"`
+	// An optional list of skills referenced by id or inline data.
+	Skills []ContainerNewParamsSkillUnion `json:"skills,omitzero"`
 	paramObj
 }
 
@@ -299,8 +443,8 @@ type ContainerNewParamsExpiresAfter struct {
 	// supported.
 	//
 	// Any of "last_active_at".
-	Anchor  string `json:"anchor,omitzero,required"`
-	Minutes int64  `json:"minutes,required"`
+	Anchor  string `json:"anchor,omitzero" api:"required"`
+	Minutes int64  `json:"minutes" api:"required"`
 	paramObj
 }
 
@@ -318,6 +462,140 @@ func init() {
 	)
 }
 
+// Optional memory limit for the container. Defaults to "1g".
+type ContainerNewParamsMemoryLimit string
+
+const (
+	ContainerNewParamsMemoryLimit1g  ContainerNewParamsMemoryLimit = "1g"
+	ContainerNewParamsMemoryLimit4g  ContainerNewParamsMemoryLimit = "4g"
+	ContainerNewParamsMemoryLimit16g ContainerNewParamsMemoryLimit = "16g"
+	ContainerNewParamsMemoryLimit64g ContainerNewParamsMemoryLimit = "64g"
+)
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ContainerNewParamsNetworkPolicyUnion struct {
+	OfDisabled  *responses.ContainerNetworkPolicyDisabledParam  `json:",omitzero,inline"`
+	OfAllowlist *responses.ContainerNetworkPolicyAllowlistParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ContainerNewParamsNetworkPolicyUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfDisabled, u.OfAllowlist)
+}
+func (u *ContainerNewParamsNetworkPolicyUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ContainerNewParamsNetworkPolicyUnion) GetAllowedDomains() []string {
+	if vt := u.OfAllowlist; vt != nil {
+		return vt.AllowedDomains
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ContainerNewParamsNetworkPolicyUnion) GetDomainSecrets() []responses.ContainerNetworkPolicyDomainSecretParam {
+	if vt := u.OfAllowlist; vt != nil {
+		return vt.DomainSecrets
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ContainerNewParamsNetworkPolicyUnion) GetType() *string {
+	if vt := u.OfDisabled; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfAllowlist; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ContainerNewParamsNetworkPolicyUnion](
+		"type",
+		apijson.Discriminator[responses.ContainerNetworkPolicyDisabledParam]("disabled"),
+		apijson.Discriminator[responses.ContainerNetworkPolicyAllowlistParam]("allowlist"),
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ContainerNewParamsSkillUnion struct {
+	OfSkillReference *responses.SkillReferenceParam `json:",omitzero,inline"`
+	OfInline         *responses.InlineSkillParam    `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ContainerNewParamsSkillUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfSkillReference, u.OfInline)
+}
+func (u *ContainerNewParamsSkillUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ContainerNewParamsSkillUnion) GetSkillID() *string {
+	if vt := u.OfSkillReference; vt != nil {
+		return &vt.SkillID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ContainerNewParamsSkillUnion) GetVersion() *string {
+	if vt := u.OfSkillReference; vt != nil && vt.Version.Valid() {
+		return &vt.Version.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ContainerNewParamsSkillUnion) GetDescription() *string {
+	if vt := u.OfInline; vt != nil {
+		return &vt.Description
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ContainerNewParamsSkillUnion) GetName() *string {
+	if vt := u.OfInline; vt != nil {
+		return &vt.Name
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ContainerNewParamsSkillUnion) GetSource() *responses.InlineSkillSourceParam {
+	if vt := u.OfInline; vt != nil {
+		return &vt.Source
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ContainerNewParamsSkillUnion) GetType() *string {
+	if vt := u.OfSkillReference; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfInline; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ContainerNewParamsSkillUnion](
+		"type",
+		apijson.Discriminator[responses.SkillReferenceParam]("skill_reference"),
+		apijson.Discriminator[responses.InlineSkillParam]("inline"),
+	)
+}
+
 type ContainerListParams struct {
 	// A cursor for use in pagination. `after` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
@@ -327,6 +605,8 @@ type ContainerListParams struct {
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
 	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
+	// Filter results by container name.
+	Name param.Opt[string] `query:"name,omitzero" json:"-"`
 	// Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 	// order and `desc` for descending order.
 	//

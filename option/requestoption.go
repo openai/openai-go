@@ -1,16 +1,17 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package option
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/openai/openai-go/v3/auth"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/tidwall/sjson"
 )
@@ -24,6 +25,7 @@ type RequestOption = requestconfig.RequestOption
 
 // WithBaseURL returns a RequestOption that sets the BaseURL for the client.
 //
+// It cannot be combined with WithDataResidency in the same configuration call.
 // For security reasons, ensure that the base URL is trusted.
 func WithBaseURL(base string) RequestOption {
 	u, err := url.Parse(base)
@@ -31,21 +33,20 @@ func WithBaseURL(base string) RequestOption {
 		u.Path += "/"
 	}
 
-	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
-		if err != nil {
-			return fmt.Errorf("requestoption: WithBaseURL failed to parse url %s", err)
-		}
-
-		r.BaseURL = u
-		return nil
-	})
+	if err != nil {
+		err = fmt.Errorf("requestoption: WithBaseURL failed to parse url %s", err)
+	}
+	return requestconfig.WithEndpointSelection("base_url", u, err)
 }
 
 // HTTPClient is primarily used to describe an [*http.Client], but also
 // supports custom implementations.
 //
-// For bespoke implementations, prefer using an [*http.Client] with a
-// custom transport. See [http.RoundTripper] for further information.
+// A native [*http.Client] keeps the SDK's credential-origin checks in its
+// redirect path. Bespoke implementations own any redirects performed inside
+// Do and must keep credentialed requests on the configured origin. Prefer
+// using an [*http.Client] with a custom transport. See [http.RoundTripper] for
+// further information.
 type HTTPClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
@@ -53,19 +54,33 @@ type HTTPClient interface {
 // WithHTTPClient returns a RequestOption that changes the underlying http client used to make this
 // request, which by default is [http.DefaultClient].
 //
-// For custom uses cases, it is recommended to provide an [*http.Client] with a custom
-// [http.RoundTripper] as its transport, rather than directly implementing [HTTPClient].
+// For custom use cases, it is recommended to provide an [*http.Client] with a
+// custom [http.RoundTripper] as its transport, rather than directly
+// implementing [HTTPClient]. A bespoke [HTTPClient] is responsible for keeping
+// any redirects it performs inside Do on the configured request origin.
 func WithHTTPClient(client HTTPClient) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		if client == nil {
 			return fmt.Errorf("requestoption: custom http client cannot be nil")
 		}
 
-		if c, ok := client.(*http.Client); ok {
-			// Prefer the native client if possible.
-			r.HTTPClient = c
+		switch selected := client.(type) {
+		case *requestconfig.DefaultHTTPClient:
+			if selected == nil || selected.Client == nil {
+				return fmt.Errorf("requestoption: custom http client cannot be nil")
+			}
+			r.RecordHTTPClientSelection(true)
+			r.HTTPClient = selected.Client
 			r.CustomHTTPDoer = nil
-		} else {
+		case *http.Client:
+			if selected == nil {
+				return fmt.Errorf("requestoption: custom http client cannot be nil")
+			}
+			r.RecordHTTPClientSelection(false)
+			r.HTTPClient = selected
+			r.CustomHTTPDoer = nil
+		default:
+			r.RecordHTTPClientSelection(false)
 			r.CustomHTTPDoer = client
 		}
 
@@ -106,11 +121,26 @@ func WithMaxRetries(retries int) RequestOption {
 	})
 }
 
+// WithMaxRetryDelay returns a RequestOption that sets the maximum delay between
+// retry attempts. This bounds both server-directed retry delays and the client's
+// exponential backoff. The default maximum is 8 seconds.
+//
+// WithMaxRetryDelay panics when delay is not positive.
+func WithMaxRetryDelay(delay time.Duration) RequestOption {
+	if delay <= 0 {
+		panic("option: max retry delay must be positive")
+	}
+	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		r.MaxRetryDelay = delay
+		return nil
+	})
+}
+
 // WithHeader returns a RequestOption that sets the header value to the associated key. It overwrites
 // any value if there was one already present.
 func WithHeader(key, value string) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
-		r.Request.Header.Set(key, value)
+		r.SetHeader(key, value)
 		return nil
 	})
 }
@@ -119,7 +149,7 @@ func WithHeader(key, value string) RequestOption {
 // onto any existing values.
 func WithHeaderAdd(key, value string) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
-		r.Request.Header.Add(key, value)
+		r.AddHeader(key, value)
 		return nil
 	})
 }
@@ -127,7 +157,7 @@ func WithHeaderAdd(key, value string) RequestOption {
 // WithHeaderDel returns a RequestOption that deletes the header value(s) associated with the given key.
 func WithHeaderDel(key string) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
-		r.Request.Header.Del(key)
+		r.DelHeader(key)
 		return nil
 	})
 }
@@ -269,8 +299,16 @@ func WithEnvironmentProduction() RequestOption {
 // WithAPIKey returns a RequestOption that sets the client setting "api_key".
 func WithAPIKey(value string) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
-		r.APIKey = value
-		return r.Apply(WithHeader("authorization", fmt.Sprintf("Bearer %s", r.APIKey)))
+		r.SetAPIKey(value)
+		return nil
+	})
+}
+
+// WithAdminAPIKey returns a RequestOption that sets the client setting "admin_api_key".
+func WithAdminAPIKey(value string) RequestOption {
+	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		r.SetAdminAPIKey(value)
+		return nil
 	})
 }
 
@@ -295,5 +333,74 @@ func WithWebhookSecret(value string) requestconfig.PreRequestOptionFunc {
 	return requestconfig.PreRequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		r.WebhookSecret = value
 		return nil
+	})
+}
+
+// WithWorkloadIdentity returns a RequestOption that configures workload identity authentication.
+// This enables the client to authenticate using short-lived tokens from cloud providers
+// (Kubernetes, Azure, GCP) instead of long-lived API keys.
+func WithWorkloadIdentity(config auth.WorkloadIdentity) RequestOption {
+	var wia *auth.WorkloadIdentityAuth
+	var initOnce sync.Once
+	var initErr error
+
+	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		workloadIdentityAuth := requestconfig.NewProviderAuthOption("OpenAI", "option.WithWorkloadIdentity")
+		if err := workloadIdentityAuth.Apply(r); err != nil {
+			return err
+		}
+		r.ClearInheritedAuthentication()
+		r.SetAPIKey("")
+
+		middlewareIndex := len(r.Middlewares)
+		return requestconfig.WithRequestFinalizer(func(final *requestconfig.RequestConfig) error {
+			if !workloadIdentityAuth.Selected(final) {
+				return nil
+			}
+			if !final.Security.BearerAuth {
+				return errors.New("workload identity cannot authenticate an admin-only API operation")
+			}
+			if final.APIKey != "" || final.AdminAPIKey != "" || final.AuthorizationHeaderOverridden() {
+				return errors.New("workload identity cannot be combined with other Authorization credentials")
+			}
+			final.Middlewares = append(final.Middlewares, nil)
+			copy(final.Middlewares[middlewareIndex+1:], final.Middlewares[middlewareIndex:])
+			final.Middlewares[middlewareIndex] = func(req *http.Request, next func(*http.Request) (*http.Response, error)) (*http.Response, error) {
+				if !workloadIdentityAuth.Selected(final) {
+					return next(req)
+				}
+				if req == nil || requestconfig.RequestRetryScopeFromContext(req.Context()) == nil {
+					return nil, requestconfig.WithNoRetryError(
+						errors.New("workload identity requires its request-owned retry scope"),
+					)
+				}
+				initOnce.Do(func() {
+					wia, initErr = auth.NewWorkloadIdentityAuth(config)
+				})
+
+				if initErr != nil {
+					return nil, initErr
+				}
+
+				var httpDoer auth.HTTPDoer
+				if final.CustomHTTPDoer != nil {
+					httpDoer = final.CustomHTTPDoer
+				} else {
+					httpDoer = final.HTTPClient
+				}
+
+				response, err := auth.WorkloadIdentityMiddleware(wia, httpDoer, req, next)
+				var oauthError *auth.OAuthError
+				if errors.As(err, &oauthError) && oauthError.ErrorCode != "temporarily_unavailable" &&
+					oauthError.ErrorCode != "server_error" {
+					return response, requestconfig.WithNoRetryError(err)
+				}
+				return response, err
+			}
+			allowBodyReplay := len(final.Middlewares) == 1
+			final.InstallRequestRetryScope(allowBodyReplay)
+			final.InstallRequestAttemptMiddleware()
+			return nil
+		}).Apply(r)
 	})
 }

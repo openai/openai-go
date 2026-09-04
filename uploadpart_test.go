@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -26,12 +26,13 @@ func TestUploadPartNew(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Uploads.Parts.New(
 		context.TODO(),
 		"upload_abc123",
 		openai.UploadPartNewParams{
-			Data: io.Reader(bytes.NewBuffer([]byte("some file contents"))),
+			Data: io.Reader(bytes.NewBuffer([]byte("Example data"))),
 		},
 	)
 	if err != nil {

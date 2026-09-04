@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package responses_test
 
@@ -26,9 +26,14 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Responses.New(context.TODO(), responses.ResponseNewParams{
 		Background: openai.Bool(true),
+		ContextManagement: []responses.ResponseNewParamsContextManagement{{
+			Type:             "type",
+			CompactThreshold: openai.Int(1000),
+		}},
 		Conversation: responses.ResponseNewParamsConversationUnion{
 			OfString: openai.String("string"),
 		},
@@ -37,12 +42,23 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 			OfString: openai.String("string"),
 		},
 		Instructions:    openai.String("instructions"),
-		MaxOutputTokens: openai.Int(0),
+		MaxOutputTokens: openai.Int(16),
 		MaxToolCalls:    openai.Int(0),
 		Metadata: shared.Metadata{
 			"foo": "string",
 		},
-		Model:              shared.ResponsesModel("gpt-4o"),
+		Model: shared.ResponsesModel("gpt-6-astra"),
+		Moderation: responses.ResponseNewParamsModeration{
+			Model: "model",
+			Policy: responses.ResponseNewParamsModerationPolicy{
+				Input: responses.ResponseNewParamsModerationPolicyInput{
+					Mode: "score",
+				},
+				Output: responses.ResponseNewParamsModerationPolicyOutput{
+					Mode: "score",
+				},
+			},
+		},
 		ParallelToolCalls:  openai.Bool(true),
 		PreviousResponseID: openai.String("previous_response_id"),
 		Prompt: responses.ResponsePromptParam{
@@ -55,9 +71,16 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 			Version: openai.String("version"),
 		},
 		PromptCacheKey: openai.String("prompt-cache-key-1234"),
+		PromptCacheOptions: responses.ResponseNewParamsPromptCacheOptions{
+			Mode: "implicit",
+			Ttl:  "30m",
+		},
+		PromptCacheRetention: responses.ResponseNewParamsPromptCacheRetentionInMemory,
 		Reasoning: shared.ReasoningParam{
-			Effort:          shared.ReasoningEffortMinimal,
+			Context:         shared.ReasoningContextAuto,
+			Effort:          shared.ReasoningEffortNone,
 			GenerateSummary: shared.ReasoningGenerateSummaryAuto,
+			Mode:            shared.ReasoningModeStandard,
 			Summary:         shared.ReasoningSummaryAuto,
 		},
 		SafetyIdentifier: openai.String("safety-identifier-1234"),
@@ -82,8 +105,14 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 				Parameters: map[string]any{
 					"foo": "bar",
 				},
-				Strict:      openai.Bool(true),
-				Description: openai.String("description"),
+				Strict:         openai.Bool(true),
+				AllowedCallers: []string{"direct"},
+				Async:          openai.Bool(true),
+				DeferLoading:   openai.Bool(true),
+				Description:    openai.String("description"),
+				OutputSchema: map[string]any{
+					"foo": "bar",
+				},
 			},
 		}},
 		TopLogprobs: openai.Int(0),
@@ -111,6 +140,7 @@ func TestResponseGetWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Responses.Get(
 		context.TODO(),
@@ -141,6 +171,7 @@ func TestResponseDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	err := client.Responses.Delete(context.TODO(), "resp_677efb5139a88190b512bc3fef8e535d")
 	if err != nil {
@@ -163,8 +194,46 @@ func TestResponseCancel(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Responses.Cancel(context.TODO(), "resp_677efb5139a88190b512bc3fef8e535d")
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestResponseCompactWithOptionalParams(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
+	)
+	_, err := client.Responses.Compact(context.TODO(), responses.ResponseCompactParams{
+		Model: responses.ResponseCompactParamsModelGPT6Astra,
+		Input: responses.ResponseCompactParamsInputUnion{
+			OfString: openai.String("string"),
+		},
+		Instructions:       openai.String("instructions"),
+		PreviousResponseID: openai.String("resp_123"),
+		PromptCacheKey:     openai.String("prompt_cache_key"),
+		PromptCacheOptions: responses.ResponseCompactParamsPromptCacheOptions{
+			Mode: "implicit",
+			Ttl:  "30m",
+		},
+		PromptCacheRetention: responses.ResponseCompactParamsPromptCacheRetentionInMemory,
+		ServiceTier:          responses.ResponseCompactParamsServiceTierAuto,
+	})
 	if err != nil {
 		var apierr *openai.Error
 		if errors.As(err, &apierr) {

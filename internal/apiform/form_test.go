@@ -48,18 +48,18 @@ type DateTime struct {
 
 type AdditionalProperties struct {
 	A      bool           `form:"a"`
-	Extras map[string]any `form:"-,extras"`
+	Extras map[string]any `form:"-" api:"extrafields"`
 }
 
 type TypedAdditionalProperties struct {
 	A      bool           `form:"a"`
-	Extras map[string]int `form:"-,extras"`
+	Extras map[string]int `form:"-" api:"extrafields"`
 }
 
 type EmbeddedStructs struct {
 	AdditionalProperties
 	A      *int           `form:"number2"`
-	Extras map[string]any `form:"-,extras"`
+	Extras map[string]any `form:"-" api:"extrafields"`
 }
 
 type Recursive struct {
@@ -121,6 +121,23 @@ type StructUnion struct {
 	OfA      UnionStructA         `form:",omitzero,inline"`
 	OfB      UnionStructB         `form:",omitzero,inline"`
 	param.APIUnion
+}
+
+type ConstantStruct struct {
+	Anchor  string `form:"anchor" default:"created_at"`
+	Seconds int    `form:"seconds"`
+}
+
+type MultipartMarshalerParent struct {
+	Middle MultipartMarshalerMiddleNext `form:"middle"`
+}
+
+type MultipartMarshalerMiddleNext struct {
+	MiddleNext MultipartMarshalerMiddle `form:"middleNext"`
+}
+
+type MultipartMarshalerMiddle struct {
+	Child int `form:"child"`
 }
 
 var tests = map[string]struct {
@@ -366,6 +383,19 @@ true
 			},
 		},
 	},
+	"recursive_struct,brackets": {
+		`--xxx
+Content-Disposition: form-data; name="child[name]"
+
+Alex
+--xxx
+Content-Disposition: form-data; name="name"
+
+Robert
+--xxx--
+`,
+		Recursive{Name: "Robert", Child: &Recursive{Name: "Alex"}},
+	},
 
 	"recursive_struct": {
 		`--xxx
@@ -529,6 +559,61 @@ Content-Disposition: form-data; name="union"
 			Union: UnionTime(time.Date(2010, 05, 23, 0, 0, 0, 0, time.UTC)),
 		},
 	},
+	"constant_zero_value": {
+		`--xxx
+Content-Disposition: form-data; name="anchor"
+
+created_at
+--xxx
+Content-Disposition: form-data; name="seconds"
+
+3600
+--xxx--
+`,
+		ConstantStruct{
+			Seconds: 3600,
+		},
+	},
+	"constant_explicit_value": {
+		`--xxx
+Content-Disposition: form-data; name="anchor"
+
+created_at_override
+--xxx
+Content-Disposition: form-data; name="seconds"
+
+3600
+--xxx--
+`,
+		ConstantStruct{
+			Anchor:  "created_at_override",
+			Seconds: 3600,
+		},
+	},
+	"deeply-nested-struct,brackets": {
+		`--xxx
+Content-Disposition: form-data; name="middle[middleNext][child]"
+
+10
+--xxx--
+`,
+		MultipartMarshalerParent{
+			Middle: MultipartMarshalerMiddleNext{
+				MiddleNext: MultipartMarshalerMiddle{
+					Child: 10,
+				},
+			},
+		},
+	},
+	"deeply-nested-map,brackets": {
+		`--xxx
+Content-Disposition: form-data; name="middle[middleNext][child]"
+
+10
+--xxx--
+`,
+		map[string]any{"middle": map[string]any{"middleNext": map[string]any{"child": 10}}},
+	},
 }
 
 func TestEncode(t *testing.T) {
@@ -536,14 +621,17 @@ func TestEncode(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			buf := bytes.NewBuffer(nil)
 			writer := multipart.NewWriter(buf)
-			writer.SetBoundary("xxx")
+			err := writer.SetBoundary("xxx")
+			if err != nil {
+				t.Errorf("setting boundary for %v failed with error %v", test.val, err)
+			}
 
-			var arrayFmt string = "indices:dots"
+			arrayFmt := "indices:dots"
 			if tags := strings.Split(name, ","); len(tags) > 1 {
 				arrayFmt = tags[1]
 			}
 
-			err := MarshalWithSettings(test.val, writer, arrayFmt)
+			err = MarshalWithSettings(test.val, writer, arrayFmt)
 			if err != nil {
 				t.Errorf("serialization of %v failed with error %v", test.val, err)
 			}
@@ -553,8 +641,93 @@ func TestEncode(t *testing.T) {
 			}
 			raw := buf.Bytes()
 			if string(raw) != strings.ReplaceAll(test.buf, "\n", "\r\n") {
-				t.Errorf("expected %+#v to serialize to '%s' but got '%s'", test.val, test.buf, string(raw))
+				t.Errorf("expected %+#v to serialize to '%s' but got '%s' (with format %s)", test.val, test.buf, string(raw), arrayFmt)
 			}
 		})
+	}
+}
+
+func TestReaderFieldNameMetadata(t *testing.T) {
+	var buffer bytes.Buffer
+	writer := multipart.NewWriter(&buffer)
+	if err := writer.SetBoundary("test"); err != nil {
+		t.Fatalf("SetBoundary() error = %v", err)
+	}
+	if err := MarshalRoot(
+		map[string]io.Reader{
+			"extra\r\nInjected-Header: yes": strings.NewReader("extra contents"),
+		},
+		writer,
+	); err != nil {
+		t.Fatalf("MarshalRoot() error = %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("Close() error = %v", err)
+	}
+
+	raw := buffer.String()
+	if !strings.Contains(raw, `name="extra%0D%0AInjected-Header: yes"`) {
+		t.Error("multipart body does not contain the escaped field name")
+	}
+	if strings.Contains(raw, "\r\nInjected-Header:") {
+		t.Error("multipart body contains an injected header line")
+	}
+}
+
+func TestReaderFieldNameRejectsOtherControlCharacters(t *testing.T) {
+	tests := []struct {
+		name      string
+		fieldName string
+	}{
+		{name: "nul", fieldName: "extra\x00"},
+		{name: "unit separator", fieldName: "extra\x1f"},
+		{name: "delete", fieldName: "extra\x7f"},
+		{name: "unicode control", fieldName: "extra\u0085"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			writer := multipart.NewWriter(io.Discard)
+			err := MarshalRoot(
+				map[string]io.Reader{test.fieldName: strings.NewReader("extra contents")},
+				writer,
+			)
+			if err == nil {
+				t.Fatal("MarshalRoot() error = nil, want invalid field name error")
+			}
+			if !strings.Contains(err.Error(), "invalid multipart field name") {
+				t.Errorf("MarshalRoot() error = %q, want invalid field name", err)
+			}
+		})
+	}
+}
+
+func TestReaderFieldNameAllowsHorizontalTab(t *testing.T) {
+	var buffer bytes.Buffer
+	writer := multipart.NewWriter(&buffer)
+	if err := writer.SetBoundary("test"); err != nil {
+		t.Fatalf("SetBoundary() error = %v", err)
+	}
+	if err := MarshalRoot(
+		map[string]io.Reader{
+			"extra\tname": strings.NewReader("extra contents"),
+		},
+		writer,
+	); err != nil {
+		t.Fatalf("MarshalRoot() error = %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("Close() error = %v", err)
+	}
+
+	part, err := multipart.NewReader(&buffer, "test").NextPart()
+	if err != nil {
+		t.Fatalf("NextPart() error = %v", err)
+	}
+	if got := part.FormName(); got != "extra\tname" {
+		t.Errorf("FormName() = %q, want field name with horizontal tab", got)
+	}
+	if err := part.Close(); err != nil {
+		t.Fatalf("Close() part error = %v", err)
 	}
 }

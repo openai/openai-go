@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -39,7 +38,7 @@ type VectorStoreService struct {
 // there is one), and before any request-specific options.
 func NewVectorStoreService(opts ...option.RequestOption) (r VectorStoreService) {
 	r = VectorStoreService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Files = NewVectorStoreFileService(opts...)
 	r.FileBatches = NewVectorStoreFileBatchService(opts...)
 	return
@@ -47,43 +46,47 @@ func NewVectorStoreService(opts ...option.RequestOption) (r VectorStoreService) 
 
 // Create a vector store.
 func (r *VectorStoreService) New(ctx context.Context, body VectorStoreNewParams, opts ...option.RequestOption) (res *VectorStore, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	path := "vector_stores"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves a vector store.
 func (r *VectorStoreService) Get(ctx context.Context, vectorStoreID string, opts ...option.RequestOption) (res *VectorStore, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("vector_stores/%s", vectorStoreID)
+	path := requestconfig.FormatPath("vector_stores/%s", vectorStoreID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Modifies a vector store.
 func (r *VectorStoreService) Update(ctx context.Context, vectorStoreID string, body VectorStoreUpdateParams, opts ...option.RequestOption) (res *VectorStore, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("vector_stores/%s", vectorStoreID)
+	path := requestconfig.FormatPath("vector_stores/%s", vectorStoreID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Returns a list of vector stores.
 func (r *VectorStoreService) List(ctx context.Context, query VectorStoreListParams, opts ...option.RequestOption) (res *pagination.CursorPage[VectorStore], err error) {
 	var raw *http.Response
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
 	path := "vector_stores"
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -105,28 +108,30 @@ func (r *VectorStoreService) ListAutoPaging(ctx context.Context, query VectorSto
 
 // Delete a vector store.
 func (r *VectorStoreService) Delete(ctx context.Context, vectorStoreID string, opts ...option.RequestOption) (res *VectorStoreDeleted, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("vector_stores/%s", vectorStoreID)
+	path := requestconfig.FormatPath("vector_stores/%s", vectorStoreID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Search a vector store for relevant chunks based on a query and file attributes
 // filter.
 func (r *VectorStoreService) Search(ctx context.Context, vectorStoreID string, body VectorStoreSearchParams, opts ...option.RequestOption) (res *pagination.Page[VectorStoreSearchResponse], err error) {
 	var raw *http.Response
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("vector_stores/%s/search", vectorStoreID)
+	path := requestconfig.FormatPath("vector_stores/%s/search", vectorStoreID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodPost, path, body, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -158,7 +163,7 @@ func NewAutoFileChunkingStrategyParam() AutoFileChunkingStrategyParam {
 // [NewAutoFileChunkingStrategyParam].
 type AutoFileChunkingStrategyParam struct {
 	// Always `auto`.
-	Type constant.Auto `json:"type,required"`
+	Type constant.Auto `json:"type" default:"auto"`
 	paramObj
 }
 
@@ -217,12 +222,12 @@ func (u FileChunkingStrategyUnion) AsAny() anyFileChunkingStrategy {
 }
 
 func (u FileChunkingStrategyUnion) AsStatic() (v StaticFileChunkingStrategyObject) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u FileChunkingStrategyUnion) AsOther() (v OtherFileChunkingStrategyObject) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -253,15 +258,6 @@ func (u FileChunkingStrategyParamUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *FileChunkingStrategyParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *FileChunkingStrategyParamUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return u.OfAuto
-	} else if !param.IsOmitted(u.OfStatic) {
-		return u.OfStatic
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -295,7 +291,7 @@ func init() {
 // introduced in the API.
 type OtherFileChunkingStrategyObject struct {
 	// Always `other`.
-	Type constant.Other `json:"type,required"`
+	Type constant.Other `json:"type" default:"other"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -314,10 +310,10 @@ type StaticFileChunkingStrategy struct {
 	// The number of tokens that overlap between chunks. The default value is `400`.
 	//
 	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
-	ChunkOverlapTokens int64 `json:"chunk_overlap_tokens,required"`
+	ChunkOverlapTokens int64 `json:"chunk_overlap_tokens" api:"required"`
 	// The maximum number of tokens in each chunk. The default value is `800`. The
 	// minimum value is `100` and the maximum value is `4096`.
-	MaxChunkSizeTokens int64 `json:"max_chunk_size_tokens,required"`
+	MaxChunkSizeTokens int64 `json:"max_chunk_size_tokens" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ChunkOverlapTokens respjson.Field
@@ -348,10 +344,10 @@ type StaticFileChunkingStrategyParam struct {
 	// The number of tokens that overlap between chunks. The default value is `400`.
 	//
 	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
-	ChunkOverlapTokens int64 `json:"chunk_overlap_tokens,required"`
+	ChunkOverlapTokens int64 `json:"chunk_overlap_tokens" api:"required"`
 	// The maximum number of tokens in each chunk. The default value is `800`. The
 	// minimum value is `100` and the maximum value is `4096`.
-	MaxChunkSizeTokens int64 `json:"max_chunk_size_tokens,required"`
+	MaxChunkSizeTokens int64 `json:"max_chunk_size_tokens" api:"required"`
 	paramObj
 }
 
@@ -364,9 +360,9 @@ func (r *StaticFileChunkingStrategyParam) UnmarshalJSON(data []byte) error {
 }
 
 type StaticFileChunkingStrategyObject struct {
-	Static StaticFileChunkingStrategy `json:"static,required"`
+	Static StaticFileChunkingStrategy `json:"static" api:"required"`
 	// Always `static`.
-	Type constant.Static `json:"type,required"`
+	Type constant.Static `json:"type" default:"static"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Static      respjson.Field
@@ -386,11 +382,11 @@ func (r *StaticFileChunkingStrategyObject) UnmarshalJSON(data []byte) error {
 //
 // The properties Static, Type are required.
 type StaticFileChunkingStrategyObjectParam struct {
-	Static StaticFileChunkingStrategyParam `json:"static,omitzero,required"`
+	Static StaticFileChunkingStrategyParam `json:"static,omitzero" api:"required"`
 	// Always `static`.
 	//
 	// This field can be elided, and will marshal its zero value as "static".
-	Type constant.Static `json:"type,required"`
+	Type constant.Static `json:"type" default:"static"`
 	paramObj
 }
 
@@ -406,35 +402,35 @@ func (r *StaticFileChunkingStrategyObjectParam) UnmarshalJSON(data []byte) error
 // `file_search` tool.
 type VectorStore struct {
 	// The identifier, which can be referenced in API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) for when the vector store was created.
-	CreatedAt  int64                 `json:"created_at,required"`
-	FileCounts VectorStoreFileCounts `json:"file_counts,required"`
+	CreatedAt  int64                 `json:"created_at" api:"required" format:"unixtime"`
+	FileCounts VectorStoreFileCounts `json:"file_counts" api:"required"`
 	// The Unix timestamp (in seconds) for when the vector store was last active.
-	LastActiveAt int64 `json:"last_active_at,required"`
+	LastActiveAt int64 `json:"last_active_at" api:"required" format:"unixtime"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.Metadata `json:"metadata,required"`
+	Metadata shared.Metadata `json:"metadata" api:"required"`
 	// The name of the vector store.
-	Name string `json:"name,required"`
+	Name string `json:"name" api:"required"`
 	// The object type, which is always `vector_store`.
-	Object constant.VectorStore `json:"object,required"`
+	Object constant.VectorStore `json:"object" default:"vector_store"`
 	// The status of the vector store, which can be either `expired`, `in_progress`, or
 	// `completed`. A status of `completed` indicates that the vector store is ready
 	// for use.
 	//
 	// Any of "expired", "in_progress", "completed".
-	Status VectorStoreStatus `json:"status,required"`
+	Status VectorStoreStatus `json:"status" api:"required"`
 	// The total number of bytes used by the files in the vector store.
-	UsageBytes int64 `json:"usage_bytes,required"`
+	UsageBytes int64 `json:"usage_bytes" api:"required"`
 	// The expiration policy for a vector store.
 	ExpiresAfter VectorStoreExpiresAfter `json:"expires_after"`
 	// The Unix timestamp (in seconds) for when the vector store will expire.
-	ExpiresAt int64 `json:"expires_at,nullable"`
+	ExpiresAt int64 `json:"expires_at" api:"nullable" format:"unixtime"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID           respjson.Field
@@ -461,15 +457,15 @@ func (r *VectorStore) UnmarshalJSON(data []byte) error {
 
 type VectorStoreFileCounts struct {
 	// The number of files that were cancelled.
-	Cancelled int64 `json:"cancelled,required"`
+	Cancelled int64 `json:"cancelled" api:"required"`
 	// The number of files that have been successfully processed.
-	Completed int64 `json:"completed,required"`
+	Completed int64 `json:"completed" api:"required"`
 	// The number of files that have failed to process.
-	Failed int64 `json:"failed,required"`
+	Failed int64 `json:"failed" api:"required"`
 	// The number of files that are currently being processed.
-	InProgress int64 `json:"in_progress,required"`
+	InProgress int64 `json:"in_progress" api:"required"`
 	// The total number of files.
-	Total int64 `json:"total,required"`
+	Total int64 `json:"total" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Cancelled   respjson.Field
@@ -503,9 +499,9 @@ const (
 type VectorStoreExpiresAfter struct {
 	// Anchor timestamp after which the expiration policy applies. Supported anchors:
 	// `last_active_at`.
-	Anchor constant.LastActiveAt `json:"anchor,required"`
+	Anchor constant.LastActiveAt `json:"anchor" default:"last_active_at"`
 	// The number of days after the anchor time that the vector store will expire.
-	Days int64 `json:"days,required"`
+	Days int64 `json:"days" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Anchor      respjson.Field
@@ -522,9 +518,9 @@ func (r *VectorStoreExpiresAfter) UnmarshalJSON(data []byte) error {
 }
 
 type VectorStoreDeleted struct {
-	ID      string                      `json:"id,required"`
-	Deleted bool                        `json:"deleted,required"`
-	Object  constant.VectorStoreDeleted `json:"object,required"`
+	ID      string                      `json:"id" api:"required"`
+	Deleted bool                        `json:"deleted" api:"required"`
+	Object  constant.VectorStoreDeleted `json:"object" default:"vector_store.deleted"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -547,15 +543,15 @@ type VectorStoreSearchResponse struct {
 	// querying for objects via API or the dashboard. Keys are strings with a maximum
 	// length of 64 characters. Values are strings with a maximum length of 512
 	// characters, booleans, or numbers.
-	Attributes map[string]VectorStoreSearchResponseAttributeUnion `json:"attributes,required"`
+	Attributes map[string]VectorStoreSearchResponseAttributeUnion `json:"attributes" api:"required"`
 	// Content chunks from the file.
-	Content []VectorStoreSearchResponseContent `json:"content,required"`
+	Content []VectorStoreSearchResponseContent `json:"content" api:"required"`
 	// The ID of the vector store file.
-	FileID string `json:"file_id,required"`
+	FileID string `json:"file_id" api:"required"`
 	// The name of the vector store file.
-	Filename string `json:"filename,required"`
+	Filename string `json:"filename" api:"required"`
 	// The similarity score for the result.
-	Score float64 `json:"score,required"`
+	Score float64 `json:"score" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Attributes  respjson.Field
@@ -597,17 +593,17 @@ type VectorStoreSearchResponseAttributeUnion struct {
 }
 
 func (u VectorStoreSearchResponseAttributeUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u VectorStoreSearchResponseAttributeUnion) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u VectorStoreSearchResponseAttributeUnion) AsBool() (v bool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -620,11 +616,11 @@ func (r *VectorStoreSearchResponseAttributeUnion) UnmarshalJSON(data []byte) err
 
 type VectorStoreSearchResponseContent struct {
 	// The text content returned from search.
-	Text string `json:"text,required"`
+	Text string `json:"text" api:"required"`
 	// The type of content.
 	//
 	// Any of "text".
-	Type string `json:"type,required"`
+	Type string `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -678,12 +674,12 @@ func (r *VectorStoreNewParams) UnmarshalJSON(data []byte) error {
 // The properties Anchor, Days are required.
 type VectorStoreNewParamsExpiresAfter struct {
 	// The number of days after the anchor time that the vector store will expire.
-	Days int64 `json:"days,required"`
+	Days int64 `json:"days" api:"required"`
 	// Anchor timestamp after which the expiration policy applies. Supported anchors:
 	// `last_active_at`.
 	//
 	// This field can be elided, and will marshal its zero value as "last_active_at".
-	Anchor constant.LastActiveAt `json:"anchor,required"`
+	Anchor constant.LastActiveAt `json:"anchor" default:"last_active_at"`
 	paramObj
 }
 
@@ -723,12 +719,12 @@ func (r *VectorStoreUpdateParams) UnmarshalJSON(data []byte) error {
 // The properties Anchor, Days are required.
 type VectorStoreUpdateParamsExpiresAfter struct {
 	// The number of days after the anchor time that the vector store will expire.
-	Days int64 `json:"days,required"`
+	Days int64 `json:"days" api:"required"`
 	// Anchor timestamp after which the expiration policy applies. Supported anchors:
 	// `last_active_at`.
 	//
 	// This field can be elided, and will marshal its zero value as "last_active_at".
-	Anchor constant.LastActiveAt `json:"anchor,required"`
+	Anchor constant.LastActiveAt `json:"anchor" default:"last_active_at"`
 	paramObj
 }
 
@@ -781,7 +777,7 @@ const (
 
 type VectorStoreSearchParams struct {
 	// A query string for a search
-	Query VectorStoreSearchParamsQueryUnion `json:"query,omitzero,required"`
+	Query VectorStoreSearchParamsQueryUnion `json:"query,omitzero" api:"required"`
 	// The maximum number of results to return. This number should be between 1 and 50
 	// inclusive.
 	MaxNumResults param.Opt[int64] `json:"max_num_results,omitzero"`
@@ -818,15 +814,6 @@ func (u *VectorStoreSearchParamsQueryUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *VectorStoreSearchParamsQueryUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfStringArray) {
-		return &u.OfStringArray
-	}
-	return nil
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -841,15 +828,6 @@ func (u VectorStoreSearchParamsFiltersUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *VectorStoreSearchParamsFiltersUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *VectorStoreSearchParamsFiltersUnion) asAny() any {
-	if !param.IsOmitted(u.OfComparisonFilter) {
-		return u.OfComparisonFilter
-	} else if !param.IsOmitted(u.OfCompoundFilter) {
-		return u.OfCompoundFilter
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -869,7 +847,7 @@ func (u VectorStoreSearchParamsFiltersUnion) GetValue() *shared.ComparisonFilter
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u VectorStoreSearchParamsFiltersUnion) GetFilters() []shared.ComparisonFilterParam {
+func (u VectorStoreSearchParamsFiltersUnion) GetFilters() []shared.CompoundFilterFilterUnionParam {
 	if vt := u.OfCompoundFilter; vt != nil {
 		return vt.Filters
 	}

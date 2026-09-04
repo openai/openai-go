@@ -1,3 +1,5 @@
+//go:build !linux
+
 package main
 
 import (
@@ -16,12 +18,14 @@ func main() {
 		Model:          openai.SpeechModelTTS1,
 		Input:          `Why did the chicken cross the road? To get to the other side.`,
 		ResponseFormat: openai.AudioSpeechNewParamsResponseFormatPCM,
-		Voice:          openai.AudioSpeechNewParamsVoiceAlloy,
+		Voice: openai.AudioSpeechNewParamsVoiceUnion{
+			OfAudioSpeechNewsVoiceString2: openai.String("alloy"),
+		},
 	})
-	defer res.Body.Close()
 	if err != nil {
 		panic(err)
 	}
+	defer func() { _ = res.Body.Close() }()
 
 	op := &oto.NewContextOptions{}
 	op.SampleRate = 24000
@@ -39,9 +43,5 @@ func main() {
 	player.Play()
 	for player.IsPlaying() {
 		time.Sleep(time.Millisecond)
-	}
-	err = player.Close()
-	if err != nil {
-		panic("player.Close failed: " + err.Error())
 	}
 }

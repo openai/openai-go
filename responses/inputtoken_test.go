@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package responses_test
 
@@ -26,6 +26,7 @@ func TestInputTokenCountWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Responses.InputTokens.Count(context.TODO(), responses.InputTokenCountParams{
 		Conversation: responses.InputTokenCountParamsConversationUnion{
@@ -37,10 +38,13 @@ func TestInputTokenCountWithOptionalParams(t *testing.T) {
 		Instructions:       openai.String("instructions"),
 		Model:              openai.String("model"),
 		ParallelToolCalls:  openai.Bool(true),
+		Personality:        responses.InputTokenCountParamsPersonalityFriendly,
 		PreviousResponseID: openai.String("resp_123"),
 		Reasoning: shared.ReasoningParam{
-			Effort:          shared.ReasoningEffortMinimal,
+			Context:         shared.ReasoningContextAuto,
+			Effort:          shared.ReasoningEffortNone,
 			GenerateSummary: shared.ReasoningGenerateSummaryAuto,
+			Mode:            shared.ReasoningModeStandard,
 			Summary:         shared.ReasoningSummaryAuto,
 		},
 		Text: responses.InputTokenCountParamsText{
@@ -58,8 +62,14 @@ func TestInputTokenCountWithOptionalParams(t *testing.T) {
 				Parameters: map[string]any{
 					"foo": "bar",
 				},
-				Strict:      openai.Bool(true),
-				Description: openai.String("description"),
+				Strict:         openai.Bool(true),
+				AllowedCallers: []string{"direct"},
+				Async:          openai.Bool(true),
+				DeferLoading:   openai.Bool(true),
+				Description:    openai.String("description"),
+				OutputSchema: map[string]any{
+					"foo": "bar",
+				},
 			},
 		}},
 		Truncation: responses.InputTokenCountParamsTruncationAuto,

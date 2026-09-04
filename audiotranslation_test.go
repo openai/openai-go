@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -26,9 +26,10 @@ func TestAudioTranslationNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Audio.Translations.New(context.TODO(), openai.AudioTranslationNewParams{
-		File:           io.Reader(bytes.NewBuffer([]byte("some file contents"))),
+		File:           io.Reader(bytes.NewBuffer([]byte("Example data"))),
 		Model:          openai.AudioModelWhisper1,
 		Prompt:         openai.String("prompt"),
 		ResponseFormat: openai.AudioTranslationNewParamsResponseFormatJSON,

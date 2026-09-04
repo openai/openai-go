@@ -1,1 +1,2 @@
 brew "go"
+brew "node"

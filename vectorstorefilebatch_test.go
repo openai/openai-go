@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -24,12 +24,12 @@ func TestVectorStoreFileBatchNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.FileBatches.New(
 		context.TODO(),
 		"vs_abc123",
 		openai.VectorStoreFileBatchNewParams{
-			FileIDs: []string{"string"},
 			Attributes: map[string]openai.VectorStoreFileBatchNewParamsAttributeUnion{
 				"foo": {
 					OfString: openai.String("string"),
@@ -38,6 +38,18 @@ func TestVectorStoreFileBatchNewWithOptionalParams(t *testing.T) {
 			ChunkingStrategy: openai.FileChunkingStrategyParamUnion{
 				OfAuto: &openai.AutoFileChunkingStrategyParam{},
 			},
+			FileIDs: []string{"string"},
+			Files: []openai.VectorStoreFileBatchNewParamsFile{{
+				FileID: "file_id",
+				Attributes: map[string]openai.VectorStoreFileBatchNewParamsFileAttributeUnion{
+					"foo": {
+						OfString: openai.String("string"),
+					},
+				},
+				ChunkingStrategy: openai.FileChunkingStrategyParamUnion{
+					OfAuto: &openai.AutoFileChunkingStrategyParam{},
+				},
+			}},
 		},
 	)
 	if err != nil {
@@ -60,6 +72,7 @@ func TestVectorStoreFileBatchGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.FileBatches.Get(
 		context.TODO(),
@@ -86,6 +99,7 @@ func TestVectorStoreFileBatchCancel(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.FileBatches.Cancel(
 		context.TODO(),
@@ -112,6 +126,7 @@ func TestVectorStoreFileBatchListFilesWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.FileBatches.ListFiles(
 		context.TODO(),

@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -26,9 +26,10 @@ func TestFineTuningJobNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.FineTuning.Jobs.New(context.TODO(), openai.FineTuningJobNewParams{
-		Model:        openai.FineTuningJobNewParamsModelBabbage002,
+		Model:        openai.FineTuningJobNewParamsModelGPT4oMini,
 		TrainingFile: "file-abc123",
 		Hyperparameters: openai.FineTuningJobNewParamsHyperparameters{
 			BatchSize: openai.FineTuningJobNewParamsHyperparametersBatchSizeUnion{
@@ -139,6 +140,7 @@ func TestFineTuningJobGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.FineTuning.Jobs.Get(context.TODO(), "ft-AF1WoRqd3aJAHsqc9NY7iL8F")
 	if err != nil {
@@ -161,6 +163,7 @@ func TestFineTuningJobListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.FineTuning.Jobs.List(context.TODO(), openai.FineTuningJobListParams{
 		After: openai.String("after"),
@@ -189,6 +192,7 @@ func TestFineTuningJobCancel(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.FineTuning.Jobs.Cancel(context.TODO(), "ft-AF1WoRqd3aJAHsqc9NY7iL8F")
 	if err != nil {
@@ -211,6 +215,7 @@ func TestFineTuningJobListEventsWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.FineTuning.Jobs.ListEvents(
 		context.TODO(),
@@ -240,6 +245,7 @@ func TestFineTuningJobPause(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.FineTuning.Jobs.Pause(context.TODO(), "ft-AF1WoRqd3aJAHsqc9NY7iL8F")
 	if err != nil {
@@ -262,6 +268,7 @@ func TestFineTuningJobResume(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.FineTuning.Jobs.Resume(context.TODO(), "ft-AF1WoRqd3aJAHsqc9NY7iL8F")
 	if err != nil {

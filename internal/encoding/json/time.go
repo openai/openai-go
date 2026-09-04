@@ -50,7 +50,7 @@ func timeMarshalEncoder(e *encodeState, v reflect.Value, opts encOpts) bool {
 	if b != nil {
 		e.Grow(len(b))
 		out := e.AvailableBuffer()
-		out, _ = appendCompact(out, b, opts.escapeHTML)
+		out, _ = appendCompact(out, b, opts)
 		e.Buffer.Write(out)
 		return true
 	}

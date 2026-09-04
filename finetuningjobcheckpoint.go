@@ -1,11 +1,10 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -20,6 +19,8 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Manage fine-tuning jobs to tailor a model to your specific training data.
+//
 // FineTuningJobCheckpointService contains methods and other services that help
 // with interacting with the openai API.
 //
@@ -35,20 +36,21 @@ type FineTuningJobCheckpointService struct {
 // options (if there is one), and before any request-specific options.
 func NewFineTuningJobCheckpointService(opts ...option.RequestOption) (r FineTuningJobCheckpointService) {
 	r = FineTuningJobCheckpointService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
 // List checkpoints for a fine-tuning job.
 func (r *FineTuningJobCheckpointService) List(ctx context.Context, fineTuningJobID string, query FineTuningJobCheckpointListParams, opts ...option.RequestOption) (res *pagination.CursorPage[FineTuningJobCheckpoint], err error) {
 	var raw *http.Response
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if fineTuningJobID == "" {
 		err = errors.New("missing required fine_tuning_job_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("fine_tuning/jobs/%s/checkpoints", fineTuningJobID)
+	path := requestconfig.FormatPath("fine_tuning/jobs/%s/checkpoints", fineTuningJobID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -70,19 +72,19 @@ func (r *FineTuningJobCheckpointService) ListAutoPaging(ctx context.Context, fin
 // fine-tuning job that is ready to use.
 type FineTuningJobCheckpoint struct {
 	// The checkpoint identifier, which can be referenced in the API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) for when the checkpoint was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The name of the fine-tuned checkpoint model that is created.
-	FineTunedModelCheckpoint string `json:"fine_tuned_model_checkpoint,required"`
+	FineTunedModelCheckpoint string `json:"fine_tuned_model_checkpoint" api:"required"`
 	// The name of the fine-tuning job that this checkpoint was created from.
-	FineTuningJobID string `json:"fine_tuning_job_id,required"`
+	FineTuningJobID string `json:"fine_tuning_job_id" api:"required"`
 	// Metrics at the step number during the fine-tuning job.
-	Metrics FineTuningJobCheckpointMetrics `json:"metrics,required"`
+	Metrics FineTuningJobCheckpointMetrics `json:"metrics" api:"required"`
 	// The object type, which is always "fine_tuning.job.checkpoint".
-	Object constant.FineTuningJobCheckpoint `json:"object,required"`
+	Object constant.FineTuningJobCheckpoint `json:"object" default:"fine_tuning.job.checkpoint"`
 	// The step number that the checkpoint was created at.
-	StepNumber int64 `json:"step_number,required"`
+	StepNumber int64 `json:"step_number" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                       respjson.Field

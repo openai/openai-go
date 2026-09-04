@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -22,6 +21,8 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Build Assistants that can call models and use tools.
+//
 // BetaThreadMessageService contains methods and other services that help with
 // interacting with the openai API.
 //
@@ -39,7 +40,7 @@ type BetaThreadMessageService struct {
 // options (if there is one), and before any request-specific options.
 func NewBetaThreadMessageService(opts ...option.RequestOption) (r BetaThreadMessageService) {
 	r = BetaThreadMessageService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
@@ -47,53 +48,56 @@ func NewBetaThreadMessageService(opts ...option.RequestOption) (r BetaThreadMess
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadMessageService) New(ctx context.Context, threadID string, body BetaThreadMessageNewParams, opts ...option.RequestOption) (res *Message, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/messages", threadID)
+	path := requestconfig.FormatPath("threads/%s/messages", threadID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieve a message.
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadMessageService) Get(ctx context.Context, threadID string, messageID string, opts ...option.RequestOption) (res *Message, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
-		return
+		return nil, err
 	}
 	if messageID == "" {
 		err = errors.New("missing required message_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/messages/%s", threadID, messageID)
+	path := requestconfig.FormatPath("threads/%s/messages/%s", threadID, messageID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Modifies a message.
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadMessageService) Update(ctx context.Context, threadID string, messageID string, body BetaThreadMessageUpdateParams, opts ...option.RequestOption) (res *Message, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
-		return
+		return nil, err
 	}
 	if messageID == "" {
 		err = errors.New("missing required message_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/messages/%s", threadID, messageID)
+	path := requestconfig.FormatPath("threads/%s/messages/%s", threadID, messageID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Returns a list of messages for a given thread.
@@ -101,13 +105,14 @@ func (r *BetaThreadMessageService) Update(ctx context.Context, threadID string, 
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadMessageService) List(ctx context.Context, threadID string, query BetaThreadMessageListParams, opts ...option.RequestOption) (res *pagination.CursorPage[Message], err error) {
 	var raw *http.Response
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/messages", threadID)
+	path := requestconfig.FormatPath("threads/%s/messages", threadID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -131,19 +136,20 @@ func (r *BetaThreadMessageService) ListAutoPaging(ctx context.Context, threadID 
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadMessageService) Delete(ctx context.Context, threadID string, messageID string, opts ...option.RequestOption) (res *MessageDeleted, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
-		return
+		return nil, err
 	}
 	if messageID == "" {
 		err = errors.New("missing required message_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/messages/%s", threadID, messageID)
+	path := requestconfig.FormatPath("threads/%s/messages/%s", threadID, messageID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // AnnotationUnion contains all possible properties and values from
@@ -201,12 +207,12 @@ func (u AnnotationUnion) AsAny() anyAnnotation {
 }
 
 func (u AnnotationUnion) AsFileCitation() (v FileCitationAnnotation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AnnotationUnion) AsFilePath() (v FilePathAnnotation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -274,12 +280,12 @@ func (u AnnotationDeltaUnion) AsAny() anyAnnotationDelta {
 }
 
 func (u AnnotationDeltaUnion) AsFileCitation() (v FileCitationDeltaAnnotation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AnnotationDeltaUnion) AsFilePath() (v FilePathDeltaAnnotation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -294,13 +300,13 @@ func (r *AnnotationDeltaUnion) UnmarshalJSON(data []byte) error {
 // File associated with the assistant or the message. Generated when the assistant
 // uses the "file_search" tool to search files.
 type FileCitationAnnotation struct {
-	EndIndex     int64                              `json:"end_index,required"`
-	FileCitation FileCitationAnnotationFileCitation `json:"file_citation,required"`
-	StartIndex   int64                              `json:"start_index,required"`
+	EndIndex     int64                              `json:"end_index" api:"required"`
+	FileCitation FileCitationAnnotationFileCitation `json:"file_citation" api:"required"`
+	StartIndex   int64                              `json:"start_index" api:"required"`
 	// The text in the message content that needs to be replaced.
-	Text string `json:"text,required"`
+	Text string `json:"text" api:"required"`
 	// Always `file_citation`.
-	Type constant.FileCitation `json:"type,required"`
+	Type constant.FileCitation `json:"type" default:"file_citation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EndIndex     respjson.Field
@@ -321,7 +327,7 @@ func (r *FileCitationAnnotation) UnmarshalJSON(data []byte) error {
 
 type FileCitationAnnotationFileCitation struct {
 	// The ID of the specific File the citation is from.
-	FileID string `json:"file_id,required"`
+	FileID string `json:"file_id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		FileID      respjson.Field
@@ -341,9 +347,9 @@ func (r *FileCitationAnnotationFileCitation) UnmarshalJSON(data []byte) error {
 // uses the "file_search" tool to search files.
 type FileCitationDeltaAnnotation struct {
 	// The index of the annotation in the text content part.
-	Index int64 `json:"index,required"`
+	Index int64 `json:"index" api:"required"`
 	// Always `file_citation`.
-	Type         constant.FileCitation                   `json:"type,required"`
+	Type         constant.FileCitation                   `json:"type" default:"file_citation"`
 	EndIndex     int64                                   `json:"end_index"`
 	FileCitation FileCitationDeltaAnnotationFileCitation `json:"file_citation"`
 	StartIndex   int64                                   `json:"start_index"`
@@ -391,13 +397,13 @@ func (r *FileCitationDeltaAnnotationFileCitation) UnmarshalJSON(data []byte) err
 // A URL for the file that's generated when the assistant used the
 // `code_interpreter` tool to generate a file.
 type FilePathAnnotation struct {
-	EndIndex   int64                      `json:"end_index,required"`
-	FilePath   FilePathAnnotationFilePath `json:"file_path,required"`
-	StartIndex int64                      `json:"start_index,required"`
+	EndIndex   int64                      `json:"end_index" api:"required"`
+	FilePath   FilePathAnnotationFilePath `json:"file_path" api:"required"`
+	StartIndex int64                      `json:"start_index" api:"required"`
 	// The text in the message content that needs to be replaced.
-	Text string `json:"text,required"`
+	Text string `json:"text" api:"required"`
 	// Always `file_path`.
-	Type constant.FilePath `json:"type,required"`
+	Type constant.FilePath `json:"type" default:"file_path"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EndIndex    respjson.Field
@@ -418,7 +424,7 @@ func (r *FilePathAnnotation) UnmarshalJSON(data []byte) error {
 
 type FilePathAnnotationFilePath struct {
 	// The ID of the file that was generated.
-	FileID string `json:"file_id,required"`
+	FileID string `json:"file_id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		FileID      respjson.Field
@@ -437,9 +443,9 @@ func (r *FilePathAnnotationFilePath) UnmarshalJSON(data []byte) error {
 // `code_interpreter` tool to generate a file.
 type FilePathDeltaAnnotation struct {
 	// The index of the annotation in the text content part.
-	Index int64 `json:"index,required"`
+	Index int64 `json:"index" api:"required"`
 	// Always `file_path`.
-	Type       constant.FilePath               `json:"type,required"`
+	Type       constant.FilePath               `json:"type" default:"file_path"`
 	EndIndex   int64                           `json:"end_index"`
 	FilePath   FilePathDeltaAnnotationFilePath `json:"file_path"`
 	StartIndex int64                           `json:"start_index"`
@@ -485,7 +491,7 @@ type ImageFile struct {
 	// The [File](https://platform.openai.com/docs/api-reference/files) ID of the image
 	// in the message content. Set `purpose="vision"` when uploading the File if you
 	// need to later display the file content.
-	FileID string `json:"file_id,required"`
+	FileID string `json:"file_id" api:"required"`
 	// Specifies the detail level of the image if specified by the user. `low` uses
 	// fewer tokens, you can opt in to high resolution using `high`.
 	//
@@ -530,7 +536,7 @@ type ImageFileParam struct {
 	// The [File](https://platform.openai.com/docs/api-reference/files) ID of the image
 	// in the message content. Set `purpose="vision"` when uploading the File if you
 	// need to later display the file content.
-	FileID string `json:"file_id,required"`
+	FileID string `json:"file_id" api:"required"`
 	// Specifies the detail level of the image if specified by the user. `low` uses
 	// fewer tokens, you can opt in to high resolution using `high`.
 	//
@@ -550,9 +556,9 @@ func (r *ImageFileParam) UnmarshalJSON(data []byte) error {
 // References an image [File](https://platform.openai.com/docs/api-reference/files)
 // in the content of a message.
 type ImageFileContentBlock struct {
-	ImageFile ImageFile `json:"image_file,required"`
+	ImageFile ImageFile `json:"image_file" api:"required"`
 	// Always `image_file`.
-	Type constant.ImageFile `json:"type,required"`
+	Type constant.ImageFile `json:"type" default:"image_file"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ImageFile   respjson.Field
@@ -582,11 +588,11 @@ func (r ImageFileContentBlock) ToParam() ImageFileContentBlockParam {
 //
 // The properties ImageFile, Type are required.
 type ImageFileContentBlockParam struct {
-	ImageFile ImageFileParam `json:"image_file,omitzero,required"`
+	ImageFile ImageFileParam `json:"image_file,omitzero" api:"required"`
 	// Always `image_file`.
 	//
 	// This field can be elided, and will marshal its zero value as "image_file".
-	Type constant.ImageFile `json:"type,required"`
+	Type constant.ImageFile `json:"type" default:"image_file"`
 	paramObj
 }
 
@@ -637,9 +643,9 @@ const (
 // in the content of a message.
 type ImageFileDeltaBlock struct {
 	// The index of the content part in the message.
-	Index int64 `json:"index,required"`
+	Index int64 `json:"index" api:"required"`
 	// Always `image_file`.
-	Type      constant.ImageFile `json:"type,required"`
+	Type      constant.ImageFile `json:"type" default:"image_file"`
 	ImageFile ImageFileDelta     `json:"image_file"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -660,7 +666,7 @@ func (r *ImageFileDeltaBlock) UnmarshalJSON(data []byte) error {
 type ImageURL struct {
 	// The external URL of the image, must be a supported image types: jpeg, jpg, png,
 	// gif, webp.
-	URL string `json:"url,required" format:"uri"`
+	URL string `json:"url" api:"required" format:"uri"`
 	// Specifies the detail level of the image. `low` uses fewer tokens, you can opt in
 	// to high resolution using `high`. Default value is `auto`
 	//
@@ -704,7 +710,7 @@ const (
 type ImageURLParam struct {
 	// The external URL of the image, must be a supported image types: jpeg, jpg, png,
 	// gif, webp.
-	URL string `json:"url,required" format:"uri"`
+	URL string `json:"url" api:"required" format:"uri"`
 	// Specifies the detail level of the image. `low` uses fewer tokens, you can opt in
 	// to high resolution using `high`. Default value is `auto`
 	//
@@ -723,9 +729,9 @@ func (r *ImageURLParam) UnmarshalJSON(data []byte) error {
 
 // References an image URL in the content of a message.
 type ImageURLContentBlock struct {
-	ImageURL ImageURL `json:"image_url,required"`
+	ImageURL ImageURL `json:"image_url" api:"required"`
 	// The type of the content part.
-	Type constant.ImageURL `json:"type,required"`
+	Type constant.ImageURL `json:"type" default:"image_url"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ImageURL    respjson.Field
@@ -754,11 +760,11 @@ func (r ImageURLContentBlock) ToParam() ImageURLContentBlockParam {
 //
 // The properties ImageURL, Type are required.
 type ImageURLContentBlockParam struct {
-	ImageURL ImageURLParam `json:"image_url,omitzero,required"`
+	ImageURL ImageURLParam `json:"image_url,omitzero" api:"required"`
 	// The type of the content part.
 	//
 	// This field can be elided, and will marshal its zero value as "image_url".
-	Type constant.ImageURL `json:"type,required"`
+	Type constant.ImageURL `json:"type" default:"image_url"`
 	paramObj
 }
 
@@ -778,7 +784,7 @@ type ImageURLDelta struct {
 	Detail ImageURLDeltaDetail `json:"detail"`
 	// The URL of the image, must be a supported image types: jpeg, jpg, png, gif,
 	// webp.
-	URL string `json:"url"`
+	URL string `json:"url" format:"uri"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Detail      respjson.Field
@@ -807,9 +813,9 @@ const (
 // References an image URL in the content of a message.
 type ImageURLDeltaBlock struct {
 	// The index of the content part in the message.
-	Index int64 `json:"index,required"`
+	Index int64 `json:"index" api:"required"`
 	// Always `image_url`.
-	Type     constant.ImageURL `json:"type,required"`
+	Type     constant.ImageURL `json:"type" default:"image_url"`
 	ImageURL ImageURLDelta     `json:"image_url"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -831,48 +837,48 @@ func (r *ImageURLDeltaBlock) UnmarshalJSON(data []byte) error {
 // [thread](https://platform.openai.com/docs/api-reference/threads).
 type Message struct {
 	// The identifier, which can be referenced in API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// If applicable, the ID of the
 	// [assistant](https://platform.openai.com/docs/api-reference/assistants) that
 	// authored this message.
-	AssistantID string `json:"assistant_id,required"`
+	AssistantID string `json:"assistant_id" api:"required"`
 	// A list of files attached to the message, and the tools they were added to.
-	Attachments []MessageAttachment `json:"attachments,required"`
+	Attachments []MessageAttachment `json:"attachments" api:"required"`
 	// The Unix timestamp (in seconds) for when the message was completed.
-	CompletedAt int64 `json:"completed_at,required"`
+	CompletedAt int64 `json:"completed_at" api:"required" format:"unixtime"`
 	// The content of the message in array of text and/or images.
-	Content []MessageContentUnion `json:"content,required"`
+	Content []MessageContentUnion `json:"content" api:"required"`
 	// The Unix timestamp (in seconds) for when the message was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The Unix timestamp (in seconds) for when the message was marked as incomplete.
-	IncompleteAt int64 `json:"incomplete_at,required"`
+	IncompleteAt int64 `json:"incomplete_at" api:"required" format:"unixtime"`
 	// On an incomplete message, details about why the message is incomplete.
-	IncompleteDetails MessageIncompleteDetails `json:"incomplete_details,required"`
+	IncompleteDetails MessageIncompleteDetails `json:"incomplete_details" api:"required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.Metadata `json:"metadata,required"`
+	Metadata shared.Metadata `json:"metadata" api:"required"`
 	// The object type, which is always `thread.message`.
-	Object constant.ThreadMessage `json:"object,required"`
+	Object constant.ThreadMessage `json:"object" default:"thread.message"`
 	// The entity that produced the message. One of `user` or `assistant`.
 	//
 	// Any of "user", "assistant".
-	Role MessageRole `json:"role,required"`
+	Role MessageRole `json:"role" api:"required"`
 	// The ID of the [run](https://platform.openai.com/docs/api-reference/runs)
 	// associated with the creation of this message. Value is `null` when messages are
 	// created manually using the create message or create thread endpoints.
-	RunID string `json:"run_id,required"`
+	RunID string `json:"run_id" api:"required"`
 	// The status of the message, which can be either `in_progress`, `incomplete`, or
 	// `completed`.
 	//
 	// Any of "in_progress", "incomplete", "completed".
-	Status MessageStatus `json:"status,required"`
+	Status MessageStatus `json:"status" api:"required"`
 	// The [thread](https://platform.openai.com/docs/api-reference/threads) ID that
 	// this message belongs to.
-	ThreadID string `json:"thread_id,required"`
+	ThreadID string `json:"thread_id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                respjson.Field
@@ -935,12 +941,12 @@ type MessageAttachmentToolUnion struct {
 }
 
 func (u MessageAttachmentToolUnion) AsCodeInterpreterTool() (v CodeInterpreterTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageAttachmentToolUnion) AsFileSearchTool() (v MessageAttachmentToolFileSearchTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -953,7 +959,7 @@ func (r *MessageAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 
 type MessageAttachmentToolFileSearchTool struct {
 	// The type of tool being defined: `file_search`
-	Type constant.FileSearch `json:"type,required"`
+	Type constant.FileSearch `json:"type" default:"file_search"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -974,7 +980,7 @@ type MessageIncompleteDetails struct {
 	//
 	// Any of "content_filter", "max_tokens", "run_cancelled", "run_expired",
 	// "run_failed".
-	Reason string `json:"reason,required"`
+	Reason string `json:"reason" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Reason      respjson.Field
@@ -1071,22 +1077,22 @@ func (u MessageContentUnion) AsAny() anyMessageContent {
 }
 
 func (u MessageContentUnion) AsImageFile() (v ImageFileContentBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentUnion) AsImageURL() (v ImageURLContentBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentUnion) AsText() (v TextContentBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentUnion) AsRefusal() (v RefusalContentBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1164,22 +1170,22 @@ func (u MessageContentDeltaUnion) AsAny() anyMessageContentDelta {
 }
 
 func (u MessageContentDeltaUnion) AsImageFile() (v ImageFileDeltaBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentDeltaUnion) AsText() (v TextDeltaBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentDeltaUnion) AsRefusal() (v RefusalDeltaBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentDeltaUnion) AsImageURL() (v ImageURLDeltaBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1223,17 +1229,6 @@ func (u MessageContentPartParamUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *MessageContentPartParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *MessageContentPartParamUnion) asAny() any {
-	if !param.IsOmitted(u.OfImageFile) {
-		return u.OfImageFile
-	} else if !param.IsOmitted(u.OfImageURL) {
-		return u.OfImageURL
-	} else if !param.IsOmitted(u.OfText) {
-		return u.OfText
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -1282,9 +1277,9 @@ func init() {
 }
 
 type MessageDeleted struct {
-	ID      string                        `json:"id,required"`
-	Deleted bool                          `json:"deleted,required"`
-	Object  constant.ThreadMessageDeleted `json:"object,required"`
+	ID      string                        `json:"id" api:"required"`
+	Deleted bool                          `json:"deleted" api:"required"`
+	Object  constant.ThreadMessageDeleted `json:"object" default:"thread.message.deleted"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -1336,11 +1331,11 @@ const (
 // streaming.
 type MessageDeltaEvent struct {
 	// The identifier of the message, which can be referenced in API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The delta containing the fields that have changed on the Message.
-	Delta MessageDelta `json:"delta,required"`
+	Delta MessageDelta `json:"delta" api:"required"`
 	// The object type, which is always `thread.message.delta`.
-	Object constant.ThreadMessageDelta `json:"object,required"`
+	Object constant.ThreadMessageDelta `json:"object" default:"thread.message.delta"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -1359,9 +1354,9 @@ func (r *MessageDeltaEvent) UnmarshalJSON(data []byte) error {
 
 // The refusal content generated by the assistant.
 type RefusalContentBlock struct {
-	Refusal string `json:"refusal,required"`
+	Refusal string `json:"refusal" api:"required"`
 	// Always `refusal`.
-	Type constant.Refusal `json:"type,required"`
+	Type constant.Refusal `json:"type" default:"refusal"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Refusal     respjson.Field
@@ -1380,9 +1375,9 @@ func (r *RefusalContentBlock) UnmarshalJSON(data []byte) error {
 // The refusal content that is part of a message.
 type RefusalDeltaBlock struct {
 	// The index of the refusal part in the message.
-	Index int64 `json:"index,required"`
+	Index int64 `json:"index" api:"required"`
 	// Always `refusal`.
-	Type    constant.Refusal `json:"type,required"`
+	Type    constant.Refusal `json:"type" default:"refusal"`
 	Refusal string           `json:"refusal"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -1401,9 +1396,9 @@ func (r *RefusalDeltaBlock) UnmarshalJSON(data []byte) error {
 }
 
 type Text struct {
-	Annotations []AnnotationUnion `json:"annotations,required"`
+	Annotations []AnnotationUnion `json:"annotations" api:"required"`
 	// The data that makes up the text.
-	Value string `json:"value,required"`
+	Value string `json:"value" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Annotations respjson.Field
@@ -1421,9 +1416,9 @@ func (r *Text) UnmarshalJSON(data []byte) error {
 
 // The text content that is part of a message.
 type TextContentBlock struct {
-	Text Text `json:"text,required"`
+	Text Text `json:"text" api:"required"`
 	// Always `text`.
-	Type constant.Text `json:"type,required"`
+	Type constant.Text `json:"type" default:"text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -1444,11 +1439,11 @@ func (r *TextContentBlock) UnmarshalJSON(data []byte) error {
 // The properties Text, Type are required.
 type TextContentBlockParam struct {
 	// Text content to be sent to the model
-	Text string `json:"text,required"`
+	Text string `json:"text" api:"required"`
 	// Always `text`.
 	//
 	// This field can be elided, and will marshal its zero value as "text".
-	Type constant.Text `json:"type,required"`
+	Type constant.Text `json:"type" default:"text"`
 	paramObj
 }
 
@@ -1482,9 +1477,9 @@ func (r *TextDelta) UnmarshalJSON(data []byte) error {
 // The text content that is part of a message.
 type TextDeltaBlock struct {
 	// The index of the content part in the message.
-	Index int64 `json:"index,required"`
+	Index int64 `json:"index" api:"required"`
 	// Always `text`.
-	Type constant.Text `json:"type,required"`
+	Type constant.Text `json:"type" default:"text"`
 	Text TextDelta     `json:"text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -1504,7 +1499,7 @@ func (r *TextDeltaBlock) UnmarshalJSON(data []byte) error {
 
 type BetaThreadMessageNewParams struct {
 	// The text contents of the message.
-	Content BetaThreadMessageNewParamsContentUnion `json:"content,omitzero,required"`
+	Content BetaThreadMessageNewParamsContentUnion `json:"content,omitzero" api:"required"`
 	// The role of the entity that is creating the message. Allowed values include:
 	//
 	//   - `user`: Indicates the message is sent by an actual user and should be used in
@@ -1513,7 +1508,7 @@ type BetaThreadMessageNewParams struct {
 	//     value to insert messages from the assistant into the conversation.
 	//
 	// Any of "user", "assistant".
-	Role BetaThreadMessageNewParamsRole `json:"role,omitzero,required"`
+	Role BetaThreadMessageNewParamsRole `json:"role,omitzero" api:"required"`
 	// A list of files attached to the message, and the tools they should be added to.
 	Attachments []BetaThreadMessageNewParamsAttachment `json:"attachments,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
@@ -1548,15 +1543,6 @@ func (u BetaThreadMessageNewParamsContentUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *BetaThreadMessageNewParamsContentUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *BetaThreadMessageNewParamsContentUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfContentParts) {
-		return &u.OfArrayOfContentParts
-	}
-	return nil
 }
 
 // The role of the entity that is creating the message. Allowed values include:
@@ -1604,15 +1590,6 @@ func (u *BetaThreadMessageNewParamsAttachmentToolUnion) UnmarshalJSON(data []byt
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *BetaThreadMessageNewParamsAttachmentToolUnion) asAny() any {
-	if !param.IsOmitted(u.OfCodeInterpreter) {
-		return u.OfCodeInterpreter
-	} else if !param.IsOmitted(u.OfFileSearch) {
-		return u.OfFileSearch
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u BetaThreadMessageNewParamsAttachmentToolUnion) GetType() *string {
 	if vt := u.OfCodeInterpreter; vt != nil {
@@ -1641,7 +1618,7 @@ func NewBetaThreadMessageNewParamsAttachmentToolFileSearch() BetaThreadMessageNe
 // [NewBetaThreadMessageNewParamsAttachmentToolFileSearch].
 type BetaThreadMessageNewParamsAttachmentToolFileSearch struct {
 	// The type of tool being defined: `file_search`
-	Type constant.FileSearch `json:"type,required"`
+	Type constant.FileSearch `json:"type" default:"file_search"`
 	paramObj
 }
 

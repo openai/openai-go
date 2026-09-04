@@ -15,12 +15,6 @@ import (
 	"github.com/openai/openai-go/v3/shared"
 )
 
-// Mock function to simulate weather data retrieval
-func getWeather(_ string) string {
-	// In a real implementation, this function would call a weather API
-	return "Sunny, 25°C"
-}
-
 // Since the streamed response is hardcoded, we can hardcode the expected tool call
 var expectedToolCall = openai.ChatCompletionMessageFunctionToolCallFunction{
 	Arguments: `{"location":"Santorini, Greece"}`,
@@ -123,7 +117,7 @@ func TestStreamingAccumulatorWithToolCalls(t *testing.T) {
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
 
-	if acc.Choices == nil || len(acc.Choices) == 0 {
+	if len(acc.Choices) == 0 {
 		t.Fatal("No choices in accumulation")
 	}
 
@@ -139,6 +133,228 @@ func TestStreamingAccumulatorWithToolCalls(t *testing.T) {
 
 	if !anythingFinished {
 		t.Fatalf("No finish events sent in accumulation")
+	}
+}
+
+func TestAccumulateTokenDetails(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			res, err := next(req)
+			if err != nil {
+				return nil, err
+			}
+			res.Body = io.NopCloser(strings.NewReader(mockResponseBody))
+			return res, nil
+		}),
+	)
+
+	stream := client.Chat.Completions.NewStreaming(context.TODO(), openai.ChatCompletionNewParams{
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			{OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("Tell me about Greece"),
+				},
+			}},
+		},
+		Model: openai.ChatModelGPT4o,
+		StreamOptions: openai.ChatCompletionStreamOptionsParam{
+			IncludeUsage: openai.Bool(true),
+		},
+	})
+
+	acc := openai.ChatCompletionAccumulator{}
+	for stream.Next() {
+		chunk := stream.Current()
+		if !acc.AddChunk(chunk) {
+			t.Fatal("Failed to accumulate chunk")
+		}
+	}
+
+	if err := stream.Err(); err != nil {
+		t.Fatalf("Stream error: %v", err)
+	}
+
+	// First chunk: prompt=10, completion=100, total=110
+	// + Second chunk: prompt=0, completion=50, total=50
+	// = Accumulated: prompt=10, completion=150, total=160
+	if acc.Usage.PromptTokens != 10 {
+		t.Errorf("PromptTokens: expected 10, got %d", acc.Usage.PromptTokens)
+	}
+	if acc.Usage.CompletionTokens != 150 {
+		t.Errorf("CompletionTokens: expected 150, got %d", acc.Usage.CompletionTokens)
+	}
+	if acc.Usage.TotalTokens != 160 {
+		t.Errorf("TotalTokens: expected 160, got %d", acc.Usage.TotalTokens)
+	}
+
+	// First chunk: reasoning=5, audio=2, accepted=8, rejected=1
+	// + Second chunk: reasoning=3, audio=1, accepted=4, rejected=2
+	// = Accumulated: reasoning=8, audio=3, accepted=12, rejected=3
+	if acc.Usage.CompletionTokensDetails.ReasoningTokens != 8 {
+		t.Errorf("CompletionTokensDetails.ReasoningTokens: expected 8, got %d", acc.Usage.CompletionTokensDetails.ReasoningTokens)
+	}
+	if acc.Usage.CompletionTokensDetails.AudioTokens != 3 {
+		t.Errorf("CompletionTokensDetails.AudioTokens: expected 3, got %d", acc.Usage.CompletionTokensDetails.AudioTokens)
+	}
+	if acc.Usage.CompletionTokensDetails.AcceptedPredictionTokens != 12 {
+		t.Errorf("CompletionTokensDetails.AcceptedPredictionTokens: expected 12, got %d", acc.Usage.CompletionTokensDetails.AcceptedPredictionTokens)
+	}
+	if acc.Usage.CompletionTokensDetails.RejectedPredictionTokens != 3 {
+		t.Errorf("CompletionTokensDetails.RejectedPredictionTokens: expected 3, got %d", acc.Usage.CompletionTokensDetails.RejectedPredictionTokens)
+	}
+
+	// First chunk: audio=3, cached=20
+	// + Second chunk: audio=0, cached=10
+	// = Accumulated: audio=3, cached=30
+	if acc.Usage.PromptTokensDetails.AudioTokens != 3 {
+		t.Errorf("PromptTokensDetails.AudioTokens: expected 3, got %d", acc.Usage.PromptTokensDetails.AudioTokens)
+	}
+	if acc.Usage.PromptTokensDetails.CachedTokens != 30 {
+		t.Errorf("PromptTokensDetails.CachedTokens: expected 30, got %d", acc.Usage.PromptTokensDetails.CachedTokens)
+	}
+}
+
+func TestAccumulatorNegativeToolCallIndex(t *testing.T) {
+	acc := openai.ChatCompletionAccumulator{}
+	chunk := openai.ChatCompletionChunk{}
+
+	// Some OpenAI-compatible providers (e.g., AWS Bedrock) return tool calls with index -1.
+	json := `{"id":"test","object":"chat.completion.chunk","created":0,"model":"test","choices":[{"index":0,"delta":{"tool_calls":[{"id":"call_123","index":-1,"type":"function","function":{"name":"test_func","arguments":"{}"}}]}}]}`
+	if err := chunk.UnmarshalJSON([]byte(json)); err != nil {
+		t.Fatalf("Failed to unmarshal chunk: %v", err)
+	}
+
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	if len(acc.Choices) != 1 || len(acc.Choices[0].Message.ToolCalls) != 1 {
+		t.Fatal("Expected 1 choice with 1 tool call")
+	}
+	if acc.Choices[0].Message.ToolCalls[0].Function.Name != "test_func" {
+		t.Errorf("Expected tool call name 'test_func', got %q", acc.Choices[0].Message.ToolCalls[0].Function.Name)
+	}
+}
+
+func TestAccumulatorEmptyToolCallsArray(t *testing.T) {
+	acc := openai.ChatCompletionAccumulator{}
+	chunkWithEmptyToolCalls := openai.ChatCompletionChunk{}
+	if err := chunkWithEmptyToolCalls.UnmarshalJSON([]byte(`{"id":"test","choices":[{"index":0,"delta":{"tool_calls":[]}}]}`)); err != nil {
+		t.Fatalf("Failed to unmarshal chunk: %v", err)
+	}
+	if !acc.AddChunk(chunkWithEmptyToolCalls) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	finishedChunk := openai.ChatCompletionChunk{}
+	if err := finishedChunk.UnmarshalJSON([]byte(`{"id":"test","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}`)); err != nil {
+		t.Fatalf("Failed to unmarshal chunk: %v", err)
+	}
+	if !acc.AddChunk(finishedChunk) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	if toolCall, ok := acc.JustFinishedToolCall(); ok {
+		t.Fatalf("JustFinishedToolCall returned unexpected tool call: %+v", toolCall)
+	}
+}
+
+func TestAccumulatorNullToolCalls(t *testing.T) {
+	acc := openai.ChatCompletionAccumulator{}
+	chunkWithNullToolCalls := openai.ChatCompletionChunk{}
+	if err := chunkWithNullToolCalls.UnmarshalJSON([]byte(`{"id":"test","choices":[{"index":0,"delta":{"tool_calls":null}}]}`)); err != nil {
+		t.Fatalf("Failed to unmarshal chunk: %v", err)
+	}
+	if !acc.AddChunk(chunkWithNullToolCalls) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	finishedChunk := openai.ChatCompletionChunk{}
+	if err := finishedChunk.UnmarshalJSON([]byte(`{"id":"test","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}`)); err != nil {
+		t.Fatalf("Failed to unmarshal chunk: %v", err)
+	}
+	if !acc.AddChunk(finishedChunk) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	if toolCall, ok := acc.JustFinishedToolCall(); ok {
+		t.Fatalf("JustFinishedToolCall returned unexpected tool call: %+v", toolCall)
+	}
+}
+
+func TestAccumulatorToolCallWithEmptyContent(t *testing.T) {
+	acc := openai.ChatCompletionAccumulator{}
+
+	toolCallChunk := openai.ChatCompletionChunk{}
+	// Some OpenAI-compatible providers send an explicit empty content field
+	// alongside a real tool call.
+	toolCallJSON := `{"id":"test","choices":[{"index":0,"delta":{"content":"","tool_calls":[{"id":"call_1","index":0,"type":"function","function":{"name":"search","arguments":"{}"}}]}}]}`
+	if err := toolCallChunk.UnmarshalJSON([]byte(toolCallJSON)); err != nil {
+		t.Fatalf("Failed to unmarshal tool call chunk: %v", err)
+	}
+	if !acc.AddChunk(toolCallChunk) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	finishChunk := openai.ChatCompletionChunk{}
+	finishJSON := `{"id":"test","choices":[{"index":0,"delta":{},"finish_reason":"tool_calls"}]}`
+	if err := finishChunk.UnmarshalJSON([]byte(finishJSON)); err != nil {
+		t.Fatalf("Failed to unmarshal finish chunk: %v", err)
+	}
+	if !acc.AddChunk(finishChunk) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	if _, ok := acc.JustFinishedContent(); ok {
+		t.Fatal("JustFinishedContent fired for an empty content field with a tool call")
+	}
+
+	toolCall, ok := acc.JustFinishedToolCall()
+	if !ok {
+		t.Fatal("JustFinishedToolCall did not fire after the finishing chunk")
+	}
+	if toolCall.ID != "call_1" || toolCall.Name != "search" || toolCall.Arguments != "{}" {
+		t.Fatalf("Found unexpected tool call: %#v", toolCall)
+	}
+}
+
+func TestAccumulatorToolCallWithEmptyContentAtNonzeroChoice(t *testing.T) {
+	acc := openai.ChatCompletionAccumulator{}
+
+	toolCallChunk := openai.ChatCompletionChunk{}
+	toolCallJSON := `{"id":"test","choices":[{"index":1,"delta":{"content":"","tool_calls":[{"id":"call_1","index":0,"type":"function","function":{"name":"search","arguments":"{}"}}]}}]}`
+	if err := toolCallChunk.UnmarshalJSON([]byte(toolCallJSON)); err != nil {
+		t.Fatalf("Failed to unmarshal tool call chunk: %v", err)
+	}
+	if !acc.AddChunk(toolCallChunk) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	finishChunk := openai.ChatCompletionChunk{}
+	finishJSON := `{"id":"test","choices":[{"index":1,"delta":{},"finish_reason":"tool_calls"}]}`
+	if err := finishChunk.UnmarshalJSON([]byte(finishJSON)); err != nil {
+		t.Fatalf("Failed to unmarshal finish chunk: %v", err)
+	}
+	if !acc.AddChunk(finishChunk) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	toolCall, ok := acc.JustFinishedToolCall()
+	if !ok {
+		t.Fatal("JustFinishedToolCall did not fire after the finishing chunk")
+	}
+	if toolCall.ID != "call_1" || toolCall.Name != "search" || toolCall.Arguments != "{}" {
+		t.Fatalf("Found unexpected tool call: %#v", toolCall)
 	}
 }
 
@@ -533,7 +749,9 @@ data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.c
 
 data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.chunk","created":1725392480,"model":"gpt-4o-2024-05-13","system_fingerprint":"fp_157b3831f5","choices":[{"index":0,"delta":{},"logprobs":null,"finish_reason":"tool_calls"}],"usage":null}
 
-data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.chunk","created":1725392480,"model":"gpt-4o-2024-05-13","system_fingerprint":"fp_157b3831f5","choices":[],"usage":{"prompt_tokens":57,"completion_tokens":202,"total_tokens":259}}
+data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.chunk","created":1725392480,"model":"gpt-4o-2024-05-13","system_fingerprint":"fp_157b3831f5","choices":[],"usage":{"prompt_tokens":10,"completion_tokens":100,"total_tokens":110,"completion_tokens_details":{"reasoning_tokens":5,"audio_tokens":2,"accepted_prediction_tokens":8,"rejected_prediction_tokens":1},"prompt_tokens_details":{"audio_tokens":3,"cached_tokens":20}}}
+
+data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.chunk","created":1725392480,"model":"gpt-4o-2024-05-13","system_fingerprint":"fp_157b3831f5","choices":[],"usage":{"prompt_tokens":0,"completion_tokens":50,"total_tokens":50,"completion_tokens_details":{"reasoning_tokens":3,"audio_tokens":1,"accepted_prediction_tokens":4,"rejected_prediction_tokens":2},"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":10}}}
 
 data: [DONE]
 

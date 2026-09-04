@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -24,6 +23,9 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Files are used to upload documents that can be used with features like
+// Assistants and Fine-tuning.
+//
 // FileService contains methods and other services that help with interacting with
 // the openai API.
 //
@@ -39,54 +41,63 @@ type FileService struct {
 // is one), and before any request-specific options.
 func NewFileService(opts ...option.RequestOption) (r FileService) {
 	r = FileService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
 // Upload a file that can be used across various endpoints. Individual files can be
-// up to 512 MB, and the size of all files uploaded by one organization can be up
-// to 1 TB.
+// up to 512 MB, and each project can store up to 2.5 TB of files in total. There
+// is no organization-wide storage limit. Uploads to this endpoint are rate-limited
+// to 1,000 requests per minute per authenticated user.
 //
-// The Assistants API supports files up to 2 million tokens and of specific file
-// types. See the
-// [Assistants Tools guide](https://platform.openai.com/docs/assistants/tools) for
-// details.
-//
-// The Fine-tuning API only supports `.jsonl` files. The input also has certain
-// required formats for fine-tuning
-// [chat](https://platform.openai.com/docs/api-reference/fine-tuning/chat-input) or
-// [completions](https://platform.openai.com/docs/api-reference/fine-tuning/completions-input)
-// models.
-//
-// The Batch API only supports `.jsonl` files up to 200 MB in size. The input also
-// has a specific required
-// [format](https://platform.openai.com/docs/api-reference/batch/request-input).
+//   - The Assistants API supports files up to 2 million tokens and of specific file
+//     types. See the
+//     [Assistants Tools guide](https://platform.openai.com/docs/assistants/tools)
+//     for details.
+//   - The Fine-tuning API only supports `.jsonl` files. The input also has certain
+//     required formats for fine-tuning
+//     [chat](https://platform.openai.com/docs/api-reference/fine-tuning/chat-input)
+//     or
+//     [completions](https://platform.openai.com/docs/api-reference/fine-tuning/completions-input)
+//     models.
+//   - The Batch API only supports `.jsonl` files up to 200 MB in size. The input
+//     also has a specific required
+//     [format](https://platform.openai.com/docs/api-reference/batch/request-input).
+//   - For Retrieval or `file_search` ingestion, upload files here first. If you need
+//     to attach multiple uploaded files to the same vector store, use
+//     [`/vector_stores/{vector_store_id}/file_batches`](https://platform.openai.com/docs/api-reference/vector-stores-file-batches/createBatch)
+//     instead of attaching them one by one. Vector store attachment has separate
+//     limits from file upload, including 2,000 attached files per minute per
+//     organization.
 //
 // Please [contact us](https://help.openai.com/) if you need to increase these
 // storage limits.
 func (r *FileService) New(ctx context.Context, body FileNewParams, opts ...option.RequestOption) (res *FileObject, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "files"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Returns information about a specific file.
 func (r *FileService) Get(ctx context.Context, fileID string, opts ...option.RequestOption) (res *FileObject, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if fileID == "" {
 		err = errors.New("missing required file_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("files/%s", fileID)
+	path := requestconfig.FormatPath("files/%s", fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Returns a list of files.
 func (r *FileService) List(ctx context.Context, query FileListParams, opts ...option.RequestOption) (res *pagination.CursorPage[FileObject], err error) {
 	var raw *http.Response
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	path := "files"
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -108,33 +119,35 @@ func (r *FileService) ListAutoPaging(ctx context.Context, query FileListParams, 
 
 // Delete a file and remove it from all vector stores.
 func (r *FileService) Delete(ctx context.Context, fileID string, opts ...option.RequestOption) (res *FileDeleted, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if fileID == "" {
 		err = errors.New("missing required file_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("files/%s", fileID)
+	path := requestconfig.FormatPath("files/%s", fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
-// Returns the contents of the specified file.
+// Returns a response containing the contents of the specified file.
 func (r *FileService) Content(ctx context.Context, fileID string, opts ...option.RequestOption) (res *http.Response, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "application/binary")}, opts...)
 	if fileID == "" {
 		err = errors.New("missing required file_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("files/%s/content", fileID)
+	path := requestconfig.FormatPath("files/%s/content", fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 type FileDeleted struct {
-	ID      string        `json:"id,required"`
-	Deleted bool          `json:"deleted,required"`
-	Object  constant.File `json:"object,required"`
+	ID      string        `json:"id" api:"required"`
+	Deleted bool          `json:"deleted" api:"required"`
+	Object  constant.File `json:"object" default:"file"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -154,31 +167,31 @@ func (r *FileDeleted) UnmarshalJSON(data []byte) error {
 // The `File` object represents a document that has been uploaded to OpenAI.
 type FileObject struct {
 	// The file identifier, which can be referenced in the API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The size of the file, in bytes.
-	Bytes int64 `json:"bytes,required"`
+	Bytes int64 `json:"bytes" api:"required"`
 	// The Unix timestamp (in seconds) for when the file was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The name of the file.
-	Filename string `json:"filename,required"`
+	Filename string `json:"filename" api:"required"`
 	// The object type, which is always `file`.
-	Object constant.File `json:"object,required"`
+	Object constant.File `json:"object" default:"file"`
 	// The intended purpose of the file. Supported values are `assistants`,
 	// `assistants_output`, `batch`, `batch_output`, `fine-tune`, `fine-tune-results`,
 	// `vision`, and `user_data`.
 	//
 	// Any of "assistants", "assistants_output", "batch", "batch_output", "fine-tune",
 	// "fine-tune-results", "vision", "user_data".
-	Purpose FileObjectPurpose `json:"purpose,required"`
+	Purpose FileObjectPurpose `json:"purpose" api:"required"`
 	// Deprecated. The current status of the file, which can be either `uploaded`,
 	// `processed`, or `error`.
 	//
 	// Any of "uploaded", "processed", "error".
 	//
 	// Deprecated: deprecated
-	Status FileObjectStatus `json:"status,required"`
+	Status FileObjectStatus `json:"status" api:"required"`
 	// The Unix timestamp (in seconds) for when the file will expire.
-	ExpiresAt int64 `json:"expires_at"`
+	ExpiresAt int64 `json:"expires_at" format:"unixtime"`
 	// Deprecated. For details on why a fine-tuning training file failed validation,
 	// see the `error` field on `fine_tuning.job`.
 	//
@@ -232,10 +245,14 @@ const (
 	FileObjectStatusError     FileObjectStatus = "error"
 )
 
-// The intended purpose of the uploaded file. One of: - `assistants`: Used in the
-// Assistants API - `batch`: Used in the Batch API - `fine-tune`: Used for
-// fine-tuning - `vision`: Images used for vision fine-tuning - `user_data`:
-// Flexible file type for any purpose - `evals`: Used for eval data sets
+// The intended purpose of the uploaded file. One of:
+//
+// - `assistants`: Used in the Assistants API
+// - `batch`: Used in the Batch API
+// - `fine-tune`: Used for fine-tuning
+// - `vision`: Images used for vision fine-tuning
+// - `user_data`: Flexible file type for any purpose
+// - `evals`: Used for eval data sets
 type FilePurpose string
 
 const (
@@ -249,14 +266,18 @@ const (
 
 type FileNewParams struct {
 	// The File object (not file name) to be uploaded.
-	File io.Reader `json:"file,omitzero,required" format:"binary"`
-	// The intended purpose of the uploaded file. One of: - `assistants`: Used in the
-	// Assistants API - `batch`: Used in the Batch API - `fine-tune`: Used for
-	// fine-tuning - `vision`: Images used for vision fine-tuning - `user_data`:
-	// Flexible file type for any purpose - `evals`: Used for eval data sets
+	File io.Reader `json:"file,omitzero" api:"required" format:"binary"`
+	// The intended purpose of the uploaded file. One of:
+	//
+	// - `assistants`: Used in the Assistants API
+	// - `batch`: Used in the Batch API
+	// - `fine-tune`: Used for fine-tuning
+	// - `vision`: Images used for vision fine-tuning
+	// - `user_data`: Flexible file type for any purpose
+	// - `evals`: Used for eval data sets
 	//
 	// Any of "assistants", "batch", "fine-tune", "vision", "user_data", "evals".
-	Purpose FilePurpose `json:"purpose,omitzero,required"`
+	Purpose FilePurpose `json:"purpose,omitzero" api:"required"`
 	// The expiration policy for a file. By default, files with `purpose=batch` expire
 	// after 30 days and all other files are persisted until they are manually deleted.
 	ExpiresAfter FileNewParamsExpiresAfter `json:"expires_after,omitzero"`
@@ -271,7 +292,7 @@ func (r FileNewParams) MarshalMultipart() (data []byte, contentType string, err 
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()
@@ -288,12 +309,12 @@ func (r FileNewParams) MarshalMultipart() (data []byte, contentType string, err 
 type FileNewParamsExpiresAfter struct {
 	// The number of seconds after the anchor time that the file will expire. Must be
 	// between 3600 (1 hour) and 2592000 (30 days).
-	Seconds int64 `json:"seconds,required"`
+	Seconds int64 `json:"seconds" api:"required"`
 	// Anchor timestamp after which the expiration policy applies. Supported anchors:
 	// `created_at`.
 	//
 	// This field can be elided, and will marshal its zero value as "created_at".
-	Anchor constant.CreatedAt `json:"anchor,required"`
+	Anchor constant.CreatedAt `json:"anchor" default:"created_at"`
 	paramObj
 }
 

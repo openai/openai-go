@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package realtime_test
 
@@ -27,6 +27,7 @@ func TestClientSecretNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Realtime.ClientSecrets.New(context.TODO(), realtime.ClientSecretNewParams{
 		ExpiresAfter: realtime.ClientSecretNewParamsExpiresAfter{
@@ -47,9 +48,12 @@ func TestClientSecretNewWithOptionalParams(t *testing.T) {
 							Type: realtime.NoiseReductionTypeNearField,
 						},
 						Transcription: realtime.AudioTranscriptionParam{
-							Language: openai.String("language"),
-							Model:    realtime.AudioTranscriptionModelWhisper1,
-							Prompt:   openai.String("prompt"),
+							Delay:     realtime.AudioTranscriptionDelayMinimal,
+							Keywords:  []string{"string"},
+							Language:  openai.String("language"),
+							Languages: []string{"string"},
+							Model:     realtime.AudioTranscriptionModelWhisper1,
+							Prompt:    openai.String("prompt"),
 						},
 						TurnDetection: realtime.RealtimeAudioInputTurnDetectionUnionParam{
 							OfServerVad: &realtime.RealtimeAudioInputTurnDetectionServerVadParam{
@@ -70,16 +74,19 @@ func TestClientSecretNewWithOptionalParams(t *testing.T) {
 							},
 						},
 						Speed: openai.Float(0.25),
-						Voice: realtime.RealtimeAudioConfigOutputVoiceAlloy,
+						Voice: realtime.RealtimeAudioConfigOutputVoiceUnionParam{
+							OfRealtimeAudioConfigOutputVoiceString2: openai.String("alloy"),
+						},
 					},
 				},
 				Include:      []string{"item.input_audio_transcription.logprobs"},
 				Instructions: openai.String("instructions"),
 				MaxOutputTokens: realtime.RealtimeSessionCreateRequestMaxOutputTokensUnionParam{
-					OfInt: openai.Int(0),
+					OfInf: constant.ValueOf[constant.Inf](),
 				},
-				Model:            realtime.RealtimeSessionCreateRequestModelGPTRealtime,
-				OutputModalities: []string{"text"},
+				Model:             realtime.RealtimeSessionCreateRequestModelGPTRealtime,
+				OutputModalities:  []string{"text"},
+				ParallelToolCalls: openai.Bool(true),
 				Prompt: responses.ResponsePromptParam{
 					ID: "id",
 					Variables: map[string]responses.ResponsePromptVariableUnionParam{
@@ -89,6 +96,9 @@ func TestClientSecretNewWithOptionalParams(t *testing.T) {
 					},
 					Version: openai.String("version"),
 				},
+				Reasoning: realtime.RealtimeReasoningParam{
+					Effort: realtime.RealtimeReasoningEffortMinimal,
+				},
 				ToolChoice: realtime.RealtimeToolChoiceConfigUnionParam{
 					OfToolChoiceMode: openai.Opt(responses.ToolChoiceOptionsNone),
 				},
@@ -96,7 +106,7 @@ func TestClientSecretNewWithOptionalParams(t *testing.T) {
 					OfFunction: &realtime.RealtimeFunctionToolParam{
 						Description: openai.String("description"),
 						Name:        openai.String("name"),
-						Parameters:  map[string]interface{}{},
+						Parameters:  map[string]any{},
 						Type:        realtime.RealtimeFunctionToolTypeFunction,
 					},
 				}},

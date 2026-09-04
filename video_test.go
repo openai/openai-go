@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -28,13 +28,16 @@ func TestVideoNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Videos.New(context.TODO(), openai.VideoNewParams{
-		Prompt:         "x",
-		InputReference: io.Reader(bytes.NewBuffer([]byte("some file contents"))),
-		Model:          openai.VideoModelSora2,
-		Seconds:        openai.VideoSeconds4,
-		Size:           openai.VideoSize720x1280,
+		Prompt: "x",
+		InputReference: openai.VideoNewParamsInputReferenceUnion{
+			OfFile: io.Reader(bytes.NewBuffer([]byte("Example data"))),
+		},
+		Model:   openai.VideoModelSora2,
+		Seconds: openai.VideoSeconds4,
+		Size:    openai.VideoSize720x1280,
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -56,6 +59,7 @@ func TestVideoGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Videos.Get(context.TODO(), "video_123")
 	if err != nil {
@@ -78,6 +82,7 @@ func TestVideoListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Videos.List(context.TODO(), openai.VideoListParams{
 		After: openai.String("after"),
@@ -104,8 +109,35 @@ func TestVideoDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Videos.Delete(context.TODO(), "video_123")
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestVideoNewCharacter(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
+	)
+	_, err := client.Videos.NewCharacter(context.TODO(), openai.VideoNewCharacterParams{
+		Name:  "x",
+		Video: io.Reader(bytes.NewBuffer([]byte("Example data"))),
+	})
 	if err != nil {
 		var apierr *openai.Error
 		if errors.As(err, &apierr) {
@@ -118,13 +150,16 @@ func TestVideoDelete(t *testing.T) {
 func TestVideoDownloadContentWithOptionalParams(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
-		w.Write([]byte("abc"))
+		if _, err := w.Write([]byte("abc")); err != nil {
+			t.Errorf("write response body: %v", err)
+		}
 	}))
 	defer server.Close()
 	baseURL := server.URL
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	resp, err := client.Videos.DownloadContent(
 		context.TODO(),
@@ -140,7 +175,11 @@ func TestVideoDownloadContentWithOptionalParams(t *testing.T) {
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			t.Errorf("close response body: %v", closeErr)
+		}
+	}()
 
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -155,6 +194,86 @@ func TestVideoDownloadContentWithOptionalParams(t *testing.T) {
 	}
 }
 
+func TestVideoEdit(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
+	)
+	_, err := client.Videos.Edit(context.TODO(), openai.VideoEditParams{
+		Prompt: "x",
+		Video: openai.VideoEditParamsVideoUnion{
+			OfFile: io.Reader(bytes.NewBuffer([]byte("Example data"))),
+		},
+	})
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestVideoExtend(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
+	)
+	_, err := client.Videos.Extend(context.TODO(), openai.VideoExtendParams{
+		Prompt:  "x",
+		Seconds: openai.VideoSeconds4,
+		Video: openai.VideoExtendParamsVideoUnion{
+			OfFile: io.Reader(bytes.NewBuffer([]byte("Example data"))),
+		},
+	})
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestVideoGetCharacter(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
+	)
+	_, err := client.Videos.GetCharacter(context.TODO(), "char_123")
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
 func TestVideoRemix(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -166,6 +285,7 @@ func TestVideoRemix(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Videos.Remix(
 		context.TODO(),

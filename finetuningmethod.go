@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/packages/respjson"
@@ -27,7 +28,7 @@ type FineTuningMethodService struct {
 // options (if there is one), and before any request-specific options.
 func NewFineTuningMethodService(opts ...option.RequestOption) (r FineTuningMethodService) {
 	r = FineTuningMethodService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
@@ -92,12 +93,12 @@ type DpoHyperparametersBatchSizeUnionResp struct {
 }
 
 func (u DpoHyperparametersBatchSizeUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u DpoHyperparametersBatchSizeUnionResp) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -129,12 +130,12 @@ type DpoHyperparametersBetaUnionResp struct {
 }
 
 func (u DpoHyperparametersBetaUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u DpoHyperparametersBetaUnionResp) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -166,12 +167,12 @@ type DpoHyperparametersLearningRateMultiplierUnionResp struct {
 }
 
 func (u DpoHyperparametersLearningRateMultiplierUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u DpoHyperparametersLearningRateMultiplierUnionResp) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -203,12 +204,12 @@ type DpoHyperparametersNEpochsUnionResp struct {
 }
 
 func (u DpoHyperparametersNEpochsUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u DpoHyperparametersNEpochsUnionResp) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -261,15 +262,6 @@ func (u *DpoHyperparametersBatchSizeUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *DpoHyperparametersBatchSizeUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfInt) {
-		return &u.OfInt.Value
-	}
-	return nil
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -285,15 +277,6 @@ func (u DpoHyperparametersBetaUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *DpoHyperparametersBetaUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *DpoHyperparametersBetaUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfFloat) {
-		return &u.OfFloat.Value
-	}
-	return nil
 }
 
 // Only one field can be non-zero.
@@ -313,15 +296,6 @@ func (u *DpoHyperparametersLearningRateMultiplierUnion) UnmarshalJSON(data []byt
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *DpoHyperparametersLearningRateMultiplierUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfFloat) {
-		return &u.OfFloat.Value
-	}
-	return nil
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -337,15 +311,6 @@ func (u DpoHyperparametersNEpochsUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *DpoHyperparametersNEpochsUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *DpoHyperparametersNEpochsUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfInt) {
-		return &u.OfInt.Value
-	}
-	return nil
 }
 
 // Configuration for the DPO fine-tuning method.
@@ -462,12 +427,12 @@ type ReinforcementHyperparametersBatchSizeUnionResp struct {
 }
 
 func (u ReinforcementHyperparametersBatchSizeUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementHyperparametersBatchSizeUnionResp) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -499,12 +464,12 @@ type ReinforcementHyperparametersComputeMultiplierUnionResp struct {
 }
 
 func (u ReinforcementHyperparametersComputeMultiplierUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementHyperparametersComputeMultiplierUnionResp) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -536,12 +501,12 @@ type ReinforcementHyperparametersEvalIntervalUnionResp struct {
 }
 
 func (u ReinforcementHyperparametersEvalIntervalUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementHyperparametersEvalIntervalUnionResp) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -573,12 +538,12 @@ type ReinforcementHyperparametersEvalSamplesUnionResp struct {
 }
 
 func (u ReinforcementHyperparametersEvalSamplesUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementHyperparametersEvalSamplesUnionResp) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -610,12 +575,12 @@ type ReinforcementHyperparametersLearningRateMultiplierUnionResp struct {
 }
 
 func (u ReinforcementHyperparametersLearningRateMultiplierUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementHyperparametersLearningRateMultiplierUnionResp) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -649,12 +614,12 @@ type ReinforcementHyperparametersNEpochsUnionResp struct {
 }
 
 func (u ReinforcementHyperparametersNEpochsUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementHyperparametersNEpochsUnionResp) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -724,15 +689,6 @@ func (u *ReinforcementHyperparametersBatchSizeUnion) UnmarshalJSON(data []byte) 
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ReinforcementHyperparametersBatchSizeUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfInt) {
-		return &u.OfInt.Value
-	}
-	return nil
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -748,15 +704,6 @@ func (u ReinforcementHyperparametersComputeMultiplierUnion) MarshalJSON() ([]byt
 }
 func (u *ReinforcementHyperparametersComputeMultiplierUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ReinforcementHyperparametersComputeMultiplierUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfFloat) {
-		return &u.OfFloat.Value
-	}
-	return nil
 }
 
 // Only one field can be non-zero.
@@ -776,15 +723,6 @@ func (u *ReinforcementHyperparametersEvalIntervalUnion) UnmarshalJSON(data []byt
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ReinforcementHyperparametersEvalIntervalUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfInt) {
-		return &u.OfInt.Value
-	}
-	return nil
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -800,15 +738,6 @@ func (u ReinforcementHyperparametersEvalSamplesUnion) MarshalJSON() ([]byte, err
 }
 func (u *ReinforcementHyperparametersEvalSamplesUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ReinforcementHyperparametersEvalSamplesUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfInt) {
-		return &u.OfInt.Value
-	}
-	return nil
 }
 
 // Only one field can be non-zero.
@@ -828,15 +757,6 @@ func (u *ReinforcementHyperparametersLearningRateMultiplierUnion) UnmarshalJSON(
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ReinforcementHyperparametersLearningRateMultiplierUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfFloat) {
-		return &u.OfFloat.Value
-	}
-	return nil
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -854,19 +774,10 @@ func (u *ReinforcementHyperparametersNEpochsUnion) UnmarshalJSON(data []byte) er
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ReinforcementHyperparametersNEpochsUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfInt) {
-		return &u.OfInt.Value
-	}
-	return nil
-}
-
 // Configuration for the reinforcement fine-tuning method.
 type ReinforcementMethod struct {
 	// The grader used for the fine-tuning job.
-	Grader ReinforcementMethodGraderUnion `json:"grader,required"`
+	Grader ReinforcementMethodGraderUnion `json:"grader" api:"required"`
 	// The hyperparameters used for the reinforcement fine-tuning job.
 	Hyperparameters ReinforcementHyperparametersResp `json:"hyperparameters"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -941,27 +852,27 @@ type ReinforcementMethodGraderUnion struct {
 }
 
 func (u ReinforcementMethodGraderUnion) AsStringCheckGrader() (v StringCheckGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementMethodGraderUnion) AsTextSimilarityGrader() (v TextSimilarityGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementMethodGraderUnion) AsPythonGrader() (v PythonGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementMethodGraderUnion) AsScoreModelGrader() (v ScoreModelGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementMethodGraderUnion) AsMultiGrader() (v MultiGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1003,7 +914,7 @@ func (r *ReinforcementMethodGraderUnionInput) UnmarshalJSON(data []byte) error {
 // The property Grader is required.
 type ReinforcementMethodParam struct {
 	// The grader used for the fine-tuning job.
-	Grader ReinforcementMethodGraderUnionParam `json:"grader,omitzero,required"`
+	Grader ReinforcementMethodGraderUnionParam `json:"grader,omitzero" api:"required"`
 	// The hyperparameters used for the reinforcement fine-tuning job.
 	Hyperparameters ReinforcementHyperparameters `json:"hyperparameters,omitzero"`
 	paramObj
@@ -1038,21 +949,6 @@ func (u ReinforcementMethodGraderUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *ReinforcementMethodGraderUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ReinforcementMethodGraderUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfStringCheckGrader) {
-		return u.OfStringCheckGrader
-	} else if !param.IsOmitted(u.OfTextSimilarityGrader) {
-		return u.OfTextSimilarityGrader
-	} else if !param.IsOmitted(u.OfPythonGrader) {
-		return u.OfPythonGrader
-	} else if !param.IsOmitted(u.OfScoreModelGrader) {
-		return u.OfScoreModelGrader
-	} else if !param.IsOmitted(u.OfMultiGrader) {
-		return u.OfMultiGrader
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -1254,12 +1150,12 @@ type SupervisedHyperparametersBatchSizeUnionResp struct {
 }
 
 func (u SupervisedHyperparametersBatchSizeUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u SupervisedHyperparametersBatchSizeUnionResp) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1291,12 +1187,12 @@ type SupervisedHyperparametersLearningRateMultiplierUnionResp struct {
 }
 
 func (u SupervisedHyperparametersLearningRateMultiplierUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u SupervisedHyperparametersLearningRateMultiplierUnionResp) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1328,12 +1224,12 @@ type SupervisedHyperparametersNEpochsUnionResp struct {
 }
 
 func (u SupervisedHyperparametersNEpochsUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u SupervisedHyperparametersNEpochsUnionResp) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1383,15 +1279,6 @@ func (u *SupervisedHyperparametersBatchSizeUnion) UnmarshalJSON(data []byte) err
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *SupervisedHyperparametersBatchSizeUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfInt) {
-		return &u.OfInt.Value
-	}
-	return nil
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -1409,15 +1296,6 @@ func (u *SupervisedHyperparametersLearningRateMultiplierUnion) UnmarshalJSON(dat
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *SupervisedHyperparametersLearningRateMultiplierUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfFloat) {
-		return &u.OfFloat.Value
-	}
-	return nil
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -1433,15 +1311,6 @@ func (u SupervisedHyperparametersNEpochsUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *SupervisedHyperparametersNEpochsUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *SupervisedHyperparametersNEpochsUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfInt) {
-		return &u.OfInt.Value
-	}
-	return nil
 }
 
 // Configuration for the supervised fine-tuning method.

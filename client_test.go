@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -29,6 +29,7 @@ func TestUserAgentHeader(t *testing.T) {
 	var userAgent string
 	client := openai.NewClient(
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -40,7 +41,7 @@ func TestUserAgentHeader(t *testing.T) {
 			},
 		}),
 	)
-	client.Chat.Completions.New(context.Background(), openai.ChatCompletionNewParams{
+	_, _ = client.Chat.Completions.New(context.Background(), openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{{
 			OfUser: &openai.ChatCompletionUserMessageParam{
 				Content: openai.ChatCompletionUserMessageParamContentUnion{
@@ -48,7 +49,7 @@ func TestUserAgentHeader(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT5,
+		Model: shared.ChatModelGPT4o,
 	})
 	if userAgent != fmt.Sprintf("OpenAI/Go %s", internal.PackageVersion) {
 		t.Errorf("Expected User-Agent to be correct, but got: %#v", userAgent)
@@ -59,6 +60,7 @@ func TestRetryAfter(t *testing.T) {
 	retryCountHeaders := make([]string, 0)
 	client := openai.NewClient(
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -81,7 +83,7 @@ func TestRetryAfter(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT5,
+		Model: shared.ChatModelGPT4o,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -102,6 +104,7 @@ func TestDeleteRetryCountHeader(t *testing.T) {
 	retryCountHeaders := make([]string, 0)
 	client := openai.NewClient(
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -125,7 +128,7 @@ func TestDeleteRetryCountHeader(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT5,
+		Model: shared.ChatModelGPT4o,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -141,6 +144,7 @@ func TestOverwriteRetryCountHeader(t *testing.T) {
 	retryCountHeaders := make([]string, 0)
 	client := openai.NewClient(
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -164,7 +168,7 @@ func TestOverwriteRetryCountHeader(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT5,
+		Model: shared.ChatModelGPT4o,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -180,6 +184,7 @@ func TestRetryAfterMs(t *testing.T) {
 	attempts := 0
 	client := openai.NewClient(
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -202,7 +207,7 @@ func TestRetryAfterMs(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT5,
+		Model: shared.ChatModelGPT4o,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -215,6 +220,7 @@ func TestRetryAfterMs(t *testing.T) {
 func TestContextCancel(t *testing.T) {
 	client := openai.NewClient(
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -234,7 +240,7 @@ func TestContextCancel(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT5,
+		Model: shared.ChatModelGPT4o,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -244,6 +250,7 @@ func TestContextCancel(t *testing.T) {
 func TestContextCancelDelay(t *testing.T) {
 	client := openai.NewClient(
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -263,7 +270,7 @@ func TestContextCancelDelay(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT5,
+		Model: shared.ChatModelGPT4o,
 	})
 	if err == nil {
 		t.Error("expected there to be a cancel error")
@@ -281,6 +288,7 @@ func TestContextDeadline(t *testing.T) {
 	go func() {
 		client := openai.NewClient(
 			option.WithAPIKey("My API Key"),
+			option.WithAdminAPIKey("My Admin API Key"),
 			option.WithHTTPClient(&http.Client{
 				Transport: &closureTransport{
 					fn: func(req *http.Request) (*http.Response, error) {
@@ -298,7 +306,7 @@ func TestContextDeadline(t *testing.T) {
 					},
 				},
 			}},
-			Model: shared.ChatModelGPT5,
+			Model: shared.ChatModelGPT4o,
 		})
 		if err == nil {
 			t.Error("expected there to be a deadline error")
@@ -327,6 +335,7 @@ func TestContextDeadlineStreaming(t *testing.T) {
 	go func() {
 		client := openai.NewClient(
 			option.WithAPIKey("My API Key"),
+			option.WithAdminAPIKey("My Admin API Key"),
 			option.WithHTTPClient(&http.Client{
 				Transport: &closureTransport{
 					fn: func(req *http.Request) (*http.Response, error) {
@@ -352,7 +361,7 @@ func TestContextDeadlineStreaming(t *testing.T) {
 					},
 				},
 			}},
-			Model: shared.ChatModelGPT5,
+			Model: shared.ChatModelGPT6Astra,
 		})
 		for stream.Next() {
 			_ = stream.Current()
@@ -381,6 +390,7 @@ func TestContextDeadlineStreamingWithRequestTimeout(t *testing.T) {
 	go func() {
 		client := openai.NewClient(
 			option.WithAPIKey("My API Key"),
+			option.WithAdminAPIKey("My Admin API Key"),
 			option.WithHTTPClient(&http.Client{
 				Transport: &closureTransport{
 					fn: func(req *http.Request) (*http.Response, error) {
@@ -408,7 +418,7 @@ func TestContextDeadlineStreamingWithRequestTimeout(t *testing.T) {
 						},
 					},
 				}},
-				Model: shared.ChatModelGPT5,
+				Model: shared.ChatModelGPT6Astra,
 			},
 			option.WithRequestTimeout((100 * time.Millisecond)),
 		)

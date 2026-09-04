@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package conversations_test
 
@@ -27,6 +27,7 @@ func TestConversationNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Conversations.New(context.TODO(), conversations.ConversationNewParams{
 		Items: []responses.ResponseInputItemUnionParam{{
@@ -34,8 +35,9 @@ func TestConversationNewWithOptionalParams(t *testing.T) {
 				Content: responses.EasyInputMessageContentUnionParam{
 					OfString: openai.String("string"),
 				},
-				Role: responses.EasyInputMessageRoleUser,
-				Type: responses.EasyInputMessageTypeMessage,
+				Role:  responses.EasyInputMessageRoleUser,
+				Phase: responses.EasyInputMessagePhaseCommentary,
+				Type:  responses.EasyInputMessageTypeMessage,
 			},
 		}},
 		Metadata: shared.Metadata{
@@ -62,6 +64,7 @@ func TestConversationGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Conversations.Get(context.TODO(), "conv_123")
 	if err != nil {
@@ -84,6 +87,7 @@ func TestConversationUpdate(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Conversations.Update(
 		context.TODO(),
@@ -114,6 +118,7 @@ func TestConversationDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Conversations.Delete(context.TODO(), "conv_123")
 	if err != nil {

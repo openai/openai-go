@@ -1,8 +1,9 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
 import (
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 )
 
@@ -13,7 +14,8 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewFineTuningCheckpointService] method instead.
 type FineTuningCheckpointService struct {
-	Options     []option.RequestOption
+	Options []option.RequestOption
+	// Manage fine-tuning jobs to tailor a model to your specific training data.
 	Permissions FineTuningCheckpointPermissionService
 }
 
@@ -22,7 +24,7 @@ type FineTuningCheckpointService struct {
 // options (if there is one), and before any request-specific options.
 func NewFineTuningCheckpointService(opts ...option.RequestOption) (r FineTuningCheckpointService) {
 	r = FineTuningCheckpointService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Permissions = NewFineTuningCheckpointPermissionService(opts...)
 	return
 }

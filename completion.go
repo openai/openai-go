@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -16,6 +16,9 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Given a prompt, the model will return one or more predicted completions, and can
+// also return the probabilities of alternative tokens at each position.
+//
 // CompletionService contains methods and other services that help with interacting
 // with the openai API.
 //
@@ -31,26 +34,34 @@ type CompletionService struct {
 // there is one), and before any request-specific options.
 func NewCompletionService(opts ...option.RequestOption) (r CompletionService) {
 	r = CompletionService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
 // Creates a completion for the provided prompt and parameters.
+//
+// Returns a completion object, or a sequence of completion objects if the request
+// is streamed.
 func (r *CompletionService) New(ctx context.Context, body CompletionNewParams, opts ...option.RequestOption) (res *Completion, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "completions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Creates a completion for the provided prompt and parameters.
+//
+// Returns a completion object, or a sequence of completion objects if the request
+// is streamed.
 func (r *CompletionService) NewStreaming(ctx context.Context, body CompletionNewParams, opts ...option.RequestOption) (stream *ssestream.Stream[Completion]) {
 	var (
 		raw *http.Response
 		err error
 	)
-	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithJSONSet("stream", true)}, opts...)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	opts = append(opts, option.WithJSONSet("stream", true))
 	path := "completions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
 	return ssestream.NewStream[Completion](ssestream.NewDecoder(raw), err)
@@ -60,15 +71,15 @@ func (r *CompletionService) NewStreaming(ctx context.Context, body CompletionNew
 // non-streamed response objects share the same shape (unlike the chat endpoint).
 type Completion struct {
 	// A unique identifier for the completion.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The list of completion choices the model generated for the input prompt.
-	Choices []CompletionChoice `json:"choices,required"`
+	Choices []CompletionChoice `json:"choices" api:"required"`
 	// The Unix timestamp (in seconds) of when the completion was created.
-	Created int64 `json:"created,required"`
+	Created int64 `json:"created" api:"required" format:"unixtime"`
 	// The model used for completion.
-	Model string `json:"model,required"`
+	Model string `json:"model" api:"required"`
 	// The object type, which is always "text_completion"
-	Object constant.TextCompletion `json:"object,required"`
+	Object constant.TextCompletion `json:"object" default:"text_completion"`
 	// This fingerprint represents the backend configuration that the model runs with.
 	//
 	// Can be used in conjunction with the `seed` request parameter to understand when
@@ -103,10 +114,10 @@ type CompletionChoice struct {
 	// content was omitted due to a flag from our content filters.
 	//
 	// Any of "stop", "length", "content_filter".
-	FinishReason CompletionChoiceFinishReason `json:"finish_reason,required"`
-	Index        int64                        `json:"index,required"`
-	Logprobs     CompletionChoiceLogprobs     `json:"logprobs,required"`
-	Text         string                       `json:"text,required"`
+	FinishReason CompletionChoiceFinishReason `json:"finish_reason" api:"required"`
+	Index        int64                        `json:"index" api:"required"`
+	Logprobs     CompletionChoiceLogprobs     `json:"logprobs" api:"required"`
+	Text         string                       `json:"text" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		FinishReason respjson.Field
@@ -161,11 +172,11 @@ func (r *CompletionChoiceLogprobs) UnmarshalJSON(data []byte) error {
 // Usage statistics for the completion request.
 type CompletionUsage struct {
 	// Number of tokens in the generated completion.
-	CompletionTokens int64 `json:"completion_tokens,required"`
+	CompletionTokens int64 `json:"completion_tokens" api:"required"`
 	// Number of tokens in the prompt.
-	PromptTokens int64 `json:"prompt_tokens,required"`
+	PromptTokens int64 `json:"prompt_tokens" api:"required"`
 	// Total number of tokens used in the request (prompt + completion).
-	TotalTokens int64 `json:"total_tokens,required"`
+	TotalTokens int64 `json:"total_tokens" api:"required"`
 	// Breakdown of tokens used in a completion.
 	CompletionTokensDetails CompletionUsageCompletionTokensDetails `json:"completion_tokens_details"`
 	// Breakdown of tokens used in the prompt.
@@ -202,12 +213,15 @@ type CompletionUsageCompletionTokensDetails struct {
 	// still counted in the total completion tokens for purposes of billing, output,
 	// and context window limits.
 	RejectedPredictionTokens int64 `json:"rejected_prediction_tokens"`
+	// Text output tokens generated by the model.
+	TextTokens int64 `json:"text_tokens"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		AcceptedPredictionTokens respjson.Field
 		AudioTokens              respjson.Field
 		ReasoningTokens          respjson.Field
 		RejectedPredictionTokens respjson.Field
+		TextTokens               respjson.Field
 		ExtraFields              map[string]respjson.Field
 		raw                      string
 	} `json:"-"`
@@ -223,14 +237,23 @@ func (r *CompletionUsageCompletionTokensDetails) UnmarshalJSON(data []byte) erro
 type CompletionUsagePromptTokensDetails struct {
 	// Audio input tokens present in the prompt.
 	AudioTokens int64 `json:"audio_tokens"`
+	// The unadjusted number of prompt tokens written to cache.
+	CacheWriteTokens int64 `json:"cache_write_tokens"`
 	// Cached tokens present in the prompt.
 	CachedTokens int64 `json:"cached_tokens"`
+	// Image input tokens present in the prompt.
+	ImageTokens int64 `json:"image_tokens"`
+	// Text input tokens present in the prompt.
+	TextTokens int64 `json:"text_tokens"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		AudioTokens  respjson.Field
-		CachedTokens respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		AudioTokens      respjson.Field
+		CacheWriteTokens respjson.Field
+		CachedTokens     respjson.Field
+		ImageTokens      respjson.Field
+		TextTokens       respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 
@@ -247,13 +270,13 @@ type CompletionNewParams struct {
 	// Note that <|endoftext|> is the document separator that the model sees during
 	// training, so if a prompt is not specified the model will generate as if from the
 	// beginning of a new document.
-	Prompt CompletionNewParamsPromptUnion `json:"prompt,omitzero,required"`
+	Prompt CompletionNewParamsPromptUnion `json:"prompt,omitzero" api:"required"`
 	// ID of the model to use. You can use the
 	// [List models](https://platform.openai.com/docs/api-reference/models/list) API to
 	// see all of your available models, or see our
 	// [Model overview](https://platform.openai.com/docs/models) for descriptions of
 	// them.
-	Model CompletionNewParamsModel `json:"model,omitzero,required"`
+	Model CompletionNewParamsModel `json:"model,omitzero" api:"required"`
 	// Generates `best_of` completions server-side and returns the "best" (the one with
 	// the highest log probability per token). Results cannot be streamed.
 	//
@@ -388,19 +411,6 @@ func (u *CompletionNewParamsPromptUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *CompletionNewParamsPromptUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfStrings) {
-		return &u.OfArrayOfStrings
-	} else if !param.IsOmitted(u.OfArrayOfTokens) {
-		return &u.OfArrayOfTokens
-	} else if !param.IsOmitted(u.OfArrayOfTokenArrays) {
-		return &u.OfArrayOfTokenArrays
-	}
-	return nil
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -415,13 +425,4 @@ func (u CompletionNewParamsStopUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *CompletionNewParamsStopUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *CompletionNewParamsStopUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfStringArray) {
-		return &u.OfStringArray
-	}
-	return nil
 }

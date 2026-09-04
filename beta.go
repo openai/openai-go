@@ -1,8 +1,9 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
 import (
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 )
 
@@ -13,9 +14,13 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewBetaService] method instead.
 type BetaService struct {
-	Options    []option.RequestOption
-	ChatKit    BetaChatKitService
+	Options   []option.RequestOption
+	Responses BetaResponseService
+	ChatKit   BetaChatKitService
+	// Build Assistants that can call models and use tools.
 	Assistants BetaAssistantService
+	// Build Assistants that can call models and use tools.
+	//
 	// Deprecated: The Assistants API is deprecated in favor of the Responses API
 	Threads BetaThreadService
 }
@@ -25,7 +30,8 @@ type BetaService struct {
 // is one), and before any request-specific options.
 func NewBetaService(opts ...option.RequestOption) (r BetaService) {
 	r = BetaService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
+	r.Responses = NewBetaResponseService(opts...)
 	r.ChatKit = NewBetaChatKitService(opts...)
 	r.Assistants = NewBetaAssistantService(opts...)
 	r.Threads = NewBetaThreadService(opts...)

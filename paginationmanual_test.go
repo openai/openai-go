@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -23,6 +23,7 @@ func TestManualPagination(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	page, err := client.FineTuning.Jobs.List(context.TODO(), openai.FineTuningJobListParams{
 		Limit: openai.Int(20),
@@ -33,7 +34,7 @@ func TestManualPagination(t *testing.T) {
 	for _, job := range page.Data {
 		t.Logf("%+v\n", job.ID)
 	}
-	// Prism mock isn't going to give us real pagination
+	// The mock server isn't going to give us real pagination
 	page, err = page.GetNextPage()
 	if err != nil {
 		t.Fatalf("err should be nil: %s", err.Error())

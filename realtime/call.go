@@ -1,15 +1,16 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package realtime
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
+	"mime/multipart"
 	"net/http"
 	"slices"
 
+	"github.com/openai/openai-go/v3/internal/apiform"
 	"github.com/openai/openai-go/v3/internal/apijson"
 	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
@@ -32,61 +33,99 @@ type CallService struct {
 // is one), and before any request-specific options.
 func NewCallService(opts ...option.RequestOption) (r CallService) {
 	r = CallService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
+}
+
+// Create a new Realtime API call over WebRTC and receive the SDP answer needed to
+// complete the peer connection.
+func (r *CallService) New(ctx context.Context, body CallNewParams, opts ...option.RequestOption) (res *http.Response, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
+	path := "realtime/calls"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	return res, err
 }
 
 // Accept an incoming SIP call and configure the realtime session that will handle
 // it.
 func (r *CallService) Accept(ctx context.Context, callID string, body CallAcceptParams, opts ...option.RequestOption) (err error) {
-	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if callID == "" {
 		err = errors.New("missing required call_id parameter")
-		return
+		return err
 	}
-	path := fmt.Sprintf("realtime/calls/%s/accept", callID)
+	path := requestconfig.FormatPath("realtime/calls/%s/accept", callID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, nil, opts...)
-	return
+	return err
 }
 
 // End an active Realtime API call, whether it was initiated over SIP or WebRTC.
 func (r *CallService) Hangup(ctx context.Context, callID string, opts ...option.RequestOption) (err error) {
-	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if callID == "" {
 		err = errors.New("missing required call_id parameter")
-		return
+		return err
 	}
-	path := fmt.Sprintf("realtime/calls/%s/hangup", callID)
+	path := requestconfig.FormatPath("realtime/calls/%s/hangup", callID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, nil, opts...)
-	return
+	return err
 }
 
 // Transfer an active SIP call to a new destination using the SIP REFER verb.
 func (r *CallService) Refer(ctx context.Context, callID string, body CallReferParams, opts ...option.RequestOption) (err error) {
-	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if callID == "" {
 		err = errors.New("missing required call_id parameter")
-		return
+		return err
 	}
-	path := fmt.Sprintf("realtime/calls/%s/refer", callID)
+	path := requestconfig.FormatPath("realtime/calls/%s/refer", callID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, nil, opts...)
-	return
+	return err
 }
 
 // Decline an incoming SIP call by returning a SIP status code to the caller.
 func (r *CallService) Reject(ctx context.Context, callID string, body CallRejectParams, opts ...option.RequestOption) (err error) {
-	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if callID == "" {
 		err = errors.New("missing required call_id parameter")
-		return
+		return err
 	}
-	path := fmt.Sprintf("realtime/calls/%s/reject", callID)
+	path := requestconfig.FormatPath("realtime/calls/%s/reject", callID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, nil, opts...)
-	return
+	return err
+}
+
+type CallNewParams struct {
+	// WebRTC Session Description Protocol (SDP) offer generated by the caller.
+	Sdp string `json:"sdp" api:"required"`
+	// Realtime session object configuration.
+	Session RealtimeSessionCreateRequestParam `json:"session,omitzero"`
+	paramObj
+}
+
+func (r CallNewParams) MarshalMultipart() (data []byte, contentType string, err error) {
+	buf := bytes.NewBuffer(nil)
+	writer := multipart.NewWriter(buf)
+	err = apiform.MarshalEncodedRoot(r, writer, r.ExtraFields(), map[string]apiform.PartEncoding{"sdp": {ContentType: "application/sdp", JSON: false}, "session": {ContentType: "application/json", JSON: true}})
+	if err != nil {
+		_ = writer.Close()
+		return nil, "", err
+	}
+	err = writer.Close()
+	if err != nil {
+		return nil, "", err
+	}
+	return buf.Bytes(), writer.FormDataContentType(), nil
 }
 
 type CallAcceptParams struct {
@@ -99,13 +138,13 @@ func (r CallAcceptParams) MarshalJSON() (data []byte, err error) {
 	return shimjson.Marshal(r.RealtimeSessionCreateRequest)
 }
 func (r *CallAcceptParams) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, &r.RealtimeSessionCreateRequest)
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type CallReferParams struct {
 	// URI that should appear in the SIP Refer-To header. Supports values like
 	// `tel:+14155550123` or `sip:agent@example.com`.
-	TargetUri string `json:"target_uri,required"`
+	TargetUri string `json:"target_uri" api:"required"`
 	paramObj
 }
 

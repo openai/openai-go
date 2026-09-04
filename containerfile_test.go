@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -26,12 +26,13 @@ func TestContainerFileNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Containers.Files.New(
 		context.TODO(),
 		"container_id",
 		openai.ContainerFileNewParams{
-			File:   io.Reader(bytes.NewBuffer([]byte("some file contents"))),
+			File:   io.Reader(bytes.NewBuffer([]byte("Example data"))),
 			FileID: openai.String("file_id"),
 		},
 	)
@@ -55,6 +56,7 @@ func TestContainerFileGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Containers.Files.Get(
 		context.TODO(),
@@ -81,6 +83,7 @@ func TestContainerFileListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Containers.Files.List(
 		context.TODO(),
@@ -111,6 +114,7 @@ func TestContainerFileDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	err := client.Containers.Files.Delete(
 		context.TODO(),

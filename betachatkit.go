@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/respjson"
 )
@@ -27,7 +28,7 @@ type BetaChatKitService struct {
 // there is one), and before any request-specific options.
 func NewBetaChatKitService(opts ...option.RequestOption) (r BetaChatKitService) {
 	r = BetaChatKitService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Sessions = NewBetaChatKitSessionService(opts...)
 	r.Threads = NewBetaChatKitThreadService(opts...)
 	return
@@ -36,15 +37,15 @@ func NewBetaChatKitService(opts ...option.RequestOption) (r BetaChatKitService) 
 // Workflow metadata and state returned for the session.
 type ChatKitWorkflow struct {
 	// Identifier of the workflow backing the session.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// State variable key-value pairs applied when invoking the workflow. Defaults to
 	// null when no overrides were provided.
-	StateVariables map[string]ChatKitWorkflowStateVariableUnion `json:"state_variables,required"`
+	StateVariables map[string]ChatKitWorkflowStateVariableUnion `json:"state_variables" api:"required"`
 	// Tracing settings applied to the workflow.
-	Tracing ChatKitWorkflowTracing `json:"tracing,required"`
+	Tracing ChatKitWorkflowTracing `json:"tracing" api:"required"`
 	// Specific workflow version used for the session. Defaults to null when using the
 	// latest deployment.
-	Version string `json:"version,required"`
+	Version string `json:"version" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID             respjson.Field
@@ -85,17 +86,17 @@ type ChatKitWorkflowStateVariableUnion struct {
 }
 
 func (u ChatKitWorkflowStateVariableUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitWorkflowStateVariableUnion) AsBool() (v bool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitWorkflowStateVariableUnion) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -109,7 +110,7 @@ func (r *ChatKitWorkflowStateVariableUnion) UnmarshalJSON(data []byte) error {
 // Tracing settings applied to the workflow.
 type ChatKitWorkflowTracing struct {
 	// Indicates whether tracing is enabled.
-	Enabled bool `json:"enabled,required"`
+	Enabled bool `json:"enabled" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Enabled     respjson.Field

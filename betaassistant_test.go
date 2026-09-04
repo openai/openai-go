@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -26,6 +26,7 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Assistants.New(context.TODO(), openai.BetaAssistantNewParams{
 		Model:        shared.ChatModelGPT5,
@@ -35,7 +36,7 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 			"foo": "string",
 		},
 		Name:            openai.String("name"),
-		ReasoningEffort: shared.ReasoningEffortMinimal,
+		ReasoningEffort: shared.ReasoningEffortNone,
 		ResponseFormat: openai.AssistantResponseFormatOptionUnionParam{
 			OfAuto: constant.ValueOf[constant.Auto](),
 		},
@@ -82,6 +83,7 @@ func TestBetaAssistantGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Assistants.Get(context.TODO(), "assistant_id")
 	if err != nil {
@@ -104,6 +106,7 @@ func TestBetaAssistantUpdateWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Assistants.Update(
 		context.TODO(),
@@ -116,7 +119,7 @@ func TestBetaAssistantUpdateWithOptionalParams(t *testing.T) {
 			},
 			Model:           openai.BetaAssistantUpdateParamsModelGPT5,
 			Name:            openai.String("name"),
-			ReasoningEffort: shared.ReasoningEffortMinimal,
+			ReasoningEffort: shared.ReasoningEffortNone,
 			ResponseFormat: openai.AssistantResponseFormatOptionUnionParam{
 				OfAuto: constant.ValueOf[constant.Auto](),
 			},
@@ -155,6 +158,7 @@ func TestBetaAssistantListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Assistants.List(context.TODO(), openai.BetaAssistantListParams{
 		After:  openai.String("after"),
@@ -182,6 +186,7 @@ func TestBetaAssistantDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Assistants.Delete(context.TODO(), "assistant_id")
 	if err != nil {

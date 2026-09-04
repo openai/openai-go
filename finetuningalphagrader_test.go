@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -24,6 +24,7 @@ func TestFineTuningAlphaGraderRunWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.FineTuning.Alpha.Graders.Run(context.TODO(), openai.FineTuningAlphaGraderRunParams{
 		Grader: openai.FineTuningAlphaGraderRunParamsGraderUnion{
@@ -35,7 +36,7 @@ func TestFineTuningAlphaGraderRunWithOptionalParams(t *testing.T) {
 			},
 		},
 		ModelSample: "model_sample",
-		Item:        map[string]interface{}{},
+		Item:        map[string]any{},
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -57,6 +58,7 @@ func TestFineTuningAlphaGraderValidateWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.FineTuning.Alpha.Graders.Validate(context.TODO(), openai.FineTuningAlphaGraderValidateParams{
 		Grader: openai.FineTuningAlphaGraderValidateParamsGraderUnion{

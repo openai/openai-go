@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -28,9 +28,10 @@ func TestFileNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Files.New(context.TODO(), openai.FileNewParams{
-		File:    io.Reader(bytes.NewBuffer([]byte("some file contents"))),
+		File:    io.Reader(bytes.NewBuffer([]byte("Example data"))),
 		Purpose: openai.FilePurposeAssistants,
 		ExpiresAfter: openai.FileNewParamsExpiresAfter{
 			Seconds: 3600,
@@ -56,6 +57,7 @@ func TestFileGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Files.Get(context.TODO(), "file_id")
 	if err != nil {
@@ -78,6 +80,7 @@ func TestFileListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Files.List(context.TODO(), openai.FileListParams{
 		After:   openai.String("after"),
@@ -105,6 +108,7 @@ func TestFileDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Files.Delete(context.TODO(), "file_id")
 	if err != nil {
@@ -119,13 +123,16 @@ func TestFileDelete(t *testing.T) {
 func TestFileContent(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
-		w.Write([]byte("abc"))
+		if _, err := w.Write([]byte("abc")); err != nil {
+			t.Errorf("write response body: %v", err)
+		}
 	}))
 	defer server.Close()
 	baseURL := server.URL
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	resp, err := client.Files.Content(context.TODO(), "file_id")
 	if err != nil {
@@ -135,7 +142,11 @@ func TestFileContent(t *testing.T) {
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			t.Errorf("close response body: %v", closeErr)
+		}
+	}()
 
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {

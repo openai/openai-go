@@ -1,18 +1,10 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package webhooks
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"crypto/subtle"
-	"encoding/base64"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"net/http"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
@@ -37,57 +29,26 @@ type WebhookService struct {
 // is one), and before any request-specific options.
 func NewWebhookService(opts ...option.RequestOption) (r WebhookService) {
 	r = WebhookService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
 // Validates that the given payload was sent by OpenAI and parses the payload.
 func (r *WebhookService) Unwrap(body []byte, headers http.Header, opts ...option.RequestOption) (*UnwrapWebhookEventUnion, error) {
-	// Always perform signature verification
-	err := r.VerifySignature(body, headers, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	res := &UnwrapWebhookEventUnion{}
-	err = res.UnmarshalJSON(body)
-	if err != nil {
-		return res, err
-	}
-	return res, nil
+	return unwrapWebhook(r, body, headers, opts...)
 }
 
 // UnwrapWithTolerance validates that the given payload was sent by OpenAI using custom tolerance, then parses the payload.
 // tolerance specifies the maximum age of the webhook.
 func (r *WebhookService) UnwrapWithTolerance(body []byte, headers http.Header, tolerance time.Duration, opts ...option.RequestOption) (*UnwrapWebhookEventUnion, error) {
-	err := r.VerifySignatureWithTolerance(body, headers, tolerance, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	res := &UnwrapWebhookEventUnion{}
-	err = res.UnmarshalJSON(body)
-	if err != nil {
-		return res, err
-	}
-	return res, nil
+	return unwrapWebhookWithTolerance(r, body, headers, tolerance, opts...)
 }
 
 // UnwrapWithToleranceAndTime validates that the given payload was sent by OpenAI using custom tolerance and time, then parses the payload.
 // tolerance specifies the maximum age of the webhook.
 // now allows specifying the current time for testing purposes.
 func (r *WebhookService) UnwrapWithToleranceAndTime(body []byte, headers http.Header, tolerance time.Duration, now time.Time, opts ...option.RequestOption) (*UnwrapWebhookEventUnion, error) {
-	err := r.VerifySignatureWithToleranceAndTime(body, headers, tolerance, now, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	res := &UnwrapWebhookEventUnion{}
-	err = res.UnmarshalJSON(body)
-	if err != nil {
-		return res, err
-	}
-	return res, nil
+	return unwrapWebhookWithToleranceAndTime(r, body, headers, tolerance, now, opts...)
 }
 
 // VerifySignature validates whether or not the webhook payload was sent by OpenAI.
@@ -109,104 +70,19 @@ func (r *WebhookService) VerifySignatureWithTolerance(body []byte, headers http.
 // tolerance specifies the maximum age of the webhook.
 // now allows specifying the current time for testing purposes.
 func (r *WebhookService) VerifySignatureWithToleranceAndTime(body []byte, headers http.Header, tolerance time.Duration, now time.Time, opts ...option.RequestOption) error {
-	cfg, err := requestconfig.PreRequestOptions(r.Options...)
-	if err != nil {
-		return err
-	}
-	webhookSecret := cfg.WebhookSecret
-
-	if webhookSecret == "" {
-		return errors.New("webhook secret must be provided either in the method call or configured on the client")
-	}
-
-	if headers == nil {
-		return errors.New("headers are required for webhook verification")
-	}
-
-	// Extract required headers
-	signatureHeader := headers.Get("webhook-signature")
-	if signatureHeader == "" {
-		return errors.New("missing required webhook-signature header")
-	}
-
-	timestampHeader := headers.Get("webhook-timestamp")
-	if timestampHeader == "" {
-		return errors.New("missing required webhook-timestamp header")
-	}
-
-	webhookID := headers.Get("webhook-id")
-	if webhookID == "" {
-		return errors.New("missing required webhook-id header")
-	}
-
-	// Validate timestamp to prevent replay attacks
-	timestampSeconds, err := strconv.ParseInt(timestampHeader, 10, 64)
-	if err != nil {
-		return errors.New("invalid webhook timestamp format")
-	}
-
-	nowUnix := now.Unix()
-	toleranceSeconds := int64(tolerance.Seconds())
-
-	if nowUnix-timestampSeconds > toleranceSeconds {
-		return errors.New("webhook timestamp is too old")
-	}
-
-	if timestampSeconds > nowUnix+toleranceSeconds {
-		return errors.New("webhook timestamp is too new")
-	}
-
-	// Extract signatures from v1,<base64> format
-	// The signature header can have multiple values, separated by spaces.
-	// Each value is in the format v1,<base64>. We should accept if any match.
-	var signatures []string
-	for _, part := range strings.Fields(signatureHeader) {
-		if strings.HasPrefix(part, "v1,") {
-			signatures = append(signatures, part[3:])
-		} else {
-			signatures = append(signatures, part)
-		}
-	}
-
-	// Decode the secret if it starts with whsec_
-	var decodedSecret []byte
-	if strings.HasPrefix(webhookSecret, "whsec_") {
-		decodedSecret, err = base64.StdEncoding.DecodeString(webhookSecret[6:])
-		if err != nil {
-			return fmt.Errorf("invalid webhook secret format: %v", err)
-		}
-	} else {
-		decodedSecret = []byte(webhookSecret)
-	}
-
-	// Create the signed payload: {webhook_id}.{timestamp}.{payload}
-	signedPayload := fmt.Sprintf("%s.%s.%s", webhookID, timestampHeader, string(body))
-
-	// Compute HMAC-SHA256 signature
-	h := hmac.New(sha256.New, decodedSecret)
-	h.Write([]byte(signedPayload))
-	expectedSignature := base64.StdEncoding.EncodeToString(h.Sum(nil))
-
-	// Accept if any signature matches using timing-safe comparison
-	for _, signature := range signatures {
-		if subtle.ConstantTimeCompare([]byte(expectedSignature), []byte(signature)) == 1 {
-			return nil
-		}
-	}
-
-	return errors.New("webhook signature verification failed")
+	return verifyWebhookSignatureWithToleranceAndTime(r, body, headers, tolerance, now, opts...)
 }
 
 // Sent when a batch API request has been cancelled.
 type BatchCancelledWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the batch API request was cancelled.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
-	Data BatchCancelledWebhookEventData `json:"data,required"`
+	Data BatchCancelledWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `batch.cancelled`.
-	Type constant.BatchCancelled `json:"type,required"`
+	Type constant.BatchCancelled `json:"type" default:"batch.cancelled"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -232,7 +108,7 @@ func (r *BatchCancelledWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type BatchCancelledWebhookEventData struct {
 	// The unique ID of the batch API request.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -257,13 +133,13 @@ const (
 // Sent when a batch API request has been completed.
 type BatchCompletedWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the batch API request was completed.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
-	Data BatchCompletedWebhookEventData `json:"data,required"`
+	Data BatchCompletedWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `batch.completed`.
-	Type constant.BatchCompleted `json:"type,required"`
+	Type constant.BatchCompleted `json:"type" default:"batch.completed"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -289,7 +165,7 @@ func (r *BatchCompletedWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type BatchCompletedWebhookEventData struct {
 	// The unique ID of the batch API request.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -314,13 +190,13 @@ const (
 // Sent when a batch API request has expired.
 type BatchExpiredWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the batch API request expired.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
-	Data BatchExpiredWebhookEventData `json:"data,required"`
+	Data BatchExpiredWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `batch.expired`.
-	Type constant.BatchExpired `json:"type,required"`
+	Type constant.BatchExpired `json:"type" default:"batch.expired"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -346,7 +222,7 @@ func (r *BatchExpiredWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type BatchExpiredWebhookEventData struct {
 	// The unique ID of the batch API request.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -371,13 +247,13 @@ const (
 // Sent when a batch API request has failed.
 type BatchFailedWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the batch API request failed.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
-	Data BatchFailedWebhookEventData `json:"data,required"`
+	Data BatchFailedWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `batch.failed`.
-	Type constant.BatchFailed `json:"type,required"`
+	Type constant.BatchFailed `json:"type" default:"batch.failed"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -403,7 +279,7 @@ func (r *BatchFailedWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type BatchFailedWebhookEventData struct {
 	// The unique ID of the batch API request.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -428,13 +304,13 @@ const (
 // Sent when an eval run has been canceled.
 type EvalRunCanceledWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the eval run was canceled.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
-	Data EvalRunCanceledWebhookEventData `json:"data,required"`
+	Data EvalRunCanceledWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `eval.run.canceled`.
-	Type constant.EvalRunCanceled `json:"type,required"`
+	Type constant.EvalRunCanceled `json:"type" default:"eval.run.canceled"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -460,7 +336,7 @@ func (r *EvalRunCanceledWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type EvalRunCanceledWebhookEventData struct {
 	// The unique ID of the eval run.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -485,13 +361,13 @@ const (
 // Sent when an eval run has failed.
 type EvalRunFailedWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the eval run failed.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
-	Data EvalRunFailedWebhookEventData `json:"data,required"`
+	Data EvalRunFailedWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `eval.run.failed`.
-	Type constant.EvalRunFailed `json:"type,required"`
+	Type constant.EvalRunFailed `json:"type" default:"eval.run.failed"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -517,7 +393,7 @@ func (r *EvalRunFailedWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type EvalRunFailedWebhookEventData struct {
 	// The unique ID of the eval run.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -542,13 +418,13 @@ const (
 // Sent when an eval run has succeeded.
 type EvalRunSucceededWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the eval run succeeded.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
-	Data EvalRunSucceededWebhookEventData `json:"data,required"`
+	Data EvalRunSucceededWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `eval.run.succeeded`.
-	Type constant.EvalRunSucceeded `json:"type,required"`
+	Type constant.EvalRunSucceeded `json:"type" default:"eval.run.succeeded"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -574,7 +450,7 @@ func (r *EvalRunSucceededWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type EvalRunSucceededWebhookEventData struct {
 	// The unique ID of the eval run.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -599,13 +475,13 @@ const (
 // Sent when a fine-tuning job has been cancelled.
 type FineTuningJobCancelledWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the fine-tuning job was cancelled.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
-	Data FineTuningJobCancelledWebhookEventData `json:"data,required"`
+	Data FineTuningJobCancelledWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `fine_tuning.job.cancelled`.
-	Type constant.FineTuningJobCancelled `json:"type,required"`
+	Type constant.FineTuningJobCancelled `json:"type" default:"fine_tuning.job.cancelled"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -631,7 +507,7 @@ func (r *FineTuningJobCancelledWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type FineTuningJobCancelledWebhookEventData struct {
 	// The unique ID of the fine-tuning job.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -656,13 +532,13 @@ const (
 // Sent when a fine-tuning job has failed.
 type FineTuningJobFailedWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the fine-tuning job failed.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
-	Data FineTuningJobFailedWebhookEventData `json:"data,required"`
+	Data FineTuningJobFailedWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `fine_tuning.job.failed`.
-	Type constant.FineTuningJobFailed `json:"type,required"`
+	Type constant.FineTuningJobFailed `json:"type" default:"fine_tuning.job.failed"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -688,7 +564,7 @@ func (r *FineTuningJobFailedWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type FineTuningJobFailedWebhookEventData struct {
 	// The unique ID of the fine-tuning job.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -713,13 +589,13 @@ const (
 // Sent when a fine-tuning job has succeeded.
 type FineTuningJobSucceededWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the fine-tuning job succeeded.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
-	Data FineTuningJobSucceededWebhookEventData `json:"data,required"`
+	Data FineTuningJobSucceededWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `fine_tuning.job.succeeded`.
-	Type constant.FineTuningJobSucceeded `json:"type,required"`
+	Type constant.FineTuningJobSucceeded `json:"type" default:"fine_tuning.job.succeeded"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -745,7 +621,7 @@ func (r *FineTuningJobSucceededWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type FineTuningJobSucceededWebhookEventData struct {
 	// The unique ID of the fine-tuning job.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -767,16 +643,102 @@ const (
 	FineTuningJobSucceededWebhookEventObjectEvent FineTuningJobSucceededWebhookEventObject = "event"
 )
 
-// Sent when Realtime API Receives a incoming SIP call.
+// Sent when an incoming API SIP session is available for Live acceptance. The same
+// pending session can also emit `realtime.call.incoming`; the first successful
+// Realtime or Live accept endpoint selects the runtime surface.
+type LiveCallIncomingWebhookEvent struct {
+	// The unique ID of the event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp (in seconds) of when the event was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// Event data payload.
+	Data LiveCallIncomingWebhookEventData `json:"data" api:"required"`
+	// The type of the event. Always `live.call.incoming`.
+	Type constant.LiveCallIncoming `json:"type" default:"live.call.incoming"`
+	// The object of the event. Always `event`.
+	//
+	// Any of "event".
+	Object LiveCallIncomingWebhookEventObject `json:"object"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Type        respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r LiveCallIncomingWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *LiveCallIncomingWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Event data payload.
+type LiveCallIncomingWebhookEventData struct {
+	// The Transceiver `rtc_...` ID of the pending SIP session. The same value appears
+	// as `call_id` in `realtime.call.incoming`.
+	SessionID string `json:"session_id" api:"required"`
+	// Headers from the SIP Invite.
+	SipHeaders []LiveCallIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		SessionID   respjson.Field
+		SipHeaders  respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r LiveCallIncomingWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *LiveCallIncomingWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A header from the SIP Invite.
+type LiveCallIncomingWebhookEventDataSipHeader struct {
+	// Name of the SIP Header.
+	Name string `json:"name" api:"required"`
+	// Value of the SIP Header.
+	Value string `json:"value" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Name        respjson.Field
+		Value       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r LiveCallIncomingWebhookEventDataSipHeader) RawJSON() string { return r.JSON.raw }
+func (r *LiveCallIncomingWebhookEventDataSipHeader) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The object of the event. Always `event`.
+type LiveCallIncomingWebhookEventObject string
+
+const (
+	LiveCallIncomingWebhookEventObjectEvent LiveCallIncomingWebhookEventObject = "event"
+)
+
+// Sent when an incoming API SIP session is available for Realtime acceptance. The
+// same pending session can also emit `live.call.incoming`; the first successful
+// Realtime or Live accept endpoint selects the runtime surface.
 type RealtimeCallIncomingWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the model response was completed.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
-	Data RealtimeCallIncomingWebhookEventData `json:"data,required"`
+	Data RealtimeCallIncomingWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `realtime.call.incoming`.
-	Type constant.RealtimeCallIncoming `json:"type,required"`
+	Type constant.RealtimeCallIncoming `json:"type" default:"realtime.call.incoming"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -801,10 +763,11 @@ func (r *RealtimeCallIncomingWebhookEvent) UnmarshalJSON(data []byte) error {
 
 // Event data payload.
 type RealtimeCallIncomingWebhookEventData struct {
-	// The unique ID of this call.
-	CallID string `json:"call_id,required"`
+	// The Transceiver `rtc_...` ID of the pending SIP session. The same value appears
+	// as `session_id` in `live.call.incoming`.
+	CallID string `json:"call_id" api:"required"`
 	// Headers from the SIP Invite.
-	SipHeaders []RealtimeCallIncomingWebhookEventDataSipHeader `json:"sip_headers,required"`
+	SipHeaders []RealtimeCallIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		CallID      respjson.Field
@@ -823,9 +786,9 @@ func (r *RealtimeCallIncomingWebhookEventData) UnmarshalJSON(data []byte) error 
 // A header from the SIP Invite.
 type RealtimeCallIncomingWebhookEventDataSipHeader struct {
 	// Name of the SIP Header.
-	Name string `json:"name,required"`
+	Name string `json:"name" api:"required"`
 	// Value of the SIP Header.
-	Value string `json:"value,required"`
+	Value string `json:"value" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Name        respjson.Field
@@ -851,13 +814,13 @@ const (
 // Sent when a background response has been cancelled.
 type ResponseCancelledWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the model response was cancelled.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
-	Data ResponseCancelledWebhookEventData `json:"data,required"`
+	Data ResponseCancelledWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `response.cancelled`.
-	Type constant.ResponseCancelled `json:"type,required"`
+	Type constant.ResponseCancelled `json:"type" default:"response.cancelled"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -883,7 +846,7 @@ func (r *ResponseCancelledWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type ResponseCancelledWebhookEventData struct {
 	// The unique ID of the model response.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -908,13 +871,13 @@ const (
 // Sent when a background response has been completed.
 type ResponseCompletedWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the model response was completed.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
-	Data ResponseCompletedWebhookEventData `json:"data,required"`
+	Data ResponseCompletedWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `response.completed`.
-	Type constant.ResponseCompleted `json:"type,required"`
+	Type constant.ResponseCompleted `json:"type" default:"response.completed"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -940,7 +903,7 @@ func (r *ResponseCompletedWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type ResponseCompletedWebhookEventData struct {
 	// The unique ID of the model response.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -965,13 +928,13 @@ const (
 // Sent when a background response has failed.
 type ResponseFailedWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the model response failed.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
-	Data ResponseFailedWebhookEventData `json:"data,required"`
+	Data ResponseFailedWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `response.failed`.
-	Type constant.ResponseFailed `json:"type,required"`
+	Type constant.ResponseFailed `json:"type" default:"response.failed"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -997,7 +960,7 @@ func (r *ResponseFailedWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type ResponseFailedWebhookEventData struct {
 	// The unique ID of the model response.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -1022,13 +985,13 @@ const (
 // Sent when a background response has been interrupted.
 type ResponseIncompleteWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the model response was interrupted.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
-	Data ResponseIncompleteWebhookEventData `json:"data,required"`
+	Data ResponseIncompleteWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `response.incomplete`.
-	Type constant.ResponseIncomplete `json:"type,required"`
+	Type constant.ResponseIncomplete `json:"type" default:"response.incomplete"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -1054,7 +1017,7 @@ func (r *ResponseIncompleteWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type ResponseIncompleteWebhookEventData struct {
 	// The unique ID of the model response.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -1076,15 +1039,108 @@ const (
 	ResponseIncompleteWebhookEventObjectEvent ResponseIncompleteWebhookEventObject = "event"
 )
 
+// Sent when an approved safety alert is available for an API project.
+type SafetyAlertCreatedWebhookEvent struct {
+	// The unique ID of the webhook event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp in seconds when the event was created.
+	CreatedAt int64                              `json:"created_at" api:"required" format:"unixtime"`
+	Data      SafetyAlertCreatedWebhookEventData `json:"data" api:"required"`
+	// Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// Always `safety.alert.created`.
+	Type constant.SafetyAlertCreated `json:"type" default:"safety.alert.created"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SafetyAlertCreatedWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *SafetyAlertCreatedWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type SafetyAlertCreatedWebhookEventData struct {
+	// The safety alert ID to pass to `GET /v1/safety/alerts/{id}`.
+	ID string `json:"id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SafetyAlertCreatedWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *SafetyAlertCreatedWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Sent when an approved safety alert is available for an enterprise workspace.
+type SafetyOrgAlertCreatedWebhookEvent struct {
+	// The unique ID of the webhook event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp in seconds when the event was created.
+	CreatedAt int64                                 `json:"created_at" api:"required" format:"unixtime"`
+	Data      SafetyOrgAlertCreatedWebhookEventData `json:"data" api:"required"`
+	// Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// Always `safety.org_alert.created`.
+	Type constant.SafetyOrgAlertCreated `json:"type" default:"safety.org_alert.created"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SafetyOrgAlertCreatedWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *SafetyOrgAlertCreatedWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type SafetyOrgAlertCreatedWebhookEventData struct {
+	// The safety alert ID to pass to `GET /v1/safety/alerts/{id}`.
+	ID string `json:"id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SafetyOrgAlertCreatedWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *SafetyOrgAlertCreatedWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // UnwrapWebhookEventUnion contains all possible properties and values from
 // [BatchCancelledWebhookEvent], [BatchCompletedWebhookEvent],
 // [BatchExpiredWebhookEvent], [BatchFailedWebhookEvent],
 // [EvalRunCanceledWebhookEvent], [EvalRunFailedWebhookEvent],
 // [EvalRunSucceededWebhookEvent], [FineTuningJobCancelledWebhookEvent],
 // [FineTuningJobFailedWebhookEvent], [FineTuningJobSucceededWebhookEvent],
-// [RealtimeCallIncomingWebhookEvent], [ResponseCancelledWebhookEvent],
-// [ResponseCompletedWebhookEvent], [ResponseFailedWebhookEvent],
-// [ResponseIncompleteWebhookEvent].
+// [LiveCallIncomingWebhookEvent], [RealtimeCallIncomingWebhookEvent],
+// [ResponseCancelledWebhookEvent], [ResponseCompletedWebhookEvent],
+// [ResponseFailedWebhookEvent], [ResponseIncompleteWebhookEvent],
+// [SafetyAlertCreatedWebhookEvent], [SafetyOrgAlertCreatedWebhookEvent].
 //
 // Use the [UnwrapWebhookEventUnion.AsAny] method to switch on the variant.
 //
@@ -1097,16 +1153,18 @@ type UnwrapWebhookEventUnion struct {
 	// [BatchFailedWebhookEventData], [EvalRunCanceledWebhookEventData],
 	// [EvalRunFailedWebhookEventData], [EvalRunSucceededWebhookEventData],
 	// [FineTuningJobCancelledWebhookEventData], [FineTuningJobFailedWebhookEventData],
-	// [FineTuningJobSucceededWebhookEventData],
+	// [FineTuningJobSucceededWebhookEventData], [LiveCallIncomingWebhookEventData],
 	// [RealtimeCallIncomingWebhookEventData], [ResponseCancelledWebhookEventData],
 	// [ResponseCompletedWebhookEventData], [ResponseFailedWebhookEventData],
-	// [ResponseIncompleteWebhookEventData]
+	// [ResponseIncompleteWebhookEventData], [SafetyAlertCreatedWebhookEventData],
+	// [SafetyOrgAlertCreatedWebhookEventData]
 	Data UnwrapWebhookEventUnionData `json:"data"`
 	// Any of "batch.cancelled", "batch.completed", "batch.expired", "batch.failed",
 	// "eval.run.canceled", "eval.run.failed", "eval.run.succeeded",
 	// "fine_tuning.job.cancelled", "fine_tuning.job.failed",
-	// "fine_tuning.job.succeeded", "realtime.call.incoming", "response.cancelled",
-	// "response.completed", "response.failed", "response.incomplete".
+	// "fine_tuning.job.succeeded", "live.call.incoming", "realtime.call.incoming",
+	// "response.cancelled", "response.completed", "response.failed",
+	// "response.incomplete", "safety.alert.created", "safety.org_alert.created".
 	Type   string `json:"type"`
 	Object string `json:"object"`
 	JSON   struct {
@@ -1136,11 +1194,14 @@ func (EvalRunSucceededWebhookEvent) implUnwrapWebhookEventUnion()       {}
 func (FineTuningJobCancelledWebhookEvent) implUnwrapWebhookEventUnion() {}
 func (FineTuningJobFailedWebhookEvent) implUnwrapWebhookEventUnion()    {}
 func (FineTuningJobSucceededWebhookEvent) implUnwrapWebhookEventUnion() {}
+func (LiveCallIncomingWebhookEvent) implUnwrapWebhookEventUnion()       {}
 func (RealtimeCallIncomingWebhookEvent) implUnwrapWebhookEventUnion()   {}
 func (ResponseCancelledWebhookEvent) implUnwrapWebhookEventUnion()      {}
 func (ResponseCompletedWebhookEvent) implUnwrapWebhookEventUnion()      {}
 func (ResponseFailedWebhookEvent) implUnwrapWebhookEventUnion()         {}
 func (ResponseIncompleteWebhookEvent) implUnwrapWebhookEventUnion()     {}
+func (SafetyAlertCreatedWebhookEvent) implUnwrapWebhookEventUnion()     {}
+func (SafetyOrgAlertCreatedWebhookEvent) implUnwrapWebhookEventUnion()  {}
 
 // Use the following switch statement to find the correct variant
 //
@@ -1155,11 +1216,14 @@ func (ResponseIncompleteWebhookEvent) implUnwrapWebhookEventUnion()     {}
 //	case webhooks.FineTuningJobCancelledWebhookEvent:
 //	case webhooks.FineTuningJobFailedWebhookEvent:
 //	case webhooks.FineTuningJobSucceededWebhookEvent:
+//	case webhooks.LiveCallIncomingWebhookEvent:
 //	case webhooks.RealtimeCallIncomingWebhookEvent:
 //	case webhooks.ResponseCancelledWebhookEvent:
 //	case webhooks.ResponseCompletedWebhookEvent:
 //	case webhooks.ResponseFailedWebhookEvent:
 //	case webhooks.ResponseIncompleteWebhookEvent:
+//	case webhooks.SafetyAlertCreatedWebhookEvent:
+//	case webhooks.SafetyOrgAlertCreatedWebhookEvent:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -1185,6 +1249,8 @@ func (u UnwrapWebhookEventUnion) AsAny() anyUnwrapWebhookEvent {
 		return u.AsFineTuningJobFailed()
 	case "fine_tuning.job.succeeded":
 		return u.AsFineTuningJobSucceeded()
+	case "live.call.incoming":
+		return u.AsLiveCallIncoming()
 	case "realtime.call.incoming":
 		return u.AsRealtimeCallIncoming()
 	case "response.cancelled":
@@ -1195,82 +1261,101 @@ func (u UnwrapWebhookEventUnion) AsAny() anyUnwrapWebhookEvent {
 		return u.AsResponseFailed()
 	case "response.incomplete":
 		return u.AsResponseIncomplete()
+	case "safety.alert.created":
+		return u.AsSafetyAlertCreated()
+	case "safety.org_alert.created":
+		return u.AsSafetyOrgAlertCreated()
 	}
 	return nil
 }
 
 func (u UnwrapWebhookEventUnion) AsBatchCancelled() (v BatchCancelledWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsBatchCompleted() (v BatchCompletedWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsBatchExpired() (v BatchExpiredWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsBatchFailed() (v BatchFailedWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsEvalRunCanceled() (v EvalRunCanceledWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsEvalRunFailed() (v EvalRunFailedWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsEvalRunSucceeded() (v EvalRunSucceededWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsFineTuningJobCancelled() (v FineTuningJobCancelledWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsFineTuningJobFailed() (v FineTuningJobFailedWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsFineTuningJobSucceeded() (v FineTuningJobSucceededWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsLiveCallIncoming() (v LiveCallIncomingWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsRealtimeCallIncoming() (v RealtimeCallIncomingWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsResponseCancelled() (v ResponseCancelledWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsResponseCompleted() (v ResponseCompletedWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsResponseFailed() (v ResponseFailedWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsResponseIncomplete() (v ResponseIncompleteWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsSafetyAlertCreated() (v SafetyAlertCreatedWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsSafetyOrgAlertCreated() (v SafetyOrgAlertCreatedWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1289,18 +1374,50 @@ func (r *UnwrapWebhookEventUnion) UnmarshalJSON(data []byte) error {
 // [UnwrapWebhookEventUnion].
 type UnwrapWebhookEventUnionData struct {
 	ID string `json:"id"`
+	// This field is from variant [LiveCallIncomingWebhookEventData].
+	SessionID string `json:"session_id"`
+	// This field is a union of [[]LiveCallIncomingWebhookEventDataSipHeader],
+	// [[]RealtimeCallIncomingWebhookEventDataSipHeader]
+	SipHeaders UnwrapWebhookEventUnionDataSipHeaders `json:"sip_headers"`
 	// This field is from variant [RealtimeCallIncomingWebhookEventData].
 	CallID string `json:"call_id"`
-	// This field is from variant [RealtimeCallIncomingWebhookEventData].
-	SipHeaders []RealtimeCallIncomingWebhookEventDataSipHeader `json:"sip_headers"`
-	JSON       struct {
+	JSON   struct {
 		ID         respjson.Field
-		CallID     respjson.Field
+		SessionID  respjson.Field
 		SipHeaders respjson.Field
+		CallID     respjson.Field
 		raw        string
 	} `json:"-"`
 }
 
 func (r *UnwrapWebhookEventUnionData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// UnwrapWebhookEventUnionDataSipHeaders is an implicit subunion of
+// [UnwrapWebhookEventUnion]. UnwrapWebhookEventUnionDataSipHeaders provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [UnwrapWebhookEventUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfLiveCallIncomingWebhookEventDataSipHeaders
+// OfRealtimeCallIncomingWebhookEventDataSipHeaders]
+type UnwrapWebhookEventUnionDataSipHeaders struct {
+	// This field will be present if the value is a
+	// [[]LiveCallIncomingWebhookEventDataSipHeader] instead of an object.
+	OfLiveCallIncomingWebhookEventDataSipHeaders []LiveCallIncomingWebhookEventDataSipHeader `json:",inline"`
+	// This field will be present if the value is a
+	// [[]RealtimeCallIncomingWebhookEventDataSipHeader] instead of an object.
+	OfRealtimeCallIncomingWebhookEventDataSipHeaders []RealtimeCallIncomingWebhookEventDataSipHeader `json:",inline"`
+	JSON                                             struct {
+		OfLiveCallIncomingWebhookEventDataSipHeaders     respjson.Field
+		OfRealtimeCallIncomingWebhookEventDataSipHeaders respjson.Field
+		raw                                              string
+	} `json:"-"`
+}
+
+func (r *UnwrapWebhookEventUnionDataSipHeaders) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }

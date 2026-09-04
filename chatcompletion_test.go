@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -25,6 +25,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{{
@@ -35,10 +36,12 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 				Name: openai.String("name"),
 			},
 		}},
-		Model: shared.ChatModelGPT5,
+		Model: shared.ChatModelGPT6Astra,
 		Audio: openai.ChatCompletionAudioParam{
 			Format: openai.ChatCompletionAudioParamFormatWAV,
-			Voice:  openai.ChatCompletionAudioParamVoiceAlloy,
+			Voice: openai.ChatCompletionAudioParamVoiceUnion{
+				OfChatCompletionAudioVoiceString2: openai.String("alloy"),
+			},
 		},
 		FrequencyPenalty: openai.Float(-2),
 		FunctionCall: openai.ChatCompletionNewParamsFunctionCallUnion{
@@ -60,7 +63,18 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		Metadata: shared.Metadata{
 			"foo": "string",
 		},
-		Modalities:        []string{"text"},
+		Modalities: []string{"text"},
+		Moderation: openai.ChatCompletionNewParamsModeration{
+			Model: "model",
+			Policy: openai.ChatCompletionNewParamsModerationPolicy{
+				Input: openai.ChatCompletionNewParamsModerationPolicyInput{
+					Mode: "score",
+				},
+				Output: openai.ChatCompletionNewParamsModerationPolicyOutput{
+					Mode: "score",
+				},
+			},
+		},
 		N:                 openai.Int(1),
 		ParallelToolCalls: openai.Bool(true),
 		Prediction: openai.ChatCompletionPredictionContentParam{
@@ -70,7 +84,12 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		},
 		PresencePenalty: openai.Float(-2),
 		PromptCacheKey:  openai.String("prompt-cache-key-1234"),
-		ReasoningEffort: shared.ReasoningEffortMinimal,
+		PromptCacheOptions: openai.ChatCompletionNewParamsPromptCacheOptions{
+			Mode: "implicit",
+			Ttl:  "30m",
+		},
+		PromptCacheRetention: openai.ChatCompletionNewParamsPromptCacheRetentionInMemory,
+		ReasoningEffort:      shared.ReasoningEffortNone,
 		ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
 			OfText: &shared.ResponseFormatTextParam{},
 		},
@@ -137,6 +156,7 @@ func TestChatCompletionGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Chat.Completions.Get(context.TODO(), "completion_id")
 	if err != nil {
@@ -159,6 +179,7 @@ func TestChatCompletionUpdate(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Chat.Completions.Update(
 		context.TODO(),
@@ -189,6 +210,7 @@ func TestChatCompletionListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Chat.Completions.List(context.TODO(), openai.ChatCompletionListParams{
 		After: openai.String("after"),
@@ -219,6 +241,7 @@ func TestChatCompletionDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Chat.Completions.Delete(context.TODO(), "completion_id")
 	if err != nil {

@@ -1,11 +1,29 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-set -e
+set -eu
 
 cd "$(dirname "$0")/.."
+repo_root="$PWD"
+lint_tests="${OPENAI_GO_LINT_TESTS:-true}"
+lint_runner="$(go tool -modfile="$repo_root/tools/go.mod" -n golangci-lint)"
 
-echo "==> Running Go build"
-go build ./...
+"$lint_runner" fmt --config="$repo_root/.golangci.yml" --diff ./tools/...
 
-echo "==> Checking tests compile"
-go test -run=^$ ./...
+if [ "$lint_tests" = false ]; then
+  go test -run='^$' ./...
+  set -- --disable=unused
+else
+  set --
+fi
+
+for module in . examples internal/testdata/consumer; do
+  (
+    cd "$module"
+    "$lint_runner" run --config="$repo_root/.golangci.yml" --tests="$lint_tests" "$@"
+
+    if [ "$lint_tests" = true ]; then
+      GOOS=windows GOARCH=arm64 CGO_ENABLED=0 \
+        "$lint_runner" run --config="$repo_root/.golangci.yml" --tests=true
+    fi
+  )
+done

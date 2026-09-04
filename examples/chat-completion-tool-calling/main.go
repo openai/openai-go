@@ -55,15 +55,15 @@ func main() {
 		return
 	}
 
-	// If there is a was a function call, continue the conversation
+	// If there was a function call, continue the conversation
 	params.Messages = append(params.Messages, completion.Choices[0].Message.ToParam())
 	for _, toolCall := range toolCalls {
 		if toolCall.Function.Name == "get_weather" {
 			// Extract the location from the function call arguments
 			var args map[string]interface{}
-			err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
-			if err != nil {
-				panic(err)
+			unmarshalErr := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
+			if unmarshalErr != nil {
+				panic(unmarshalErr)
 			}
 			location := args["location"].(string)
 

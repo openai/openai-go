@@ -1,8 +1,9 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
 import (
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 )
 
@@ -14,6 +15,7 @@ import (
 // the [NewFineTuningAlphaService] method instead.
 type FineTuningAlphaService struct {
 	Options []option.RequestOption
+	// Manage fine-tuning jobs to tailor a model to your specific training data.
 	Graders FineTuningAlphaGraderService
 }
 
@@ -22,7 +24,7 @@ type FineTuningAlphaService struct {
 // there is one), and before any request-specific options.
 func NewFineTuningAlphaService(opts ...option.RequestOption) (r FineTuningAlphaService) {
 	r = FineTuningAlphaService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Graders = NewFineTuningAlphaGraderService(opts...)
 	return
 }

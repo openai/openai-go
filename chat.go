@@ -1,8 +1,9 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
 import (
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 )
 
@@ -13,7 +14,9 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewChatService] method instead.
 type ChatService struct {
-	Options     []option.RequestOption
+	Options []option.RequestOption
+	// Given a list of messages comprising a conversation, the model will return a
+	// response.
 	Completions ChatCompletionService
 }
 
@@ -22,7 +25,7 @@ type ChatService struct {
 // is one), and before any request-specific options.
 func NewChatService(opts ...option.RequestOption) (r ChatService) {
 	r = ChatService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Completions = NewChatCompletionService(opts...)
 	return
 }

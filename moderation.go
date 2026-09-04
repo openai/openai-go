@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -15,6 +15,9 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Given text and/or image inputs, classifies if those inputs are potentially
+// harmful.
+//
 // ModerationService contains methods and other services that help with interacting
 // with the openai API.
 //
@@ -30,28 +33,29 @@ type ModerationService struct {
 // there is one), and before any request-specific options.
 func NewModerationService(opts ...option.RequestOption) (r ModerationService) {
 	r = ModerationService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
 // Classifies if text and/or image inputs are potentially harmful. Learn more in
 // the [moderation guide](https://platform.openai.com/docs/guides/moderation).
 func (r *ModerationService) New(ctx context.Context, body ModerationNewParams, opts ...option.RequestOption) (res *ModerationNewResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "moderations"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 type Moderation struct {
 	// A list of the categories, and whether they are flagged or not.
-	Categories ModerationCategories `json:"categories,required"`
+	Categories ModerationCategories `json:"categories" api:"required"`
 	// A list of the categories along with the input type(s) that the score applies to.
-	CategoryAppliedInputTypes ModerationCategoryAppliedInputTypes `json:"category_applied_input_types,required"`
+	CategoryAppliedInputTypes ModerationCategoryAppliedInputTypes `json:"category_applied_input_types" api:"required"`
 	// A list of the categories along with their scores as predicted by model.
-	CategoryScores ModerationCategoryScores `json:"category_scores,required"`
+	CategoryScores ModerationCategoryScores `json:"category_scores" api:"required"`
 	// Whether any of the below categories are flagged.
-	Flagged bool `json:"flagged,required"`
+	Flagged bool `json:"flagged" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Categories                respjson.Field
@@ -73,47 +77,47 @@ func (r *Moderation) UnmarshalJSON(data []byte) error {
 type ModerationCategories struct {
 	// Content that expresses, incites, or promotes harassing language towards any
 	// target.
-	Harassment bool `json:"harassment,required"`
+	Harassment bool `json:"harassment" api:"required"`
 	// Harassment content that also includes violence or serious harm towards any
 	// target.
-	HarassmentThreatening bool `json:"harassment/threatening,required"`
+	HarassmentThreatening bool `json:"harassment/threatening" api:"required"`
 	// Content that expresses, incites, or promotes hate based on race, gender,
 	// ethnicity, religion, nationality, sexual orientation, disability status, or
 	// caste. Hateful content aimed at non-protected groups (e.g., chess players) is
 	// harassment.
-	Hate bool `json:"hate,required"`
+	Hate bool `json:"hate" api:"required"`
 	// Hateful content that also includes violence or serious harm towards the targeted
 	// group based on race, gender, ethnicity, religion, nationality, sexual
 	// orientation, disability status, or caste.
-	HateThreatening bool `json:"hate/threatening,required"`
+	HateThreatening bool `json:"hate/threatening" api:"required"`
 	// Content that includes instructions or advice that facilitate the planning or
 	// execution of wrongdoing, or that gives advice or instruction on how to commit
 	// illicit acts. For example, "how to shoplift" would fit this category.
-	Illicit bool `json:"illicit,required"`
+	Illicit bool `json:"illicit" api:"required"`
 	// Content that includes instructions or advice that facilitate the planning or
 	// execution of wrongdoing that also includes violence, or that gives advice or
 	// instruction on the procurement of any weapon.
-	IllicitViolent bool `json:"illicit/violent,required"`
+	IllicitViolent bool `json:"illicit/violent" api:"required"`
 	// Content that promotes, encourages, or depicts acts of self-harm, such as
 	// suicide, cutting, and eating disorders.
-	SelfHarm bool `json:"self-harm,required"`
+	SelfHarm bool `json:"self-harm" api:"required"`
 	// Content that encourages performing acts of self-harm, such as suicide, cutting,
 	// and eating disorders, or that gives instructions or advice on how to commit such
 	// acts.
-	SelfHarmInstructions bool `json:"self-harm/instructions,required"`
+	SelfHarmInstructions bool `json:"self-harm/instructions" api:"required"`
 	// Content where the speaker expresses that they are engaging or intend to engage
 	// in acts of self-harm, such as suicide, cutting, and eating disorders.
-	SelfHarmIntent bool `json:"self-harm/intent,required"`
+	SelfHarmIntent bool `json:"self-harm/intent" api:"required"`
 	// Content meant to arouse sexual excitement, such as the description of sexual
 	// activity, or that promotes sexual services (excluding sex education and
 	// wellness).
-	Sexual bool `json:"sexual,required"`
+	Sexual bool `json:"sexual" api:"required"`
 	// Sexual content that includes an individual who is under 18 years old.
-	SexualMinors bool `json:"sexual/minors,required"`
+	SexualMinors bool `json:"sexual/minors" api:"required"`
 	// Content that depicts death, violence, or physical injury.
-	Violence bool `json:"violence,required"`
+	Violence bool `json:"violence" api:"required"`
 	// Content that depicts death, violence, or physical injury in graphic detail.
-	ViolenceGraphic bool `json:"violence/graphic,required"`
+	ViolenceGraphic bool `json:"violence/graphic" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Harassment            respjson.Field
@@ -145,55 +149,55 @@ type ModerationCategoryAppliedInputTypes struct {
 	// The applied input type(s) for the category 'harassment'.
 	//
 	// Any of "text".
-	Harassment []string `json:"harassment,required"`
+	Harassment []string `json:"harassment" api:"required"`
 	// The applied input type(s) for the category 'harassment/threatening'.
 	//
 	// Any of "text".
-	HarassmentThreatening []string `json:"harassment/threatening,required"`
+	HarassmentThreatening []string `json:"harassment/threatening" api:"required"`
 	// The applied input type(s) for the category 'hate'.
 	//
 	// Any of "text".
-	Hate []string `json:"hate,required"`
+	Hate []string `json:"hate" api:"required"`
 	// The applied input type(s) for the category 'hate/threatening'.
 	//
 	// Any of "text".
-	HateThreatening []string `json:"hate/threatening,required"`
+	HateThreatening []string `json:"hate/threatening" api:"required"`
 	// The applied input type(s) for the category 'illicit'.
 	//
 	// Any of "text".
-	Illicit []string `json:"illicit,required"`
+	Illicit []string `json:"illicit" api:"required"`
 	// The applied input type(s) for the category 'illicit/violent'.
 	//
 	// Any of "text".
-	IllicitViolent []string `json:"illicit/violent,required"`
+	IllicitViolent []string `json:"illicit/violent" api:"required"`
 	// The applied input type(s) for the category 'self-harm'.
 	//
 	// Any of "text", "image".
-	SelfHarm []string `json:"self-harm,required"`
+	SelfHarm []string `json:"self-harm" api:"required"`
 	// The applied input type(s) for the category 'self-harm/instructions'.
 	//
 	// Any of "text", "image".
-	SelfHarmInstructions []string `json:"self-harm/instructions,required"`
+	SelfHarmInstructions []string `json:"self-harm/instructions" api:"required"`
 	// The applied input type(s) for the category 'self-harm/intent'.
 	//
 	// Any of "text", "image".
-	SelfHarmIntent []string `json:"self-harm/intent,required"`
+	SelfHarmIntent []string `json:"self-harm/intent" api:"required"`
 	// The applied input type(s) for the category 'sexual'.
 	//
 	// Any of "text", "image".
-	Sexual []string `json:"sexual,required"`
+	Sexual []string `json:"sexual" api:"required"`
 	// The applied input type(s) for the category 'sexual/minors'.
 	//
 	// Any of "text".
-	SexualMinors []string `json:"sexual/minors,required"`
+	SexualMinors []string `json:"sexual/minors" api:"required"`
 	// The applied input type(s) for the category 'violence'.
 	//
 	// Any of "text", "image".
-	Violence []string `json:"violence,required"`
+	Violence []string `json:"violence" api:"required"`
 	// The applied input type(s) for the category 'violence/graphic'.
 	//
 	// Any of "text", "image".
-	ViolenceGraphic []string `json:"violence/graphic,required"`
+	ViolenceGraphic []string `json:"violence/graphic" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Harassment            respjson.Field
@@ -223,31 +227,31 @@ func (r *ModerationCategoryAppliedInputTypes) UnmarshalJSON(data []byte) error {
 // A list of the categories along with their scores as predicted by model.
 type ModerationCategoryScores struct {
 	// The score for the category 'harassment'.
-	Harassment float64 `json:"harassment,required"`
+	Harassment float64 `json:"harassment" api:"required"`
 	// The score for the category 'harassment/threatening'.
-	HarassmentThreatening float64 `json:"harassment/threatening,required"`
+	HarassmentThreatening float64 `json:"harassment/threatening" api:"required"`
 	// The score for the category 'hate'.
-	Hate float64 `json:"hate,required"`
+	Hate float64 `json:"hate" api:"required"`
 	// The score for the category 'hate/threatening'.
-	HateThreatening float64 `json:"hate/threatening,required"`
+	HateThreatening float64 `json:"hate/threatening" api:"required"`
 	// The score for the category 'illicit'.
-	Illicit float64 `json:"illicit,required"`
+	Illicit float64 `json:"illicit" api:"required"`
 	// The score for the category 'illicit/violent'.
-	IllicitViolent float64 `json:"illicit/violent,required"`
+	IllicitViolent float64 `json:"illicit/violent" api:"required"`
 	// The score for the category 'self-harm'.
-	SelfHarm float64 `json:"self-harm,required"`
+	SelfHarm float64 `json:"self-harm" api:"required"`
 	// The score for the category 'self-harm/instructions'.
-	SelfHarmInstructions float64 `json:"self-harm/instructions,required"`
+	SelfHarmInstructions float64 `json:"self-harm/instructions" api:"required"`
 	// The score for the category 'self-harm/intent'.
-	SelfHarmIntent float64 `json:"self-harm/intent,required"`
+	SelfHarmIntent float64 `json:"self-harm/intent" api:"required"`
 	// The score for the category 'sexual'.
-	Sexual float64 `json:"sexual,required"`
+	Sexual float64 `json:"sexual" api:"required"`
 	// The score for the category 'sexual/minors'.
-	SexualMinors float64 `json:"sexual/minors,required"`
+	SexualMinors float64 `json:"sexual/minors" api:"required"`
 	// The score for the category 'violence'.
-	Violence float64 `json:"violence,required"`
+	Violence float64 `json:"violence" api:"required"`
 	// The score for the category 'violence/graphic'.
-	ViolenceGraphic float64 `json:"violence/graphic,required"`
+	ViolenceGraphic float64 `json:"violence/graphic" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Harassment            respjson.Field
@@ -279,11 +283,11 @@ func (r *ModerationCategoryScores) UnmarshalJSON(data []byte) error {
 // The properties ImageURL, Type are required.
 type ModerationImageURLInputParam struct {
 	// Contains either an image URL or a data URL for a base64 encoded image.
-	ImageURL ModerationImageURLInputImageURLParam `json:"image_url,omitzero,required"`
+	ImageURL ModerationImageURLInputImageURLParam `json:"image_url,omitzero" api:"required"`
 	// Always `image_url`.
 	//
 	// This field can be elided, and will marshal its zero value as "image_url".
-	Type constant.ImageURL `json:"type,required"`
+	Type constant.ImageURL `json:"type" default:"image_url"`
 	paramObj
 }
 
@@ -300,7 +304,7 @@ func (r *ModerationImageURLInputParam) UnmarshalJSON(data []byte) error {
 // The property URL is required.
 type ModerationImageURLInputImageURLParam struct {
 	// Either a URL of the image or the base64 encoded image data.
-	URL string `json:"url,required" format:"uri"`
+	URL string `json:"url" api:"required" format:"uri"`
 	paramObj
 }
 
@@ -349,15 +353,6 @@ func (u *ModerationMultiModalInputUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ModerationMultiModalInputUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfImageURL) {
-		return u.OfImageURL
-	} else if !param.IsOmitted(u.OfText) {
-		return u.OfText
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u ModerationMultiModalInputUnionParam) GetImageURL() *ModerationImageURLInputImageURLParam {
 	if vt := u.OfImageURL; vt != nil {
@@ -397,11 +392,11 @@ func init() {
 // The properties Text, Type are required.
 type ModerationTextInputParam struct {
 	// A string of text to classify.
-	Text string `json:"text,required"`
+	Text string `json:"text" api:"required"`
 	// Always `text`.
 	//
 	// This field can be elided, and will marshal its zero value as "text".
-	Type constant.Text `json:"type,required"`
+	Type constant.Text `json:"type" default:"text"`
 	paramObj
 }
 
@@ -416,11 +411,11 @@ func (r *ModerationTextInputParam) UnmarshalJSON(data []byte) error {
 // Represents if a given text input is potentially harmful.
 type ModerationNewResponse struct {
 	// The unique identifier for the moderation request.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The model used to generate the moderation results.
-	Model string `json:"model,required"`
+	Model string `json:"model" api:"required"`
 	// A list of moderation objects.
-	Results []Moderation `json:"results,required"`
+	Results []Moderation `json:"results" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -440,7 +435,7 @@ func (r *ModerationNewResponse) UnmarshalJSON(data []byte) error {
 type ModerationNewParams struct {
 	// Input (or inputs) to classify. Can be a single string, an array of strings, or
 	// an array of multi-modal input objects similar to other models.
-	Input ModerationNewParamsInputUnion `json:"input,omitzero,required"`
+	Input ModerationNewParamsInputUnion `json:"input,omitzero" api:"required"`
 	// The content moderation model you would like to use. Learn more in
 	// [the moderation guide](https://platform.openai.com/docs/guides/moderation), and
 	// learn about available models
@@ -472,15 +467,4 @@ func (u ModerationNewParamsInputUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *ModerationNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ModerationNewParamsInputUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfStringArray) {
-		return &u.OfStringArray
-	} else if !param.IsOmitted(u.OfModerationMultiModalArray) {
-		return &u.OfModerationMultiModalArray
-	}
-	return nil
 }

@@ -5,7 +5,7 @@ package respjson
 // Use [Field.Valid] to check if an optional value was null or omitted.
 //
 // A Field will always occur in the following structure, where it
-// mirrors the original field in it's parent struct:
+// mirrors the original field in its parent struct:
 //
 //	type ExampleObject struct {
 //		Foo bool	`json:"foo"`

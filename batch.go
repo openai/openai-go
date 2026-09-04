@@ -1,11 +1,10 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -21,6 +20,8 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Create large batches of API requests to run asynchronously.
+//
 // BatchService contains methods and other services that help with interacting with
 // the openai API.
 //
@@ -36,34 +37,37 @@ type BatchService struct {
 // is one), and before any request-specific options.
 func NewBatchService(opts ...option.RequestOption) (r BatchService) {
 	r = BatchService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
 // Creates and executes a batch from an uploaded file of requests
 func (r *BatchService) New(ctx context.Context, body BatchNewParams, opts ...option.RequestOption) (res *Batch, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "batches"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves a batch.
 func (r *BatchService) Get(ctx context.Context, batchID string, opts ...option.RequestOption) (res *Batch, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if batchID == "" {
 		err = errors.New("missing required batch_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("batches/%s", batchID)
+	path := requestconfig.FormatPath("batches/%s", batchID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // List your organization's batches.
 func (r *BatchService) List(ctx context.Context, query BatchListParams, opts ...option.RequestOption) (res *pagination.CursorPage[Batch], err error) {
 	var raw *http.Response
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	path := "batches"
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -87,62 +91,63 @@ func (r *BatchService) ListAutoPaging(ctx context.Context, query BatchListParams
 // 10 minutes, before changing to `cancelled`, where it will have partial results
 // (if any) available in the output file.
 func (r *BatchService) Cancel(ctx context.Context, batchID string, opts ...option.RequestOption) (res *Batch, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if batchID == "" {
 		err = errors.New("missing required batch_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("batches/%s/cancel", batchID)
+	path := requestconfig.FormatPath("batches/%s/cancel", batchID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 type Batch struct {
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The time frame within which the batch should be processed.
-	CompletionWindow string `json:"completion_window,required"`
+	CompletionWindow string `json:"completion_window" api:"required"`
 	// The Unix timestamp (in seconds) for when the batch was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The OpenAI API endpoint used by the batch.
-	Endpoint string `json:"endpoint,required"`
+	Endpoint string `json:"endpoint" api:"required"`
 	// The ID of the input file for the batch.
-	InputFileID string `json:"input_file_id,required"`
+	InputFileID string `json:"input_file_id" api:"required"`
 	// The object type, which is always `batch`.
-	Object constant.Batch `json:"object,required"`
+	Object constant.Batch `json:"object" default:"batch"`
 	// The current status of the batch.
 	//
 	// Any of "validating", "failed", "in_progress", "finalizing", "completed",
 	// "expired", "cancelling", "cancelled".
-	Status BatchStatus `json:"status,required"`
+	Status BatchStatus `json:"status" api:"required"`
 	// The Unix timestamp (in seconds) for when the batch was cancelled.
-	CancelledAt int64 `json:"cancelled_at"`
+	CancelledAt int64 `json:"cancelled_at" format:"unixtime"`
 	// The Unix timestamp (in seconds) for when the batch started cancelling.
-	CancellingAt int64 `json:"cancelling_at"`
+	CancellingAt int64 `json:"cancelling_at" format:"unixtime"`
 	// The Unix timestamp (in seconds) for when the batch was completed.
-	CompletedAt int64 `json:"completed_at"`
+	CompletedAt int64 `json:"completed_at" format:"unixtime"`
 	// The ID of the file containing the outputs of requests with errors.
 	ErrorFileID string      `json:"error_file_id"`
 	Errors      BatchErrors `json:"errors"`
 	// The Unix timestamp (in seconds) for when the batch expired.
-	ExpiredAt int64 `json:"expired_at"`
+	ExpiredAt int64 `json:"expired_at" format:"unixtime"`
 	// The Unix timestamp (in seconds) for when the batch will expire.
-	ExpiresAt int64 `json:"expires_at"`
+	ExpiresAt int64 `json:"expires_at" format:"unixtime"`
 	// The Unix timestamp (in seconds) for when the batch failed.
-	FailedAt int64 `json:"failed_at"`
+	FailedAt int64 `json:"failed_at" format:"unixtime"`
 	// The Unix timestamp (in seconds) for when the batch started finalizing.
-	FinalizingAt int64 `json:"finalizing_at"`
+	FinalizingAt int64 `json:"finalizing_at" format:"unixtime"`
 	// The Unix timestamp (in seconds) for when the batch started processing.
-	InProgressAt int64 `json:"in_progress_at"`
+	InProgressAt int64 `json:"in_progress_at" format:"unixtime"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.Metadata `json:"metadata,nullable"`
-	// Model ID used to process the batch, like `gpt-5-2025-08-07`. OpenAI offers a
-	// wide range of models with different capabilities, performance characteristics,
-	// and price points. Refer to the
+	Metadata shared.Metadata `json:"metadata" api:"nullable"`
+	// Model ID used to process the batch, like `gpt-6-astra`. OpenAI offers a wide
+	// range of models with different capabilities, performance characteristics, and
+	// price points. Refer to the
 	// [model guide](https://platform.openai.com/docs/models) to browse and compare
 	// available models.
 	Model string `json:"model"`
@@ -226,11 +231,11 @@ type BatchError struct {
 	// An error code identifying the error type.
 	Code string `json:"code"`
 	// The line number of the input file where the error occurred, if applicable.
-	Line int64 `json:"line,nullable"`
+	Line int64 `json:"line" api:"nullable"`
 	// A human-readable message providing more details about the error.
 	Message string `json:"message"`
 	// The name of the parameter that caused the error, if applicable.
-	Param string `json:"param,nullable"`
+	Param string `json:"param" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Code        respjson.Field
@@ -251,11 +256,11 @@ func (r *BatchError) UnmarshalJSON(data []byte) error {
 // The request counts for different statuses within the batch.
 type BatchRequestCounts struct {
 	// Number of requests that have been completed successfully.
-	Completed int64 `json:"completed,required"`
+	Completed int64 `json:"completed" api:"required"`
 	// Number of requests that have failed.
-	Failed int64 `json:"failed,required"`
+	Failed int64 `json:"failed" api:"required"`
 	// Total number of requests in the batch.
-	Total int64 `json:"total,required"`
+	Total int64 `json:"total" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Completed   respjson.Field
@@ -277,15 +282,15 @@ func (r *BatchRequestCounts) UnmarshalJSON(data []byte) error {
 // created after September 7, 2025.
 type BatchUsage struct {
 	// The number of input tokens.
-	InputTokens int64 `json:"input_tokens,required"`
+	InputTokens int64 `json:"input_tokens" api:"required"`
 	// A detailed breakdown of the input tokens.
-	InputTokensDetails BatchUsageInputTokensDetails `json:"input_tokens_details,required"`
+	InputTokensDetails BatchUsageInputTokensDetails `json:"input_tokens_details" api:"required"`
 	// The number of output tokens.
-	OutputTokens int64 `json:"output_tokens,required"`
+	OutputTokens int64 `json:"output_tokens" api:"required"`
 	// A detailed breakdown of the output tokens.
-	OutputTokensDetails BatchUsageOutputTokensDetails `json:"output_tokens_details,required"`
+	OutputTokensDetails BatchUsageOutputTokensDetails `json:"output_tokens_details" api:"required"`
 	// The total number of tokens used.
-	TotalTokens int64 `json:"total_tokens,required"`
+	TotalTokens int64 `json:"total_tokens" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		InputTokens         respjson.Field
@@ -308,7 +313,7 @@ func (r *BatchUsage) UnmarshalJSON(data []byte) error {
 type BatchUsageInputTokensDetails struct {
 	// The number of tokens that were retrieved from the cache.
 	// [More on prompt caching](https://platform.openai.com/docs/guides/prompt-caching).
-	CachedTokens int64 `json:"cached_tokens,required"`
+	CachedTokens int64 `json:"cached_tokens" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		CachedTokens respjson.Field
@@ -326,7 +331,7 @@ func (r *BatchUsageInputTokensDetails) UnmarshalJSON(data []byte) error {
 // A detailed breakdown of the output tokens.
 type BatchUsageOutputTokensDetails struct {
 	// The number of reasoning tokens.
-	ReasoningTokens int64 `json:"reasoning_tokens,required"`
+	ReasoningTokens int64 `json:"reasoning_tokens" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ReasoningTokens respjson.Field
@@ -346,15 +351,18 @@ type BatchNewParams struct {
 	// is supported.
 	//
 	// Any of "24h".
-	CompletionWindow BatchNewParamsCompletionWindow `json:"completion_window,omitzero,required"`
+	CompletionWindow BatchNewParamsCompletionWindow `json:"completion_window,omitzero" api:"required"`
 	// The endpoint to be used for all requests in the batch. Currently
-	// `/v1/responses`, `/v1/chat/completions`, `/v1/embeddings`, and `/v1/completions`
-	// are supported. Note that `/v1/embeddings` batches are also restricted to a
-	// maximum of 50,000 embedding inputs across all requests in the batch.
+	// `/v1/responses`, `/v1/chat/completions`, `/v1/embeddings`, `/v1/completions`,
+	// `/v1/moderations`, `/v1/images/generations`, `/v1/images/edits`, and
+	// `/v1/videos` are supported. Note that `/v1/embeddings` batches are also
+	// restricted to a maximum of 50,000 embedding inputs across all requests in the
+	// batch.
 	//
 	// Any of "/v1/responses", "/v1/chat/completions", "/v1/embeddings",
-	// "/v1/completions".
-	Endpoint BatchNewParamsEndpoint `json:"endpoint,omitzero,required"`
+	// "/v1/completions", "/v1/moderations", "/v1/images/generations",
+	// "/v1/images/edits", "/v1/videos".
+	Endpoint BatchNewParamsEndpoint `json:"endpoint,omitzero" api:"required"`
 	// The ID of an uploaded file that contains requests for the new batch.
 	//
 	// See [upload file](https://platform.openai.com/docs/api-reference/files/create)
@@ -364,7 +372,7 @@ type BatchNewParams struct {
 	// [JSONL file](https://platform.openai.com/docs/api-reference/batch/request-input),
 	// and must be uploaded with the purpose `batch`. The file can contain up to 50,000
 	// requests, and can be up to 200 MB in size.
-	InputFileID string `json:"input_file_id,required"`
+	InputFileID string `json:"input_file_id" api:"required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
@@ -395,16 +403,22 @@ const (
 )
 
 // The endpoint to be used for all requests in the batch. Currently
-// `/v1/responses`, `/v1/chat/completions`, `/v1/embeddings`, and `/v1/completions`
-// are supported. Note that `/v1/embeddings` batches are also restricted to a
-// maximum of 50,000 embedding inputs across all requests in the batch.
+// `/v1/responses`, `/v1/chat/completions`, `/v1/embeddings`, `/v1/completions`,
+// `/v1/moderations`, `/v1/images/generations`, `/v1/images/edits`, and
+// `/v1/videos` are supported. Note that `/v1/embeddings` batches are also
+// restricted to a maximum of 50,000 embedding inputs across all requests in the
+// batch.
 type BatchNewParamsEndpoint string
 
 const (
-	BatchNewParamsEndpointV1Responses       BatchNewParamsEndpoint = "/v1/responses"
-	BatchNewParamsEndpointV1ChatCompletions BatchNewParamsEndpoint = "/v1/chat/completions"
-	BatchNewParamsEndpointV1Embeddings      BatchNewParamsEndpoint = "/v1/embeddings"
-	BatchNewParamsEndpointV1Completions     BatchNewParamsEndpoint = "/v1/completions"
+	BatchNewParamsEndpointV1Responses         BatchNewParamsEndpoint = "/v1/responses"
+	BatchNewParamsEndpointV1ChatCompletions   BatchNewParamsEndpoint = "/v1/chat/completions"
+	BatchNewParamsEndpointV1Embeddings        BatchNewParamsEndpoint = "/v1/embeddings"
+	BatchNewParamsEndpointV1Completions       BatchNewParamsEndpoint = "/v1/completions"
+	BatchNewParamsEndpointV1Moderations       BatchNewParamsEndpoint = "/v1/moderations"
+	BatchNewParamsEndpointV1ImagesGenerations BatchNewParamsEndpoint = "/v1/images/generations"
+	BatchNewParamsEndpointV1ImagesEdits       BatchNewParamsEndpoint = "/v1/images/edits"
+	BatchNewParamsEndpointV1Videos            BatchNewParamsEndpoint = "/v1/videos"
 )
 
 // The expiration policy for the output and/or error file that are generated for a
@@ -414,13 +428,13 @@ const (
 type BatchNewParamsOutputExpiresAfter struct {
 	// The number of seconds after the anchor time that the file will expire. Must be
 	// between 3600 (1 hour) and 2592000 (30 days).
-	Seconds int64 `json:"seconds,required"`
+	Seconds int64 `json:"seconds" api:"required"`
 	// Anchor timestamp after which the expiration policy applies. Supported anchors:
 	// `created_at`. Note that the anchor is the file creation time, not the time the
 	// batch is created.
 	//
 	// This field can be elided, and will marshal its zero value as "created_at".
-	Anchor constant.CreatedAt `json:"anchor,required"`
+	Anchor constant.CreatedAt `json:"anchor" default:"created_at"`
 	paramObj
 }
 

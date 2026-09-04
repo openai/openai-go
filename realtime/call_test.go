@@ -1,10 +1,14 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package realtime_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 
@@ -15,6 +19,131 @@ import (
 	"github.com/openai/openai-go/v3/responses"
 	"github.com/openai/openai-go/v3/shared/constant"
 )
+
+func TestCallNewWithOptionalParams(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		if _, err := w.Write([]byte("abc")); err != nil {
+			t.Errorf("write response body: %v", err)
+		}
+	}))
+	defer server.Close()
+	baseURL := server.URL
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
+	)
+	resp, err := client.Realtime.Calls.New(context.TODO(), realtime.CallNewParams{
+		Sdp: "sdp",
+		Session: realtime.RealtimeSessionCreateRequestParam{
+			Audio: realtime.RealtimeAudioConfigParam{
+				Input: realtime.RealtimeAudioConfigInputParam{
+					Format: realtime.RealtimeAudioFormatsUnionParam{
+						OfAudioPCM: &realtime.RealtimeAudioFormatsAudioPCMParam{
+							Rate: 24000,
+							Type: "audio/pcm",
+						},
+					},
+					NoiseReduction: realtime.RealtimeAudioConfigInputNoiseReductionParam{
+						Type: realtime.NoiseReductionTypeNearField,
+					},
+					Transcription: realtime.AudioTranscriptionParam{
+						Delay:     realtime.AudioTranscriptionDelayMinimal,
+						Keywords:  []string{"string"},
+						Language:  openai.String("language"),
+						Languages: []string{"string"},
+						Model:     realtime.AudioTranscriptionModelWhisper1,
+						Prompt:    openai.String("prompt"),
+					},
+					TurnDetection: realtime.RealtimeAudioInputTurnDetectionUnionParam{
+						OfServerVad: &realtime.RealtimeAudioInputTurnDetectionServerVadParam{
+							CreateResponse:    openai.Bool(true),
+							IdleTimeoutMs:     openai.Int(5000),
+							InterruptResponse: openai.Bool(true),
+							PrefixPaddingMs:   openai.Int(0),
+							SilenceDurationMs: openai.Int(0),
+							Threshold:         openai.Float(0),
+						},
+					},
+				},
+				Output: realtime.RealtimeAudioConfigOutputParam{
+					Format: realtime.RealtimeAudioFormatsUnionParam{
+						OfAudioPCM: &realtime.RealtimeAudioFormatsAudioPCMParam{
+							Rate: 24000,
+							Type: "audio/pcm",
+						},
+					},
+					Speed: openai.Float(0.25),
+					Voice: realtime.RealtimeAudioConfigOutputVoiceUnionParam{
+						OfRealtimeAudioConfigOutputVoiceString2: openai.String("alloy"),
+					},
+				},
+			},
+			Include:      []string{"item.input_audio_transcription.logprobs"},
+			Instructions: openai.String("instructions"),
+			MaxOutputTokens: realtime.RealtimeSessionCreateRequestMaxOutputTokensUnionParam{
+				OfInf: constant.ValueOf[constant.Inf](),
+			},
+			Model:             realtime.RealtimeSessionCreateRequestModelGPTRealtime,
+			OutputModalities:  []string{"text"},
+			ParallelToolCalls: openai.Bool(true),
+			Prompt: responses.ResponsePromptParam{
+				ID: "id",
+				Variables: map[string]responses.ResponsePromptVariableUnionParam{
+					"foo": {
+						OfString: openai.String("string"),
+					},
+				},
+				Version: openai.String("version"),
+			},
+			Reasoning: realtime.RealtimeReasoningParam{
+				Effort: realtime.RealtimeReasoningEffortMinimal,
+			},
+			ToolChoice: realtime.RealtimeToolChoiceConfigUnionParam{
+				OfToolChoiceMode: openai.Opt(responses.ToolChoiceOptionsNone),
+			},
+			Tools: realtime.RealtimeToolsConfigParam{realtime.RealtimeToolsConfigUnionParam{
+				OfFunction: &realtime.RealtimeFunctionToolParam{
+					Description: openai.String("description"),
+					Name:        openai.String("name"),
+					Parameters:  map[string]any{},
+					Type:        realtime.RealtimeFunctionToolTypeFunction,
+				},
+			}},
+			Tracing: realtime.RealtimeTracingConfigUnionParam{
+				OfAuto: constant.ValueOf[constant.Auto](),
+			},
+			Truncation: realtime.RealtimeTruncationUnionParam{
+				OfRealtimeTruncationStrategy: openai.String("auto"),
+			},
+		},
+	})
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			t.Errorf("close response body: %v", closeErr)
+		}
+	}()
+
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+	if !bytes.Equal(b, []byte("abc")) {
+		t.Fatalf("return value not %s: %s", "abc", b)
+	}
+}
 
 func TestCallAcceptWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
@@ -27,6 +156,7 @@ func TestCallAcceptWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	err := client.Realtime.Calls.Accept(
 		context.TODO(),
@@ -45,9 +175,12 @@ func TestCallAcceptWithOptionalParams(t *testing.T) {
 							Type: realtime.NoiseReductionTypeNearField,
 						},
 						Transcription: realtime.AudioTranscriptionParam{
-							Language: openai.String("language"),
-							Model:    realtime.AudioTranscriptionModelWhisper1,
-							Prompt:   openai.String("prompt"),
+							Delay:     realtime.AudioTranscriptionDelayMinimal,
+							Keywords:  []string{"string"},
+							Language:  openai.String("language"),
+							Languages: []string{"string"},
+							Model:     realtime.AudioTranscriptionModelWhisper1,
+							Prompt:    openai.String("prompt"),
 						},
 						TurnDetection: realtime.RealtimeAudioInputTurnDetectionUnionParam{
 							OfServerVad: &realtime.RealtimeAudioInputTurnDetectionServerVadParam{
@@ -68,16 +201,19 @@ func TestCallAcceptWithOptionalParams(t *testing.T) {
 							},
 						},
 						Speed: openai.Float(0.25),
-						Voice: realtime.RealtimeAudioConfigOutputVoiceAlloy,
+						Voice: realtime.RealtimeAudioConfigOutputVoiceUnionParam{
+							OfRealtimeAudioConfigOutputVoiceString2: openai.String("alloy"),
+						},
 					},
 				},
 				Include:      []string{"item.input_audio_transcription.logprobs"},
 				Instructions: openai.String("instructions"),
 				MaxOutputTokens: realtime.RealtimeSessionCreateRequestMaxOutputTokensUnionParam{
-					OfInt: openai.Int(0),
+					OfInf: constant.ValueOf[constant.Inf](),
 				},
-				Model:            realtime.RealtimeSessionCreateRequestModelGPTRealtime,
-				OutputModalities: []string{"text"},
+				Model:             realtime.RealtimeSessionCreateRequestModelGPTRealtime,
+				OutputModalities:  []string{"text"},
+				ParallelToolCalls: openai.Bool(true),
 				Prompt: responses.ResponsePromptParam{
 					ID: "id",
 					Variables: map[string]responses.ResponsePromptVariableUnionParam{
@@ -87,6 +223,9 @@ func TestCallAcceptWithOptionalParams(t *testing.T) {
 					},
 					Version: openai.String("version"),
 				},
+				Reasoning: realtime.RealtimeReasoningParam{
+					Effort: realtime.RealtimeReasoningEffortMinimal,
+				},
 				ToolChoice: realtime.RealtimeToolChoiceConfigUnionParam{
 					OfToolChoiceMode: openai.Opt(responses.ToolChoiceOptionsNone),
 				},
@@ -94,7 +233,7 @@ func TestCallAcceptWithOptionalParams(t *testing.T) {
 					OfFunction: &realtime.RealtimeFunctionToolParam{
 						Description: openai.String("description"),
 						Name:        openai.String("name"),
-						Parameters:  map[string]interface{}{},
+						Parameters:  map[string]any{},
 						Type:        realtime.RealtimeFunctionToolTypeFunction,
 					},
 				}},
@@ -127,6 +266,7 @@ func TestCallHangup(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	err := client.Realtime.Calls.Hangup(context.TODO(), "call_id")
 	if err != nil {
@@ -149,6 +289,7 @@ func TestCallRefer(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	err := client.Realtime.Calls.Refer(
 		context.TODO(),
@@ -177,6 +318,7 @@ func TestCallRejectWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	err := client.Realtime.Calls.Reject(
 		context.TODO(),

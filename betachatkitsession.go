@@ -1,11 +1,10 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"slices"
 
@@ -30,38 +29,42 @@ type BetaChatKitSessionService struct {
 // options (if there is one), and before any request-specific options.
 func NewBetaChatKitSessionService(opts ...option.RequestOption) (r BetaChatKitSessionService) {
 	r = BetaChatKitSessionService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
-// Create a ChatKit session
+// Create a ChatKit session.
 func (r *BetaChatKitSessionService) New(ctx context.Context, body BetaChatKitSessionNewParams, opts ...option.RequestOption) (res *ChatSession, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "chatkit_beta=v1")}, opts...)
 	path := "chatkit/sessions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
-// Cancel a ChatKit session
+// Cancel an active ChatKit session and return its most recent metadata.
+//
+// Cancelling prevents new requests from using the issued client secret.
 func (r *BetaChatKitSessionService) Cancel(ctx context.Context, sessionID string, opts ...option.RequestOption) (res *ChatSession, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "chatkit_beta=v1")}, opts...)
 	if sessionID == "" {
 		err = errors.New("missing required session_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("chatkit/sessions/%s/cancel", sessionID)
+	path := requestconfig.FormatPath("chatkit/sessions/%s/cancel", sessionID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 type BetaChatKitSessionNewParams struct {
 	// A free-form string that identifies your end user; ensures this Session can
 	// access other objects that have the same `user` scope.
-	User string `json:"user,required"`
+	User string `json:"user" api:"required"`
 	// Workflow that powers the session.
-	Workflow ChatSessionWorkflowParam `json:"workflow,omitzero,required"`
+	Workflow ChatSessionWorkflowParam `json:"workflow,omitzero" api:"required"`
 	// Optional overrides for ChatKit runtime configuration features
 	ChatKitConfiguration ChatSessionChatKitConfigurationParam `json:"chatkit_configuration,omitzero"`
 	// Optional override for session expiration timing in seconds from creation.

@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -40,7 +39,7 @@ type ContainerFileService struct {
 // there is one), and before any request-specific options.
 func NewContainerFileService(opts ...option.RequestOption) (r ContainerFileService) {
 	r = ContainerFileService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Content = NewContainerFileContentService(opts...)
 	return
 }
@@ -50,42 +49,45 @@ func NewContainerFileService(opts ...option.RequestOption) (r ContainerFileServi
 // You can send either a multipart/form-data request with the raw file content, or
 // a JSON request with a file ID.
 func (r *ContainerFileService) New(ctx context.Context, containerID string, body ContainerFileNewParams, opts ...option.RequestOption) (res *ContainerFileNewResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if containerID == "" {
 		err = errors.New("missing required container_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("containers/%s/files", containerID)
+	path := requestconfig.FormatPath("containers/%s/files", containerID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieve Container File
 func (r *ContainerFileService) Get(ctx context.Context, containerID string, fileID string, opts ...option.RequestOption) (res *ContainerFileGetResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if containerID == "" {
 		err = errors.New("missing required container_id parameter")
-		return
+		return nil, err
 	}
 	if fileID == "" {
 		err = errors.New("missing required file_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("containers/%s/files/%s", containerID, fileID)
+	path := requestconfig.FormatPath("containers/%s/files/%s", containerID, fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // List Container files
 func (r *ContainerFileService) List(ctx context.Context, containerID string, query ContainerFileListParams, opts ...option.RequestOption) (res *pagination.CursorPage[ContainerFileListResponse], err error) {
 	var raw *http.Response
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if containerID == "" {
 		err = errors.New("missing required container_id parameter")
-		return
+		return nil, err
 	}
-	path := fmt.Sprintf("containers/%s/files", containerID)
+	path := requestconfig.FormatPath("containers/%s/files", containerID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -105,36 +107,37 @@ func (r *ContainerFileService) ListAutoPaging(ctx context.Context, containerID s
 
 // Delete Container File
 func (r *ContainerFileService) Delete(ctx context.Context, containerID string, fileID string, opts ...option.RequestOption) (err error) {
-	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if containerID == "" {
 		err = errors.New("missing required container_id parameter")
-		return
+		return err
 	}
 	if fileID == "" {
 		err = errors.New("missing required file_id parameter")
-		return
+		return err
 	}
-	path := fmt.Sprintf("containers/%s/files/%s", containerID, fileID)
+	path := requestconfig.FormatPath("containers/%s/files/%s", containerID, fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
-	return
+	return err
 }
 
 type ContainerFileNewResponse struct {
 	// Unique identifier for the file.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// Size of the file in bytes.
-	Bytes int64 `json:"bytes,required"`
+	Bytes int64 `json:"bytes" api:"required"`
 	// The container this file belongs to.
-	ContainerID string `json:"container_id,required"`
+	ContainerID string `json:"container_id" api:"required"`
 	// Unix timestamp (in seconds) when the file was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The type of this object (`container.file`).
-	Object constant.ContainerFile `json:"object,required"`
+	Object constant.ContainerFile `json:"object" default:"container.file"`
 	// Path of the file in the container.
-	Path string `json:"path,required"`
+	Path string `json:"path" api:"required"`
 	// Source of the file (e.g., `user`, `assistant`).
-	Source string `json:"source,required"`
+	Source string `json:"source" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -157,19 +160,19 @@ func (r *ContainerFileNewResponse) UnmarshalJSON(data []byte) error {
 
 type ContainerFileGetResponse struct {
 	// Unique identifier for the file.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// Size of the file in bytes.
-	Bytes int64 `json:"bytes,required"`
+	Bytes int64 `json:"bytes" api:"required"`
 	// The container this file belongs to.
-	ContainerID string `json:"container_id,required"`
+	ContainerID string `json:"container_id" api:"required"`
 	// Unix timestamp (in seconds) when the file was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The type of this object (`container.file`).
-	Object constant.ContainerFile `json:"object,required"`
+	Object constant.ContainerFile `json:"object" default:"container.file"`
 	// Path of the file in the container.
-	Path string `json:"path,required"`
+	Path string `json:"path" api:"required"`
 	// Source of the file (e.g., `user`, `assistant`).
-	Source string `json:"source,required"`
+	Source string `json:"source" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -192,19 +195,19 @@ func (r *ContainerFileGetResponse) UnmarshalJSON(data []byte) error {
 
 type ContainerFileListResponse struct {
 	// Unique identifier for the file.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// Size of the file in bytes.
-	Bytes int64 `json:"bytes,required"`
+	Bytes int64 `json:"bytes" api:"required"`
 	// The container this file belongs to.
-	ContainerID string `json:"container_id,required"`
+	ContainerID string `json:"container_id" api:"required"`
 	// Unix timestamp (in seconds) when the file was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The type of this object (`container.file`).
-	Object constant.ContainerFile `json:"object,required"`
+	Object constant.ContainerFile `json:"object" default:"container.file"`
 	// Path of the file in the container.
-	Path string `json:"path,required"`
+	Path string `json:"path" api:"required"`
 	// Source of the file (e.g., `user`, `assistant`).
-	Source string `json:"source,required"`
+	Source string `json:"source" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -241,7 +244,7 @@ func (r ContainerFileNewParams) MarshalMultipart() (data []byte, contentType str
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()

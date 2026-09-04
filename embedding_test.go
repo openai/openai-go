@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -24,12 +24,13 @@ func TestEmbeddingNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Embeddings.New(context.TODO(), openai.EmbeddingNewParams{
 		Input: openai.EmbeddingNewParamsInputUnion{
 			OfString: openai.String("The quick brown fox jumped over the lazy dog"),
 		},
-		Model:          openai.EmbeddingModelTextEmbeddingAda002,
+		Model:          openai.EmbeddingModelTextEmbedding3Small,
 		Dimensions:     openai.Int(1),
 		EncodingFormat: openai.EmbeddingNewParamsEncodingFormatFloat,
 		User:           openai.String("user-1234"),
