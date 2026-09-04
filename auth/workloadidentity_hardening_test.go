@@ -669,3 +669,34 @@ func (body *ordinaryObservedBody) Close() error {
 	body.closes.Add(1)
 	return nil
 }
+
+func TestWorkloadIdentityMiddlewareClosesUnauthorizedBeforeRefresh(t *testing.T) {
+	identity := newOrdinaryWorkloadIdentity(t)
+	body := &ordinaryObservedBody{}
+	var exchanges atomic.Int32
+	client := ordinaryWorkloadIssuer(t, func() string {
+		attempt := exchanges.Add(1)
+		if attempt == 2 && body.closes.Load() != 1 {
+			t.Errorf("401 body closes before refresh = %d, want 1", body.closes.Load())
+		}
+		return fmt.Sprintf("synthetic-bearer-%d", attempt)
+	})
+	request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "https://api.openai.com/v1/models", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	calls := 0
+	response, err := auth.WorkloadIdentityMiddleware(identity, client, request, func(*http.Request) (*http.Response, error) {
+		calls++
+		if calls == 1 {
+			return &http.Response{StatusCode: 401, Body: body}, nil
+		}
+		return ordinaryWorkloadResponse(200, `{}`), nil
+	})
+	if response != nil {
+		_ = response.Body.Close()
+	}
+	if err != nil || calls != 2 || exchanges.Load() != 2 || body.closes.Load() != 1 {
+		t.Errorf("middleware replay = %v, calls=%d, exchanges=%d, closes=%d; want success, 2, 2, 1", err, calls, exchanges.Load(), body.closes.Load())
+	}
+}

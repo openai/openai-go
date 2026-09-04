@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -74,5 +75,30 @@ func TestX509OAuthIssuerRetryAfter(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func TestX509IssuerHonorsRaisedRetryCap(t *testing.T) {
+	var attempts atomic.Int32
+	var first time.Time
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if attempts.Add(1) == 1 {
+			first = time.Now()
+			w.Header().Set("Retry-After", "10")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		if elapsed := time.Since(first); elapsed < 10*time.Second {
+			t.Errorf("issuer retry delay = %s, want at least 10s", elapsed)
+		}
+		_, _ = io.WriteString(w, x509ValidExchangeResponse())
+	}))
+	identity := newX509LifecycleIdentity(t, fixture)
+	ctx, cancel := context.WithTimeout(t.Context(), 20*time.Second)
+	defer cancel()
+	ctx = requestconfig.WithRequestRetryScope(ctx, requestconfig.NewRequestRetryScope(1, 30*time.Second, true, nil))
+	token, err := identity.GetToken(ctx, fixture.capability)
+	if err != nil || token != x509ExchangeSyntheticToken || attempts.Load() != 2 {
+		t.Errorf("GetToken(10s issuer minimum, 30s cap) = %q, %v, attempts=%d; want success after two attempts", token, err, attempts.Load())
 	}
 }

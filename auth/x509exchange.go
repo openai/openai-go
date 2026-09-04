@@ -306,16 +306,19 @@ func x509ParseRetryAfter(headers http.Header, now time.Time) (time.Duration, boo
 		}
 		parsed, err := strconv.ParseFloat(value, 64)
 		if errors.Is(err, strconv.ErrRange) && math.IsInf(parsed, 1) {
-			return x509MaximumRetryAfter, true, true
+			return time.Duration(math.MaxInt64), true, true
 		}
 		if err == nil {
 			if math.IsNaN(parsed) || math.IsInf(parsed, 0) || parsed < 0 {
 				continue
 			}
-			if parsed >= float64(x509MaximumRetryAfter)/float64(header.unit) {
-				return x509MaximumRetryAfter, true, parsed > float64(x509MaximumRetryAfter)/float64(header.unit)
+			delay := math.Ceil(parsed * float64(header.unit))
+			// Compare before conversion: floating-point rounding at MaxInt64 can
+			// otherwise overflow the native duration and permit an early retry.
+			if delay >= float64(math.MaxInt64) {
+				return time.Duration(math.MaxInt64), true, true
 			}
-			return time.Duration(math.Ceil(parsed * float64(header.unit))), true, false
+			return time.Duration(delay), true, false
 		}
 		if header.name != "Retry-After" {
 			continue
@@ -325,7 +328,7 @@ func x509ParseRetryAfter(headers http.Header, now time.Time) (time.Duration, boo
 			if delay <= 0 {
 				return 0, true, false
 			}
-			return min(delay, x509MaximumRetryAfter), true, delay > x509MaximumRetryAfter
+			return delay, true, deadline.After(now.Add(delay))
 		}
 	}
 	return 0, false, false

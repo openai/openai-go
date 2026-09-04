@@ -69,16 +69,10 @@ func WorkloadIdentityMiddleware(
 
 	token, err = wia.GetToken(tokenContext, httpClient)
 	if err != nil {
-		if resp.Body != nil {
-			_ = resp.Body.Close()
-		}
 		return nil, err
 	}
 	setWorkloadIdentityAuthorization(retryReq, token)
 
-	if resp.Body != nil {
-		_ = resp.Body.Close()
-	}
 	resp, err = next(retryReq)
 	if err == nil && resp != nil && resp.StatusCode == http.StatusUnauthorized {
 		wia.invalidateToken(token)

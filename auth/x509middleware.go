@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 )
@@ -73,9 +74,6 @@ func X509WorkloadIdentityMiddleware(
 	} else if !retry {
 		return response, nil
 	}
-	if response.Body != nil {
-		_ = response.Body.Close()
-	}
 	replay := request.Clone(request.Context())
 	token, err = identity.GetToken(tokenContext, httpClient)
 	if err != nil {
@@ -129,17 +127,23 @@ func unauthorizedRetryResponse(response *http.Response, retry bool) *http.Respon
 
 func waitForUnauthorizedReplay(ctx context.Context, response *http.Response) (bool, error) {
 	err := ctx.Err()
+	var delay time.Duration
 	if err == nil {
-		delay, _, allowed := requestconfig.AuthenticationRetryDelay(response, 0)
+		var allowed bool
+		delay, _, allowed = requestconfig.AuthenticationRetryDelay(response, 0)
 		if !allowed {
 			return false, nil
 		}
-		err = requestconfig.WaitForDelay(ctx, delay)
+	}
+	// Once recovery is allowed, this response is discarded. Release its
+	// transport resources before waiting or requesting a replacement token.
+	if response.Body != nil {
+		_ = response.Body.Close()
 	}
 	if err != nil {
-		if response.Body != nil {
-			_ = response.Body.Close()
-		}
+		return false, err
+	}
+	if err := requestconfig.WaitForDelay(ctx, delay); err != nil {
 		return false, err
 	}
 	return true, nil

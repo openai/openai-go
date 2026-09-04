@@ -125,8 +125,11 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 			if refusal := refusalScope.AuthenticationRetryRefusal(); refusal != nil {
 				identity.mu.Unlock()
 				token, err := identity.cachedTokenAfterIssuerRefusal(callerCtx, refusal)
-				if err == nil || callerCtx.Err() != nil {
-					return token, err
+				if callerErr := callerCtx.Err(); callerErr != nil {
+					return "", callerErr
+				}
+				if err == nil {
+					return token, nil
 				}
 				notBefore := x509IssuerRetryNotBefore(refusal, refusalScope)
 				if notBefore.IsZero() {
@@ -161,8 +164,11 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 						refusalScope.RefuseAuthenticationRetry(status, x509IssuerRetryNotBefore(status, refusalScope))
 					}
 					token, err := identity.cachedTokenAfterIssuerRefusal(callerCtx, status)
-					if err == nil || callerCtx.Err() != nil {
-						return token, err
+					if callerErr := callerCtx.Err(); callerErr != nil {
+						return "", callerErr
+					}
+					if err == nil {
+						return token, nil
 					}
 					notBefore := x509IssuerRetryNotBefore(status, refusalScope)
 					ownerCanceled := current.ownerContextErr != nil && errors.Is(current.err, current.ownerContextErr)

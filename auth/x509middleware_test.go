@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -485,5 +486,47 @@ func TestX509WorkloadIdentityMiddlewarePreservesUnscopedIssuerRetryBudget(t *tes
 	}
 	if err != nil || response == nil || response.StatusCode != http.StatusOK || exchanges.Load() != 6 || dispatched.Load() != 2 {
 		t.Errorf("standalone issuer retry budgets: response:%v error:%v issuer/API=%d/%d, want success and6/2", response, err, exchanges.Load(), dispatched.Load())
+	}
+}
+
+type x509ReplayCloseBody struct {
+	io.Reader
+	cancel context.CancelFunc
+	closes int
+}
+
+func (body *x509ReplayCloseBody) Close() error {
+	body.closes++
+	body.cancel()
+	return nil
+}
+
+func TestX509MiddlewareClosesUnauthorizedBeforeWait(t *testing.T) {
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = io.WriteString(w, x509ValidExchangeResponse())
+	}))
+	identity := newX509LifecycleIdentity(t, fixture)
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+	body := &x509ReplayCloseBody{Reader: strings.NewReader("synthetic unauthorized"), cancel: cancel}
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://mtls.api.openai.com/v1/models", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var received time.Time
+	response, err := X509WorkloadIdentityMiddleware(identity, fixture.capability, request, func(*http.Request) (*http.Response, error) {
+		received = time.Now()
+		return &http.Response{StatusCode: 401, Header: http.Header{"Retry-After": {"1"}}, Body: body}, nil
+	})
+	if elapsed := time.Since(received); elapsed >= time.Second {
+		t.Errorf("401 body release took %s, want cancellation before the one-second retry wait", elapsed)
+	}
+	if response != nil || !errors.Is(err, context.Canceled) || body.closes != 1 {
+		t.Errorf("middleware after body-close cancellation = %v, %v, closes=%d; want nil, canceled, 1", response, err, body.closes)
+	}
+	if response != nil && response.Body != nil {
+		if closeErr := response.Body.Close(); closeErr != nil {
+			t.Errorf("close unexpected middleware response: %v", closeErr)
+		}
 	}
 }

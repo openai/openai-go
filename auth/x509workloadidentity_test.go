@@ -870,3 +870,49 @@ func TestX509WorkloadIdentityFollowerPreservesUsableCacheAfterIssuerRefusal(t *t
 		})
 	}
 }
+
+// Cancel just after the cached-refusal check observes an active caller. The
+// outer decision must return the newly observed cancellation, not the old status.
+type x509CancelAfterCheckContext struct {
+	context.Context
+	cancel context.CancelFunc
+	checks int
+}
+
+func (ctx *x509CancelAfterCheckContext) Err() error {
+	err := ctx.Context.Err()
+	ctx.checks++
+	if ctx.checks == 2 {
+		ctx.cancel()
+	}
+	return err
+}
+
+func TestX509IssuerRefusalReturnsNewlyObservedCancellation(t *testing.T) {
+	for _, follower := range []bool{false, true} {
+		t.Run(strconv.FormatBool(follower), func(t *testing.T) {
+			var attempts atomic.Int32
+			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				attempts.Add(1)
+				_, _ = io.WriteString(w, x509ValidExchangeResponse())
+			}))
+			identity := newX509LifecycleIdentity(t, fixture)
+			refusal := &x509ExchangeHTTPError{statusCode: 503, hasRetryAfter: true, retryAfter: time.Second}
+			scope := requestconfig.NewRequestRetryScope(1, time.Second, true, nil)
+			if follower {
+				done := make(chan struct{})
+				close(done)
+				identity.inFlight = &x509TokenRefresh{done: done, err: refusal}
+			} else {
+				scope.RefuseAuthenticationRetry(refusal, time.Time{})
+			}
+			base, cancel := context.WithCancel(t.Context())
+			defer cancel()
+			ctx := &x509CancelAfterCheckContext{Context: requestconfig.WithRequestRetryScope(base, scope), cancel: cancel}
+			token, err := identity.GetToken(ctx, fixture.capability)
+			if token != "" || !errors.Is(err, context.Canceled) || attempts.Load() != 0 {
+				t.Errorf("GetToken(refusal, follower=%t) = %q, %v, attempts=%d; want cancellation and zero attempts", follower, token, err, attempts.Load())
+			}
+		})
+	}
+}
