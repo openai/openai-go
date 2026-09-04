@@ -467,7 +467,11 @@ func parseRetryAfterHeader(resp *http.Response, maxDelay time.Duration) (delay t
 		if v == "" {
 			continue
 		}
-		if retryAfter, err := strconv.ParseFloat(v, 64); err == nil {
+		retryAfter, err := strconv.ParseFloat(v, 64)
+		if errors.Is(err, strconv.ErrRange) && math.IsInf(retryAfter, 1) {
+			return maxDelay, true, true
+		}
+		if err == nil {
 			if math.IsNaN(retryAfter) || math.IsInf(retryAfter, 0) || retryAfter < 0 {
 				continue
 			}
