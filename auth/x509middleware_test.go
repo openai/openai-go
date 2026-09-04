@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 )
@@ -397,5 +398,92 @@ func TestX509WorkloadIdentityMiddlewareNeverReturnsSignedResponseRequests(t *tes
 				t.Error("authentication modified the original unsigned caller request")
 			}
 		})
+	}
+}
+
+func TestX509WorkloadIdentityMiddlewareRetainsUnscopedIssuerRefusal(t *testing.T) {
+	var exchanges, dispatched atomic.Int32
+	var allowIssuer atomic.Bool
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		exchanges.Add(1)
+		if allowIssuer.Load() {
+			_, _ = io.WriteString(w, x509ValidExchangeResponse())
+			return
+		}
+		w.Header().Set("Retry-After", "90")
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}))
+	identity := newX509LifecycleIdentity(t, fixture)
+	identity.cached = x509ExchangedToken{value: "synthetic-cached-bearer", expiresAt: time.Now().Add(time.Minute)}
+	request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "https://"+x509APIHost+"/v1/models", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, err := X509WorkloadIdentityMiddleware(identity, fixture.capability, request, func(*http.Request) (*http.Response, error) {
+		dispatched.Add(1)
+		return &http.Response{StatusCode: http.StatusUnauthorized}, nil
+	})
+
+	if response != nil && response.Body != nil {
+		if closeErr := response.Body.Close(); closeErr != nil {
+			t.Errorf("close standalone middleware response: %v", closeErr)
+		}
+	}
+	var status *x509ExchangeHTTPError
+	if response != nil || !errors.As(err, &status) || status.statusCode != http.StatusServiceUnavailable {
+		t.Errorf("standalone cached 401 replay = response:%v error:%v, want original issuer503", response, err)
+	}
+	if exchanges.Load() != 1 || dispatched.Load() != 1 {
+		t.Errorf("standalone refusal issuer/API attempts = %d/%d, want 1/1", exchanges.Load(), dispatched.Load())
+	}
+	allowIssuer.Store(true)
+	response, err = X509WorkloadIdentityMiddleware(identity, fixture.capability, request, func(*http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK}, nil
+	})
+
+	if response != nil && response.Body != nil {
+		if closeErr := response.Body.Close(); closeErr != nil {
+			t.Errorf("close standalone middleware response: %v", closeErr)
+		}
+	}
+	if err != nil || response == nil || response.StatusCode != http.StatusOK {
+		t.Errorf("independent middleware invocation retained refusal: %v", err)
+	}
+	if got := exchanges.Load(); got != 2 {
+		t.Errorf("independent middleware invocation issuer count = %d, want 2 total", got)
+	}
+}
+
+func TestX509WorkloadIdentityMiddlewarePreservesUnscopedIssuerRetryBudget(t *testing.T) {
+	var exchanges, dispatched atomic.Int32
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempt := exchanges.Add(1)
+		if attempt%3 != 0 {
+			w.Header().Set("Retry-After", "0")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		_, _ = io.WriteString(w, strings.Replace(x509ValidExchangeResponse(), x509ExchangeSyntheticToken, fmt.Sprintf("synthetic-bearer-%d", attempt), 1))
+	}))
+	identity := newX509LifecycleIdentity(t, fixture)
+	request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "https://"+x509APIHost+"/v1/models", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, err := X509WorkloadIdentityMiddleware(identity, fixture.capability, request, func(*http.Request) (*http.Response, error) {
+		status := http.StatusOK
+		if dispatched.Add(1) == 1 {
+			status = http.StatusUnauthorized
+		}
+		return &http.Response{StatusCode: status}, nil
+	})
+
+	if response != nil && response.Body != nil {
+		if closeErr := response.Body.Close(); closeErr != nil {
+			t.Errorf("close standalone middleware response: %v", closeErr)
+		}
+	}
+	if err != nil || response == nil || response.StatusCode != http.StatusOK || exchanges.Load() != 6 || dispatched.Load() != 2 {
+		t.Errorf("standalone issuer retry budgets: response:%v error:%v issuer/API=%d/%d, want success and6/2", response, err, exchanges.Load(), dispatched.Load())
 	}
 }

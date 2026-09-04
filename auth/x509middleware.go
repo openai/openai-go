@@ -1,12 +1,15 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 )
+
+type x509IssuerRefusalContextKey struct{}
 
 // X509WorkloadIdentityMiddleware authenticates a request using its attested
 // workload identity. A rejected bearer is conditionally invalidated and the
@@ -32,7 +35,14 @@ func X509WorkloadIdentityMiddleware(
 		}
 	}
 	hadBody := request.Body != nil && request.Body != http.NoBody
-	token, err := identity.GetToken(request.Context(), httpClient)
+	tokenContext := request.Context()
+	if requestconfig.RequestRetryScopeFromContext(tokenContext) == nil {
+		// Reuse only the refusal storage, without installing a retry budget or
+		// changing standalone issuer retries and the single middleware replay.
+		tokenContext = context.WithValue(tokenContext, x509IssuerRefusalContextKey{},
+			requestconfig.NewRequestRetryScope(0, 0, false, nil))
+	}
+	token, err := identity.GetToken(tokenContext, httpClient)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +72,7 @@ func X509WorkloadIdentityMiddleware(
 		_ = response.Body.Close()
 	}
 	replay := request.Clone(request.Context())
-	token, err = identity.GetToken(request.Context(), httpClient)
+	token, err = identity.GetToken(tokenContext, httpClient)
 	if err != nil {
 		return nil, err
 	}

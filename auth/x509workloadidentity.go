@@ -100,8 +100,12 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 		return "", err
 	}
 	scope := requestconfig.RequestRetryScopeFromContext(ctx)
-	if scope != nil {
-		if refusal := scope.AuthenticationRetryRefusal(); refusal != nil {
+	refusalScope := scope
+	if refusalScope == nil {
+		refusalScope, _ = ctx.Value(x509IssuerRefusalContextKey{}).(*requestconfig.RequestRetryScope)
+	}
+	if refusalScope != nil {
+		if refusal := refusalScope.AuthenticationRetryRefusal(); refusal != nil {
 			return identity.cachedTokenAfterIssuerRefusal(ctx, refusal)
 		}
 	}
@@ -122,8 +126,8 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 			return identity.tokenAfterExchangeContextDone(ctx, callerCtx)
 		}
 		identity.mu.Lock()
-		if scope != nil {
-			if refusal := scope.AuthenticationRetryRefusal(); refusal != nil {
+		if refusalScope != nil {
+			if refusal := refusalScope.AuthenticationRetryRefusal(); refusal != nil {
 				identity.mu.Unlock()
 				return identity.cachedTokenAfterIssuerRefusal(callerCtx, refusal)
 			}
@@ -147,8 +151,8 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 				// including one interrupted by cancellation of the refresh leader.
 				var status *x509ExchangeHTTPError
 				if errors.As(current.err, &status) && status.hasRetryAfter && status.retryAfter > 0 {
-					if scope != nil {
-						scope.RefuseAuthenticationRetry(status)
+					if refusalScope != nil {
+						refusalScope.RefuseAuthenticationRetry(status)
 					}
 					return identity.cachedTokenAfterIssuerRefusal(callerCtx, status)
 				}
@@ -178,8 +182,8 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 		var refusal *x509ExchangeHTTPError
 		if !errors.As(err, &refusal) || !refusal.hasRetryAfter || refusal.retryAfter <= 0 {
 			refusal = nil
-		} else if scope != nil {
-			scope.RefuseAuthenticationRetry(refusal)
+		} else if refusalScope != nil {
+			refusalScope.RefuseAuthenticationRetry(refusal)
 		}
 		identity.mu.Lock()
 		refresh.ownerContextErr = ctx.Err()
