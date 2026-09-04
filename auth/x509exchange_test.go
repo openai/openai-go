@@ -988,3 +988,22 @@ func newX509ExchangeFixture(t *testing.T, handler http.Handler) *x509ExchangeFix
 	})
 	return &x509ExchangeFixture{template: template, capability: capability}
 }
+
+type x509CancelingResponseBody struct{ cancel context.CancelFunc }
+
+func (body x509CancelingResponseBody) Read([]byte) (int, error) {
+	body.cancel()
+	return 0, context.Canceled
+}
+func (body x509CancelingResponseBody) Close() error { return nil }
+
+func TestX509ExchangeRetainsIssuerHintDuringCanceledDrain(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+	response := &http.Response{StatusCode: 503, Header: http.Header{"Retry-After-Ms": {"1000"}}, Body: x509CancelingResponseBody{cancel: cancel}}
+	err := x509ExchangeStatusError(ctx, response)
+	var status *x509ExchangeHTTPError
+	if !errors.Is(err, context.Canceled) || !errors.As(err, &status) || status.statusCode != 503 || status.retryAfter != time.Second {
+		t.Fatalf("canceled drain error=%v, want cancellation and retained issuer minimum", err)
+	}
+}

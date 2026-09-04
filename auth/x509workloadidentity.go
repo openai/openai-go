@@ -128,15 +128,20 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 			case <-ctx.Done():
 				return identity.tokenAfterExchangeContextDone(ctx, callerCtx)
 			case <-current.done:
+				if ctx.Err() != nil {
+					return identity.tokenAfterExchangeContextDone(ctx, callerCtx)
+				}
+				// A follower must not immediately replay a server-directed wait,
+				// including one interrupted by cancellation of the refresh leader.
+				var status *x509ExchangeHTTPError
+				if errors.As(current.err, &status) && status.hasRetryAfter && status.retryAfter > 0 {
+					return "", status
+				}
 				if current.err == nil || current.ownerContextErr != nil &&
 					errors.Is(current.err, current.ownerContextErr) {
 					continue
 				}
-				// A follower must not immediately replay a server-directed wait.
-				var status *x509ExchangeHTTPError
-				if errors.As(current.err, &status) && status.hasRetryAfter && status.retryAfter > 0 {
-					return "", current.err
-				}
+
 				if retryableX509ExchangeError(current.err) {
 					if scope := requestconfig.RequestRetryScopeFromContext(ctx); scope != nil && scope.TryRetry() {
 						continue
@@ -199,6 +204,9 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 		close(refresh.done)
 		identity.mu.Unlock()
 		if err != nil {
+			if contextErr := ctx.Err(); contextErr != nil {
+				return "", contextErr
+			}
 			return "", err
 		}
 		if fallback {
@@ -260,7 +268,7 @@ func (identity *X509WorkloadIdentityAuth) exchangeWithRetry(
 			}
 			identity.mu.Unlock()
 		}
-		if err == nil || !retryableX509ExchangeError(err) || attempt+1 >= x509MaximumAttempts {
+		if err == nil || ctx.Err() != nil || !retryableX509ExchangeError(err) || attempt+1 >= x509MaximumAttempts {
 			return token, err
 		}
 		scope := requestconfig.RequestRetryScopeFromContext(ctx)
@@ -284,6 +292,9 @@ func (identity *X509WorkloadIdentityAuth) exchangeWithRetry(
 		case <-ctx.Done():
 			if !timer.Stop() {
 				<-timer.C
+			}
+			if status != nil && status.hasRetryAfter && status.retryAfter > 0 {
+				return x509ExchangedToken{}, errors.Join(ctx.Err(), status)
 			}
 			return x509ExchangedToken{}, ctx.Err()
 		case <-timer.C:

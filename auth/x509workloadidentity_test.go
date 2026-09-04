@@ -792,11 +792,36 @@ func TestX509WorkloadIdentityFollowerDoesNotReplayIssuerHint(t *testing.T) {
 	issuerError := &x509ExchangeHTTPError{statusCode: 503, hasRetryAfter: true, retryAfter: time.Second}
 	done := make(chan struct{})
 	close(done)
-	identity.inFlight = &x509TokenRefresh{done: done, err: issuerError}
-	var retries int
-	ctx := requestconfig.WithRequestRetryScope(t.Context(), requestconfig.NewRequestRetryScope(1, time.Second, true, func(count int) { retries = count }))
-	_, err := identity.GetToken(ctx, fixture.capability)
-	if !errors.Is(err, issuerError) || attempts.Load() != 0 || retries != 0 {
-		t.Errorf("GetToken(follower with issuer hint) = %v, attempts=%d retries=%d, want original error and zero attempts/retries", err, attempts.Load(), retries)
+	for _, ownerError := range []error{nil, context.Canceled} {
+		identity.inFlight = &x509TokenRefresh{done: done, err: errors.Join(issuerError, ownerError), ownerContextErr: ownerError}
+		var retries int
+		ctx := requestconfig.WithRequestRetryScope(t.Context(), requestconfig.NewRequestRetryScope(1, time.Second, true, func(count int) { retries = count }))
+		_, err := identity.GetToken(ctx, fixture.capability)
+		if !errors.Is(err, issuerError) || errors.Is(err, context.Canceled) || attempts.Load() != 0 || retries != 0 {
+			t.Errorf("GetToken(follower with issuer hint, owner=%v) = %v, attempts=%d retries=%d, want original error and zero attempts/retries", ownerError, err, attempts.Load(), retries)
+		}
+	}
+}
+
+func TestX509WorkloadIdentityRetainsIssuerHintWhenWaitIsCanceled(t *testing.T) {
+	for _, statusCode := range []int{429, 503} {
+		t.Run(strconv.Itoa(statusCode), func(t *testing.T) {
+			var attempts atomic.Int32
+			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				attempts.Add(1)
+				w.Header().Set("Retry-After", "1")
+				w.WriteHeader(statusCode)
+			}))
+			identity := newX509LifecycleIdentity(t, fixture)
+			ctx, cancel := context.WithCancel(t.Context())
+			defer cancel()
+			scope := requestconfig.NewRequestRetryScope(1, time.Second, true, func(int) { cancel() })
+			ctx = requestconfig.WithRequestRetryScope(ctx, scope)
+			_, err := identity.exchangeWithRetry(ctx, fixture.capability, &x509TokenRefresh{})
+			var status *x509ExchangeHTTPError
+			if !errors.Is(err, context.Canceled) || !errors.As(err, &status) || status.statusCode != statusCode || status.retryAfter != time.Second || attempts.Load() != 1 {
+				t.Fatalf("canceled wait error=%v attempts=%d, want cancellation and retained issuer minimum after one request", err, attempts.Load())
+			}
+		})
 	}
 }

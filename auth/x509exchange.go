@@ -194,19 +194,28 @@ func x509DecodeExchangedToken(ctx context.Context, body []byte, started time.Tim
 }
 
 func x509ExchangeStatusError(ctx context.Context, response *http.Response) (result error) {
-	if err := ctx.Err(); err != nil {
-		return err
+	var status *x509ExchangeHTTPError
+	if response.StatusCode != http.StatusBadRequest && response.StatusCode != http.StatusUnauthorized &&
+		response.StatusCode != http.StatusForbidden {
+		status = &x509ExchangeHTTPError{statusCode: response.StatusCode}
+		if status.retryable() {
+			status.retryAfter, status.hasRetryAfter, status.retryAfterTooLong = x509ParseRetryAfter(response.Header, time.Now())
+		}
 	}
 	defer func() {
 		if err := ctx.Err(); err != nil {
 			result = err
+			if status != nil && status.hasRetryAfter && status.retryAfter > 0 {
+				// Keep the minimum available to healthy followers of a canceled refresh.
+				result = errors.Join(err, status)
+			}
 		}
 	}()
-	if response.StatusCode != http.StatusBadRequest && response.StatusCode != http.StatusUnauthorized &&
-		response.StatusCode != http.StatusForbidden {
-		status := &x509ExchangeHTTPError{statusCode: response.StatusCode}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if status != nil {
 		if status.retryable() {
-			status.retryAfter, status.hasRetryAfter, status.retryAfterTooLong = x509ParseRetryAfter(response.Header, time.Now())
 			if x509RetryAfterExceedsMaximum(status, requestconfig.RequestRetryScopeFromContext(ctx)) {
 				return status
 			}
@@ -220,6 +229,7 @@ func x509ExchangeStatusError(ctx context.Context, response *http.Response) (resu
 		}
 		return status
 	}
+
 	oauthError := &OAuthError{StatusCode: response.StatusCode}
 	body, err := x509ReadExchangeResponse(ctx, response, x509ErrorResponseMaximum)
 	if err != nil {
