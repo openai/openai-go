@@ -1,8 +1,0 @@
-{
-  "name": "openai-go-steady-mock",
-  "private": true,
-  "license": "Apache-2.0",
-  "dependencies": {
-    "@stdy/cli": "0.22.2"
-  }
-}

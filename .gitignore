@@ -7,3 +7,5 @@ Brewfile.lock.json
 /scripts/steady/.install.*/
 /scripts/steady/.publication-lock/
 /scripts/steady/.versions/
+
+/scripts/steady/.cache/
