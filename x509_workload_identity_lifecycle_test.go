@@ -802,3 +802,52 @@ func x509IntegrationTokenResponse(token string) string {
 	return fmt.Sprintf(`{"access_token":%q,"token_type":"Bearer",`+
 		`"issued_token_type":"urn:ietf:params:oauth:token-type:access_token","expires_in":60}`, token)
 }
+
+func TestX509WorkloadIdentityKeepsIssuerRefusalAcrossCachedBearerRetries(t *testing.T) {
+	for _, apiStatus := range []int{401, 500} {
+		t.Run(strconv.Itoa(apiStatus), func(t *testing.T) {
+			t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+			config, issuer, api := newX509WorkloadIdentityIntegration(t)
+			var exchanges, requests atomic.Int32
+			issuer.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				switch exchanges.Add(1) {
+				case 1:
+					_, _ = io.WriteString(w, strings.Replace(x509IntegrationTokenResponse("synthetic-short-bearer"), `"expires_in":60`, `"expires_in":2`, 1))
+				case 2:
+					w.Header().Set("Retry-After", "90")
+					w.WriteHeader(http.StatusServiceUnavailable)
+				default:
+					_, _ = io.WriteString(w, x509IntegrationTokenResponse("synthetic-next-request-bearer"))
+				}
+			})
+			api.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				if requests.Add(1) == 2 {
+					w.Header().Set("Retry-After-Ms", "500")
+					w.WriteHeader(apiStatus)
+					_, _ = io.WriteString(w, `{"error":{"message":"synthetic API failure"}}`)
+					return
+				}
+				_, _ = io.WriteString(w, `{"data":[]}`)
+			})
+			client := openai.NewClient(option.WithX509WorkloadIdentity(config), option.WithMaxRetries(2))
+			if _, err := client.Models.List(t.Context()); err != nil {
+				t.Fatalf("prime bearer: %v", err)
+			}
+			time.Sleep(1100 * time.Millisecond)
+			_, err := client.Models.List(t.Context())
+			if apiStatus == 401 && err == nil {
+				t.Error("rejected cached bearer must return original issuer refusal")
+			}
+			if apiStatus == 500 && err != nil {
+				t.Errorf("ordinary API retry should use valid cached bearer: %v", err)
+			}
+			if got := exchanges.Load(); got != 2 {
+				t.Errorf("same logical request made %d issuer requests, want 2 including prime", got)
+			}
+			if _, err := client.Models.List(t.Context()); err != nil {
+				t.Errorf("separate logical request retained prior refusal: %v", err)
+			}
+		})
+	}
+}

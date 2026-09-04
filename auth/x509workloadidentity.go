@@ -99,6 +99,12 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 	if err := transport.validateAttestation(); err != nil {
 		return "", err
 	}
+	scope := requestconfig.RequestRetryScopeFromContext(ctx)
+	if scope != nil {
+		if refusal := scope.AuthenticationRetryRefusal(); refusal != nil {
+			return identity.cachedTokenAfterIssuerRefusal(ctx, refusal)
+		}
+	}
 	if identity.mu.TryLock() {
 		now := time.Now()
 		if identity.cached.value != "" && now.Before(identity.refreshAfter) && now.Before(identity.cached.expiresAt) {
@@ -116,6 +122,12 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 			return identity.tokenAfterExchangeContextDone(ctx, callerCtx)
 		}
 		identity.mu.Lock()
+		if scope != nil {
+			if refusal := scope.AuthenticationRetryRefusal(); refusal != nil {
+				identity.mu.Unlock()
+				return identity.cachedTokenAfterIssuerRefusal(callerCtx, refusal)
+			}
+		}
 		now := time.Now()
 		if identity.cached.value != "" && now.Before(identity.refreshAfter) && now.Before(identity.cached.expiresAt) {
 			token := identity.cached.value
@@ -135,7 +147,10 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 				// including one interrupted by cancellation of the refresh leader.
 				var status *x509ExchangeHTTPError
 				if errors.As(current.err, &status) && status.hasRetryAfter && status.retryAfter > 0 {
-					return "", status
+					if scope != nil {
+						scope.RefuseAuthenticationRetry(status)
+					}
+					return identity.cachedTokenAfterIssuerRefusal(callerCtx, status)
 				}
 				if current.err == nil || current.ownerContextErr != nil &&
 					errors.Is(current.err, current.ownerContextErr) {
@@ -143,7 +158,7 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 				}
 
 				if retryableX509ExchangeError(current.err) {
-					if scope := requestconfig.RequestRetryScopeFromContext(ctx); scope != nil && scope.TryRetry() {
+					if scope != nil && scope.TryRetry() {
 						continue
 					}
 				}
@@ -159,6 +174,13 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 		identity.mu.Unlock()
 
 		token, err := identity.exchangeWithRetry(ctx, transport, refresh)
+		exchangeErr := err
+		var refusal *x509ExchangeHTTPError
+		if !errors.As(err, &refusal) || !refusal.hasRetryAfter || refusal.retryAfter <= 0 {
+			refusal = nil
+		} else if scope != nil {
+			scope.RefuseAuthenticationRetry(refusal)
+		}
 		identity.mu.Lock()
 		refresh.ownerContextErr = ctx.Err()
 		now = time.Now()
@@ -167,7 +189,7 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 		}
 		fallback := false
 		if err != nil && x509CanFallBackToCachedToken(err, ctx, callerCtx) && identity.cached.value != "" &&
-			time.Now().Before(identity.cached.expiresAt) {
+			time.Now().Before(identity.cached.expiresAt) && !identity.bearers.isRejected(identity.cached.value, time.Now()) {
 			cooldown := min(x509MaximumRetryCooldown, time.Until(identity.cached.expiresAt)/2)
 			identity.refreshAfter = time.Now().Add(cooldown)
 			token, err = identity.cached, nil
@@ -200,6 +222,10 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 			}
 		}
 		refresh.err = err
+		if refusal != nil {
+			// Keep the issuer hint visible to followers even when this caller uses cache.
+			refresh.err = exchangeErr
+		}
 		identity.inFlight = nil
 		close(refresh.done)
 		identity.mu.Unlock()
@@ -216,6 +242,19 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 		}
 		return token.value, nil
 	}
+}
+
+func (identity *X509WorkloadIdentityAuth) cachedTokenAfterIssuerRefusal(ctx context.Context, refusal error) (string, error) {
+	identity.mu.Lock()
+	defer identity.mu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
+	now := time.Now()
+	if identity.cached.value != "" && now.Before(identity.cached.expiresAt) && !identity.bearers.isRejected(identity.cached.value, now) {
+		return identity.cached.value, nil
+	}
+	return "", refusal
 }
 
 func (identity *X509WorkloadIdentityAuth) exchangeContext(ctx context.Context) (context.Context, context.CancelFunc) {

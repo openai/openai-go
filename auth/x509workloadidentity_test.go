@@ -825,3 +825,48 @@ func TestX509WorkloadIdentityRetainsIssuerHintWhenWaitIsCanceled(t *testing.T) {
 		})
 	}
 }
+
+func TestX509WorkloadIdentityFollowerPreservesUsableCacheAfterIssuerRefusal(t *testing.T) {
+	for _, state := range []string{"valid", "expired", "rejected", "canceled"} {
+		t.Run(state, func(t *testing.T) {
+			var attempts atomic.Int32
+			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				attempts.Add(1)
+				_, _ = io.WriteString(w, x509ValidExchangeResponse())
+			}))
+			identity := newX509LifecycleIdentity(t, fixture)
+			identity.cached = x509ExchangedToken{value: "synthetic-cached-bearer", expiresAt: time.Now().Add(time.Minute)}
+			if state == "expired" {
+				identity.cached.expiresAt = time.Now().Add(-time.Second)
+			}
+			if state == "rejected" {
+				identity.invalidateToken(identity.cached.value)
+			}
+			issuerError := &x509ExchangeHTTPError{statusCode: 503, hasRetryAfter: true, retryAfter: time.Second}
+			done := make(chan struct{})
+			close(done)
+			identity.inFlight = &x509TokenRefresh{done: done, err: errors.Join(context.Canceled, issuerError), ownerContextErr: context.Canceled}
+			ctx, cancel := context.WithCancel(t.Context())
+			defer cancel()
+			if state == "canceled" {
+				cancel()
+			}
+			ctx = requestconfig.WithRequestRetryScope(ctx, requestconfig.NewRequestRetryScope(2, time.Second, true, nil))
+			token, err := identity.GetToken(ctx, fixture.capability)
+			if state == "valid" {
+				if token != "synthetic-cached-bearer" || err != nil {
+					t.Errorf("healthy follower cache = %q, %v, want cached token", token, err)
+				}
+			} else if state == "canceled" {
+				if !errors.Is(err, context.Canceled) {
+					t.Errorf("canceled follower = %v, want cancellation", err)
+				}
+			} else if !errors.Is(err, issuerError) || token != "" {
+				t.Errorf("unusable follower cache = %q, %v, want original issuer status", token, err)
+			}
+			if attempts.Load() != 0 {
+				t.Errorf("follower state %s performed %d issuer requests", state, attempts.Load())
+			}
+		})
+	}
+}

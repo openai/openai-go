@@ -20,15 +20,16 @@ type requestRetryScopeFactory struct {
 // ordinary SDK request attempts, and a single unauthorized-response replay.
 // This is internal API and may change without notice.
 type RequestRetryScope struct {
-	mu              sync.Mutex
-	maximum         int
-	maximumDelay    time.Duration
-	outerRetries    int
-	internalRetries int
-	attempts        int
-	replayUsed      bool
-	allowBodyReplay bool
-	onInternalRetry func(int)
+	mu                         sync.Mutex
+	maximum                    int
+	maximumDelay               time.Duration
+	outerRetries               int
+	internalRetries            int
+	attempts                   int
+	replayUsed                 bool
+	allowBodyReplay            bool
+	onInternalRetry            func(int)
+	authenticationRetryRefusal error
 }
 
 // NewRequestRetryScope creates the retry scope for one logical SDK request.
@@ -90,6 +91,23 @@ func WithRequestRetryScope(ctx context.Context, scope *RequestRetryScope) contex
 func RequestRetryScopeFromContext(ctx context.Context) *RequestRetryScope {
 	scope, _ := ctx.Value(requestRetryScopeContextKey{}).(*RequestRetryScope)
 	return scope
+}
+
+// RefuseAuthenticationRetry preserves an issuer refusal for this logical request.
+// Subsequent attempts may reuse a usable cached token, but must not contact the issuer.
+func (scope *RequestRetryScope) RefuseAuthenticationRetry(err error) {
+	scope.mu.Lock()
+	defer scope.mu.Unlock()
+	if scope.authenticationRetryRefusal == nil {
+		scope.authenticationRetryRefusal = err
+	}
+}
+
+// AuthenticationRetryRefusal returns the original issuer refusal, if any.
+func (scope *RequestRetryScope) AuthenticationRetryRefusal() error {
+	scope.mu.Lock()
+	defer scope.mu.Unlock()
+	return scope.authenticationRetryRefusal
 }
 
 // BeginAttempt records the first dispatch or one ordinary SDK retry attempt.
