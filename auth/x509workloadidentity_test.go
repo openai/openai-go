@@ -712,3 +712,91 @@ func TestX509WorkloadIdentityBoundsRepeatedInvalidatedBearerResponses(t *testing
 		})
 	}
 }
+
+func TestX509WorkloadIdentityStopsExcessiveIssuerHints(t *testing.T) {
+	for _, statusCode := range []int{429, 503} {
+		for _, test := range []struct {
+			name, header, value string
+			maximum             time.Duration
+		}{
+			{name: "default cap", header: "Retry-After", value: "9"},
+			{name: "caller cap", header: "Retry-After-Ms", value: "10", maximum: time.Millisecond},
+			{name: "overflow", header: "Retry-After", value: "1e999", maximum: time.Millisecond},
+			{name: "preferred overflow", header: "Retry-After-Ms", value: "1e999", maximum: time.Millisecond},
+			{name: "date", header: "Retry-After", value: time.Now().Add(time.Hour).UTC().Format(http.TimeFormat)},
+		} {
+			t.Run(strconv.Itoa(statusCode)+"/"+test.name, func(t *testing.T) {
+				var attempts atomic.Int32
+				fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+					attempts.Add(1)
+					w.Header().Set("Retry-After", "0")
+					w.Header().Set(test.header, test.value)
+					w.WriteHeader(statusCode)
+					_, _ = io.WriteString(w, "private-issuer-body")
+				}))
+				identity := newX509LifecycleIdentity(t, fixture)
+				ctx, cancel := context.WithTimeout(t.Context(), 250*time.Millisecond)
+				defer cancel()
+				if test.maximum != 0 {
+					ctx = requestconfig.WithRequestRetryScope(ctx, requestconfig.NewRequestRetryScope(2, test.maximum, true, nil))
+				}
+				token, err := identity.GetToken(ctx, fixture.capability)
+				var status *x509ExchangeHTTPError
+				if token != "" || !errors.As(err, &status) || status.statusCode != statusCode {
+					t.Errorf("GetToken(%s) = (%q, %v), want original HTTP %d error", test.name, token, err, statusCode)
+				}
+				if got := attempts.Load(); got != 1 {
+					t.Errorf("GetToken(%s) issuer attempts = %d, want 1", test.name, got)
+				}
+				if err != nil && strings.Contains(err.Error(), "private-") {
+					t.Errorf("GetToken(%s) exposed issuer body", test.name)
+				}
+			})
+		}
+	}
+}
+
+func TestX509WorkloadIdentityPreservesIssuerWaitAfterTruncatedBodyAndWake(t *testing.T) {
+	var attempts atomic.Int32
+	var first time.Time
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if attempts.Add(1) == 1 {
+			first = time.Now()
+			w.Header().Set("Retry-After-Ms", "100")
+			w.Header().Set("Content-Length", "1000")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_, _ = io.WriteString(w, "private-truncated-issuer-body")
+			return
+		}
+		if elapsed := time.Since(first); elapsed < 100*time.Millisecond {
+			t.Errorf("issuer replay after truncated body = %s, want at least 100ms", elapsed)
+		}
+		_, _ = io.WriteString(w, x509ValidExchangeResponse())
+	}))
+	identity := newX509LifecycleIdentity(t, fixture)
+	wake := make(chan struct{})
+	close(wake)
+	token, err := identity.exchangeWithRetry(t.Context(), fixture.capability, &x509TokenRefresh{wake: wake})
+	if err != nil || token.value != x509ExchangeSyntheticToken || attempts.Load() != 2 {
+		t.Errorf("exchangeWithRetry(truncated body, wake) attempts=%d error=%v, want successful second attempt", attempts.Load(), err)
+	}
+}
+
+func TestX509WorkloadIdentityFollowerDoesNotReplayIssuerHint(t *testing.T) {
+	var attempts atomic.Int32
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts.Add(1)
+		_, _ = io.WriteString(w, x509ValidExchangeResponse())
+	}))
+	identity := newX509LifecycleIdentity(t, fixture)
+	issuerError := &x509ExchangeHTTPError{statusCode: 503, hasRetryAfter: true, retryAfter: time.Second}
+	done := make(chan struct{})
+	close(done)
+	identity.inFlight = &x509TokenRefresh{done: done, err: issuerError}
+	var retries int
+	ctx := requestconfig.WithRequestRetryScope(t.Context(), requestconfig.NewRequestRetryScope(1, time.Second, true, func(count int) { retries = count }))
+	_, err := identity.GetToken(ctx, fixture.capability)
+	if !errors.Is(err, issuerError) || attempts.Load() != 0 || retries != 0 {
+		t.Errorf("GetToken(follower with issuer hint) = %v, attempts=%d retries=%d, want original error and zero attempts/retries", err, attempts.Load(), retries)
+	}
+}

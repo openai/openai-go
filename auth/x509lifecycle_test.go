@@ -385,13 +385,13 @@ func TestX509WorkloadIdentitySelectsBoundedIssuerRetryDelays(t *testing.T) {
 			want: 70 * time.Millisecond},
 		{name: "explicit zero is immediate", err: &x509ExchangeHTTPError{
 			statusCode: 429, retryAfter: 0, hasRetryAfter: true}},
-		{name: "issuer hint obeys caller maximum", err: &x509ExchangeHTTPError{
+		{name: "issuer hint is never shortened", err: &x509ExchangeHTTPError{
 			statusCode: 503, retryAfter: time.Second, hasRetryAfter: true},
-			scope: requestconfig.NewRequestRetryScope(2, 7*time.Millisecond, true, nil), want: 7 * time.Millisecond},
+			scope: requestconfig.NewRequestRetryScope(2, 7*time.Millisecond, true, nil), want: time.Second},
 		{name: "ordinary delay obeys caller maximum", err: &x509ExchangeReadError{},
 			scope: requestconfig.NewRequestRetryScope(2, time.Millisecond, true, nil), want: time.Millisecond},
-		{name: "standalone delay remains bounded", err: &x509ExchangeHTTPError{
-			statusCode: 429, retryAfter: time.Hour, hasRetryAfter: true}, want: x509MaximumRetryAfter},
+		{name: "standalone hint is never shortened", err: &x509ExchangeHTTPError{
+			statusCode: 429, retryAfter: time.Hour, hasRetryAfter: true}, want: time.Hour},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			if got := x509ExchangeRetryDelay(test.err, test.attempt, test.scope); got != test.want {
@@ -579,21 +579,26 @@ func TestX509WorkloadIdentityDoesNotRetryPermanentTLSVerificationFailures(t *tes
 	}
 }
 
-func TestX509WorkloadIdentityInvalidationWakesObsoleteProactiveRetry(t *testing.T) {
+func TestX509WorkloadIdentityInvalidationPreservesIssuerMinimum(t *testing.T) {
 	var exchanges atomic.Int32
+	var firstFailure time.Time
 	waiting := make(chan struct{})
 	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		switch exchanges.Add(1) {
 		case 1:
 			_, _ = io.WriteString(w, x509ValidExchangeResponse())
 		case 2:
-			w.Header().Set("Retry-After", "8")
+			firstFailure = time.Now()
+			w.Header().Set("Retry-After-Ms", "100")
 			w.WriteHeader(http.StatusTooManyRequests)
 			if flush, ok := w.(http.Flusher); ok {
 				flush.Flush()
 			}
 			close(waiting)
 		default:
+			if elapsed := time.Since(firstFailure); elapsed < 100*time.Millisecond {
+				t.Errorf("invalidation shortened issuer wait to %s, want at least 100ms", elapsed)
+			}
 			_, _ = io.WriteString(w, strings.Replace(x509ValidExchangeResponse(),
 				x509ExchangeSyntheticToken, "synthetic-refreshed-bearer", 1))
 		}
@@ -639,10 +644,10 @@ func TestX509WorkloadIdentityInvalidationWakesObsoleteProactiveRetry(t *testing.
 	select {
 	case refreshErr := <-result:
 		if refreshErr != nil {
-			t.Errorf("generation-specific invalidation did not wake issuer-directed backoff: %v", refreshErr)
+			t.Errorf("generation-specific invalidation failed after issuer-directed wait: %v", refreshErr)
 		}
 	case <-ctx.Done():
-		t.Fatal("rejected cached bearer remained blocked behind obsolete eight-second issuer backoff")
+		t.Fatal("rejected cached bearer did not refresh after the issuer minimum")
 	}
 	if got := exchanges.Load(); got != 3 {
 		t.Errorf("prime/obsolete/woken issuer attempts = %d, want 3", got)

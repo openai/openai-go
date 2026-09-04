@@ -478,7 +478,7 @@ func parseRetryAfterHeader(resp *http.Response, maxDelay time.Duration) (delay t
 			if retryAfter >= float64(maxDelay)/float64(retry.units) {
 				return maxDelay, true, retryAfter > float64(maxDelay)/float64(retry.units)
 			}
-			return time.Duration(retryAfter * float64(retry.units)), true, false
+			return time.Duration(math.Ceil(retryAfter * float64(retry.units))), true, false
 		}
 		if d, ok := retry.custom(v); ok {
 			if d <= 0 {

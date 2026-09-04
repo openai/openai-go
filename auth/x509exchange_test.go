@@ -353,6 +353,7 @@ func TestX509ExchangePreservesOnlySafeBoundedRetryAfterDelays(t *testing.T) {
 		headers http.Header
 		want    time.Duration
 		present bool
+		exceeds bool
 	}{
 		{name: "preferred milliseconds", status: 429,
 			headers: http.Header{"Retry-After-Ms": {"125"}, "Retry-After": {"3"}},
@@ -366,15 +367,15 @@ func TestX509ExchangePreservesOnlySafeBoundedRetryAfterDelays(t *testing.T) {
 		{name: "conflict delay", status: 409,
 			headers: http.Header{"Retry-After": {"1"}}, want: time.Second, present: true},
 		{name: "finite huge seconds", status: 503,
-			headers: http.Header{"Retry-After": {"1e100"}}, want: x509MaximumRetryAfter, present: true},
+			headers: http.Header{"Retry-After": {"1e100"}}, want: x509MaximumRetryAfter, present: true, exceeds: true},
 		{name: "finite scaling overflow", status: 503,
 			headers: http.Header{"Retry-After": {"2" + strings.Repeat("0", 299)}},
-			want:    x509MaximumRetryAfter, present: true},
+			want:    x509MaximumRetryAfter, present: true, exceeds: true},
 		{name: "finite huge milliseconds", status: 429,
-			headers: http.Header{"Retry-After-Ms": {"1e100"}}, want: x509MaximumRetryAfter, present: true},
+			headers: http.Header{"Retry-After-Ms": {"1e100"}}, want: x509MaximumRetryAfter, present: true, exceeds: true},
 		{name: "future HTTP date bounded", status: 503,
 			headers: http.Header{"Retry-After": {time.Now().Add(time.Hour).UTC().Format(http.TimeFormat)}},
-			want:    x509MaximumRetryAfter, present: true},
+			want:    x509MaximumRetryAfter, present: true, exceeds: true},
 		{name: "past HTTP date immediate", status: 503,
 			headers: http.Header{"Retry-After": {time.Now().Add(-time.Hour).UTC().Format(http.TimeFormat)}}, present: true},
 		{name: "invalid preferred header falls through", status: 429,
@@ -390,7 +391,7 @@ func TestX509ExchangePreservesOnlySafeBoundedRetryAfterDelays(t *testing.T) {
 		{name: "not a number", status: 429, headers: http.Header{"Retry-After": {"NaN"}}},
 		{name: "positive infinity", status: 429, headers: http.Header{"Retry-After": {"+Inf"}}},
 		{name: "negative infinity", status: 429, headers: http.Header{"Retry-After": {"-Inf"}}},
-		{name: "float overflow", status: 429, headers: http.Header{"Retry-After": {"1e999"}}},
+		{name: "float overflow", status: 429, headers: http.Header{"Retry-After": {"1e999"}}, want: x509MaximumRetryAfter, present: true, exceeds: true},
 		{name: "private invalid value", status: 503, headers: http.Header{"Retry-After": {"private-header-secret"}}},
 		{name: "permanent status ignores header", status: 404,
 			headers: http.Header{"Retry-After": {"3"}}},
@@ -411,7 +412,7 @@ func TestX509ExchangePreservesOnlySafeBoundedRetryAfterDelays(t *testing.T) {
 			if token != (x509ExchangedToken{}) || !errors.As(err, &status) {
 				t.Fatalf("issuer failure = token:%v error:%v, want a private HTTP status error", token, err)
 			}
-			if status.retryAfter != test.want || status.hasRetryAfter != test.present {
+			if status.retryAfter != test.want || status.hasRetryAfter != test.present || status.retryAfterTooLong != test.exceeds {
 				t.Errorf("safe issuer-directed delay = (%s, %t), want (%s, %t)",
 					status.retryAfter, status.hasRetryAfter, test.want, test.present)
 			}
@@ -436,7 +437,7 @@ func TestX509ParseRetryAfterUsesProvidedClockForHTTPDates(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			headers := http.Header{"Retry-After": {now.Add(3 * time.Second).Format(test.format)}}
-			if delay, present := x509ParseRetryAfter(headers, now); !present || delay != 3*time.Second {
+			if delay, present, exceeds := x509ParseRetryAfter(headers, now); !present || exceeds || delay != 3*time.Second {
 				t.Errorf("clock-relative Retry-After date = (%s, %t), want (3s, true)", delay, present)
 			}
 		})

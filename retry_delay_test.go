@@ -124,6 +124,8 @@ func TestRetryAfterDelayEdgeCases(t *testing.T) {
 		"excessive HTTP date":                       {httpDateOffset: 90 * time.Second, wantAttempts: 1},
 		"explicit retry cannot shorten the minimum": {header: http.Header{"Retry-After": {"90"}, "X-Should-Retry": {"true"}}, wantAttempts: 1},
 		"explicit retry opt-out":                    {header: http.Header{"Retry-After": {"3"}, "X-Should-Retry": {"false"}}, wantAttempts: 1},
+		"fractional seconds round up":               {header: http.Header{"Retry-After": {"1.001"}}, wantAttempts: 2, minimumWait: 1001 * time.Millisecond, maximumWait: 1001 * time.Millisecond},
+		"fractional milliseconds round up":          {header: http.Header{"Retry-After-Ms": {"1.001"}}, wantAttempts: 2, minimumWait: 1001 * time.Microsecond, maximumWait: 1001 * time.Microsecond},
 		"zero seconds":                              {header: http.Header{"Retry-After": {"0"}}, wantAttempts: 2},
 		"zero milliseconds":                         {header: http.Header{"Retry-After-Ms": {"0"}}, wantAttempts: 2},
 		"elapsed HTTP date":                         {httpDateOffset: -time.Minute, wantAttempts: 2},

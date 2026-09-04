@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/shared"
 )
 
@@ -31,9 +32,10 @@ type x509ExchangedToken struct {
 }
 
 type x509ExchangeHTTPError struct {
-	statusCode    int
-	retryAfter    time.Duration
-	hasRetryAfter bool
+	statusCode        int
+	retryAfter        time.Duration
+	hasRetryAfter     bool
+	retryAfterTooLong bool
 }
 
 func (err *x509ExchangeHTTPError) Error() string {
@@ -204,9 +206,16 @@ func x509ExchangeStatusError(ctx context.Context, response *http.Response) (resu
 		response.StatusCode != http.StatusForbidden {
 		status := &x509ExchangeHTTPError{statusCode: response.StatusCode}
 		if status.retryable() {
-			status.retryAfter, status.hasRetryAfter = x509ParseRetryAfter(response.Header, time.Now())
+			status.retryAfter, status.hasRetryAfter, status.retryAfterTooLong = x509ParseRetryAfter(response.Header, time.Now())
+			if x509RetryAfterExceedsMaximum(status, requestconfig.RequestRetryScopeFromContext(ctx)) {
+				return status
+			}
 			if err := x509DrainRetryableResponse(ctx, response); err != nil {
-				return err
+				if ctx.Err() != nil || !status.hasRetryAfter || status.retryAfter <= 0 {
+					return err
+				}
+				// A failed drain must not discard the server minimum.
+				return status
 			}
 		}
 		return status
@@ -255,7 +264,7 @@ func x509DrainRetryableResponse(ctx context.Context, response *http.Response) er
 	return nil
 }
 
-func x509ParseRetryAfter(headers http.Header, now time.Time) (time.Duration, bool) {
+func x509ParseRetryAfter(headers http.Header, now time.Time) (time.Duration, bool, bool) {
 	for _, header := range []struct {
 		name string
 		unit time.Duration
@@ -267,14 +276,18 @@ func x509ParseRetryAfter(headers http.Header, now time.Time) (time.Duration, boo
 		if value == "" {
 			continue
 		}
-		if parsed, err := strconv.ParseFloat(value, 64); err == nil {
+		parsed, err := strconv.ParseFloat(value, 64)
+		if errors.Is(err, strconv.ErrRange) && math.IsInf(parsed, 1) {
+			return x509MaximumRetryAfter, true, true
+		}
+		if err == nil {
 			if math.IsNaN(parsed) || math.IsInf(parsed, 0) || parsed < 0 {
 				continue
 			}
 			if parsed >= float64(x509MaximumRetryAfter)/float64(header.unit) {
-				return x509MaximumRetryAfter, true
+				return x509MaximumRetryAfter, true, parsed > float64(x509MaximumRetryAfter)/float64(header.unit)
 			}
-			return time.Duration(parsed * float64(header.unit)), true
+			return time.Duration(math.Ceil(parsed * float64(header.unit))), true, false
 		}
 		if header.name != "Retry-After" {
 			continue
@@ -282,10 +295,10 @@ func x509ParseRetryAfter(headers http.Header, now time.Time) (time.Duration, boo
 		if deadline, err := http.ParseTime(value); err == nil {
 			delay := deadline.Sub(now)
 			if delay <= 0 {
-				return 0, true
+				return 0, true, false
 			}
-			return min(delay, x509MaximumRetryAfter), true
+			return min(delay, x509MaximumRetryAfter), true, delay > x509MaximumRetryAfter
 		}
 	}
-	return 0, false
+	return 0, false, false
 }

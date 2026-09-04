@@ -132,6 +132,11 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 					errors.Is(current.err, current.ownerContextErr) {
 					continue
 				}
+				// A follower must not immediately replay a server-directed wait.
+				var status *x509ExchangeHTTPError
+				if errors.As(current.err, &status) && status.hasRetryAfter && status.retryAfter > 0 {
+					return "", current.err
+				}
 				if retryableX509ExchangeError(current.err) {
 					if scope := requestconfig.RequestRetryScopeFromContext(ctx); scope != nil && scope.TryRetry() {
 						continue
@@ -259,11 +264,20 @@ func (identity *X509WorkloadIdentityAuth) exchangeWithRetry(
 			return token, err
 		}
 		scope := requestconfig.RequestRetryScopeFromContext(ctx)
+		if x509RetryAfterExceedsMaximum(err, scope) {
+			return token, err
+		}
 		if scope != nil && !scope.TryRetry() {
 			return token, err
 		}
 		if errors.Is(err, errX509InvalidatedBearer) {
 			continue
+		}
+		retryWake := wake
+		var status *x509ExchangeHTTPError
+		if errors.As(err, &status) && status.hasRetryAfter && status.retryAfter > 0 {
+			// Bearer invalidation may interrupt backoff, but not a server minimum.
+			retryWake = nil
 		}
 		timer := time.NewTimer(x509ExchangeRetryDelay(err, attempt, scope))
 		select {
@@ -273,7 +287,7 @@ func (identity *X509WorkloadIdentityAuth) exchangeWithRetry(
 			}
 			return x509ExchangedToken{}, ctx.Err()
 		case <-timer.C:
-		case <-wake:
+		case <-retryWake:
 			if !timer.Stop() {
 				select {
 				case <-timer.C:
@@ -285,11 +299,23 @@ func (identity *X509WorkloadIdentityAuth) exchangeWithRetry(
 	}
 }
 
+func x509RetryAfterExceedsMaximum(err error, scope *requestconfig.RequestRetryScope) bool {
+	var status *x509ExchangeHTTPError
+	if !errors.As(err, &status) || !status.hasRetryAfter {
+		return false
+	}
+	maximum := x509MaximumRetryAfter
+	if scope != nil {
+		maximum = scope.MaxRetryDelay()
+	}
+	return status.retryAfterTooLong || status.retryAfter > maximum
+}
+
 func x509ExchangeRetryDelay(err error, attempt int, scope *requestconfig.RequestRetryScope) time.Duration {
 	delay := x509InitialRetryDelay << attempt
 	var status *x509ExchangeHTTPError
 	if errors.As(err, &status) && status.hasRetryAfter {
-		delay = status.retryAfter
+		return status.retryAfter
 	}
 	maximum := x509MaximumRetryAfter
 	if scope != nil {
