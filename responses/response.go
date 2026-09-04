@@ -9014,8 +9014,6 @@ type ResponseFunctionCallArgumentsDoneEvent struct {
 	Arguments string `json:"arguments" api:"required"`
 	// The ID of the item.
 	ItemID string `json:"item_id" api:"required"`
-	// The name of the function that was called.
-	Name string `json:"name" api:"required"`
 	// The index of the output item.
 	OutputIndex int64 `json:"output_index" api:"required"`
 	// The sequence number of this event.
@@ -9025,7 +9023,6 @@ type ResponseFunctionCallArgumentsDoneEvent struct {
 	JSON struct {
 		Arguments      respjson.Field
 		ItemID         respjson.Field
-		Name           respjson.Field
 		OutputIndex    respjson.Field
 		SequenceNumber respjson.Field
 		Type           respjson.Field
@@ -22538,10 +22535,8 @@ type ResponseStreamEventUnion struct {
 	// This field is from variant [ResponseErrorEvent].
 	Message string `json:"message"`
 	// This field is from variant [ResponseErrorEvent].
-	Param     string `json:"param"`
-	Arguments string `json:"arguments"`
-	// This field is from variant [ResponseFunctionCallArgumentsDoneEvent].
-	Name         string `json:"name"`
+	Param        string `json:"param"`
+	Arguments    string `json:"arguments"`
 	Command      string `json:"command"`
 	CommandIndex int64  `json:"command_index"`
 	// This field is from variant [ResponseShellCallCommandDeltaEvent].
@@ -22590,7 +22585,6 @@ type ResponseStreamEventUnion struct {
 		Message           respjson.Field
 		Param             respjson.Field
 		Arguments         respjson.Field
-		Name              respjson.Field
 		Command           respjson.Field
 		CommandIndex      respjson.Field
 		Obfuscation       respjson.Field
