@@ -28,6 +28,14 @@ func TestNextCursorPaginationFollowsEmptyPages(t *testing.T) {
 			want: []string{"group-1"},
 		},
 		{
+			name: "repeated cursor stops",
+			pages: map[string]string{
+				"":         `{"data":[],"has_more":true,"next":"cursor-1"}`,
+				"cursor-1": `{"data":[],"has_more":true,"next":"cursor-1"}`,
+			},
+			want: []string{},
+		},
+		{
 			name: "empty intermediate page",
 			pages: map[string]string{
 				"":         `{"data":[{"id":"group-1","created_at":1,"group_type":"group","is_scim_managed":false,"name":"one"}],"has_more":true,"next":"cursor-1"}`,

@@ -360,11 +360,12 @@ func (r *NextCursorPage[T]) SetPageConfig(cfg *requestconfig.RequestConfig, res 
 }
 
 type NextCursorPageAutoPager[T any] struct {
-	page *NextCursorPage[T]
-	cur  T
-	idx  int
-	run  int
-	err  error
+	page        *NextCursorPage[T]
+	cur         T
+	idx         int
+	run         int
+	err         error
+	seenCursors map[string]struct{}
 	paramObj
 }
 
@@ -387,6 +388,16 @@ func (r *NextCursorPageAutoPager[T]) Next() bool {
 			return true
 		}
 		r.idx = 0
+		next := r.page.Next
+		if next != "" {
+			if r.seenCursors == nil {
+				r.seenCursors = make(map[string]struct{})
+			}
+			if _, seen := r.seenCursors[next]; seen {
+				return false
+			}
+			r.seenCursors[next] = struct{}{}
+		}
 		r.page, r.err = r.page.GetNextPage()
 		if r.err != nil || r.page == nil {
 			return false
