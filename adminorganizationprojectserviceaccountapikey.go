@@ -64,6 +64,9 @@ type AdminOrganizationProjectServiceAccountAPIKeyNewResponse struct {
 	Object constant.OrganizationProjectServiceAccountAPIKey `json:"object" default:"organization.project.service_account.api_key"`
 	// The unredacted API key value.
 	Value string `json:"value" api:"required"`
+	// The Unix timestamp (in seconds) when the API key expires, or null if it does not
+	// expire.
+	ExpiresAt int64 `json:"expires_at" api:"nullable" format:"unixtime"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -71,6 +74,7 @@ type AdminOrganizationProjectServiceAccountAPIKeyNewResponse struct {
 		Name        respjson.Field
 		Object      respjson.Field
 		Value       respjson.Field
+		ExpiresAt   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -83,6 +87,8 @@ func (r *AdminOrganizationProjectServiceAccountAPIKeyNewResponse) UnmarshalJSON(
 }
 
 type AdminOrganizationProjectServiceAccountAPIKeyNewParams struct {
+	// Number of seconds until the API key expires.
+	ExpiresInSeconds param.Opt[int64] `json:"expires_in_seconds,omitzero"`
 	// API key name.
 	Name param.Opt[string] `json:"name,omitzero"`
 	// API key scopes.

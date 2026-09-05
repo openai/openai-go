@@ -33139,6 +33139,9 @@ type BetaResponseNewParams struct {
 	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
 	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
 	// Whether to store the generated model response for later retrieval via API.
+	// Defaults to true when omitted. If set to true, response data will be stored for
+	// at least 30 days, subject to the
+	// [data retention exceptions](/api/docs/guides/your-data#v1responses).
 	Store param.Opt[bool] `json:"store,omitzero"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
 	// make the output more random, while lower values like 0.2 will make it more
