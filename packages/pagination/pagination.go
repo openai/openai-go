@@ -1,6 +1,7 @@
 package pagination
 
 import (
+	"errors"
 	"net/http"
 	"reflect"
 
@@ -328,10 +329,6 @@ func (r *NextCursorPage[T]) UnmarshalJSON(data []byte) error {
 // there is no next page, this function will return a 'nil' for the page value, but
 // will not return an error
 func (r *NextCursorPage[T]) GetNextPage() (res *NextCursorPage[T], err error) {
-	if len(r.Data) == 0 {
-		return nil, nil
-	}
-
 	if r.JSON.HasMore.Valid() && r.HasMore == false {
 		return nil, nil
 	}
@@ -364,36 +361,49 @@ func (r *NextCursorPage[T]) SetPageConfig(cfg *requestconfig.RequestConfig, res 
 }
 
 type NextCursorPageAutoPager[T any] struct {
-	page *NextCursorPage[T]
-	cur  T
-	idx  int
-	run  int
-	err  error
+	page        *NextCursorPage[T]
+	cur         T
+	idx         int
+	run         int
+	err         error
+	seenCursors map[string]struct{}
 	paramObj
 }
 
 func NewNextCursorPageAutoPager[T any](page *NextCursorPage[T], err error) *NextCursorPageAutoPager[T] {
 	return &NextCursorPageAutoPager[T]{
-		page: page,
-		err:  err,
+		page:        page,
+		err:         err,
+		seenCursors: make(map[string]struct{}),
 	}
 }
 
 func (r *NextCursorPageAutoPager[T]) Next() bool {
-	if r.page == nil || len(r.page.Data) == 0 {
-		return false
-	}
-	if r.idx >= len(r.page.Data) {
+	for r.page != nil {
+		if r.idx < len(r.page.Data) {
+			r.cur = r.page.Data[r.idx]
+			r.run += 1
+			r.idx += 1
+			return true
+		}
+		if r.page.JSON.HasMore.Valid() && !r.page.HasMore {
+			r.page = nil
+			return false
+		}
+		if r.page.Next != "" {
+			if _, ok := r.seenCursors[r.page.Next]; ok {
+				r.err = errors.New("pagination cursor did not advance")
+				return false
+			}
+			r.seenCursors[r.page.Next] = struct{}{}
+		}
 		r.idx = 0
 		r.page, r.err = r.page.GetNextPage()
-		if r.err != nil || r.page == nil || len(r.page.Data) == 0 {
+		if r.err != nil {
 			return false
 		}
 	}
-	r.cur = r.page.Data[r.idx]
-	r.run += 1
-	r.idx += 1
-	return true
+	return false
 }
 
 func (r *NextCursorPageAutoPager[T]) Current() T {
