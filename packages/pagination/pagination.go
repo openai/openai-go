@@ -361,19 +361,20 @@ func (r *NextCursorPage[T]) SetPageConfig(cfg *requestconfig.RequestConfig, res 
 }
 
 type NextCursorPageAutoPager[T any] struct {
-	page       *NextCursorPage[T]
-	cur        T
-	idx        int
-	run        int
-	err        error
-	lastCursor string
+	page        *NextCursorPage[T]
+	cur         T
+	idx         int
+	run         int
+	err         error
+	seenCursors map[string]struct{}
 	paramObj
 }
 
 func NewNextCursorPageAutoPager[T any](page *NextCursorPage[T], err error) *NextCursorPageAutoPager[T] {
 	return &NextCursorPageAutoPager[T]{
-		page: page,
-		err:  err,
+		page:        page,
+		err:         err,
+		seenCursors: make(map[string]struct{}),
 	}
 }
 
@@ -385,11 +386,17 @@ func (r *NextCursorPageAutoPager[T]) Next() bool {
 			r.idx += 1
 			return true
 		}
-		if r.page.Next != "" && r.page.Next == r.lastCursor {
-			r.err = errors.New("pagination cursor did not advance")
+		if r.page.JSON.HasMore.Valid() && !r.page.HasMore {
+			r.page = nil
 			return false
 		}
-		r.lastCursor = r.page.Next
+		if r.page.Next != "" {
+			if _, ok := r.seenCursors[r.page.Next]; ok {
+				r.err = errors.New("pagination cursor did not advance")
+				return false
+			}
+			r.seenCursors[r.page.Next] = struct{}{}
+		}
 		r.idx = 0
 		r.page, r.err = r.page.GetNextPage()
 		if r.err != nil {
