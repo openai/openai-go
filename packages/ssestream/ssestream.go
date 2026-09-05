@@ -29,14 +29,14 @@ func NewDecoder(res *http.Response) Decoder {
 	}
 
 	contentType, mediaType := decoderContentTypes(res.Header.Get("content-type"))
-	if t, ok := decoderTypes[contentType]; ok {
+	if t, ok := registeredDecoder(contentType); ok {
 		return t(res.Body)
 	}
 
 	// Preserve parameter-specific registrations while allowing a bare media
 	// type registration to match standard Content-Type parameters.
 	if mediaType != "" {
-		if t, ok := decoderTypes[mediaType]; ok {
+		if t, ok := registeredDecoder(mediaType); ok {
 			return t(res.Body)
 		}
 	}
@@ -46,9 +46,21 @@ func NewDecoder(res *http.Response) Decoder {
 	return &eventStreamDecoder{rc: res.Body, scn: scn}
 }
 
-var decoderTypes = map[string](func(io.ReadCloser) Decoder){}
+var (
+	decoderTypesMu sync.RWMutex
+	decoderTypes   = map[string](func(io.ReadCloser) Decoder){}
+)
+
+func registeredDecoder(contentType string) (func(io.ReadCloser) Decoder, bool) {
+	decoderTypesMu.RLock()
+	defer decoderTypesMu.RUnlock()
+	t, ok := decoderTypes[contentType]
+	return t, ok
+}
 
 func RegisterDecoder(contentType string, decoder func(io.ReadCloser) Decoder) {
+	decoderTypesMu.Lock()
+	defer decoderTypesMu.Unlock()
 	decoderTypes[strings.ToLower(contentType)] = decoder
 }
 
