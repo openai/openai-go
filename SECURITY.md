@@ -25,6 +25,14 @@ modules such as `github.com/openai/openai-go/v3`, and official tagged SDK releas
 artifacts. Security issues affecting other OpenAI services may also be reported
 through the same private channel.
 
+## Canonical threat model
+
+For Codex Security scans and security review, the repository's canonical
+detailed threat model and trust-boundary authority is
+[docs/architecture/security-model.md](docs/architecture/security-model.md).
+This file remains the disclosure and reportability entry point and does not
+independently redefine those boundaries.
+
 For supported Go versions and SDK release compatibility, see
 [GO_VERSION_POLICY.md](GO_VERSION_POLICY.md).
 
