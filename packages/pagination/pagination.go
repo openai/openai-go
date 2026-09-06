@@ -365,7 +365,7 @@ type NextCursorPageAutoPager[T any] struct {
 	idx         int
 	run         int
 	err         error
-	seenCursors map[string]struct{}
+	seenCursors *map[string]struct{}
 	paramObj
 }
 
@@ -391,12 +391,13 @@ func (r *NextCursorPageAutoPager[T]) Next() bool {
 		next := r.page.Next
 		if next != "" {
 			if r.seenCursors == nil {
-				r.seenCursors = make(map[string]struct{})
+				seenCursors := make(map[string]struct{})
+				r.seenCursors = &seenCursors
 			}
-			if _, seen := r.seenCursors[next]; seen {
+			if _, seen := (*r.seenCursors)[next]; seen {
 				return false
 			}
-			r.seenCursors[next] = struct{}{}
+			(*r.seenCursors)[next] = struct{}{}
 		}
 		r.page, r.err = r.page.GetNextPage()
 		if r.err != nil || r.page == nil {

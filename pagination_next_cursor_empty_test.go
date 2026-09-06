@@ -11,6 +11,7 @@ import (
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/pagination"
 )
 
 func TestNextCursorPaginationFollowsEmptyPages(t *testing.T) {
@@ -87,4 +88,10 @@ func TestNextCursorPaginationFollowsEmptyPages(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNextCursorPageAutoPagerRemainsComparable(t *testing.T) {
+	var left pagination.NextCursorPageAutoPager[int]
+	var right pagination.NextCursorPageAutoPager[int]
+	_ = left == right
 }
