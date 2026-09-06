@@ -11,6 +11,7 @@ import (
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/pagination"
 	"github.com/openai/openai-go/v3/responses"
 	"github.com/openai/openai-go/v3/shared"
 )
@@ -94,5 +95,25 @@ func TestCompoundFilterRetainsNestedFieldMetadata(t *testing.T) {
 	}
 	if got := filter.Filters[0].AsCompoundFilter(); got.Type != child.Type || got.JSON.Type.Valid() != child.JSON.Type.Valid() {
 		t.Fatal("nested field metadata differs from AsCompoundFilter")
+	}
+}
+
+type customRecursiveFilter struct {
+	shared.CompoundFilter
+	Children []customRecursiveFilter `json:"children"`
+}
+
+func (f *customRecursiveFilter) UnmarshalJSON(_ []byte) error {
+	f.Type = "custom"
+	return nil
+}
+
+func TestPageRetainsCustomRecursiveUnmarshaler(t *testing.T) {
+	var page pagination.Page[customRecursiveFilter]
+	if err := json.Unmarshal([]byte(`{"data":[{"type":"and","children":[]}]}`), &page); err != nil {
+		t.Fatalf("Unmarshal() error = %v", err)
+	}
+	if len(page.Data) != 1 || page.Data[0].Type != "custom" {
+		t.Fatalf("page data = %+v, want custom unmarshaler output", page.Data)
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 	"unsafe"
@@ -188,6 +189,13 @@ func isRegisteredStructUnionSlice(t reflect.Type) bool {
 func isRecursiveGeneratedType(t reflect.Type) bool {
 	if cached, ok := recursiveGeneratedTypes.Load(t); ok {
 		return cached.(bool)
+	}
+	// Consumers can embed generated metadata in recursive types with their own
+	// UnmarshalJSON methods. Only SDK-owned types may bypass that method.
+	const sdkPackage = "github.com/openai/openai-go/v3"
+	if t.PkgPath() != sdkPackage && !strings.HasPrefix(t.PkgPath(), sdkPackage+"/") {
+		recursiveGeneratedTypes.Store(t, false)
+		return false
 	}
 	if t.Kind() != reflect.Struct {
 		recursiveGeneratedTypes.Store(t, false)
