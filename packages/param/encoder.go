@@ -66,7 +66,7 @@ func MarshalWithExtras[T ParamStruct, R any](f T, underlying any, extras map[str
 	} else if ovr, ok := f.Overrides(); ok {
 		return shimjson.Marshal(ovr)
 	} else {
-		return shimjson.Marshal(underlying, shimjson.WithSkipCompaction(true))
+		return shimjson.Marshal(underlying)
 	}
 }
 
@@ -96,7 +96,7 @@ func MarshalUnion[T ParamStruct](metadata T, variants ...any) ([]byte, error) {
 			Err:  fmt.Errorf("expected union to have only one present variant, got %d", nPresent),
 		}
 	}
-	return shimjson.Marshal(variants[presentIdx], shimjson.WithSkipCompaction(true))
+	return shimjson.Marshal(variants[presentIdx])
 }
 
 // typeFor is shimmed from Go 1.23 "reflect" package

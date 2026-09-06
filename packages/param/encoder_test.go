@@ -403,6 +403,28 @@ type NonCompacted struct {
 	param.APIObject
 }
 
+type RawMessageParent struct {
+	Strict bool            `json:"strict"`
+	Schema json.RawMessage `json:"schema"`
+
+	param.APIObject
+}
+
+type RawMessageUnion struct {
+	OfSchema json.RawMessage
+
+	param.APIObject
+}
+
+func (r RawMessageParent) MarshalJSON() ([]byte, error) {
+	type shadow RawMessageParent
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+
+func (r RawMessageUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(r, r.OfSchema)
+}
+
 func (a NonCompactedDoubleParent) MarshalJSON() ([]byte, error) {
 	type shadow NonCompactedDoubleParent
 	return param.MarshalObject(a, (*shadow)(&a))
@@ -434,6 +456,12 @@ func TestAppendCompactBroken(t *testing.T) {
 				Raw: `{ "broken": "json" `,
 			}},
 		},
+		"red/raw-message-parameter-injection": {
+			RawMessageParent{Strict: true, Schema: json.RawMessage(`{},"strict":false`)},
+		},
+		"red/raw-message-union-injection": {
+			RawMessageUnion{OfSchema: json.RawMessage(`{},"strict":false`)},
+		},
 	}
 
 	for name, test := range tests {
@@ -446,12 +474,8 @@ func TestAppendCompactBroken(t *testing.T) {
 	}
 }
 
-// TestAppendCompact validates an optimization for internal SDK types to
-// avoid O(keys^2) iteration over each JSON object.
-//
-// It's possible to intentionally trigger this behavior as both a user and
-// SDK developer. However, the edge case is quite pathological and requires
-// calling [json.Marshaler.MarshalJSON] rather than [json.Marshal].
+// TestAppendCompact validates that nested marshaler output is compacted and
+// checked as a complete JSON value before it is added to an enclosing value.
 func TestAppendCompact(t *testing.T) {
 
 	tests := map[string]struct {
@@ -461,8 +485,8 @@ func TestAppendCompact(t *testing.T) {
 		//
 		// Non-compacted cases
 		//
-		// Note this is how to exploit the compacter to fail, you must call [json.Marshaler.MarshalJSON] rather than [json.Marshal].
-		// The type must also embed [param.APIObject] and return non-compacted JSON.
+		// A top-level call to MarshalJSON can return non-compacted JSON, while
+		// enclosing SDK parameter types compact nested marshaler output.
 		//
 
 		"no-compact/fails-compaction": {
@@ -473,13 +497,13 @@ func TestAppendCompact(t *testing.T) {
 			NonCompactedParent{BadChild: NonCompacted{
 				Raw: nonCompactedRaw,
 			}},
-			`{"bad_child":` + nonCompactedRaw + `}`,
+			`{"bad_child":{"foo":"bar"}}`,
 		},
 		"no-compact/double-nested-with-bad-child": {
 			NonCompactedDoubleParent{Prop: "1", Parent: NonCompactedParent{BadChild: NonCompacted{
 				Raw: nonCompactedRaw,
 			}}},
-			`{"prop":"1","parent":{"bad_child":` + nonCompactedRaw + `}}`,
+			`{"prop":"1","parent":{"bad_child":{"foo":"bar"}}}`,
 		},
 
 		//
@@ -546,8 +570,12 @@ func TestAppendCompact(t *testing.T) {
 			if err != nil {
 				t.Fatalf("didn't expect error %v, expected %s", err, test.expected)
 			}
-			if string(b) != test.expected {
-				t.Logf("expected %s (%s), received %s", test.expected, reflect.TypeOf(test.value), string(b))
+			var compactedExpected bytes.Buffer
+			if err := json.Compact(&compactedExpected, []byte(test.expected)); err != nil {
+				t.Fatalf("didn't expect error %v, expected %s", err, test.expected)
+			}
+			if string(b) != compactedExpected.String() {
+				t.Fatalf("expected %s (%s), received %s", compactedExpected.String(), reflect.TypeOf(test.value), string(b))
 			}
 		})
 	}
