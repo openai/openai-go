@@ -79,3 +79,20 @@ func TestCompoundFilterRetainsInvalidNestedObjectMetadata(t *testing.T) {
 		})
 	}
 }
+
+func TestCompoundFilterRetainsNestedFieldMetadata(t *testing.T) {
+	var filter shared.CompoundFilter
+	if err := json.Unmarshal([]byte(`{"type":"and","filters":[{"type":42,"filters":[]}]}`), &filter); err != nil {
+		t.Fatalf("Unmarshal() error = %v", err)
+	}
+	if len(filter.Filters) != 1 {
+		t.Fatalf("filters = %d, want 1", len(filter.Filters))
+	}
+	child := filter.Filters[0].OfCompoundFilter
+	if child.Type != "42" || !child.JSON.Type.Valid() {
+		t.Fatalf("nested type = %q, valid = %v; want 42 and valid", child.Type, child.JSON.Type.Valid())
+	}
+	if got := filter.Filters[0].AsCompoundFilter(); got.Type != child.Type || got.JSON.Type.Valid() != child.JSON.Type.Valid() {
+		t.Fatal("nested field metadata differs from AsCompoundFilter")
+	}
+}

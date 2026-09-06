@@ -263,9 +263,13 @@ func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
 			if !isRecursiveGeneratedType(t) {
 				return indirectUnmarshalerDecoder
 			}
-			// Retain the object-shape check from the generated UnmarshalRoot
-			// call without restarting decoding or replacing the parent state.
-			isRoot = true
+			// Preserve UnmarshalRoot's object validation and permissive state,
+			// but reuse the parsed node instead of copying and parsing it again.
+			rootBuilder := decoderBuilder{root: true}
+			decode := rootBuilder.typeDecoder(t)
+			return func(node gjson.Result, value reflect.Value, _ *decoderState) error {
+				return decode(node, value, &decoderState{strict: false, exactness: exact})
+			}
 		}
 	}
 	d.root = false
