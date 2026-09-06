@@ -259,8 +259,13 @@ func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
 		return unmarshalerDecoder
 	}
 	if !d.root && reflect.PointerTo(t).Implements(reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()) {
-		if _, ok := unionVariants[t]; !ok && !isRecursiveGeneratedType(t) {
-			return indirectUnmarshalerDecoder
+		if _, ok := unionVariants[t]; !ok {
+			if !isRecursiveGeneratedType(t) {
+				return indirectUnmarshalerDecoder
+			}
+			// Retain the object-shape check from the generated UnmarshalRoot
+			// call without restarting decoding or replacing the parent state.
+			isRoot = true
 		}
 	}
 	d.root = false

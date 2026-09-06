@@ -2,6 +2,7 @@ package openai_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -11,6 +12,7 @@ import (
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/responses"
+	"github.com/openai/openai-go/v3/shared"
 )
 
 func TestResponsesNewDecodesDeepRecursiveFilter(t *testing.T) {
@@ -54,5 +56,26 @@ func TestResponsesNewDecodesDeepRecursiveFilter(t *testing.T) {
 			return
 		}
 		filters = filters[0].OfCompoundFilter.Filters
+	}
+}
+
+func TestCompoundFilterRetainsInvalidNestedObjectMetadata(t *testing.T) {
+	for _, raw := range []string{`42`, `[]`, `"filter"`, `true`} {
+		t.Run(raw, func(t *testing.T) {
+			var filter shared.CompoundFilter
+			if err := json.Unmarshal([]byte(`{"type":"and","filters":[`+raw+`]}`), &filter); err != nil {
+				t.Fatalf("Unmarshal() error = %v", err)
+			}
+			if len(filter.Filters) != 1 {
+				t.Fatalf("filters = %d, want 1", len(filter.Filters))
+			}
+			child := filter.Filters[0]
+			if child.JSON.OfCompoundFilter.Valid() {
+				t.Fatal("non-object filter was marked as a valid compound filter")
+			}
+			if got := child.RawJSON(); got != raw {
+				t.Fatalf("filter raw JSON = %q, want %q", got, raw)
+			}
+		})
 	}
 }
