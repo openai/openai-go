@@ -8,19 +8,24 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/openai/openai-go/v3/packages/param"
 	"reflect"
 	"strconv"
 	"sync"
 	"time"
 	"unsafe"
 
+	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/tidwall/gjson"
 )
 
 // decoders is a synchronized map with roughly the following type:
 // map[reflect.Type]decoderFunc
 var decoders sync.Map
+
+// recursiveGeneratedTypes caches whether a generated response type contains
+// itself. Calling its generated UnmarshalJSON method while decoding a nested
+// value would restart decoding with a copy of the remaining JSON subtree.
+var recursiveGeneratedTypes sync.Map
 
 // Unmarshal is similar to [encoding/json.Unmarshal] and parses the JSON-encoded
 // data and stores it in the given pointer.
@@ -180,6 +185,58 @@ func isRegisteredStructUnionSlice(t reflect.Type) bool {
 	return registered && isStructUnion(t.Elem())
 }
 
+func isRecursiveGeneratedType(t reflect.Type) bool {
+	if cached, ok := recursiveGeneratedTypes.Load(t); ok {
+		return cached.(bool)
+	}
+	if t.Kind() != reflect.Struct {
+		recursiveGeneratedTypes.Store(t, false)
+		return false
+	}
+
+	jsonField, ok := t.FieldByName("JSON")
+	if !ok || jsonField.Type.Kind() != reflect.Struct {
+		recursiveGeneratedTypes.Store(t, false)
+		return false
+	}
+	if rawField, ok := jsonField.Type.FieldByName("raw"); !ok || rawField.Type.Kind() != reflect.String {
+		recursiveGeneratedTypes.Store(t, false)
+		return false
+	}
+
+	var contains func(reflect.Type, map[reflect.Type]bool) bool
+	contains = func(current reflect.Type, seen map[reflect.Type]bool) bool {
+		if current == t {
+			return true
+		}
+		if seen[current] {
+			return false
+		}
+		seen[current] = true
+
+		switch current.Kind() {
+		case reflect.Array, reflect.Pointer, reflect.Slice:
+			return contains(current.Elem(), seen)
+		case reflect.Map:
+			return contains(current.Key(), seen) || contains(current.Elem(), seen)
+		case reflect.Struct:
+			for i := 0; i < current.NumField(); i++ {
+				if contains(current.Field(i).Type, seen) {
+					return true
+				}
+			}
+		}
+		return false
+	}
+
+	recursive := false
+	for i := 0; i < t.NumField() && !recursive; i++ {
+		recursive = contains(t.Field(i).Type, make(map[reflect.Type]bool))
+	}
+	recursiveGeneratedTypes.Store(t, recursive)
+	return recursive
+}
+
 func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
 	isRoot := d.root
 
@@ -202,7 +259,7 @@ func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
 		return unmarshalerDecoder
 	}
 	if !d.root && reflect.PointerTo(t).Implements(reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()) {
-		if _, ok := unionVariants[t]; !ok {
+		if _, ok := unionVariants[t]; !ok && !isRecursiveGeneratedType(t) {
 			return indirectUnmarshalerDecoder
 		}
 	}
