@@ -459,9 +459,6 @@ func TestAppendCompactBroken(t *testing.T) {
 		"red/raw-message-parameter-injection": {
 			RawMessageParent{Strict: true, Schema: json.RawMessage(`{},"strict":false`)},
 		},
-		"red/raw-message-union-injection": {
-			RawMessageUnion{OfSchema: json.RawMessage(`{},"strict":false`)},
-		},
 	}
 
 	for name, test := range tests {
@@ -471,6 +468,15 @@ func TestAppendCompactBroken(t *testing.T) {
 				t.Fatal("expected error got", v)
 			}
 		})
+	}
+}
+
+func TestMarshalUnionRejectsInvalidJSON(t *testing.T) {
+	value := RawMessageUnion{OfSchema: json.RawMessage(`{},"strict":false`)}
+	// Exercise the SDK marshaler directly: json.Marshal would independently
+	// reject this output even if MarshalUnion skipped validation.
+	if data, err := value.MarshalJSON(); err == nil {
+		t.Fatalf("expected invalid union JSON to be rejected, got %s", data)
 	}
 }
 
