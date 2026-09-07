@@ -29,6 +29,7 @@ require (
 	github.com/aws/smithy-go v1.27.8 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.1.2 // indirect
+	github.com/coder/websocket v1.8.15 // indirect
 	github.com/ebitengine/purego v0.9.0 // indirect
 	github.com/pb33f/ordered-map/v2 v2.3.1 // indirect
 	github.com/tidwall/gjson v1.19.0 // indirect
