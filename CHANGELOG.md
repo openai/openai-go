@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.58.0](https://github.com/openai/openai-go/compare/v3.57.0...v3.58.0) (2026-09-08)
+
+
+### Features
+
+* **api:** add GPT Image 2.5 models and image options ([#904](https://github.com/openai/openai-go/issues/904)) ([92a91b7](https://github.com/openai/openai-go/commit/92a91b78e0d159a4874296cb79be07e4a0c4682d))
+
 ## [3.57.0](https://github.com/openai/openai-go/compare/v3.56.0...v3.57.0) (2026-09-05)
 
 
