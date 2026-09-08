@@ -647,8 +647,8 @@ func (r *LiveCallIncomingWebhookEvent) UnmarshalJSON(data []byte) error {
 
 // Event data payload.
 type LiveCallIncomingWebhookEventData struct {
-	// The Transceiver `rtc_...` ID of the pending SIP session. The same value appears
-	// as `call_id` in `realtime.call.incoming`.
+	// The `live_...` ID of the pending SIP session. Forward this value unchanged when
+	// accepting or rejecting the call through the Live API.
 	SessionID string `json:"session_id" api:"required"`
 	// Headers from the SIP Invite.
 	SipHeaders []LiveCallIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
@@ -731,8 +731,10 @@ func (r *RealtimeCallIncomingWebhookEvent) UnmarshalJSON(data []byte) error {
 
 // Event data payload.
 type RealtimeCallIncomingWebhookEventData struct {
-	// The Transceiver `rtc_...` ID of the pending SIP session. The same value appears
-	// as `session_id` in `live.call.incoming`.
+	// The Transceiver `rtc_...` ID of the pending SIP session. The paired
+	// `live.call.incoming` event derives its `session_id` by replacing the `rtc_`
+	// prefix with `live_`. Use the ID returned by the event with the corresponding
+	// Realtime or Live API.
 	CallID string `json:"call_id" api:"required"`
 	// Headers from the SIP Invite.
 	SipHeaders []RealtimeCallIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
