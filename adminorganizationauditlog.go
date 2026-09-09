@@ -2319,7 +2319,7 @@ type AdminOrganizationAuditLogListParams struct {
 	EffectiveAt AdminOrganizationAuditLogListParamsEffectiveAt `query:"effective_at,omitzero" json:"-"`
 	// Return only events with a `type` in one of these values. For example,
 	// `project.created`. For all options, see the documentation for the
-	// [audit log object](https://platform.openai.com/docs/api-reference/audit-logs/object).
+	// [audit log object](https://developers.openai.com/api/reference/resources/admin/subresources/organization/subresources/audit_logs).
 	//
 	// Any of "api_key.created", "api_key.updated", "api_key.deleted",
 	// "certificate.created", "certificate.updated", "certificate.deleted",

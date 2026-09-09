@@ -274,13 +274,14 @@ type FineTuningAlphaGraderRunParams struct {
 	Grader FineTuningAlphaGraderRunParamsGraderUnion `json:"grader,omitzero" api:"required"`
 	// The model sample to be evaluated. This value will be used to populate the
 	// `sample` namespace. See
-	// [the guide](https://platform.openai.com/docs/guides/graders) for more details.
-	// The `output_json` variable will be populated if the model sample is a valid JSON
-	// string.
+	// [the guide](https://developers.openai.com/api/docs/guides/graders) for more
+	// details. The `output_json` variable will be populated if the model sample is a
+	// valid JSON string.
 	ModelSample string `json:"model_sample" api:"required"`
 	// The dataset item provided to the grader. This will be used to populate the
 	// `item` namespace. See
-	// [the guide](https://platform.openai.com/docs/guides/graders) for more details.
+	// [the guide](https://developers.openai.com/api/docs/guides/graders) for more
+	// details.
 	Item any `json:"item,omitzero"`
 	paramObj
 }

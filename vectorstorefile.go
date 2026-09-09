@@ -40,8 +40,8 @@ func NewVectorStoreFileService(opts ...option.RequestOption) (r VectorStoreFileS
 }
 
 // Create a vector store file by attaching a
-// [File](https://platform.openai.com/docs/api-reference/files) to a
-// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object).
+// [File](https://developers.openai.com/api/reference/resources/files) to a
+// [vector store](https://developers.openai.com/api/reference/resources/vector_stores).
 func (r *VectorStoreFileService) New(ctx context.Context, vectorStoreID string, body VectorStoreFileNewParams, opts ...option.RequestOption) (res *VectorStoreFile, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -145,7 +145,7 @@ func (r *VectorStoreFileService) ListAutoPaging(ctx context.Context, vectorStore
 
 // Delete a vector store file. This will remove the file from the vector store but
 // the file itself will not be deleted. To delete the file, use the
-// [delete file](https://platform.openai.com/docs/api-reference/files/delete)
+// [delete file](https://developers.openai.com/api/reference/resources/files/methods/delete)
 // endpoint.
 func (r *VectorStoreFileService) Delete(ctx context.Context, vectorStoreID string, fileID string, opts ...option.RequestOption) (res *VectorStoreFileDeleted, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
@@ -217,8 +217,8 @@ type VectorStoreFile struct {
 	// original file size.
 	UsageBytes int64 `json:"usage_bytes" api:"required"`
 	// The ID of the
-	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
-	// that the [File](https://platform.openai.com/docs/api-reference/files) is
+	// [vector store](https://developers.openai.com/api/reference/resources/vector_stores)
+	// that the [File](https://developers.openai.com/api/reference/resources/files) is
 	// attached to.
 	VectorStoreID string `json:"vector_store_id" api:"required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
@@ -372,10 +372,10 @@ func (r *VectorStoreFileContentResponse) UnmarshalJSON(data []byte) error {
 }
 
 type VectorStoreFileNewParams struct {
-	// A [File](https://platform.openai.com/docs/api-reference/files) ID that the
-	// vector store should use. Useful for tools like `file_search` that can access
+	// A [File](https://developers.openai.com/api/reference/resources/files) ID that
+	// the vector store should use. Useful for tools like `file_search` that can access
 	// files. For multi-file ingestion, we recommend
-	// [`file_batches`](https://platform.openai.com/docs/api-reference/vector-stores-file-batches/createBatch)
+	// [`file_batches`](https://developers.openai.com/api/reference/resources/vector_stores/subresources/file_batches/methods/create)
 	// to minimize per-vector-store write requests.
 	FileID string `json:"file_id" api:"required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
