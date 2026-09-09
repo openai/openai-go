@@ -1211,7 +1211,7 @@ type ItemNewParams struct {
 	// The items to add to the conversation. You may add up to 20 items at a time.
 	Items []responses.ResponseInputItemUnionParam `json:"items,omitzero" api:"required"`
 	// Additional fields to include in the response. See the `include` parameter for
-	// [listing Conversation items above](https://platform.openai.com/docs/api-reference/conversations/list-items#conversations_list_items-include)
+	// [listing Conversation items above](https://developers.openai.com/api/reference/resources/conversations/subresources/items/methods/list#%28resource%29%20conversations.items%20%3E%20%28method%29%20list%20%3E%20%28params%29%20default%20%3E%20%28param%29%20include%20%3E%20%28schema%29)
 	// for more information.
 	Include []responses.ResponseIncludable `query:"include,omitzero" json:"-"`
 	paramObj
@@ -1235,7 +1235,7 @@ func (r ItemNewParams) URLQuery() (v url.Values, err error) {
 
 type ItemGetParams struct {
 	// Additional fields to include in the response. See the `include` parameter for
-	// [listing Conversation items above](https://platform.openai.com/docs/api-reference/conversations/list-items#conversations_list_items-include)
+	// [listing Conversation items above](https://developers.openai.com/api/reference/resources/conversations/subresources/items/methods/list#%28resource%29%20conversations.items%20%3E%20%28method%29%20list%20%3E%20%28params%29%20default%20%3E%20%28param%29%20include%20%3E%20%28schema%29)
 	// for more information.
 	Include []responses.ResponseIncludable `query:"include,omitzero" json:"-"`
 	paramObj

@@ -79,7 +79,7 @@ func (r *ImageService) EditStreaming(ctx context.Context, body ImageEditParams, 
 }
 
 // Creates an image given a prompt.
-// [Learn more](https://platform.openai.com/docs/guides/images).
+// [Learn more](https://developers.openai.com/api/docs/guides/images-vision).
 func (r *ImageService) Generate(ctx context.Context, body ImageGenerateParams, opts ...option.RequestOption) (res *ImagesResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -89,7 +89,7 @@ func (r *ImageService) Generate(ctx context.Context, body ImageGenerateParams, o
 }
 
 // Creates an image given a prompt.
-// [Learn more](https://platform.openai.com/docs/guides/images).
+// [Learn more](https://developers.openai.com/api/docs/guides/images-vision).
 func (r *ImageService) GenerateStreaming(ctx context.Context, body ImageGenerateParams, opts ...option.RequestOption) (stream *ssestream.Stream[ImageGenStreamEventUnion]) {
 	var (
 		raw *http.Response
@@ -907,7 +907,7 @@ type ImageNewVariationParams struct {
 	N param.Opt[int64] `json:"n,omitzero"`
 	// A unique identifier representing your end-user, which can help OpenAI to monitor
 	// and detect abuse.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
 	User param.Opt[string] `json:"user,omitzero"`
 	// The model to use for image generation. Only `dall-e-2` is supported at this
 	// time.
@@ -995,7 +995,7 @@ type ImageEditParams struct {
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
 	// A unique identifier representing your end-user, which can help OpenAI to monitor
 	// and detect abuse.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
 	User param.Opt[string] `json:"user,omitzero"`
 	// Allows to set transparency for the background of the generated image(s). Must be
 	// one of `transparent`, `opaque`, or `auto` (default value). When `auto` is used,
@@ -1208,7 +1208,7 @@ type ImageGenerateParams struct {
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
 	// A unique identifier representing your end-user, which can help OpenAI to monitor
 	// and detect abuse.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
 	User param.Opt[string] `json:"user,omitzero"`
 	// Allows to set transparency for the background of the generated image(s). Must be
 	// one of `transparent`, `opaque`, or `auto` (default value). When `auto` is used,
