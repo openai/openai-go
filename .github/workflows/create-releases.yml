@@ -36,10 +36,11 @@ jobs:
           manifest-file: .release-please-manifest.json
 
   publish:
-    name: publish
+    name: Index Go documentation
     needs: release
     if: ${{ needs.release.outputs.releases_created == 'true' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
 
@@ -48,8 +49,23 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Generate godocs
+      - name: Verify released module and request documentation indexing
         run: |
-          version="$(jq -r '. | to_entries[0] | .value' .release-please-manifest.json)"
+          version="$(jq -er '.["."]' .release-please-manifest.json)"
           module="$(awk '$1 == "module" { print $2; exit }' go.mod)"
-          curl --fail --show-error --silent -X POST "https://pkg.go.dev/fetch/${module}@v${version}"
+
+          # Warm the proxy and verify the version before retrying pkg.go.dev 404s.
+          curl --fail-with-body --show-error --silent \
+            --retry 5 --retry-all-errors --retry-delay 15 --retry-max-time 180 \
+            --connect-timeout 10 --max-time 30 \
+            "https://proxy.golang.org/${module}/@v/v${version}.info"
+
+          # pkg.go.dev returns 408 after 30 seconds while indexing continues.
+          # Retrying also handles a fresh version not yet visible there (404).
+          if ! curl --fail-with-body --show-error --silent \
+            --retry 5 --retry-all-errors --retry-delay 15 --retry-max-time 300 \
+            --connect-timeout 10 --max-time 45 \
+            -X POST "https://pkg.go.dev/fetch/${module}@v${version}"; then
+            echo "::error::Go module ${module}@v${version} is available, but documentation indexing failed. Inspect the response above and rerun only the Index Go documentation job."
+            exit 1
+          fi
