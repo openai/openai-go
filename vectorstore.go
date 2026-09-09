@@ -654,9 +654,9 @@ type VectorStoreNewParams struct {
 	ChunkingStrategy FileChunkingStrategyParamUnion `json:"chunking_strategy,omitzero"`
 	// The expiration policy for a vector store.
 	ExpiresAfter VectorStoreNewParamsExpiresAfter `json:"expires_after,omitzero"`
-	// A list of [File](https://platform.openai.com/docs/api-reference/files) IDs that
-	// the vector store should use. Useful for tools like `file_search` that can access
-	// files.
+	// A list of [File](https://developers.openai.com/api/reference/resources/files)
+	// IDs that the vector store should use. Useful for tools like `file_search` that
+	// can access files.
 	FileIDs []string `json:"file_ids,omitzero"`
 	paramObj
 }

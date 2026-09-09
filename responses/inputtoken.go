@@ -74,14 +74,14 @@ type InputTokenCountParams struct {
 	// Model ID used to generate the response, like `gpt-4o` or `o3`. OpenAI offers a
 	// wide range of models with different capabilities, performance characteristics,
 	// and price points. Refer to the
-	// [model guide](https://platform.openai.com/docs/models) to browse and compare
-	// available models.
+	// [model guide](https://developers.openai.com/api/docs/models) to browse and
+	// compare available models.
 	Model param.Opt[string] `json:"model,omitzero"`
 	// Whether to allow the model to run tool calls in parallel.
 	ParallelToolCalls param.Opt[bool] `json:"parallel_tool_calls,omitzero"`
 	// The unique ID of the previous response to the model. Use this to create
 	// multi-turn conversations. Learn more about
-	// [conversation state](https://platform.openai.com/docs/guides/conversation-state).
+	// [conversation state](https://developers.openai.com/api/docs/guides/conversation-state).
 	// Cannot be used in conjunction with `conversation`.
 	PreviousResponseID param.Opt[string] `json:"previous_response_id,omitzero"`
 	// The conversation that this response belongs to. Items from this conversation are
@@ -94,8 +94,8 @@ type InputTokenCountParams struct {
 	// Configuration options for a text response from the model. Can be plain text or
 	// structured JSON data. Learn more:
 	//
-	// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
-	// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
+	//   - [Text inputs and outputs](https://developers.openai.com/api/docs/guides/text)
+	//   - [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
 	Text InputTokenCountParamsText `json:"text,omitzero"`
 	// Controls which tool the model should use, if any.
 	ToolChoice InputTokenCountParamsToolChoiceUnion `json:"tool_choice,omitzero"`
@@ -107,7 +107,7 @@ type InputTokenCountParams struct {
 	// at most 64 characters.
 	Personality InputTokenCountParamsPersonality `json:"personality,omitzero"`
 	// **gpt-5 and o-series models only** Configuration options for
-	// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+	// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 	Reasoning shared.ReasoningParam `json:"reasoning,omitzero"`
 	// The truncation strategy to use for the model response. - `auto`: If the input to
 	// this Response exceeds the model's context window size, the model will truncate
@@ -173,8 +173,8 @@ const (
 // Configuration options for a text response from the model. Can be plain text or
 // structured JSON data. Learn more:
 //
-// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
-// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
+//   - [Text inputs and outputs](https://developers.openai.com/api/docs/guides/text)
+//   - [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
 type InputTokenCountParamsText struct {
 	// Constrains the verbosity of the model's response. Lower values will result in
 	// more concise responses, while higher values will result in more verbose
@@ -187,7 +187,7 @@ type InputTokenCountParamsText struct {
 	//
 	// Configuring `{ "type": "json_schema" }` enables Structured Outputs, which
 	// ensures the model will match your supplied JSON schema. Learn more in the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	//
 	// The default format is `{ "type": "text" }` with no additional options.
 	//

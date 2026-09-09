@@ -46,16 +46,16 @@ func NewResponseService(opts ...option.RequestOption) (r ResponseService) {
 }
 
 // Creates a model response. Provide
-// [text](https://platform.openai.com/docs/guides/text) or
-// [image](https://platform.openai.com/docs/guides/images) inputs to generate
-// [text](https://platform.openai.com/docs/guides/text) or
-// [JSON](https://platform.openai.com/docs/guides/structured-outputs) outputs. Have
-// the model call your own
-// [custom code](https://platform.openai.com/docs/guides/function-calling) or use
-// built-in [tools](https://platform.openai.com/docs/guides/tools) like
-// [web search](https://platform.openai.com/docs/guides/tools-web-search) or
-// [file search](https://platform.openai.com/docs/guides/tools-file-search) to use
-// your own data as input for the model's response.
+// [text](https://developers.openai.com/api/docs/guides/text) or
+// [image](https://developers.openai.com/api/docs/guides/images-vision) inputs to
+// generate [text](https://developers.openai.com/api/docs/guides/text) or
+// [JSON](https://developers.openai.com/api/docs/guides/structured-outputs)
+// outputs. Have the model call your own
+// [custom code](https://developers.openai.com/api/docs/guides/function-calling) or
+// use built-in [tools](https://developers.openai.com/api/docs/guides/tools) like
+// [web search](https://developers.openai.com/api/docs/guides/tools-web-search) or
+// [file search](https://developers.openai.com/api/docs/guides/tools-file-search)
+// to use your own data as input for the model's response.
 func (r *ResponseService) New(ctx context.Context, body ResponseNewParams, opts ...option.RequestOption) (res *Response, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -65,16 +65,16 @@ func (r *ResponseService) New(ctx context.Context, body ResponseNewParams, opts 
 }
 
 // Creates a model response. Provide
-// [text](https://platform.openai.com/docs/guides/text) or
-// [image](https://platform.openai.com/docs/guides/images) inputs to generate
-// [text](https://platform.openai.com/docs/guides/text) or
-// [JSON](https://platform.openai.com/docs/guides/structured-outputs) outputs. Have
-// the model call your own
-// [custom code](https://platform.openai.com/docs/guides/function-calling) or use
-// built-in [tools](https://platform.openai.com/docs/guides/tools) like
-// [web search](https://platform.openai.com/docs/guides/tools-web-search) or
-// [file search](https://platform.openai.com/docs/guides/tools-file-search) to use
-// your own data as input for the model's response.
+// [text](https://developers.openai.com/api/docs/guides/text) or
+// [image](https://developers.openai.com/api/docs/guides/images-vision) inputs to
+// generate [text](https://developers.openai.com/api/docs/guides/text) or
+// [JSON](https://developers.openai.com/api/docs/guides/structured-outputs)
+// outputs. Have the model call your own
+// [custom code](https://developers.openai.com/api/docs/guides/function-calling) or
+// use built-in [tools](https://developers.openai.com/api/docs/guides/tools) like
+// [web search](https://developers.openai.com/api/docs/guides/tools-web-search) or
+// [file search](https://developers.openai.com/api/docs/guides/tools-file-search)
+// to use your own data as input for the model's response.
 func (r *ResponseService) NewStreaming(ctx context.Context, body ResponseNewParams, opts ...option.RequestOption) (stream *ssestream.Stream[ResponseStreamEventUnion]) {
 	var (
 		raw *http.Response
@@ -135,7 +135,7 @@ func (r *ResponseService) Delete(ctx context.Context, responseID string, opts ..
 
 // Cancels a model response with the given ID. Only responses created with the
 // `background` parameter set to `true` can be cancelled.
-// [Learn more](https://platform.openai.com/docs/guides/background).
+// [Learn more](https://developers.openai.com/api/docs/guides/background).
 func (r *ResponseService) Cancel(ctx context.Context, responseID string, opts ...option.RequestOption) (res *Response, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -151,9 +151,9 @@ func (r *ResponseService) Cancel(ctx context.Context, responseID string, opts ..
 // Compact a conversation. Returns a compacted response object.
 //
 // Learn when and how to compact long-running conversations in the
-// [conversation state guide](https://platform.openai.com/docs/guides/conversation-state#managing-the-context-window).
+// [conversation state guide](https://developers.openai.com/api/docs/guides/conversation-state#managing-the-context-window).
 // For ZDR-compatible compaction details, see
-// [Compaction (advanced)](https://platform.openai.com/docs/guides/conversation-state#compaction-advanced).
+// [Compaction (advanced)](https://developers.openai.com/api/docs/guides/conversation-state#compaction-advanced).
 func (r *ResponseService) Compact(ctx context.Context, body ResponseCompactParams, opts ...option.RequestOption) (res *CompactedResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -1133,7 +1133,7 @@ type ComputerActionList []ComputerActionUnion
 type ComputerActionListParam []ComputerActionUnionParam
 
 // A tool that controls a virtual computer. Learn more about the
-// [computer tool](https://platform.openai.com/docs/guides/tools-computer-use).
+// [computer tool](https://developers.openai.com/api/docs/guides/tools-computer-use).
 type ComputerTool struct {
 	// The type of the computer tool. Always `computer`.
 	Type constant.Computer `json:"type" default:"computer"`
@@ -1167,7 +1167,7 @@ func NewComputerToolParam() ComputerToolParam {
 }
 
 // A tool that controls a virtual computer. Learn more about the
-// [computer tool](https://platform.openai.com/docs/guides/tools-computer-use).
+// [computer tool](https://developers.openai.com/api/docs/guides/tools-computer-use).
 //
 // This struct has a constant value, construct it with [NewComputerToolParam].
 type ComputerToolParam struct {
@@ -1185,7 +1185,7 @@ func (r *ComputerToolParam) UnmarshalJSON(data []byte) error {
 }
 
 // A tool that controls a virtual computer. Learn more about the
-// [computer tool](https://platform.openai.com/docs/guides/tools-computer-use).
+// [computer tool](https://developers.openai.com/api/docs/guides/tools-computer-use).
 type ComputerUsePreviewTool struct {
 	// The height of the computer display.
 	DisplayHeight int64 `json:"display_height" api:"required"`
@@ -1235,7 +1235,7 @@ const (
 )
 
 // A tool that controls a virtual computer. Learn more about the
-// [computer tool](https://platform.openai.com/docs/guides/tools-computer-use).
+// [computer tool](https://developers.openai.com/api/docs/guides/tools-computer-use).
 //
 // The properties DisplayHeight, DisplayWidth, Environment, Type are required.
 type ComputerUsePreviewToolParam struct {
@@ -1810,7 +1810,7 @@ func (r *ContainerReferenceParam) UnmarshalJSON(data []byte) error {
 }
 
 // A custom tool that processes input using a specified format. Learn more about
-// [custom tools](https://platform.openai.com/docs/guides/function-calling#custom-tools)
+// [custom tools](https://developers.openai.com/api/docs/guides/function-calling#custom-tools)
 type CustomTool struct {
 	// The name of the custom tool, used to identify it in tool calls.
 	Name string `json:"name" api:"required"`
@@ -1859,7 +1859,7 @@ func (r CustomTool) ToParam() CustomToolParam {
 }
 
 // A custom tool that processes input using a specified format. Learn more about
-// [custom tools](https://platform.openai.com/docs/guides/function-calling#custom-tools)
+// [custom tools](https://developers.openai.com/api/docs/guides/function-calling#custom-tools)
 //
 // The properties Name, Type are required.
 type CustomToolParam struct {
@@ -2075,7 +2075,7 @@ func (u *EasyInputMessageContentUnionParam) asAny() any {
 
 // A tool that searches for relevant content from uploaded files. Learn more about
 // the
-// [file search tool](https://platform.openai.com/docs/guides/tools-file-search).
+// [file search tool](https://developers.openai.com/api/docs/guides/tools-file-search).
 type FileSearchTool struct {
 	// The type of the file search tool. Always `file_search`.
 	Type constant.FileSearch `json:"type" default:"file_search"`
@@ -2206,7 +2206,7 @@ func (r *FileSearchToolRankingOptionsHybridSearch) UnmarshalJSON(data []byte) er
 
 // A tool that searches for relevant content from uploaded files. Learn more about
 // the
-// [file search tool](https://platform.openai.com/docs/guides/tools-file-search).
+// [file search tool](https://developers.openai.com/api/docs/guides/tools-file-search).
 //
 // The properties Type, VectorStoreIDs are required.
 type FileSearchToolParam struct {
@@ -2622,7 +2622,7 @@ func init() {
 
 // Defines a function in your own code the model can choose to call. Learn more
 // about
-// [function calling](https://platform.openai.com/docs/guides/function-calling).
+// [function calling](https://developers.openai.com/api/docs/guides/function-calling).
 type FunctionTool struct {
 	// The name of the function to call.
 	Name string `json:"name" api:"required"`
@@ -2678,7 +2678,7 @@ func (r FunctionTool) ToParam() FunctionToolParam {
 
 // Defines a function in your own code the model can choose to call. Learn more
 // about
-// [function calling](https://platform.openai.com/docs/guides/function-calling).
+// [function calling](https://developers.openai.com/api/docs/guides/function-calling).
 //
 // The properties Name, Parameters, Strict, Type are required.
 type FunctionToolParam struct {
@@ -3584,8 +3584,8 @@ type Response struct {
 	// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
 	// range of models with different capabilities, performance characteristics, and
 	// price points. Refer to the
-	// [model guide](https://platform.openai.com/docs/models) to browse and compare
-	// available models.
+	// [model guide](https://developers.openai.com/api/docs/models) to browse and
+	// compare available models.
 	Model shared.ResponsesModel `json:"model" api:"required"`
 	// The object type of this resource - always set to `response`.
 	Object constant.Response `json:"object" default:"response"`
@@ -3615,17 +3615,18 @@ type Response struct {
 	//
 	//   - **Built-in tools**: Tools that are provided by OpenAI that extend the model's
 	//     capabilities, like
-	//     [web search](https://platform.openai.com/docs/guides/tools-web-search) or
-	//     [file search](https://platform.openai.com/docs/guides/tools-file-search).
+	//     [web search](https://developers.openai.com/api/docs/guides/tools-web-search)
+	//     or
+	//     [file search](https://developers.openai.com/api/docs/guides/tools-file-search).
 	//     Learn more about
-	//     [built-in tools](https://platform.openai.com/docs/guides/tools).
+	//     [built-in tools](https://developers.openai.com/api/docs/guides/tools).
 	//   - **MCP Tools**: Integrations with third-party systems via custom MCP servers or
 	//     predefined connectors such as Google Drive and SharePoint. Learn more about
-	//     [MCP Tools](https://platform.openai.com/docs/guides/tools-connectors-mcp).
+	//     [MCP Tools](https://developers.openai.com/api/docs/guides/tools-connectors-mcp).
 	//   - **Function calls (custom tools)**: Functions that are defined by you, enabling
 	//     the model to call your own code with strongly typed arguments and outputs.
 	//     Learn more about
-	//     [function calling](https://platform.openai.com/docs/guides/function-calling).
+	//     [function calling](https://developers.openai.com/api/docs/guides/function-calling).
 	//     You can also use custom tools to call your own code.
 	Tools []ToolUnion `json:"tools" api:"required"`
 	// An alternative to sampling with temperature, called nucleus sampling, where the
@@ -3635,7 +3636,7 @@ type Response struct {
 	// We generally recommend altering this or `temperature` but not both.
 	TopP float64 `json:"top_p" api:"required"`
 	// Whether to run the model response in the background.
-	// [Learn more](https://platform.openai.com/docs/guides/background).
+	// [Learn more](https://developers.openai.com/api/docs/guides/background).
 	Background bool `json:"background" api:"nullable"`
 	// Unix timestamp (in seconds) of when this Response was completed. Only present
 	// when the status is `completed`.
@@ -3645,7 +3646,7 @@ type Response struct {
 	Conversation ResponseConversation `json:"conversation" api:"nullable"`
 	// An upper bound for the number of tokens that can be generated for a response,
 	// including visible output tokens and
-	// [reasoning tokens](https://platform.openai.com/docs/guides/reasoning).
+	// [reasoning tokens](https://developers.openai.com/api/docs/guides/reasoning).
 	MaxOutputTokens int64 `json:"max_output_tokens" api:"nullable"`
 	// The maximum number of total calls to built-in tools that can be processed in a
 	// response. This maximum number applies across all built-in tool calls, not per
@@ -3657,17 +3658,17 @@ type Response struct {
 	Moderation ResponseModeration `json:"moderation" api:"nullable"`
 	// The unique ID of the previous response to the model. Use this to create
 	// multi-turn conversations. Learn more about
-	// [conversation state](https://platform.openai.com/docs/guides/conversation-state).
+	// [conversation state](https://developers.openai.com/api/docs/guides/conversation-state).
 	// Cannot be used in conjunction with `conversation`.
 	PreviousResponseID string `json:"previous_response_id" api:"nullable"`
 	// Reference to a prompt template and its variables.
-	// [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
+	// [Learn more](https://developers.openai.com/api/docs/guides/text?api-mode=responses#version-prompts-in-code).
 	Prompt ResponsePrompt `json:"prompt" api:"nullable"`
 	// Prompt cache diagnostics requested for this response.
 	PromptCacheDiagnostics ResponsePromptCacheDiagnosticsUnion `json:"prompt_cache_diagnostics"`
 	// Used by OpenAI to cache responses for similar requests to optimize your cache
 	// hit rates. Replaces the `user` field.
-	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
+	// [Learn more](https://developers.openai.com/api/docs/guides/prompt-caching).
 	PromptCacheKey string `json:"prompt_cache_key" api:"nullable"`
 	// The prompt-caching options that were applied to the response. Supported for
 	// `gpt-5.6` and later models.
@@ -3677,7 +3678,7 @@ type Response struct {
 	// The retention policy for the prompt cache. Set to `24h` to enable extended
 	// prompt caching, which keeps cached prefixes active for longer, up to a maximum
 	// of 24 hours.
-	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching#prompt-cache-retention).
+	// [Learn more](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-retention).
 	// This field expresses a maximum retention policy, while
 	// `prompt_cache_options.ttl` expresses a minimum cache lifetime. The two fields
 	// are independent and do not interact. For `gpt-5.5`, `gpt-5.5-pro`, and future
@@ -3695,14 +3696,14 @@ type Response struct {
 	// Deprecated: deprecated
 	PromptCacheRetention ResponsePromptCacheRetention `json:"prompt_cache_retention" api:"nullable"`
 	// Configuration options for
-	// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+	// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 	Reasoning shared.Reasoning `json:"reasoning" api:"nullable"`
 	// A stable identifier used to help detect users of your application that may be
 	// violating OpenAI's usage policies. The IDs should be a string that uniquely
 	// identifies each user, with a maximum length of 64 characters. We recommend
 	// hashing their username or email address, in order to avoid sending us any
 	// identifying information.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
 	SafetyIdentifier string `json:"safety_identifier" api:"nullable"`
 	// Specifies the processing type used for serving the request.
 	//
@@ -3711,13 +3712,15 @@ type Response struct {
 	//     will use 'default'.
 	//   - If set to 'default', then the request will be processed with the standard
 	//     pricing and performance for the selected model.
-	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)',
-	//     then the request will be processed with the Flex Processing service tier.
-	//   - To opt-in to [Fast mode](/api/docs/guides/fast-mode) at the request level,
-	//     include the `service_tier=fast` or `service_tier=priority` parameter for
-	//     Responses or Chat Completions. The response will show `service_tier=priority`
-	//     regardless of if you specify `service_tier=fast` or `priority` in your
-	//     request.
+	//   - If set to
+	//     '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+	//     the request will be processed with the Flex Processing service tier.
+	//   - To opt-in to
+	//     [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+	//     request level, include the `service_tier=fast` or `service_tier=priority`
+	//     parameter for Responses or Chat Completions. The response will show
+	//     `service_tier=priority` regardless of if you specify `service_tier=fast` or
+	//     `priority` in your request.
 	//   - If set to 'ultrafast', then the request will be processed with the
 	//     access-controlled Ultrafast Processing service tier. This tier is currently
 	//     available for `gpt-5.6-sol`; a response served through it will show
@@ -3740,8 +3743,8 @@ type Response struct {
 	// Configuration options for a text response from the model. Can be plain text or
 	// structured JSON data. Learn more:
 	//
-	// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
-	// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
+	//   - [Text inputs and outputs](https://developers.openai.com/api/docs/guides/text)
+	//   - [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
 	Text ResponseTextConfig `json:"text"`
 	// An integer between 0 and 20 specifying the maximum number of most likely tokens
 	// to return at each token position, each with an associated log probability. In
@@ -3764,7 +3767,7 @@ type Response struct {
 	// `prompt_cache_key` instead to maintain caching optimizations. A stable
 	// identifier for your end-users. Used to boost cache hit rates by better bucketing
 	// similar requests and to help OpenAI detect and prevent abuse.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
 	//
 	// Deprecated: deprecated
 	User string `json:"user"`
@@ -4507,7 +4510,7 @@ func (r *ResponsePromptCacheOptions) UnmarshalJSON(data []byte) error {
 // The retention policy for the prompt cache. Set to `24h` to enable extended
 // prompt caching, which keeps cached prefixes active for longer, up to a maximum
 // of 24 hours.
-// [Learn more](https://platform.openai.com/docs/guides/prompt-caching#prompt-cache-retention).
+// [Learn more](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-retention).
 // This field expresses a maximum retention policy, while
 // `prompt_cache_options.ttl` expresses a minimum cache lifetime. The two fields
 // are independent and do not interact. For `gpt-5.5`, `gpt-5.5-pro`, and future
@@ -4533,13 +4536,15 @@ const (
 //     will use 'default'.
 //   - If set to 'default', then the request will be processed with the standard
 //     pricing and performance for the selected model.
-//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)',
-//     then the request will be processed with the Flex Processing service tier.
-//   - To opt-in to [Fast mode](/api/docs/guides/fast-mode) at the request level,
-//     include the `service_tier=fast` or `service_tier=priority` parameter for
-//     Responses or Chat Completions. The response will show `service_tier=priority`
-//     regardless of if you specify `service_tier=fast` or `priority` in your
-//     request.
+//   - If set to
+//     '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+//     the request will be processed with the Flex Processing service tier.
+//   - To opt-in to
+//     [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+//     request level, include the `service_tier=fast` or `service_tier=priority`
+//     parameter for Responses or Chat Completions. The response will show
+//     `service_tier=priority` regardless of if you specify `service_tier=fast` or
+//     `priority` in your request.
 //   - If set to 'ultrafast', then the request will be processed with the
 //     access-controlled Ultrafast Processing service tier. This tier is currently
 //     available for `gpt-5.6-sol`; a response served through it will show
@@ -5555,7 +5560,7 @@ func (r *ResponseCodeInterpreterToolCallOutputImageParam) UnmarshalJSON(data []b
 }
 
 // A compaction item generated by the
-// [`v1/responses/compact` API](https://platform.openai.com/docs/api-reference/responses/compact).
+// [`v1/responses/compact` API](https://developers.openai.com/api/reference/resources/responses/methods/compact).
 type ResponseCompactionItem struct {
 	// The unique ID of the compaction item.
 	ID string `json:"id" api:"required"`
@@ -5585,7 +5590,7 @@ func (r *ResponseCompactionItem) UnmarshalJSON(data []byte) error {
 func (ResponseCompactionItem) ImplConversationItemUnion() {}
 
 // A compaction item generated by the
-// [`v1/responses/compact` API](https://platform.openai.com/docs/api-reference/responses/compact).
+// [`v1/responses/compact` API](https://developers.openai.com/api/reference/resources/responses/methods/compact).
 type ResponseCompactionItemParamResp struct {
 	// The encrypted content of the compaction summary.
 	EncryptedContent string `json:"encrypted_content" api:"required"`
@@ -5620,7 +5625,7 @@ func (r ResponseCompactionItemParamResp) ToParam() ResponseCompactionItemParam {
 }
 
 // A compaction item generated by the
-// [`v1/responses/compact` API](https://platform.openai.com/docs/api-reference/responses/compact).
+// [`v1/responses/compact` API](https://developers.openai.com/api/reference/resources/responses/methods/compact).
 //
 // The properties EncryptedContent, Type are required.
 type ResponseCompactionItemParam struct {
@@ -5668,7 +5673,7 @@ func (r *ResponseCompletedEvent) UnmarshalJSON(data []byte) error {
 }
 
 // A tool call to a computer use tool. See the
-// [computer use guide](https://platform.openai.com/docs/guides/tools-computer-use)
+// [computer use guide](https://developers.openai.com/api/docs/guides/tools-computer-use)
 // for more information.
 type ResponseComputerToolCall struct {
 	// The unique ID of the computer call.
@@ -6179,7 +6184,7 @@ func (r *ResponseComputerToolCallActionWait) UnmarshalJSON(data []byte) error {
 }
 
 // A tool call to a computer use tool. See the
-// [computer use guide](https://platform.openai.com/docs/guides/tools-computer-use)
+// [computer use guide](https://developers.openai.com/api/docs/guides/tools-computer-use)
 // for more information.
 //
 // The properties ID, CallID, PendingSafetyChecks, Status, Type are required.
@@ -8516,7 +8521,7 @@ func (r *ResponseFileSearchCallSearchingEvent) UnmarshalJSON(data []byte) error 
 }
 
 // The results of a file search tool call. See the
-// [file search guide](https://platform.openai.com/docs/guides/tools-file-search)
+// [file search guide](https://developers.openai.com/api/docs/guides/tools-file-search)
 // for more information.
 type ResponseFileSearchToolCall struct {
 	// The unique ID of the file search tool call.
@@ -8652,7 +8657,7 @@ func (r *ResponseFileSearchToolCallResultAttributeUnion) UnmarshalJSON(data []by
 }
 
 // The results of a file search tool call. See the
-// [file search guide](https://platform.openai.com/docs/guides/tools-file-search)
+// [file search guide](https://developers.openai.com/api/docs/guides/tools-file-search)
 // for more information.
 //
 // The properties ID, Queries, Status, Type are required.
@@ -8895,7 +8900,7 @@ func init() {
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
-// [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
+// [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 type ResponseFormatTextJSONSchemaConfig struct {
 	// The name of the response format. Must be a-z, A-Z, 0-9, or contain underscores
 	// and dashes, with a maximum length of 64.
@@ -8912,7 +8917,7 @@ type ResponseFormatTextJSONSchemaConfig struct {
 	// true, the model will always follow the exact schema defined in the `schema`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. To
 	// learn more, read the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	Strict bool `json:"strict" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -8944,7 +8949,7 @@ func (r ResponseFormatTextJSONSchemaConfig) ToParam() ResponseFormatTextJSONSche
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
-// [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
+// [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 //
 // The properties Name, Schema, Type are required.
 type ResponseFormatTextJSONSchemaConfigParam struct {
@@ -8958,7 +8963,7 @@ type ResponseFormatTextJSONSchemaConfigParam struct {
 	// true, the model will always follow the exact schema defined in the `schema`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. To
 	// learn more, read the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	Strict param.Opt[bool] `json:"strict,omitzero"`
 	// A description of what the response format is for, used by the model to determine
 	// how to respond in the format.
@@ -10101,7 +10106,7 @@ func (r *ResponseFunctionShellToolCallOutputCallerProgram) UnmarshalJSON(data []
 }
 
 // A tool call to run a function. See the
-// [function calling guide](https://platform.openai.com/docs/guides/function-calling)
+// [function calling guide](https://developers.openai.com/api/docs/guides/function-calling)
 // for more information.
 type ResponseFunctionToolCall struct {
 	// A JSON string of the arguments to pass to the function.
@@ -10268,7 +10273,7 @@ const (
 )
 
 // A tool call to run a function. See the
-// [function calling guide](https://platform.openai.com/docs/guides/function-calling)
+// [function calling guide](https://developers.openai.com/api/docs/guides/function-calling)
 // for more information.
 //
 // The properties Arguments, CallID, Name, Type are required.
@@ -10397,7 +10402,7 @@ func (r *ResponseFunctionToolCallCallerProgramParam) UnmarshalJSON(data []byte) 
 }
 
 // A tool call to run a function. See the
-// [function calling guide](https://platform.openai.com/docs/guides/function-calling)
+// [function calling guide](https://developers.openai.com/api/docs/guides/function-calling)
 // for more information.
 type ResponseFunctionToolCallItem struct {
 	// The unique ID of the function tool call.
@@ -10750,8 +10755,8 @@ func (r *ResponseFunctionToolCallOutputItemCallerProgram) UnmarshalJSON(data []b
 }
 
 // The results of a web search tool call. See the
-// [web search guide](https://platform.openai.com/docs/guides/tools-web-search) for
-// more information.
+// [web search guide](https://developers.openai.com/api/docs/guides/tools-web-search)
+// for more information.
 type ResponseFunctionWebSearch struct {
 	// The unique ID of the web search tool call.
 	ID string `json:"id" api:"required"`
@@ -10986,8 +10991,8 @@ const (
 )
 
 // The results of a web search tool call. See the
-// [web search guide](https://platform.openai.com/docs/guides/tools-web-search) for
-// more information.
+// [web search guide](https://developers.openai.com/api/docs/guides/tools-web-search)
+// for more information.
 //
 // The properties ID, Action, Status, Type are required.
 type ResponseFunctionWebSearchParam struct {
@@ -12091,7 +12096,7 @@ func (r *ResponseInputFileContentPromptCacheBreakpointParam) UnmarshalJSON(data 
 }
 
 // An image input to the model. Learn about
-// [image inputs](https://platform.openai.com/docs/guides/vision).
+// [image inputs](https://developers.openai.com/api/docs/guides/images-vision).
 type ResponseInputImage struct {
 	// The detail level of the image to be sent to the model. One of `high`, `low`,
 	// `auto`, or `original`. Defaults to `auto`.
@@ -12170,7 +12175,7 @@ func (r *ResponseInputImagePromptCacheBreakpoint) UnmarshalJSON(data []byte) err
 }
 
 // An image input to the model. Learn about
-// [image inputs](https://platform.openai.com/docs/guides/vision).
+// [image inputs](https://developers.openai.com/api/docs/guides/images-vision).
 //
 // The properties Detail, Type are required.
 type ResponseInputImageParam struct {
@@ -12230,7 +12235,7 @@ func (r *ResponseInputImagePromptCacheBreakpointParam) UnmarshalJSON(data []byte
 }
 
 // An image input to the model. Learn about
-// [image inputs](https://platform.openai.com/docs/guides/vision)
+// [image inputs](https://developers.openai.com/api/docs/guides/images-vision)
 type ResponseInputImageContent struct {
 	// The type of the input item. Always `input_image`.
 	Type constant.InputImage `json:"type" default:"input_image"`
@@ -12308,7 +12313,7 @@ func (r *ResponseInputImageContentPromptCacheBreakpoint) UnmarshalJSON(data []by
 }
 
 // An image input to the model. Learn about
-// [image inputs](https://platform.openai.com/docs/guides/vision)
+// [image inputs](https://developers.openai.com/api/docs/guides/images-vision)
 //
 // The property Type is required.
 type ResponseInputImageContentParam struct {
@@ -12416,8 +12421,8 @@ type ResponseInputItemUnion struct {
 	// This field is from variant [ResponseComputerToolCall].
 	PendingSafetyChecks []ResponseComputerToolCallPendingSafetyCheck `json:"pending_safety_checks"`
 	// This field is a union of [ResponseComputerToolCallActionUnion],
-	// [ResponseFunctionWebSearchActionUnion], [ResponseInputItemLocalShellCallAction],
-	// [ResponseInputItemShellCallAction]
+	// [ResponseFunctionWebSearchActionUnion], [string],
+	// [ResponseInputItemLocalShellCallAction], [ResponseInputItemShellCallAction]
 	Action ResponseInputItemUnionAction `json:"action"`
 	// This field is from variant [ResponseComputerToolCall].
 	Actions ComputerActionList `json:"actions"`
@@ -12452,7 +12457,13 @@ type ResponseInputItemUnion struct {
 	EncryptedContent string                         `json:"encrypted_content"`
 	Result           string                         `json:"result"`
 	// This field is from variant [ResponseInputItemImageGenerationCall].
+	Background string `json:"background"`
+	// This field is from variant [ResponseInputItemImageGenerationCall].
+	OutputFormat string `json:"output_format"`
+	// This field is from variant [ResponseInputItemImageGenerationCall].
 	Quality string `json:"quality"`
+	// This field is from variant [ResponseInputItemImageGenerationCall].
+	RevisedPrompt string `json:"revised_prompt"`
 	// This field is from variant [ResponseInputItemImageGenerationCall].
 	Size string `json:"size"`
 	Code string `json:"code"`
@@ -12504,7 +12515,10 @@ type ResponseInputItemUnion struct {
 		Summary                  respjson.Field
 		EncryptedContent         respjson.Field
 		Result                   respjson.Field
+		Background               respjson.Field
+		OutputFormat             respjson.Field
 		Quality                  respjson.Field
+		RevisedPrompt            respjson.Field
 		Size                     respjson.Field
 		Code                     respjson.Field
 		ContainerID              respjson.Field
@@ -12883,7 +12897,12 @@ func (r *ResponseInputItemUnionContent) UnmarshalJSON(data []byte) error {
 //
 // For type safety it is recommended to directly use a variant of the
 // [ResponseInputItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfResponseInputItemImageGenerationCallAction]
 type ResponseInputItemUnionAction struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfResponseInputItemImageGenerationCallAction string `json:",inline"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
 	Button string   `json:"button"`
 	Type   string   `json:"type"`
@@ -12921,28 +12940,29 @@ type ResponseInputItemUnionAction struct {
 	// This field is from variant [ResponseInputItemShellCallAction].
 	MaxOutputLength int64 `json:"max_output_length"`
 	JSON            struct {
-		Button           respjson.Field
-		Type             respjson.Field
-		X                respjson.Field
-		Y                respjson.Field
-		Keys             respjson.Field
-		Path             respjson.Field
-		ScrollX          respjson.Field
-		ScrollY          respjson.Field
-		Text             respjson.Field
-		Queries          respjson.Field
-		Query            respjson.Field
-		Sources          respjson.Field
-		URL              respjson.Field
-		Pattern          respjson.Field
-		Command          respjson.Field
-		Env              respjson.Field
-		TimeoutMs        respjson.Field
-		User             respjson.Field
-		WorkingDirectory respjson.Field
-		Commands         respjson.Field
-		MaxOutputLength  respjson.Field
-		raw              string
+		OfResponseInputItemImageGenerationCallAction respjson.Field
+		Button                                       respjson.Field
+		Type                                         respjson.Field
+		X                                            respjson.Field
+		Y                                            respjson.Field
+		Keys                                         respjson.Field
+		Path                                         respjson.Field
+		ScrollX                                      respjson.Field
+		ScrollY                                      respjson.Field
+		Text                                         respjson.Field
+		Queries                                      respjson.Field
+		Query                                        respjson.Field
+		Sources                                      respjson.Field
+		URL                                          respjson.Field
+		Pattern                                      respjson.Field
+		Command                                      respjson.Field
+		Env                                          respjson.Field
+		TimeoutMs                                    respjson.Field
+		User                                         respjson.Field
+		WorkingDirectory                             respjson.Field
+		Commands                                     respjson.Field
+		MaxOutputLength                              respjson.Field
+		raw                                          string
 	} `json:"-"`
 }
 
@@ -13464,23 +13484,41 @@ type ResponseInputItemImageGenerationCall struct {
 	Status string `json:"status" api:"required"`
 	// The type of the image generation call. Always `image_generation_call`.
 	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
+	// The action used for image generation.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action" api:"nullable"`
+	// The background setting used for generation.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background string `json:"background" api:"nullable"`
+	// The output format used for generation.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat string `json:"output_format" api:"nullable"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
 	//
 	// Any of "low", "medium", "high", "xhigh", "max", "auto".
 	Quality string `json:"quality" api:"nullable"`
+	// The prompt that was used after any model prompt rewriting.
+	RevisedPrompt string `json:"revised_prompt" api:"nullable"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size string `json:"size" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Result      respjson.Field
-		Status      respjson.Field
-		Type        respjson.Field
-		Quality     respjson.Field
-		Size        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID            respjson.Field
+		Result        respjson.Field
+		Status        respjson.Field
+		Type          respjson.Field
+		Action        respjson.Field
+		Background    respjson.Field
+		OutputFormat  respjson.Field
+		Quality       respjson.Field
+		RevisedPrompt respjson.Field
+		Size          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -14999,9 +15037,33 @@ func (u ResponseInputItemUnionParam) GetSummary() []ResponseReasoningItemSummary
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemUnionParam) GetBackground() *string {
+	if vt := u.OfImageGenerationCall; vt != nil {
+		return &vt.Background
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemUnionParam) GetOutputFormat() *string {
+	if vt := u.OfImageGenerationCall; vt != nil {
+		return &vt.OutputFormat
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponseInputItemUnionParam) GetQuality() *string {
 	if vt := u.OfImageGenerationCall; vt != nil {
 		return &vt.Quality
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemUnionParam) GetRevisedPrompt() *string {
+	if vt := u.OfImageGenerationCall; vt != nil && vt.RevisedPrompt.Valid() {
+		return &vt.RevisedPrompt.Value
 	}
 	return nil
 }
@@ -15473,6 +15535,8 @@ func (u ResponseInputItemUnionParam) GetAction() (res responseInputItemUnionPara
 		res.any = vt.Action.asAny()
 	} else if vt := u.OfWebSearchCall; vt != nil {
 		res.any = vt.Action.asAny()
+	} else if vt := u.OfImageGenerationCall; vt != nil {
+		res.any = &vt.Action
 	} else if vt := u.OfLocalShellCall; vt != nil {
 		res.any = &vt.Action
 	} else if vt := u.OfShellCall; vt != nil {
@@ -15492,7 +15556,7 @@ func (u ResponseInputItemUnionParam) GetAction() (res responseInputItemUnionPara
 // [*ResponseComputerToolCallActionWaitParam],
 // [*ResponseFunctionWebSearchActionSearchParam],
 // [*ResponseFunctionWebSearchActionOpenPageParam],
-// [*ResponseFunctionWebSearchActionFindParam],
+// [*ResponseFunctionWebSearchActionFindParam], [*string],
 // [*ResponseInputItemLocalShellCallActionParam],
 // [*ResponseInputItemShellCallActionParam]
 type responseInputItemUnionParamAction struct{ any }
@@ -15512,6 +15576,7 @@ type responseInputItemUnionParamAction struct{ any }
 //	case *responses.ResponseFunctionWebSearchActionSearchParam:
 //	case *responses.ResponseFunctionWebSearchActionOpenPageParam:
 //	case *responses.ResponseFunctionWebSearchActionFindParam:
+//	case *string:
 //	case *responses.ResponseInputItemLocalShellCallActionParam:
 //	case *responses.ResponseInputItemShellCallActionParam:
 //	default:
@@ -16371,6 +16436,20 @@ type ResponseInputItemImageGenerationCallParam struct {
 	//
 	// Any of "in_progress", "completed", "generating", "failed".
 	Status string `json:"status,omitzero" api:"required"`
+	// The prompt that was used after any model prompt rewriting.
+	RevisedPrompt param.Opt[string] `json:"revised_prompt,omitzero"`
+	// The action used for image generation.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action,omitzero"`
+	// The background setting used for generation.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background string `json:"background,omitzero"`
+	// The output format used for generation.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat string `json:"output_format,omitzero"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
 	//
@@ -16397,6 +16476,15 @@ func (r *ResponseInputItemImageGenerationCallParam) UnmarshalJSON(data []byte) e
 func init() {
 	apijson.RegisterFieldValidator[ResponseInputItemImageGenerationCallParam](
 		"status", "in_progress", "completed", "generating", "failed",
+	)
+	apijson.RegisterFieldValidator[ResponseInputItemImageGenerationCallParam](
+		"action", "generate", "edit", "auto",
+	)
+	apijson.RegisterFieldValidator[ResponseInputItemImageGenerationCallParam](
+		"background", "transparent", "opaque", "auto",
+	)
+	apijson.RegisterFieldValidator[ResponseInputItemImageGenerationCallParam](
+		"output_format", "png", "webp", "jpeg",
 	)
 	apijson.RegisterFieldValidator[ResponseInputItemImageGenerationCallParam](
 		"quality", "low", "medium", "high", "xhigh", "max", "auto",
@@ -17814,8 +17902,8 @@ type ResponseItemUnion struct {
 	// This field is from variant [ResponseComputerToolCall].
 	PendingSafetyChecks []ResponseComputerToolCallPendingSafetyCheck `json:"pending_safety_checks"`
 	// This field is a union of [ResponseComputerToolCallActionUnion],
-	// [ResponseFunctionWebSearchActionUnion], [ResponseItemLocalShellCallAction],
-	// [ResponseFunctionShellToolCallAction]
+	// [ResponseFunctionWebSearchActionUnion], [string],
+	// [ResponseItemLocalShellCallAction], [ResponseFunctionShellToolCallAction]
 	Action ResponseItemUnionAction `json:"action"`
 	// This field is from variant [ResponseComputerToolCall].
 	Actions ComputerActionList `json:"actions"`
@@ -17854,7 +17942,13 @@ type ResponseItemUnion struct {
 	Fingerprint string `json:"fingerprint"`
 	Result      string `json:"result"`
 	// This field is from variant [ResponseItemImageGenerationCall].
+	Background string `json:"background"`
+	// This field is from variant [ResponseItemImageGenerationCall].
+	OutputFormat string `json:"output_format"`
+	// This field is from variant [ResponseItemImageGenerationCall].
 	Quality string `json:"quality"`
+	// This field is from variant [ResponseItemImageGenerationCall].
+	RevisedPrompt string `json:"revised_prompt"`
 	// This field is from variant [ResponseItemImageGenerationCall].
 	Size string `json:"size"`
 	// This field is from variant [ResponseCodeInterpreterToolCall].
@@ -17906,7 +18000,10 @@ type ResponseItemUnion struct {
 		Code                     respjson.Field
 		Fingerprint              respjson.Field
 		Result                   respjson.Field
+		Background               respjson.Field
+		OutputFormat             respjson.Field
 		Quality                  respjson.Field
+		RevisedPrompt            respjson.Field
 		Size                     respjson.Field
 		ContainerID              respjson.Field
 		Outputs                  respjson.Field
@@ -18255,7 +18352,12 @@ func (r *ResponseItemUnionContent) UnmarshalJSON(data []byte) error {
 //
 // For type safety it is recommended to directly use a variant of the
 // [ResponseItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfResponseItemImageGenerationCallAction]
 type ResponseItemUnionAction struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfResponseItemImageGenerationCallAction string `json:",inline"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
 	Button string   `json:"button"`
 	Type   string   `json:"type"`
@@ -18293,28 +18395,29 @@ type ResponseItemUnionAction struct {
 	// This field is from variant [ResponseFunctionShellToolCallAction].
 	MaxOutputLength int64 `json:"max_output_length"`
 	JSON            struct {
-		Button           respjson.Field
-		Type             respjson.Field
-		X                respjson.Field
-		Y                respjson.Field
-		Keys             respjson.Field
-		Path             respjson.Field
-		ScrollX          respjson.Field
-		ScrollY          respjson.Field
-		Text             respjson.Field
-		Queries          respjson.Field
-		Query            respjson.Field
-		Sources          respjson.Field
-		URL              respjson.Field
-		Pattern          respjson.Field
-		Command          respjson.Field
-		Env              respjson.Field
-		TimeoutMs        respjson.Field
-		User             respjson.Field
-		WorkingDirectory respjson.Field
-		Commands         respjson.Field
-		MaxOutputLength  respjson.Field
-		raw              string
+		OfResponseItemImageGenerationCallAction respjson.Field
+		Button                                  respjson.Field
+		Type                                    respjson.Field
+		X                                       respjson.Field
+		Y                                       respjson.Field
+		Keys                                    respjson.Field
+		Path                                    respjson.Field
+		ScrollX                                 respjson.Field
+		ScrollY                                 respjson.Field
+		Text                                    respjson.Field
+		Queries                                 respjson.Field
+		Query                                   respjson.Field
+		Sources                                 respjson.Field
+		URL                                     respjson.Field
+		Pattern                                 respjson.Field
+		Command                                 respjson.Field
+		Env                                     respjson.Field
+		TimeoutMs                               respjson.Field
+		User                                    respjson.Field
+		WorkingDirectory                        respjson.Field
+		Commands                                respjson.Field
+		MaxOutputLength                         respjson.Field
+		raw                                     string
 	} `json:"-"`
 }
 
@@ -18566,23 +18669,41 @@ type ResponseItemImageGenerationCall struct {
 	Status string `json:"status" api:"required"`
 	// The type of the image generation call. Always `image_generation_call`.
 	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
+	// The action used for image generation.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action" api:"nullable"`
+	// The background setting used for generation.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background string `json:"background" api:"nullable"`
+	// The output format used for generation.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat string `json:"output_format" api:"nullable"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
 	//
 	// Any of "low", "medium", "high", "xhigh", "max", "auto".
 	Quality string `json:"quality" api:"nullable"`
+	// The prompt that was used after any model prompt rewriting.
+	RevisedPrompt string `json:"revised_prompt" api:"nullable"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size string `json:"size" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Result      respjson.Field
-		Status      respjson.Field
-		Type        respjson.Field
-		Quality     respjson.Field
-		Size        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID            respjson.Field
+		Result        respjson.Field
+		Status        respjson.Field
+		Type          respjson.Field
+		Action        respjson.Field
+		Background    respjson.Field
+		OutputFormat  respjson.Field
+		Quality       respjson.Field
+		RevisedPrompt respjson.Field
+		Size          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -19153,8 +19274,8 @@ type ResponseOutputItemUnion struct {
 	Output    ResponseOutputItemUnionOutput `json:"output"`
 	CreatedBy string                        `json:"created_by"`
 	// This field is a union of [ResponseFunctionWebSearchActionUnion],
-	// [ResponseComputerToolCallActionUnion], [ResponseOutputItemLocalShellCallAction],
-	// [ResponseFunctionShellToolCallAction]
+	// [ResponseComputerToolCallActionUnion], [string],
+	// [ResponseOutputItemLocalShellCallAction], [ResponseFunctionShellToolCallAction]
 	Action ResponseOutputItemUnionAction `json:"action"`
 	// This field is from variant [ResponseComputerToolCall].
 	PendingSafetyChecks []ResponseComputerToolCallPendingSafetyCheck `json:"pending_safety_checks"`
@@ -19174,7 +19295,13 @@ type ResponseOutputItemUnion struct {
 	// [[]ResponseOutputItemMcpListToolsTool]
 	Tools ResponseOutputItemUnionTools `json:"tools"`
 	// This field is from variant [ResponseOutputItemImageGenerationCall].
+	Background string `json:"background"`
+	// This field is from variant [ResponseOutputItemImageGenerationCall].
+	OutputFormat string `json:"output_format"`
+	// This field is from variant [ResponseOutputItemImageGenerationCall].
 	Quality string `json:"quality"`
+	// This field is from variant [ResponseOutputItemImageGenerationCall].
+	RevisedPrompt string `json:"revised_prompt"`
 	// This field is from variant [ResponseOutputItemImageGenerationCall].
 	Size string `json:"size"`
 	// This field is from variant [ResponseCodeInterpreterToolCall].
@@ -19225,7 +19352,10 @@ type ResponseOutputItemUnion struct {
 		Result                   respjson.Field
 		Execution                respjson.Field
 		Tools                    respjson.Field
+		Background               respjson.Field
+		OutputFormat             respjson.Field
 		Quality                  respjson.Field
+		RevisedPrompt            respjson.Field
 		Size                     respjson.Field
 		ContainerID              respjson.Field
 		Outputs                  respjson.Field
@@ -19613,8 +19743,13 @@ func (r *ResponseOutputItemUnionOutput) UnmarshalJSON(data []byte) error {
 //
 // For type safety it is recommended to directly use a variant of the
 // [ResponseOutputItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfResponseOutputItemImageGenerationCallAction]
 type ResponseOutputItemUnionAction struct {
-	Type string `json:"type"`
+	// This field will be present if the value is a [string] instead of an object.
+	OfResponseOutputItemImageGenerationCallAction string `json:",inline"`
+	Type                                          string `json:"type"`
 	// This field is from variant [ResponseFunctionWebSearchActionUnion].
 	Queries []string `json:"queries"`
 	// This field is from variant [ResponseFunctionWebSearchActionUnion].
@@ -19651,28 +19786,29 @@ type ResponseOutputItemUnionAction struct {
 	// This field is from variant [ResponseFunctionShellToolCallAction].
 	MaxOutputLength int64 `json:"max_output_length"`
 	JSON            struct {
-		Type             respjson.Field
-		Queries          respjson.Field
-		Query            respjson.Field
-		Sources          respjson.Field
-		URL              respjson.Field
-		Pattern          respjson.Field
-		Button           respjson.Field
-		X                respjson.Field
-		Y                respjson.Field
-		Keys             respjson.Field
-		Path             respjson.Field
-		ScrollX          respjson.Field
-		ScrollY          respjson.Field
-		Text             respjson.Field
-		Command          respjson.Field
-		Env              respjson.Field
-		TimeoutMs        respjson.Field
-		User             respjson.Field
-		WorkingDirectory respjson.Field
-		Commands         respjson.Field
-		MaxOutputLength  respjson.Field
-		raw              string
+		OfResponseOutputItemImageGenerationCallAction respjson.Field
+		Type                                          respjson.Field
+		Queries                                       respjson.Field
+		Query                                         respjson.Field
+		Sources                                       respjson.Field
+		URL                                           respjson.Field
+		Pattern                                       respjson.Field
+		Button                                        respjson.Field
+		X                                             respjson.Field
+		Y                                             respjson.Field
+		Keys                                          respjson.Field
+		Path                                          respjson.Field
+		ScrollX                                       respjson.Field
+		ScrollY                                       respjson.Field
+		Text                                          respjson.Field
+		Command                                       respjson.Field
+		Env                                           respjson.Field
+		TimeoutMs                                     respjson.Field
+		User                                          respjson.Field
+		WorkingDirectory                              respjson.Field
+		Commands                                      respjson.Field
+		MaxOutputLength                               respjson.Field
+		raw                                           string
 	} `json:"-"`
 }
 
@@ -19838,23 +19974,41 @@ type ResponseOutputItemImageGenerationCall struct {
 	Status string `json:"status" api:"required"`
 	// The type of the image generation call. Always `image_generation_call`.
 	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
+	// The action used for image generation.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action" api:"nullable"`
+	// The background setting used for generation.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background string `json:"background" api:"nullable"`
+	// The output format used for generation.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat string `json:"output_format" api:"nullable"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
 	//
 	// Any of "low", "medium", "high", "xhigh", "max", "auto".
 	Quality string `json:"quality" api:"nullable"`
+	// The prompt that was used after any model prompt rewriting.
+	RevisedPrompt string `json:"revised_prompt" api:"nullable"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size string `json:"size" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Result      respjson.Field
-		Status      respjson.Field
-		Type        respjson.Field
-		Quality     respjson.Field
-		Size        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID            respjson.Field
+		Result        respjson.Field
+		Status        respjson.Field
+		Type          respjson.Field
+		Action        respjson.Field
+		Background    respjson.Field
+		OutputFormat  respjson.Field
+		Quality       respjson.Field
+		RevisedPrompt respjson.Field
+		Size          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -21329,7 +21483,7 @@ func (r *ResponseOutputTextAnnotationAddedEventAnnotationFilePath) UnmarshalJSON
 }
 
 // Reference to a prompt template and its variables.
-// [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
+// [Learn more](https://developers.openai.com/api/docs/guides/text?api-mode=responses#version-prompts-in-code).
 type ResponsePrompt struct {
 	// The unique identifier of the prompt template to use.
 	ID string `json:"id" api:"required"`
@@ -21453,7 +21607,7 @@ func (r *ResponsePromptVariableUnionPromptCacheBreakpoint) UnmarshalJSON(data []
 }
 
 // Reference to a prompt template and its variables.
-// [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
+// [Learn more](https://developers.openai.com/api/docs/guides/text?api-mode=responses#version-prompts-in-code).
 //
 // The property ID is required.
 type ResponsePromptParam struct {
@@ -21636,7 +21790,7 @@ func (r *ResponseQueuedEvent) UnmarshalJSON(data []byte) error {
 // A description of the chain of thought used by a reasoning model while generating
 // a response. Be sure to include these items in your `input` to the Responses API
 // for subsequent turns of a conversation if you are manually
-// [managing context](https://platform.openai.com/docs/guides/conversation-state).
+// [managing context](https://developers.openai.com/api/docs/guides/conversation-state).
 type ResponseReasoningItem struct {
 	// The unique identifier of the reasoning content.
 	ID string `json:"id" api:"required"`
@@ -21745,7 +21899,7 @@ const (
 // A description of the chain of thought used by a reasoning model while generating
 // a response. Be sure to include these items in your `input` to the Responses API
 // for subsequent turns of a conversation if you are manually
-// [managing context](https://platform.openai.com/docs/guides/conversation-state).
+// [managing context](https://developers.openai.com/api/docs/guides/conversation-state).
 //
 // The properties ID, Summary, Type are required.
 type ResponseReasoningItemParam struct {
@@ -23290,14 +23444,14 @@ func (r *ResponseStreamEventUnionLogprobs) UnmarshalJSON(data []byte) error {
 // Configuration options for a text response from the model. Can be plain text or
 // structured JSON data. Learn more:
 //
-// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
-// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
+//   - [Text inputs and outputs](https://developers.openai.com/api/docs/guides/text)
+//   - [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
 type ResponseTextConfig struct {
 	// An object specifying the format that the model must output.
 	//
 	// Configuring `{ "type": "json_schema" }` enables Structured Outputs, which
 	// ensures the model will match your supplied JSON schema. Learn more in the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	//
 	// The default format is `{ "type": "text" }` with no additional options.
 	//
@@ -23353,8 +23507,8 @@ const (
 // Configuration options for a text response from the model. Can be plain text or
 // structured JSON data. Learn more:
 //
-// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
-// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
+//   - [Text inputs and outputs](https://developers.openai.com/api/docs/guides/text)
+//   - [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
 type ResponseTextConfigParam struct {
 	// Constrains the verbosity of the model's response. Lower values will result in
 	// more concise responses, while higher values will result in more verbose
@@ -23367,7 +23521,7 @@ type ResponseTextConfigParam struct {
 	//
 	// Configuring `{ "type": "json_schema" }` enables Structured Outputs, which
 	// ensures the model will match your supplied JSON schema. Learn more in the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	//
 	// The default format is `{ "type": "text" }` with no additional options.
 	//
@@ -23799,7 +23953,7 @@ type ResponseUsageInputTokensDetails struct {
 	// The number of input tokens that were written to the cache.
 	CacheWriteTokens int64 `json:"cache_write_tokens" api:"required"`
 	// The number of tokens that were retrieved from the cache.
-	// [More on prompt caching](https://platform.openai.com/docs/guides/prompt-caching).
+	// [More on prompt caching](https://developers.openai.com/api/docs/guides/prompt-caching).
 	CachedTokens int64 `json:"cached_tokens" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -24329,7 +24483,7 @@ func (r ToolUnion) ToParam() ToolUnionParam {
 
 // Give the model access to additional tools via remote Model Context Protocol
 // (MCP) servers.
-// [Learn more about MCP](https://platform.openai.com/docs/guides/tools-remote-mcp).
+// [Learn more about MCP](https://developers.openai.com/api/docs/guides/tools-connectors-mcp).
 type ToolMcp struct {
 	// A label for this MCP server, used to identify it in tool calls.
 	ServerLabel string `json:"server_label" api:"required"`
@@ -24348,7 +24502,7 @@ type ToolMcp struct {
 	// Identifier for service connectors, like those available in ChatGPT. One of
 	// `server_url`, `connector_id`, or `tunnel_id` must be provided. Learn more about
 	// service connectors
-	// [here](https://platform.openai.com/docs/guides/tools-remote-mcp#connectors).
+	// [here](https://developers.openai.com/api/docs/guides/tools-connectors-mcp#connectors).
 	//
 	// Currently supported `connector_id` values are:
 	//
@@ -25714,7 +25868,7 @@ func init() {
 
 // Give the model access to additional tools via remote Model Context Protocol
 // (MCP) servers.
-// [Learn more about MCP](https://platform.openai.com/docs/guides/tools-remote-mcp).
+// [Learn more about MCP](https://developers.openai.com/api/docs/guides/tools-connectors-mcp).
 //
 // The properties ServerLabel, Type are required.
 type ToolMcpParam struct {
@@ -25748,7 +25902,7 @@ type ToolMcpParam struct {
 	// Identifier for service connectors, like those available in ChatGPT. One of
 	// `server_url`, `connector_id`, or `tunnel_id` must be provided. Learn more about
 	// service connectors
-	// [here](https://platform.openai.com/docs/guides/tools-remote-mcp#connectors).
+	// [here](https://developers.openai.com/api/docs/guides/tools-connectors-mcp#connectors).
 	//
 	// Currently supported `connector_id` values are:
 	//
@@ -26579,10 +26733,10 @@ func (r *ToolChoiceShellParam) UnmarshalJSON(data []byte) error {
 }
 
 // Indicates that the model should use a built-in tool to generate a response.
-// [Learn more about built-in tools](https://platform.openai.com/docs/guides/tools).
+// [Learn more about built-in tools](https://developers.openai.com/api/docs/guides/tools).
 type ToolChoiceTypes struct {
 	// The type of hosted tool the model should to use. Learn more about
-	// [built-in tools](https://platform.openai.com/docs/guides/tools).
+	// [built-in tools](https://developers.openai.com/api/docs/guides/tools).
 	//
 	// Allowed values are:
 	//
@@ -26622,7 +26776,7 @@ func (r ToolChoiceTypes) ToParam() ToolChoiceTypesParam {
 }
 
 // The type of hosted tool the model should to use. Learn more about
-// [built-in tools](https://platform.openai.com/docs/guides/tools).
+// [built-in tools](https://developers.openai.com/api/docs/guides/tools).
 //
 // Allowed values are:
 //
@@ -26647,12 +26801,12 @@ const (
 )
 
 // Indicates that the model should use a built-in tool to generate a response.
-// [Learn more about built-in tools](https://platform.openai.com/docs/guides/tools).
+// [Learn more about built-in tools](https://developers.openai.com/api/docs/guides/tools).
 //
 // The property Type is required.
 type ToolChoiceTypesParam struct {
 	// The type of hosted tool the model should to use. Learn more about
-	// [built-in tools](https://platform.openai.com/docs/guides/tools).
+	// [built-in tools](https://developers.openai.com/api/docs/guides/tools).
 	//
 	// Allowed values are:
 	//
@@ -26754,7 +26908,7 @@ func (r *ToolSearchToolParam) UnmarshalJSON(data []byte) error {
 
 // This tool searches the web for relevant results to use in a response. Learn more
 // about the
-// [web search tool](https://platform.openai.com/docs/guides/tools-web-search).
+// [web search tool](https://developers.openai.com/api/docs/guides/tools-web-search).
 type WebSearchPreviewTool struct {
 	// The type of the web search tool. One of `web_search_preview` or
 	// `web_search_preview_2025_03_11`.
@@ -26849,7 +27003,7 @@ func (r *WebSearchPreviewToolUserLocation) UnmarshalJSON(data []byte) error {
 
 // This tool searches the web for relevant results to use in a response. Learn more
 // about the
-// [web search tool](https://platform.openai.com/docs/guides/tools-web-search).
+// [web search tool](https://developers.openai.com/api/docs/guides/tools-web-search).
 //
 // The property Type is required.
 type WebSearchPreviewToolParam struct {
@@ -26908,7 +27062,7 @@ func (r *WebSearchPreviewToolUserLocationParam) UnmarshalJSON(data []byte) error
 }
 
 // Search the Internet for sources related to the prompt. Learn more about the
-// [web search tool](https://platform.openai.com/docs/guides/tools-web-search).
+// [web search tool](https://developers.openai.com/api/docs/guides/tools-web-search).
 type WebSearchTool struct {
 	// The type of the web search tool. One of `web_search` or `web_search_2025_08_26`.
 	//
@@ -27028,7 +27182,7 @@ func (r *WebSearchToolUserLocation) UnmarshalJSON(data []byte) error {
 }
 
 // Search the Internet for sources related to the prompt. Learn more about the
-// [web search tool](https://platform.openai.com/docs/guides/tools-web-search).
+// [web search tool](https://developers.openai.com/api/docs/guides/tools-web-search).
 //
 // The property Type is required.
 type WebSearchToolParam struct {
@@ -27113,7 +27267,7 @@ func init() {
 
 type ResponseNewParams struct {
 	// Whether to run the model response in the background.
-	// [Learn more](https://platform.openai.com/docs/guides/background).
+	// [Learn more](https://developers.openai.com/api/docs/guides/background).
 	Background param.Opt[bool] `json:"background,omitzero"`
 	// A system (or developer) message inserted into the model's context.
 	//
@@ -27123,7 +27277,7 @@ type ResponseNewParams struct {
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
 	// An upper bound for the number of tokens that can be generated for a response,
 	// including visible output tokens and
-	// [reasoning tokens](https://platform.openai.com/docs/guides/reasoning).
+	// [reasoning tokens](https://developers.openai.com/api/docs/guides/reasoning).
 	MaxOutputTokens param.Opt[int64] `json:"max_output_tokens,omitzero"`
 	// The maximum number of total calls to built-in tools that can be processed in a
 	// response. This maximum number applies across all built-in tool calls, not per
@@ -27134,24 +27288,24 @@ type ResponseNewParams struct {
 	ParallelToolCalls param.Opt[bool] `json:"parallel_tool_calls,omitzero"`
 	// The unique ID of the previous response to the model. Use this to create
 	// multi-turn conversations. Learn more about
-	// [conversation state](https://platform.openai.com/docs/guides/conversation-state).
+	// [conversation state](https://developers.openai.com/api/docs/guides/conversation-state).
 	// Cannot be used in conjunction with `conversation`.
 	PreviousResponseID param.Opt[string] `json:"previous_response_id,omitzero"`
 	// Used by OpenAI to cache responses for similar requests to optimize your cache
 	// hit rates. Replaces the `user` field.
-	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
+	// [Learn more](https://developers.openai.com/api/docs/guides/prompt-caching).
 	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
 	// A stable identifier used to help detect users of your application that may be
 	// violating OpenAI's usage policies. The IDs should be a string that uniquely
 	// identifies each user, with a maximum length of 64 characters. We recommend
 	// hashing their username or email address, in order to avoid sending us any
 	// identifying information.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
 	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
 	// Whether to store the generated model response for later retrieval via API.
 	// Defaults to true when omitted. If set to true, response data will be stored for
 	// at least 30 days, subject to the
-	// [data retention exceptions](/api/docs/guides/your-data#v1responses).
+	// [data retention exceptions](https://developers.openai.com/api/docs/guides/your-data#v1responses).
 	Store param.Opt[bool] `json:"store,omitzero"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
 	// make the output more random, while lower values like 0.2 will make it more
@@ -27172,7 +27326,7 @@ type ResponseNewParams struct {
 	// `prompt_cache_key` instead to maintain caching optimizations. A stable
 	// identifier for your end-users. Used to boost cache hit rates by better bucketing
 	// similar requests and to help OpenAI detect and prevent abuse.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
 	User param.Opt[string] `json:"user,omitzero"`
 	// Context management configuration for this request.
 	ContextManagement []ResponseNewParamsContextManagement `json:"context_management,omitzero"`
@@ -27210,14 +27364,14 @@ type ResponseNewParams struct {
 	// Configuration for running moderation on the input and output of this response.
 	Moderation ResponseNewParamsModeration `json:"moderation,omitzero"`
 	// Reference to a prompt template and its variables.
-	// [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
+	// [Learn more](https://developers.openai.com/api/docs/guides/text?api-mode=responses#version-prompts-in-code).
 	Prompt ResponsePromptParam `json:"prompt,omitzero"`
 	// Deprecated. Use `prompt_cache_options.ttl` instead.
 	//
 	// The retention policy for the prompt cache. Set to `24h` to enable extended
 	// prompt caching, which keeps cached prefixes active for longer, up to a maximum
 	// of 24 hours.
-	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching#prompt-cache-retention).
+	// [Learn more](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-retention).
 	// This field expresses a maximum retention policy, while
 	// `prompt_cache_options.ttl` expresses a minimum cache lifetime. The two fields
 	// are independent and do not interact. For `gpt-5.5`, `gpt-5.5-pro`, and future
@@ -27239,13 +27393,15 @@ type ResponseNewParams struct {
 	//     will use 'default'.
 	//   - If set to 'default', then the request will be processed with the standard
 	//     pricing and performance for the selected model.
-	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)',
-	//     then the request will be processed with the Flex Processing service tier.
-	//   - To opt-in to [Fast mode](/api/docs/guides/fast-mode) at the request level,
-	//     include the `service_tier=fast` or `service_tier=priority` parameter for
-	//     Responses or Chat Completions. The response will show `service_tier=priority`
-	//     regardless of if you specify `service_tier=fast` or `priority` in your
-	//     request.
+	//   - If set to
+	//     '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+	//     the request will be processed with the Flex Processing service tier.
+	//   - To opt-in to
+	//     [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+	//     request level, include the `service_tier=fast` or `service_tier=priority`
+	//     parameter for Responses or Chat Completions. The response will show
+	//     `service_tier=priority` regardless of if you specify `service_tier=fast` or
+	//     `priority` in your request.
 	//   - If set to 'ultrafast', then the request will be processed with the
 	//     access-controlled Ultrafast Processing service tier. This tier is currently
 	//     available for `gpt-5.6-sol`; a response served through it will show
@@ -27275,17 +27431,17 @@ type ResponseNewParams struct {
 	//
 	// Learn more:
 	//
-	// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
-	// - [Image inputs](https://platform.openai.com/docs/guides/images)
-	// - [File inputs](https://platform.openai.com/docs/guides/pdf-files)
-	// - [Conversation state](https://platform.openai.com/docs/guides/conversation-state)
-	// - [Function calling](https://platform.openai.com/docs/guides/function-calling)
+	//   - [Text inputs and outputs](https://developers.openai.com/api/docs/guides/text)
+	//   - [Image inputs](https://developers.openai.com/api/docs/guides/images-vision)
+	//   - [File inputs](https://developers.openai.com/api/docs/guides/file-inputs)
+	//   - [Conversation state](https://developers.openai.com/api/docs/guides/conversation-state)
+	//   - [Function calling](https://developers.openai.com/api/docs/guides/function-calling)
 	Input ResponseNewParamsInputUnion `json:"input,omitzero"`
 	// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
 	// range of models with different capabilities, performance characteristics, and
 	// price points. Refer to the
-	// [model guide](https://platform.openai.com/docs/models) to browse and compare
-	// available models.
+	// [model guide](https://developers.openai.com/api/docs/models) to browse and
+	// compare available models.
 	Model shared.ResponsesModel `json:"model,omitzero"`
 	// Options for prompt caching. Supported for `gpt-5.6` and later models. By
 	// default, OpenAI automatically chooses one implicit cache breakpoint. You can add
@@ -27294,17 +27450,17 @@ type ResponseNewParams struct {
 	// up to the latest 80 breakpoints in the conversation, without a content-block
 	// lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
 	// `ttl` defaults to `30m`, which is currently the only supported value. See the
-	// [prompt caching guide](https://platform.openai.com/docs/guides/prompt-caching)
+	// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 	// for current details.
 	PromptCacheOptions ResponseNewParamsPromptCacheOptions `json:"prompt_cache_options,omitzero"`
 	// Configuration options for
-	// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+	// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 	Reasoning shared.ReasoningParam `json:"reasoning,omitzero"`
 	// Configuration options for a text response from the model. Can be plain text or
 	// structured JSON data. Learn more:
 	//
-	// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
-	// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
+	//   - [Text inputs and outputs](https://developers.openai.com/api/docs/guides/text)
+	//   - [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
 	Text ResponseTextConfigParam `json:"text,omitzero"`
 	// How the model should select which tool (or tools) to use when generating a
 	// response. See the `tools` parameter to see how to specify which tools the model
@@ -27317,17 +27473,18 @@ type ResponseNewParams struct {
 	//
 	//   - **Built-in tools**: Tools that are provided by OpenAI that extend the model's
 	//     capabilities, like
-	//     [web search](https://platform.openai.com/docs/guides/tools-web-search) or
-	//     [file search](https://platform.openai.com/docs/guides/tools-file-search).
+	//     [web search](https://developers.openai.com/api/docs/guides/tools-web-search)
+	//     or
+	//     [file search](https://developers.openai.com/api/docs/guides/tools-file-search).
 	//     Learn more about
-	//     [built-in tools](https://platform.openai.com/docs/guides/tools).
+	//     [built-in tools](https://developers.openai.com/api/docs/guides/tools).
 	//   - **MCP Tools**: Integrations with third-party systems via custom MCP servers or
 	//     predefined connectors such as Google Drive and SharePoint. Learn more about
-	//     [MCP Tools](https://platform.openai.com/docs/guides/tools-connectors-mcp).
+	//     [MCP Tools](https://developers.openai.com/api/docs/guides/tools-connectors-mcp).
 	//   - **Function calls (custom tools)**: Functions that are defined by you, enabling
 	//     the model to call your own code with strongly typed arguments and outputs.
 	//     Learn more about
-	//     [function calling](https://platform.openai.com/docs/guides/function-calling).
+	//     [function calling](https://developers.openai.com/api/docs/guides/function-calling).
 	//     You can also use custom tools to call your own code.
 	Tools []ToolUnionParam `json:"tools,omitzero"`
 	paramObj
@@ -27480,7 +27637,7 @@ func init() {
 // up to the latest 80 breakpoints in the conversation, without a content-block
 // lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
 // `ttl` defaults to `30m`, which is currently the only supported value. See the
-// [prompt caching guide](https://platform.openai.com/docs/guides/prompt-caching)
+// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 // for current details.
 type ResponseNewParamsPromptCacheOptions struct {
 	// The ID of a response to compare when diagnosing prompt cache reuse. Supplying
@@ -27526,7 +27683,7 @@ func init() {
 // The retention policy for the prompt cache. Set to `24h` to enable extended
 // prompt caching, which keeps cached prefixes active for longer, up to a maximum
 // of 24 hours.
-// [Learn more](https://platform.openai.com/docs/guides/prompt-caching#prompt-cache-retention).
+// [Learn more](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-retention).
 // This field expresses a maximum retention policy, while
 // `prompt_cache_options.ttl` expresses a minimum cache lifetime. The two fields
 // are independent and do not interact. For `gpt-5.5`, `gpt-5.5-pro`, and future
@@ -27552,13 +27709,15 @@ const (
 //     will use 'default'.
 //   - If set to 'default', then the request will be processed with the standard
 //     pricing and performance for the selected model.
-//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)',
-//     then the request will be processed with the Flex Processing service tier.
-//   - To opt-in to [Fast mode](/api/docs/guides/fast-mode) at the request level,
-//     include the `service_tier=fast` or `service_tier=priority` parameter for
-//     Responses or Chat Completions. The response will show `service_tier=priority`
-//     regardless of if you specify `service_tier=fast` or `priority` in your
-//     request.
+//   - If set to
+//     '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+//     the request will be processed with the Flex Processing service tier.
+//   - To opt-in to
+//     [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+//     request level, include the `service_tier=fast` or `service_tier=priority`
+//     parameter for Responses or Chat Completions. The response will show
+//     `service_tier=priority` regardless of if you specify `service_tier=fast` or
+//     `priority` in your request.
 //   - If set to 'ultrafast', then the request will be processed with the
 //     access-controlled Ultrafast Processing service tier. This tier is currently
 //     available for `gpt-5.6-sol`; a response served through it will show
@@ -27755,8 +27914,8 @@ type ResponseCompactParams struct {
 	// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
 	// range of models with different capabilities, performance characteristics, and
 	// price points. Refer to the
-	// [model guide](https://platform.openai.com/docs/models) to browse and compare
-	// available models.
+	// [model guide](https://developers.openai.com/api/docs/models) to browse and
+	// compare available models.
 	Model ResponseCompactParamsModel `json:"model,omitzero" api:"required"`
 	// A system (or developer) message inserted into the model's context. When used
 	// along with `previous_response_id`, the instructions from a previous response
@@ -27765,7 +27924,7 @@ type ResponseCompactParams struct {
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
 	// The unique ID of the previous response to the model. Use this to create
 	// multi-turn conversations. Learn more about
-	// [conversation state](https://platform.openai.com/docs/guides/conversation-state).
+	// [conversation state](https://developers.openai.com/api/docs/guides/conversation-state).
 	// Cannot be used in conjunction with `conversation`.
 	PreviousResponseID param.Opt[string] `json:"previous_response_id,omitzero"`
 	// A key to use when reading from or writing to the prompt cache.
@@ -27779,7 +27938,7 @@ type ResponseCompactParams struct {
 	// up to the latest 80 breakpoints in the conversation, without a content-block
 	// lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
 	// `ttl` defaults to `30m`, which is currently the only supported value. See the
-	// [prompt caching guide](https://platform.openai.com/docs/guides/prompt-caching)
+	// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 	// for current details.
 	PromptCacheOptions ResponseCompactParamsPromptCacheOptions `json:"prompt_cache_options,omitzero"`
 	// How long to retain a prompt cache entry created by this request.
@@ -27791,17 +27950,17 @@ type ResponseCompactParams struct {
 	// Project settings. Unless otherwise configured, the Project will use 'default'. -
 	// If set to 'default', then the request will be processed with the standard
 	// pricing and performance for the selected model. - If set to
-	// '[flex](https://platform.openai.com/docs/guides/flex-processing)', then the
-	// request will be processed with the Flex Processing service tier. - To opt-in to
-	// [Fast mode](/api/docs/guides/fast-mode) at the request level, include the
-	// `service_tier=fast` or `service_tier=priority` parameter for Responses or Chat
-	// Completions. For models with a dedicated Fast tier, either value resolves to
-	// `service_tier=fast`; for other models, either value resolves to
-	// `service_tier=priority`. - When not set, the default behavior is 'auto'. When
-	// the `service_tier` parameter is set, the response body will include the
-	// `service_tier` value based on the processing mode actually used to serve the
-	// request. This response value may be different from the value set in the
-	// parameter.
+	// '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+	// the request will be processed with the Flex Processing service tier. - To opt-in
+	// to [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+	// request level, include the `service_tier=fast` or `service_tier=priority`
+	// parameter for Responses or Chat Completions. For models with a dedicated Fast
+	// tier, either value resolves to `service_tier=fast`; for other models, either
+	// value resolves to `service_tier=priority`. - When not set, the default behavior
+	// is 'auto'. When the `service_tier` parameter is set, the response body will
+	// include the `service_tier` value based on the processing mode actually used to
+	// serve the request. This response value may be different from the value set in
+	// the parameter.
 	//
 	// Any of "auto", "default", "fast", "flex", "priority".
 	ServiceTier ResponseCompactParamsServiceTier `json:"service_tier,omitzero"`
@@ -27819,8 +27978,8 @@ func (r *ResponseCompactParams) UnmarshalJSON(data []byte) error {
 // Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
 // range of models with different capabilities, performance characteristics, and
 // price points. Refer to the
-// [model guide](https://platform.openai.com/docs/models) to browse and compare
-// available models.
+// [model guide](https://developers.openai.com/api/docs/models) to browse and
+// compare available models.
 type ResponseCompactParamsModel string
 
 const (
@@ -27952,7 +28111,7 @@ func (u *ResponseCompactParamsInputUnion) UnmarshalJSON(data []byte) error {
 // up to the latest 80 breakpoints in the conversation, without a content-block
 // lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
 // `ttl` defaults to `30m`, which is currently the only supported value. See the
-// [prompt caching guide](https://platform.openai.com/docs/guides/prompt-caching)
+// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 // for current details.
 type ResponseCompactParamsPromptCacheOptions struct {
 	// Controls whether OpenAI automatically creates an implicit cache breakpoint.
@@ -28003,17 +28162,17 @@ const (
 // Project settings. Unless otherwise configured, the Project will use 'default'. -
 // If set to 'default', then the request will be processed with the standard
 // pricing and performance for the selected model. - If set to
-// '[flex](https://platform.openai.com/docs/guides/flex-processing)', then the
-// request will be processed with the Flex Processing service tier. - To opt-in to
-// [Fast mode](/api/docs/guides/fast-mode) at the request level, include the
-// `service_tier=fast` or `service_tier=priority` parameter for Responses or Chat
-// Completions. For models with a dedicated Fast tier, either value resolves to
-// `service_tier=fast`; for other models, either value resolves to
-// `service_tier=priority`. - When not set, the default behavior is 'auto'. When
-// the `service_tier` parameter is set, the response body will include the
-// `service_tier` value based on the processing mode actually used to serve the
-// request. This response value may be different from the value set in the
-// parameter.
+// '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+// the request will be processed with the Flex Processing service tier. - To opt-in
+// to [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+// request level, include the `service_tier=fast` or `service_tier=priority`
+// parameter for Responses or Chat Completions. For models with a dedicated Fast
+// tier, either value resolves to `service_tier=fast`; for other models, either
+// value resolves to `service_tier=priority`. - When not set, the default behavior
+// is 'auto'. When the `service_tier` parameter is set, the response body will
+// include the `service_tier` value based on the processing mode actually used to
+// serve the request. This response value may be different from the value set in
+// the parameter.
 type ResponseCompactParamsServiceTier string
 
 const (
