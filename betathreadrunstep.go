@@ -151,8 +151,8 @@ func (r *CodeInterpreterOutputImage) UnmarshalJSON(data []byte) error {
 }
 
 type CodeInterpreterOutputImageImage struct {
-	// The [file](https://platform.openai.com/docs/api-reference/files) ID of the
-	// image.
+	// The [file](https://developers.openai.com/api/reference/resources/files) ID of
+	// the image.
 	FileID string `json:"file_id"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -327,8 +327,8 @@ func (r *CodeInterpreterToolCallCodeInterpreterOutputImage) UnmarshalJSON(data [
 }
 
 type CodeInterpreterToolCallCodeInterpreterOutputImageImage struct {
-	// The [file](https://platform.openai.com/docs/api-reference/files) ID of the
-	// image.
+	// The [file](https://developers.openai.com/api/reference/resources/files) ID of
+	// the image.
 	FileID string `json:"file_id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -644,8 +644,7 @@ type FunctionToolCallFunction struct {
 	// The name of the function.
 	Name string `json:"name" api:"required"`
 	// The output of the function. This will be `null` if the outputs have not been
-	// [submitted](https://platform.openai.com/docs/api-reference/runs/submitToolOutputs)
-	// yet.
+	// [submitted](https://developers.openai.com/api/docs/assistants/migration) yet.
 	Output string `json:"output" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -697,8 +696,7 @@ type FunctionToolCallDeltaFunction struct {
 	// The name of the function.
 	Name string `json:"name"`
 	// The output of the function. This will be `null` if the outputs have not been
-	// [submitted](https://platform.openai.com/docs/api-reference/runs/submitToolOutputs)
-	// yet.
+	// [submitted](https://developers.openai.com/api/docs/assistants/migration) yet.
 	Output string `json:"output" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -758,7 +756,7 @@ type RunStep struct {
 	// The identifier of the run step, which can be referenced in API endpoints.
 	ID string `json:"id" api:"required"`
 	// The ID of the
-	// [assistant](https://platform.openai.com/docs/api-reference/assistants)
+	// [assistant](https://developers.openai.com/api/docs/assistants/migration)
 	// associated with the run step.
 	AssistantID string `json:"assistant_id" api:"required"`
 	// The Unix timestamp (in seconds) for when the run step was cancelled.
@@ -784,8 +782,8 @@ type RunStep struct {
 	Metadata shared.Metadata `json:"metadata" api:"required"`
 	// The object type, which is always `thread.run.step`.
 	Object constant.ThreadRunStep `json:"object" default:"thread.run.step"`
-	// The ID of the [run](https://platform.openai.com/docs/api-reference/runs) that
-	// this run step is a part of.
+	// The ID of the [run](https://developers.openai.com/api/docs/assistants/migration)
+	// that this run step is a part of.
 	RunID string `json:"run_id" api:"required"`
 	// The status of the run step, which can be either `in_progress`, `cancelled`,
 	// `failed`, `completed`, or `expired`.
@@ -794,8 +792,9 @@ type RunStep struct {
 	Status RunStepStatus `json:"status" api:"required"`
 	// The details of the run step.
 	StepDetails RunStepStepDetailsUnion `json:"step_details" api:"required"`
-	// The ID of the [thread](https://platform.openai.com/docs/api-reference/threads)
-	// that was run.
+	// The ID of the
+	// [thread](https://developers.openai.com/api/docs/assistants/migration) that was
+	// run.
 	ThreadID string `json:"thread_id" api:"required"`
 	// The type of run step, which can be either `message_creation` or `tool_calls`.
 	//
@@ -1333,7 +1332,7 @@ type BetaThreadRunStepGetParams struct {
 	// to fetch the file search result content.
 	//
 	// See the
-	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search#customizing-file-search-settings)
+	// [file search tool documentation](https://developers.openai.com/api/docs/guides/tools-file-search#retrieval-customization)
 	// for more information.
 	Include []RunStepInclude `query:"include,omitzero" json:"-"`
 	paramObj
@@ -1367,7 +1366,7 @@ type BetaThreadRunStepListParams struct {
 	// to fetch the file search result content.
 	//
 	// See the
-	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search#customizing-file-search-settings)
+	// [file search tool documentation](https://developers.openai.com/api/docs/guides/tools-file-search#retrieval-customization)
 	// for more information.
 	Include []RunStepInclude `query:"include,omitzero" json:"-"`
 	// Sort order by the `created_at` timestamp of the objects. `asc` for ascending
