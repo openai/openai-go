@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.59.0](https://github.com/openai/openai-go/compare/v3.58.0...v3.59.0) (2026-09-09)
+
+
+### Features
+
+* **api:** Add project API key expiration support ([#906](https://github.com/openai/openai-go/issues/906)) ([c126b9c](https://github.com/openai/openai-go/commit/c126b9c3df74822b09d2875793acbd9d0ad17f0e))
+
 ## [3.58.0](https://github.com/openai/openai-go/compare/v3.57.0...v3.58.0) (2026-09-08)
 
 
