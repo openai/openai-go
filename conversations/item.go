@@ -186,13 +186,19 @@ type ConversationItemUnion struct {
 	// This field is from variant [responses.ResponseFileSearchToolCall].
 	Results []responses.ResponseFileSearchToolCallResult `json:"results"`
 	// This field is a union of [responses.ResponseFunctionWebSearchActionUnion],
-	// [responses.ResponseComputerToolCallActionUnion],
+	// [string], [responses.ResponseComputerToolCallActionUnion],
 	// [ConversationItemLocalShellCallAction],
 	// [responses.ResponseFunctionShellToolCallAction]
 	Action ConversationItemUnionAction `json:"action"`
 	Result string                      `json:"result"`
 	// This field is from variant [ConversationItemImageGenerationCall].
+	Background string `json:"background"`
+	// This field is from variant [ConversationItemImageGenerationCall].
+	OutputFormat string `json:"output_format"`
+	// This field is from variant [ConversationItemImageGenerationCall].
 	Quality string `json:"quality"`
+	// This field is from variant [ConversationItemImageGenerationCall].
+	RevisedPrompt string `json:"revised_prompt"`
 	// This field is from variant [ConversationItemImageGenerationCall].
 	Size string `json:"size"`
 	// This field is from variant [responses.ResponseComputerToolCall].
@@ -252,7 +258,10 @@ type ConversationItemUnion struct {
 		Results                  respjson.Field
 		Action                   respjson.Field
 		Result                   respjson.Field
+		Background               respjson.Field
+		OutputFormat             respjson.Field
 		Quality                  respjson.Field
+		RevisedPrompt            respjson.Field
 		Size                     respjson.Field
 		PendingSafetyChecks      respjson.Field
 		Actions                  respjson.Field
@@ -667,8 +676,13 @@ func (r *ConversationItemUnionOutput) UnmarshalJSON(data []byte) error {
 //
 // For type safety it is recommended to directly use a variant of the
 // [ConversationItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfConversationItemImageGenerationCallAction]
 type ConversationItemUnionAction struct {
-	Type string `json:"type"`
+	// This field will be present if the value is a [string] instead of an object.
+	OfConversationItemImageGenerationCallAction string `json:",inline"`
+	Type                                        string `json:"type"`
 	// This field is from variant [responses.ResponseFunctionWebSearchActionUnion].
 	Queries []string `json:"queries"`
 	// This field is from variant [responses.ResponseFunctionWebSearchActionUnion].
@@ -705,28 +719,29 @@ type ConversationItemUnionAction struct {
 	// This field is from variant [responses.ResponseFunctionShellToolCallAction].
 	MaxOutputLength int64 `json:"max_output_length"`
 	JSON            struct {
-		Type             respjson.Field
-		Queries          respjson.Field
-		Query            respjson.Field
-		Sources          respjson.Field
-		URL              respjson.Field
-		Pattern          respjson.Field
-		Button           respjson.Field
-		X                respjson.Field
-		Y                respjson.Field
-		Keys             respjson.Field
-		Path             respjson.Field
-		ScrollX          respjson.Field
-		ScrollY          respjson.Field
-		Text             respjson.Field
-		Command          respjson.Field
-		Env              respjson.Field
-		TimeoutMs        respjson.Field
-		User             respjson.Field
-		WorkingDirectory respjson.Field
-		Commands         respjson.Field
-		MaxOutputLength  respjson.Field
-		raw              string
+		OfConversationItemImageGenerationCallAction respjson.Field
+		Type                                        respjson.Field
+		Queries                                     respjson.Field
+		Query                                       respjson.Field
+		Sources                                     respjson.Field
+		URL                                         respjson.Field
+		Pattern                                     respjson.Field
+		Button                                      respjson.Field
+		X                                           respjson.Field
+		Y                                           respjson.Field
+		Keys                                        respjson.Field
+		Path                                        respjson.Field
+		ScrollX                                     respjson.Field
+		ScrollY                                     respjson.Field
+		Text                                        respjson.Field
+		Command                                     respjson.Field
+		Env                                         respjson.Field
+		TimeoutMs                                   respjson.Field
+		User                                        respjson.Field
+		WorkingDirectory                            respjson.Field
+		Commands                                    respjson.Field
+		MaxOutputLength                             respjson.Field
+		raw                                         string
 	} `json:"-"`
 }
 
@@ -804,23 +819,41 @@ type ConversationItemImageGenerationCall struct {
 	Status string `json:"status" api:"required"`
 	// The type of the image generation call. Always `image_generation_call`.
 	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
+	// The action used for image generation.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action" api:"nullable"`
+	// The background setting used for generation.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background string `json:"background" api:"nullable"`
+	// The output format used for generation.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat string `json:"output_format" api:"nullable"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
 	//
 	// Any of "low", "medium", "high", "xhigh", "max", "auto".
 	Quality string `json:"quality" api:"nullable"`
+	// The prompt that was used after any model prompt rewriting.
+	RevisedPrompt string `json:"revised_prompt" api:"nullable"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size string `json:"size" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Result      respjson.Field
-		Status      respjson.Field
-		Type        respjson.Field
-		Quality     respjson.Field
-		Size        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID            respjson.Field
+		Result        respjson.Field
+		Status        respjson.Field
+		Type          respjson.Field
+		Action        respjson.Field
+		Background    respjson.Field
+		OutputFormat  respjson.Field
+		Quality       respjson.Field
+		RevisedPrompt respjson.Field
+		Size          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -1211,7 +1244,7 @@ type ItemNewParams struct {
 	// The items to add to the conversation. You may add up to 20 items at a time.
 	Items []responses.ResponseInputItemUnionParam `json:"items,omitzero" api:"required"`
 	// Additional fields to include in the response. See the `include` parameter for
-	// [listing Conversation items above](https://platform.openai.com/docs/api-reference/conversations/list-items#conversations_list_items-include)
+	// [listing Conversation items above](https://developers.openai.com/api/reference/resources/conversations/subresources/items/methods/list#%28resource%29%20conversations.items%20%3E%20%28method%29%20list%20%3E%20%28params%29%20default%20%3E%20%28param%29%20include%20%3E%20%28schema%29)
 	// for more information.
 	Include []responses.ResponseIncludable `query:"include,omitzero" json:"-"`
 	paramObj
@@ -1235,7 +1268,7 @@ func (r ItemNewParams) URLQuery() (v url.Values, err error) {
 
 type ItemGetParams struct {
 	// Additional fields to include in the response. See the `include` parameter for
-	// [listing Conversation items above](https://platform.openai.com/docs/api-reference/conversations/list-items#conversations_list_items-include)
+	// [listing Conversation items above](https://developers.openai.com/api/reference/resources/conversations/subresources/items/methods/list#%28resource%29%20conversations.items%20%3E%20%28method%29%20list%20%3E%20%28params%29%20default%20%3E%20%28param%29%20include%20%3E%20%28schema%29)
 	// for more information.
 	Include []responses.ResponseIncludable `query:"include,omitzero" json:"-"`
 	paramObj

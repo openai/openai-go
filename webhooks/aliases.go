@@ -474,8 +474,8 @@ type FunctionDefinition = shared.FunctionDefinition
 type FunctionDefinitionParam = shared.FunctionDefinitionParam
 
 // The parameters the functions accepts, described as a JSON Schema object. See the
-// [guide](https://platform.openai.com/docs/guides/function-calling) for examples,
-// and the
+// [guide](https://developers.openai.com/api/docs/guides/function-calling) for
+// examples, and the
 // [JSON Schema reference](https://json-schema.org/understanding-json-schema/) for
 // documentation about the format.
 //
@@ -504,7 +504,7 @@ const OAuthErrorCodeInvalidGrant = shared.OAuthErrorCodeInvalidGrant
 const OAuthErrorCodeInvalidSubjectToken = shared.OAuthErrorCodeInvalidSubjectToken
 
 // Configuration options for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 //
 // This is an alias to an internal type.
 type Reasoning = shared.Reasoning
@@ -579,7 +579,7 @@ const ReasoningSummaryConcise = shared.ReasoningSummaryConcise
 const ReasoningSummaryDetailed = shared.ReasoningSummaryDetailed
 
 // Configuration options for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 //
 // This is an alias to an internal type.
 type ReasoningParam = shared.ReasoningParam
@@ -588,7 +588,7 @@ type ReasoningParam = shared.ReasoningParam
 // are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
 // reasoning effort can result in faster responses and fewer tokens used on
 // reasoning in a response. Not all reasoning models support every value. See the
-// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+// [reasoning guide](https://developers.openai.com/api/docs/guides/reasoning) for
 // model-specific support.
 //
 // This is an alias to an internal type.
@@ -631,7 +631,7 @@ type ResponseFormatJSONObjectParam = shared.ResponseFormatJSONObjectParam
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
-// [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
+// [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 //
 // This is an alias to an internal type.
 type ResponseFormatJSONSchema = shared.ResponseFormatJSONSchema
@@ -643,7 +643,7 @@ type ResponseFormatJSONSchemaJSONSchema = shared.ResponseFormatJSONSchemaJSONSch
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
-// [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
+// [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 //
 // This is an alias to an internal type.
 type ResponseFormatJSONSchemaParam = shared.ResponseFormatJSONSchemaParam

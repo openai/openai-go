@@ -63,7 +63,7 @@ type AudioTranscription struct {
 	Model AudioTranscriptionModel `json:"model"`
 	// An optional text to guide the model's style or continue a previous audio
 	// segment. For `whisper-1`, the
-	// [prompt is a list of keywords](https://platform.openai.com/docs/guides/speech-to-text#prompting).
+	// [prompt is a list of keywords](https://developers.openai.com/api/docs/guides/speech-to-text#prompting).
 	// For `gpt-4o-transcribe` models (excluding `gpt-4o-transcribe-diarize`), the
 	// prompt is a free text string, for example "expect words related to technology".
 	// Prompt is not supported with `gpt-realtime-whisper` in GA Realtime sessions.
@@ -134,7 +134,7 @@ type AudioTranscriptionParam struct {
 	Language param.Opt[string] `json:"language,omitzero"`
 	// An optional text to guide the model's style or continue a previous audio
 	// segment. For `whisper-1`, the
-	// [prompt is a list of keywords](https://platform.openai.com/docs/guides/speech-to-text#prompting).
+	// [prompt is a list of keywords](https://developers.openai.com/api/docs/guides/speech-to-text#prompting).
 	// For `gpt-4o-transcribe` models (excluding `gpt-4o-transcribe-diarize`), the
 	// prompt is a free text string, for example "expect words related to technology".
 	// Prompt is not supported with `gpt-realtime-whisper` in GA Realtime sessions.
@@ -224,7 +224,7 @@ type RealtimeAudioConfigInputParam struct {
 	// `null` to turn off once on. Input audio transcription is not native to the
 	// model, since the model consumes audio directly. Transcription runs
 	// asynchronously through
-	// [the /audio/transcriptions endpoint](https://platform.openai.com/docs/api-reference/audio/createTranscription)
+	// [the /audio/transcriptions endpoint](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create)
 	// and should be treated as guidance of input audio content rather than precisely
 	// what the model heard. The client can optionally set the language and prompt for
 	// transcription, these offer additional guidance to the transcription service.
@@ -954,7 +954,7 @@ type RealtimeSessionCreateRequestParam struct {
 	// reasoning Realtime models such as `gpt-realtime-2`.
 	ParallelToolCalls param.Opt[bool] `json:"parallel_tool_calls,omitzero"`
 	// Reference to a prompt template and its variables.
-	// [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
+	// [Learn more](https://developers.openai.com/api/docs/guides/text?api-mode=responses#version-prompts-in-code).
 	Prompt responses.ResponsePromptParam `json:"prompt,omitzero"`
 	// Realtime API can write session traces to the
 	// [Traces Dashboard](https://platform.openai.com/logs?api=traces). Set to null to
@@ -1283,7 +1283,7 @@ func init() {
 
 // Give the model access to additional tools via remote Model Context Protocol
 // (MCP) servers.
-// [Learn more about MCP](https://platform.openai.com/docs/guides/tools-remote-mcp).
+// [Learn more about MCP](https://developers.openai.com/api/docs/guides/tools-connectors-mcp).
 //
 // The properties ServerLabel, Type are required.
 type RealtimeToolsConfigUnionMcpParam struct {
@@ -1317,7 +1317,7 @@ type RealtimeToolsConfigUnionMcpParam struct {
 	// Identifier for service connectors, like those available in ChatGPT. One of
 	// `server_url`, `connector_id`, or `tunnel_id` must be provided. Learn more about
 	// service connectors
-	// [here](https://platform.openai.com/docs/guides/tools-remote-mcp#connectors).
+	// [here](https://developers.openai.com/api/docs/guides/tools-connectors-mcp#connectors).
 	//
 	// Currently supported `connector_id` values are:
 	//
@@ -1564,7 +1564,7 @@ type RealtimeTranscriptionSessionAudioInputParam struct {
 	// `null` to turn off once on. Input audio transcription is not native to the
 	// model, since the model consumes audio directly. Transcription runs
 	// asynchronously through
-	// [the /audio/transcriptions endpoint](https://platform.openai.com/docs/api-reference/audio/createTranscription)
+	// [the /audio/transcriptions endpoint](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create)
 	// and should be treated as guidance of input audio content rather than precisely
 	// what the model heard. The client can optionally set the language and prompt for
 	// transcription, these offer additional guidance to the transcription service.
