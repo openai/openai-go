@@ -148,8 +148,8 @@ type Batch struct {
 	// Model ID used to process the batch, like `gpt-6-astra`. OpenAI offers a wide
 	// range of models with different capabilities, performance characteristics, and
 	// price points. Refer to the
-	// [model guide](https://platform.openai.com/docs/models) to browse and compare
-	// available models.
+	// [model guide](https://developers.openai.com/api/docs/models) to browse and
+	// compare available models.
 	Model string `json:"model"`
 	// The ID of the file containing the outputs of successfully executed requests.
 	OutputFileID string `json:"output_file_id"`
@@ -312,7 +312,7 @@ func (r *BatchUsage) UnmarshalJSON(data []byte) error {
 // A detailed breakdown of the input tokens.
 type BatchUsageInputTokensDetails struct {
 	// The number of tokens that were retrieved from the cache.
-	// [More on prompt caching](https://platform.openai.com/docs/guides/prompt-caching).
+	// [More on prompt caching](https://developers.openai.com/api/docs/guides/prompt-caching).
 	CachedTokens int64 `json:"cached_tokens" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -365,11 +365,12 @@ type BatchNewParams struct {
 	Endpoint BatchNewParamsEndpoint `json:"endpoint,omitzero" api:"required"`
 	// The ID of an uploaded file that contains requests for the new batch.
 	//
-	// See [upload file](https://platform.openai.com/docs/api-reference/files/create)
+	// See
+	// [upload file](https://developers.openai.com/api/reference/resources/files/methods/create)
 	// for how to upload a file.
 	//
 	// Your input file must be formatted as a
-	// [JSONL file](https://platform.openai.com/docs/api-reference/batch/request-input),
+	// [JSONL file](https://developers.openai.com/api/docs/guides/batch#1-prepare-your-batch-file),
 	// and must be uploaded with the purpose `batch`. The file can contain up to 50,000
 	// requests, and can be up to 200 MB in size.
 	InputFileID string `json:"input_file_id" api:"required"`

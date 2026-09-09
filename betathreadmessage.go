@@ -488,9 +488,9 @@ func (r *FilePathDeltaAnnotationFilePath) UnmarshalJSON(data []byte) error {
 }
 
 type ImageFile struct {
-	// The [File](https://platform.openai.com/docs/api-reference/files) ID of the image
-	// in the message content. Set `purpose="vision"` when uploading the File if you
-	// need to later display the file content.
+	// The [File](https://developers.openai.com/api/reference/resources/files) ID of
+	// the image in the message content. Set `purpose="vision"` when uploading the File
+	// if you need to later display the file content.
 	FileID string `json:"file_id" api:"required"`
 	// Specifies the detail level of the image if specified by the user. `low` uses
 	// fewer tokens, you can opt in to high resolution using `high`.
@@ -533,9 +533,9 @@ const (
 
 // The property FileID is required.
 type ImageFileParam struct {
-	// The [File](https://platform.openai.com/docs/api-reference/files) ID of the image
-	// in the message content. Set `purpose="vision"` when uploading the File if you
-	// need to later display the file content.
+	// The [File](https://developers.openai.com/api/reference/resources/files) ID of
+	// the image in the message content. Set `purpose="vision"` when uploading the File
+	// if you need to later display the file content.
 	FileID string `json:"file_id" api:"required"`
 	// Specifies the detail level of the image if specified by the user. `low` uses
 	// fewer tokens, you can opt in to high resolution using `high`.
@@ -553,8 +553,9 @@ func (r *ImageFileParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// References an image [File](https://platform.openai.com/docs/api-reference/files)
-// in the content of a message.
+// References an image
+// [File](https://developers.openai.com/api/reference/resources/files) in the
+// content of a message.
 type ImageFileContentBlock struct {
 	ImageFile ImageFile `json:"image_file" api:"required"`
 	// Always `image_file`.
@@ -583,8 +584,9 @@ func (r ImageFileContentBlock) ToParam() ImageFileContentBlockParam {
 	return param.Override[ImageFileContentBlockParam](json.RawMessage(r.RawJSON()))
 }
 
-// References an image [File](https://platform.openai.com/docs/api-reference/files)
-// in the content of a message.
+// References an image
+// [File](https://developers.openai.com/api/reference/resources/files) in the
+// content of a message.
 //
 // The properties ImageFile, Type are required.
 type ImageFileContentBlockParam struct {
@@ -610,9 +612,9 @@ type ImageFileDelta struct {
 	//
 	// Any of "auto", "low", "high".
 	Detail ImageFileDeltaDetail `json:"detail"`
-	// The [File](https://platform.openai.com/docs/api-reference/files) ID of the image
-	// in the message content. Set `purpose="vision"` when uploading the File if you
-	// need to later display the file content.
+	// The [File](https://developers.openai.com/api/reference/resources/files) ID of
+	// the image in the message content. Set `purpose="vision"` when uploading the File
+	// if you need to later display the file content.
 	FileID string `json:"file_id"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -639,8 +641,9 @@ const (
 	ImageFileDeltaDetailHigh ImageFileDeltaDetail = "high"
 )
 
-// References an image [File](https://platform.openai.com/docs/api-reference/files)
-// in the content of a message.
+// References an image
+// [File](https://developers.openai.com/api/reference/resources/files) in the
+// content of a message.
 type ImageFileDeltaBlock struct {
 	// The index of the content part in the message.
 	Index int64 `json:"index" api:"required"`
@@ -834,12 +837,12 @@ func (r *ImageURLDeltaBlock) UnmarshalJSON(data []byte) error {
 }
 
 // Represents a message within a
-// [thread](https://platform.openai.com/docs/api-reference/threads).
+// [thread](https://developers.openai.com/api/docs/assistants/migration).
 type Message struct {
 	// The identifier, which can be referenced in API endpoints.
 	ID string `json:"id" api:"required"`
 	// If applicable, the ID of the
-	// [assistant](https://platform.openai.com/docs/api-reference/assistants) that
+	// [assistant](https://developers.openai.com/api/docs/assistants/migration) that
 	// authored this message.
 	AssistantID string `json:"assistant_id" api:"required"`
 	// A list of files attached to the message, and the tools they were added to.
@@ -867,7 +870,7 @@ type Message struct {
 	//
 	// Any of "user", "assistant".
 	Role MessageRole `json:"role" api:"required"`
-	// The ID of the [run](https://platform.openai.com/docs/api-reference/runs)
+	// The ID of the [run](https://developers.openai.com/api/docs/assistants/migration)
 	// associated with the creation of this message. Value is `null` when messages are
 	// created manually using the create message or create thread endpoints.
 	RunID string `json:"run_id" api:"required"`
@@ -876,8 +879,8 @@ type Message struct {
 	//
 	// Any of "in_progress", "incomplete", "completed".
 	Status MessageStatus `json:"status" api:"required"`
-	// The [thread](https://platform.openai.com/docs/api-reference/threads) ID that
-	// this message belongs to.
+	// The [thread](https://developers.openai.com/api/docs/assistants/migration) ID
+	// that this message belongs to.
 	ThreadID string `json:"thread_id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {

@@ -215,6 +215,9 @@ type AdminOrganizationProjectServiceAccountNewResponseAPIKey struct {
 	// The object type, which is always `organization.project.service_account.api_key`
 	Object constant.OrganizationProjectServiceAccountAPIKey `json:"object" default:"organization.project.service_account.api_key"`
 	Value  string                                           `json:"value" api:"required"`
+	// The Unix timestamp (in seconds) when the API key expires, or null if it does not
+	// expire.
+	ExpiresAt int64 `json:"expires_at" api:"nullable" format:"unixtime"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -222,6 +225,7 @@ type AdminOrganizationProjectServiceAccountNewResponseAPIKey struct {
 		Name        respjson.Field
 		Object      respjson.Field
 		Value       respjson.Field
+		ExpiresAt   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -267,6 +271,12 @@ type AdminOrganizationProjectServiceAccountNewParams struct {
 	Name string `json:"name" api:"required"`
 	// Create the service account without default roles or an API key.
 	CreateServiceAccountOnly param.Opt[bool] `json:"create_service_account_only,omitzero"`
+	// Number of seconds until the initial API key expires. If omitted or null, the key
+	// does not expire unless the effective organization or project policy requires an
+	// expiration. When a policy sets a maximum lifetime, this value must be provided
+	// and must not exceed that limit. A non-null value cannot be used when
+	// `create_service_account_only` is true.
+	ExpiresInSeconds param.Opt[int64] `json:"expires_in_seconds,omitzero"`
 	paramObj
 }
 

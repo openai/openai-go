@@ -834,8 +834,8 @@ type FunctionDefinition struct {
 	// how to call the function.
 	Description string `json:"description"`
 	// The parameters the functions accepts, described as a JSON Schema object. See the
-	// [guide](https://platform.openai.com/docs/guides/function-calling) for examples,
-	// and the
+	// [guide](https://developers.openai.com/api/docs/guides/function-calling) for
+	// examples, and the
 	// [JSON Schema reference](https://json-schema.org/understanding-json-schema/) for
 	// documentation about the format.
 	//
@@ -845,7 +845,7 @@ type FunctionDefinition struct {
 	// set to true, the model will follow the exact schema defined in the `parameters`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
 	// more about Structured Outputs in the
-	// [function calling guide](https://platform.openai.com/docs/guides/function-calling).
+	// [function calling guide](https://developers.openai.com/api/docs/guides/function-calling).
 	Strict bool `json:"strict" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -882,14 +882,14 @@ type FunctionDefinitionParam struct {
 	// set to true, the model will follow the exact schema defined in the `parameters`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
 	// more about Structured Outputs in the
-	// [function calling guide](https://platform.openai.com/docs/guides/function-calling).
+	// [function calling guide](https://developers.openai.com/api/docs/guides/function-calling).
 	Strict param.Opt[bool] `json:"strict,omitzero"`
 	// A description of what the function does, used by the model to choose when and
 	// how to call the function.
 	Description param.Opt[string] `json:"description,omitzero"`
 	// The parameters the functions accepts, described as a JSON Schema object. See the
-	// [guide](https://platform.openai.com/docs/guides/function-calling) for examples,
-	// and the
+	// [guide](https://developers.openai.com/api/docs/guides/function-calling) for
+	// examples, and the
 	// [JSON Schema reference](https://json-schema.org/understanding-json-schema/) for
 	// documentation about the format.
 	//
@@ -918,7 +918,7 @@ const (
 )
 
 // Configuration options for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 type Reasoning struct {
 	// Controls which reasoning items are rendered back to the model on later turns. If
 	// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
@@ -933,7 +933,7 @@ type Reasoning struct {
 	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
 	// reasoning effort can result in faster responses and fewer tokens used on
 	// reasoning in a response. Not all reasoning models support every value. See the
-	// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+	// [reasoning guide](https://developers.openai.com/api/docs/guides/reasoning) for
 	// model-specific support.
 	//
 	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
@@ -1040,7 +1040,7 @@ const (
 )
 
 // Configuration options for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 type ReasoningParam struct {
 	// Controls which reasoning items are rendered back to the model on later turns. If
 	// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
@@ -1055,7 +1055,7 @@ type ReasoningParam struct {
 	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
 	// reasoning effort can result in faster responses and fewer tokens used on
 	// reasoning in a response. Not all reasoning models support every value. See the
-	// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+	// [reasoning guide](https://developers.openai.com/api/docs/guides/reasoning) for
 	// model-specific support.
 	//
 	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
@@ -1098,7 +1098,7 @@ func (r *ReasoningParam) UnmarshalJSON(data []byte) error {
 // are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
 // reasoning effort can result in faster responses and fewer tokens used on
 // reasoning in a response. Not all reasoning models support every value. See the
-// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+// [reasoning guide](https://developers.openai.com/api/docs/guides/reasoning) for
 // model-specific support.
 type ReasoningEffort string
 
@@ -1172,7 +1172,7 @@ func (r *ResponseFormatJSONObjectParam) UnmarshalJSON(data []byte) error {
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
-// [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
+// [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 type ResponseFormatJSONSchema struct {
 	// Structured Outputs configuration options, including a JSON Schema.
 	JSONSchema ResponseFormatJSONSchemaJSONSchema `json:"json_schema" api:"required"`
@@ -1218,7 +1218,7 @@ type ResponseFormatJSONSchemaJSONSchema struct {
 	// true, the model will always follow the exact schema defined in the `schema`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. To
 	// learn more, read the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	Strict bool `json:"strict" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -1239,7 +1239,7 @@ func (r *ResponseFormatJSONSchemaJSONSchema) UnmarshalJSON(data []byte) error {
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
-// [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
+// [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 //
 // The properties JSONSchema, Type are required.
 type ResponseFormatJSONSchemaParam struct {
@@ -1271,7 +1271,7 @@ type ResponseFormatJSONSchemaJSONSchemaParam struct {
 	// true, the model will always follow the exact schema defined in the `schema`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. To
 	// learn more, read the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	Strict param.Opt[bool] `json:"strict,omitzero"`
 	// A description of what the response format is for, used by the model to determine
 	// how to respond in the format.

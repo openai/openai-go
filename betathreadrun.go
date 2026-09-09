@@ -233,7 +233,7 @@ func (r *BetaThreadRunService) SubmitToolOutputsStreaming(ctx context.Context, t
 type RequiredActionFunctionToolCall struct {
 	// The ID of the tool call. This ID must be referenced when you submit the tool
 	// outputs in using the
-	// [Submit tool outputs to run](https://platform.openai.com/docs/api-reference/runs/submitToolOutputs)
+	// [Submit tool outputs to run](https://developers.openai.com/api/docs/assistants/migration)
 	// endpoint.
 	ID string `json:"id" api:"required"`
 	// The function definition.
@@ -279,13 +279,13 @@ func (r *RequiredActionFunctionToolCallFunction) UnmarshalJSON(data []byte) erro
 }
 
 // Represents an execution run on a
-// [thread](https://platform.openai.com/docs/api-reference/threads).
+// [thread](https://developers.openai.com/api/docs/assistants/migration).
 type Run struct {
 	// The identifier, which can be referenced in API endpoints.
 	ID string `json:"id" api:"required"`
 	// The ID of the
-	// [assistant](https://platform.openai.com/docs/api-reference/assistants) used for
-	// execution of this run.
+	// [assistant](https://developers.openai.com/api/docs/assistants/migration) used
+	// for execution of this run.
 	AssistantID string `json:"assistant_id" api:"required"`
 	// The Unix timestamp (in seconds) for when the run was cancelled.
 	CancelledAt int64 `json:"cancelled_at" api:"required" format:"unixtime"`
@@ -301,8 +301,8 @@ type Run struct {
 	// incomplete.
 	IncompleteDetails RunIncompleteDetails `json:"incomplete_details" api:"required"`
 	// The instructions that the
-	// [assistant](https://platform.openai.com/docs/api-reference/assistants) used for
-	// this run.
+	// [assistant](https://developers.openai.com/api/docs/assistants/migration) used
+	// for this run.
 	Instructions string `json:"instructions" api:"required"`
 	// The last error associated with this run. Will be `null` if there are no errors.
 	LastError RunLastError `json:"last_error" api:"required"`
@@ -320,27 +320,27 @@ type Run struct {
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata" api:"required"`
 	// The model that the
-	// [assistant](https://platform.openai.com/docs/api-reference/assistants) used for
-	// this run.
+	// [assistant](https://developers.openai.com/api/docs/assistants/migration) used
+	// for this run.
 	Model string `json:"model" api:"required"`
 	// The object type, which is always `thread.run`.
 	Object constant.ThreadRun `json:"object" default:"thread.run"`
 	// Whether to enable
-	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
+	// [parallel function calling](https://developers.openai.com/api/docs/guides/function-calling#parallel-function-calling)
 	// during tool use.
 	ParallelToolCalls bool `json:"parallel_tool_calls" api:"required"`
 	// Details on the action required to continue the run. Will be `null` if no action
 	// is required.
 	RequiredAction RunRequiredAction `json:"required_action" api:"required"`
 	// Specifies the format that the model must output. Compatible with
-	// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
-	// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
-	// and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
+	// [GPT-4o](https://developers.openai.com/api/docs/models/gpt-4o),
+	// [GPT-4 Turbo](https://developers.openai.com/api/docs/models/gpt-4-turbo), and
+	// all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
 	//
 	// Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
 	// Outputs which ensures the model will match your supplied JSON schema. Learn more
 	// in the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	//
 	// Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
 	// message the model generates is valid JSON.
@@ -362,8 +362,9 @@ type Run struct {
 	// Any of "queued", "in_progress", "requires_action", "cancelling", "cancelled",
 	// "failed", "completed", "incomplete", "expired".
 	Status RunStatus `json:"status" api:"required"`
-	// The ID of the [thread](https://platform.openai.com/docs/api-reference/threads)
-	// that was executed on as a part of this run.
+	// The ID of the
+	// [thread](https://developers.openai.com/api/docs/assistants/migration) that was
+	// executed on as a part of this run.
 	ThreadID string `json:"thread_id" api:"required"`
 	// Controls which (if any) tool is called by the model. `none` means the model will
 	// not call any tools and instead generates a message. `auto` is the default value
@@ -374,8 +375,8 @@ type Run struct {
 	// call that tool.
 	ToolChoice AssistantToolChoiceOptionUnion `json:"tool_choice" api:"required"`
 	// The list of tools that the
-	// [assistant](https://platform.openai.com/docs/api-reference/assistants) used for
-	// this run.
+	// [assistant](https://developers.openai.com/api/docs/assistants/migration) used
+	// for this run.
 	Tools []AssistantToolUnion `json:"tools" api:"required"`
 	// Controls for how a thread will be truncated prior to the run. Use this to
 	// control the initial context window of the run.
@@ -584,16 +585,16 @@ const (
 
 type BetaThreadRunNewParams struct {
 	// The ID of the
-	// [assistant](https://platform.openai.com/docs/api-reference/assistants) to use to
-	// execute this run.
+	// [assistant](https://developers.openai.com/api/docs/assistants/migration) to use
+	// to execute this run.
 	AssistantID string `json:"assistant_id" api:"required"`
 	// Appends additional instructions at the end of the instructions for the run. This
 	// is useful for modifying the behavior on a per-run basis without overriding other
 	// instructions.
 	AdditionalInstructions param.Opt[string] `json:"additional_instructions,omitzero"`
 	// Overrides the
-	// [instructions](https://platform.openai.com/docs/api-reference/assistants/createAssistant)
-	// of the assistant. This is useful for modifying the behavior on a per-run basis.
+	// [instructions](https://developers.openai.com/api/docs/assistants/migration) of
+	// the assistant. This is useful for modifying the behavior on a per-run basis.
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
 	// The maximum number of completion tokens that may be used over the course of the
 	// run. The run will make a best effort to use only the number of completion tokens
@@ -618,7 +619,7 @@ type BetaThreadRunNewParams struct {
 	// We generally recommend altering this or temperature but not both.
 	TopP param.Opt[float64] `json:"top_p,omitzero"`
 	// Whether to enable
-	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
+	// [parallel function calling](https://developers.openai.com/api/docs/guides/function-calling#parallel-function-calling)
 	// during tool use.
 	ParallelToolCalls param.Opt[bool] `json:"parallel_tool_calls,omitzero"`
 	// Adds additional messages to the thread before creating the run.
@@ -630,16 +631,17 @@ type BetaThreadRunNewParams struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata,omitzero"`
-	// The ID of the [Model](https://platform.openai.com/docs/api-reference/models) to
-	// be used to execute this run. If a value is provided here, it will override the
-	// model associated with the assistant. If not, the model associated with the
-	// assistant will be used.
+	// The ID of the
+	// [Model](https://developers.openai.com/api/reference/resources/models) to be used
+	// to execute this run. If a value is provided here, it will override the model
+	// associated with the assistant. If not, the model associated with the assistant
+	// will be used.
 	Model shared.ChatModel `json:"model,omitzero"`
 	// Constrains effort on reasoning for reasoning models. Currently supported values
 	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
 	// reasoning effort can result in faster responses and fewer tokens used on
 	// reasoning in a response. Not all reasoning models support every value. See the
-	// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+	// [reasoning guide](https://developers.openai.com/api/docs/guides/reasoning) for
 	// model-specific support.
 	//
 	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
@@ -655,18 +657,18 @@ type BetaThreadRunNewParams struct {
 	// to fetch the file search result content.
 	//
 	// See the
-	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search#customizing-file-search-settings)
+	// [file search tool documentation](https://developers.openai.com/api/docs/guides/tools-file-search#retrieval-customization)
 	// for more information.
 	Include []RunStepInclude `query:"include,omitzero" json:"-"`
 	// Specifies the format that the model must output. Compatible with
-	// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
-	// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
-	// and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
+	// [GPT-4o](https://developers.openai.com/api/docs/models/gpt-4o),
+	// [GPT-4 Turbo](https://developers.openai.com/api/docs/models/gpt-4-turbo), and
+	// all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
 	//
 	// Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
 	// Outputs which ensures the model will match your supplied JSON schema. Learn more
 	// in the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	//
 	// Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
 	// message the model generates is valid JSON.

@@ -650,7 +650,9 @@ type LiveCallIncomingWebhookEventData struct {
 	// The `live_...` ID of the pending SIP session. Forward this value unchanged when
 	// accepting or rejecting the call through the Live API.
 	SessionID string `json:"session_id" api:"required"`
-	// Headers from the SIP Invite.
+	// Headers from the SIP INVITE, excluding SIP authorization headers. Retained
+	// names, values, repeated entries, and order are preserved. Treat these values as
+	// untrusted call metadata.
 	SipHeaders []LiveCallIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -736,7 +738,9 @@ type RealtimeCallIncomingWebhookEventData struct {
 	// prefix with `live_`. Use the ID returned by the event with the corresponding
 	// Realtime or Live API.
 	CallID string `json:"call_id" api:"required"`
-	// Headers from the SIP Invite.
+	// Headers from the SIP INVITE, excluding SIP authorization headers. Retained
+	// names, values, repeated entries, and order are preserved. Treat these values as
+	// untrusted call metadata.
 	SipHeaders []RealtimeCallIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
