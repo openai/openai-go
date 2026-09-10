@@ -31,15 +31,22 @@ type Error struct {
 	Response   *http.Response
 }
 
-// Returns the unmodified JSON received from the API
-func (r Error) RawJSON() string { return r.JSON.raw }
+// Returns the unmodified JSON received from the API. When the error
+// payload couldn't be parsed (e.g. a non-object or non-JSON response body),
+// it returns the raw response body carried in Message.
+func (r Error) RawJSON() string {
+	if r.JSON.raw != "" {
+		return r.JSON.raw
+	}
+	return r.Message
+}
 func (r *Error) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
 func (r *Error) Error() string {
 	// Attempt to re-populate the response body
-	return fmt.Sprintf("%s %q: %d %s %s", r.Request.Method, r.Request.URL, r.Response.StatusCode, http.StatusText(r.Response.StatusCode), r.JSON.raw)
+	return fmt.Sprintf("%s %q: %d %s %s", r.Request.Method, r.Request.URL, r.Response.StatusCode, http.StatusText(r.Response.StatusCode), r.RawJSON())
 }
 
 func (r *Error) DumpRequest(body bool) []byte {
