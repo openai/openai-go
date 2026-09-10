@@ -35,7 +35,11 @@ func NewSessionService(opts ...option.RequestOption) (r SessionService) {
 	return
 }
 
-// Accept an incoming SIP call with Live startup configuration.
+// Accept an incoming SIP call. Supply session with type live, the model, and
+// startup configuration. Before accepting calls, follow the
+// [Live prompting guide](https://developers.openai.com/api/docs/guides/live-prompting)
+// to write frontend conversation instructions and a separate backend prompt. SIP
+// media format is negotiated; omit audio.format.
 func (r *SessionService) Accept(ctx context.Context, sessionID string, body SessionAcceptParams, opts ...option.RequestOption) (err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -76,7 +80,7 @@ func (r *SessionService) Fork(ctx context.Context, sessionID string, body Sessio
 	return res, err
 }
 
-// Hang up a Live session.
+// End a SIP call identified by session_id.
 func (r *SessionService) Hangup(ctx context.Context, sessionID string, opts ...option.RequestOption) (err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -90,7 +94,8 @@ func (r *SessionService) Hangup(ctx context.Context, sessionID string, opts ...o
 	return err
 }
 
-// Transfer a Live SIP call to another destination.
+// Transfer a SIP call to another destination. Supply a nonblank target_uri for the
+// SIP Refer-To header.
 func (r *SessionService) Refer(ctx context.Context, sessionID string, body SessionReferParams, opts ...option.RequestOption) (err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -104,7 +109,8 @@ func (r *SessionService) Refer(ctx context.Context, sessionID string, body Sessi
 	return err
 }
 
-// Reject an incoming SIP call.
+// Reject an incoming SIP call. Send a required SIP rejection status_code between
+// 300 and 699.
 func (r *SessionService) Reject(ctx context.Context, sessionID string, body SessionRejectParams, opts ...option.RequestOption) (err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
