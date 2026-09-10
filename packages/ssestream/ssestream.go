@@ -29,16 +29,14 @@ func NewDecoder(res *http.Response) Decoder {
 	}
 
 	contentType, mediaType := decoderContentTypes(res.Header.Get("content-type"))
-	if t, ok := decoderTypes[contentType]; ok {
-		return t(res.Body)
+	decoderTypesMu.RLock()
+	t, ok := decoderTypes[contentType]
+	if !ok && mediaType != "" {
+		t, ok = decoderTypes[mediaType]
 	}
-
-	// Preserve parameter-specific registrations while allowing a bare media
-	// type registration to match standard Content-Type parameters.
-	if mediaType != "" {
-		if t, ok := decoderTypes[mediaType]; ok {
-			return t(res.Body)
-		}
+	decoderTypesMu.RUnlock()
+	if ok {
+		return t(res.Body)
 	}
 
 	scn := bufio.NewScanner(res.Body)
@@ -47,8 +45,11 @@ func NewDecoder(res *http.Response) Decoder {
 }
 
 var decoderTypes = map[string](func(io.ReadCloser) Decoder){}
+var decoderTypesMu sync.RWMutex
 
 func RegisterDecoder(contentType string, decoder func(io.ReadCloser) Decoder) {
+	decoderTypesMu.Lock()
+	defer decoderTypesMu.Unlock()
 	decoderTypes[strings.ToLower(contentType)] = decoder
 }
 
