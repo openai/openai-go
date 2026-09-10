@@ -15,6 +15,7 @@ import (
 // the [NewBetaService] method instead.
 type BetaService struct {
 	Options   []option.RequestOption
+	Agents    BetaAgentService
 	Responses BetaResponseService
 	ChatKit   BetaChatKitService
 	// Build Assistants that can call models and use tools.
@@ -31,6 +32,7 @@ type BetaService struct {
 func NewBetaService(opts ...option.RequestOption) (r BetaService) {
 	r = BetaService{}
 	r.Options = requestconfig.InheritedOptions(opts...)
+	r.Agents = NewBetaAgentService(opts...)
 	r.Responses = NewBetaResponseService(opts...)
 	r.ChatKit = NewBetaChatKitService(opts...)
 	r.Assistants = NewBetaAssistantService(opts...)
