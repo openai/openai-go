@@ -21,6 +21,7 @@ func ValueOf[T Constant[T]]() T {
 type Active string                                           // Always "active"
 type AdditionalTools string                                  // Always "additional_tools"
 type AgentMessage string                                     // Always "agent_message"
+type All string                                              // Always "all"
 type AllowedTools string                                     // Always "allowed_tools"
 type Allowlist string                                        // Always "allowlist"
 type ApplicationZip string                                   // Always "application/zip"
@@ -30,6 +31,9 @@ type ApplyPatchCallOutput string                             // Always "apply_pa
 type Approximate string                                      // Always "approximate"
 type Assistant string                                        // Always "assistant"
 type AssistantDeleted string                                 // Always "assistant.deleted"
+type AudioPCM string                                         // Always "audio/pcm"
+type AudioPCMA string                                        // Always "audio/pcma"
+type AudioPCMU string                                        // Always "audio/pcmu"
 type Auto string                                             // Always "auto"
 type Base64 string                                           // Always "base64"
 type Batch string                                            // Always "batch"
@@ -41,6 +45,7 @@ type Bucket string                                           // Always "bucket"
 type C2PA string                                             // Always "c2pa"
 type CacheHit string                                         // Always "cache_hit"
 type CacheMiss string                                        // Always "cache_miss"
+type CallError string                                        // Always "call_error"
 type CertificateDeleted string                               // Always "certificate.deleted"
 type ChatCompletion string                                   // Always "chat.completion"
 type ChatCompletionChunk string                              // Always "chat.completion.chunk"
@@ -96,6 +101,7 @@ type CreatedAt string                                        // Always "created_
 type Custom string                                           // Always "custom"
 type CustomToolCall string                                   // Always "custom_tool_call"
 type CustomToolCallOutput string                             // Always "custom_tool_call_output"
+type Delegation string                                       // Always "delegation"
 type DeleteFile string                                       // Always "delete_file"
 type Developer string                                        // Always "developer"
 type Direct string                                           // Always "direct"
@@ -146,6 +152,7 @@ type ImageGenerationCompleted string                         // Always "image_ge
 type ImageGenerationPartialImage string                      // Always "image_generation.partial_image"
 type ImageURL string                                         // Always "image_url"
 type Inf string                                              // Always "inf"
+type Info string                                             // Always "info"
 type Inline string                                           // Always "inline"
 type InputAudio string                                       // Always "input_audio"
 type InputAudioBufferAppend string                           // Always "input_audio_buffer.append"
@@ -167,7 +174,9 @@ type Keypress string                                         // Always "keypress
 type LabelModel string                                       // Always "label_model"
 type LastActiveAt string                                     // Always "last_active_at"
 type List string                                             // Always "list"
+type Live string                                             // Always "live"
 type LiveCallIncoming string                                 // Always "live.call.incoming"
+type LiveTransportIncoming string                            // Always "live.transport.incoming"
 type Local string                                            // Always "local"
 type LocalShell string                                       // Always "local_shell"
 type LocalShellCall string                                   // Always "local_shell_call"
@@ -283,6 +292,7 @@ type ResponseCreated string                                  // Always "response
 type ResponseCustomToolCallInputDelta string                 // Always "response.custom_tool_call_input.delta"
 type ResponseCustomToolCallInputDone string                  // Always "response.custom_tool_call_input.done"
 type ResponseDone string                                     // Always "response.done"
+type ResponseEvent string                                    // Always "response.event"
 type ResponseFailed string                                   // Always "response.failed"
 type ResponseFileSearchCallCompleted string                  // Always "response.file_search_call.completed"
 type ResponseFileSearchCallInProgress string                 // Always "response.file_search_call.in_progress"
@@ -299,6 +309,7 @@ type ResponseInject string                                   // Always "response
 type ResponseInjectCreated string                            // Always "response.inject.created"
 type ResponseInjectFailed string                             // Always "response.inject.failed"
 type ResponseInputTokens string                              // Always "response.input_tokens"
+type ResponseItemCreate string                               // Always "response.item.create"
 type ResponseMcpCallArgumentsDelta string                    // Always "response.mcp_call_arguments.delta"
 type ResponseMcpCallArgumentsDone string                     // Always "response.mcp_call_arguments.done"
 type ResponseMcpCallCompleted string                         // Always "response.mcp_call.completed"
@@ -337,6 +348,7 @@ type ResponseSteerPending string                             // Always "response
 type ResponseWebSearchCallCompleted string                   // Always "response.web_search_call.completed"
 type ResponseWebSearchCallInProgress string                  // Always "response.web_search_call.in_progress"
 type ResponseWebSearchCallSearching string                   // Always "response.web_search_call.searching"
+type Responses string                                        // Always "responses"
 type RetentionRatio string                                   // Always "retention_ratio"
 type Role string                                             // Always "role"
 type RoleDeleted string                                      // Always "role.deleted"
@@ -351,16 +363,32 @@ type SemanticVad string                                      // Always "semantic
 type ServerVad string                                        // Always "server_vad"
 type SessionClose string                                     // Always "session.close"
 type SessionClosed string                                    // Always "session.closed"
+type SessionCommentaryAppend string                          // Always "session.commentary.append"
+type SessionCommentaryAppended string                        // Always "session.commentary.appended"
 type SessionCreated string                                   // Always "session.created"
+type SessionDelegationCreated string                         // Always "session.delegation.created"
 type SessionInputAudioBufferAppend string                    // Always "session.input_audio_buffer.append"
+type SessionInputAudioAppend string                          // Always "session.input_audio.append"
+type SessionInputAudioMute string                            // Always "session.input_audio.mute"
+type SessionInputAudioMuted string                           // Always "session.input_audio.muted"
+type SessionInputAudioUnmute string                          // Always "session.input_audio.unmute"
+type SessionInputAudioUnmuted string                         // Always "session.input_audio.unmuted"
 type SessionInputTranscriptDelta string                      // Always "session.input_transcript.delta"
+type SessionInstructionsAppend string                        // Always "session.instructions.append"
+type SessionInstructionsAppended string                      // Always "session.instructions.appended"
 type SessionOutputAudioDelta string                          // Always "session.output_audio.delta"
 type SessionOutputTranscriptDelta string                     // Always "session.output_transcript.delta"
+type SessionStart string                                     // Always "session.start"
+type SessionStarted string                                   // Always "session.started"
+type SessionThinkingAppend string                            // Always "session.thinking.append"
+type SessionThinkingAppended string                          // Always "session.thinking.appended"
 type SessionUpdate string                                    // Always "session.update"
 type SessionUpdated string                                   // Always "session.updated"
+type SessionUsageUpdated string                              // Always "session.usage.updated"
 type Shell string                                            // Always "shell"
 type ShellCall string                                        // Always "shell_call"
 type ShellCallOutput string                                  // Always "shell_call_output"
+type Sip string                                              // Always "sip"
 type Skill string                                            // Always "skill"
 type SkillReference string                                   // Always "skill_reference"
 type SkillDeleted string                                     // Always "skill.deleted"
@@ -420,6 +448,11 @@ type Transcription string                                    // Always "transcri
 type TranscriptionSessionUpdate string                       // Always "transcription_session.update"
 type TranscriptionSessionUpdated string                      // Always "transcription_session.updated"
 type Translation string                                      // Always "translation"
+type TransportAnswered string                                // Always "transport.answered"
+type TransportDtmfReceived string                            // Always "transport.dtmf.received"
+type TransportDtmfSend string                                // Always "transport.dtmf.send"
+type TransportFailed string                                  // Always "transport.failed"
+type TransportRinging string                                 // Always "transport.ringing"
 type Type string                                             // Always "type"
 type Unavailable string                                      // Always "unavailable"
 type UpdateFile string                                       // Always "update_file"
@@ -440,11 +473,14 @@ type Video string                                            // Always "video"
 type VideoDeleted string                                     // Always "video.deleted"
 type Wait string                                             // Always "wait"
 type Wandb string                                            // Always "wandb"
+type WebSearch string                                        // Always "web_search"
 type WebSearchCall string                                    // Always "web_search_call"
+type Webrtc string                                           // Always "webrtc"
 
 func (c Active) Default() Active                               { return "active" }
 func (c AdditionalTools) Default() AdditionalTools             { return "additional_tools" }
 func (c AgentMessage) Default() AgentMessage                   { return "agent_message" }
+func (c All) Default() All                                     { return "all" }
 func (c AllowedTools) Default() AllowedTools                   { return "allowed_tools" }
 func (c Allowlist) Default() Allowlist                         { return "allowlist" }
 func (c ApplicationZip) Default() ApplicationZip               { return "application/zip" }
@@ -454,6 +490,9 @@ func (c ApplyPatchCallOutput) Default() ApplyPatchCallOutput   { return "apply_p
 func (c Approximate) Default() Approximate                     { return "approximate" }
 func (c Assistant) Default() Assistant                         { return "assistant" }
 func (c AssistantDeleted) Default() AssistantDeleted           { return "assistant.deleted" }
+func (c AudioPCM) Default() AudioPCM                           { return "audio/pcm" }
+func (c AudioPCMA) Default() AudioPCMA                         { return "audio/pcma" }
+func (c AudioPCMU) Default() AudioPCMU                         { return "audio/pcmu" }
 func (c Auto) Default() Auto                                   { return "auto" }
 func (c Base64) Default() Base64                               { return "base64" }
 func (c Batch) Default() Batch                                 { return "batch" }
@@ -465,6 +504,7 @@ func (c Bucket) Default() Bucket                               { return "bucket"
 func (c C2PA) Default() C2PA                                   { return "c2pa" }
 func (c CacheHit) Default() CacheHit                           { return "cache_hit" }
 func (c CacheMiss) Default() CacheMiss                         { return "cache_miss" }
+func (c CallError) Default() CallError                         { return "call_error" }
 func (c CertificateDeleted) Default() CertificateDeleted       { return "certificate.deleted" }
 func (c ChatCompletion) Default() ChatCompletion               { return "chat.completion" }
 func (c ChatCompletionChunk) Default() ChatCompletionChunk     { return "chat.completion.chunk" }
@@ -544,6 +584,7 @@ func (c CreatedAt) Default() CreatedAt                           { return "creat
 func (c Custom) Default() Custom                                 { return "custom" }
 func (c CustomToolCall) Default() CustomToolCall                 { return "custom_tool_call" }
 func (c CustomToolCallOutput) Default() CustomToolCallOutput     { return "custom_tool_call_output" }
+func (c Delegation) Default() Delegation                         { return "delegation" }
 func (c DeleteFile) Default() DeleteFile                         { return "delete_file" }
 func (c Developer) Default() Developer                           { return "developer" }
 func (c Direct) Default() Direct                                 { return "direct" }
@@ -600,6 +641,7 @@ func (c ImageGenerationPartialImage) Default() ImageGenerationPartialImage {
 }
 func (c ImageURL) Default() ImageURL                             { return "image_url" }
 func (c Inf) Default() Inf                                       { return "inf" }
+func (c Info) Default() Info                                     { return "info" }
 func (c Inline) Default() Inline                                 { return "inline" }
 func (c InputAudio) Default() InputAudio                         { return "input_audio" }
 func (c InputAudioBufferAppend) Default() InputAudioBufferAppend { return "input_audio_buffer.append" }
@@ -633,7 +675,9 @@ func (c Keypress) Default() Keypress                             { return "keypr
 func (c LabelModel) Default() LabelModel                         { return "label_model" }
 func (c LastActiveAt) Default() LastActiveAt                     { return "last_active_at" }
 func (c List) Default() List                                     { return "list" }
+func (c Live) Default() Live                                     { return "live" }
 func (c LiveCallIncoming) Default() LiveCallIncoming             { return "live.call.incoming" }
+func (c LiveTransportIncoming) Default() LiveTransportIncoming   { return "live.transport.incoming" }
 func (c Local) Default() Local                                   { return "local" }
 func (c LocalShell) Default() LocalShell                         { return "local_shell" }
 func (c LocalShellCall) Default() LocalShellCall                 { return "local_shell_call" }
@@ -847,6 +891,7 @@ func (c ResponseCustomToolCallInputDone) Default() ResponseCustomToolCallInputDo
 	return "response.custom_tool_call_input.done"
 }
 func (c ResponseDone) Default() ResponseDone     { return "response.done" }
+func (c ResponseEvent) Default() ResponseEvent   { return "response.event" }
 func (c ResponseFailed) Default() ResponseFailed { return "response.failed" }
 func (c ResponseFileSearchCallCompleted) Default() ResponseFileSearchCallCompleted {
 	return "response.file_search_call.completed"
@@ -881,6 +926,7 @@ func (c ResponseInject) Default() ResponseInject               { return "respons
 func (c ResponseInjectCreated) Default() ResponseInjectCreated { return "response.inject.created" }
 func (c ResponseInjectFailed) Default() ResponseInjectFailed   { return "response.inject.failed" }
 func (c ResponseInputTokens) Default() ResponseInputTokens     { return "response.input_tokens" }
+func (c ResponseItemCreate) Default() ResponseItemCreate       { return "response.item.create" }
 func (c ResponseMcpCallArgumentsDelta) Default() ResponseMcpCallArgumentsDelta {
 	return "response.mcp_call_arguments.delta"
 }
@@ -975,6 +1021,7 @@ func (c ResponseWebSearchCallInProgress) Default() ResponseWebSearchCallInProgre
 func (c ResponseWebSearchCallSearching) Default() ResponseWebSearchCallSearching {
 	return "response.web_search_call.searching"
 }
+func (c Responses) Default() Responses                         { return "responses" }
 func (c RetentionRatio) Default() RetentionRatio               { return "retention_ratio" }
 func (c Role) Default() Role                                   { return "role" }
 func (c RoleDeleted) Default() RoleDeleted                     { return "role.deleted" }
@@ -989,12 +1036,38 @@ func (c SemanticVad) Default() SemanticVad                     { return "semanti
 func (c ServerVad) Default() ServerVad                         { return "server_vad" }
 func (c SessionClose) Default() SessionClose                   { return "session.close" }
 func (c SessionClosed) Default() SessionClosed                 { return "session.closed" }
-func (c SessionCreated) Default() SessionCreated               { return "session.created" }
+func (c SessionCommentaryAppend) Default() SessionCommentaryAppend {
+	return "session.commentary.append"
+}
+func (c SessionCommentaryAppended) Default() SessionCommentaryAppended {
+	return "session.commentary.appended"
+}
+func (c SessionCreated) Default() SessionCreated { return "session.created" }
+func (c SessionDelegationCreated) Default() SessionDelegationCreated {
+	return "session.delegation.created"
+}
 func (c SessionInputAudioBufferAppend) Default() SessionInputAudioBufferAppend {
 	return "session.input_audio_buffer.append"
 }
+func (c SessionInputAudioAppend) Default() SessionInputAudioAppend {
+	return "session.input_audio.append"
+}
+func (c SessionInputAudioMute) Default() SessionInputAudioMute   { return "session.input_audio.mute" }
+func (c SessionInputAudioMuted) Default() SessionInputAudioMuted { return "session.input_audio.muted" }
+func (c SessionInputAudioUnmute) Default() SessionInputAudioUnmute {
+	return "session.input_audio.unmute"
+}
+func (c SessionInputAudioUnmuted) Default() SessionInputAudioUnmuted {
+	return "session.input_audio.unmuted"
+}
 func (c SessionInputTranscriptDelta) Default() SessionInputTranscriptDelta {
 	return "session.input_transcript.delta"
+}
+func (c SessionInstructionsAppend) Default() SessionInstructionsAppend {
+	return "session.instructions.append"
+}
+func (c SessionInstructionsAppended) Default() SessionInstructionsAppended {
+	return "session.instructions.appended"
 }
 func (c SessionOutputAudioDelta) Default() SessionOutputAudioDelta {
 	return "session.output_audio.delta"
@@ -1002,11 +1075,19 @@ func (c SessionOutputAudioDelta) Default() SessionOutputAudioDelta {
 func (c SessionOutputTranscriptDelta) Default() SessionOutputTranscriptDelta {
 	return "session.output_transcript.delta"
 }
+func (c SessionStart) Default() SessionStart                   { return "session.start" }
+func (c SessionStarted) Default() SessionStarted               { return "session.started" }
+func (c SessionThinkingAppend) Default() SessionThinkingAppend { return "session.thinking.append" }
+func (c SessionThinkingAppended) Default() SessionThinkingAppended {
+	return "session.thinking.appended"
+}
 func (c SessionUpdate) Default() SessionUpdate                   { return "session.update" }
 func (c SessionUpdated) Default() SessionUpdated                 { return "session.updated" }
+func (c SessionUsageUpdated) Default() SessionUsageUpdated       { return "session.usage.updated" }
 func (c Shell) Default() Shell                                   { return "shell" }
 func (c ShellCall) Default() ShellCall                           { return "shell_call" }
 func (c ShellCallOutput) Default() ShellCallOutput               { return "shell_call_output" }
+func (c Sip) Default() Sip                                       { return "sip" }
 func (c Skill) Default() Skill                                   { return "skill" }
 func (c SkillReference) Default() SkillReference                 { return "skill_reference" }
 func (c SkillDeleted) Default() SkillDeleted                     { return "skill.deleted" }
@@ -1077,19 +1158,24 @@ func (c TranscriptionSessionUpdate) Default() TranscriptionSessionUpdate {
 func (c TranscriptionSessionUpdated) Default() TranscriptionSessionUpdated {
 	return "transcription_session.updated"
 }
-func (c Translation) Default() Translation               { return "translation" }
-func (c Type) Default() Type                             { return "type" }
-func (c Unavailable) Default() Unavailable               { return "unavailable" }
-func (c UpdateFile) Default() UpdateFile                 { return "update_file" }
-func (c Upload) Default() Upload                         { return "upload" }
-func (c UploadPart) Default() UploadPart                 { return "upload.part" }
-func (c URL) Default() URL                               { return "url" }
-func (c URLCitation) Default() URLCitation               { return "url_citation" }
-func (c User) Default() User                             { return "user" }
-func (c UserRole) Default() UserRole                     { return "user.role" }
-func (c VectorStore) Default() VectorStore               { return "vector_store" }
-func (c VectorStoreDeleted) Default() VectorStoreDeleted { return "vector_store.deleted" }
-func (c VectorStoreFile) Default() VectorStoreFile       { return "vector_store.file" }
+func (c Translation) Default() Translation                     { return "translation" }
+func (c TransportAnswered) Default() TransportAnswered         { return "transport.answered" }
+func (c TransportDtmfReceived) Default() TransportDtmfReceived { return "transport.dtmf.received" }
+func (c TransportDtmfSend) Default() TransportDtmfSend         { return "transport.dtmf.send" }
+func (c TransportFailed) Default() TransportFailed             { return "transport.failed" }
+func (c TransportRinging) Default() TransportRinging           { return "transport.ringing" }
+func (c Type) Default() Type                                   { return "type" }
+func (c Unavailable) Default() Unavailable                     { return "unavailable" }
+func (c UpdateFile) Default() UpdateFile                       { return "update_file" }
+func (c Upload) Default() Upload                               { return "upload" }
+func (c UploadPart) Default() UploadPart                       { return "upload.part" }
+func (c URL) Default() URL                                     { return "url" }
+func (c URLCitation) Default() URLCitation                     { return "url_citation" }
+func (c User) Default() User                                   { return "user" }
+func (c UserRole) Default() UserRole                           { return "user.role" }
+func (c VectorStore) Default() VectorStore                     { return "vector_store" }
+func (c VectorStoreDeleted) Default() VectorStoreDeleted       { return "vector_store.deleted" }
+func (c VectorStoreFile) Default() VectorStoreFile             { return "vector_store.file" }
 func (c VectorStoreFileContentPage) Default() VectorStoreFileContentPage {
 	return "vector_store.file_content.page"
 }
@@ -1102,11 +1188,14 @@ func (c Video) Default() Video                 { return "video" }
 func (c VideoDeleted) Default() VideoDeleted   { return "video.deleted" }
 func (c Wait) Default() Wait                   { return "wait" }
 func (c Wandb) Default() Wandb                 { return "wandb" }
+func (c WebSearch) Default() WebSearch         { return "web_search" }
 func (c WebSearchCall) Default() WebSearchCall { return "web_search_call" }
+func (c Webrtc) Default() Webrtc               { return "webrtc" }
 
 func (c Active) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c AdditionalTools) MarshalJSON() ([]byte, error)            { return marshalString(c) }
 func (c AgentMessage) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c All) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c AllowedTools) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c Allowlist) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c ApplicationZip) MarshalJSON() ([]byte, error)             { return marshalString(c) }
@@ -1116,6 +1205,9 @@ func (c ApplyPatchCallOutput) MarshalJSON() ([]byte, error)       { return marsh
 func (c Approximate) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c Assistant) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c AssistantDeleted) MarshalJSON() ([]byte, error)           { return marshalString(c) }
+func (c AudioPCM) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
+func (c AudioPCMA) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c AudioPCMU) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c Auto) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
 func (c Base64) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c Batch) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
@@ -1127,6 +1219,7 @@ func (c Bucket) MarshalJSON() ([]byte, error)                     { return marsh
 func (c C2PA) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
 func (c CacheHit) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
 func (c CacheMiss) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c CallError) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c CertificateDeleted) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c ChatCompletion) MarshalJSON() ([]byte, error)             { return marshalString(c) }
 func (c ChatCompletionChunk) MarshalJSON() ([]byte, error)        { return marshalString(c) }
@@ -1190,6 +1283,7 @@ func (c CreatedAt) MarshalJSON() ([]byte, error)                           { ret
 func (c Custom) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c CustomToolCall) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c CustomToolCallOutput) MarshalJSON() ([]byte, error)                { return marshalString(c) }
+func (c Delegation) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c DeleteFile) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c Developer) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c Direct) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
@@ -1240,6 +1334,7 @@ func (c ImageGenerationCompleted) MarshalJSON() ([]byte, error)            { ret
 func (c ImageGenerationPartialImage) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c ImageURL) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c Inf) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
+func (c Info) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Inline) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c InputAudio) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c InputAudioBufferAppend) MarshalJSON() ([]byte, error)              { return marshalString(c) }
@@ -1261,7 +1356,9 @@ func (c Keypress) MarshalJSON() ([]byte, error)                            { ret
 func (c LabelModel) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c LastActiveAt) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c List) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
+func (c Live) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c LiveCallIncoming) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c LiveTransportIncoming) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c Local) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c LocalShell) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c LocalShellCall) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
@@ -1391,6 +1488,7 @@ func (c ResponseCreated) MarshalJSON() ([]byte, error)                       { r
 func (c ResponseCustomToolCallInputDelta) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c ResponseCustomToolCallInputDone) MarshalJSON() ([]byte, error)       { return marshalString(c) }
 func (c ResponseDone) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
+func (c ResponseEvent) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c ResponseFailed) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c ResponseFileSearchCallCompleted) MarshalJSON() ([]byte, error)       { return marshalString(c) }
 func (c ResponseFileSearchCallInProgress) MarshalJSON() ([]byte, error)      { return marshalString(c) }
@@ -1409,6 +1507,7 @@ func (c ResponseInject) MarshalJSON() ([]byte, error)                      { ret
 func (c ResponseInjectCreated) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c ResponseInjectFailed) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c ResponseInputTokens) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c ResponseItemCreate) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c ResponseMcpCallArgumentsDelta) MarshalJSON() ([]byte, error)       { return marshalString(c) }
 func (c ResponseMcpCallArgumentsDone) MarshalJSON() ([]byte, error)        { return marshalString(c) }
 func (c ResponseMcpCallCompleted) MarshalJSON() ([]byte, error)            { return marshalString(c) }
@@ -1447,6 +1546,7 @@ func (c ResponseSteerPending) MarshalJSON() ([]byte, error)                { ret
 func (c ResponseWebSearchCallCompleted) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c ResponseWebSearchCallInProgress) MarshalJSON() ([]byte, error)     { return marshalString(c) }
 func (c ResponseWebSearchCallSearching) MarshalJSON() ([]byte, error)      { return marshalString(c) }
+func (c Responses) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c RetentionRatio) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c Role) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c RoleDeleted) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
@@ -1461,16 +1561,32 @@ func (c SemanticVad) MarshalJSON() ([]byte, error)                         { ret
 func (c ServerVad) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c SessionClose) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c SessionClosed) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c SessionCommentaryAppend) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c SessionCommentaryAppended) MarshalJSON() ([]byte, error)           { return marshalString(c) }
 func (c SessionCreated) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c SessionDelegationCreated) MarshalJSON() ([]byte, error)            { return marshalString(c) }
 func (c SessionInputAudioBufferAppend) MarshalJSON() ([]byte, error)       { return marshalString(c) }
+func (c SessionInputAudioAppend) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c SessionInputAudioMute) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c SessionInputAudioMuted) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c SessionInputAudioUnmute) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c SessionInputAudioUnmuted) MarshalJSON() ([]byte, error)            { return marshalString(c) }
 func (c SessionInputTranscriptDelta) MarshalJSON() ([]byte, error)         { return marshalString(c) }
+func (c SessionInstructionsAppend) MarshalJSON() ([]byte, error)           { return marshalString(c) }
+func (c SessionInstructionsAppended) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c SessionOutputAudioDelta) MarshalJSON() ([]byte, error)             { return marshalString(c) }
 func (c SessionOutputTranscriptDelta) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c SessionStart) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c SessionStarted) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c SessionThinkingAppend) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c SessionThinkingAppended) MarshalJSON() ([]byte, error)             { return marshalString(c) }
 func (c SessionUpdate) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
 func (c SessionUpdated) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c SessionUsageUpdated) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c Shell) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c ShellCall) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c ShellCallOutput) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
+func (c Sip) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
 func (c Skill) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c SkillReference) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c SkillDeleted) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
@@ -1530,6 +1646,11 @@ func (c Transcription) MarshalJSON() ([]byte, error)                       { ret
 func (c TranscriptionSessionUpdate) MarshalJSON() ([]byte, error)          { return marshalString(c) }
 func (c TranscriptionSessionUpdated) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c Translation) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
+func (c TransportAnswered) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
+func (c TransportDtmfReceived) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c TransportDtmfSend) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
+func (c TransportFailed) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
+func (c TransportRinging) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c Type) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Unavailable) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c UpdateFile) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
@@ -1550,7 +1671,9 @@ func (c Video) MarshalJSON() ([]byte, error)                               { ret
 func (c VideoDeleted) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c Wait) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Wandb) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
+func (c WebSearch) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c WebSearchCall) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c Webrtc) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 
 type constant[T any] interface {
 	Constant[T]

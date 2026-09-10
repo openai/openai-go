@@ -11,6 +11,7 @@ import (
 
 	"github.com/openai/openai-go/v3/conversations"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/live"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/realtime"
 	"github.com/openai/openai-go/v3/responses"
@@ -53,6 +54,7 @@ type Client struct {
 	Uploads   UploadService
 	Admin     AdminService
 	Responses responses.ResponseService
+	Live      live.LiveService
 	Realtime  realtime.RealtimeService
 	// Manage conversations and conversation items.
 	Conversations conversations.ConversationService
@@ -134,6 +136,7 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 	r.Uploads = NewUploadService(opts...)
 	r.Admin = NewAdminService(opts...)
 	r.Responses = responses.NewResponseService(opts...)
+	r.Live = live.NewLiveService(opts...)
 	r.Realtime = realtime.NewRealtimeService(opts...)
 	r.Conversations = conversations.NewConversationService(opts...)
 	r.Containers = NewContainerService(opts...)

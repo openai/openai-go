@@ -3,9 +3,11 @@
 package responses
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -12421,8 +12423,8 @@ type ResponseInputItemUnion struct {
 	// This field is from variant [ResponseComputerToolCall].
 	PendingSafetyChecks []ResponseComputerToolCallPendingSafetyCheck `json:"pending_safety_checks"`
 	// This field is a union of [ResponseComputerToolCallActionUnion],
-	// [ResponseFunctionWebSearchActionUnion], [ResponseInputItemLocalShellCallAction],
-	// [ResponseInputItemShellCallAction]
+	// [ResponseFunctionWebSearchActionUnion], [string],
+	// [ResponseInputItemLocalShellCallAction], [ResponseInputItemShellCallAction]
 	Action ResponseInputItemUnionAction `json:"action"`
 	// This field is from variant [ResponseComputerToolCall].
 	Actions ComputerActionList `json:"actions"`
@@ -12457,7 +12459,13 @@ type ResponseInputItemUnion struct {
 	EncryptedContent string                         `json:"encrypted_content"`
 	Result           string                         `json:"result"`
 	// This field is from variant [ResponseInputItemImageGenerationCall].
+	Background string `json:"background"`
+	// This field is from variant [ResponseInputItemImageGenerationCall].
+	OutputFormat string `json:"output_format"`
+	// This field is from variant [ResponseInputItemImageGenerationCall].
 	Quality string `json:"quality"`
+	// This field is from variant [ResponseInputItemImageGenerationCall].
+	RevisedPrompt string `json:"revised_prompt"`
 	// This field is from variant [ResponseInputItemImageGenerationCall].
 	Size string `json:"size"`
 	Code string `json:"code"`
@@ -12509,7 +12517,10 @@ type ResponseInputItemUnion struct {
 		Summary                  respjson.Field
 		EncryptedContent         respjson.Field
 		Result                   respjson.Field
+		Background               respjson.Field
+		OutputFormat             respjson.Field
 		Quality                  respjson.Field
+		RevisedPrompt            respjson.Field
 		Size                     respjson.Field
 		Code                     respjson.Field
 		ContainerID              respjson.Field
@@ -12888,7 +12899,12 @@ func (r *ResponseInputItemUnionContent) UnmarshalJSON(data []byte) error {
 //
 // For type safety it is recommended to directly use a variant of the
 // [ResponseInputItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfResponseInputItemImageGenerationCallAction]
 type ResponseInputItemUnionAction struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfResponseInputItemImageGenerationCallAction string `json:",inline"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
 	Button string   `json:"button"`
 	Type   string   `json:"type"`
@@ -12926,33 +12942,47 @@ type ResponseInputItemUnionAction struct {
 	// This field is from variant [ResponseInputItemShellCallAction].
 	MaxOutputLength int64 `json:"max_output_length"`
 	JSON            struct {
-		Button           respjson.Field
-		Type             respjson.Field
-		X                respjson.Field
-		Y                respjson.Field
-		Keys             respjson.Field
-		Path             respjson.Field
-		ScrollX          respjson.Field
-		ScrollY          respjson.Field
-		Text             respjson.Field
-		Queries          respjson.Field
-		Query            respjson.Field
-		Sources          respjson.Field
-		URL              respjson.Field
-		Pattern          respjson.Field
-		Command          respjson.Field
-		Env              respjson.Field
-		TimeoutMs        respjson.Field
-		User             respjson.Field
-		WorkingDirectory respjson.Field
-		Commands         respjson.Field
-		MaxOutputLength  respjson.Field
-		raw              string
+		OfResponseInputItemImageGenerationCallAction respjson.Field
+		Button                                       respjson.Field
+		Type                                         respjson.Field
+		X                                            respjson.Field
+		Y                                            respjson.Field
+		Keys                                         respjson.Field
+		Path                                         respjson.Field
+		ScrollX                                      respjson.Field
+		ScrollY                                      respjson.Field
+		Text                                         respjson.Field
+		Queries                                      respjson.Field
+		Query                                        respjson.Field
+		Sources                                      respjson.Field
+		URL                                          respjson.Field
+		Pattern                                      respjson.Field
+		Command                                      respjson.Field
+		Env                                          respjson.Field
+		TimeoutMs                                    respjson.Field
+		User                                         respjson.Field
+		WorkingDirectory                             respjson.Field
+		Commands                                     respjson.Field
+		MaxOutputLength                              respjson.Field
+		raw                                          string
 	} `json:"-"`
 }
 
 func (r *ResponseInputItemUnionAction) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded ResponseInputItemUnionAction
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfResponseInputItemImageGenerationCallAction.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into ResponseInputItemUnionAction: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // ResponseInputItemUnionOutput is an implicit subunion of
@@ -12997,7 +13027,23 @@ type ResponseInputItemUnionOutput struct {
 }
 
 func (r *ResponseInputItemUnionOutput) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded ResponseInputItemUnionOutput
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() ||
+			decoded.JSON.OfResponseFunctionCallOutputItemArray.Valid() ||
+			decoded.JSON.OfResponseFunctionShellCallOutputContentArray.Valid() ||
+			decoded.JSON.OfOutputContentList.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into ResponseInputItemUnionOutput: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // ResponseInputItemUnionArguments is an implicit subunion of
@@ -13099,7 +13145,20 @@ type ResponseInputItemUnionError struct {
 }
 
 func (r *ResponseInputItemUnionError) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded ResponseInputItemUnionError
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into ResponseInputItemUnionError: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // ToParam converts this ResponseInputItemUnion to a ResponseInputItemUnionParam.
@@ -13469,23 +13528,41 @@ type ResponseInputItemImageGenerationCall struct {
 	Status string `json:"status" api:"required"`
 	// The type of the image generation call. Always `image_generation_call`.
 	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
+	// The action used for image generation.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action" api:"nullable"`
+	// The background setting used for generation.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background string `json:"background" api:"nullable"`
+	// The output format used for generation.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat string `json:"output_format" api:"nullable"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
 	//
 	// Any of "low", "medium", "high", "xhigh", "max", "auto".
 	Quality string `json:"quality" api:"nullable"`
+	// The prompt that was used after any model prompt rewriting.
+	RevisedPrompt string `json:"revised_prompt" api:"nullable"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size string `json:"size" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Result      respjson.Field
-		Status      respjson.Field
-		Type        respjson.Field
-		Quality     respjson.Field
-		Size        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID            respjson.Field
+		Result        respjson.Field
+		Status        respjson.Field
+		Type          respjson.Field
+		Action        respjson.Field
+		Background    respjson.Field
+		OutputFormat  respjson.Field
+		Quality       respjson.Field
+		RevisedPrompt respjson.Field
+		Size          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -15004,9 +15081,33 @@ func (u ResponseInputItemUnionParam) GetSummary() []ResponseReasoningItemSummary
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemUnionParam) GetBackground() *string {
+	if vt := u.OfImageGenerationCall; vt != nil && vt.Background.Valid() {
+		return &vt.Background.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemUnionParam) GetOutputFormat() *string {
+	if vt := u.OfImageGenerationCall; vt != nil && vt.OutputFormat.Valid() {
+		return &vt.OutputFormat.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponseInputItemUnionParam) GetQuality() *string {
 	if vt := u.OfImageGenerationCall; vt != nil {
 		return &vt.Quality
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemUnionParam) GetRevisedPrompt() *string {
+	if vt := u.OfImageGenerationCall; vt != nil && vt.RevisedPrompt.Valid() {
+		return &vt.RevisedPrompt.Value
 	}
 	return nil
 }
@@ -15478,6 +15579,8 @@ func (u ResponseInputItemUnionParam) GetAction() (res responseInputItemUnionPara
 		res.any = vt.Action.asAny()
 	} else if vt := u.OfWebSearchCall; vt != nil {
 		res.any = vt.Action.asAny()
+	} else if vt := u.OfImageGenerationCall; vt != nil && vt.Action.Valid() {
+		res.any = &vt.Action.Value
 	} else if vt := u.OfLocalShellCall; vt != nil {
 		res.any = &vt.Action
 	} else if vt := u.OfShellCall; vt != nil {
@@ -15497,7 +15600,7 @@ func (u ResponseInputItemUnionParam) GetAction() (res responseInputItemUnionPara
 // [*ResponseComputerToolCallActionWaitParam],
 // [*ResponseFunctionWebSearchActionSearchParam],
 // [*ResponseFunctionWebSearchActionOpenPageParam],
-// [*ResponseFunctionWebSearchActionFindParam],
+// [*ResponseFunctionWebSearchActionFindParam], [*string],
 // [*ResponseInputItemLocalShellCallActionParam],
 // [*ResponseInputItemShellCallActionParam]
 type responseInputItemUnionParamAction struct{ any }
@@ -15517,6 +15620,7 @@ type responseInputItemUnionParamAction struct{ any }
 //	case *responses.ResponseFunctionWebSearchActionSearchParam:
 //	case *responses.ResponseFunctionWebSearchActionOpenPageParam:
 //	case *responses.ResponseFunctionWebSearchActionFindParam:
+//	case *string:
 //	case *responses.ResponseInputItemLocalShellCallActionParam:
 //	case *responses.ResponseInputItemShellCallActionParam:
 //	default:
@@ -16376,6 +16480,20 @@ type ResponseInputItemImageGenerationCallParam struct {
 	//
 	// Any of "in_progress", "completed", "generating", "failed".
 	Status string `json:"status,omitzero" api:"required"`
+	// The prompt that was used after any model prompt rewriting.
+	RevisedPrompt param.Opt[string] `json:"revised_prompt,omitzero"`
+	// The action used for image generation.
+	//
+	// Any of "generate", "edit", "auto".
+	Action param.Opt[string] `json:"action,omitzero"`
+	// The background setting used for generation.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background param.Opt[string] `json:"background,omitzero"`
+	// The output format used for generation.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat param.Opt[string] `json:"output_format,omitzero"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
 	//
@@ -17819,8 +17937,8 @@ type ResponseItemUnion struct {
 	// This field is from variant [ResponseComputerToolCall].
 	PendingSafetyChecks []ResponseComputerToolCallPendingSafetyCheck `json:"pending_safety_checks"`
 	// This field is a union of [ResponseComputerToolCallActionUnion],
-	// [ResponseFunctionWebSearchActionUnion], [ResponseItemLocalShellCallAction],
-	// [ResponseFunctionShellToolCallAction]
+	// [ResponseFunctionWebSearchActionUnion], [string],
+	// [ResponseItemLocalShellCallAction], [ResponseFunctionShellToolCallAction]
 	Action ResponseItemUnionAction `json:"action"`
 	// This field is from variant [ResponseComputerToolCall].
 	Actions ComputerActionList `json:"actions"`
@@ -17859,7 +17977,13 @@ type ResponseItemUnion struct {
 	Fingerprint string `json:"fingerprint"`
 	Result      string `json:"result"`
 	// This field is from variant [ResponseItemImageGenerationCall].
+	Background string `json:"background"`
+	// This field is from variant [ResponseItemImageGenerationCall].
+	OutputFormat string `json:"output_format"`
+	// This field is from variant [ResponseItemImageGenerationCall].
 	Quality string `json:"quality"`
+	// This field is from variant [ResponseItemImageGenerationCall].
+	RevisedPrompt string `json:"revised_prompt"`
 	// This field is from variant [ResponseItemImageGenerationCall].
 	Size string `json:"size"`
 	// This field is from variant [ResponseCodeInterpreterToolCall].
@@ -17911,7 +18035,10 @@ type ResponseItemUnion struct {
 		Code                     respjson.Field
 		Fingerprint              respjson.Field
 		Result                   respjson.Field
+		Background               respjson.Field
+		OutputFormat             respjson.Field
 		Quality                  respjson.Field
+		RevisedPrompt            respjson.Field
 		Size                     respjson.Field
 		ContainerID              respjson.Field
 		Outputs                  respjson.Field
@@ -18260,7 +18387,12 @@ func (r *ResponseItemUnionContent) UnmarshalJSON(data []byte) error {
 //
 // For type safety it is recommended to directly use a variant of the
 // [ResponseItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfResponseItemImageGenerationCallAction]
 type ResponseItemUnionAction struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfResponseItemImageGenerationCallAction string `json:",inline"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
 	Button string   `json:"button"`
 	Type   string   `json:"type"`
@@ -18298,33 +18430,47 @@ type ResponseItemUnionAction struct {
 	// This field is from variant [ResponseFunctionShellToolCallAction].
 	MaxOutputLength int64 `json:"max_output_length"`
 	JSON            struct {
-		Button           respjson.Field
-		Type             respjson.Field
-		X                respjson.Field
-		Y                respjson.Field
-		Keys             respjson.Field
-		Path             respjson.Field
-		ScrollX          respjson.Field
-		ScrollY          respjson.Field
-		Text             respjson.Field
-		Queries          respjson.Field
-		Query            respjson.Field
-		Sources          respjson.Field
-		URL              respjson.Field
-		Pattern          respjson.Field
-		Command          respjson.Field
-		Env              respjson.Field
-		TimeoutMs        respjson.Field
-		User             respjson.Field
-		WorkingDirectory respjson.Field
-		Commands         respjson.Field
-		MaxOutputLength  respjson.Field
-		raw              string
+		OfResponseItemImageGenerationCallAction respjson.Field
+		Button                                  respjson.Field
+		Type                                    respjson.Field
+		X                                       respjson.Field
+		Y                                       respjson.Field
+		Keys                                    respjson.Field
+		Path                                    respjson.Field
+		ScrollX                                 respjson.Field
+		ScrollY                                 respjson.Field
+		Text                                    respjson.Field
+		Queries                                 respjson.Field
+		Query                                   respjson.Field
+		Sources                                 respjson.Field
+		URL                                     respjson.Field
+		Pattern                                 respjson.Field
+		Command                                 respjson.Field
+		Env                                     respjson.Field
+		TimeoutMs                               respjson.Field
+		User                                    respjson.Field
+		WorkingDirectory                        respjson.Field
+		Commands                                respjson.Field
+		MaxOutputLength                         respjson.Field
+		raw                                     string
 	} `json:"-"`
 }
 
 func (r *ResponseItemUnionAction) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded ResponseItemUnionAction
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfResponseItemImageGenerationCallAction.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into ResponseItemUnionAction: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // ResponseItemUnionOutput is an implicit subunion of [ResponseItemUnion].
@@ -18365,7 +18511,22 @@ type ResponseItemUnionOutput struct {
 }
 
 func (r *ResponseItemUnionOutput) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded ResponseItemUnionOutput
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() ||
+			decoded.JSON.OfOutputContentList.Valid() ||
+			decoded.JSON.OfResponseFunctionShellToolCallOutputOutputArray.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into ResponseItemUnionOutput: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // ResponseItemUnionArguments is an implicit subunion of [ResponseItemUnion].
@@ -18467,7 +18628,20 @@ type ResponseItemUnionError struct {
 }
 
 func (r *ResponseItemUnionError) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded ResponseItemUnionError
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into ResponseItemUnionError: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 type ResponseItemAdditionalTools struct {
@@ -18571,23 +18745,41 @@ type ResponseItemImageGenerationCall struct {
 	Status string `json:"status" api:"required"`
 	// The type of the image generation call. Always `image_generation_call`.
 	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
+	// The action used for image generation.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action" api:"nullable"`
+	// The background setting used for generation.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background string `json:"background" api:"nullable"`
+	// The output format used for generation.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat string `json:"output_format" api:"nullable"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
 	//
 	// Any of "low", "medium", "high", "xhigh", "max", "auto".
 	Quality string `json:"quality" api:"nullable"`
+	// The prompt that was used after any model prompt rewriting.
+	RevisedPrompt string `json:"revised_prompt" api:"nullable"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size string `json:"size" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Result      respjson.Field
-		Status      respjson.Field
-		Type        respjson.Field
-		Quality     respjson.Field
-		Size        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID            respjson.Field
+		Result        respjson.Field
+		Status        respjson.Field
+		Type          respjson.Field
+		Action        respjson.Field
+		Background    respjson.Field
+		OutputFormat  respjson.Field
+		Quality       respjson.Field
+		RevisedPrompt respjson.Field
+		Size          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -19158,8 +19350,8 @@ type ResponseOutputItemUnion struct {
 	Output    ResponseOutputItemUnionOutput `json:"output"`
 	CreatedBy string                        `json:"created_by"`
 	// This field is a union of [ResponseFunctionWebSearchActionUnion],
-	// [ResponseComputerToolCallActionUnion], [ResponseOutputItemLocalShellCallAction],
-	// [ResponseFunctionShellToolCallAction]
+	// [ResponseComputerToolCallActionUnion], [string],
+	// [ResponseOutputItemLocalShellCallAction], [ResponseFunctionShellToolCallAction]
 	Action ResponseOutputItemUnionAction `json:"action"`
 	// This field is from variant [ResponseComputerToolCall].
 	PendingSafetyChecks []ResponseComputerToolCallPendingSafetyCheck `json:"pending_safety_checks"`
@@ -19179,7 +19371,13 @@ type ResponseOutputItemUnion struct {
 	// [[]ResponseOutputItemMcpListToolsTool]
 	Tools ResponseOutputItemUnionTools `json:"tools"`
 	// This field is from variant [ResponseOutputItemImageGenerationCall].
+	Background string `json:"background"`
+	// This field is from variant [ResponseOutputItemImageGenerationCall].
+	OutputFormat string `json:"output_format"`
+	// This field is from variant [ResponseOutputItemImageGenerationCall].
 	Quality string `json:"quality"`
+	// This field is from variant [ResponseOutputItemImageGenerationCall].
+	RevisedPrompt string `json:"revised_prompt"`
 	// This field is from variant [ResponseOutputItemImageGenerationCall].
 	Size string `json:"size"`
 	// This field is from variant [ResponseCodeInterpreterToolCall].
@@ -19230,7 +19428,10 @@ type ResponseOutputItemUnion struct {
 		Result                   respjson.Field
 		Execution                respjson.Field
 		Tools                    respjson.Field
+		Background               respjson.Field
+		OutputFormat             respjson.Field
 		Quality                  respjson.Field
+		RevisedPrompt            respjson.Field
 		Size                     respjson.Field
 		ContainerID              respjson.Field
 		Outputs                  respjson.Field
@@ -19609,7 +19810,22 @@ type ResponseOutputItemUnionOutput struct {
 }
 
 func (r *ResponseOutputItemUnionOutput) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded ResponseOutputItemUnionOutput
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() ||
+			decoded.JSON.OfOutputContentList.Valid() ||
+			decoded.JSON.OfResponseFunctionShellToolCallOutputOutputArray.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into ResponseOutputItemUnionOutput: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // ResponseOutputItemUnionAction is an implicit subunion of
@@ -19618,8 +19834,13 @@ func (r *ResponseOutputItemUnionOutput) UnmarshalJSON(data []byte) error {
 //
 // For type safety it is recommended to directly use a variant of the
 // [ResponseOutputItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfResponseOutputItemImageGenerationCallAction]
 type ResponseOutputItemUnionAction struct {
-	Type string `json:"type"`
+	// This field will be present if the value is a [string] instead of an object.
+	OfResponseOutputItemImageGenerationCallAction string `json:",inline"`
+	Type                                          string `json:"type"`
 	// This field is from variant [ResponseFunctionWebSearchActionUnion].
 	Queries []string `json:"queries"`
 	// This field is from variant [ResponseFunctionWebSearchActionUnion].
@@ -19656,33 +19877,47 @@ type ResponseOutputItemUnionAction struct {
 	// This field is from variant [ResponseFunctionShellToolCallAction].
 	MaxOutputLength int64 `json:"max_output_length"`
 	JSON            struct {
-		Type             respjson.Field
-		Queries          respjson.Field
-		Query            respjson.Field
-		Sources          respjson.Field
-		URL              respjson.Field
-		Pattern          respjson.Field
-		Button           respjson.Field
-		X                respjson.Field
-		Y                respjson.Field
-		Keys             respjson.Field
-		Path             respjson.Field
-		ScrollX          respjson.Field
-		ScrollY          respjson.Field
-		Text             respjson.Field
-		Command          respjson.Field
-		Env              respjson.Field
-		TimeoutMs        respjson.Field
-		User             respjson.Field
-		WorkingDirectory respjson.Field
-		Commands         respjson.Field
-		MaxOutputLength  respjson.Field
-		raw              string
+		OfResponseOutputItemImageGenerationCallAction respjson.Field
+		Type                                          respjson.Field
+		Queries                                       respjson.Field
+		Query                                         respjson.Field
+		Sources                                       respjson.Field
+		URL                                           respjson.Field
+		Pattern                                       respjson.Field
+		Button                                        respjson.Field
+		X                                             respjson.Field
+		Y                                             respjson.Field
+		Keys                                          respjson.Field
+		Path                                          respjson.Field
+		ScrollX                                       respjson.Field
+		ScrollY                                       respjson.Field
+		Text                                          respjson.Field
+		Command                                       respjson.Field
+		Env                                           respjson.Field
+		TimeoutMs                                     respjson.Field
+		User                                          respjson.Field
+		WorkingDirectory                              respjson.Field
+		Commands                                      respjson.Field
+		MaxOutputLength                               respjson.Field
+		raw                                           string
 	} `json:"-"`
 }
 
 func (r *ResponseOutputItemUnionAction) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded ResponseOutputItemUnionAction
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfResponseOutputItemImageGenerationCallAction.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into ResponseOutputItemUnionAction: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // ResponseOutputItemUnionTools is an implicit subunion of
@@ -19739,7 +19974,20 @@ type ResponseOutputItemUnionError struct {
 }
 
 func (r *ResponseOutputItemUnionError) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded ResponseOutputItemUnionError
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into ResponseOutputItemUnionError: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 type ResponseOutputItemProgram struct {
@@ -19843,23 +20091,41 @@ type ResponseOutputItemImageGenerationCall struct {
 	Status string `json:"status" api:"required"`
 	// The type of the image generation call. Always `image_generation_call`.
 	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
+	// The action used for image generation.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action" api:"nullable"`
+	// The background setting used for generation.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background string `json:"background" api:"nullable"`
+	// The output format used for generation.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat string `json:"output_format" api:"nullable"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
 	//
 	// Any of "low", "medium", "high", "xhigh", "max", "auto".
 	Quality string `json:"quality" api:"nullable"`
+	// The prompt that was used after any model prompt rewriting.
+	RevisedPrompt string `json:"revised_prompt" api:"nullable"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size string `json:"size" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Result      respjson.Field
-		Status      respjson.Field
-		Type        respjson.Field
-		Quality     respjson.Field
-		Size        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID            respjson.Field
+		Result        respjson.Field
+		Status        respjson.Field
+		Type          respjson.Field
+		Action        respjson.Field
+		Background    respjson.Field
+		OutputFormat  respjson.Field
+		Quality       respjson.Field
+		RevisedPrompt respjson.Field
+		Size          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
