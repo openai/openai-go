@@ -1372,6 +1372,8 @@ Methods:
 
 # [Responses](responses/api.md)
 
+# [Live](live/api.md)
+
 # [Realtime](realtime/api.md)
 
 # [Conversations](conversations/api.md)
