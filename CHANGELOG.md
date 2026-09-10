@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.60.0](https://github.com/openai/openai-go/compare/v3.59.0...v3.60.0) (2026-09-10)
+
+
+### Features
+
+* **api:** Add Live API ([59af83b](https://github.com/openai/openai-go/commit/59af83bf037b7a8fc6b75fc259a1cd6367185921))
+
 ## [3.59.0](https://github.com/openai/openai-go/compare/v3.58.0...v3.59.0) (2026-09-09)
 
 
