@@ -496,3 +496,85 @@ func TestMultiDiscriminatorUnion(t *testing.T) {
 		})
 	}
 }
+
+// MessageVariantInput and MessageVariantOutput each implement their own
+// UnmarshalJSON, mirroring how generated SDK param types do it. That matters
+// here because it's what makes the variants bypass the regular struct decoder
+// when they're decoded as a nested union field.
+type MessageVariantInput struct {
+	Type    string `json:"type" api:"required"`
+	Role    string `json:"role" api:"required"`
+	Content string `json:"content" api:"required"`
+}
+
+func (m *MessageVariantInput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, m)
+}
+
+type MessageVariantOutput struct {
+	ID      string `json:"id" api:"required"`
+	Type    string `json:"type" api:"required"`
+	Role    string `json:"role" api:"required"`
+	Content string `json:"content" api:"required"`
+}
+
+func (m *MessageVariantOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, m)
+}
+
+type AmbiguousMessageUnion struct {
+	OfInput  *MessageVariantInput  `json:",inline"`
+	OfOutput *MessageVariantOutput `json:",inline"`
+
+	paramUnion
+}
+
+func (u *AmbiguousMessageUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func init() {
+	apijson.RegisterUnion[AmbiguousMessageUnion](
+		"type",
+		apijson.Discriminator[MessageVariantInput]("message"),
+		apijson.Discriminator[MessageVariantOutput]("message"),
+	)
+}
+
+func TestDiscriminatorTiebreakOnSharedValue(t *testing.T) {
+	tests := map[string]struct {
+		raw    string
+		target AmbiguousMessageUnion
+	}{
+		"matches_input_variant_fields": {
+			raw: `{"type":"message","role":"user","content":"hi"}`,
+			target: AmbiguousMessageUnion{OfInput: &MessageVariantInput{
+				Type:    "message",
+				Role:    "user",
+				Content: "hi",
+			}},
+		},
+		"matches_output_variant_fields": {
+			raw: `{"id":"msg_1","type":"message","role":"assistant","content":"hi"}`,
+			target: AmbiguousMessageUnion{OfOutput: &MessageVariantOutput{
+				ID:      "msg_1",
+				Type:    "message",
+				Role:    "assistant",
+				Content: "hi",
+			}},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			var dst AmbiguousMessageUnion
+			err := json.Unmarshal([]byte(test.raw), &dst)
+			if err != nil {
+				t.Fatalf("failed unmarshal with err: %v", err)
+			}
+			if !reflect.DeepEqual(dst, test.target) {
+				t.Fatalf("failed equality, got %#v but expected %#v", dst, test.target)
+			}
+		})
+	}
+}
