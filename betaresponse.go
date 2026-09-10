@@ -3,6 +3,7 @@
 package openai
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -13734,7 +13735,7 @@ type BetaResponseInputItemUnion struct {
 	// This field is from variant [BetaResponseComputerToolCall].
 	PendingSafetyChecks []BetaResponseComputerToolCallPendingSafetyCheck `json:"pending_safety_checks"`
 	// This field is a union of [BetaComputerActionUnion],
-	// [BetaResponseFunctionWebSearchActionUnion], [string], [string],
+	// [BetaResponseFunctionWebSearchActionUnion], [string], [string], [string],
 	// [BetaResponseInputItemLocalShellCallAction],
 	// [BetaResponseInputItemShellCallAction]
 	Action BetaResponseInputItemUnionAction `json:"action"`
@@ -13777,7 +13778,13 @@ type BetaResponseInputItemUnion struct {
 	EncryptedContent string                             `json:"encrypted_content"`
 	Result           string                             `json:"result"`
 	// This field is from variant [BetaResponseInputItemImageGenerationCall].
+	Background string `json:"background"`
+	// This field is from variant [BetaResponseInputItemImageGenerationCall].
+	OutputFormat string `json:"output_format"`
+	// This field is from variant [BetaResponseInputItemImageGenerationCall].
 	Quality string `json:"quality"`
+	// This field is from variant [BetaResponseInputItemImageGenerationCall].
+	RevisedPrompt string `json:"revised_prompt"`
 	// This field is from variant [BetaResponseInputItemImageGenerationCall].
 	Size string `json:"size"`
 	Code string `json:"code"`
@@ -13832,7 +13839,10 @@ type BetaResponseInputItemUnion struct {
 		Summary                  respjson.Field
 		EncryptedContent         respjson.Field
 		Result                   respjson.Field
+		Background               respjson.Field
+		OutputFormat             respjson.Field
 		Quality                  respjson.Field
+		RevisedPrompt            respjson.Field
 		Size                     respjson.Field
 		Code                     respjson.Field
 		ContainerID              respjson.Field
@@ -14333,7 +14343,20 @@ type BetaResponseInputItemUnionAction struct {
 }
 
 func (r *BetaResponseInputItemUnionAction) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded BetaResponseInputItemUnionAction
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfBetaResponseInputItemMultiAgentCallOutputAction.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into BetaResponseInputItemUnionAction: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // BetaResponseInputItemUnionOutput is an implicit subunion of
@@ -14383,7 +14406,24 @@ type BetaResponseInputItemUnionOutput struct {
 }
 
 func (r *BetaResponseInputItemUnionOutput) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded BetaResponseInputItemUnionOutput
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() ||
+			decoded.JSON.OfBetaResponseFunctionCallOutputItemArray.Valid() ||
+			decoded.JSON.OfBetaResponseInputItemMultiAgentCallOutputOutputArray.Valid() ||
+			decoded.JSON.OfBetaResponseFunctionShellCallOutputContentArray.Valid() ||
+			decoded.JSON.OfOutputContentList.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into BetaResponseInputItemUnionOutput: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // BetaResponseInputItemUnionArguments is an implicit subunion of
@@ -14486,7 +14526,20 @@ type BetaResponseInputItemUnionError struct {
 }
 
 func (r *BetaResponseInputItemUnionError) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded BetaResponseInputItemUnionError
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into BetaResponseInputItemUnionError: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // ToParam converts this BetaResponseInputItemUnion to a
@@ -15474,26 +15527,44 @@ type BetaResponseInputItemImageGenerationCall struct {
 	Status string `json:"status" api:"required"`
 	// The type of the image generation call. Always `image_generation_call`.
 	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
+	// The action used for image generation.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action" api:"nullable"`
 	// The agent that produced this item.
 	Agent BetaResponseInputItemImageGenerationCallAgent `json:"agent" api:"nullable"`
+	// The background setting used for generation.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background string `json:"background" api:"nullable"`
+	// The output format used for generation.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat string `json:"output_format" api:"nullable"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
 	//
 	// Any of "low", "medium", "high", "xhigh", "max", "auto".
 	Quality string `json:"quality" api:"nullable"`
+	// The prompt that was used after any model prompt rewriting.
+	RevisedPrompt string `json:"revised_prompt" api:"nullable"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size string `json:"size" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Result      respjson.Field
-		Status      respjson.Field
-		Type        respjson.Field
-		Agent       respjson.Field
-		Quality     respjson.Field
-		Size        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID            respjson.Field
+		Result        respjson.Field
+		Status        respjson.Field
+		Type          respjson.Field
+		Action        respjson.Field
+		Agent         respjson.Field
+		Background    respjson.Field
+		OutputFormat  respjson.Field
+		Quality       respjson.Field
+		RevisedPrompt respjson.Field
+		Size          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -17379,9 +17450,33 @@ func (u BetaResponseInputItemUnionParam) GetSummary() []BetaResponseReasoningIte
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemUnionParam) GetBackground() *string {
+	if vt := u.OfImageGenerationCall; vt != nil && vt.Background.Valid() {
+		return &vt.Background.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemUnionParam) GetOutputFormat() *string {
+	if vt := u.OfImageGenerationCall; vt != nil && vt.OutputFormat.Valid() {
+		return &vt.OutputFormat.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u BetaResponseInputItemUnionParam) GetQuality() *string {
 	if vt := u.OfImageGenerationCall; vt != nil {
 		return &vt.Quality
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemUnionParam) GetRevisedPrompt() *string {
+	if vt := u.OfImageGenerationCall; vt != nil && vt.RevisedPrompt.Valid() {
+		return &vt.RevisedPrompt.Value
 	}
 	return nil
 }
@@ -18112,6 +18207,8 @@ func (u BetaResponseInputItemUnionParam) GetAction() (res betaResponseInputItemU
 		res.any = &vt.Action
 	} else if vt := u.OfMultiAgentCallOutput; vt != nil {
 		res.any = &vt.Action
+	} else if vt := u.OfImageGenerationCall; vt != nil && vt.Action.Valid() {
+		res.any = &vt.Action.Value
 	} else if vt := u.OfLocalShellCall; vt != nil {
 		res.any = &vt.Action
 	} else if vt := u.OfShellCall; vt != nil {
@@ -19615,8 +19712,22 @@ type BetaResponseInputItemImageGenerationCallParam struct {
 	//
 	// Any of "in_progress", "completed", "generating", "failed".
 	Status string `json:"status,omitzero" api:"required"`
+	// The prompt that was used after any model prompt rewriting.
+	RevisedPrompt param.Opt[string] `json:"revised_prompt,omitzero"`
+	// The action used for image generation.
+	//
+	// Any of "generate", "edit", "auto".
+	Action param.Opt[string] `json:"action,omitzero"`
 	// The agent that produced this item.
 	Agent BetaResponseInputItemImageGenerationCallAgentParam `json:"agent,omitzero"`
+	// The background setting used for generation.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background param.Opt[string] `json:"background,omitzero"`
+	// The output format used for generation.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat param.Opt[string] `json:"output_format,omitzero"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
 	//
@@ -21386,7 +21497,7 @@ type BetaResponseItemUnion struct {
 	// This field is from variant [BetaResponseComputerToolCall].
 	PendingSafetyChecks []BetaResponseComputerToolCallPendingSafetyCheck `json:"pending_safety_checks"`
 	// This field is a union of [BetaComputerActionUnion],
-	// [BetaResponseFunctionWebSearchActionUnion], [string], [string],
+	// [BetaResponseFunctionWebSearchActionUnion], [string], [string], [string],
 	// [BetaResponseItemLocalShellCallAction],
 	// [BetaResponseFunctionShellToolCallAction]
 	Action BetaResponseItemUnionAction `json:"action"`
@@ -21432,7 +21543,13 @@ type BetaResponseItemUnion struct {
 	Fingerprint string `json:"fingerprint"`
 	Result      string `json:"result"`
 	// This field is from variant [BetaResponseItemImageGenerationCall].
+	Background string `json:"background"`
+	// This field is from variant [BetaResponseItemImageGenerationCall].
+	OutputFormat string `json:"output_format"`
+	// This field is from variant [BetaResponseItemImageGenerationCall].
 	Quality string `json:"quality"`
+	// This field is from variant [BetaResponseItemImageGenerationCall].
+	RevisedPrompt string `json:"revised_prompt"`
 	// This field is from variant [BetaResponseItemImageGenerationCall].
 	Size string `json:"size"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
@@ -21487,7 +21604,10 @@ type BetaResponseItemUnion struct {
 		Code                     respjson.Field
 		Fingerprint              respjson.Field
 		Result                   respjson.Field
+		Background               respjson.Field
+		OutputFormat             respjson.Field
 		Quality                  respjson.Field
+		RevisedPrompt            respjson.Field
 		Size                     respjson.Field
 		ContainerID              respjson.Field
 		Outputs                  respjson.Field
@@ -21956,7 +22076,20 @@ type BetaResponseItemUnionAction struct {
 }
 
 func (r *BetaResponseItemUnionAction) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded BetaResponseItemUnionAction
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfBetaResponseItemMultiAgentCallOutputAction.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into BetaResponseItemUnionAction: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // BetaResponseItemUnionOutput is an implicit subunion of [BetaResponseItemUnion].
@@ -22001,7 +22134,23 @@ type BetaResponseItemUnionOutput struct {
 }
 
 func (r *BetaResponseItemUnionOutput) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded BetaResponseItemUnionOutput
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() ||
+			decoded.JSON.OfOutputContentList.Valid() ||
+			decoded.JSON.OfBetaResponseOutputTextArray.Valid() ||
+			decoded.JSON.OfBetaResponseFunctionShellToolCallOutputOutputArray.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into BetaResponseItemUnionOutput: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // BetaResponseItemUnionArguments is an implicit subunion of
@@ -22104,7 +22253,20 @@ type BetaResponseItemUnionError struct {
 }
 
 func (r *BetaResponseItemUnionError) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded BetaResponseItemUnionError
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into BetaResponseItemUnionError: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 type BetaResponseItemAgentMessage struct {
@@ -22769,26 +22931,44 @@ type BetaResponseItemImageGenerationCall struct {
 	Status string `json:"status" api:"required"`
 	// The type of the image generation call. Always `image_generation_call`.
 	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
+	// The action used for image generation.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action" api:"nullable"`
 	// The agent that produced this item.
 	Agent BetaResponseItemImageGenerationCallAgent `json:"agent" api:"nullable"`
+	// The background setting used for generation.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background string `json:"background" api:"nullable"`
+	// The output format used for generation.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat string `json:"output_format" api:"nullable"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
 	//
 	// Any of "low", "medium", "high", "xhigh", "max", "auto".
 	Quality string `json:"quality" api:"nullable"`
+	// The prompt that was used after any model prompt rewriting.
+	RevisedPrompt string `json:"revised_prompt" api:"nullable"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size string `json:"size" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Result      respjson.Field
-		Status      respjson.Field
-		Type        respjson.Field
-		Agent       respjson.Field
-		Quality     respjson.Field
-		Size        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID            respjson.Field
+		Result        respjson.Field
+		Status        respjson.Field
+		Type          respjson.Field
+		Action        respjson.Field
+		Agent         respjson.Field
+		Background    respjson.Field
+		OutputFormat  respjson.Field
+		Quality       respjson.Field
+		RevisedPrompt respjson.Field
+		Size          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -23708,7 +23888,7 @@ type BetaResponseOutputItemUnion struct {
 	// This field is from variant [BetaResponseOutputItemAgentMessage].
 	Recipient string `json:"recipient"`
 	// This field is a union of [string], [string],
-	// [BetaResponseFunctionWebSearchActionUnion], [BetaComputerActionUnion],
+	// [BetaResponseFunctionWebSearchActionUnion], [BetaComputerActionUnion], [string],
 	// [BetaResponseOutputItemLocalShellCallAction],
 	// [BetaResponseFunctionShellToolCallAction]
 	Action BetaResponseOutputItemUnionAction `json:"action"`
@@ -23730,7 +23910,13 @@ type BetaResponseOutputItemUnion struct {
 	// [[]BetaResponseOutputItemMcpListToolsTool]
 	Tools BetaResponseOutputItemUnionTools `json:"tools"`
 	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
+	Background string `json:"background"`
+	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
+	OutputFormat string `json:"output_format"`
+	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
 	Quality string `json:"quality"`
+	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
+	RevisedPrompt string `json:"revised_prompt"`
 	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
 	Size string `json:"size"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
@@ -23784,7 +23970,10 @@ type BetaResponseOutputItemUnion struct {
 		Result                   respjson.Field
 		Execution                respjson.Field
 		Tools                    respjson.Field
+		Background               respjson.Field
+		OutputFormat             respjson.Field
 		Quality                  respjson.Field
+		RevisedPrompt            respjson.Field
 		Size                     respjson.Field
 		ContainerID              respjson.Field
 		Outputs                  respjson.Field
@@ -24245,7 +24434,23 @@ type BetaResponseOutputItemUnionOutput struct {
 }
 
 func (r *BetaResponseOutputItemUnionOutput) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded BetaResponseOutputItemUnionOutput
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() ||
+			decoded.JSON.OfOutputContentList.Valid() ||
+			decoded.JSON.OfBetaResponseOutputTextArray.Valid() ||
+			decoded.JSON.OfBetaResponseFunctionShellToolCallOutputOutputArray.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into BetaResponseOutputItemUnionOutput: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // BetaResponseOutputItemUnionAction is an implicit subunion of
@@ -24324,7 +24529,20 @@ type BetaResponseOutputItemUnionAction struct {
 }
 
 func (r *BetaResponseOutputItemUnionAction) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded BetaResponseOutputItemUnionAction
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfBetaResponseOutputItemMultiAgentCallOutputAction.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into BetaResponseOutputItemUnionAction: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // BetaResponseOutputItemUnionTools is an implicit subunion of
@@ -24382,7 +24600,20 @@ type BetaResponseOutputItemUnionError struct {
 }
 
 func (r *BetaResponseOutputItemUnionError) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded BetaResponseOutputItemUnionError
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into BetaResponseOutputItemUnionError: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 type BetaResponseOutputItemAgentMessage struct {
@@ -25053,26 +25284,44 @@ type BetaResponseOutputItemImageGenerationCall struct {
 	Status string `json:"status" api:"required"`
 	// The type of the image generation call. Always `image_generation_call`.
 	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
+	// The action used for image generation.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action" api:"nullable"`
 	// The agent that produced this item.
 	Agent BetaResponseOutputItemImageGenerationCallAgent `json:"agent" api:"nullable"`
+	// The background setting used for generation.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background string `json:"background" api:"nullable"`
+	// The output format used for generation.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat string `json:"output_format" api:"nullable"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
 	//
 	// Any of "low", "medium", "high", "xhigh", "max", "auto".
 	Quality string `json:"quality" api:"nullable"`
+	// The prompt that was used after any model prompt rewriting.
+	RevisedPrompt string `json:"revised_prompt" api:"nullable"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size string `json:"size" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Result      respjson.Field
-		Status      respjson.Field
-		Type        respjson.Field
-		Agent       respjson.Field
-		Quality     respjson.Field
-		Size        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID            respjson.Field
+		Result        respjson.Field
+		Status        respjson.Field
+		Type          respjson.Field
+		Action        respjson.Field
+		Agent         respjson.Field
+		Background    respjson.Field
+		OutputFormat  respjson.Field
+		Quality       respjson.Field
+		RevisedPrompt respjson.Field
+		Size          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
