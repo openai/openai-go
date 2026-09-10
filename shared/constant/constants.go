@@ -20,7 +20,49 @@ func ValueOf[T Constant[T]]() T {
 
 type Active string                                           // Always "active"
 type AdditionalTools string                                  // Always "additional_tools"
+type Agent string                                            // Always "agent"
 type AgentMessage string                                     // Always "agent_message"
+type AgentDeleted string                                     // Always "agent.deleted"
+type AgentEnvironment string                                 // Always "agent.environment"
+type AgentEnvironmentFile string                             // Always "agent.environment.file"
+type AgentEnvironmentTemplate string                         // Always "agent.environment.template"
+type AgentEnvironmentTemplateDeleted string                  // Always "agent.environment.template.deleted"
+type AgentOutputCommandExecutionOutputDelta string           // Always "agent.output.command_execution_output.delta"
+type AgentSession string                                     // Always "agent.session"
+type AgentSessionArtifact string                             // Always "agent.session.artifact"
+type AgentSessionArtifactDeleted string                      // Always "agent.session.artifact.deleted"
+type AgentSessionCreated string                              // Always "agent.session.created"
+type AgentSessionDeleted string                              // Always "agent.session.deleted"
+type AgentSessionEnvironmentConnected string                 // Always "agent.session.environment.connected"
+type AgentSessionEnvironmentDisconnected string              // Always "agent.session.environment.disconnected"
+type AgentSessionEnvironmentFailed string                    // Always "agent.session.environment.failed"
+type AgentSessionEnvironmentPending string                   // Always "agent.session.environment.pending"
+type AgentSessionEnvironmentReady string                     // Always "agent.session.environment.ready"
+type AgentSessionFailed string                               // Always "agent.session.failed"
+type AgentSessionIdle string                                 // Always "agent.session.idle"
+type AgentSessionInProgress string                           // Always "agent.session.in_progress"
+type AgentSessionInputCancel string                          // Always "agent.session.input.cancel"
+type AgentSessionInputMessage string                         // Always "agent.session.input.message"
+type AgentSessionInputToolResult string                      // Always "agent.session.input.tool_result"
+type AgentSessionRequiresAction string                       // Always "agent.session.requires_action"
+type AgentSessionSubagentActive string                       // Always "agent.session.subagent.active"
+type AgentSessionSubagentClosed string                       // Always "agent.session.subagent.closed"
+type AgentSessionSubagentCreated string                      // Always "agent.session.subagent.created"
+type AgentSessionTurnCancelled string                        // Always "agent.session.turn.cancelled"
+type AgentSessionTurnCompleted string                        // Always "agent.session.turn.completed"
+type AgentSessionTurnContentPartAdded string                 // Always "agent.session.turn.content_part.added"
+type AgentSessionTurnContentPartDone string                  // Always "agent.session.turn.content_part.done"
+type AgentSessionTurnCreated string                          // Always "agent.session.turn.created"
+type AgentSessionTurnFailed string                           // Always "agent.session.turn.failed"
+type AgentSessionTurnInProgress string                       // Always "agent.session.turn.in_progress"
+type AgentSessionTurnItemAdded string                        // Always "agent.session.turn.item.added"
+type AgentSessionTurnItemDone string                         // Always "agent.session.turn.item.done"
+type AgentSessionTurnOutputTextDelta string                  // Always "agent.session.turn.output_text.delta"
+type AgentSessionTurnOutputTextDone string                   // Always "agent.session.turn.output_text.done"
+type AgentSessionTurnReasoningSummaryPartAdded string        // Always "agent.session.turn.reasoning_summary_part.added"
+type AgentSessionTurnReasoningSummaryPartDone string         // Always "agent.session.turn.reasoning_summary_part.done"
+type AgentSessionTurnReasoningSummaryTextDelta string        // Always "agent.session.turn.reasoning_summary_text.delta"
+type AgentSessionTurnReasoningSummaryTextDone string         // Always "agent.session.turn.reasoning_summary_text.done"
 type All string                                              // Always "all"
 type AllowedTools string                                     // Always "allowed_tools"
 type Allowlist string                                        // Always "allowlist"
@@ -63,9 +105,13 @@ type ChatKitWidget string                                    // Always "chatkit.
 type CheckpointPermission string                             // Always "checkpoint.permission"
 type Click string                                            // Always "click"
 type Client string                                           // Always "client"
+type ClientSecretBasic string                                // Always "client_secret_basic"
+type ClientSecretPost string                                 // Always "client_secret_post"
+type CloseSubagentCall string                                // Always "close_subagent_call"
 type Closed string                                           // Always "closed"
 type CodeInterpreter string                                  // Always "code_interpreter"
 type CodeInterpreterCall string                              // Always "code_interpreter_call"
+type CommandExecution string                                 // Always "command_execution"
 type Compaction string                                       // Always "compaction"
 type CompactionTrigger string                                // Always "compaction_trigger"
 type ComparisonResponseNotFound string                       // Always "comparison_response_not_found"
@@ -97,6 +143,7 @@ type ConversationItemRetrieved string                        // Always "conversa
 type ConversationItemTruncate string                         // Always "conversation.item.truncate"
 type ConversationItemTruncated string                        // Always "conversation.item.truncated"
 type CreateFile string                                       // Always "create_file"
+type CreateSubagentCall string                               // Always "create_subagent_call"
 type CreatedAt string                                        // Always "created_at"
 type Custom string                                           // Always "custom"
 type CustomToolCall string                                   // Always "custom_tool_call"
@@ -112,6 +159,7 @@ type Duration string                                         // Always "duration
 type Email string                                            // Always "email"
 type Embedding string                                        // Always "embedding"
 type EncryptedContent string                                 // Always "encrypted_content"
+type EnvironmentConnection string                            // Always "environment_connection"
 type Error string                                            // Always "error"
 type EvalRunCanceled string                                  // Always "eval.run.canceled"
 type EvalRunFailed string                                    // Always "eval.run.failed"
@@ -122,6 +170,7 @@ type Exit string                                             // Always "exit"
 type Explicit string                                         // Always "explicit"
 type File string                                             // Always "file"
 type FileCitation string                                     // Always "file_citation"
+type FileID string                                           // Always "file_id"
 type FilePath string                                         // Always "file_path"
 type FileSearch string                                       // Always "file_search"
 type FileSearchCall string                                   // Always "file_search_call"
@@ -141,6 +190,7 @@ type GroupDeleted string                                     // Always "group.de
 type GroupRole string                                        // Always "group.role"
 type GroupUser string                                        // Always "group.user"
 type GroupUserDeleted string                                 // Always "group.user.deleted"
+type HTTP string                                             // Always "http"
 type HTTPError string                                        // Always "http_error"
 type Image string                                            // Always "image"
 type ImageEditCompleted string                               // Always "image_edit.completed"
@@ -151,6 +201,7 @@ type ImageGenerationCall string                              // Always "image_ge
 type ImageGenerationCompleted string                         // Always "image_generation.completed"
 type ImageGenerationPartialImage string                      // Always "image_generation.partial_image"
 type ImageURL string                                         // Always "image_url"
+type Incomplete string                                       // Always "incomplete"
 type Inf string                                              // Always "inf"
 type Info string                                             // Always "info"
 type Inline string                                           // Always "inline"
@@ -167,6 +218,7 @@ type InputAudioBufferTimeoutTriggered string                 // Always "input_au
 type InputFile string                                        // Always "input_file"
 type InputImage string                                       // Always "input_image"
 type InputText string                                        // Always "input_text"
+type InterruptSubagentCall string                            // Always "interrupt_subagent_call"
 type InvalidRequestError string                              // Always "invalid_request_error"
 type JSONObject string                                       // Always "json_object"
 type JSONSchema string                                       // Always "json_schema"
@@ -191,6 +243,7 @@ type McpListTools string                                     // Always "mcp_list
 type McpListToolsCompleted string                            // Always "mcp_list_tools.completed"
 type McpListToolsFailed string                               // Always "mcp_list_tools.failed"
 type McpListToolsInProgress string                           // Always "mcp_list_tools.in_progress"
+type McpOAuth string                                         // Always "mcp_oauth"
 type McpProtocolError string                                 // Always "mcp_protocol_error"
 type McpToolExecutionError string                            // Always "mcp_tool_execution_error"
 type Message string                                          // Always "message"
@@ -203,7 +256,9 @@ type Multi string                                            // Always "multi"
 type MultiAgentCall string                                   // Always "multi_agent_call"
 type MultiAgentCallOutput string                             // Always "multi_agent_call_output"
 type Namespace string                                        // Always "namespace"
+type None string                                             // Always "none"
 type OpenPage string                                         // Always "open_page"
+type OpenAIHosted string                                     // Always "openai_hosted"
 type OrganizationAdminAPIKey string                          // Always "organization.admin_api_key"
 type OrganizationAdminAPIKeyDeleted string                   // Always "organization.admin_api_key.deleted"
 type OrganizationCertificate string                          // Always "organization.certificate"
@@ -349,6 +404,7 @@ type ResponseWebSearchCallCompleted string                   // Always "response
 type ResponseWebSearchCallInProgress string                  // Always "response.web_search_call.in_progress"
 type ResponseWebSearchCallSearching string                   // Always "response.web_search_call.searching"
 type Responses string                                        // Always "responses"
+type ResumeSubagentCall string                               // Always "resume_subagent_call"
 type RetentionRatio string                                   // Always "retention_ratio"
 type Role string                                             // Always "role"
 type RoleDeleted string                                      // Always "role.deleted"
@@ -359,7 +415,9 @@ type ScoreModel string                                       // Always "score_mo
 type Screenshot string                                       // Always "screenshot"
 type Scroll string                                           // Always "scroll"
 type Search string                                           // Always "search"
+type SelfHosted string                                       // Always "self_hosted"
 type SemanticVad string                                      // Always "semantic_vad"
+type SendSubagentInputCall string                            // Always "send_subagent_input_call"
 type ServerVad string                                        // Always "server_vad"
 type SessionClose string                                     // Always "session.close"
 type SessionClosed string                                    // Always "session.closed"
@@ -395,6 +453,8 @@ type SkillDeleted string                                     // Always "skill.de
 type SkillVersion string                                     // Always "skill.version"
 type SkillVersionDeleted string                              // Always "skill.version.deleted"
 type Static string                                           // Always "static"
+type StaticBearer string                                     // Always "static_bearer"
+type Stdio string                                            // Always "stdio"
 type StringCheck string                                      // Always "string_check"
 type SubmitToolOutputs string                                // Always "submit_tool_outputs"
 type SummaryText string                                      // Always "summary_text"
@@ -462,6 +522,10 @@ type URL string                                              // Always "url"
 type URLCitation string                                      // Always "url_citation"
 type User string                                             // Always "user"
 type UserRole string                                         // Always "user.role"
+type Vault string                                            // Always "vault"
+type VaultCredential string                                  // Always "vault.credential"
+type VaultCredentialDeleted string                           // Always "vault.credential.deleted"
+type VaultDeleted string                                     // Always "vault.deleted"
 type VectorStore string                                      // Always "vector_store"
 type VectorStoreDeleted string                               // Always "vector_store.deleted"
 type VectorStoreFile string                                  // Always "vector_store.file"
@@ -472,14 +536,117 @@ type VectorStoreSearchResultsPage string                     // Always "vector_s
 type Video string                                            // Always "video"
 type VideoDeleted string                                     // Always "video.deleted"
 type Wait string                                             // Always "wait"
+type WaitForSubagentsCall string                             // Always "wait_for_subagents_call"
 type Wandb string                                            // Always "wandb"
 type WebSearch string                                        // Always "web_search"
 type WebSearchCall string                                    // Always "web_search_call"
 type Webrtc string                                           // Always "webrtc"
 
-func (c Active) Default() Active                               { return "active" }
-func (c AdditionalTools) Default() AdditionalTools             { return "additional_tools" }
-func (c AgentMessage) Default() AgentMessage                   { return "agent_message" }
+func (c Active) Default() Active                             { return "active" }
+func (c AdditionalTools) Default() AdditionalTools           { return "additional_tools" }
+func (c Agent) Default() Agent                               { return "agent" }
+func (c AgentMessage) Default() AgentMessage                 { return "agent_message" }
+func (c AgentDeleted) Default() AgentDeleted                 { return "agent.deleted" }
+func (c AgentEnvironment) Default() AgentEnvironment         { return "agent.environment" }
+func (c AgentEnvironmentFile) Default() AgentEnvironmentFile { return "agent.environment.file" }
+func (c AgentEnvironmentTemplate) Default() AgentEnvironmentTemplate {
+	return "agent.environment.template"
+}
+func (c AgentEnvironmentTemplateDeleted) Default() AgentEnvironmentTemplateDeleted {
+	return "agent.environment.template.deleted"
+}
+func (c AgentOutputCommandExecutionOutputDelta) Default() AgentOutputCommandExecutionOutputDelta {
+	return "agent.output.command_execution_output.delta"
+}
+func (c AgentSession) Default() AgentSession                 { return "agent.session" }
+func (c AgentSessionArtifact) Default() AgentSessionArtifact { return "agent.session.artifact" }
+func (c AgentSessionArtifactDeleted) Default() AgentSessionArtifactDeleted {
+	return "agent.session.artifact.deleted"
+}
+func (c AgentSessionCreated) Default() AgentSessionCreated { return "agent.session.created" }
+func (c AgentSessionDeleted) Default() AgentSessionDeleted { return "agent.session.deleted" }
+func (c AgentSessionEnvironmentConnected) Default() AgentSessionEnvironmentConnected {
+	return "agent.session.environment.connected"
+}
+func (c AgentSessionEnvironmentDisconnected) Default() AgentSessionEnvironmentDisconnected {
+	return "agent.session.environment.disconnected"
+}
+func (c AgentSessionEnvironmentFailed) Default() AgentSessionEnvironmentFailed {
+	return "agent.session.environment.failed"
+}
+func (c AgentSessionEnvironmentPending) Default() AgentSessionEnvironmentPending {
+	return "agent.session.environment.pending"
+}
+func (c AgentSessionEnvironmentReady) Default() AgentSessionEnvironmentReady {
+	return "agent.session.environment.ready"
+}
+func (c AgentSessionFailed) Default() AgentSessionFailed         { return "agent.session.failed" }
+func (c AgentSessionIdle) Default() AgentSessionIdle             { return "agent.session.idle" }
+func (c AgentSessionInProgress) Default() AgentSessionInProgress { return "agent.session.in_progress" }
+func (c AgentSessionInputCancel) Default() AgentSessionInputCancel {
+	return "agent.session.input.cancel"
+}
+func (c AgentSessionInputMessage) Default() AgentSessionInputMessage {
+	return "agent.session.input.message"
+}
+func (c AgentSessionInputToolResult) Default() AgentSessionInputToolResult {
+	return "agent.session.input.tool_result"
+}
+func (c AgentSessionRequiresAction) Default() AgentSessionRequiresAction {
+	return "agent.session.requires_action"
+}
+func (c AgentSessionSubagentActive) Default() AgentSessionSubagentActive {
+	return "agent.session.subagent.active"
+}
+func (c AgentSessionSubagentClosed) Default() AgentSessionSubagentClosed {
+	return "agent.session.subagent.closed"
+}
+func (c AgentSessionSubagentCreated) Default() AgentSessionSubagentCreated {
+	return "agent.session.subagent.created"
+}
+func (c AgentSessionTurnCancelled) Default() AgentSessionTurnCancelled {
+	return "agent.session.turn.cancelled"
+}
+func (c AgentSessionTurnCompleted) Default() AgentSessionTurnCompleted {
+	return "agent.session.turn.completed"
+}
+func (c AgentSessionTurnContentPartAdded) Default() AgentSessionTurnContentPartAdded {
+	return "agent.session.turn.content_part.added"
+}
+func (c AgentSessionTurnContentPartDone) Default() AgentSessionTurnContentPartDone {
+	return "agent.session.turn.content_part.done"
+}
+func (c AgentSessionTurnCreated) Default() AgentSessionTurnCreated {
+	return "agent.session.turn.created"
+}
+func (c AgentSessionTurnFailed) Default() AgentSessionTurnFailed { return "agent.session.turn.failed" }
+func (c AgentSessionTurnInProgress) Default() AgentSessionTurnInProgress {
+	return "agent.session.turn.in_progress"
+}
+func (c AgentSessionTurnItemAdded) Default() AgentSessionTurnItemAdded {
+	return "agent.session.turn.item.added"
+}
+func (c AgentSessionTurnItemDone) Default() AgentSessionTurnItemDone {
+	return "agent.session.turn.item.done"
+}
+func (c AgentSessionTurnOutputTextDelta) Default() AgentSessionTurnOutputTextDelta {
+	return "agent.session.turn.output_text.delta"
+}
+func (c AgentSessionTurnOutputTextDone) Default() AgentSessionTurnOutputTextDone {
+	return "agent.session.turn.output_text.done"
+}
+func (c AgentSessionTurnReasoningSummaryPartAdded) Default() AgentSessionTurnReasoningSummaryPartAdded {
+	return "agent.session.turn.reasoning_summary_part.added"
+}
+func (c AgentSessionTurnReasoningSummaryPartDone) Default() AgentSessionTurnReasoningSummaryPartDone {
+	return "agent.session.turn.reasoning_summary_part.done"
+}
+func (c AgentSessionTurnReasoningSummaryTextDelta) Default() AgentSessionTurnReasoningSummaryTextDelta {
+	return "agent.session.turn.reasoning_summary_text.delta"
+}
+func (c AgentSessionTurnReasoningSummaryTextDone) Default() AgentSessionTurnReasoningSummaryTextDone {
+	return "agent.session.turn.reasoning_summary_text.done"
+}
 func (c All) Default() All                                     { return "all" }
 func (c AllowedTools) Default() AllowedTools                   { return "allowed_tools" }
 func (c Allowlist) Default() Allowlist                         { return "allowlist" }
@@ -524,9 +691,13 @@ func (c ChatKitWidget) Default() ChatKitWidget                 { return "chatkit
 func (c CheckpointPermission) Default() CheckpointPermission   { return "checkpoint.permission" }
 func (c Click) Default() Click                                 { return "click" }
 func (c Client) Default() Client                               { return "client" }
+func (c ClientSecretBasic) Default() ClientSecretBasic         { return "client_secret_basic" }
+func (c ClientSecretPost) Default() ClientSecretPost           { return "client_secret_post" }
+func (c CloseSubagentCall) Default() CloseSubagentCall         { return "close_subagent_call" }
 func (c Closed) Default() Closed                               { return "closed" }
 func (c CodeInterpreter) Default() CodeInterpreter             { return "code_interpreter" }
 func (c CodeInterpreterCall) Default() CodeInterpreterCall     { return "code_interpreter_call" }
+func (c CommandExecution) Default() CommandExecution           { return "command_execution" }
 func (c Compaction) Default() Compaction                       { return "compaction" }
 func (c CompactionTrigger) Default() CompactionTrigger         { return "compaction_trigger" }
 func (c ComparisonResponseNotFound) Default() ComparisonResponseNotFound {
@@ -580,6 +751,7 @@ func (c ConversationItemTruncated) Default() ConversationItemTruncated {
 	return "conversation.item.truncated"
 }
 func (c CreateFile) Default() CreateFile                         { return "create_file" }
+func (c CreateSubagentCall) Default() CreateSubagentCall         { return "create_subagent_call" }
 func (c CreatedAt) Default() CreatedAt                           { return "created_at" }
 func (c Custom) Default() Custom                                 { return "custom" }
 func (c CustomToolCall) Default() CustomToolCall                 { return "custom_tool_call" }
@@ -595,6 +767,7 @@ func (c Duration) Default() Duration                             { return "durat
 func (c Email) Default() Email                                   { return "email" }
 func (c Embedding) Default() Embedding                           { return "embedding" }
 func (c EncryptedContent) Default() EncryptedContent             { return "encrypted_content" }
+func (c EnvironmentConnection) Default() EnvironmentConnection   { return "environment_connection" }
 func (c Error) Default() Error                                   { return "error" }
 func (c EvalRunCanceled) Default() EvalRunCanceled               { return "eval.run.canceled" }
 func (c EvalRunFailed) Default() EvalRunFailed                   { return "eval.run.failed" }
@@ -605,6 +778,7 @@ func (c Exit) Default() Exit                                     { return "exit"
 func (c Explicit) Default() Explicit                             { return "explicit" }
 func (c File) Default() File                                     { return "file" }
 func (c FileCitation) Default() FileCitation                     { return "file_citation" }
+func (c FileID) Default() FileID                                 { return "file_id" }
 func (c FilePath) Default() FilePath                             { return "file_path" }
 func (c FileSearch) Default() FileSearch                         { return "file_search" }
 func (c FileSearchCall) Default() FileSearchCall                 { return "file_search_call" }
@@ -626,6 +800,7 @@ func (c GroupDeleted) Default() GroupDeleted                     { return "group
 func (c GroupRole) Default() GroupRole                           { return "group.role" }
 func (c GroupUser) Default() GroupUser                           { return "group.user" }
 func (c GroupUserDeleted) Default() GroupUserDeleted             { return "group.user.deleted" }
+func (c HTTP) Default() HTTP                                     { return "http" }
 func (c HTTPError) Default() HTTPError                           { return "http_error" }
 func (c Image) Default() Image                                   { return "image" }
 func (c ImageEditCompleted) Default() ImageEditCompleted         { return "image_edit.completed" }
@@ -640,6 +815,7 @@ func (c ImageGenerationPartialImage) Default() ImageGenerationPartialImage {
 	return "image_generation.partial_image"
 }
 func (c ImageURL) Default() ImageURL                             { return "image_url" }
+func (c Incomplete) Default() Incomplete                         { return "incomplete" }
 func (c Inf) Default() Inf                                       { return "inf" }
 func (c Info) Default() Info                                     { return "info" }
 func (c Inline) Default() Inline                                 { return "inline" }
@@ -668,6 +844,7 @@ func (c InputAudioBufferTimeoutTriggered) Default() InputAudioBufferTimeoutTrigg
 func (c InputFile) Default() InputFile                           { return "input_file" }
 func (c InputImage) Default() InputImage                         { return "input_image" }
 func (c InputText) Default() InputText                           { return "input_text" }
+func (c InterruptSubagentCall) Default() InterruptSubagentCall   { return "interrupt_subagent_call" }
 func (c InvalidRequestError) Default() InvalidRequestError       { return "invalid_request_error" }
 func (c JSONObject) Default() JSONObject                         { return "json_object" }
 func (c JSONSchema) Default() JSONSchema                         { return "json_schema" }
@@ -692,6 +869,7 @@ func (c McpListTools) Default() McpListTools                     { return "mcp_l
 func (c McpListToolsCompleted) Default() McpListToolsCompleted   { return "mcp_list_tools.completed" }
 func (c McpListToolsFailed) Default() McpListToolsFailed         { return "mcp_list_tools.failed" }
 func (c McpListToolsInProgress) Default() McpListToolsInProgress { return "mcp_list_tools.in_progress" }
+func (c McpOAuth) Default() McpOAuth                             { return "mcp_oauth" }
 func (c McpProtocolError) Default() McpProtocolError             { return "mcp_protocol_error" }
 func (c McpToolExecutionError) Default() McpToolExecutionError   { return "mcp_tool_execution_error" }
 func (c Message) Default() Message                               { return "message" }
@@ -704,7 +882,9 @@ func (c Multi) Default() Multi                                   { return "multi
 func (c MultiAgentCall) Default() MultiAgentCall                 { return "multi_agent_call" }
 func (c MultiAgentCallOutput) Default() MultiAgentCallOutput     { return "multi_agent_call_output" }
 func (c Namespace) Default() Namespace                           { return "namespace" }
+func (c None) Default() None                                     { return "none" }
 func (c OpenPage) Default() OpenPage                             { return "open_page" }
+func (c OpenAIHosted) Default() OpenAIHosted                     { return "openai_hosted" }
 func (c OrganizationAdminAPIKey) Default() OrganizationAdminAPIKey {
 	return "organization.admin_api_key"
 }
@@ -1022,6 +1202,7 @@ func (c ResponseWebSearchCallSearching) Default() ResponseWebSearchCallSearching
 	return "response.web_search_call.searching"
 }
 func (c Responses) Default() Responses                         { return "responses" }
+func (c ResumeSubagentCall) Default() ResumeSubagentCall       { return "resume_subagent_call" }
 func (c RetentionRatio) Default() RetentionRatio               { return "retention_ratio" }
 func (c Role) Default() Role                                   { return "role" }
 func (c RoleDeleted) Default() RoleDeleted                     { return "role.deleted" }
@@ -1032,7 +1213,9 @@ func (c ScoreModel) Default() ScoreModel                       { return "score_m
 func (c Screenshot) Default() Screenshot                       { return "screenshot" }
 func (c Scroll) Default() Scroll                               { return "scroll" }
 func (c Search) Default() Search                               { return "search" }
+func (c SelfHosted) Default() SelfHosted                       { return "self_hosted" }
 func (c SemanticVad) Default() SemanticVad                     { return "semantic_vad" }
+func (c SendSubagentInputCall) Default() SendSubagentInputCall { return "send_subagent_input_call" }
 func (c ServerVad) Default() ServerVad                         { return "server_vad" }
 func (c SessionClose) Default() SessionClose                   { return "session.close" }
 func (c SessionClosed) Default() SessionClosed                 { return "session.closed" }
@@ -1094,6 +1277,8 @@ func (c SkillDeleted) Default() SkillDeleted                     { return "skill
 func (c SkillVersion) Default() SkillVersion                     { return "skill.version" }
 func (c SkillVersionDeleted) Default() SkillVersionDeleted       { return "skill.version.deleted" }
 func (c Static) Default() Static                                 { return "static" }
+func (c StaticBearer) Default() StaticBearer                     { return "static_bearer" }
+func (c Stdio) Default() Stdio                                   { return "stdio" }
 func (c StringCheck) Default() StringCheck                       { return "string_check" }
 func (c SubmitToolOutputs) Default() SubmitToolOutputs           { return "submit_tool_outputs" }
 func (c SummaryText) Default() SummaryText                       { return "summary_text" }
@@ -1158,24 +1343,28 @@ func (c TranscriptionSessionUpdate) Default() TranscriptionSessionUpdate {
 func (c TranscriptionSessionUpdated) Default() TranscriptionSessionUpdated {
 	return "transcription_session.updated"
 }
-func (c Translation) Default() Translation                     { return "translation" }
-func (c TransportAnswered) Default() TransportAnswered         { return "transport.answered" }
-func (c TransportDtmfReceived) Default() TransportDtmfReceived { return "transport.dtmf.received" }
-func (c TransportDtmfSend) Default() TransportDtmfSend         { return "transport.dtmf.send" }
-func (c TransportFailed) Default() TransportFailed             { return "transport.failed" }
-func (c TransportRinging) Default() TransportRinging           { return "transport.ringing" }
-func (c Type) Default() Type                                   { return "type" }
-func (c Unavailable) Default() Unavailable                     { return "unavailable" }
-func (c UpdateFile) Default() UpdateFile                       { return "update_file" }
-func (c Upload) Default() Upload                               { return "upload" }
-func (c UploadPart) Default() UploadPart                       { return "upload.part" }
-func (c URL) Default() URL                                     { return "url" }
-func (c URLCitation) Default() URLCitation                     { return "url_citation" }
-func (c User) Default() User                                   { return "user" }
-func (c UserRole) Default() UserRole                           { return "user.role" }
-func (c VectorStore) Default() VectorStore                     { return "vector_store" }
-func (c VectorStoreDeleted) Default() VectorStoreDeleted       { return "vector_store.deleted" }
-func (c VectorStoreFile) Default() VectorStoreFile             { return "vector_store.file" }
+func (c Translation) Default() Translation                       { return "translation" }
+func (c TransportAnswered) Default() TransportAnswered           { return "transport.answered" }
+func (c TransportDtmfReceived) Default() TransportDtmfReceived   { return "transport.dtmf.received" }
+func (c TransportDtmfSend) Default() TransportDtmfSend           { return "transport.dtmf.send" }
+func (c TransportFailed) Default() TransportFailed               { return "transport.failed" }
+func (c TransportRinging) Default() TransportRinging             { return "transport.ringing" }
+func (c Type) Default() Type                                     { return "type" }
+func (c Unavailable) Default() Unavailable                       { return "unavailable" }
+func (c UpdateFile) Default() UpdateFile                         { return "update_file" }
+func (c Upload) Default() Upload                                 { return "upload" }
+func (c UploadPart) Default() UploadPart                         { return "upload.part" }
+func (c URL) Default() URL                                       { return "url" }
+func (c URLCitation) Default() URLCitation                       { return "url_citation" }
+func (c User) Default() User                                     { return "user" }
+func (c UserRole) Default() UserRole                             { return "user.role" }
+func (c Vault) Default() Vault                                   { return "vault" }
+func (c VaultCredential) Default() VaultCredential               { return "vault.credential" }
+func (c VaultCredentialDeleted) Default() VaultCredentialDeleted { return "vault.credential.deleted" }
+func (c VaultDeleted) Default() VaultDeleted                     { return "vault.deleted" }
+func (c VectorStore) Default() VectorStore                       { return "vector_store" }
+func (c VectorStoreDeleted) Default() VectorStoreDeleted         { return "vector_store.deleted" }
+func (c VectorStoreFile) Default() VectorStoreFile               { return "vector_store.file" }
 func (c VectorStoreFileContentPage) Default() VectorStoreFileContentPage {
 	return "vector_store.file_content.page"
 }
@@ -1184,17 +1373,70 @@ func (c VectorStoreFilesBatch) Default() VectorStoreFilesBatch   { return "vecto
 func (c VectorStoreSearchResultsPage) Default() VectorStoreSearchResultsPage {
 	return "vector_store.search_results.page"
 }
-func (c Video) Default() Video                 { return "video" }
-func (c VideoDeleted) Default() VideoDeleted   { return "video.deleted" }
-func (c Wait) Default() Wait                   { return "wait" }
-func (c Wandb) Default() Wandb                 { return "wandb" }
-func (c WebSearch) Default() WebSearch         { return "web_search" }
-func (c WebSearchCall) Default() WebSearchCall { return "web_search_call" }
-func (c Webrtc) Default() Webrtc               { return "webrtc" }
+func (c Video) Default() Video                               { return "video" }
+func (c VideoDeleted) Default() VideoDeleted                 { return "video.deleted" }
+func (c Wait) Default() Wait                                 { return "wait" }
+func (c WaitForSubagentsCall) Default() WaitForSubagentsCall { return "wait_for_subagents_call" }
+func (c Wandb) Default() Wandb                               { return "wandb" }
+func (c WebSearch) Default() WebSearch                       { return "web_search" }
+func (c WebSearchCall) Default() WebSearchCall               { return "web_search_call" }
+func (c Webrtc) Default() Webrtc                             { return "webrtc" }
 
-func (c Active) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
-func (c AdditionalTools) MarshalJSON() ([]byte, error)            { return marshalString(c) }
-func (c AgentMessage) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c Active) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
+func (c AdditionalTools) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c Agent) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
+func (c AgentMessage) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c AgentDeleted) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c AgentEnvironment) MarshalJSON() ([]byte, error)                { return marshalString(c) }
+func (c AgentEnvironmentFile) MarshalJSON() ([]byte, error)            { return marshalString(c) }
+func (c AgentEnvironmentTemplate) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c AgentEnvironmentTemplateDeleted) MarshalJSON() ([]byte, error) { return marshalString(c) }
+func (c AgentOutputCommandExecutionOutputDelta) MarshalJSON() ([]byte, error) {
+	return marshalString(c)
+}
+func (c AgentSession) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c AgentSessionArtifact) MarshalJSON() ([]byte, error)                { return marshalString(c) }
+func (c AgentSessionArtifactDeleted) MarshalJSON() ([]byte, error)         { return marshalString(c) }
+func (c AgentSessionCreated) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c AgentSessionDeleted) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c AgentSessionEnvironmentConnected) MarshalJSON() ([]byte, error)    { return marshalString(c) }
+func (c AgentSessionEnvironmentDisconnected) MarshalJSON() ([]byte, error) { return marshalString(c) }
+func (c AgentSessionEnvironmentFailed) MarshalJSON() ([]byte, error)       { return marshalString(c) }
+func (c AgentSessionEnvironmentPending) MarshalJSON() ([]byte, error)      { return marshalString(c) }
+func (c AgentSessionEnvironmentReady) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c AgentSessionFailed) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c AgentSessionIdle) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c AgentSessionInProgress) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c AgentSessionInputCancel) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c AgentSessionInputMessage) MarshalJSON() ([]byte, error)            { return marshalString(c) }
+func (c AgentSessionInputToolResult) MarshalJSON() ([]byte, error)         { return marshalString(c) }
+func (c AgentSessionRequiresAction) MarshalJSON() ([]byte, error)          { return marshalString(c) }
+func (c AgentSessionSubagentActive) MarshalJSON() ([]byte, error)          { return marshalString(c) }
+func (c AgentSessionSubagentClosed) MarshalJSON() ([]byte, error)          { return marshalString(c) }
+func (c AgentSessionSubagentCreated) MarshalJSON() ([]byte, error)         { return marshalString(c) }
+func (c AgentSessionTurnCancelled) MarshalJSON() ([]byte, error)           { return marshalString(c) }
+func (c AgentSessionTurnCompleted) MarshalJSON() ([]byte, error)           { return marshalString(c) }
+func (c AgentSessionTurnContentPartAdded) MarshalJSON() ([]byte, error)    { return marshalString(c) }
+func (c AgentSessionTurnContentPartDone) MarshalJSON() ([]byte, error)     { return marshalString(c) }
+func (c AgentSessionTurnCreated) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c AgentSessionTurnFailed) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c AgentSessionTurnInProgress) MarshalJSON() ([]byte, error)          { return marshalString(c) }
+func (c AgentSessionTurnItemAdded) MarshalJSON() ([]byte, error)           { return marshalString(c) }
+func (c AgentSessionTurnItemDone) MarshalJSON() ([]byte, error)            { return marshalString(c) }
+func (c AgentSessionTurnOutputTextDelta) MarshalJSON() ([]byte, error)     { return marshalString(c) }
+func (c AgentSessionTurnOutputTextDone) MarshalJSON() ([]byte, error)      { return marshalString(c) }
+func (c AgentSessionTurnReasoningSummaryPartAdded) MarshalJSON() ([]byte, error) {
+	return marshalString(c)
+}
+func (c AgentSessionTurnReasoningSummaryPartDone) MarshalJSON() ([]byte, error) {
+	return marshalString(c)
+}
+func (c AgentSessionTurnReasoningSummaryTextDelta) MarshalJSON() ([]byte, error) {
+	return marshalString(c)
+}
+func (c AgentSessionTurnReasoningSummaryTextDone) MarshalJSON() ([]byte, error) {
+	return marshalString(c)
+}
 func (c All) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c AllowedTools) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c Allowlist) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
@@ -1237,9 +1479,13 @@ func (c ChatKitWidget) MarshalJSON() ([]byte, error)              { return marsh
 func (c CheckpointPermission) MarshalJSON() ([]byte, error)       { return marshalString(c) }
 func (c Click) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c Client) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
+func (c ClientSecretBasic) MarshalJSON() ([]byte, error)          { return marshalString(c) }
+func (c ClientSecretPost) MarshalJSON() ([]byte, error)           { return marshalString(c) }
+func (c CloseSubagentCall) MarshalJSON() ([]byte, error)          { return marshalString(c) }
 func (c Closed) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c CodeInterpreter) MarshalJSON() ([]byte, error)            { return marshalString(c) }
 func (c CodeInterpreterCall) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c CommandExecution) MarshalJSON() ([]byte, error)           { return marshalString(c) }
 func (c Compaction) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c CompactionTrigger) MarshalJSON() ([]byte, error)          { return marshalString(c) }
 func (c ComparisonResponseNotFound) MarshalJSON() ([]byte, error) { return marshalString(c) }
@@ -1279,6 +1525,7 @@ func (c ConversationItemRetrieved) MarshalJSON() ([]byte, error)           { ret
 func (c ConversationItemTruncate) MarshalJSON() ([]byte, error)            { return marshalString(c) }
 func (c ConversationItemTruncated) MarshalJSON() ([]byte, error)           { return marshalString(c) }
 func (c CreateFile) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
+func (c CreateSubagentCall) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c CreatedAt) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c Custom) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c CustomToolCall) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
@@ -1294,6 +1541,7 @@ func (c Duration) MarshalJSON() ([]byte, error)                            { ret
 func (c Email) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c Embedding) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c EncryptedContent) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c EnvironmentConnection) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c Error) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c EvalRunCanceled) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c EvalRunFailed) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
@@ -1304,6 +1552,7 @@ func (c Exit) MarshalJSON() ([]byte, error)                                { ret
 func (c Explicit) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c File) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c FileCitation) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c FileID) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c FilePath) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c FileSearch) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c FileSearchCall) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
@@ -1323,6 +1572,7 @@ func (c GroupDeleted) MarshalJSON() ([]byte, error)                        { ret
 func (c GroupRole) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c GroupUser) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c GroupUserDeleted) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c HTTP) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c HTTPError) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c Image) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c ImageEditCompleted) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
@@ -1333,6 +1583,7 @@ func (c ImageGenerationCall) MarshalJSON() ([]byte, error)                 { ret
 func (c ImageGenerationCompleted) MarshalJSON() ([]byte, error)            { return marshalString(c) }
 func (c ImageGenerationPartialImage) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c ImageURL) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
+func (c Incomplete) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c Inf) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
 func (c Info) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Inline) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
@@ -1349,6 +1600,7 @@ func (c InputAudioBufferTimeoutTriggered) MarshalJSON() ([]byte, error)    { ret
 func (c InputFile) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c InputImage) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c InputText) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
+func (c InterruptSubagentCall) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c InvalidRequestError) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c JSONObject) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c JSONSchema) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
@@ -1373,6 +1625,7 @@ func (c McpListTools) MarshalJSON() ([]byte, error)                        { ret
 func (c McpListToolsCompleted) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c McpListToolsFailed) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c McpListToolsInProgress) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c McpOAuth) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c McpProtocolError) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c McpToolExecutionError) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c Message) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
@@ -1385,7 +1638,9 @@ func (c Multi) MarshalJSON() ([]byte, error)                               { ret
 func (c MultiAgentCall) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c MultiAgentCallOutput) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c Namespace) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
+func (c None) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c OpenPage) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
+func (c OpenAIHosted) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c OrganizationAdminAPIKey) MarshalJSON() ([]byte, error)             { return marshalString(c) }
 func (c OrganizationAdminAPIKeyDeleted) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c OrganizationCertificate) MarshalJSON() ([]byte, error)             { return marshalString(c) }
@@ -1547,6 +1802,7 @@ func (c ResponseWebSearchCallCompleted) MarshalJSON() ([]byte, error)      { ret
 func (c ResponseWebSearchCallInProgress) MarshalJSON() ([]byte, error)     { return marshalString(c) }
 func (c ResponseWebSearchCallSearching) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c Responses) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
+func (c ResumeSubagentCall) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c RetentionRatio) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c Role) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c RoleDeleted) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
@@ -1557,7 +1813,9 @@ func (c ScoreModel) MarshalJSON() ([]byte, error)                          { ret
 func (c Screenshot) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c Scroll) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c Search) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
+func (c SelfHosted) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c SemanticVad) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
+func (c SendSubagentInputCall) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c ServerVad) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c SessionClose) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c SessionClosed) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
@@ -1593,6 +1851,8 @@ func (c SkillDeleted) MarshalJSON() ([]byte, error)                        { ret
 func (c SkillVersion) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c SkillVersionDeleted) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c Static) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
+func (c StaticBearer) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c Stdio) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c StringCheck) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c SubmitToolOutputs) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
 func (c SummaryText) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
@@ -1660,6 +1920,10 @@ func (c URL) MarshalJSON() ([]byte, error)                                 { ret
 func (c URLCitation) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c User) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c UserRole) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
+func (c Vault) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
+func (c VaultCredential) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
+func (c VaultCredentialDeleted) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c VaultDeleted) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c VectorStore) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c VectorStoreDeleted) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c VectorStoreFile) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
@@ -1670,6 +1934,7 @@ func (c VectorStoreSearchResultsPage) MarshalJSON() ([]byte, error)        { ret
 func (c Video) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c VideoDeleted) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c Wait) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
+func (c WaitForSubagentsCall) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c Wandb) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c WebSearch) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c WebSearchCall) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
