@@ -643,9 +643,11 @@ const (
 	FineTuningJobSucceededWebhookEventObjectEvent FineTuningJobSucceededWebhookEventObject = "event"
 )
 
-// Sent when an incoming API SIP session is available for Live acceptance. The same
-// pending session can also emit `realtime.call.incoming`; the first successful
-// Realtime or Live accept endpoint selects the runtime surface.
+// Deprecated: use `live.transport.incoming`. Retained for existing subscriptions
+// during migration; new subscriptions to this event are not allowed. Sent when an
+// incoming API SIP session is available for Live acceptance. The same pending
+// session can also emit `realtime.call.incoming`; the first successful Realtime or
+// Live accept endpoint selects the runtime surface.
 type LiveCallIncomingWebhookEvent struct {
 	// The unique ID of the event.
 	ID string `json:"id" api:"required"`
@@ -679,8 +681,9 @@ func (r *LiveCallIncomingWebhookEvent) UnmarshalJSON(data []byte) error {
 
 // Event data payload.
 type LiveCallIncomingWebhookEventData struct {
-	// The `live_...` ID of the pending SIP session. Forward this value unchanged when
-	// accepting or rejecting the call through the Live API.
+	// The `live_...` ID of the pending SIP session. Pass this value unchanged to Live
+	// call controls and sideband connections. The corresponding
+	// `realtime.call.incoming` event uses a separate `rtc_...` call ID.
 	SessionID string `json:"session_id" api:"required"`
 	// Headers from the SIP INVITE, excluding SIP authorization headers. Retained
 	// names, values, repeated entries, and order are preserved. Treat these values as
@@ -729,9 +732,98 @@ const (
 	LiveCallIncomingWebhookEventObjectEvent LiveCallIncomingWebhookEventObject = "event"
 )
 
-// Sent when an incoming API SIP session is available for Realtime acceptance. The
-// same pending session can also emit `live.call.incoming`; the first successful
+// Sent when an incoming API SIP session is available for Live acceptance. The same
+// pending session can also emit `realtime.call.incoming`; the first successful
 // Realtime or Live accept endpoint selects the runtime surface.
+type LiveTransportIncomingWebhookEvent struct {
+	// The unique ID of the event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp (in seconds) of when the event was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// Event data payload.
+	Data LiveTransportIncomingWebhookEventData `json:"data" api:"required"`
+	// The type of the event. Always `live.transport.incoming`.
+	Type constant.LiveTransportIncoming `json:"type" default:"live.transport.incoming"`
+	// The object of the event. Always `event`.
+	//
+	// Any of "event".
+	Object LiveTransportIncomingWebhookEventObject `json:"object"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Type        respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r LiveTransportIncomingWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *LiveTransportIncomingWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Event data payload.
+type LiveTransportIncomingWebhookEventData struct {
+	// The `live_...` ID of the pending SIP session. Forward this value unchanged when
+	// accepting or rejecting the call through the Live API.
+	SessionID string `json:"session_id" api:"required"`
+	// Headers from the SIP INVITE, excluding SIP authorization headers. Retained
+	// names, values, repeated entries, and order are preserved. Treat these values as
+	// untrusted call metadata.
+	SipHeaders []LiveTransportIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
+	// The incoming transport type. Always `sip`.
+	Type constant.Sip `json:"type" default:"sip"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		SessionID   respjson.Field
+		SipHeaders  respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r LiveTransportIncomingWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *LiveTransportIncomingWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A header from the SIP Invite.
+type LiveTransportIncomingWebhookEventDataSipHeader struct {
+	// Name of the SIP Header.
+	Name string `json:"name" api:"required"`
+	// Value of the SIP Header.
+	Value string `json:"value" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Name        respjson.Field
+		Value       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r LiveTransportIncomingWebhookEventDataSipHeader) RawJSON() string { return r.JSON.raw }
+func (r *LiveTransportIncomingWebhookEventDataSipHeader) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The object of the event. Always `event`.
+type LiveTransportIncomingWebhookEventObject string
+
+const (
+	LiveTransportIncomingWebhookEventObjectEvent LiveTransportIncomingWebhookEventObject = "event"
+)
+
+// Sent when an incoming API SIP session is available for Realtime acceptance. The
+// same pending session can also emit `live.transport.incoming`; the first
+// successful Realtime or Live accept endpoint selects the runtime surface.
 type RealtimeCallIncomingWebhookEvent struct {
 	// The unique ID of the event.
 	ID string `json:"id" api:"required"`
@@ -766,7 +858,7 @@ func (r *RealtimeCallIncomingWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type RealtimeCallIncomingWebhookEventData struct {
 	// The Transceiver `rtc_...` ID of the pending SIP session. The paired
-	// `live.call.incoming` event derives its `session_id` by replacing the `rtc_`
+	// `live.transport.incoming` event derives its `session_id` by replacing the `rtc_`
 	// prefix with `live_`. Use the ID returned by the event with the corresponding
 	// Realtime or Live API.
 	CallID string `json:"call_id" api:"required"`
@@ -1143,10 +1235,11 @@ func (r *SafetyOrgAlertCreatedWebhookEventData) UnmarshalJSON(data []byte) error
 // [EvalRunCanceledWebhookEvent], [EvalRunFailedWebhookEvent],
 // [EvalRunSucceededWebhookEvent], [FineTuningJobCancelledWebhookEvent],
 // [FineTuningJobFailedWebhookEvent], [FineTuningJobSucceededWebhookEvent],
-// [LiveCallIncomingWebhookEvent], [RealtimeCallIncomingWebhookEvent],
-// [ResponseCancelledWebhookEvent], [ResponseCompletedWebhookEvent],
-// [ResponseFailedWebhookEvent], [ResponseIncompleteWebhookEvent],
-// [SafetyAlertCreatedWebhookEvent], [SafetyOrgAlertCreatedWebhookEvent].
+// [LiveCallIncomingWebhookEvent], [LiveTransportIncomingWebhookEvent],
+// [RealtimeCallIncomingWebhookEvent], [ResponseCancelledWebhookEvent],
+// [ResponseCompletedWebhookEvent], [ResponseFailedWebhookEvent],
+// [ResponseIncompleteWebhookEvent], [SafetyAlertCreatedWebhookEvent],
+// [SafetyOrgAlertCreatedWebhookEvent].
 //
 // Use the [UnwrapWebhookEventUnion.AsAny] method to switch on the variant.
 //
@@ -1160,17 +1253,18 @@ type UnwrapWebhookEventUnion struct {
 	// [EvalRunFailedWebhookEventData], [EvalRunSucceededWebhookEventData],
 	// [FineTuningJobCancelledWebhookEventData], [FineTuningJobFailedWebhookEventData],
 	// [FineTuningJobSucceededWebhookEventData], [LiveCallIncomingWebhookEventData],
-	// [RealtimeCallIncomingWebhookEventData], [ResponseCancelledWebhookEventData],
-	// [ResponseCompletedWebhookEventData], [ResponseFailedWebhookEventData],
-	// [ResponseIncompleteWebhookEventData], [SafetyAlertCreatedWebhookEventData],
-	// [SafetyOrgAlertCreatedWebhookEventData]
+	// [LiveTransportIncomingWebhookEventData], [RealtimeCallIncomingWebhookEventData],
+	// [ResponseCancelledWebhookEventData], [ResponseCompletedWebhookEventData],
+	// [ResponseFailedWebhookEventData], [ResponseIncompleteWebhookEventData],
+	// [SafetyAlertCreatedWebhookEventData], [SafetyOrgAlertCreatedWebhookEventData]
 	Data UnwrapWebhookEventUnionData `json:"data"`
 	// Any of "batch.cancelled", "batch.completed", "batch.expired", "batch.failed",
 	// "eval.run.canceled", "eval.run.failed", "eval.run.succeeded",
 	// "fine_tuning.job.cancelled", "fine_tuning.job.failed",
-	// "fine_tuning.job.succeeded", "live.call.incoming", "realtime.call.incoming",
-	// "response.cancelled", "response.completed", "response.failed",
-	// "response.incomplete", "safety.alert.created", "safety.org_alert.created".
+	// "fine_tuning.job.succeeded", "live.call.incoming", "live.transport.incoming",
+	// "realtime.call.incoming", "response.cancelled", "response.completed",
+	// "response.failed", "response.incomplete", "safety.alert.created",
+	// "safety.org_alert.created".
 	Type   string `json:"type"`
 	Object string `json:"object"`
 	JSON   struct {
@@ -1201,6 +1295,7 @@ func (FineTuningJobCancelledWebhookEvent) implUnwrapWebhookEventUnion() {}
 func (FineTuningJobFailedWebhookEvent) implUnwrapWebhookEventUnion()    {}
 func (FineTuningJobSucceededWebhookEvent) implUnwrapWebhookEventUnion() {}
 func (LiveCallIncomingWebhookEvent) implUnwrapWebhookEventUnion()       {}
+func (LiveTransportIncomingWebhookEvent) implUnwrapWebhookEventUnion()  {}
 func (RealtimeCallIncomingWebhookEvent) implUnwrapWebhookEventUnion()   {}
 func (ResponseCancelledWebhookEvent) implUnwrapWebhookEventUnion()      {}
 func (ResponseCompletedWebhookEvent) implUnwrapWebhookEventUnion()      {}
@@ -1223,6 +1318,7 @@ func (SafetyOrgAlertCreatedWebhookEvent) implUnwrapWebhookEventUnion()  {}
 //	case webhooks.FineTuningJobFailedWebhookEvent:
 //	case webhooks.FineTuningJobSucceededWebhookEvent:
 //	case webhooks.LiveCallIncomingWebhookEvent:
+//	case webhooks.LiveTransportIncomingWebhookEvent:
 //	case webhooks.RealtimeCallIncomingWebhookEvent:
 //	case webhooks.ResponseCancelledWebhookEvent:
 //	case webhooks.ResponseCompletedWebhookEvent:
@@ -1257,6 +1353,8 @@ func (u UnwrapWebhookEventUnion) AsAny() anyUnwrapWebhookEvent {
 		return u.AsFineTuningJobSucceeded()
 	case "live.call.incoming":
 		return u.AsLiveCallIncoming()
+	case "live.transport.incoming":
+		return u.AsLiveTransportIncoming()
 	case "realtime.call.incoming":
 		return u.AsRealtimeCallIncoming()
 	case "response.cancelled":
@@ -1330,6 +1428,11 @@ func (u UnwrapWebhookEventUnion) AsLiveCallIncoming() (v LiveCallIncomingWebhook
 	return
 }
 
+func (u UnwrapWebhookEventUnion) AsLiveTransportIncoming() (v LiveTransportIncomingWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
 func (u UnwrapWebhookEventUnion) AsRealtimeCallIncoming() (v RealtimeCallIncomingWebhookEvent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
@@ -1379,18 +1482,21 @@ func (r *UnwrapWebhookEventUnion) UnmarshalJSON(data []byte) error {
 // For type safety it is recommended to directly use a variant of the
 // [UnwrapWebhookEventUnion].
 type UnwrapWebhookEventUnionData struct {
-	ID string `json:"id"`
-	// This field is from variant [LiveCallIncomingWebhookEventData].
+	ID        string `json:"id"`
 	SessionID string `json:"session_id"`
 	// This field is a union of [[]LiveCallIncomingWebhookEventDataSipHeader],
+	// [[]LiveTransportIncomingWebhookEventDataSipHeader],
 	// [[]RealtimeCallIncomingWebhookEventDataSipHeader]
 	SipHeaders UnwrapWebhookEventUnionDataSipHeaders `json:"sip_headers"`
+	// This field is from variant [LiveTransportIncomingWebhookEventData].
+	Type constant.Sip `json:"type"`
 	// This field is from variant [RealtimeCallIncomingWebhookEventData].
 	CallID string `json:"call_id"`
 	JSON   struct {
 		ID         respjson.Field
 		SessionID  respjson.Field
 		SipHeaders respjson.Field
+		Type       respjson.Field
 		CallID     respjson.Field
 		raw        string
 	} `json:"-"`
@@ -1409,18 +1515,23 @@ func (r *UnwrapWebhookEventUnionData) UnmarshalJSON(data []byte) error {
 //
 // If the underlying value is not a json object, one of the following properties
 // will be valid: OfLiveCallIncomingWebhookEventDataSipHeaders
+// OfLiveTransportIncomingWebhookEventDataSipHeaders
 // OfRealtimeCallIncomingWebhookEventDataSipHeaders]
 type UnwrapWebhookEventUnionDataSipHeaders struct {
 	// This field will be present if the value is a
 	// [[]LiveCallIncomingWebhookEventDataSipHeader] instead of an object.
 	OfLiveCallIncomingWebhookEventDataSipHeaders []LiveCallIncomingWebhookEventDataSipHeader `json:",inline"`
 	// This field will be present if the value is a
+	// [[]LiveTransportIncomingWebhookEventDataSipHeader] instead of an object.
+	OfLiveTransportIncomingWebhookEventDataSipHeaders []LiveTransportIncomingWebhookEventDataSipHeader `json:",inline"`
+	// This field will be present if the value is a
 	// [[]RealtimeCallIncomingWebhookEventDataSipHeader] instead of an object.
 	OfRealtimeCallIncomingWebhookEventDataSipHeaders []RealtimeCallIncomingWebhookEventDataSipHeader `json:",inline"`
 	JSON                                             struct {
-		OfLiveCallIncomingWebhookEventDataSipHeaders     respjson.Field
-		OfRealtimeCallIncomingWebhookEventDataSipHeaders respjson.Field
-		raw                                              string
+		OfLiveCallIncomingWebhookEventDataSipHeaders      respjson.Field
+		OfLiveTransportIncomingWebhookEventDataSipHeaders respjson.Field
+		OfRealtimeCallIncomingWebhookEventDataSipHeaders  respjson.Field
+		raw                                               string
 	} `json:"-"`
 }
 
