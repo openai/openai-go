@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -30,7 +30,7 @@ type AdminOrganizationDataRetentionService struct {
 // client's options (if there is one), and before any request-specific options.
 func NewAdminOrganizationDataRetentionService(opts ...option.RequestOption) (r AdminOrganizationDataRetentionService) {
 	r = AdminOrganizationDataRetentionService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

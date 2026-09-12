@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -167,6 +167,7 @@ func TestAdminOrganizationUsageCostsWithOptionalParams(t *testing.T) {
 		EndTime:     openai.Int(0),
 		GroupBy:     []string{"project_id"},
 		Limit:       openai.Int(0),
+		LineItems:   []string{"string"},
 		Page:        openai.String("page"),
 		ProjectIDs:  []string{"string"},
 	})

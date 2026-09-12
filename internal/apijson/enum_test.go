@@ -74,14 +74,14 @@ func TestEnumStructStringValidator(t *testing.T) {
 		var dst EnumStruct
 
 		dec := decoderBuilder{root: true}
-		exactness, _ := dec.unmarshalWithExactness([]byte(raw), &dst)
+		gotExactness, _ := dec.unmarshalWithExactness([]byte(raw), &dst)
 
 		if !reflect.DeepEqual(dst, expected.EnumStruct) {
 			t.Fatalf("failed equality check %#v", dst)
 		}
 
-		if exactness != expected.exactness {
-			t.Fatalf("exactness got %d expected %d %s", exactness, expected.exactness, raw)
+		if gotExactness != expected.exactness {
+			t.Fatalf("exactness got %d expected %d %s", gotExactness, expected.exactness, raw)
 		}
 	}
 }

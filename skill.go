@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -40,7 +40,7 @@ type SkillService struct {
 // is one), and before any request-specific options.
 func NewSkillService(opts ...option.RequestOption) (r SkillService) {
 	r = SkillService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Content = NewSkillContentService(opts...)
 	r.Versions = NewSkillVersionService(opts...)
 	return
@@ -216,7 +216,7 @@ func (r SkillNewParams) MarshalMultipart() (data []byte, contentType string, err
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()
@@ -240,15 +240,6 @@ func (u SkillNewParamsFilesUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *SkillNewParamsFilesUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *SkillNewParamsFilesUnion) asAny() any {
-	if !param.IsOmitted(u.OfFileArray) {
-		return &u.OfFileArray
-	} else if !param.IsOmitted(u.OfFile) {
-		return &u.OfFile
-	}
-	return nil
 }
 
 type SkillUpdateParams struct {

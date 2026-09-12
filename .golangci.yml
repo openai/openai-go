@@ -1,0 +1,58 @@
+version: "2"
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+formatters:
+  enable:
+    - gofmt
+  exclusions:
+    generated: disable
+
+linters:
+  default: none
+  enable:
+    - bodyclose
+    - durationcheck
+    - errcheck
+    - errchkjson
+    - errorlint
+    - govet
+    - ineffassign
+    - makezero
+    - nilerr
+    - nilnesserr
+    - nolintlint
+    - staticcheck
+    - unused
+  exclusions:
+    generated: disable
+  settings:
+    errorlint:
+      # Wrapping an existing public error changes its errors.Is/As contract.
+      # Keep format-verb checks disabled until wrapping is reviewed separately.
+      errorf: false
+      allowed-errors:
+        # io.Reader EOF and net/http redirect sentinels require identity.
+        - err: io.EOF
+          fun: (*github.com/openai/openai-go/v3/internal/encoding/json.Decoder).refill
+        - err: net/http.ErrUseLastResponse
+          fun: (*net/http.Client).CheckRedirect
+    govet:
+      enable-all: true
+      disable:
+        # fieldalignment is not part of normal go vet or gopls: layout advice
+        # rarely identifies a real problem and may introduce false sharing.
+        # Reordering exported handwritten or generated structs also breaks
+        # positional literals and compatibility-critical schema field order.
+        - fieldalignment
+    nolintlint:
+      # A disabled analyzer cannot reliably prove whether its directive is stale.
+      allow-unused: true
+      require-explanation: true
+      require-specific: true
+    staticcheck:
+      checks:
+        - "SA*"
+        - "S1009"

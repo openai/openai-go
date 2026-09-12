@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -40,7 +40,7 @@ type BetaThreadMessageService struct {
 // options (if there is one), and before any request-specific options.
 func NewBetaThreadMessageService(opts ...option.RequestOption) (r BetaThreadMessageService) {
 	r = BetaThreadMessageService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
@@ -207,12 +207,12 @@ func (u AnnotationUnion) AsAny() anyAnnotation {
 }
 
 func (u AnnotationUnion) AsFileCitation() (v FileCitationAnnotation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AnnotationUnion) AsFilePath() (v FilePathAnnotation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -280,12 +280,12 @@ func (u AnnotationDeltaUnion) AsAny() anyAnnotationDelta {
 }
 
 func (u AnnotationDeltaUnion) AsFileCitation() (v FileCitationDeltaAnnotation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AnnotationDeltaUnion) AsFilePath() (v FilePathDeltaAnnotation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -488,9 +488,9 @@ func (r *FilePathDeltaAnnotationFilePath) UnmarshalJSON(data []byte) error {
 }
 
 type ImageFile struct {
-	// The [File](https://platform.openai.com/docs/api-reference/files) ID of the image
-	// in the message content. Set `purpose="vision"` when uploading the File if you
-	// need to later display the file content.
+	// The [File](https://developers.openai.com/api/reference/resources/files) ID of
+	// the image in the message content. Set `purpose="vision"` when uploading the File
+	// if you need to later display the file content.
 	FileID string `json:"file_id" api:"required"`
 	// Specifies the detail level of the image if specified by the user. `low` uses
 	// fewer tokens, you can opt in to high resolution using `high`.
@@ -533,9 +533,9 @@ const (
 
 // The property FileID is required.
 type ImageFileParam struct {
-	// The [File](https://platform.openai.com/docs/api-reference/files) ID of the image
-	// in the message content. Set `purpose="vision"` when uploading the File if you
-	// need to later display the file content.
+	// The [File](https://developers.openai.com/api/reference/resources/files) ID of
+	// the image in the message content. Set `purpose="vision"` when uploading the File
+	// if you need to later display the file content.
 	FileID string `json:"file_id" api:"required"`
 	// Specifies the detail level of the image if specified by the user. `low` uses
 	// fewer tokens, you can opt in to high resolution using `high`.
@@ -553,8 +553,9 @@ func (r *ImageFileParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// References an image [File](https://platform.openai.com/docs/api-reference/files)
-// in the content of a message.
+// References an image
+// [File](https://developers.openai.com/api/reference/resources/files) in the
+// content of a message.
 type ImageFileContentBlock struct {
 	ImageFile ImageFile `json:"image_file" api:"required"`
 	// Always `image_file`.
@@ -583,8 +584,9 @@ func (r ImageFileContentBlock) ToParam() ImageFileContentBlockParam {
 	return param.Override[ImageFileContentBlockParam](json.RawMessage(r.RawJSON()))
 }
 
-// References an image [File](https://platform.openai.com/docs/api-reference/files)
-// in the content of a message.
+// References an image
+// [File](https://developers.openai.com/api/reference/resources/files) in the
+// content of a message.
 //
 // The properties ImageFile, Type are required.
 type ImageFileContentBlockParam struct {
@@ -610,9 +612,9 @@ type ImageFileDelta struct {
 	//
 	// Any of "auto", "low", "high".
 	Detail ImageFileDeltaDetail `json:"detail"`
-	// The [File](https://platform.openai.com/docs/api-reference/files) ID of the image
-	// in the message content. Set `purpose="vision"` when uploading the File if you
-	// need to later display the file content.
+	// The [File](https://developers.openai.com/api/reference/resources/files) ID of
+	// the image in the message content. Set `purpose="vision"` when uploading the File
+	// if you need to later display the file content.
 	FileID string `json:"file_id"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -639,8 +641,9 @@ const (
 	ImageFileDeltaDetailHigh ImageFileDeltaDetail = "high"
 )
 
-// References an image [File](https://platform.openai.com/docs/api-reference/files)
-// in the content of a message.
+// References an image
+// [File](https://developers.openai.com/api/reference/resources/files) in the
+// content of a message.
 type ImageFileDeltaBlock struct {
 	// The index of the content part in the message.
 	Index int64 `json:"index" api:"required"`
@@ -834,12 +837,12 @@ func (r *ImageURLDeltaBlock) UnmarshalJSON(data []byte) error {
 }
 
 // Represents a message within a
-// [thread](https://platform.openai.com/docs/api-reference/threads).
+// [thread](https://developers.openai.com/api/docs/assistants/migration).
 type Message struct {
 	// The identifier, which can be referenced in API endpoints.
 	ID string `json:"id" api:"required"`
 	// If applicable, the ID of the
-	// [assistant](https://platform.openai.com/docs/api-reference/assistants) that
+	// [assistant](https://developers.openai.com/api/docs/assistants/migration) that
 	// authored this message.
 	AssistantID string `json:"assistant_id" api:"required"`
 	// A list of files attached to the message, and the tools they were added to.
@@ -867,7 +870,7 @@ type Message struct {
 	//
 	// Any of "user", "assistant".
 	Role MessageRole `json:"role" api:"required"`
-	// The ID of the [run](https://platform.openai.com/docs/api-reference/runs)
+	// The ID of the [run](https://developers.openai.com/api/docs/assistants/migration)
 	// associated with the creation of this message. Value is `null` when messages are
 	// created manually using the create message or create thread endpoints.
 	RunID string `json:"run_id" api:"required"`
@@ -876,8 +879,8 @@ type Message struct {
 	//
 	// Any of "in_progress", "incomplete", "completed".
 	Status MessageStatus `json:"status" api:"required"`
-	// The [thread](https://platform.openai.com/docs/api-reference/threads) ID that
-	// this message belongs to.
+	// The [thread](https://developers.openai.com/api/docs/assistants/migration) ID
+	// that this message belongs to.
 	ThreadID string `json:"thread_id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -941,12 +944,12 @@ type MessageAttachmentToolUnion struct {
 }
 
 func (u MessageAttachmentToolUnion) AsCodeInterpreterTool() (v CodeInterpreterTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageAttachmentToolUnion) AsFileSearchTool() (v MessageAttachmentToolFileSearchTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1077,22 +1080,22 @@ func (u MessageContentUnion) AsAny() anyMessageContent {
 }
 
 func (u MessageContentUnion) AsImageFile() (v ImageFileContentBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentUnion) AsImageURL() (v ImageURLContentBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentUnion) AsText() (v TextContentBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentUnion) AsRefusal() (v RefusalContentBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1170,22 +1173,22 @@ func (u MessageContentDeltaUnion) AsAny() anyMessageContentDelta {
 }
 
 func (u MessageContentDeltaUnion) AsImageFile() (v ImageFileDeltaBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentDeltaUnion) AsText() (v TextDeltaBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentDeltaUnion) AsRefusal() (v RefusalDeltaBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentDeltaUnion) AsImageURL() (v ImageURLDeltaBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1229,17 +1232,6 @@ func (u MessageContentPartParamUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *MessageContentPartParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *MessageContentPartParamUnion) asAny() any {
-	if !param.IsOmitted(u.OfImageFile) {
-		return u.OfImageFile
-	} else if !param.IsOmitted(u.OfImageURL) {
-		return u.OfImageURL
-	} else if !param.IsOmitted(u.OfText) {
-		return u.OfText
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -1556,15 +1548,6 @@ func (u *BetaThreadMessageNewParamsContentUnion) UnmarshalJSON(data []byte) erro
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *BetaThreadMessageNewParamsContentUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfContentParts) {
-		return &u.OfArrayOfContentParts
-	}
-	return nil
-}
-
 // The role of the entity that is creating the message. Allowed values include:
 //
 //   - `user`: Indicates the message is sent by an actual user and should be used in
@@ -1608,15 +1591,6 @@ func (u BetaThreadMessageNewParamsAttachmentToolUnion) MarshalJSON() ([]byte, er
 }
 func (u *BetaThreadMessageNewParamsAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *BetaThreadMessageNewParamsAttachmentToolUnion) asAny() any {
-	if !param.IsOmitted(u.OfCodeInterpreter) {
-		return u.OfCodeInterpreter
-	} else if !param.IsOmitted(u.OfFileSearch) {
-		return u.OfFileSearch
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.

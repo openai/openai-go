@@ -326,7 +326,8 @@ func TestOptionalInterfaceAssignability(t *testing.T) {
 		t.Fatalf("unexpected successful assignment")
 	}
 
-	notOpt.implOpt() // silence the warning
+	_ = notOpt.isZero()
+	notOpt.implOpt()
 }
 
 type PrimitiveUnion struct {

@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -35,7 +35,7 @@ type AudioTranslationService struct {
 // options (if there is one), and before any request-specific options.
 func NewAudioTranslationService(opts ...option.RequestOption) (r AudioTranslationService) {
 	r = AudioTranslationService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
@@ -66,14 +66,16 @@ func (r *Translation) UnmarshalJSON(data []byte) error {
 
 type AudioTranslationNewParams struct {
 	// The audio file object (not file name) translate, in one of these formats: flac,
-	// mp3, mp4, mpeg, mpga, m4a, ogg, wav, or webm.
+	// mp3, mp4, mpeg, mpga, m4a, ogg, wav, or webm. The request must include enough
+	// format metadata for the file to be identified. We recommend an extension-bearing
+	// filename and an appropriate content type.
 	File io.Reader `json:"file,omitzero" api:"required" format:"binary"`
 	// ID of the model to use. Only `whisper-1` (which is powered by our open source
 	// Whisper V2 model) is currently available.
 	Model AudioModel `json:"model,omitzero" api:"required"`
 	// An optional text to guide the model's style or continue a previous audio
 	// segment. The
-	// [prompt](https://platform.openai.com/docs/guides/speech-to-text#prompting)
+	// [prompt](https://developers.openai.com/api/docs/guides/speech-to-text#prompting)
 	// should be in English.
 	Prompt param.Opt[string] `json:"prompt,omitzero"`
 	// The sampling temperature, between 0 and 1. Higher values like 0.8 will make the
@@ -98,7 +100,7 @@ func (r AudioTranslationNewParams) MarshalMultipart() (data []byte, contentType 
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()

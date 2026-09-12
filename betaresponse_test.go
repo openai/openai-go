@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -45,7 +45,7 @@ func TestBetaResponseNewWithOptionalParams(t *testing.T) {
 		Metadata: map[string]string{
 			"foo": "string",
 		},
-		Model: openai.BetaResponseNewParamsModelGPT5_1,
+		Model: openai.BetaResponseNewParamsModelGPT6Astra,
 		Moderation: openai.BetaResponseNewParamsModeration{
 			Model: "model",
 			Policy: openai.BetaResponseNewParamsModerationPolicy{
@@ -74,8 +74,9 @@ func TestBetaResponseNewWithOptionalParams(t *testing.T) {
 		},
 		PromptCacheKey: openai.String("prompt-cache-key-1234"),
 		PromptCacheOptions: openai.BetaResponseNewParamsPromptCacheOptions{
-			Mode: "implicit",
-			Ttl:  "30m",
+			ComparisonResponseID: openai.String("resp_123"),
+			Mode:                 "implicit",
+			Ttl:                  "30m",
 		},
 		PromptCacheRetention: openai.BetaResponseNewParamsPromptCacheRetentionInMemory,
 		Reasoning: openai.BetaResponseNewParamsReasoning{
@@ -109,6 +110,7 @@ func TestBetaResponseNewWithOptionalParams(t *testing.T) {
 				},
 				Strict:         openai.Bool(true),
 				AllowedCallers: []string{"direct"},
+				Async:          openai.Bool(true),
 				DeferLoading:   openai.Bool(true),
 				Description:    openai.String("description"),
 				OutputSchema: map[string]any{
@@ -235,7 +237,7 @@ func TestBetaResponseCompactWithOptionalParams(t *testing.T) {
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Responses.Compact(context.TODO(), openai.BetaResponseCompactParams{
-		Model: openai.BetaResponseCompactParamsModelGPT5_6Sol,
+		Model: openai.BetaResponseCompactParamsModelGPT6Astra,
 		Input: openai.BetaResponseCompactParamsInputUnion{
 			OfString: openai.String("string"),
 		},

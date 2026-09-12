@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package realtime
 
@@ -32,7 +32,7 @@ type ClientSecretService struct {
 // there is one), and before any request-specific options.
 func NewClientSecretService(opts ...option.RequestOption) (r ClientSecretService) {
 	r = ClientSecretService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
@@ -47,7 +47,7 @@ func NewClientSecretService(opts ...option.RequestOption) (r ClientSecretService
 // will be applied to any sessions created using that client secret, but these can
 // also be overridden by the client connection.
 //
-// [Learn more about authentication with client secrets over WebRTC](https://platform.openai.com/docs/guides/realtime-webrtc).
+// [Learn more about authentication with client secrets over WebRTC](https://developers.openai.com/api/docs/guides/realtime-webrtc).
 //
 // Returns the created client secret and the effective session object. The client
 // secret is a string that looks like `ek_1234`.
@@ -104,7 +104,7 @@ type RealtimeSessionCreateResponse struct {
 	// Any of "text", "audio".
 	OutputModalities []string `json:"output_modalities"`
 	// Reference to a prompt template and its variables.
-	// [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
+	// [Learn more](https://developers.openai.com/api/docs/guides/text?api-mode=responses#version-prompts-in-code).
 	Prompt responses.ResponsePrompt `json:"prompt" api:"nullable"`
 	// Configuration for reasoning-capable Realtime models such as `gpt-realtime-2`.
 	Reasoning RealtimeReasoning `json:"reasoning"`
@@ -332,12 +332,12 @@ func (u RealtimeSessionCreateResponseAudioInputTurnDetectionUnion) AsAny() anyRe
 }
 
 func (u RealtimeSessionCreateResponseAudioInputTurnDetectionUnion) AsServerVad() (v RealtimeSessionCreateResponseAudioInputTurnDetectionServerVad) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseAudioInputTurnDetectionUnion) AsSemanticVad() (v RealtimeSessionCreateResponseAudioInputTurnDetectionSemanticVad) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -507,12 +507,12 @@ type RealtimeSessionCreateResponseMaxOutputTokensUnion struct {
 }
 
 func (u RealtimeSessionCreateResponseMaxOutputTokensUnion) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseMaxOutputTokensUnion) AsInf() (v constant.Inf) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -574,17 +574,17 @@ type RealtimeSessionCreateResponseToolChoiceUnion struct {
 }
 
 func (u RealtimeSessionCreateResponseToolChoiceUnion) AsToolChoiceMode() (v responses.ToolChoiceOptions) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseToolChoiceUnion) AsFunctionTool() (v responses.ToolChoiceFunction) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseToolChoiceUnion) AsMcpTool() (v responses.ToolChoiceMcp) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -650,12 +650,12 @@ type RealtimeSessionCreateResponseToolUnion struct {
 }
 
 func (u RealtimeSessionCreateResponseToolUnion) AsFunctionTool() (v RealtimeFunctionTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseToolUnion) AsMcpTool() (v RealtimeSessionCreateResponseToolMcpTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -668,7 +668,7 @@ func (r *RealtimeSessionCreateResponseToolUnion) UnmarshalJSON(data []byte) erro
 
 // Give the model access to additional tools via remote Model Context Protocol
 // (MCP) servers.
-// [Learn more about MCP](https://platform.openai.com/docs/guides/tools-remote-mcp).
+// [Learn more about MCP](https://developers.openai.com/api/docs/guides/tools-connectors-mcp).
 type RealtimeSessionCreateResponseToolMcpTool struct {
 	// A label for this MCP server, used to identify it in tool calls.
 	ServerLabel string `json:"server_label" api:"required"`
@@ -687,7 +687,7 @@ type RealtimeSessionCreateResponseToolMcpTool struct {
 	// Identifier for service connectors, like those available in ChatGPT. One of
 	// `server_url`, `connector_id`, or `tunnel_id` must be provided. Learn more about
 	// service connectors
-	// [here](https://platform.openai.com/docs/guides/tools-remote-mcp#connectors).
+	// [here](https://developers.openai.com/api/docs/guides/tools-connectors-mcp#connectors).
 	//
 	// Currently supported `connector_id` values are:
 	//
@@ -770,12 +770,12 @@ type RealtimeSessionCreateResponseToolMcpToolAllowedToolsUnion struct {
 }
 
 func (u RealtimeSessionCreateResponseToolMcpToolAllowedToolsUnion) AsMcpAllowedTools() (v []string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseToolMcpToolAllowedToolsUnion) AsMcpToolFilter() (v RealtimeSessionCreateResponseToolMcpToolAllowedToolsMcpToolFilter) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -841,12 +841,12 @@ type RealtimeSessionCreateResponseToolMcpToolRequireApprovalUnion struct {
 }
 
 func (u RealtimeSessionCreateResponseToolMcpToolRequireApprovalUnion) AsMcpToolApprovalFilter() (v RealtimeSessionCreateResponseToolMcpToolRequireApprovalMcpToolApprovalFilter) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseToolMcpToolRequireApprovalUnion) AsMcpToolApprovalSetting() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -976,12 +976,12 @@ type RealtimeSessionCreateResponseTracingUnion struct {
 }
 
 func (u RealtimeSessionCreateResponseTracingUnion) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseTracingUnion) AsTracingConfiguration() (v RealtimeSessionCreateResponseTracingTracingConfiguration) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1273,12 +1273,12 @@ func (u ClientSecretNewResponseSessionUnion) AsAny() anyClientSecretNewResponseS
 }
 
 func (u ClientSecretNewResponseSessionUnion) AsRealtime() (v RealtimeSessionCreateResponse) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ClientSecretNewResponseSessionUnion) AsTranscription() (v RealtimeTranscriptionSessionCreateResponse) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1469,15 +1469,6 @@ func (u ClientSecretNewParamsSessionUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *ClientSecretNewParamsSessionUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ClientSecretNewParamsSessionUnion) asAny() any {
-	if !param.IsOmitted(u.OfRealtime) {
-		return u.OfRealtime
-	} else if !param.IsOmitted(u.OfTranscription) {
-		return u.OfTranscription
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.

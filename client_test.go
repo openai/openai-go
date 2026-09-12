@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -361,7 +361,7 @@ func TestContextDeadlineStreaming(t *testing.T) {
 					},
 				},
 			}},
-			Model: shared.ChatModelGPT5_4,
+			Model: shared.ChatModelGPT6Astra,
 		})
 		for stream.Next() {
 			_ = stream.Current()
@@ -418,7 +418,7 @@ func TestContextDeadlineStreamingWithRequestTimeout(t *testing.T) {
 						},
 					},
 				}},
-				Model: shared.ChatModelGPT5_4,
+				Model: shared.ChatModelGPT6Astra,
 			},
 			option.WithRequestTimeout((100 * time.Millisecond)),
 		)

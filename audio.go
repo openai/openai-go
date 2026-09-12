@@ -1,8 +1,9 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
 import (
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 )
 
@@ -27,7 +28,7 @@ type AudioService struct {
 // is one), and before any request-specific options.
 func NewAudioService(opts ...option.RequestOption) (r AudioService) {
 	r = AudioService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Transcriptions = NewAudioTranscriptionService(opts...)
 	r.Translations = NewAudioTranslationService(opts...)
 	r.Speech = NewAudioSpeechService(opts...)
@@ -38,6 +39,7 @@ type AudioModel = string
 
 const (
 	AudioModelWhisper1                      AudioModel = "whisper-1"
+	AudioModelGPTTranscribe                 AudioModel = "gpt-transcribe"
 	AudioModelGPT4oTranscribe               AudioModel = "gpt-4o-transcribe"
 	AudioModelGPT4oMiniTranscribe           AudioModel = "gpt-4o-mini-transcribe"
 	AudioModelGPT4oMiniTranscribe2025_12_15 AudioModel = "gpt-4o-mini-transcribe-2025-12-15"

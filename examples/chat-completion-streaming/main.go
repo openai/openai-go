@@ -24,6 +24,7 @@ func main() {
 		Seed:  openai.Int(0),
 		Model: openai.ChatModelGPT4o,
 	})
+	defer func() { _ = stream.Close() }()
 
 	for stream.Next() {
 		evt := stream.Current()

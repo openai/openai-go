@@ -13,6 +13,7 @@ package json
 import (
 	"encoding"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"github.com/openai/openai-go/v3/internal/encoding/json/shims"
 	"reflect"
@@ -256,14 +257,14 @@ func (d *decodeState) saveError(err error) {
 // addErrorContext returns a new error enhanced with information from d.errorContext
 func (d *decodeState) addErrorContext(err error) error {
 	if d.errorContext != nil && (d.errorContext.Struct != nil || len(d.errorContext.FieldStack) > 0) {
-		switch err := err.(type) {
-		case *UnmarshalTypeError:
-			err.Struct = d.errorContext.Struct.Name()
+		var typeError *UnmarshalTypeError
+		if errors.As(err, &typeError) {
+			typeError.Struct = d.errorContext.Struct.Name()
 			fieldStack := d.errorContext.FieldStack
-			if err.Field != "" {
-				fieldStack = append(fieldStack, err.Field)
+			if typeError.Field != "" {
+				fieldStack = append(fieldStack, typeError.Field)
 			}
-			err.Field = strings.Join(fieldStack, ".")
+			typeError.Field = strings.Join(fieldStack, ".")
 		}
 	}
 	return err

@@ -19,6 +19,9 @@ if [ -f "Brewfile" ] && [ "$(uname -s)" = "Darwin" ] && [ "${SKIP_BREW:-}" != "1
   }
 fi
 
+echo "==> Installing the locked Steady mock server…"
+./scripts/steady/install
+
 echo "==> Installing Go dependencies…"
 
 go mod tidy -e

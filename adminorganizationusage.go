@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -33,7 +33,7 @@ type AdminOrganizationUsageService struct {
 // options (if there is one), and before any request-specific options.
 func NewAdminOrganizationUsageService(opts ...option.RequestOption) (r AdminOrganizationUsageService) {
 	r = AdminOrganizationUsageService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
@@ -136,6 +136,21 @@ func (r *AdminOrganizationUsageService) WebSearchCalls(ctx context.Context, quer
 	return res, err
 }
 
+// The unit of the `quantity` value. If no single supported unit applies to the
+// result, this field is `null`.
+type CostQuantityUnit string
+
+const (
+	CostQuantityUnitTokens          CostQuantityUnit = "tokens"
+	CostQuantityUnit1000Tokens      CostQuantityUnit = "1000_tokens"
+	CostQuantityUnitDurationSeconds CostQuantityUnit = "duration_seconds"
+	CostQuantityUnitDurationMinutes CostQuantityUnit = "duration_minutes"
+	CostQuantityUnitDurationHours   CostQuantityUnit = "duration_hours"
+	CostQuantityUnitGibibyteHours   CostQuantityUnit = "gibibyte_hours"
+	CostQuantityUnitImages          CostQuantityUnit = "images"
+	CostQuantityUnitCharacters      CostQuantityUnit = "characters"
+)
+
 type AdminOrganizationUsageAudioSpeechesResponse struct {
 	Data     []AdminOrganizationUsageAudioSpeechesResponseData `json:"data" api:"required"`
 	HasMore  bool                                              `json:"has_more" api:"required"`
@@ -222,12 +237,39 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
-	InputCachedTokens int64  `json:"input_cached_tokens"`
-	Model             string `json:"model"`
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
-	OutputAudioTokens int64  `json:"output_audio_tokens"`
-	ProjectID         string `json:"project_id"`
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
+	InputUncachedTokens int64  `json:"input_uncached_tokens"`
+	Model               string `json:"model"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
+	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
+	OutputTextTokens int64  `json:"output_text_tokens"`
+	ProjectID        string `json:"project_id"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
 	ServiceTier string `json:"service_tier"`
@@ -269,34 +311,47 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		Images            respjson.Field
-		Size              respjson.Field
-		Source            respjson.Field
-		Characters        respjson.Field
-		Seconds           respjson.Field
-		UsageBytes        respjson.Field
-		NumSessions       respjson.Field
-		NumRequests       respjson.Field
-		VectorStoreID     respjson.Field
-		ContextLevel      respjson.Field
-		Amount            respjson.Field
-		LineItem          respjson.Field
-		Quantity          respjson.Field
-		raw               string
+	// This field is from variant
+	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResult].
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
+	JSON         struct {
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		Images                 respjson.Field
+		Size                   respjson.Field
+		Source                 respjson.Field
+		Characters             respjson.Field
+		Seconds                respjson.Field
+		UsageBytes             respjson.Field
+		NumSessions            respjson.Field
+		NumRequests            respjson.Field
+		VectorStoreID          respjson.Field
+		ContextLevel           respjson.Field
+		Amount                 respjson.Field
+		LineItem               respjson.Field
+		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -377,57 +432,57 @@ func (u AdminOrganizationUsageAudioSpeechesResponseDataResultUnion) AsAny() anyA
 }
 
 func (u AdminOrganizationUsageAudioSpeechesResponseDataResultUnion) AsOrganizationUsageCompletionsResult() (v AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioSpeechesResponseDataResultUnion) AsOrganizationUsageEmbeddingsResult() (v AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageEmbeddingsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioSpeechesResponseDataResultUnion) AsOrganizationUsageModerationsResult() (v AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageModerationsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioSpeechesResponseDataResultUnion) AsOrganizationUsageImagesResult() (v AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageImagesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioSpeechesResponseDataResultUnion) AsOrganizationUsageAudioSpeechesResult() (v AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageAudioSpeechesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioSpeechesResponseDataResultUnion) AsOrganizationUsageAudioTranscriptionsResult() (v AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageAudioTranscriptionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioSpeechesResponseDataResultUnion) AsOrganizationUsageVectorStoresResult() (v AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageVectorStoresResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioSpeechesResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioSpeechesResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageFileSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioSpeechesResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageWebSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioSpeechesResponseDataResultUnion) AsOrganizationCostsResult() (v AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -442,14 +497,16 @@ func (r *AdminOrganizationUsageAudioSpeechesResponseDataResultUnion) UnmarshalJS
 
 // The aggregated completions usage details of the specific time bucket.
 type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult struct {
-	// The aggregated number of text input tokens used, including cached tokens. For
-	// customers subscribe to scale tier, this includes scale tier tokens.
+	// The aggregated number of input tokens used, including cached and cache-write
+	// tokens. This includes text, audio, and image tokens. For customers subscribed to
+	// Scale Tier, this includes Scale Tier tokens.
 	InputTokens int64 `json:"input_tokens" api:"required"`
 	// The count of requests made to the model.
 	NumModelRequests int64                                       `json:"num_model_requests" api:"required"`
 	Object           constant.OrganizationUsageCompletionsResult `json:"object" default:"organization.usage.completions.result"`
-	// The aggregated number of text output tokens used. For customers subscribe to
-	// scale tier, this includes scale tier tokens.
+	// The aggregated number of output tokens used across text, audio, and image
+	// outputs. For customers subscribed to Scale Tier, this includes Scale Tier
+	// tokens.
 	OutputTokens int64 `json:"output_tokens" api:"required"`
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
@@ -457,17 +514,36 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompl
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
-	// The aggregated number of audio input tokens used, including cached tokens.
+	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of text input tokens that has been cached from previous
-	// requests. For customers subscribe to scale tier, this includes scale tier
-	// tokens.
+	// The aggregated number of input tokens written to the cache.
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
+	// The aggregated number of cached audio input tokens used.
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// The aggregated number of cached image input tokens used.
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// The aggregated number of cached text input tokens used.
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// The aggregated number of cached input tokens used across text, audio, and image
+	// inputs. For customers subscribed to Scale Tier, this includes Scale Tier tokens.
 	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// The aggregated number of uncached image input tokens used.
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// The aggregated number of uncached text input tokens used, excluding cache-write
+	// tokens.
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// The aggregated number of uncached input tokens used across text, audio, and
+	// image inputs, excluding cache-write tokens.
+	InputUncachedTokens int64 `json:"input_uncached_tokens"`
 	// When `group_by=model`, this field provides the model name of the grouped usage
 	// result.
 	Model string `json:"model" api:"nullable"`
 	// The aggregated number of audio output tokens used.
 	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// The aggregated number of image output tokens used.
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// The aggregated number of text output tokens used.
+	OutputTextTokens int64 `json:"output_text_tokens"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
@@ -479,21 +555,30 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompl
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		ExtraFields       map[string]respjson.Field
-		raw               string
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		ExtraFields            map[string]respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -871,16 +956,20 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResul
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -1001,12 +1090,39 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
-	InputCachedTokens int64  `json:"input_cached_tokens"`
-	Model             string `json:"model"`
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
-	OutputAudioTokens int64  `json:"output_audio_tokens"`
-	ProjectID         string `json:"project_id"`
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputUncachedTokens int64  `json:"input_uncached_tokens"`
+	Model               string `json:"model"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputTextTokens int64  `json:"output_text_tokens"`
+	ProjectID        string `json:"project_id"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
 	ServiceTier string `json:"service_tier"`
@@ -1048,34 +1164,47 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		Images            respjson.Field
-		Size              respjson.Field
-		Source            respjson.Field
-		Characters        respjson.Field
-		Seconds           respjson.Field
-		UsageBytes        respjson.Field
-		NumSessions       respjson.Field
-		NumRequests       respjson.Field
-		VectorStoreID     respjson.Field
-		ContextLevel      respjson.Field
-		Amount            respjson.Field
-		LineItem          respjson.Field
-		Quantity          respjson.Field
-		raw               string
+	// This field is from variant
+	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCostsResult].
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
+	JSON         struct {
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		Images                 respjson.Field
+		Size                   respjson.Field
+		Source                 respjson.Field
+		Characters             respjson.Field
+		Seconds                respjson.Field
+		UsageBytes             respjson.Field
+		NumSessions            respjson.Field
+		NumRequests            respjson.Field
+		VectorStoreID          respjson.Field
+		ContextLevel           respjson.Field
+		Amount                 respjson.Field
+		LineItem               respjson.Field
+		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -1157,57 +1286,57 @@ func (u AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion) AsAny(
 }
 
 func (u AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion) AsOrganizationUsageCompletionsResult() (v AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion) AsOrganizationUsageEmbeddingsResult() (v AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageEmbeddingsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion) AsOrganizationUsageModerationsResult() (v AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageModerationsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion) AsOrganizationUsageImagesResult() (v AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageImagesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion) AsOrganizationUsageAudioSpeechesResult() (v AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageAudioSpeechesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion) AsOrganizationUsageAudioTranscriptionsResult() (v AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageAudioTranscriptionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion) AsOrganizationUsageVectorStoresResult() (v AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageVectorStoresResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageFileSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageWebSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion) AsOrganizationCostsResult() (v AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCostsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1222,14 +1351,16 @@ func (r *AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion) Unmar
 
 // The aggregated completions usage details of the specific time bucket.
 type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult struct {
-	// The aggregated number of text input tokens used, including cached tokens. For
-	// customers subscribe to scale tier, this includes scale tier tokens.
+	// The aggregated number of input tokens used, including cached and cache-write
+	// tokens. This includes text, audio, and image tokens. For customers subscribed to
+	// Scale Tier, this includes Scale Tier tokens.
 	InputTokens int64 `json:"input_tokens" api:"required"`
 	// The count of requests made to the model.
 	NumModelRequests int64                                       `json:"num_model_requests" api:"required"`
 	Object           constant.OrganizationUsageCompletionsResult `json:"object" default:"organization.usage.completions.result"`
-	// The aggregated number of text output tokens used. For customers subscribe to
-	// scale tier, this includes scale tier tokens.
+	// The aggregated number of output tokens used across text, audio, and image
+	// outputs. For customers subscribed to Scale Tier, this includes Scale Tier
+	// tokens.
 	OutputTokens int64 `json:"output_tokens" api:"required"`
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
@@ -1237,17 +1368,36 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsag
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
-	// The aggregated number of audio input tokens used, including cached tokens.
+	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of text input tokens that has been cached from previous
-	// requests. For customers subscribe to scale tier, this includes scale tier
-	// tokens.
+	// The aggregated number of input tokens written to the cache.
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
+	// The aggregated number of cached audio input tokens used.
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// The aggregated number of cached image input tokens used.
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// The aggregated number of cached text input tokens used.
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// The aggregated number of cached input tokens used across text, audio, and image
+	// inputs. For customers subscribed to Scale Tier, this includes Scale Tier tokens.
 	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// The aggregated number of uncached image input tokens used.
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// The aggregated number of uncached text input tokens used, excluding cache-write
+	// tokens.
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// The aggregated number of uncached input tokens used across text, audio, and
+	// image inputs, excluding cache-write tokens.
+	InputUncachedTokens int64 `json:"input_uncached_tokens"`
 	// When `group_by=model`, this field provides the model name of the grouped usage
 	// result.
 	Model string `json:"model" api:"nullable"`
 	// The aggregated number of audio output tokens used.
 	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// The aggregated number of image output tokens used.
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// The aggregated number of text output tokens used.
+	OutputTextTokens int64 `json:"output_text_tokens"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
@@ -1259,21 +1409,30 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsag
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		ExtraFields       map[string]respjson.Field
-		raw               string
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		ExtraFields            map[string]respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -1651,16 +1810,20 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCost
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -1784,12 +1947,39 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion struct
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
-	InputCachedTokens int64  `json:"input_cached_tokens"`
-	Model             string `json:"model"`
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
-	OutputAudioTokens int64  `json:"output_audio_tokens"`
-	ProjectID         string `json:"project_id"`
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputUncachedTokens int64  `json:"input_uncached_tokens"`
+	Model               string `json:"model"`
+	// This field is from variant
+	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputTextTokens int64  `json:"output_text_tokens"`
+	ProjectID        string `json:"project_id"`
 	// This field is from variant
 	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
 	ServiceTier string `json:"service_tier"`
@@ -1831,34 +2021,47 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion struct
 	// This field is from variant
 	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		Images            respjson.Field
-		Size              respjson.Field
-		Source            respjson.Field
-		Characters        respjson.Field
-		Seconds           respjson.Field
-		UsageBytes        respjson.Field
-		NumSessions       respjson.Field
-		NumRequests       respjson.Field
-		VectorStoreID     respjson.Field
-		ContextLevel      respjson.Field
-		Amount            respjson.Field
-		LineItem          respjson.Field
-		Quantity          respjson.Field
-		raw               string
+	// This field is from variant
+	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationCostsResult].
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
+	JSON         struct {
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		Images                 respjson.Field
+		Size                   respjson.Field
+		Source                 respjson.Field
+		Characters             respjson.Field
+		Seconds                respjson.Field
+		UsageBytes             respjson.Field
+		NumSessions            respjson.Field
+		NumRequests            respjson.Field
+		VectorStoreID          respjson.Field
+		ContextLevel           respjson.Field
+		Amount                 respjson.Field
+		LineItem               respjson.Field
+		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -1940,57 +2143,57 @@ func (u AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion) As
 }
 
 func (u AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion) AsOrganizationUsageCompletionsResult() (v AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion) AsOrganizationUsageEmbeddingsResult() (v AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageEmbeddingsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion) AsOrganizationUsageModerationsResult() (v AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageModerationsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion) AsOrganizationUsageImagesResult() (v AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageImagesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion) AsOrganizationUsageAudioSpeechesResult() (v AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageAudioSpeechesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion) AsOrganizationUsageAudioTranscriptionsResult() (v AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageAudioTranscriptionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion) AsOrganizationUsageVectorStoresResult() (v AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageVectorStoresResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageFileSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageWebSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion) AsOrganizationCostsResult() (v AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationCostsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -2005,14 +2208,16 @@ func (r *AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion) U
 
 // The aggregated completions usage details of the specific time bucket.
 type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult struct {
-	// The aggregated number of text input tokens used, including cached tokens. For
-	// customers subscribe to scale tier, this includes scale tier tokens.
+	// The aggregated number of input tokens used, including cached and cache-write
+	// tokens. This includes text, audio, and image tokens. For customers subscribed to
+	// Scale Tier, this includes Scale Tier tokens.
 	InputTokens int64 `json:"input_tokens" api:"required"`
 	// The count of requests made to the model.
 	NumModelRequests int64                                       `json:"num_model_requests" api:"required"`
 	Object           constant.OrganizationUsageCompletionsResult `json:"object" default:"organization.usage.completions.result"`
-	// The aggregated number of text output tokens used. For customers subscribe to
-	// scale tier, this includes scale tier tokens.
+	// The aggregated number of output tokens used across text, audio, and image
+	// outputs. For customers subscribed to Scale Tier, this includes Scale Tier
+	// tokens.
 	OutputTokens int64 `json:"output_tokens" api:"required"`
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
@@ -2020,17 +2225,36 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganization
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
-	// The aggregated number of audio input tokens used, including cached tokens.
+	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of text input tokens that has been cached from previous
-	// requests. For customers subscribe to scale tier, this includes scale tier
-	// tokens.
+	// The aggregated number of input tokens written to the cache.
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
+	// The aggregated number of cached audio input tokens used.
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// The aggregated number of cached image input tokens used.
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// The aggregated number of cached text input tokens used.
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// The aggregated number of cached input tokens used across text, audio, and image
+	// inputs. For customers subscribed to Scale Tier, this includes Scale Tier tokens.
 	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// The aggregated number of uncached image input tokens used.
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// The aggregated number of uncached text input tokens used, excluding cache-write
+	// tokens.
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// The aggregated number of uncached input tokens used across text, audio, and
+	// image inputs, excluding cache-write tokens.
+	InputUncachedTokens int64 `json:"input_uncached_tokens"`
 	// When `group_by=model`, this field provides the model name of the grouped usage
 	// result.
 	Model string `json:"model" api:"nullable"`
 	// The aggregated number of audio output tokens used.
 	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// The aggregated number of image output tokens used.
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// The aggregated number of text output tokens used.
+	OutputTextTokens int64 `json:"output_text_tokens"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
@@ -2042,21 +2266,30 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganization
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		ExtraFields       map[string]respjson.Field
-		raw               string
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		ExtraFields            map[string]respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -2434,16 +2667,20 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganization
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -2564,12 +2801,39 @@ type AdminOrganizationUsageCompletionsResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
-	InputCachedTokens int64  `json:"input_cached_tokens"`
-	Model             string `json:"model"`
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
-	OutputAudioTokens int64  `json:"output_audio_tokens"`
-	ProjectID         string `json:"project_id"`
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputUncachedTokens int64  `json:"input_uncached_tokens"`
+	Model               string `json:"model"`
+	// This field is from variant
+	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputTextTokens int64  `json:"output_text_tokens"`
+	ProjectID        string `json:"project_id"`
 	// This field is from variant
 	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
 	ServiceTier string `json:"service_tier"`
@@ -2611,34 +2875,47 @@ type AdminOrganizationUsageCompletionsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		Images            respjson.Field
-		Size              respjson.Field
-		Source            respjson.Field
-		Characters        respjson.Field
-		Seconds           respjson.Field
-		UsageBytes        respjson.Field
-		NumSessions       respjson.Field
-		NumRequests       respjson.Field
-		VectorStoreID     respjson.Field
-		ContextLevel      respjson.Field
-		Amount            respjson.Field
-		LineItem          respjson.Field
-		Quantity          respjson.Field
-		raw               string
+	// This field is from variant
+	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult].
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
+	JSON         struct {
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		Images                 respjson.Field
+		Size                   respjson.Field
+		Source                 respjson.Field
+		Characters             respjson.Field
+		Seconds                respjson.Field
+		UsageBytes             respjson.Field
+		NumSessions            respjson.Field
+		NumRequests            respjson.Field
+		VectorStoreID          respjson.Field
+		ContextLevel           respjson.Field
+		Amount                 respjson.Field
+		LineItem               respjson.Field
+		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -2719,57 +2996,57 @@ func (u AdminOrganizationUsageCompletionsResponseDataResultUnion) AsAny() anyAdm
 }
 
 func (u AdminOrganizationUsageCompletionsResponseDataResultUnion) AsOrganizationUsageCompletionsResult() (v AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCompletionsResponseDataResultUnion) AsOrganizationUsageEmbeddingsResult() (v AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageEmbeddingsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCompletionsResponseDataResultUnion) AsOrganizationUsageModerationsResult() (v AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageModerationsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCompletionsResponseDataResultUnion) AsOrganizationUsageImagesResult() (v AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageImagesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCompletionsResponseDataResultUnion) AsOrganizationUsageAudioSpeechesResult() (v AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageAudioSpeechesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCompletionsResponseDataResultUnion) AsOrganizationUsageAudioTranscriptionsResult() (v AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageAudioTranscriptionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCompletionsResponseDataResultUnion) AsOrganizationUsageVectorStoresResult() (v AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageVectorStoresResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCompletionsResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCompletionsResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageFileSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCompletionsResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageWebSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCompletionsResponseDataResultUnion) AsOrganizationCostsResult() (v AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -2782,14 +3059,16 @@ func (r *AdminOrganizationUsageCompletionsResponseDataResultUnion) UnmarshalJSON
 
 // The aggregated completions usage details of the specific time bucket.
 type AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult struct {
-	// The aggregated number of text input tokens used, including cached tokens. For
-	// customers subscribe to scale tier, this includes scale tier tokens.
+	// The aggregated number of input tokens used, including cached and cache-write
+	// tokens. This includes text, audio, and image tokens. For customers subscribed to
+	// Scale Tier, this includes Scale Tier tokens.
 	InputTokens int64 `json:"input_tokens" api:"required"`
 	// The count of requests made to the model.
 	NumModelRequests int64                                       `json:"num_model_requests" api:"required"`
 	Object           constant.OrganizationUsageCompletionsResult `json:"object" default:"organization.usage.completions.result"`
-	// The aggregated number of text output tokens used. For customers subscribe to
-	// scale tier, this includes scale tier tokens.
+	// The aggregated number of output tokens used across text, audio, and image
+	// outputs. For customers subscribed to Scale Tier, this includes Scale Tier
+	// tokens.
 	OutputTokens int64 `json:"output_tokens" api:"required"`
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
@@ -2797,17 +3076,36 @@ type AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageComplet
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
-	// The aggregated number of audio input tokens used, including cached tokens.
+	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of text input tokens that has been cached from previous
-	// requests. For customers subscribe to scale tier, this includes scale tier
-	// tokens.
+	// The aggregated number of input tokens written to the cache.
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
+	// The aggregated number of cached audio input tokens used.
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// The aggregated number of cached image input tokens used.
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// The aggregated number of cached text input tokens used.
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// The aggregated number of cached input tokens used across text, audio, and image
+	// inputs. For customers subscribed to Scale Tier, this includes Scale Tier tokens.
 	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// The aggregated number of uncached image input tokens used.
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// The aggregated number of uncached text input tokens used, excluding cache-write
+	// tokens.
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// The aggregated number of uncached input tokens used across text, audio, and
+	// image inputs, excluding cache-write tokens.
+	InputUncachedTokens int64 `json:"input_uncached_tokens"`
 	// When `group_by=model`, this field provides the model name of the grouped usage
 	// result.
 	Model string `json:"model" api:"nullable"`
 	// The aggregated number of audio output tokens used.
 	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// The aggregated number of image output tokens used.
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// The aggregated number of text output tokens used.
+	OutputTextTokens int64 `json:"output_text_tokens"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
@@ -2819,21 +3117,30 @@ type AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageComplet
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		ExtraFields       map[string]respjson.Field
-		raw               string
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		ExtraFields            map[string]respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -3211,16 +3518,20 @@ type AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult 
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -3341,12 +3652,39 @@ type AdminOrganizationUsageCostsResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
-	InputCachedTokens int64  `json:"input_cached_tokens"`
-	Model             string `json:"model"`
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
-	OutputAudioTokens int64  `json:"output_audio_tokens"`
-	ProjectID         string `json:"project_id"`
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
+	InputUncachedTokens int64  `json:"input_uncached_tokens"`
+	Model               string `json:"model"`
+	// This field is from variant
+	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputTextTokens int64  `json:"output_text_tokens"`
+	ProjectID        string `json:"project_id"`
 	// This field is from variant
 	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
 	ServiceTier string `json:"service_tier"`
@@ -3388,34 +3726,47 @@ type AdminOrganizationUsageCostsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		Images            respjson.Field
-		Size              respjson.Field
-		Source            respjson.Field
-		Characters        respjson.Field
-		Seconds           respjson.Field
-		UsageBytes        respjson.Field
-		NumSessions       respjson.Field
-		NumRequests       respjson.Field
-		VectorStoreID     respjson.Field
-		ContextLevel      respjson.Field
-		Amount            respjson.Field
-		LineItem          respjson.Field
-		Quantity          respjson.Field
-		raw               string
+	// This field is from variant
+	// [AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult].
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
+	JSON         struct {
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		Images                 respjson.Field
+		Size                   respjson.Field
+		Source                 respjson.Field
+		Characters             respjson.Field
+		Seconds                respjson.Field
+		UsageBytes             respjson.Field
+		NumSessions            respjson.Field
+		NumRequests            respjson.Field
+		VectorStoreID          respjson.Field
+		ContextLevel           respjson.Field
+		Amount                 respjson.Field
+		LineItem               respjson.Field
+		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -3495,57 +3846,57 @@ func (u AdminOrganizationUsageCostsResponseDataResultUnion) AsAny() anyAdminOrga
 }
 
 func (u AdminOrganizationUsageCostsResponseDataResultUnion) AsOrganizationUsageCompletionsResult() (v AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCostsResponseDataResultUnion) AsOrganizationUsageEmbeddingsResult() (v AdminOrganizationUsageCostsResponseDataResultOrganizationUsageEmbeddingsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCostsResponseDataResultUnion) AsOrganizationUsageModerationsResult() (v AdminOrganizationUsageCostsResponseDataResultOrganizationUsageModerationsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCostsResponseDataResultUnion) AsOrganizationUsageImagesResult() (v AdminOrganizationUsageCostsResponseDataResultOrganizationUsageImagesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCostsResponseDataResultUnion) AsOrganizationUsageAudioSpeechesResult() (v AdminOrganizationUsageCostsResponseDataResultOrganizationUsageAudioSpeechesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCostsResponseDataResultUnion) AsOrganizationUsageAudioTranscriptionsResult() (v AdminOrganizationUsageCostsResponseDataResultOrganizationUsageAudioTranscriptionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCostsResponseDataResultUnion) AsOrganizationUsageVectorStoresResult() (v AdminOrganizationUsageCostsResponseDataResultOrganizationUsageVectorStoresResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCostsResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCostsResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageCostsResponseDataResultOrganizationUsageFileSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCostsResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageCostsResponseDataResultOrganizationUsageWebSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageCostsResponseDataResultUnion) AsOrganizationCostsResult() (v AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -3558,14 +3909,16 @@ func (r *AdminOrganizationUsageCostsResponseDataResultUnion) UnmarshalJSON(data 
 
 // The aggregated completions usage details of the specific time bucket.
 type AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult struct {
-	// The aggregated number of text input tokens used, including cached tokens. For
-	// customers subscribe to scale tier, this includes scale tier tokens.
+	// The aggregated number of input tokens used, including cached and cache-write
+	// tokens. This includes text, audio, and image tokens. For customers subscribed to
+	// Scale Tier, this includes Scale Tier tokens.
 	InputTokens int64 `json:"input_tokens" api:"required"`
 	// The count of requests made to the model.
 	NumModelRequests int64                                       `json:"num_model_requests" api:"required"`
 	Object           constant.OrganizationUsageCompletionsResult `json:"object" default:"organization.usage.completions.result"`
-	// The aggregated number of text output tokens used. For customers subscribe to
-	// scale tier, this includes scale tier tokens.
+	// The aggregated number of output tokens used across text, audio, and image
+	// outputs. For customers subscribed to Scale Tier, this includes Scale Tier
+	// tokens.
 	OutputTokens int64 `json:"output_tokens" api:"required"`
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
@@ -3573,17 +3926,36 @@ type AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsRe
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
-	// The aggregated number of audio input tokens used, including cached tokens.
+	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of text input tokens that has been cached from previous
-	// requests. For customers subscribe to scale tier, this includes scale tier
-	// tokens.
+	// The aggregated number of input tokens written to the cache.
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
+	// The aggregated number of cached audio input tokens used.
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// The aggregated number of cached image input tokens used.
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// The aggregated number of cached text input tokens used.
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// The aggregated number of cached input tokens used across text, audio, and image
+	// inputs. For customers subscribed to Scale Tier, this includes Scale Tier tokens.
 	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// The aggregated number of uncached image input tokens used.
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// The aggregated number of uncached text input tokens used, excluding cache-write
+	// tokens.
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// The aggregated number of uncached input tokens used across text, audio, and
+	// image inputs, excluding cache-write tokens.
+	InputUncachedTokens int64 `json:"input_uncached_tokens"`
 	// When `group_by=model`, this field provides the model name of the grouped usage
 	// result.
 	Model string `json:"model" api:"nullable"`
 	// The aggregated number of audio output tokens used.
 	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// The aggregated number of image output tokens used.
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// The aggregated number of text output tokens used.
+	OutputTextTokens int64 `json:"output_text_tokens"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
@@ -3595,21 +3967,30 @@ type AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsRe
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		ExtraFields       map[string]respjson.Field
-		raw               string
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		ExtraFields            map[string]respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -3987,16 +4368,20 @@ type AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult struct
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -4117,12 +4502,39 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
-	InputCachedTokens int64  `json:"input_cached_tokens"`
-	Model             string `json:"model"`
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
-	OutputAudioTokens int64  `json:"output_audio_tokens"`
-	ProjectID         string `json:"project_id"`
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
+	InputUncachedTokens int64  `json:"input_uncached_tokens"`
+	Model               string `json:"model"`
+	// This field is from variant
+	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputTextTokens int64  `json:"output_text_tokens"`
+	ProjectID        string `json:"project_id"`
 	// This field is from variant
 	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
 	ServiceTier string `json:"service_tier"`
@@ -4164,34 +4576,47 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		Images            respjson.Field
-		Size              respjson.Field
-		Source            respjson.Field
-		Characters        respjson.Field
-		Seconds           respjson.Field
-		UsageBytes        respjson.Field
-		NumSessions       respjson.Field
-		NumRequests       respjson.Field
-		VectorStoreID     respjson.Field
-		ContextLevel      respjson.Field
-		Amount            respjson.Field
-		LineItem          respjson.Field
-		Quantity          respjson.Field
-		raw               string
+	// This field is from variant
+	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult].
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
+	JSON         struct {
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		Images                 respjson.Field
+		Size                   respjson.Field
+		Source                 respjson.Field
+		Characters             respjson.Field
+		Seconds                respjson.Field
+		UsageBytes             respjson.Field
+		NumSessions            respjson.Field
+		NumRequests            respjson.Field
+		VectorStoreID          respjson.Field
+		ContextLevel           respjson.Field
+		Amount                 respjson.Field
+		LineItem               respjson.Field
+		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -4272,57 +4697,57 @@ func (u AdminOrganizationUsageEmbeddingsResponseDataResultUnion) AsAny() anyAdmi
 }
 
 func (u AdminOrganizationUsageEmbeddingsResponseDataResultUnion) AsOrganizationUsageCompletionsResult() (v AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageEmbeddingsResponseDataResultUnion) AsOrganizationUsageEmbeddingsResult() (v AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageEmbeddingsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageEmbeddingsResponseDataResultUnion) AsOrganizationUsageModerationsResult() (v AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageModerationsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageEmbeddingsResponseDataResultUnion) AsOrganizationUsageImagesResult() (v AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageImagesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageEmbeddingsResponseDataResultUnion) AsOrganizationUsageAudioSpeechesResult() (v AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageAudioSpeechesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageEmbeddingsResponseDataResultUnion) AsOrganizationUsageAudioTranscriptionsResult() (v AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageAudioTranscriptionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageEmbeddingsResponseDataResultUnion) AsOrganizationUsageVectorStoresResult() (v AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageVectorStoresResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageEmbeddingsResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageEmbeddingsResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageFileSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageEmbeddingsResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageWebSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageEmbeddingsResponseDataResultUnion) AsOrganizationCostsResult() (v AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -4335,14 +4760,16 @@ func (r *AdminOrganizationUsageEmbeddingsResponseDataResultUnion) UnmarshalJSON(
 
 // The aggregated completions usage details of the specific time bucket.
 type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult struct {
-	// The aggregated number of text input tokens used, including cached tokens. For
-	// customers subscribe to scale tier, this includes scale tier tokens.
+	// The aggregated number of input tokens used, including cached and cache-write
+	// tokens. This includes text, audio, and image tokens. For customers subscribed to
+	// Scale Tier, this includes Scale Tier tokens.
 	InputTokens int64 `json:"input_tokens" api:"required"`
 	// The count of requests made to the model.
 	NumModelRequests int64                                       `json:"num_model_requests" api:"required"`
 	Object           constant.OrganizationUsageCompletionsResult `json:"object" default:"organization.usage.completions.result"`
-	// The aggregated number of text output tokens used. For customers subscribe to
-	// scale tier, this includes scale tier tokens.
+	// The aggregated number of output tokens used across text, audio, and image
+	// outputs. For customers subscribed to Scale Tier, this includes Scale Tier
+	// tokens.
 	OutputTokens int64 `json:"output_tokens" api:"required"`
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
@@ -4350,17 +4777,36 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompleti
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
-	// The aggregated number of audio input tokens used, including cached tokens.
+	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of text input tokens that has been cached from previous
-	// requests. For customers subscribe to scale tier, this includes scale tier
-	// tokens.
+	// The aggregated number of input tokens written to the cache.
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
+	// The aggregated number of cached audio input tokens used.
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// The aggregated number of cached image input tokens used.
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// The aggregated number of cached text input tokens used.
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// The aggregated number of cached input tokens used across text, audio, and image
+	// inputs. For customers subscribed to Scale Tier, this includes Scale Tier tokens.
 	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// The aggregated number of uncached image input tokens used.
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// The aggregated number of uncached text input tokens used, excluding cache-write
+	// tokens.
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// The aggregated number of uncached input tokens used across text, audio, and
+	// image inputs, excluding cache-write tokens.
+	InputUncachedTokens int64 `json:"input_uncached_tokens"`
 	// When `group_by=model`, this field provides the model name of the grouped usage
 	// result.
 	Model string `json:"model" api:"nullable"`
 	// The aggregated number of audio output tokens used.
 	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// The aggregated number of image output tokens used.
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// The aggregated number of text output tokens used.
+	OutputTextTokens int64 `json:"output_text_tokens"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
@@ -4372,21 +4818,30 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompleti
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		ExtraFields       map[string]respjson.Field
-		raw               string
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		ExtraFields            map[string]respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -4764,16 +5219,20 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult s
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -4894,12 +5353,39 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
-	InputCachedTokens int64  `json:"input_cached_tokens"`
-	Model             string `json:"model"`
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
-	OutputAudioTokens int64  `json:"output_audio_tokens"`
-	ProjectID         string `json:"project_id"`
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputUncachedTokens int64  `json:"input_uncached_tokens"`
+	Model               string `json:"model"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputTextTokens int64  `json:"output_text_tokens"`
+	ProjectID        string `json:"project_id"`
 	// This field is from variant
 	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
 	ServiceTier string `json:"service_tier"`
@@ -4941,34 +5427,47 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		Images            respjson.Field
-		Size              respjson.Field
-		Source            respjson.Field
-		Characters        respjson.Field
-		Seconds           respjson.Field
-		UsageBytes        respjson.Field
-		NumSessions       respjson.Field
-		NumRequests       respjson.Field
-		VectorStoreID     respjson.Field
-		ContextLevel      respjson.Field
-		Amount            respjson.Field
-		LineItem          respjson.Field
-		Quantity          respjson.Field
-		raw               string
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResult].
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
+	JSON         struct {
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		Images                 respjson.Field
+		Size                   respjson.Field
+		Source                 respjson.Field
+		Characters             respjson.Field
+		Seconds                respjson.Field
+		UsageBytes             respjson.Field
+		NumSessions            respjson.Field
+		NumRequests            respjson.Field
+		VectorStoreID          respjson.Field
+		ContextLevel           respjson.Field
+		Amount                 respjson.Field
+		LineItem               respjson.Field
+		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -5049,57 +5548,57 @@ func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsAny() an
 }
 
 func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageCompletionsResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageEmbeddingsResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageEmbeddingsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageModerationsResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageModerationsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageImagesResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageImagesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageAudioSpeechesResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageAudioSpeechesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageAudioTranscriptionsResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageAudioTranscriptionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageVectorStoresResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageVectorStoresResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageFileSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageWebSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationCostsResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -5114,14 +5613,16 @@ func (r *AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) Unmarshal
 
 // The aggregated completions usage details of the specific time bucket.
 type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult struct {
-	// The aggregated number of text input tokens used, including cached tokens. For
-	// customers subscribe to scale tier, this includes scale tier tokens.
+	// The aggregated number of input tokens used, including cached and cache-write
+	// tokens. This includes text, audio, and image tokens. For customers subscribed to
+	// Scale Tier, this includes Scale Tier tokens.
 	InputTokens int64 `json:"input_tokens" api:"required"`
 	// The count of requests made to the model.
 	NumModelRequests int64                                       `json:"num_model_requests" api:"required"`
 	Object           constant.OrganizationUsageCompletionsResult `json:"object" default:"organization.usage.completions.result"`
-	// The aggregated number of text output tokens used. For customers subscribe to
-	// scale tier, this includes scale tier tokens.
+	// The aggregated number of output tokens used across text, audio, and image
+	// outputs. For customers subscribed to Scale Tier, this includes Scale Tier
+	// tokens.
 	OutputTokens int64 `json:"output_tokens" api:"required"`
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
@@ -5129,17 +5630,36 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCom
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
-	// The aggregated number of audio input tokens used, including cached tokens.
+	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of text input tokens that has been cached from previous
-	// requests. For customers subscribe to scale tier, this includes scale tier
-	// tokens.
+	// The aggregated number of input tokens written to the cache.
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
+	// The aggregated number of cached audio input tokens used.
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// The aggregated number of cached image input tokens used.
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// The aggregated number of cached text input tokens used.
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// The aggregated number of cached input tokens used across text, audio, and image
+	// inputs. For customers subscribed to Scale Tier, this includes Scale Tier tokens.
 	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// The aggregated number of uncached image input tokens used.
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// The aggregated number of uncached text input tokens used, excluding cache-write
+	// tokens.
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// The aggregated number of uncached input tokens used across text, audio, and
+	// image inputs, excluding cache-write tokens.
+	InputUncachedTokens int64 `json:"input_uncached_tokens"`
 	// When `group_by=model`, this field provides the model name of the grouped usage
 	// result.
 	Model string `json:"model" api:"nullable"`
 	// The aggregated number of audio output tokens used.
 	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// The aggregated number of image output tokens used.
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// The aggregated number of text output tokens used.
+	OutputTextTokens int64 `json:"output_text_tokens"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
@@ -5151,21 +5671,30 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCom
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		ExtraFields       map[string]respjson.Field
-		raw               string
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		ExtraFields            map[string]respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -5543,16 +6072,20 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsRes
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -5673,12 +6206,39 @@ type AdminOrganizationUsageImagesResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
-	InputCachedTokens int64  `json:"input_cached_tokens"`
-	Model             string `json:"model"`
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
-	OutputAudioTokens int64  `json:"output_audio_tokens"`
-	ProjectID         string `json:"project_id"`
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
+	InputUncachedTokens int64  `json:"input_uncached_tokens"`
+	Model               string `json:"model"`
+	// This field is from variant
+	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
+	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
+	OutputTextTokens int64  `json:"output_text_tokens"`
+	ProjectID        string `json:"project_id"`
 	// This field is from variant
 	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
 	ServiceTier string `json:"service_tier"`
@@ -5720,34 +6280,47 @@ type AdminOrganizationUsageImagesResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		Images            respjson.Field
-		Size              respjson.Field
-		Source            respjson.Field
-		Characters        respjson.Field
-		Seconds           respjson.Field
-		UsageBytes        respjson.Field
-		NumSessions       respjson.Field
-		NumRequests       respjson.Field
-		VectorStoreID     respjson.Field
-		ContextLevel      respjson.Field
-		Amount            respjson.Field
-		LineItem          respjson.Field
-		Quantity          respjson.Field
-		raw               string
+	// This field is from variant
+	// [AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult].
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
+	JSON         struct {
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		Images                 respjson.Field
+		Size                   respjson.Field
+		Source                 respjson.Field
+		Characters             respjson.Field
+		Seconds                respjson.Field
+		UsageBytes             respjson.Field
+		NumSessions            respjson.Field
+		NumRequests            respjson.Field
+		VectorStoreID          respjson.Field
+		ContextLevel           respjson.Field
+		Amount                 respjson.Field
+		LineItem               respjson.Field
+		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -5827,57 +6400,57 @@ func (u AdminOrganizationUsageImagesResponseDataResultUnion) AsAny() anyAdminOrg
 }
 
 func (u AdminOrganizationUsageImagesResponseDataResultUnion) AsOrganizationUsageCompletionsResult() (v AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageImagesResponseDataResultUnion) AsOrganizationUsageEmbeddingsResult() (v AdminOrganizationUsageImagesResponseDataResultOrganizationUsageEmbeddingsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageImagesResponseDataResultUnion) AsOrganizationUsageModerationsResult() (v AdminOrganizationUsageImagesResponseDataResultOrganizationUsageModerationsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageImagesResponseDataResultUnion) AsOrganizationUsageImagesResult() (v AdminOrganizationUsageImagesResponseDataResultOrganizationUsageImagesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageImagesResponseDataResultUnion) AsOrganizationUsageAudioSpeechesResult() (v AdminOrganizationUsageImagesResponseDataResultOrganizationUsageAudioSpeechesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageImagesResponseDataResultUnion) AsOrganizationUsageAudioTranscriptionsResult() (v AdminOrganizationUsageImagesResponseDataResultOrganizationUsageAudioTranscriptionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageImagesResponseDataResultUnion) AsOrganizationUsageVectorStoresResult() (v AdminOrganizationUsageImagesResponseDataResultOrganizationUsageVectorStoresResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageImagesResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageImagesResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageImagesResponseDataResultOrganizationUsageFileSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageImagesResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageImagesResponseDataResultOrganizationUsageWebSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageImagesResponseDataResultUnion) AsOrganizationCostsResult() (v AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -5890,14 +6463,16 @@ func (r *AdminOrganizationUsageImagesResponseDataResultUnion) UnmarshalJSON(data
 
 // The aggregated completions usage details of the specific time bucket.
 type AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult struct {
-	// The aggregated number of text input tokens used, including cached tokens. For
-	// customers subscribe to scale tier, this includes scale tier tokens.
+	// The aggregated number of input tokens used, including cached and cache-write
+	// tokens. This includes text, audio, and image tokens. For customers subscribed to
+	// Scale Tier, this includes Scale Tier tokens.
 	InputTokens int64 `json:"input_tokens" api:"required"`
 	// The count of requests made to the model.
 	NumModelRequests int64                                       `json:"num_model_requests" api:"required"`
 	Object           constant.OrganizationUsageCompletionsResult `json:"object" default:"organization.usage.completions.result"`
-	// The aggregated number of text output tokens used. For customers subscribe to
-	// scale tier, this includes scale tier tokens.
+	// The aggregated number of output tokens used across text, audio, and image
+	// outputs. For customers subscribed to Scale Tier, this includes Scale Tier
+	// tokens.
 	OutputTokens int64 `json:"output_tokens" api:"required"`
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
@@ -5905,17 +6480,36 @@ type AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsR
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
-	// The aggregated number of audio input tokens used, including cached tokens.
+	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of text input tokens that has been cached from previous
-	// requests. For customers subscribe to scale tier, this includes scale tier
-	// tokens.
+	// The aggregated number of input tokens written to the cache.
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
+	// The aggregated number of cached audio input tokens used.
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// The aggregated number of cached image input tokens used.
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// The aggregated number of cached text input tokens used.
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// The aggregated number of cached input tokens used across text, audio, and image
+	// inputs. For customers subscribed to Scale Tier, this includes Scale Tier tokens.
 	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// The aggregated number of uncached image input tokens used.
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// The aggregated number of uncached text input tokens used, excluding cache-write
+	// tokens.
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// The aggregated number of uncached input tokens used across text, audio, and
+	// image inputs, excluding cache-write tokens.
+	InputUncachedTokens int64 `json:"input_uncached_tokens"`
 	// When `group_by=model`, this field provides the model name of the grouped usage
 	// result.
 	Model string `json:"model" api:"nullable"`
 	// The aggregated number of audio output tokens used.
 	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// The aggregated number of image output tokens used.
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// The aggregated number of text output tokens used.
+	OutputTextTokens int64 `json:"output_text_tokens"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
@@ -5927,21 +6521,30 @@ type AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsR
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		ExtraFields       map[string]respjson.Field
-		raw               string
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		ExtraFields            map[string]respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -6319,16 +6922,20 @@ type AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult struc
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -6449,12 +7056,39 @@ type AdminOrganizationUsageModerationsResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
-	InputCachedTokens int64  `json:"input_cached_tokens"`
-	Model             string `json:"model"`
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
-	OutputAudioTokens int64  `json:"output_audio_tokens"`
-	ProjectID         string `json:"project_id"`
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
+	InputUncachedTokens int64  `json:"input_uncached_tokens"`
+	Model               string `json:"model"`
+	// This field is from variant
+	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputTextTokens int64  `json:"output_text_tokens"`
+	ProjectID        string `json:"project_id"`
 	// This field is from variant
 	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
 	ServiceTier string `json:"service_tier"`
@@ -6496,34 +7130,47 @@ type AdminOrganizationUsageModerationsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		Images            respjson.Field
-		Size              respjson.Field
-		Source            respjson.Field
-		Characters        respjson.Field
-		Seconds           respjson.Field
-		UsageBytes        respjson.Field
-		NumSessions       respjson.Field
-		NumRequests       respjson.Field
-		VectorStoreID     respjson.Field
-		ContextLevel      respjson.Field
-		Amount            respjson.Field
-		LineItem          respjson.Field
-		Quantity          respjson.Field
-		raw               string
+	// This field is from variant
+	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult].
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
+	JSON         struct {
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		Images                 respjson.Field
+		Size                   respjson.Field
+		Source                 respjson.Field
+		Characters             respjson.Field
+		Seconds                respjson.Field
+		UsageBytes             respjson.Field
+		NumSessions            respjson.Field
+		NumRequests            respjson.Field
+		VectorStoreID          respjson.Field
+		ContextLevel           respjson.Field
+		Amount                 respjson.Field
+		LineItem               respjson.Field
+		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -6604,57 +7251,57 @@ func (u AdminOrganizationUsageModerationsResponseDataResultUnion) AsAny() anyAdm
 }
 
 func (u AdminOrganizationUsageModerationsResponseDataResultUnion) AsOrganizationUsageCompletionsResult() (v AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageModerationsResponseDataResultUnion) AsOrganizationUsageEmbeddingsResult() (v AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageEmbeddingsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageModerationsResponseDataResultUnion) AsOrganizationUsageModerationsResult() (v AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageModerationsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageModerationsResponseDataResultUnion) AsOrganizationUsageImagesResult() (v AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageImagesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageModerationsResponseDataResultUnion) AsOrganizationUsageAudioSpeechesResult() (v AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageAudioSpeechesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageModerationsResponseDataResultUnion) AsOrganizationUsageAudioTranscriptionsResult() (v AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageAudioTranscriptionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageModerationsResponseDataResultUnion) AsOrganizationUsageVectorStoresResult() (v AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageVectorStoresResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageModerationsResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageModerationsResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageFileSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageModerationsResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageWebSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageModerationsResponseDataResultUnion) AsOrganizationCostsResult() (v AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -6667,14 +7314,16 @@ func (r *AdminOrganizationUsageModerationsResponseDataResultUnion) UnmarshalJSON
 
 // The aggregated completions usage details of the specific time bucket.
 type AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult struct {
-	// The aggregated number of text input tokens used, including cached tokens. For
-	// customers subscribe to scale tier, this includes scale tier tokens.
+	// The aggregated number of input tokens used, including cached and cache-write
+	// tokens. This includes text, audio, and image tokens. For customers subscribed to
+	// Scale Tier, this includes Scale Tier tokens.
 	InputTokens int64 `json:"input_tokens" api:"required"`
 	// The count of requests made to the model.
 	NumModelRequests int64                                       `json:"num_model_requests" api:"required"`
 	Object           constant.OrganizationUsageCompletionsResult `json:"object" default:"organization.usage.completions.result"`
-	// The aggregated number of text output tokens used. For customers subscribe to
-	// scale tier, this includes scale tier tokens.
+	// The aggregated number of output tokens used across text, audio, and image
+	// outputs. For customers subscribed to Scale Tier, this includes Scale Tier
+	// tokens.
 	OutputTokens int64 `json:"output_tokens" api:"required"`
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
@@ -6682,17 +7331,36 @@ type AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageComplet
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
-	// The aggregated number of audio input tokens used, including cached tokens.
+	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of text input tokens that has been cached from previous
-	// requests. For customers subscribe to scale tier, this includes scale tier
-	// tokens.
+	// The aggregated number of input tokens written to the cache.
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
+	// The aggregated number of cached audio input tokens used.
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// The aggregated number of cached image input tokens used.
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// The aggregated number of cached text input tokens used.
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// The aggregated number of cached input tokens used across text, audio, and image
+	// inputs. For customers subscribed to Scale Tier, this includes Scale Tier tokens.
 	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// The aggregated number of uncached image input tokens used.
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// The aggregated number of uncached text input tokens used, excluding cache-write
+	// tokens.
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// The aggregated number of uncached input tokens used across text, audio, and
+	// image inputs, excluding cache-write tokens.
+	InputUncachedTokens int64 `json:"input_uncached_tokens"`
 	// When `group_by=model`, this field provides the model name of the grouped usage
 	// result.
 	Model string `json:"model" api:"nullable"`
 	// The aggregated number of audio output tokens used.
 	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// The aggregated number of image output tokens used.
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// The aggregated number of text output tokens used.
+	OutputTextTokens int64 `json:"output_text_tokens"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
@@ -6704,21 +7372,30 @@ type AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageComplet
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		ExtraFields       map[string]respjson.Field
-		raw               string
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		ExtraFields            map[string]respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -7096,16 +7773,20 @@ type AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult 
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -7226,12 +7907,39 @@ type AdminOrganizationUsageVectorStoresResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
-	InputCachedTokens int64  `json:"input_cached_tokens"`
-	Model             string `json:"model"`
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
-	OutputAudioTokens int64  `json:"output_audio_tokens"`
-	ProjectID         string `json:"project_id"`
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
+	InputUncachedTokens int64  `json:"input_uncached_tokens"`
+	Model               string `json:"model"`
+	// This field is from variant
+	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
+	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
+	OutputTextTokens int64  `json:"output_text_tokens"`
+	ProjectID        string `json:"project_id"`
 	// This field is from variant
 	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
 	ServiceTier string `json:"service_tier"`
@@ -7273,34 +7981,47 @@ type AdminOrganizationUsageVectorStoresResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		Images            respjson.Field
-		Size              respjson.Field
-		Source            respjson.Field
-		Characters        respjson.Field
-		Seconds           respjson.Field
-		UsageBytes        respjson.Field
-		NumSessions       respjson.Field
-		NumRequests       respjson.Field
-		VectorStoreID     respjson.Field
-		ContextLevel      respjson.Field
-		Amount            respjson.Field
-		LineItem          respjson.Field
-		Quantity          respjson.Field
-		raw               string
+	// This field is from variant
+	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult].
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
+	JSON         struct {
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		Images                 respjson.Field
+		Size                   respjson.Field
+		Source                 respjson.Field
+		Characters             respjson.Field
+		Seconds                respjson.Field
+		UsageBytes             respjson.Field
+		NumSessions            respjson.Field
+		NumRequests            respjson.Field
+		VectorStoreID          respjson.Field
+		ContextLevel           respjson.Field
+		Amount                 respjson.Field
+		LineItem               respjson.Field
+		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -7381,57 +8102,57 @@ func (u AdminOrganizationUsageVectorStoresResponseDataResultUnion) AsAny() anyAd
 }
 
 func (u AdminOrganizationUsageVectorStoresResponseDataResultUnion) AsOrganizationUsageCompletionsResult() (v AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageVectorStoresResponseDataResultUnion) AsOrganizationUsageEmbeddingsResult() (v AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageEmbeddingsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageVectorStoresResponseDataResultUnion) AsOrganizationUsageModerationsResult() (v AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageModerationsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageVectorStoresResponseDataResultUnion) AsOrganizationUsageImagesResult() (v AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageImagesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageVectorStoresResponseDataResultUnion) AsOrganizationUsageAudioSpeechesResult() (v AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageAudioSpeechesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageVectorStoresResponseDataResultUnion) AsOrganizationUsageAudioTranscriptionsResult() (v AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageAudioTranscriptionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageVectorStoresResponseDataResultUnion) AsOrganizationUsageVectorStoresResult() (v AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageVectorStoresResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageVectorStoresResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageVectorStoresResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageFileSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageVectorStoresResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageWebSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageVectorStoresResponseDataResultUnion) AsOrganizationCostsResult() (v AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -7446,14 +8167,16 @@ func (r *AdminOrganizationUsageVectorStoresResponseDataResultUnion) UnmarshalJSO
 
 // The aggregated completions usage details of the specific time bucket.
 type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult struct {
-	// The aggregated number of text input tokens used, including cached tokens. For
-	// customers subscribe to scale tier, this includes scale tier tokens.
+	// The aggregated number of input tokens used, including cached and cache-write
+	// tokens. This includes text, audio, and image tokens. For customers subscribed to
+	// Scale Tier, this includes Scale Tier tokens.
 	InputTokens int64 `json:"input_tokens" api:"required"`
 	// The count of requests made to the model.
 	NumModelRequests int64                                       `json:"num_model_requests" api:"required"`
 	Object           constant.OrganizationUsageCompletionsResult `json:"object" default:"organization.usage.completions.result"`
-	// The aggregated number of text output tokens used. For customers subscribe to
-	// scale tier, this includes scale tier tokens.
+	// The aggregated number of output tokens used across text, audio, and image
+	// outputs. For customers subscribed to Scale Tier, this includes Scale Tier
+	// tokens.
 	OutputTokens int64 `json:"output_tokens" api:"required"`
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
@@ -7461,17 +8184,36 @@ type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageComple
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
-	// The aggregated number of audio input tokens used, including cached tokens.
+	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of text input tokens that has been cached from previous
-	// requests. For customers subscribe to scale tier, this includes scale tier
-	// tokens.
+	// The aggregated number of input tokens written to the cache.
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
+	// The aggregated number of cached audio input tokens used.
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// The aggregated number of cached image input tokens used.
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// The aggregated number of cached text input tokens used.
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// The aggregated number of cached input tokens used across text, audio, and image
+	// inputs. For customers subscribed to Scale Tier, this includes Scale Tier tokens.
 	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// The aggregated number of uncached image input tokens used.
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// The aggregated number of uncached text input tokens used, excluding cache-write
+	// tokens.
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// The aggregated number of uncached input tokens used across text, audio, and
+	// image inputs, excluding cache-write tokens.
+	InputUncachedTokens int64 `json:"input_uncached_tokens"`
 	// When `group_by=model`, this field provides the model name of the grouped usage
 	// result.
 	Model string `json:"model" api:"nullable"`
 	// The aggregated number of audio output tokens used.
 	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// The aggregated number of image output tokens used.
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// The aggregated number of text output tokens used.
+	OutputTextTokens int64 `json:"output_text_tokens"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
@@ -7483,21 +8225,30 @@ type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageComple
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		ExtraFields       map[string]respjson.Field
-		raw               string
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		ExtraFields            map[string]respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -7875,16 +8626,20 @@ type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -8005,12 +8760,39 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
-	InputCachedTokens int64  `json:"input_cached_tokens"`
-	Model             string `json:"model"`
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
-	OutputAudioTokens int64  `json:"output_audio_tokens"`
-	ProjectID         string `json:"project_id"`
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputUncachedTokens int64  `json:"input_uncached_tokens"`
+	Model               string `json:"model"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputTextTokens int64  `json:"output_text_tokens"`
+	ProjectID        string `json:"project_id"`
 	// This field is from variant
 	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
 	ServiceTier string `json:"service_tier"`
@@ -8052,34 +8834,47 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		Images            respjson.Field
-		Size              respjson.Field
-		Source            respjson.Field
-		Characters        respjson.Field
-		Seconds           respjson.Field
-		UsageBytes        respjson.Field
-		NumSessions       respjson.Field
-		NumRequests       respjson.Field
-		VectorStoreID     respjson.Field
-		ContextLevel      respjson.Field
-		Amount            respjson.Field
-		LineItem          respjson.Field
-		Quantity          respjson.Field
-		raw               string
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResult].
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
+	JSON         struct {
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		Images                 respjson.Field
+		Size                   respjson.Field
+		Source                 respjson.Field
+		Characters             respjson.Field
+		Seconds                respjson.Field
+		UsageBytes             respjson.Field
+		NumSessions            respjson.Field
+		NumRequests            respjson.Field
+		VectorStoreID          respjson.Field
+		ContextLevel           respjson.Field
+		Amount                 respjson.Field
+		LineItem               respjson.Field
+		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -8160,57 +8955,57 @@ func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsAny() any
 }
 
 func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageCompletionsResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageEmbeddingsResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageEmbeddingsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageModerationsResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageModerationsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageImagesResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageImagesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageAudioSpeechesResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageAudioSpeechesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageAudioTranscriptionsResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageAudioTranscriptionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageVectorStoresResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageVectorStoresResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageFileSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageWebSearchesResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationCostsResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -8225,14 +9020,16 @@ func (r *AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) UnmarshalJ
 
 // The aggregated completions usage details of the specific time bucket.
 type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult struct {
-	// The aggregated number of text input tokens used, including cached tokens. For
-	// customers subscribe to scale tier, this includes scale tier tokens.
+	// The aggregated number of input tokens used, including cached and cache-write
+	// tokens. This includes text, audio, and image tokens. For customers subscribed to
+	// Scale Tier, this includes Scale Tier tokens.
 	InputTokens int64 `json:"input_tokens" api:"required"`
 	// The count of requests made to the model.
 	NumModelRequests int64                                       `json:"num_model_requests" api:"required"`
 	Object           constant.OrganizationUsageCompletionsResult `json:"object" default:"organization.usage.completions.result"`
-	// The aggregated number of text output tokens used. For customers subscribe to
-	// scale tier, this includes scale tier tokens.
+	// The aggregated number of output tokens used across text, audio, and image
+	// outputs. For customers subscribed to Scale Tier, this includes Scale Tier
+	// tokens.
 	OutputTokens int64 `json:"output_tokens" api:"required"`
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
@@ -8240,17 +9037,36 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageComp
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
-	// The aggregated number of audio input tokens used, including cached tokens.
+	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of text input tokens that has been cached from previous
-	// requests. For customers subscribe to scale tier, this includes scale tier
-	// tokens.
+	// The aggregated number of input tokens written to the cache.
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
+	// The aggregated number of cached audio input tokens used.
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
+	// The aggregated number of cached image input tokens used.
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens"`
+	// The aggregated number of cached text input tokens used.
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens"`
+	// The aggregated number of cached input tokens used across text, audio, and image
+	// inputs. For customers subscribed to Scale Tier, this includes Scale Tier tokens.
 	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// The aggregated number of uncached image input tokens used.
+	InputImageTokens int64 `json:"input_image_tokens"`
+	// The aggregated number of uncached text input tokens used, excluding cache-write
+	// tokens.
+	InputTextTokens int64 `json:"input_text_tokens"`
+	// The aggregated number of uncached input tokens used across text, audio, and
+	// image inputs, excluding cache-write tokens.
+	InputUncachedTokens int64 `json:"input_uncached_tokens"`
 	// When `group_by=model`, this field provides the model name of the grouped usage
 	// result.
 	Model string `json:"model" api:"nullable"`
 	// The aggregated number of audio output tokens used.
 	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// The aggregated number of image output tokens used.
+	OutputImageTokens int64 `json:"output_image_tokens"`
+	// The aggregated number of text output tokens used.
+	OutputTextTokens int64 `json:"output_text_tokens"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
@@ -8262,21 +9078,30 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageComp
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens       respjson.Field
-		NumModelRequests  respjson.Field
-		Object            respjson.Field
-		OutputTokens      respjson.Field
-		APIKeyID          respjson.Field
-		Batch             respjson.Field
-		InputAudioTokens  respjson.Field
-		InputCachedTokens respjson.Field
-		Model             respjson.Field
-		OutputAudioTokens respjson.Field
-		ProjectID         respjson.Field
-		ServiceTier       respjson.Field
-		UserID            respjson.Field
-		ExtraFields       map[string]respjson.Field
-		raw               string
+		InputTokens            respjson.Field
+		NumModelRequests       respjson.Field
+		Object                 respjson.Field
+		OutputTokens           respjson.Field
+		APIKeyID               respjson.Field
+		Batch                  respjson.Field
+		InputAudioTokens       respjson.Field
+		InputCacheWriteTokens  respjson.Field
+		InputCachedAudioTokens respjson.Field
+		InputCachedImageTokens respjson.Field
+		InputCachedTextTokens  respjson.Field
+		InputCachedTokens      respjson.Field
+		InputImageTokens       respjson.Field
+		InputTextTokens        respjson.Field
+		InputUncachedTokens    respjson.Field
+		Model                  respjson.Field
+		OutputAudioTokens      respjson.Field
+		OutputImageTokens      respjson.Field
+		OutputTextTokens       respjson.Field
+		ProjectID              respjson.Field
+		ServiceTier            respjson.Field
+		UserID                 respjson.Field
+		ExtraFields            map[string]respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -8654,16 +9479,20 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResu
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -8935,6 +9764,9 @@ type AdminOrganizationUsageCostsParams struct {
 	//
 	// Any of "project_id", "line_item", "api_key_id".
 	GroupBy []string `query:"group_by,omitzero" json:"-"`
+	// Return only costs for these exact line item names. Each value must match the
+	// complete `line_item` value, for example `gpt-6-astra, input_tokens`.
+	LineItems []string `query:"line_items,omitzero" json:"-"`
 	// Return only costs for these projects.
 	ProjectIDs []string `query:"project_ids,omitzero" json:"-"`
 	paramObj

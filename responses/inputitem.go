@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package responses
 
@@ -34,7 +34,7 @@ type InputItemService struct {
 // there is one), and before any request-specific options.
 func NewInputItemService(opts ...option.RequestOption) (r InputItemService) {
 	r = InputItemService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -36,6 +36,7 @@ type AdminOrganizationProjectService struct {
 	Groups                AdminOrganizationProjectGroupService
 	Roles                 AdminOrganizationProjectRoleService
 	DataRetention         AdminOrganizationProjectDataRetentionService
+	SpendLimit            AdminOrganizationProjectSpendLimitService
 	SpendAlerts           AdminOrganizationProjectSpendAlertService
 	Certificates          AdminOrganizationProjectCertificateService
 }
@@ -45,7 +46,7 @@ type AdminOrganizationProjectService struct {
 // client's options (if there is one), and before any request-specific options.
 func NewAdminOrganizationProjectService(opts ...option.RequestOption) (r AdminOrganizationProjectService) {
 	r = AdminOrganizationProjectService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Users = NewAdminOrganizationProjectUserService(opts...)
 	r.ServiceAccounts = NewAdminOrganizationProjectServiceAccountService(opts...)
 	r.APIKeys = NewAdminOrganizationProjectAPIKeyService(opts...)
@@ -55,6 +56,7 @@ func NewAdminOrganizationProjectService(opts ...option.RequestOption) (r AdminOr
 	r.Groups = NewAdminOrganizationProjectGroupService(opts...)
 	r.Roles = NewAdminOrganizationProjectRoleService(opts...)
 	r.DataRetention = NewAdminOrganizationProjectDataRetentionService(opts...)
+	r.SpendLimit = NewAdminOrganizationProjectSpendLimitService(opts...)
 	r.SpendAlerts = NewAdminOrganizationProjectSpendAlertService(opts...)
 	r.Certificates = NewAdminOrganizationProjectCertificateService(opts...)
 	return
@@ -148,6 +150,12 @@ type Project struct {
 	ExternalKeyID string `json:"external_key_id" api:"nullable"`
 	// The name of the project. This appears in reporting.
 	Name string `json:"name" api:"nullable"`
+	// The residency configuration for the project.
+	//
+	// Any of "GLOBAL", "US_STORAGE_PROCESSING", "EU_STORAGE_PROCESSING", "JP_STORAGE",
+	// "KR_STORAGE", "CA_STORAGE", "SG_STORAGE", "IN_STORAGE", "AU_STORAGE",
+	// "GB_STORAGE", "AE_STORAGE", "AE_STORAGE_PROCESSING".
+	Residency ProjectResidency `json:"residency"`
 	// `active` or `archived`
 	Status string `json:"status" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -158,6 +166,7 @@ type Project struct {
 		ArchivedAt    respjson.Field
 		ExternalKeyID respjson.Field
 		Name          respjson.Field
+		Residency     respjson.Field
 		Status        respjson.Field
 		ExtraFields   map[string]respjson.Field
 		raw           string
@@ -170,6 +179,23 @@ func (r *Project) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type ProjectResidency string
+
+const (
+	ProjectResidencyGlobal              ProjectResidency = "GLOBAL"
+	ProjectResidencyUsStorageProcessing ProjectResidency = "US_STORAGE_PROCESSING"
+	ProjectResidencyEuStorageProcessing ProjectResidency = "EU_STORAGE_PROCESSING"
+	ProjectResidencyJpStorage           ProjectResidency = "JP_STORAGE"
+	ProjectResidencyKrStorage           ProjectResidency = "KR_STORAGE"
+	ProjectResidencyCaStorage           ProjectResidency = "CA_STORAGE"
+	ProjectResidencySgStorage           ProjectResidency = "SG_STORAGE"
+	ProjectResidencyInStorage           ProjectResidency = "IN_STORAGE"
+	ProjectResidencyAuStorage           ProjectResidency = "AU_STORAGE"
+	ProjectResidencyGBStorage           ProjectResidency = "GB_STORAGE"
+	ProjectResidencyAeStorage           ProjectResidency = "AE_STORAGE"
+	ProjectResidencyAeStorageProcessing ProjectResidency = "AE_STORAGE_PROCESSING"
+)
+
 type AdminOrganizationProjectNewParams struct {
 	// The friendly name of the project, this name appears in reports.
 	Name string `json:"name" api:"required"`
@@ -177,9 +203,20 @@ type AdminOrganizationProjectNewParams struct {
 	ExternalKeyID param.Opt[string] `json:"external_key_id,omitzero"`
 	// Create the project with the specified data residency region. Your organization
 	// must have access to Data residency functionality in order to use. See
-	// [data residency controls](https://platform.openai.com/docs/guides/your-data#data-residency-controls)
-	// to review the functionality and limitations of setting this field.
+	// [data residency controls](https://developers.openai.com/api/docs/guides/your-data#data-residency-controls)
+	// to review the functionality and limitations of setting this field. Deprecated:
+	// use `residency` instead. Do not provide both `geography` and `residency`.
 	Geography param.Opt[string] `json:"geography,omitzero"`
+	// Create the project with the specified residency configuration. Your organization
+	// must have access to the requested residency configuration in order to use it.
+	// See
+	// [data residency controls](https://developers.openai.com/api/docs/guides/your-data#data-residency-controls)
+	// to review the functionality and limitations of setting this field.
+	//
+	// Any of "GLOBAL", "US_STORAGE_PROCESSING", "EU_STORAGE_PROCESSING", "JP_STORAGE",
+	// "KR_STORAGE", "CA_STORAGE", "SG_STORAGE", "IN_STORAGE", "AU_STORAGE",
+	// "GB_STORAGE", "AE_STORAGE", "AE_STORAGE_PROCESSING".
+	Residency ProjectResidency `json:"residency,omitzero"`
 	paramObj
 }
 
@@ -194,7 +231,8 @@ func (r *AdminOrganizationProjectNewParams) UnmarshalJSON(data []byte) error {
 type AdminOrganizationProjectUpdateParams struct {
 	// External key ID to associate with the project.
 	ExternalKeyID param.Opt[string] `json:"external_key_id,omitzero"`
-	// Geography for the project.
+	// Geography for the project. Deprecated: use `residency` when creating a project
+	// to configure data residency. This field is retained for backward compatibility.
 	Geography param.Opt[string] `json:"geography,omitzero"`
 	// The updated name of the project, this name appears in reports.
 	Name param.Opt[string] `json:"name,omitzero"`

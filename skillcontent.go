@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -27,7 +27,7 @@ type SkillContentService struct {
 // there is one), and before any request-specific options.
 func NewSkillContentService(opts ...option.RequestOption) (r SkillContentService) {
 	r = SkillContentService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

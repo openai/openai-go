@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -27,7 +27,7 @@ type ContainerFileContentService struct {
 // options (if there is one), and before any request-specific options.
 func NewContainerFileContentService(opts ...option.RequestOption) (r ContainerFileContentService) {
 	r = ContainerFileContentService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

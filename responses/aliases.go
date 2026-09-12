@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package responses
 
@@ -49,6 +49,12 @@ const AllModelsComputerUsePreview = shared.AllModelsComputerUsePreview
 // Equals "computer-use-preview-2025-03-11"
 const AllModelsComputerUsePreview2025_03_11 = shared.AllModelsComputerUsePreview2025_03_11
 
+// Equals "gpt-5.5-pro"
+const AllModelsGPT5_5Pro = shared.AllModelsGPT5_5Pro
+
+// Equals "gpt-5.5-pro-2026-04-23"
+const AllModelsGPT5_5Pro2026_04_23 = shared.AllModelsGPT5_5Pro2026_04_23
+
 // Equals "gpt-5-codex"
 const AllModelsGPT5Codex = shared.AllModelsGPT5Codex
 
@@ -61,8 +67,20 @@ const AllModelsGPT5Pro2025_10_06 = shared.AllModelsGPT5Pro2025_10_06
 // Equals "gpt-5.1-codex-max"
 const AllModelsGPT5_1CodexMax = shared.AllModelsGPT5_1CodexMax
 
+// Equals "gpt-daybreak-blue-latest"
+const AllModelsGPTDaybreakBlueLatest = shared.AllModelsGPTDaybreakBlueLatest
+
+// Equals "gpt-daybreak-red-latest"
+const AllModelsGPTDaybreakRedLatest = shared.AllModelsGPTDaybreakRedLatest
+
+// Equals "gpt-5.6-cyber"
+const AllModelsGPT5_6Cyber = shared.AllModelsGPT5_6Cyber
+
 // This is an alias to an internal type.
 type ChatModel = shared.ChatModel
+
+// Equals "gpt-6-astra"
+const ChatModelGPT6Astra = shared.ChatModelGPT6Astra
 
 // Equals "gpt-5.6-sol"
 const ChatModelGPT5_6Sol = shared.ChatModelGPT5_6Sol
@@ -72,6 +90,12 @@ const ChatModelGPT5_6Terra = shared.ChatModelGPT5_6Terra
 
 // Equals "gpt-5.6-luna"
 const ChatModelGPT5_6Luna = shared.ChatModelGPT5_6Luna
+
+// Equals "gpt-5.5"
+const ChatModelGPT5_5 = shared.ChatModelGPT5_5
+
+// Equals "gpt-5.5-2026-04-23"
+const ChatModelGPT5_5_2026_04_23 = shared.ChatModelGPT5_5_2026_04_23
 
 // Equals "gpt-5.4"
 const ChatModelGPT5_4 = shared.ChatModelGPT5_4
@@ -381,6 +405,12 @@ type ComparisonFilterValueArrayItemUnionParam = shared.ComparisonFilterValueArra
 // This is an alias to an internal type.
 type CompoundFilter = shared.CompoundFilter
 
+// A filter used to compare a specified attribute key to a given value using a
+// defined comparison operation.
+//
+// This is an alias to an internal type.
+type CompoundFilterFilterUnion = shared.CompoundFilterFilterUnion
+
 // Type of operation: `and` or `or`.
 //
 // This is an alias to an internal type.
@@ -396,6 +426,12 @@ const CompoundFilterTypeOr = shared.CompoundFilterTypeOr
 //
 // This is an alias to an internal type.
 type CompoundFilterParam = shared.CompoundFilterParam
+
+// A filter used to compare a specified attribute key to a given value using a
+// defined comparison operation.
+//
+// This is an alias to an internal type.
+type CompoundFilterFilterUnionParam = shared.CompoundFilterFilterUnionParam
 
 // The input format for the custom tool. Default is unconstrained text.
 //
@@ -431,14 +467,22 @@ type CustomToolInputFormatGrammarParam = shared.CustomToolInputFormatGrammarPara
 type ErrorObject = shared.ErrorObject
 
 // This is an alias to an internal type.
+type ErrorObjectMisalignment = shared.ErrorObjectMisalignment
+
+// An optional public continuation instruction.
+//
+// This is an alias to an internal type.
+type ErrorObjectMisalignmentSteer = shared.ErrorObjectMisalignmentSteer
+
+// This is an alias to an internal type.
 type FunctionDefinition = shared.FunctionDefinition
 
 // This is an alias to an internal type.
 type FunctionDefinitionParam = shared.FunctionDefinitionParam
 
 // The parameters the functions accepts, described as a JSON Schema object. See the
-// [guide](https://platform.openai.com/docs/guides/function-calling) for examples,
-// and the
+// [guide](https://developers.openai.com/api/docs/guides/function-calling) for
+// examples, and the
 // [JSON Schema reference](https://json-schema.org/understanding-json-schema/) for
 // documentation about the format.
 //
@@ -466,15 +510,16 @@ const OAuthErrorCodeInvalidGrant = shared.OAuthErrorCodeInvalidGrant
 // Equals "invalid_subject_token"
 const OAuthErrorCodeInvalidSubjectToken = shared.OAuthErrorCodeInvalidSubjectToken
 
-// **gpt-5 and o-series models only**
-//
 // Configuration options for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 //
 // This is an alias to an internal type.
 type Reasoning = shared.Reasoning
 
-// Controls which reasoning items are rendered back to the model on later turns.
+// Controls which reasoning items are rendered back to the model on later turns. If
+// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
+// model family defaults to `all_turns`; earlier models default to `current_turn`.
+//
 // When returned on a response, this is the effective reasoning context mode used
 // for the response.
 //
@@ -540,10 +585,8 @@ const ReasoningSummaryConcise = shared.ReasoningSummaryConcise
 // Equals "detailed"
 const ReasoningSummaryDetailed = shared.ReasoningSummaryDetailed
 
-// **gpt-5 and o-series models only**
-//
 // Configuration options for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 //
 // This is an alias to an internal type.
 type ReasoningParam = shared.ReasoningParam
@@ -552,7 +595,7 @@ type ReasoningParam = shared.ReasoningParam
 // are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
 // reasoning effort can result in faster responses and fewer tokens used on
 // reasoning in a response. Not all reasoning models support every value. See the
-// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+// [reasoning guide](https://developers.openai.com/api/docs/guides/reasoning) for
 // model-specific support.
 //
 // This is an alias to an internal type.
@@ -595,7 +638,7 @@ type ResponseFormatJSONObjectParam = shared.ResponseFormatJSONObjectParam
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
-// [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
+// [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 //
 // This is an alias to an internal type.
 type ResponseFormatJSONSchema = shared.ResponseFormatJSONSchema
@@ -607,7 +650,7 @@ type ResponseFormatJSONSchemaJSONSchema = shared.ResponseFormatJSONSchemaJSONSch
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
-// [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
+// [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 //
 // This is an alias to an internal type.
 type ResponseFormatJSONSchemaParam = shared.ResponseFormatJSONSchemaParam
@@ -660,6 +703,12 @@ const ResponsesModelComputerUsePreview = shared.ResponsesModelComputerUsePreview
 // Equals "computer-use-preview-2025-03-11"
 const ResponsesModelComputerUsePreview2025_03_11 = shared.ResponsesModelComputerUsePreview2025_03_11
 
+// Equals "gpt-5.5-pro"
+const ResponsesModelGPT5_5Pro = shared.ResponsesModelGPT5_5Pro
+
+// Equals "gpt-5.5-pro-2026-04-23"
+const ResponsesModelGPT5_5Pro2026_04_23 = shared.ResponsesModelGPT5_5Pro2026_04_23
+
 // Equals "gpt-5-codex"
 const ResponsesModelGPT5Codex = shared.ResponsesModelGPT5Codex
 
@@ -671,3 +720,12 @@ const ResponsesModelGPT5Pro2025_10_06 = shared.ResponsesModelGPT5Pro2025_10_06
 
 // Equals "gpt-5.1-codex-max"
 const ResponsesModelGPT5_1CodexMax = shared.ResponsesModelGPT5_1CodexMax
+
+// Equals "gpt-daybreak-blue-latest"
+const ResponsesModelGPTDaybreakBlueLatest = shared.ResponsesModelGPTDaybreakBlueLatest
+
+// Equals "gpt-daybreak-red-latest"
+const ResponsesModelGPTDaybreakRedLatest = shared.ResponsesModelGPTDaybreakRedLatest
+
+// Equals "gpt-5.6-cyber"
+const ResponsesModelGPT5_6Cyber = shared.ResponsesModelGPT5_6Cyber

@@ -1,12 +1,16 @@
 package ssestream
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
 	"reflect"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 )
 
 func TestStreamSkipsEventsWithoutData(t *testing.T) {
@@ -83,10 +87,205 @@ func TestDecoderSkipsBlocksWithoutData(t *testing.T) {
 	}
 }
 
+func TestNewDecoderMatchesRegisteredMediaTypeWithCaseAndParameters(t *testing.T) {
+	const contentType = "application/x-openai-go-test"
+	want := &testDecoder{}
+	RegisterDecoder(contentType, func(io.ReadCloser) Decoder {
+		return want
+	})
+	t.Cleanup(func() {
+		delete(decoderTypes, contentType)
+	})
+
+	decoder := NewDecoder(&http.Response{
+		Header: http.Header{
+			"Content-Type": {"Application/X-OpenAI-Go-Test; charset=utf-8"},
+		},
+		Body: io.NopCloser(strings.NewReader("")),
+	})
+
+	if decoder != want {
+		t.Fatalf("decoder = %T, want registered decoder", decoder)
+	}
+}
+
+func TestNewDecoderPreservesRegisteredContentTypeParameters(t *testing.T) {
+	const (
+		mediaType = "application/x-openai-go-test-parameters"
+		profileV1 = mediaType + "; profile=v1"
+		profileV2 = mediaType + "; profile=v2"
+	)
+	wantDefault := &testDecoder{}
+	wantV1 := &testDecoder{}
+	wantV2 := &testDecoder{}
+	RegisterDecoder(mediaType, func(io.ReadCloser) Decoder {
+		return wantDefault
+	})
+	RegisterDecoder(profileV1, func(io.ReadCloser) Decoder {
+		return wantV1
+	})
+	RegisterDecoder(profileV2, func(io.ReadCloser) Decoder {
+		return wantV2
+	})
+	t.Cleanup(func() {
+		delete(decoderTypes, mediaType)
+		delete(decoderTypes, profileV1)
+		delete(decoderTypes, profileV2)
+	})
+
+	for name, test := range map[string]struct {
+		contentType string
+		want        Decoder
+	}{
+		"profile v1": {
+			contentType: "Application/X-OpenAI-Go-Test-Parameters; profile=v1",
+			want:        wantV1,
+		},
+		"profile v2": {
+			contentType: "Application/X-OpenAI-Go-Test-Parameters; profile=v2",
+			want:        wantV2,
+		},
+		"unregistered profile": {
+			contentType: "Application/X-OpenAI-Go-Test-Parameters; profile=v3",
+			want:        wantDefault,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			decoder := NewDecoder(&http.Response{
+				Header: http.Header{
+					"Content-Type": {test.contentType},
+				},
+				Body: io.NopCloser(strings.NewReader("")),
+			})
+
+			if decoder != test.want {
+				t.Fatalf("decoder = %T, want registered decoder", decoder)
+			}
+		})
+	}
+}
+
+func TestNewDecoderDoesNotLowercaseContentTypeParameterValues(t *testing.T) {
+	const (
+		mediaType   = "application/x-openai-go-test-profile"
+		contentType = mediaType + "; profile=\"https://example.com/v1\""
+	)
+	wantDefault := &testDecoder{}
+	wantProfile := &testDecoder{}
+	RegisterDecoder(mediaType, func(io.ReadCloser) Decoder {
+		return wantDefault
+	})
+	RegisterDecoder(contentType, func(io.ReadCloser) Decoder {
+		return wantProfile
+	})
+	t.Cleanup(func() {
+		delete(decoderTypes, mediaType)
+		delete(decoderTypes, contentType)
+	})
+
+	for name, test := range map[string]struct {
+		contentType string
+		want        Decoder
+	}{
+		"lowercase value": {
+			contentType: "Application/X-OpenAI-Go-Test-Profile; profile=\"https://example.com/v1\"",
+			want:        wantProfile,
+		},
+		"distinct uppercase value": {
+			contentType: "Application/X-OpenAI-Go-Test-Profile; profile=\"https://example.com/V1\"",
+			want:        wantDefault,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			decoder := NewDecoder(&http.Response{
+				Header: http.Header{
+					"Content-Type": {test.contentType},
+				},
+				Body: io.NopCloser(strings.NewReader("")),
+			})
+
+			if decoder != test.want {
+				t.Fatalf("decoder = %T, want registered decoder", decoder)
+			}
+		})
+	}
+}
+
+func TestNewDecoderPreservesExistingCharsetParameterMatching(t *testing.T) {
+	const contentType = "application/x-openai-go-test-charset; charset=UTF-8"
+	want := &testDecoder{}
+	RegisterDecoder(contentType, func(io.ReadCloser) Decoder {
+		return want
+	})
+	t.Cleanup(func() {
+		delete(decoderTypes, strings.ToLower(contentType))
+	})
+
+	decoder := NewDecoder(&http.Response{
+		Header: http.Header{
+			"Content-Type": {"Application/X-OpenAI-Go-Test-Charset; charset=utf-8"},
+		},
+		Body: io.NopCloser(strings.NewReader("")),
+	})
+
+	if decoder != want {
+		t.Fatalf("decoder = %T, want registered decoder", decoder)
+	}
+}
+
+func TestNewDecoderDoesNotCollapseUnsupportedExtendedParameters(t *testing.T) {
+	const (
+		mediaType   = "application/x-openai-go-test-extended"
+		extendedKey = mediaType + "; variant*=iso-8859-1''caf%E9"
+	)
+	wantDefault := &testDecoder{}
+	wantExtended := &testDecoder{}
+	RegisterDecoder(mediaType, func(io.ReadCloser) Decoder {
+		return wantDefault
+	})
+	RegisterDecoder(extendedKey, func(io.ReadCloser) Decoder {
+		return wantExtended
+	})
+	t.Cleanup(func() {
+		delete(decoderTypes, mediaType)
+		delete(decoderTypes, strings.ToLower(extendedKey))
+	})
+
+	for name, test := range map[string]struct {
+		contentType string
+		want        Decoder
+	}{
+		"bare media type": {
+			contentType: mediaType,
+			want:        wantDefault,
+		},
+		"extended parameter": {
+			contentType: "Application/X-OpenAI-Go-Test-Extended; variant*=iso-8859-1''caf%e9",
+			want:        wantExtended,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			decoder := NewDecoder(&http.Response{
+				Header: http.Header{
+					"Content-Type": {test.contentType},
+				},
+				Body: io.NopCloser(strings.NewReader("")),
+			})
+
+			if decoder != test.want {
+				t.Fatalf("decoder = %T, want registered decoder", decoder)
+			}
+		})
+	}
+}
+
 type testDecoder struct {
-	events  []Event
-	current Event
-	next    int
+	events     []Event
+	current    Event
+	next       int
+	err        error
+	closeErr   error
+	closeCalls int
 }
 
 func (d *testDecoder) Next() bool {
@@ -99,8 +298,262 @@ func (d *testDecoder) Next() bool {
 }
 
 func (d *testDecoder) Event() Event { return d.current }
-func (d *testDecoder) Close() error { return nil }
-func (d *testDecoder) Err() error   { return nil }
+func (d *testDecoder) Close() error {
+	d.closeCalls++
+	return d.closeErr
+}
+func (d *testDecoder) Err() error { return d.err }
+
+type terminalDecoder struct {
+	continued  chan struct{}
+	release    chan struct{}
+	nextCalls  int
+	closeCalls int
+}
+
+func newTerminalDecoder() *terminalDecoder {
+	return &terminalDecoder{
+		continued: make(chan struct{}),
+		release:   make(chan struct{}),
+	}
+}
+
+func (d *terminalDecoder) Next() bool {
+	d.nextCalls++
+	if d.nextCalls == 1 {
+		return true
+	}
+	close(d.continued)
+	<-d.release
+	return false
+}
+
+func (d *terminalDecoder) Event() Event { return Event{Data: []byte("[DONE]\n")} }
+func (d *terminalDecoder) Close() error {
+	d.closeCalls++
+	return nil
+}
+func (d *terminalDecoder) Err() error { return nil }
+
+func TestStreamStopsAndClosesAtDoneWithoutWaitingForEOF(t *testing.T) {
+	decoder := newTerminalDecoder()
+	stream := NewStream[map[string]any](decoder, nil)
+	result := make(chan bool, 1)
+
+	go func() {
+		result <- stream.Next()
+	}()
+
+	select {
+	case got := <-result:
+		if got {
+			t.Fatal("terminal event unexpectedly produced a stream value")
+		}
+	case <-decoder.continued:
+		close(decoder.release)
+		<-result
+		t.Fatal("stream continued reading after the terminal event")
+	}
+
+	if decoder.nextCalls != 1 {
+		t.Fatalf("decoder.Next called %d times, want 1", decoder.nextCalls)
+	}
+	if decoder.closeCalls != 1 {
+		t.Fatalf("decoder.Close called %d times, want 1", decoder.closeCalls)
+	}
+	if err := stream.Err(); err != nil {
+		t.Fatalf("stream ended with error: %v", err)
+	}
+}
+
+type closeTrackingReadCloser struct {
+	io.Reader
+	closeCalls int
+}
+
+func (r *closeTrackingReadCloser) Close() error {
+	r.closeCalls++
+	return nil
+}
+
+func TestStreamClosesResponseBodyAtDone(t *testing.T) {
+	body := &closeTrackingReadCloser{
+		Reader: strings.NewReader("data: [DONE]\n\n"),
+	}
+	stream := NewStream[map[string]any](NewDecoder(&http.Response{
+		Header: http.Header{"Content-Type": []string{"text/event-stream"}},
+		Body:   body,
+	}), nil)
+
+	if stream.Next() {
+		t.Fatal("terminal event unexpectedly produced a stream value")
+	}
+	if body.closeCalls != 1 {
+		t.Fatalf("response body Close called %d times, want 1", body.closeCalls)
+	}
+	if err := stream.Close(); err != nil {
+		t.Fatalf("second stream.Close returned error: %v", err)
+	}
+	if body.closeCalls != 1 {
+		t.Fatalf("response body Close called %d times after repeated close, want 1", body.closeCalls)
+	}
+}
+
+func TestStreamClosesOnUnrecoverableErrorsAndEOF(t *testing.T) {
+	tests := map[string]struct {
+		decoder    *testDecoder
+		initialErr error
+		checkErr   func(*testing.T, error)
+	}{
+		"stream error": {
+			decoder: &testDecoder{events: []Event{{Data: []byte(`{"error":{"message":"bad"}}`)}}},
+			checkErr: func(t *testing.T, err error) {
+				t.Helper()
+				var streamErr *StreamError
+				if !errors.As(err, &streamErr) {
+					t.Fatalf("stream error = %v, want *StreamError", err)
+				}
+			},
+		},
+		"decode error": {
+			decoder: &testDecoder{events: []Event{{Data: []byte(`not json`)}}},
+			checkErr: func(t *testing.T, err error) {
+				t.Helper()
+				var syntaxErr *json.SyntaxError
+				if !errors.As(err, &syntaxErr) {
+					t.Fatalf("stream error = %v, want *json.SyntaxError", err)
+				}
+			},
+		},
+		"decoder error": {
+			decoder: &testDecoder{err: errTestReader},
+			checkErr: func(t *testing.T, err error) {
+				t.Helper()
+				if !errors.Is(err, errTestReader) {
+					t.Fatalf("stream error = %v, want %v", err, errTestReader)
+				}
+			},
+		},
+		"initial error": {
+			decoder:    &testDecoder{},
+			initialErr: errTestReader,
+			checkErr: func(t *testing.T, err error) {
+				t.Helper()
+				if !errors.Is(err, errTestReader) {
+					t.Fatalf("stream error = %v, want %v", err, errTestReader)
+				}
+			},
+		},
+		"EOF": {
+			decoder: &testDecoder{},
+			checkErr: func(t *testing.T, err error) {
+				t.Helper()
+				if err != nil {
+					t.Fatalf("stream ended with error: %v", err)
+				}
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			stream := NewStream[map[string]any](test.decoder, test.initialErr)
+
+			if stream.Next() {
+				t.Fatal("terminal stream state unexpectedly produced a value")
+			}
+			test.checkErr(t, stream.Err())
+			if test.decoder.closeCalls != 1 {
+				t.Fatalf("decoder.Close called %d times, want 1", test.decoder.closeCalls)
+			}
+		})
+	}
+}
+
+func TestStreamCloseIsIdempotent(t *testing.T) {
+	errClose := errors.New("test close error")
+	decoder := &testDecoder{closeErr: errClose}
+	stream := NewStream[map[string]any](decoder, nil)
+
+	for range 2 {
+		if err := stream.Close(); !errors.Is(err, errClose) {
+			t.Fatalf("stream.Close error = %v, want %v", err, errClose)
+		}
+	}
+	if decoder.closeCalls != 1 {
+		t.Fatalf("decoder.Close called %d times, want 1", decoder.closeCalls)
+	}
+	if stream.Next() {
+		t.Fatal("closed stream unexpectedly produced a value")
+	}
+}
+
+type blockingReadCloser struct {
+	readStarted chan struct{}
+	closed      chan struct{}
+	readOnce    sync.Once
+	closeOnce   sync.Once
+	closeCalls  atomic.Int32
+}
+
+func newBlockingReadCloser() *blockingReadCloser {
+	return &blockingReadCloser{
+		readStarted: make(chan struct{}),
+		closed:      make(chan struct{}),
+	}
+}
+
+func (r *blockingReadCloser) Read([]byte) (int, error) {
+	r.readOnce.Do(func() { close(r.readStarted) })
+	<-r.closed
+	return 0, io.ErrClosedPipe
+}
+
+func (r *blockingReadCloser) Close() error {
+	r.closeCalls.Add(1)
+	r.closeOnce.Do(func() { close(r.closed) })
+	return nil
+}
+
+func TestStreamCloseInterruptsBlockedNext(t *testing.T) {
+	body := newBlockingReadCloser()
+	stream := NewStream[map[string]any](NewDecoder(&http.Response{
+		Header: http.Header{"Content-Type": []string{"text/event-stream"}},
+		Body:   body,
+	}), nil)
+	nextResult := make(chan bool, 1)
+
+	go func() {
+		nextResult <- stream.Next()
+	}()
+
+	<-body.readStarted
+	if err := stream.Close(); err != nil {
+		t.Fatalf("stream.Close returned error: %v", err)
+	}
+
+	select {
+	case got := <-nextResult:
+		if got {
+			t.Fatal("interrupted stream unexpectedly produced a value")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("stream.Next remained blocked after Close")
+	}
+
+	if !errors.Is(stream.Err(), io.ErrClosedPipe) {
+		t.Fatalf("stream error = %v, want %v", stream.Err(), io.ErrClosedPipe)
+	}
+	if got := body.closeCalls.Load(); got != 1 {
+		t.Fatalf("response body Close called %d times, want 1", got)
+	}
+	if err := stream.Close(); err != nil {
+		t.Fatalf("second stream.Close returned error: %v", err)
+	}
+	if got := body.closeCalls.Load(); got != 1 {
+		t.Fatalf("response body Close called %d times after repeated close, want 1", got)
+	}
+}
 
 func TestSynthesizedStreamPreservesCustomEventsWithoutData(t *testing.T) {
 	decoder := &testDecoder{events: []Event{{Type: "custom.heartbeat"}}}
@@ -176,5 +629,53 @@ func TestStreamRejectsEmptyDataField(t *testing.T) {
 	}
 	if err := stream.Err(); err == nil || !strings.Contains(err.Error(), "unexpected end of JSON input") {
 		t.Fatalf("stream error = %v, want unexpected end of JSON input", err)
+	}
+}
+
+func TestEventStreamDecoderDiscardsIncompleteEventAtEOF(t *testing.T) {
+	for name, body := range map[string]string{
+		"event with data":    "event: update\ndata: hello",
+		"event without data": "event: update",
+	} {
+		t.Run(name, func(t *testing.T) {
+			res := &http.Response{
+				Header: http.Header{
+					"Content-Type": []string{"text/event-stream"},
+				},
+				Body: io.NopCloser(strings.NewReader(body)),
+			}
+
+			decoder := NewDecoder(res)
+			if decoder == nil {
+				t.Fatal("expected decoder")
+			}
+			if decoder.Next() {
+				t.Fatal("unexpected incomplete event")
+			}
+			if err := decoder.Err(); err != nil {
+				t.Fatalf("unexpected decoder error: %v", err)
+			}
+		})
+	}
+}
+
+func TestStreamDiscardsIncompleteEventAtEOF(t *testing.T) {
+	res := &http.Response{
+		Header: http.Header{
+			"Content-Type": []string{"text/event-stream"},
+		},
+		Body: io.NopCloser(strings.NewReader("event: update")),
+	}
+
+	type payload struct {
+		Value string `json:"value"`
+	}
+
+	stream := NewStream[payload](NewDecoder(res), nil)
+	if stream.Next() {
+		t.Fatal("unexpected incomplete stream event")
+	}
+	if err := stream.Err(); err != nil {
+		t.Fatalf("unexpected stream error: %v", err)
 	}
 }

@@ -15,12 +15,6 @@ import (
 	"github.com/openai/openai-go/v3/shared"
 )
 
-// Mock function to simulate weather data retrieval
-func getWeather(_ string) string {
-	// In a real implementation, this function would call a weather API
-	return "Sunny, 25°C"
-}
-
 // Since the streamed response is hardcoded, we can hardcode the expected tool call
 var expectedToolCall = openai.ChatCompletionMessageFunctionToolCallFunction{
 	Arguments: `{"location":"Santorini, Greece"}`,
@@ -123,7 +117,7 @@ func TestStreamingAccumulatorWithToolCalls(t *testing.T) {
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
 
-	if acc.Choices == nil || len(acc.Choices) == 0 {
+	if len(acc.Choices) == 0 {
 		t.Fatal("No choices in accumulation")
 	}
 
@@ -254,9 +248,114 @@ func TestAccumulatorNegativeToolCallIndex(t *testing.T) {
 
 func TestAccumulatorEmptyToolCallsArray(t *testing.T) {
 	acc := openai.ChatCompletionAccumulator{}
-	chunk := openai.ChatCompletionChunk{}
-	chunk.UnmarshalJSON([]byte(`{"id":"test","choices":[{"index":0,"delta":{"tool_calls":[]}}]}`))
-	acc.AddChunk(chunk)
+	chunkWithEmptyToolCalls := openai.ChatCompletionChunk{}
+	if err := chunkWithEmptyToolCalls.UnmarshalJSON([]byte(`{"id":"test","choices":[{"index":0,"delta":{"tool_calls":[]}}]}`)); err != nil {
+		t.Fatalf("Failed to unmarshal chunk: %v", err)
+	}
+	if !acc.AddChunk(chunkWithEmptyToolCalls) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	finishedChunk := openai.ChatCompletionChunk{}
+	if err := finishedChunk.UnmarshalJSON([]byte(`{"id":"test","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}`)); err != nil {
+		t.Fatalf("Failed to unmarshal chunk: %v", err)
+	}
+	if !acc.AddChunk(finishedChunk) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	if toolCall, ok := acc.JustFinishedToolCall(); ok {
+		t.Fatalf("JustFinishedToolCall returned unexpected tool call: %+v", toolCall)
+	}
+}
+
+func TestAccumulatorNullToolCalls(t *testing.T) {
+	acc := openai.ChatCompletionAccumulator{}
+	chunkWithNullToolCalls := openai.ChatCompletionChunk{}
+	if err := chunkWithNullToolCalls.UnmarshalJSON([]byte(`{"id":"test","choices":[{"index":0,"delta":{"tool_calls":null}}]}`)); err != nil {
+		t.Fatalf("Failed to unmarshal chunk: %v", err)
+	}
+	if !acc.AddChunk(chunkWithNullToolCalls) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	finishedChunk := openai.ChatCompletionChunk{}
+	if err := finishedChunk.UnmarshalJSON([]byte(`{"id":"test","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}`)); err != nil {
+		t.Fatalf("Failed to unmarshal chunk: %v", err)
+	}
+	if !acc.AddChunk(finishedChunk) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	if toolCall, ok := acc.JustFinishedToolCall(); ok {
+		t.Fatalf("JustFinishedToolCall returned unexpected tool call: %+v", toolCall)
+	}
+}
+
+func TestAccumulatorToolCallWithEmptyContent(t *testing.T) {
+	acc := openai.ChatCompletionAccumulator{}
+
+	toolCallChunk := openai.ChatCompletionChunk{}
+	// Some OpenAI-compatible providers send an explicit empty content field
+	// alongside a real tool call.
+	toolCallJSON := `{"id":"test","choices":[{"index":0,"delta":{"content":"","tool_calls":[{"id":"call_1","index":0,"type":"function","function":{"name":"search","arguments":"{}"}}]}}]}`
+	if err := toolCallChunk.UnmarshalJSON([]byte(toolCallJSON)); err != nil {
+		t.Fatalf("Failed to unmarshal tool call chunk: %v", err)
+	}
+	if !acc.AddChunk(toolCallChunk) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	finishChunk := openai.ChatCompletionChunk{}
+	finishJSON := `{"id":"test","choices":[{"index":0,"delta":{},"finish_reason":"tool_calls"}]}`
+	if err := finishChunk.UnmarshalJSON([]byte(finishJSON)); err != nil {
+		t.Fatalf("Failed to unmarshal finish chunk: %v", err)
+	}
+	if !acc.AddChunk(finishChunk) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	if _, ok := acc.JustFinishedContent(); ok {
+		t.Fatal("JustFinishedContent fired for an empty content field with a tool call")
+	}
+
+	toolCall, ok := acc.JustFinishedToolCall()
+	if !ok {
+		t.Fatal("JustFinishedToolCall did not fire after the finishing chunk")
+	}
+	if toolCall.ID != "call_1" || toolCall.Name != "search" || toolCall.Arguments != "{}" {
+		t.Fatalf("Found unexpected tool call: %#v", toolCall)
+	}
+}
+
+func TestAccumulatorToolCallWithEmptyContentAtNonzeroChoice(t *testing.T) {
+	acc := openai.ChatCompletionAccumulator{}
+
+	toolCallChunk := openai.ChatCompletionChunk{}
+	toolCallJSON := `{"id":"test","choices":[{"index":1,"delta":{"content":"","tool_calls":[{"id":"call_1","index":0,"type":"function","function":{"name":"search","arguments":"{}"}}]}}]}`
+	if err := toolCallChunk.UnmarshalJSON([]byte(toolCallJSON)); err != nil {
+		t.Fatalf("Failed to unmarshal tool call chunk: %v", err)
+	}
+	if !acc.AddChunk(toolCallChunk) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	finishChunk := openai.ChatCompletionChunk{}
+	finishJSON := `{"id":"test","choices":[{"index":1,"delta":{},"finish_reason":"tool_calls"}]}`
+	if err := finishChunk.UnmarshalJSON([]byte(finishJSON)); err != nil {
+		t.Fatalf("Failed to unmarshal finish chunk: %v", err)
+	}
+	if !acc.AddChunk(finishChunk) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	toolCall, ok := acc.JustFinishedToolCall()
+	if !ok {
+		t.Fatal("JustFinishedToolCall did not fire after the finishing chunk")
+	}
+	if toolCall.ID != "call_1" || toolCall.Name != "search" || toolCall.Arguments != "{}" {
+		t.Fatalf("Found unexpected tool call: %#v", toolCall)
+	}
 }
 
 // manually created on 11/3/2024

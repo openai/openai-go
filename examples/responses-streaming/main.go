@@ -17,6 +17,7 @@ func main() {
 		Input: responses.ResponseNewParamsInputUnion{OfString: openai.String(question)},
 		Model: openai.ChatModelGPT4,
 	})
+	defer func() { _ = stream.Close() }()
 
 	var completeText string
 

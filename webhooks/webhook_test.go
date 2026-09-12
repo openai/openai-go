@@ -1,8 +1,12 @@
 package webhooks_test
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"net/http"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -28,6 +32,96 @@ func createTestHeaders() http.Header {
 	}
 }
 
+func createSignedTestHeaders(secret string, timestamp int64) http.Header {
+	timestampString := strconv.FormatInt(timestamp, 10)
+	h := hmac.New(sha256.New, []byte(secret))
+	h.Write([]byte(testWebhookID + "." + timestampString + "." + testPayload))
+	return http.Header{
+		"Webhook-Signature": []string{"v1," + base64.StdEncoding.EncodeToString(h.Sum(nil))},
+		"Webhook-Timestamp": []string{timestampString},
+		"Webhook-Id":        []string{testWebhookID},
+	}
+}
+
+func TestWebhookService_RequestOptionsOverrideClientOptions(t *testing.T) {
+	t.Setenv("OPENAI_WEBHOOK_SECRET", "")
+
+	const (
+		clientSecret  = "client-secret"
+		requestSecret = "request-secret"
+	)
+	timestamp := time.Now().Unix()
+	now := time.Unix(timestamp, 0)
+	clientHeaders := createSignedTestHeaders(clientSecret, timestamp)
+	requestHeaders := createSignedTestHeaders(requestSecret, timestamp)
+	client := openai.NewClient(option.WithWebhookSecret(clientSecret))
+	clientWithoutSecret := openai.NewClient()
+
+	tests := []struct {
+		name string
+		call func(*openai.Client, http.Header, ...option.RequestOption) error
+	}{
+		{
+			name: "VerifySignature",
+			call: func(client *openai.Client, headers http.Header, opts ...option.RequestOption) error {
+				return client.Webhooks.VerifySignature([]byte(testPayload), headers, opts...)
+			},
+		},
+		{
+			name: "VerifySignatureWithTolerance",
+			call: func(client *openai.Client, headers http.Header, opts ...option.RequestOption) error {
+				return client.Webhooks.VerifySignatureWithTolerance([]byte(testPayload), headers, 5*time.Minute, opts...)
+			},
+		},
+		{
+			name: "VerifySignatureWithToleranceAndTime",
+			call: func(client *openai.Client, headers http.Header, opts ...option.RequestOption) error {
+				return client.Webhooks.VerifySignatureWithToleranceAndTime([]byte(testPayload), headers, 5*time.Minute, now, opts...)
+			},
+		},
+		{
+			name: "Unwrap",
+			call: func(client *openai.Client, headers http.Header, opts ...option.RequestOption) error {
+				_, err := client.Webhooks.Unwrap([]byte(testPayload), headers, opts...)
+				return err
+			},
+		},
+		{
+			name: "UnwrapWithTolerance",
+			call: func(client *openai.Client, headers http.Header, opts ...option.RequestOption) error {
+				_, err := client.Webhooks.UnwrapWithTolerance([]byte(testPayload), headers, 5*time.Minute, opts...)
+				return err
+			},
+		},
+		{
+			name: "UnwrapWithToleranceAndTime",
+			call: func(client *openai.Client, headers http.Header, opts ...option.RequestOption) error {
+				_, err := client.Webhooks.UnwrapWithToleranceAndTime([]byte(testPayload), headers, 5*time.Minute, now, opts...)
+				return err
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			requestOption := option.WithWebhookSecret(requestSecret)
+			if err := test.call(&client, requestHeaders, requestOption); err != nil {
+				t.Fatalf("request option should override client option: %v", err)
+			}
+			if err := test.call(&client, clientHeaders, requestOption); err == nil {
+				t.Fatal("client option should not remain active when a request option is provided")
+			}
+			if err := test.call(&clientWithoutSecret, requestHeaders, requestOption); err != nil {
+				t.Fatalf("request option should work without a client option: %v", err)
+			}
+		})
+	}
+}
+
+func createTestHeadersForSecret(secret []byte) http.Header {
+	return createSignedTestHeaders(string(secret), testTimestamp)
+}
+
 func TestWebhookService_VerifySignature_ValidSignature(t *testing.T) {
 	client := openai.NewClient(
 		option.WithAPIKey("test-key"),
@@ -39,6 +133,162 @@ func TestWebhookService_VerifySignature_ValidSignature(t *testing.T) {
 	err := client.Webhooks.VerifySignatureWithToleranceAndTime([]byte(testPayload), createTestHeaders(), 5*time.Minute, fixedTime)
 	if err != nil {
 		t.Errorf("VerifySignatureWithToleranceAndTime should have succeeded with valid signature: %v", err)
+	}
+}
+
+func TestWebhookService_VerifySignature_RejectsInvalidPrefixedSecrets(t *testing.T) {
+	validSecret, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(testSecret, "whsec_"))
+	if err != nil {
+		t.Fatalf("failed to decode test secret: %v", err)
+	}
+
+	tests := []struct {
+		name    string
+		secret  string
+		key     []byte
+		wantErr string
+	}{
+		{
+			name:    "empty",
+			secret:  "whsec_",
+			key:     nil,
+			wantErr: "invalid webhook secret: decoded secret must be at least 24 bytes",
+		},
+		{
+			name:    "undersized",
+			secret:  "whsec_YQ==",
+			key:     []byte("a"),
+			wantErr: "invalid webhook secret: decoded secret must be at least 24 bytes",
+		},
+		{
+			name:    "non-zero trailing base64 bits",
+			secret:  strings.TrimSuffix(testSecret, "c=") + "d=",
+			key:     validSecret,
+			wantErr: "invalid webhook secret format",
+		},
+		{
+			name:    "non-canonical base64 line break",
+			secret:  strings.Replace(testSecret, "+", "+\n", 1),
+			key:     validSecret,
+			wantErr: "expected canonical base64 encoding",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			client := openai.NewClient(
+				option.WithAPIKey("test-key"),
+				option.WithWebhookSecret(test.secret),
+			)
+
+			err := client.Webhooks.VerifySignatureWithToleranceAndTime(
+				[]byte(testPayload),
+				createTestHeadersForSecret(test.key),
+				5*time.Minute,
+				time.Unix(testTimestamp, 0),
+			)
+			if err == nil || !strings.Contains(err.Error(), test.wantErr) {
+				t.Fatalf("VerifySignatureWithToleranceAndTime error = %v, want error containing %q", err, test.wantErr)
+			}
+		})
+	}
+}
+
+func TestWebhookService_VerifySignature_AcceptsMinimumLengthPrefixedSecret(t *testing.T) {
+	secret := []byte("123456789012345678901234")
+	client := openai.NewClient(
+		option.WithAPIKey("test-key"),
+		option.WithWebhookSecret("whsec_"+base64.StdEncoding.EncodeToString(secret)),
+	)
+
+	err := client.Webhooks.VerifySignatureWithToleranceAndTime(
+		[]byte(testPayload),
+		createTestHeadersForSecret(secret),
+		5*time.Minute,
+		time.Unix(testTimestamp, 0),
+	)
+	if err != nil {
+		t.Fatalf("VerifySignatureWithToleranceAndTime should have accepted a 24-byte prefixed secret: %v", err)
+	}
+}
+
+func TestWebhookService_VerifySignature_AcceptsRawSecret(t *testing.T) {
+	secret := "legacy-raw-secret"
+	client := openai.NewClient(
+		option.WithAPIKey("test-key"),
+		option.WithWebhookSecret(secret),
+	)
+
+	err := client.Webhooks.VerifySignatureWithToleranceAndTime(
+		[]byte(testPayload),
+		createTestHeadersForSecret([]byte(secret)),
+		5*time.Minute,
+		time.Unix(testTimestamp, 0),
+	)
+	if err != nil {
+		t.Fatalf("VerifySignatureWithToleranceAndTime should have accepted a valid raw secret: %v", err)
+	}
+}
+
+func TestWebhookService_VerifySignature_RejectsInvalidEnvironmentSecret(t *testing.T) {
+	t.Setenv("OPENAI_WEBHOOK_SECRET", "whsec_")
+	client := openai.NewClient(option.WithAPIKey("test-key"))
+
+	err := client.Webhooks.VerifySignatureWithToleranceAndTime(
+		[]byte(testPayload),
+		createTestHeadersForSecret(nil),
+		5*time.Minute,
+		time.Unix(testTimestamp, 0),
+	)
+	if err == nil || !strings.Contains(err.Error(), "decoded secret must be at least 24 bytes") {
+		t.Fatalf("VerifySignatureWithToleranceAndTime error = %v, want invalid webhook secret error", err)
+	}
+}
+
+func TestWebhookService_VerifySignature_ExplicitSecretOverridesInvalidEnvironmentDefault(t *testing.T) {
+	t.Setenv("OPENAI_WEBHOOK_SECRET", "whsec_")
+	client := openai.NewClient(
+		option.WithAPIKey("test-key"),
+		option.WithWebhookSecret(testSecret),
+	)
+
+	err := client.Webhooks.VerifySignatureWithToleranceAndTime(
+		[]byte(testPayload),
+		createTestHeaders(),
+		5*time.Minute,
+		time.Unix(testTimestamp, 0),
+	)
+	if err != nil {
+		t.Fatalf("VerifySignatureWithToleranceAndTime should have accepted the explicit valid secret: %v", err)
+	}
+}
+
+func TestWebhookService_VerifySignature_ValidatesEffectiveRequestSecret(t *testing.T) {
+	t.Setenv("OPENAI_WEBHOOK_SECRET", "")
+	fixedTime := time.Unix(testTimestamp, 0)
+
+	clientWithInvalidSecret := openai.NewClient(option.WithWebhookSecret("whsec_"))
+	err := clientWithInvalidSecret.Webhooks.VerifySignatureWithToleranceAndTime(
+		[]byte(testPayload),
+		createTestHeaders(),
+		5*time.Minute,
+		fixedTime,
+		option.WithWebhookSecret(testSecret),
+	)
+	if err != nil {
+		t.Fatalf("VerifySignatureWithToleranceAndTime should have accepted the valid request secret: %v", err)
+	}
+
+	clientWithValidSecret := openai.NewClient(option.WithWebhookSecret(testSecret))
+	err = clientWithValidSecret.Webhooks.VerifySignatureWithToleranceAndTime(
+		[]byte(testPayload),
+		createTestHeadersForSecret(nil),
+		5*time.Minute,
+		fixedTime,
+		option.WithWebhookSecret("whsec_"),
+	)
+	if err == nil || !strings.Contains(err.Error(), "decoded secret must be at least 24 bytes") {
+		t.Fatalf("VerifySignatureWithToleranceAndTime error = %v, want invalid request secret error", err)
 	}
 }
 
@@ -256,11 +506,11 @@ func TestWebhookService_UnwrapWithToleranceAndTime(t *testing.T) {
 	fixedTime := time.Unix(testTimestamp, 0)
 	webhookEvent, err := client.Webhooks.UnwrapWithToleranceAndTime([]byte(testPayload), createTestHeaders(), 5*time.Minute, fixedTime)
 	if err != nil {
-		t.Errorf("UnwrapWithToleranceAndTime should have succeeded with valid signature: %v", err)
+		t.Fatalf("UnwrapWithToleranceAndTime should have succeeded with valid signature: %v", err)
 	}
 
 	if webhookEvent == nil {
-		t.Error("UnwrapWithToleranceAndTime should return parsed event")
+		t.Fatal("UnwrapWithToleranceAndTime should return parsed event")
 	}
 
 	parsed := webhookEvent.AsResponseCompleted()

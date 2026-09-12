@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -30,7 +30,7 @@ type AudioSpeechService struct {
 // there is one), and before any request-specific options.
 func NewAudioSpeechService(opts ...option.RequestOption) (r AudioSpeechService) {
 	r = AudioSpeechService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
@@ -58,7 +58,8 @@ const (
 type AudioSpeechNewParams struct {
 	// The text to generate audio for. The maximum length is 4096 characters.
 	Input string `json:"input" api:"required"`
-	// One of the available [TTS models](https://platform.openai.com/docs/models#tts):
+	// One of the available
+	// [TTS models](https://developers.openai.com/api/docs/guides/text-to-speech):
 	// `tts-1`, `tts-1-hd`, `gpt-4o-mini-tts`, or `gpt-4o-mini-tts-2025-12-15`.
 	Model SpeechModel `json:"model,omitzero" api:"required"`
 	// The voice to use when generating the audio. Supported built-in voices are
@@ -66,7 +67,7 @@ type AudioSpeechNewParams struct {
 	// `shimmer`, `verse`, `marin`, and `cedar`. You may also provide a custom voice
 	// object with an `id`, for example `{ "id": "voice_1234" }`. Previews of the
 	// voices are available in the
-	// [Text to speech guide](https://platform.openai.com/docs/guides/text-to-speech#voice-options).
+	// [Text to speech guide](https://developers.openai.com/api/docs/guides/text-to-speech#voice-options).
 	Voice AudioSpeechNewParamsVoiceUnion `json:"voice,omitzero" api:"required"`
 	// Control the voice of your generated audio with additional instructions. Does not
 	// work with `tts-1` or `tts-1-hd`.
@@ -112,17 +113,6 @@ func (u AudioSpeechNewParamsVoiceUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *AudioSpeechNewParamsVoiceUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *AudioSpeechNewParamsVoiceUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfAudioSpeechNewsVoiceString2) {
-		return &u.OfAudioSpeechNewsVoiceString2
-	} else if !param.IsOmitted(u.OfAudioSpeechNewsVoiceID) {
-		return u.OfAudioSpeechNewsVoiceID
-	}
-	return nil
 }
 
 type AudioSpeechNewParamsVoiceString2 string

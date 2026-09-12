@@ -1,5 +1,3 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package ssestream
 
 import (
@@ -8,8 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"strings"
+	"sync"
+	"sync/atomic"
 
 	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
 	"github.com/tidwall/gjson"
@@ -27,22 +28,39 @@ func NewDecoder(res *http.Response) Decoder {
 		return nil
 	}
 
-	var decoder Decoder
-	contentType := res.Header.Get("content-type")
+	contentType, mediaType := decoderContentTypes(res.Header.Get("content-type"))
 	if t, ok := decoderTypes[contentType]; ok {
-		decoder = t(res.Body)
-	} else {
-		scn := bufio.NewScanner(res.Body)
-		scn.Buffer(nil, bufio.MaxScanTokenSize<<9)
-		decoder = &eventStreamDecoder{rc: res.Body, scn: scn}
+		return t(res.Body)
 	}
-	return decoder
+
+	// Preserve parameter-specific registrations while allowing a bare media
+	// type registration to match standard Content-Type parameters.
+	if mediaType != "" {
+		if t, ok := decoderTypes[mediaType]; ok {
+			return t(res.Body)
+		}
+	}
+
+	scn := bufio.NewScanner(res.Body)
+	scn.Buffer(nil, bufio.MaxScanTokenSize<<9)
+	return &eventStreamDecoder{rc: res.Body, scn: scn}
 }
 
 var decoderTypes = map[string](func(io.ReadCloser) Decoder){}
 
 func RegisterDecoder(contentType string, decoder func(io.ReadCloser) Decoder) {
 	decoderTypes[strings.ToLower(contentType)] = decoder
+}
+
+func decoderContentTypes(contentType string) (string, string) {
+	base, _, _ := strings.Cut(contentType, ";")
+	exactType := strings.ToLower(base) + contentType[len(base):]
+
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return exactType, ""
+	}
+	return exactType, mediaType
 }
 
 type Event struct {
@@ -75,20 +93,20 @@ func (s *eventStreamDecoder) Next() bool {
 	}
 
 	event := ""
-	data := bytes.NewBuffer(nil)
+	var data []byte
 
 	for s.scn.Scan() {
 		txt := s.scn.Bytes()
 
 		// Dispatch event on an empty line
 		if len(txt) == 0 {
-			if data.Len() == 0 {
+			if len(data) == 0 {
 				event = ""
 				continue
 			}
 			s.evt = Event{
 				Type: event,
-				Data: data.Bytes(),
+				Data: data,
 			}
 			return true
 		}
@@ -108,14 +126,8 @@ func (s *eventStreamDecoder) Next() bool {
 		case "event":
 			event = string(value)
 		case "data":
-			_, s.err = data.Write(value)
-			if s.err != nil {
-				break
-			}
-			_, s.err = data.WriteRune('\n')
-			if s.err != nil {
-				break
-			}
+			data = append(data, value...)
+			data = append(data, '\n')
 		}
 	}
 
@@ -142,7 +154,9 @@ type Stream[T any] struct {
 	decoder             Decoder
 	cur                 T
 	err                 error
-	done                bool
+	closeErr            error
+	closeOnce           sync.Once
+	done                atomic.Bool
 	synthesizeEventData bool
 }
 
@@ -164,6 +178,8 @@ func NewStreamWithSynthesizeEventData[T any](decoder Decoder, err error) *Stream
 // Next returns false if the stream has ended or an error occurred.
 // Call Stream.Current() to get the current value.
 // Call Stream.Err() to get the error.
+// The stream closes automatically when it reaches a terminal event or error.
+// Call Stream.Close() if iteration stops before Next returns false.
 //
 //		for stream.Next() {
 //			data := stream.Current()
@@ -174,60 +190,53 @@ func NewStreamWithSynthesizeEventData[T any](decoder Decoder, err error) *Stream
 //	 	}
 func (s *Stream[T]) Next() bool {
 	if s.err != nil {
+		return s.finish(s.err)
+	}
+	decoder := s.decoder
+	if s.done.Load() || decoder == nil {
 		return false
 	}
 
-	for s.decoder.Next() {
-		if s.done {
-			continue
-		}
-
-		if bytes.HasPrefix(s.decoder.Event().Data, []byte("[DONE]")) {
-			// In this case we don't break because we still want to iterate through the full stream.
-			s.done = true
-			continue
-		}
-
-		ep := gjson.GetBytes(s.decoder.Event().Data, "error")
-		if ep.Exists() {
-			s.err = &StreamError{
-				Message: fmt.Sprintf("received error while streaming: %s", ep.String()),
-				Event:   s.decoder.Event(),
-			}
-			return false
-		}
-		var nxt T
-		data := s.decoder.Event().Data
-		if s.decoder.Event().Type != "" && strings.HasPrefix(s.decoder.Event().Type, "thread.") {
-			synthesized := map[string]any{
-				"event": s.decoder.Event().Type,
-				"data":  json.RawMessage(data),
-			}
-			data, s.err = shimjson.Marshal(synthesized)
-			if s.err != nil {
-				return false
-			}
-		} else if s.synthesizeEventData {
-			synthesized := map[string]any{
-				"event": s.decoder.Event().Type,
-				"data":  json.RawMessage(data),
-			}
-			data, s.err = shimjson.Marshal(synthesized)
-			if s.err != nil {
-				return false
-			}
-		}
-		s.err = json.Unmarshal(data, &nxt)
-		if s.err != nil {
-			return false
-		}
-		s.cur = nxt
-		return true
+	if !decoder.Next() {
+		// decoder.Next() may be false because of an error
+		return s.finish(decoder.Err())
 	}
 
-	// decoder.Next() may be false because of an error
-	s.err = s.decoder.Err()
+	event := decoder.Event()
+	if bytes.HasPrefix(event.Data, []byte("[DONE]")) {
+		return s.finish(nil)
+	}
 
+	ep := gjson.GetBytes(event.Data, "error")
+	if ep.Exists() {
+		return s.finish(&StreamError{
+			Message: fmt.Sprintf("received error while streaming: %s", ep.String()),
+			Event:   event,
+		})
+	}
+	var nxt T
+	data := event.Data
+	if s.synthesizeEventData || strings.HasPrefix(event.Type, "thread.") {
+		synthesized := map[string]any{
+			"event": event.Type,
+			"data":  json.RawMessage(data),
+		}
+		var err error
+		data, err = shimjson.Marshal(synthesized)
+		if err != nil {
+			return s.finish(err)
+		}
+	}
+	if err := json.Unmarshal(data, &nxt); err != nil {
+		return s.finish(err)
+	}
+	s.cur = nxt
+	return true
+}
+
+func (s *Stream[T]) finish(err error) bool {
+	s.err = err
+	_ = s.Close()
 	return false
 }
 
@@ -239,10 +248,14 @@ func (s *Stream[T]) Err() error {
 	return s.err
 }
 
+// Close releases the stream's decoder. Repeated calls return the first close
+// result without closing the decoder again.
 func (s *Stream[T]) Close() error {
-	if s.decoder == nil {
-		// already closed
-		return nil
-	}
-	return s.decoder.Close()
+	s.closeOnce.Do(func() {
+		s.done.Store(true)
+		if s.decoder != nil {
+			s.closeErr = s.decoder.Close()
+		}
+	})
+	return s.closeErr
 }

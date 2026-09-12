@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -33,12 +33,13 @@ type ModerationService struct {
 // there is one), and before any request-specific options.
 func NewModerationService(opts ...option.RequestOption) (r ModerationService) {
 	r = ModerationService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
 // Classifies if text and/or image inputs are potentially harmful. Learn more in
-// the [moderation guide](https://platform.openai.com/docs/guides/moderation).
+// the
+// [moderation guide](https://developers.openai.com/api/docs/guides/moderation).
 func (r *ModerationService) New(ctx context.Context, body ModerationNewParams, opts ...option.RequestOption) (res *ModerationNewResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -353,15 +354,6 @@ func (u *ModerationMultiModalInputUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ModerationMultiModalInputUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfImageURL) {
-		return u.OfImageURL
-	} else if !param.IsOmitted(u.OfText) {
-		return u.OfText
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u ModerationMultiModalInputUnionParam) GetImageURL() *ModerationImageURLInputImageURLParam {
 	if vt := u.OfImageURL; vt != nil {
@@ -446,9 +438,9 @@ type ModerationNewParams struct {
 	// an array of multi-modal input objects similar to other models.
 	Input ModerationNewParamsInputUnion `json:"input,omitzero" api:"required"`
 	// The content moderation model you would like to use. Learn more in
-	// [the moderation guide](https://platform.openai.com/docs/guides/moderation), and
-	// learn about available models
-	// [here](https://platform.openai.com/docs/models#moderation).
+	// [the moderation guide](https://developers.openai.com/api/docs/guides/moderation),
+	// and learn about available models
+	// [here](https://developers.openai.com/api/docs/guides/moderation).
 	Model ModerationModel `json:"model,omitzero"`
 	paramObj
 }
@@ -476,15 +468,4 @@ func (u ModerationNewParamsInputUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *ModerationNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ModerationNewParamsInputUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfStringArray) {
-		return &u.OfStringArray
-	} else if !param.IsOmitted(u.OfModerationMultiModalArray) {
-		return &u.OfModerationMultiModalArray
-	}
-	return nil
 }

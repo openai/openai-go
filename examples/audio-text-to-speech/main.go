@@ -22,10 +22,10 @@ func main() {
 			OfAudioSpeechNewsVoiceString2: openai.String("alloy"),
 		},
 	})
-	defer res.Body.Close()
 	if err != nil {
 		panic(err)
 	}
+	defer func() { _ = res.Body.Close() }()
 
 	op := &oto.NewContextOptions{}
 	op.SampleRate = 24000
@@ -43,9 +43,5 @@ func main() {
 	player.Play()
 	for player.IsPlaying() {
 		time.Sleep(time.Millisecond)
-	}
-	err = player.Close()
-	if err != nil {
-		panic("player.Close failed: " + err.Error())
 	}
 }

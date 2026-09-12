@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package shared
 
@@ -13,6 +13,8 @@ import (
 
 // aliased to make [param.APIUnion] private when embedding
 type paramUnion = param.APIUnion
+
+// aliased to make [param.APIObject] private when embedding
 type paramObj = param.APIObject
 
 // AllModels also accepts any [string] or [ChatModel]
@@ -29,22 +31,27 @@ const (
 	AllModelsO4MiniDeepResearch2025_06_26 AllModels = "o4-mini-deep-research-2025-06-26"
 	AllModelsComputerUsePreview           AllModels = "computer-use-preview"
 	AllModelsComputerUsePreview2025_03_11 AllModels = "computer-use-preview-2025-03-11"
+	AllModelsGPT5_5Pro                    AllModels = "gpt-5.5-pro"
+	AllModelsGPT5_5Pro2026_04_23          AllModels = "gpt-5.5-pro-2026-04-23"
 	AllModelsGPT5Codex                    AllModels = "gpt-5-codex"
 	AllModelsGPT5Pro                      AllModels = "gpt-5-pro"
 	AllModelsGPT5Pro2025_10_06            AllModels = "gpt-5-pro-2025-10-06"
 	AllModelsGPT5_1CodexMax               AllModels = "gpt-5.1-codex-max"
+	AllModelsGPTDaybreakBlueLatest        AllModels = "gpt-daybreak-blue-latest"
+	AllModelsGPTDaybreakRedLatest         AllModels = "gpt-daybreak-red-latest"
+	AllModelsGPT5_6Cyber                  AllModels = "gpt-5.6-cyber"
 	// Or some ...[ChatModel]
 )
 
 type ChatModel = string
-type ResponsesModel = string
-
-// aliased to make [param.APIObject] private when embedding
 
 const (
+	ChatModelGPT6Astra                        ChatModel = "gpt-6-astra"
 	ChatModelGPT5_6Sol                        ChatModel = "gpt-5.6-sol"
 	ChatModelGPT5_6Terra                      ChatModel = "gpt-5.6-terra"
 	ChatModelGPT5_6Luna                       ChatModel = "gpt-5.6-luna"
+	ChatModelGPT5_5                           ChatModel = "gpt-5.5"
+	ChatModelGPT5_5_2026_04_23                ChatModel = "gpt-5.5-2026-04-23"
 	ChatModelGPT5_4                           ChatModel = "gpt-5.4"
 	ChatModelGPT5_4Mini                       ChatModel = "gpt-5.4-mini"
 	ChatModelGPT5_4Nano                       ChatModel = "gpt-5.4-nano"
@@ -223,22 +230,22 @@ type ComparisonFilterValueUnion struct {
 }
 
 func (u ComparisonFilterValueUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ComparisonFilterValueUnion) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ComparisonFilterValueUnion) AsBool() (v bool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ComparisonFilterValueUnion) AsComparisonFilterValueArray() (v []ComparisonFilterValueArrayItemUnion) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -269,12 +276,12 @@ type ComparisonFilterValueArrayItemUnion struct {
 }
 
 func (u ComparisonFilterValueArrayItemUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ComparisonFilterValueArrayItemUnion) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -338,19 +345,6 @@ func (u *ComparisonFilterValueUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ComparisonFilterValueUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfFloat) {
-		return &u.OfFloat.Value
-	} else if !param.IsOmitted(u.OfBool) {
-		return &u.OfBool.Value
-	} else if !param.IsOmitted(u.OfComparisonFilterValueArray) {
-		return &u.OfComparisonFilterValueArray
-	}
-	return nil
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -367,20 +361,11 @@ func (u *ComparisonFilterValueArrayItemUnionParam) UnmarshalJSON(data []byte) er
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ComparisonFilterValueArrayItemUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfFloat) {
-		return &u.OfFloat.Value
-	}
-	return nil
-}
-
 // Combine multiple filters using `and` or `or`.
 type CompoundFilter struct {
 	// Array of filters to combine. Items can be `ComparisonFilter` or
 	// `CompoundFilter`.
-	Filters []ComparisonFilter `json:"filters" api:"required"`
+	Filters []CompoundFilterFilterUnion `json:"filters" api:"required"`
 	// Type of operation: `and` or `or`.
 	//
 	// Any of "and", "or".
@@ -409,6 +394,44 @@ func (r CompoundFilter) ToParam() CompoundFilterParam {
 	return param.Override[CompoundFilterParam](json.RawMessage(r.RawJSON()))
 }
 
+// CompoundFilterFilterUnion contains all possible properties and values from
+// [ComparisonFilter], [CompoundFilter].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type CompoundFilterFilterUnion struct {
+	// This field is from variant [ComparisonFilter].
+	Key string `json:"key"`
+	// This field is from variant [ComparisonFilter].
+	Type ComparisonFilterType `json:"type"`
+	// This field is from variant [ComparisonFilter].
+	Value            ComparisonFilterValueUnion `json:"value"`
+	OfCompoundFilter CompoundFilter             `json:",inline"`
+	JSON             struct {
+		Key              respjson.Field
+		Type             respjson.Field
+		Value            respjson.Field
+		OfCompoundFilter respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+func (u CompoundFilterFilterUnion) AsComparisonFilter() (v ComparisonFilter) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u CompoundFilterFilterUnion) AsCompoundFilter() (v CompoundFilter) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u CompoundFilterFilterUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *CompoundFilterFilterUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Type of operation: `and` or `or`.
 type CompoundFilterType string
 
@@ -423,7 +446,7 @@ const (
 type CompoundFilterParam struct {
 	// Array of filters to combine. Items can be `ComparisonFilter` or
 	// `CompoundFilter`.
-	Filters []ComparisonFilterParam `json:"filters,omitzero" api:"required"`
+	Filters []CompoundFilterFilterUnionParam `json:"filters,omitzero" api:"required"`
 	// Type of operation: `and` or `or`.
 	//
 	// Any of "and", "or".
@@ -437,6 +460,72 @@ func (r CompoundFilterParam) MarshalJSON() (data []byte, err error) {
 }
 func (r *CompoundFilterParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type CompoundFilterFilterUnionParam struct {
+	OfComparison *ComparisonFilterParam `json:",omitzero,inline"`
+	OfFilter     *CompoundFilterParam   `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u CompoundFilterFilterUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfComparison, u.OfFilter)
+}
+func (u *CompoundFilterFilterUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u CompoundFilterFilterUnionParam) GetKey() *string {
+	if vt := u.OfComparison; vt != nil {
+		return &vt.Key
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u CompoundFilterFilterUnionParam) GetValue() *ComparisonFilterValueUnionParam {
+	if vt := u.OfComparison; vt != nil {
+		return &vt.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u CompoundFilterFilterUnionParam) GetFilters() []CompoundFilterFilterUnionParam {
+	if vt := u.OfFilter; vt != nil {
+		return vt.Filters
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u CompoundFilterFilterUnionParam) GetType() *string {
+	if vt := u.OfComparison; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFilter; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[CompoundFilterFilterUnionParam](
+		"type",
+		apijson.Discriminator[ComparisonFilterParam]("eq"),
+		apijson.Discriminator[ComparisonFilterParam]("ne"),
+		apijson.Discriminator[ComparisonFilterParam]("gt"),
+		apijson.Discriminator[ComparisonFilterParam]("gte"),
+		apijson.Discriminator[ComparisonFilterParam]("lt"),
+		apijson.Discriminator[ComparisonFilterParam]("lte"),
+		apijson.Discriminator[ComparisonFilterParam]("in"),
+		apijson.Discriminator[ComparisonFilterParam]("nin"),
+		apijson.Discriminator[CompoundFilterParam]("and"),
+		apijson.Discriminator[CompoundFilterParam]("or"),
+	)
 }
 
 // CustomToolInputFormatUnion contains all possible properties and values from
@@ -486,12 +575,12 @@ func (u CustomToolInputFormatUnion) AsAny() anyCustomToolInputFormat {
 }
 
 func (u CustomToolInputFormatUnion) AsText() (v CustomToolInputFormatText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u CustomToolInputFormatUnion) AsGrammar() (v CustomToolInputFormatGrammar) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -581,15 +670,6 @@ func (u CustomToolInputFormatUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *CustomToolInputFormatUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *CustomToolInputFormatUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfText) {
-		return u.OfText
-	} else if !param.IsOmitted(u.OfGrammar) {
-		return u.OfGrammar
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -682,24 +762,67 @@ func init() {
 }
 
 type ErrorObject struct {
-	Code    string `json:"code" api:"required"`
-	Message string `json:"message" api:"required"`
-	Param   string `json:"param" api:"required"`
-	Type    string `json:"type" api:"required"`
+	Code         string                  `json:"code" api:"required"`
+	Message      string                  `json:"message" api:"required"`
+	Param        string                  `json:"param" api:"required"`
+	Type         string                  `json:"type" api:"required"`
+	Misalignment ErrorObjectMisalignment `json:"misalignment"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Code        respjson.Field
-		Message     respjson.Field
-		Param       respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Code         respjson.Field
+		Message      respjson.Field
+		Param        respjson.Field
+		Type         respjson.Field
+		Misalignment respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
 // Returns the unmodified JSON received from the API
 func (r ErrorObject) RawJSON() string { return r.JSON.raw }
 func (r *ErrorObject) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ErrorObjectMisalignment struct {
+	// The public explanation for this block.
+	DetailedExplanation string `json:"detailed_explanation"`
+	// An optional classification; clients must accept additional values.
+	ErrorType string `json:"error_type"`
+	// An optional public continuation instruction.
+	Steer ErrorObjectMisalignmentSteer `json:"steer"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		DetailedExplanation respjson.Field
+		ErrorType           respjson.Field
+		Steer               respjson.Field
+		ExtraFields         map[string]respjson.Field
+		raw                 string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ErrorObjectMisalignment) RawJSON() string { return r.JSON.raw }
+func (r *ErrorObjectMisalignment) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An optional public continuation instruction.
+type ErrorObjectMisalignmentSteer struct {
+	// The public continuation instruction.
+	Message string `json:"message" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ErrorObjectMisalignmentSteer) RawJSON() string { return r.JSON.raw }
+func (r *ErrorObjectMisalignmentSteer) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -711,8 +834,8 @@ type FunctionDefinition struct {
 	// how to call the function.
 	Description string `json:"description"`
 	// The parameters the functions accepts, described as a JSON Schema object. See the
-	// [guide](https://platform.openai.com/docs/guides/function-calling) for examples,
-	// and the
+	// [guide](https://developers.openai.com/api/docs/guides/function-calling) for
+	// examples, and the
 	// [JSON Schema reference](https://json-schema.org/understanding-json-schema/) for
 	// documentation about the format.
 	//
@@ -722,7 +845,7 @@ type FunctionDefinition struct {
 	// set to true, the model will follow the exact schema defined in the `parameters`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
 	// more about Structured Outputs in the
-	// [function calling guide](https://platform.openai.com/docs/guides/function-calling).
+	// [function calling guide](https://developers.openai.com/api/docs/guides/function-calling).
 	Strict bool `json:"strict" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -759,14 +882,14 @@ type FunctionDefinitionParam struct {
 	// set to true, the model will follow the exact schema defined in the `parameters`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
 	// more about Structured Outputs in the
-	// [function calling guide](https://platform.openai.com/docs/guides/function-calling).
+	// [function calling guide](https://developers.openai.com/api/docs/guides/function-calling).
 	Strict param.Opt[bool] `json:"strict,omitzero"`
 	// A description of what the function does, used by the model to choose when and
 	// how to call the function.
 	Description param.Opt[string] `json:"description,omitzero"`
 	// The parameters the functions accepts, described as a JSON Schema object. See the
-	// [guide](https://platform.openai.com/docs/guides/function-calling) for examples,
-	// and the
+	// [guide](https://developers.openai.com/api/docs/guides/function-calling) for
+	// examples, and the
 	// [JSON Schema reference](https://json-schema.org/understanding-json-schema/) for
 	// documentation about the format.
 	//
@@ -794,12 +917,13 @@ const (
 	OAuthErrorCodeInvalidSubjectToken OAuthErrorCode = "invalid_subject_token"
 )
 
-// **gpt-5 and o-series models only**
-//
 // Configuration options for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 type Reasoning struct {
-	// Controls which reasoning items are rendered back to the model on later turns.
+	// Controls which reasoning items are rendered back to the model on later turns. If
+	// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
+	// model family defaults to `all_turns`; earlier models default to `current_turn`.
+	//
 	// When returned on a response, this is the effective reasoning context mode used
 	// for the response.
 	//
@@ -809,7 +933,7 @@ type Reasoning struct {
 	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
 	// reasoning effort can result in faster responses and fewer tokens used on
 	// reasoning in a response. Not all reasoning models support every value. See the
-	// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+	// [reasoning guide](https://developers.openai.com/api/docs/guides/reasoning) for
 	// model-specific support.
 	//
 	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
@@ -864,7 +988,10 @@ func (r Reasoning) ToParam() ReasoningParam {
 	return param.Override[ReasoningParam](json.RawMessage(r.RawJSON()))
 }
 
-// Controls which reasoning items are rendered back to the model on later turns.
+// Controls which reasoning items are rendered back to the model on later turns. If
+// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
+// model family defaults to `all_turns`; earlier models default to `current_turn`.
+//
 // When returned on a response, this is the effective reasoning context mode used
 // for the response.
 type ReasoningContext string
@@ -912,12 +1039,13 @@ const (
 	ReasoningSummaryDetailed ReasoningSummary = "detailed"
 )
 
-// **gpt-5 and o-series models only**
-//
 // Configuration options for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 type ReasoningParam struct {
-	// Controls which reasoning items are rendered back to the model on later turns.
+	// Controls which reasoning items are rendered back to the model on later turns. If
+	// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
+	// model family defaults to `all_turns`; earlier models default to `current_turn`.
+	//
 	// When returned on a response, this is the effective reasoning context mode used
 	// for the response.
 	//
@@ -927,7 +1055,7 @@ type ReasoningParam struct {
 	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
 	// reasoning effort can result in faster responses and fewer tokens used on
 	// reasoning in a response. Not all reasoning models support every value. See the
-	// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+	// [reasoning guide](https://developers.openai.com/api/docs/guides/reasoning) for
 	// model-specific support.
 	//
 	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
@@ -970,7 +1098,7 @@ func (r *ReasoningParam) UnmarshalJSON(data []byte) error {
 // are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
 // reasoning effort can result in faster responses and fewer tokens used on
 // reasoning in a response. Not all reasoning models support every value. See the
-// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+// [reasoning guide](https://developers.openai.com/api/docs/guides/reasoning) for
 // model-specific support.
 type ReasoningEffort string
 
@@ -1044,7 +1172,7 @@ func (r *ResponseFormatJSONObjectParam) UnmarshalJSON(data []byte) error {
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
-// [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
+// [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 type ResponseFormatJSONSchema struct {
 	// Structured Outputs configuration options, including a JSON Schema.
 	JSONSchema ResponseFormatJSONSchemaJSONSchema `json:"json_schema" api:"required"`
@@ -1090,7 +1218,7 @@ type ResponseFormatJSONSchemaJSONSchema struct {
 	// true, the model will always follow the exact schema defined in the `schema`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. To
 	// learn more, read the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	Strict bool `json:"strict" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -1111,7 +1239,7 @@ func (r *ResponseFormatJSONSchemaJSONSchema) UnmarshalJSON(data []byte) error {
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
-// [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
+// [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 //
 // The properties JSONSchema, Type are required.
 type ResponseFormatJSONSchemaParam struct {
@@ -1143,7 +1271,7 @@ type ResponseFormatJSONSchemaJSONSchemaParam struct {
 	// true, the model will always follow the exact schema defined in the `schema`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. To
 	// learn more, read the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	Strict param.Opt[bool] `json:"strict,omitzero"`
 	// A description of what the response format is for, used by the model to determine
 	// how to respond in the format.
@@ -1216,6 +1344,7 @@ func (r *ResponseFormatTextParam) UnmarshalJSON(data []byte) error {
 }
 
 // ResponsesModel also accepts any [string] or [ChatModel]
+type ResponsesModel = string
 
 const (
 	ResponsesModelO1Pro                        ResponsesModel = "o1-pro"
@@ -1228,9 +1357,14 @@ const (
 	ResponsesModelO4MiniDeepResearch2025_06_26 ResponsesModel = "o4-mini-deep-research-2025-06-26"
 	ResponsesModelComputerUsePreview           ResponsesModel = "computer-use-preview"
 	ResponsesModelComputerUsePreview2025_03_11 ResponsesModel = "computer-use-preview-2025-03-11"
+	ResponsesModelGPT5_5Pro                    ResponsesModel = "gpt-5.5-pro"
+	ResponsesModelGPT5_5Pro2026_04_23          ResponsesModel = "gpt-5.5-pro-2026-04-23"
 	ResponsesModelGPT5Codex                    ResponsesModel = "gpt-5-codex"
 	ResponsesModelGPT5Pro                      ResponsesModel = "gpt-5-pro"
 	ResponsesModelGPT5Pro2025_10_06            ResponsesModel = "gpt-5-pro-2025-10-06"
 	ResponsesModelGPT5_1CodexMax               ResponsesModel = "gpt-5.1-codex-max"
+	ResponsesModelGPTDaybreakBlueLatest        ResponsesModel = "gpt-daybreak-blue-latest"
+	ResponsesModelGPTDaybreakRedLatest         ResponsesModel = "gpt-daybreak-red-latest"
+	ResponsesModelGPT5_6Cyber                  ResponsesModel = "gpt-5.6-cyber"
 	// Or some ...[ChatModel]
 )

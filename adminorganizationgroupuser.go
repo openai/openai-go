@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -34,7 +34,7 @@ type AdminOrganizationGroupUserService struct {
 // client's options (if there is one), and before any request-specific options.
 func NewAdminOrganizationGroupUserService(opts ...option.RequestOption) (r AdminOrganizationGroupUserService) {
 	r = AdminOrganizationGroupUserService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

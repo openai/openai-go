@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -36,21 +36,22 @@ type UploadPartService struct {
 // there is one), and before any request-specific options.
 func NewUploadPartService(opts ...option.RequestOption) (r UploadPartService) {
 	r = UploadPartService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
 // Adds a
-// [Part](https://platform.openai.com/docs/api-reference/uploads/part-object) to an
-// [Upload](https://platform.openai.com/docs/api-reference/uploads/object) object.
-// A Part represents a chunk of bytes from the file you are trying to upload.
+// [Part](https://developers.openai.com/api/reference/resources/uploads/subresources/parts)
+// to an [Upload](https://developers.openai.com/api/reference/resources/uploads)
+// object. A Part represents a chunk of bytes from the file you are trying to
+// upload.
 //
 // Each Part can be at most 64 MB, and you can add Parts until you hit the Upload
 // maximum of 8 GB.
 //
 // It is possible to add multiple Parts in parallel. You can decide the intended
 // order of the Parts when you
-// [complete the Upload](https://platform.openai.com/docs/api-reference/uploads/complete).
+// [complete the Upload](https://developers.openai.com/api/reference/resources/uploads/methods/complete).
 func (r *UploadPartService) New(ctx context.Context, uploadID string, body UploadPartNewParams, opts ...option.RequestOption) (res *UploadPart, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -104,7 +105,7 @@ func (r UploadPartNewParams) MarshalMultipart() (data []byte, contentType string
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()

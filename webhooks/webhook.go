@@ -1,18 +1,10 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package webhooks
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"crypto/subtle"
-	"encoding/base64"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"net/http"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
@@ -37,57 +29,26 @@ type WebhookService struct {
 // is one), and before any request-specific options.
 func NewWebhookService(opts ...option.RequestOption) (r WebhookService) {
 	r = WebhookService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
 // Validates that the given payload was sent by OpenAI and parses the payload.
 func (r *WebhookService) Unwrap(body []byte, headers http.Header, opts ...option.RequestOption) (*UnwrapWebhookEventUnion, error) {
-	// Always perform signature verification
-	err := r.VerifySignature(body, headers, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	res := &UnwrapWebhookEventUnion{}
-	err = res.UnmarshalJSON(body)
-	if err != nil {
-		return res, err
-	}
-	return res, nil
+	return unwrapWebhook(r, body, headers, opts...)
 }
 
 // UnwrapWithTolerance validates that the given payload was sent by OpenAI using custom tolerance, then parses the payload.
 // tolerance specifies the maximum age of the webhook.
 func (r *WebhookService) UnwrapWithTolerance(body []byte, headers http.Header, tolerance time.Duration, opts ...option.RequestOption) (*UnwrapWebhookEventUnion, error) {
-	err := r.VerifySignatureWithTolerance(body, headers, tolerance, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	res := &UnwrapWebhookEventUnion{}
-	err = res.UnmarshalJSON(body)
-	if err != nil {
-		return res, err
-	}
-	return res, nil
+	return unwrapWebhookWithTolerance(r, body, headers, tolerance, opts...)
 }
 
 // UnwrapWithToleranceAndTime validates that the given payload was sent by OpenAI using custom tolerance and time, then parses the payload.
 // tolerance specifies the maximum age of the webhook.
 // now allows specifying the current time for testing purposes.
 func (r *WebhookService) UnwrapWithToleranceAndTime(body []byte, headers http.Header, tolerance time.Duration, now time.Time, opts ...option.RequestOption) (*UnwrapWebhookEventUnion, error) {
-	err := r.VerifySignatureWithToleranceAndTime(body, headers, tolerance, now, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	res := &UnwrapWebhookEventUnion{}
-	err = res.UnmarshalJSON(body)
-	if err != nil {
-		return res, err
-	}
-	return res, nil
+	return unwrapWebhookWithToleranceAndTime(r, body, headers, tolerance, now, opts...)
 }
 
 // VerifySignature validates whether or not the webhook payload was sent by OpenAI.
@@ -109,92 +70,7 @@ func (r *WebhookService) VerifySignatureWithTolerance(body []byte, headers http.
 // tolerance specifies the maximum age of the webhook.
 // now allows specifying the current time for testing purposes.
 func (r *WebhookService) VerifySignatureWithToleranceAndTime(body []byte, headers http.Header, tolerance time.Duration, now time.Time, opts ...option.RequestOption) error {
-	cfg, err := requestconfig.PreRequestOptions(r.Options...)
-	if err != nil {
-		return err
-	}
-	webhookSecret := cfg.WebhookSecret
-
-	if webhookSecret == "" {
-		return errors.New("webhook secret must be provided either in the method call or configured on the client")
-	}
-
-	if headers == nil {
-		return errors.New("headers are required for webhook verification")
-	}
-
-	// Extract required headers
-	signatureHeader := headers.Get("webhook-signature")
-	if signatureHeader == "" {
-		return errors.New("missing required webhook-signature header")
-	}
-
-	timestampHeader := headers.Get("webhook-timestamp")
-	if timestampHeader == "" {
-		return errors.New("missing required webhook-timestamp header")
-	}
-
-	webhookID := headers.Get("webhook-id")
-	if webhookID == "" {
-		return errors.New("missing required webhook-id header")
-	}
-
-	// Validate timestamp to prevent replay attacks
-	timestampSeconds, err := strconv.ParseInt(timestampHeader, 10, 64)
-	if err != nil {
-		return errors.New("invalid webhook timestamp format")
-	}
-
-	nowUnix := now.Unix()
-	toleranceSeconds := int64(tolerance.Seconds())
-
-	if nowUnix-timestampSeconds > toleranceSeconds {
-		return errors.New("webhook timestamp is too old")
-	}
-
-	if timestampSeconds > nowUnix+toleranceSeconds {
-		return errors.New("webhook timestamp is too new")
-	}
-
-	// Extract signatures from v1,<base64> format
-	// The signature header can have multiple values, separated by spaces.
-	// Each value is in the format v1,<base64>. We should accept if any match.
-	var signatures []string
-	for _, part := range strings.Fields(signatureHeader) {
-		if strings.HasPrefix(part, "v1,") {
-			signatures = append(signatures, part[3:])
-		} else {
-			signatures = append(signatures, part)
-		}
-	}
-
-	// Decode the secret if it starts with whsec_
-	var decodedSecret []byte
-	if strings.HasPrefix(webhookSecret, "whsec_") {
-		decodedSecret, err = base64.StdEncoding.DecodeString(webhookSecret[6:])
-		if err != nil {
-			return fmt.Errorf("invalid webhook secret format: %v", err)
-		}
-	} else {
-		decodedSecret = []byte(webhookSecret)
-	}
-
-	// Create the signed payload: {webhook_id}.{timestamp}.{payload}
-	signedPayload := fmt.Sprintf("%s.%s.%s", webhookID, timestampHeader, string(body))
-
-	// Compute HMAC-SHA256 signature
-	h := hmac.New(sha256.New, decodedSecret)
-	h.Write([]byte(signedPayload))
-	expectedSignature := base64.StdEncoding.EncodeToString(h.Sum(nil))
-
-	// Accept if any signature matches using timing-safe comparison
-	for _, signature := range signatures {
-		if subtle.ConstantTimeCompare([]byte(expectedSignature), []byte(signature)) == 1 {
-			return nil
-		}
-	}
-
-	return errors.New("webhook signature verification failed")
+	return verifyWebhookSignatureWithToleranceAndTime(r, body, headers, tolerance, now, opts...)
 }
 
 // Sent when a batch API request has been cancelled.
@@ -767,7 +643,187 @@ const (
 	FineTuningJobSucceededWebhookEventObjectEvent FineTuningJobSucceededWebhookEventObject = "event"
 )
 
-// Sent when Realtime API Receives a incoming SIP call.
+// Deprecated: use `live.transport.incoming`. Retained for existing subscriptions
+// during migration; new subscriptions to this event are not allowed. Sent when an
+// incoming API SIP session is available for Live acceptance. The same pending
+// session can also emit `realtime.call.incoming`; the first successful Realtime or
+// Live accept endpoint selects the runtime surface.
+type LiveCallIncomingWebhookEvent struct {
+	// The unique ID of the event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp (in seconds) of when the event was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// Event data payload.
+	Data LiveCallIncomingWebhookEventData `json:"data" api:"required"`
+	// The type of the event. Always `live.call.incoming`.
+	Type constant.LiveCallIncoming `json:"type" default:"live.call.incoming"`
+	// The object of the event. Always `event`.
+	//
+	// Any of "event".
+	Object LiveCallIncomingWebhookEventObject `json:"object"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Type        respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r LiveCallIncomingWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *LiveCallIncomingWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Event data payload.
+type LiveCallIncomingWebhookEventData struct {
+	// The `live_...` ID of the pending SIP session. Pass this value unchanged to Live
+	// call controls and sideband connections. The corresponding
+	// `realtime.call.incoming` event uses a separate `rtc_...` call ID.
+	SessionID string `json:"session_id" api:"required"`
+	// Headers from the SIP INVITE, excluding SIP authorization headers. Retained
+	// names, values, repeated entries, and order are preserved. Treat these values as
+	// untrusted call metadata.
+	SipHeaders []LiveCallIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		SessionID   respjson.Field
+		SipHeaders  respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r LiveCallIncomingWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *LiveCallIncomingWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A header from the SIP Invite.
+type LiveCallIncomingWebhookEventDataSipHeader struct {
+	// Name of the SIP Header.
+	Name string `json:"name" api:"required"`
+	// Value of the SIP Header.
+	Value string `json:"value" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Name        respjson.Field
+		Value       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r LiveCallIncomingWebhookEventDataSipHeader) RawJSON() string { return r.JSON.raw }
+func (r *LiveCallIncomingWebhookEventDataSipHeader) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The object of the event. Always `event`.
+type LiveCallIncomingWebhookEventObject string
+
+const (
+	LiveCallIncomingWebhookEventObjectEvent LiveCallIncomingWebhookEventObject = "event"
+)
+
+// Sent when an incoming API SIP session is available for Live acceptance. The same
+// pending session can also emit `realtime.call.incoming`; the first successful
+// Realtime or Live accept endpoint selects the runtime surface.
+type LiveTransportIncomingWebhookEvent struct {
+	// The unique ID of the event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp (in seconds) of when the event was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// Event data payload.
+	Data LiveTransportIncomingWebhookEventData `json:"data" api:"required"`
+	// The type of the event. Always `live.transport.incoming`.
+	Type constant.LiveTransportIncoming `json:"type" default:"live.transport.incoming"`
+	// The object of the event. Always `event`.
+	//
+	// Any of "event".
+	Object LiveTransportIncomingWebhookEventObject `json:"object"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Type        respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r LiveTransportIncomingWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *LiveTransportIncomingWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Event data payload.
+type LiveTransportIncomingWebhookEventData struct {
+	// The `live_...` ID of the pending SIP session. Forward this value unchanged when
+	// accepting or rejecting the call through the Live API.
+	SessionID string `json:"session_id" api:"required"`
+	// Headers from the SIP INVITE, excluding SIP authorization headers. Retained
+	// names, values, repeated entries, and order are preserved. Treat these values as
+	// untrusted call metadata.
+	SipHeaders []LiveTransportIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
+	// The incoming transport type. Always `sip`.
+	Type constant.Sip `json:"type" default:"sip"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		SessionID   respjson.Field
+		SipHeaders  respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r LiveTransportIncomingWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *LiveTransportIncomingWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A header from the SIP Invite.
+type LiveTransportIncomingWebhookEventDataSipHeader struct {
+	// Name of the SIP Header.
+	Name string `json:"name" api:"required"`
+	// Value of the SIP Header.
+	Value string `json:"value" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Name        respjson.Field
+		Value       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r LiveTransportIncomingWebhookEventDataSipHeader) RawJSON() string { return r.JSON.raw }
+func (r *LiveTransportIncomingWebhookEventDataSipHeader) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The object of the event. Always `event`.
+type LiveTransportIncomingWebhookEventObject string
+
+const (
+	LiveTransportIncomingWebhookEventObjectEvent LiveTransportIncomingWebhookEventObject = "event"
+)
+
+// Sent when an incoming API SIP session is available for Realtime acceptance. The
+// same pending session can also emit `live.transport.incoming`; the first
+// successful Realtime or Live accept endpoint selects the runtime surface.
 type RealtimeCallIncomingWebhookEvent struct {
 	// The unique ID of the event.
 	ID string `json:"id" api:"required"`
@@ -801,9 +857,14 @@ func (r *RealtimeCallIncomingWebhookEvent) UnmarshalJSON(data []byte) error {
 
 // Event data payload.
 type RealtimeCallIncomingWebhookEventData struct {
-	// The unique ID of this call.
+	// The Transceiver `rtc_...` ID of the pending SIP session. The paired
+	// `live.transport.incoming` event derives its `session_id` by replacing the `rtc_`
+	// prefix with `live_`. Use the ID returned by the event with the corresponding
+	// Realtime or Live API.
 	CallID string `json:"call_id" api:"required"`
-	// Headers from the SIP Invite.
+	// Headers from the SIP INVITE, excluding SIP authorization headers. Retained
+	// names, values, repeated entries, and order are preserved. Treat these values as
+	// untrusted call metadata.
 	SipHeaders []RealtimeCallIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -1076,74 +1137,97 @@ const (
 	ResponseIncompleteWebhookEventObjectEvent ResponseIncompleteWebhookEventObject = "event"
 )
 
-// Sent when a request associated with a safety identifier has been blocked.
-type SafetyIdentifierBlockedWebhookEvent struct {
-	// The unique ID of the event.
+// Sent when an approved safety alert is available for an API project.
+type SafetyAlertCreatedWebhookEvent struct {
+	// The unique ID of the webhook event.
 	ID string `json:"id" api:"required"`
-	// The Unix timestamp (in seconds) of when the request was blocked.
-	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
-	// Event data payload.
-	Data SafetyIdentifierBlockedWebhookEventData `json:"data" api:"required"`
-	// The type of the event. Always `safety_identifier.blocked`.
-	Type constant.SafetyIdentifierBlocked `json:"type" default:"safety_identifier.blocked"`
-	// The object of the event. Always `event`.
-	//
-	// Any of "event".
-	Object SafetyIdentifierBlockedWebhookEventObject `json:"object"`
+	// The Unix timestamp in seconds when the event was created.
+	CreatedAt int64                              `json:"created_at" api:"required" format:"unixtime"`
+	Data      SafetyAlertCreatedWebhookEventData `json:"data" api:"required"`
+	// Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// Always `safety.alert.created`.
+	Type constant.SafetyAlertCreated `json:"type" default:"safety.alert.created"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
 		CreatedAt   respjson.Field
 		Data        respjson.Field
-		Type        respjson.Field
 		Object      respjson.Field
+		Type        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
 
 // Returns the unmodified JSON received from the API
-func (r SafetyIdentifierBlockedWebhookEvent) RawJSON() string { return r.JSON.raw }
-func (r *SafetyIdentifierBlockedWebhookEvent) UnmarshalJSON(data []byte) error {
+func (r SafetyAlertCreatedWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *SafetyAlertCreatedWebhookEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Event data payload.
-type SafetyIdentifierBlockedWebhookEventData struct {
-	// The safety category that triggered the block, such as `bio` or `cyber`.
-	SafetyCategory string `json:"safety_category" api:"required"`
-	// The stable safety identifier associated with the blocked request.
-	SafetyIdentifier string `json:"safety_identifier" api:"required"`
-	// The model used for the blocked request, if available.
-	Model string `json:"model"`
-	// The project associated with the blocked request, if available.
-	ProjectID string `json:"project_id"`
-	// The OpenAI request ID for the blocked request, if available.
-	RequestID string `json:"request_id"`
+type SafetyAlertCreatedWebhookEventData struct {
+	// The safety alert ID to pass to `GET /v1/safety/alerts/{id}`.
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		SafetyCategory   respjson.Field
-		SafetyIdentifier respjson.Field
-		Model            respjson.Field
-		ProjectID        respjson.Field
-		RequestID        respjson.Field
-		ExtraFields      map[string]respjson.Field
-		raw              string
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
 	} `json:"-"`
 }
 
 // Returns the unmodified JSON received from the API
-func (r SafetyIdentifierBlockedWebhookEventData) RawJSON() string { return r.JSON.raw }
-func (r *SafetyIdentifierBlockedWebhookEventData) UnmarshalJSON(data []byte) error {
+func (r SafetyAlertCreatedWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *SafetyAlertCreatedWebhookEventData) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The object of the event. Always `event`.
-type SafetyIdentifierBlockedWebhookEventObject string
+// Sent when an approved safety alert is available for an enterprise workspace.
+type SafetyOrgAlertCreatedWebhookEvent struct {
+	// The unique ID of the webhook event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp in seconds when the event was created.
+	CreatedAt int64                                 `json:"created_at" api:"required" format:"unixtime"`
+	Data      SafetyOrgAlertCreatedWebhookEventData `json:"data" api:"required"`
+	// Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// Always `safety.org_alert.created`.
+	Type constant.SafetyOrgAlertCreated `json:"type" default:"safety.org_alert.created"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
 
-const (
-	SafetyIdentifierBlockedWebhookEventObjectEvent SafetyIdentifierBlockedWebhookEventObject = "event"
-)
+// Returns the unmodified JSON received from the API
+func (r SafetyOrgAlertCreatedWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *SafetyOrgAlertCreatedWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type SafetyOrgAlertCreatedWebhookEventData struct {
+	// The safety alert ID to pass to `GET /v1/safety/alerts/{id}`.
+	ID string `json:"id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SafetyOrgAlertCreatedWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *SafetyOrgAlertCreatedWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // UnwrapWebhookEventUnion contains all possible properties and values from
 // [BatchCancelledWebhookEvent], [BatchCompletedWebhookEvent],
@@ -1151,9 +1235,11 @@ const (
 // [EvalRunCanceledWebhookEvent], [EvalRunFailedWebhookEvent],
 // [EvalRunSucceededWebhookEvent], [FineTuningJobCancelledWebhookEvent],
 // [FineTuningJobFailedWebhookEvent], [FineTuningJobSucceededWebhookEvent],
+// [LiveCallIncomingWebhookEvent], [LiveTransportIncomingWebhookEvent],
 // [RealtimeCallIncomingWebhookEvent], [ResponseCancelledWebhookEvent],
 // [ResponseCompletedWebhookEvent], [ResponseFailedWebhookEvent],
-// [ResponseIncompleteWebhookEvent], [SafetyIdentifierBlockedWebhookEvent].
+// [ResponseIncompleteWebhookEvent], [SafetyAlertCreatedWebhookEvent],
+// [SafetyOrgAlertCreatedWebhookEvent].
 //
 // Use the [UnwrapWebhookEventUnion.AsAny] method to switch on the variant.
 //
@@ -1166,17 +1252,19 @@ type UnwrapWebhookEventUnion struct {
 	// [BatchFailedWebhookEventData], [EvalRunCanceledWebhookEventData],
 	// [EvalRunFailedWebhookEventData], [EvalRunSucceededWebhookEventData],
 	// [FineTuningJobCancelledWebhookEventData], [FineTuningJobFailedWebhookEventData],
-	// [FineTuningJobSucceededWebhookEventData],
-	// [RealtimeCallIncomingWebhookEventData], [ResponseCancelledWebhookEventData],
-	// [ResponseCompletedWebhookEventData], [ResponseFailedWebhookEventData],
-	// [ResponseIncompleteWebhookEventData], [SafetyIdentifierBlockedWebhookEventData]
+	// [FineTuningJobSucceededWebhookEventData], [LiveCallIncomingWebhookEventData],
+	// [LiveTransportIncomingWebhookEventData], [RealtimeCallIncomingWebhookEventData],
+	// [ResponseCancelledWebhookEventData], [ResponseCompletedWebhookEventData],
+	// [ResponseFailedWebhookEventData], [ResponseIncompleteWebhookEventData],
+	// [SafetyAlertCreatedWebhookEventData], [SafetyOrgAlertCreatedWebhookEventData]
 	Data UnwrapWebhookEventUnionData `json:"data"`
 	// Any of "batch.cancelled", "batch.completed", "batch.expired", "batch.failed",
 	// "eval.run.canceled", "eval.run.failed", "eval.run.succeeded",
 	// "fine_tuning.job.cancelled", "fine_tuning.job.failed",
-	// "fine_tuning.job.succeeded", "realtime.call.incoming", "response.cancelled",
-	// "response.completed", "response.failed", "response.incomplete",
-	// "safety_identifier.blocked".
+	// "fine_tuning.job.succeeded", "live.call.incoming", "live.transport.incoming",
+	// "realtime.call.incoming", "response.cancelled", "response.completed",
+	// "response.failed", "response.incomplete", "safety.alert.created",
+	// "safety.org_alert.created".
 	Type   string `json:"type"`
 	Object string `json:"object"`
 	JSON   struct {
@@ -1196,22 +1284,25 @@ type anyUnwrapWebhookEvent interface {
 	implUnwrapWebhookEventUnion()
 }
 
-func (BatchCancelledWebhookEvent) implUnwrapWebhookEventUnion()          {}
-func (BatchCompletedWebhookEvent) implUnwrapWebhookEventUnion()          {}
-func (BatchExpiredWebhookEvent) implUnwrapWebhookEventUnion()            {}
-func (BatchFailedWebhookEvent) implUnwrapWebhookEventUnion()             {}
-func (EvalRunCanceledWebhookEvent) implUnwrapWebhookEventUnion()         {}
-func (EvalRunFailedWebhookEvent) implUnwrapWebhookEventUnion()           {}
-func (EvalRunSucceededWebhookEvent) implUnwrapWebhookEventUnion()        {}
-func (FineTuningJobCancelledWebhookEvent) implUnwrapWebhookEventUnion()  {}
-func (FineTuningJobFailedWebhookEvent) implUnwrapWebhookEventUnion()     {}
-func (FineTuningJobSucceededWebhookEvent) implUnwrapWebhookEventUnion()  {}
-func (RealtimeCallIncomingWebhookEvent) implUnwrapWebhookEventUnion()    {}
-func (ResponseCancelledWebhookEvent) implUnwrapWebhookEventUnion()       {}
-func (ResponseCompletedWebhookEvent) implUnwrapWebhookEventUnion()       {}
-func (ResponseFailedWebhookEvent) implUnwrapWebhookEventUnion()          {}
-func (ResponseIncompleteWebhookEvent) implUnwrapWebhookEventUnion()      {}
-func (SafetyIdentifierBlockedWebhookEvent) implUnwrapWebhookEventUnion() {}
+func (BatchCancelledWebhookEvent) implUnwrapWebhookEventUnion()         {}
+func (BatchCompletedWebhookEvent) implUnwrapWebhookEventUnion()         {}
+func (BatchExpiredWebhookEvent) implUnwrapWebhookEventUnion()           {}
+func (BatchFailedWebhookEvent) implUnwrapWebhookEventUnion()            {}
+func (EvalRunCanceledWebhookEvent) implUnwrapWebhookEventUnion()        {}
+func (EvalRunFailedWebhookEvent) implUnwrapWebhookEventUnion()          {}
+func (EvalRunSucceededWebhookEvent) implUnwrapWebhookEventUnion()       {}
+func (FineTuningJobCancelledWebhookEvent) implUnwrapWebhookEventUnion() {}
+func (FineTuningJobFailedWebhookEvent) implUnwrapWebhookEventUnion()    {}
+func (FineTuningJobSucceededWebhookEvent) implUnwrapWebhookEventUnion() {}
+func (LiveCallIncomingWebhookEvent) implUnwrapWebhookEventUnion()       {}
+func (LiveTransportIncomingWebhookEvent) implUnwrapWebhookEventUnion()  {}
+func (RealtimeCallIncomingWebhookEvent) implUnwrapWebhookEventUnion()   {}
+func (ResponseCancelledWebhookEvent) implUnwrapWebhookEventUnion()      {}
+func (ResponseCompletedWebhookEvent) implUnwrapWebhookEventUnion()      {}
+func (ResponseFailedWebhookEvent) implUnwrapWebhookEventUnion()         {}
+func (ResponseIncompleteWebhookEvent) implUnwrapWebhookEventUnion()     {}
+func (SafetyAlertCreatedWebhookEvent) implUnwrapWebhookEventUnion()     {}
+func (SafetyOrgAlertCreatedWebhookEvent) implUnwrapWebhookEventUnion()  {}
 
 // Use the following switch statement to find the correct variant
 //
@@ -1226,12 +1317,15 @@ func (SafetyIdentifierBlockedWebhookEvent) implUnwrapWebhookEventUnion() {}
 //	case webhooks.FineTuningJobCancelledWebhookEvent:
 //	case webhooks.FineTuningJobFailedWebhookEvent:
 //	case webhooks.FineTuningJobSucceededWebhookEvent:
+//	case webhooks.LiveCallIncomingWebhookEvent:
+//	case webhooks.LiveTransportIncomingWebhookEvent:
 //	case webhooks.RealtimeCallIncomingWebhookEvent:
 //	case webhooks.ResponseCancelledWebhookEvent:
 //	case webhooks.ResponseCompletedWebhookEvent:
 //	case webhooks.ResponseFailedWebhookEvent:
 //	case webhooks.ResponseIncompleteWebhookEvent:
-//	case webhooks.SafetyIdentifierBlockedWebhookEvent:
+//	case webhooks.SafetyAlertCreatedWebhookEvent:
+//	case webhooks.SafetyOrgAlertCreatedWebhookEvent:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -1257,6 +1351,10 @@ func (u UnwrapWebhookEventUnion) AsAny() anyUnwrapWebhookEvent {
 		return u.AsFineTuningJobFailed()
 	case "fine_tuning.job.succeeded":
 		return u.AsFineTuningJobSucceeded()
+	case "live.call.incoming":
+		return u.AsLiveCallIncoming()
+	case "live.transport.incoming":
+		return u.AsLiveTransportIncoming()
 	case "realtime.call.incoming":
 		return u.AsRealtimeCallIncoming()
 	case "response.cancelled":
@@ -1267,89 +1365,106 @@ func (u UnwrapWebhookEventUnion) AsAny() anyUnwrapWebhookEvent {
 		return u.AsResponseFailed()
 	case "response.incomplete":
 		return u.AsResponseIncomplete()
-	case "safety_identifier.blocked":
-		return u.AsSafetyIdentifierBlocked()
+	case "safety.alert.created":
+		return u.AsSafetyAlertCreated()
+	case "safety.org_alert.created":
+		return u.AsSafetyOrgAlertCreated()
 	}
 	return nil
 }
 
 func (u UnwrapWebhookEventUnion) AsBatchCancelled() (v BatchCancelledWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsBatchCompleted() (v BatchCompletedWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsBatchExpired() (v BatchExpiredWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsBatchFailed() (v BatchFailedWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsEvalRunCanceled() (v EvalRunCanceledWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsEvalRunFailed() (v EvalRunFailedWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsEvalRunSucceeded() (v EvalRunSucceededWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsFineTuningJobCancelled() (v FineTuningJobCancelledWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsFineTuningJobFailed() (v FineTuningJobFailedWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsFineTuningJobSucceeded() (v FineTuningJobSucceededWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsLiveCallIncoming() (v LiveCallIncomingWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsLiveTransportIncoming() (v LiveTransportIncomingWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsRealtimeCallIncoming() (v RealtimeCallIncomingWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsResponseCancelled() (v ResponseCancelledWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsResponseCompleted() (v ResponseCompletedWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsResponseFailed() (v ResponseFailedWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsResponseIncomplete() (v ResponseIncompleteWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u UnwrapWebhookEventUnion) AsSafetyIdentifierBlocked() (v SafetyIdentifierBlockedWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+func (u UnwrapWebhookEventUnion) AsSafetyAlertCreated() (v SafetyAlertCreatedWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsSafetyOrgAlertCreated() (v SafetyOrgAlertCreatedWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1367,34 +1482,59 @@ func (r *UnwrapWebhookEventUnion) UnmarshalJSON(data []byte) error {
 // For type safety it is recommended to directly use a variant of the
 // [UnwrapWebhookEventUnion].
 type UnwrapWebhookEventUnionData struct {
-	ID string `json:"id"`
+	ID        string `json:"id"`
+	SessionID string `json:"session_id"`
+	// This field is a union of [[]LiveCallIncomingWebhookEventDataSipHeader],
+	// [[]LiveTransportIncomingWebhookEventDataSipHeader],
+	// [[]RealtimeCallIncomingWebhookEventDataSipHeader]
+	SipHeaders UnwrapWebhookEventUnionDataSipHeaders `json:"sip_headers"`
+	// This field is from variant [LiveTransportIncomingWebhookEventData].
+	Type constant.Sip `json:"type"`
 	// This field is from variant [RealtimeCallIncomingWebhookEventData].
 	CallID string `json:"call_id"`
-	// This field is from variant [RealtimeCallIncomingWebhookEventData].
-	SipHeaders []RealtimeCallIncomingWebhookEventDataSipHeader `json:"sip_headers"`
-	// This field is from variant [SafetyIdentifierBlockedWebhookEventData].
-	SafetyCategory string `json:"safety_category"`
-	// This field is from variant [SafetyIdentifierBlockedWebhookEventData].
-	SafetyIdentifier string `json:"safety_identifier"`
-	// This field is from variant [SafetyIdentifierBlockedWebhookEventData].
-	Model string `json:"model"`
-	// This field is from variant [SafetyIdentifierBlockedWebhookEventData].
-	ProjectID string `json:"project_id"`
-	// This field is from variant [SafetyIdentifierBlockedWebhookEventData].
-	RequestID string `json:"request_id"`
-	JSON      struct {
-		ID               respjson.Field
-		CallID           respjson.Field
-		SipHeaders       respjson.Field
-		SafetyCategory   respjson.Field
-		SafetyIdentifier respjson.Field
-		Model            respjson.Field
-		ProjectID        respjson.Field
-		RequestID        respjson.Field
-		raw              string
+	JSON   struct {
+		ID         respjson.Field
+		SessionID  respjson.Field
+		SipHeaders respjson.Field
+		Type       respjson.Field
+		CallID     respjson.Field
+		raw        string
 	} `json:"-"`
 }
 
 func (r *UnwrapWebhookEventUnionData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// UnwrapWebhookEventUnionDataSipHeaders is an implicit subunion of
+// [UnwrapWebhookEventUnion]. UnwrapWebhookEventUnionDataSipHeaders provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [UnwrapWebhookEventUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfLiveCallIncomingWebhookEventDataSipHeaders
+// OfLiveTransportIncomingWebhookEventDataSipHeaders
+// OfRealtimeCallIncomingWebhookEventDataSipHeaders]
+type UnwrapWebhookEventUnionDataSipHeaders struct {
+	// This field will be present if the value is a
+	// [[]LiveCallIncomingWebhookEventDataSipHeader] instead of an object.
+	OfLiveCallIncomingWebhookEventDataSipHeaders []LiveCallIncomingWebhookEventDataSipHeader `json:",inline"`
+	// This field will be present if the value is a
+	// [[]LiveTransportIncomingWebhookEventDataSipHeader] instead of an object.
+	OfLiveTransportIncomingWebhookEventDataSipHeaders []LiveTransportIncomingWebhookEventDataSipHeader `json:",inline"`
+	// This field will be present if the value is a
+	// [[]RealtimeCallIncomingWebhookEventDataSipHeader] instead of an object.
+	OfRealtimeCallIncomingWebhookEventDataSipHeaders []RealtimeCallIncomingWebhookEventDataSipHeader `json:",inline"`
+	JSON                                             struct {
+		OfLiveCallIncomingWebhookEventDataSipHeaders      respjson.Field
+		OfLiveTransportIncomingWebhookEventDataSipHeaders respjson.Field
+		OfRealtimeCallIncomingWebhookEventDataSipHeaders  respjson.Field
+		raw                                               string
+	} `json:"-"`
+}
+
+func (r *UnwrapWebhookEventUnionDataSipHeaders) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }

@@ -27,8 +27,10 @@ func (e *SubjectTokenProviderError) Unwrap() error {
 // OAuthError is raised when there is an error in the RFC-defined OAuth flow, such as failing to exchange the token.
 // See https://datatracker.ietf.org/doc/html/rfc8693 for the OAuth 2.0 Token Exchange specification.
 type OAuthError struct {
-	StatusCode       int
-	ErrorCode        shared.OAuthErrorCode
+	StatusCode int
+	ErrorCode  shared.OAuthErrorCode
+	// ErrorDescription is retained for compatibility. Issuer-provided error
+	// descriptions are intentionally redacted and this field is normally empty.
 	ErrorDescription string
 }
 

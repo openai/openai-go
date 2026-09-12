@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -30,6 +30,7 @@ func TestAdminOrganizationProjectNewWithOptionalParams(t *testing.T) {
 		Name:          "name",
 		ExternalKeyID: openai.String("external_key_id"),
 		Geography:     openai.String("geography"),
+		Residency:     openai.ProjectResidencyGlobal,
 	})
 	if err != nil {
 		var apierr *openai.Error

@@ -3,6 +3,7 @@ package auth_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strings"
@@ -444,21 +445,22 @@ func TestOAuthErrorHandling(t *testing.T) {
 			continue
 		}
 
-		_, isOAuthError := err.(*auth.OAuthError)
+		var oauthErr *auth.OAuthError
+		isOAuthError := errors.As(err, &oauthErr)
 		if isOAuthError != tc.shouldBeOAuthError {
 			t.Errorf("Status %d: isOAuthError = %v, want %v", tc.statusCode, isOAuthError, tc.shouldBeOAuthError)
+			continue
 		}
 
 		if tc.shouldBeOAuthError {
-			oauthErr := err.(*auth.OAuthError)
 			if oauthErr.StatusCode != tc.statusCode {
 				t.Errorf("StatusCode = %d, want %d", oauthErr.StatusCode, tc.statusCode)
 			}
 			if oauthErr.ErrorCode != "invalid_grant" {
 				t.Errorf("ErrorCode = %q, want %q", oauthErr.ErrorCode, "invalid_grant")
 			}
-			if oauthErr.ErrorDescription != "Token exchange failed" {
-				t.Errorf("ErrorDescription = %q, want %q", oauthErr.ErrorDescription, "Token exchange failed")
+			if oauthErr.ErrorDescription != "" {
+				t.Errorf("ErrorDescription = %q, want redacted issuer description", oauthErr.ErrorDescription)
 			}
 		}
 	}

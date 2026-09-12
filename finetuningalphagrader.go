@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -32,7 +32,7 @@ type FineTuningAlphaGraderService struct {
 // options (if there is one), and before any request-specific options.
 func NewFineTuningAlphaGraderService(opts ...option.RequestOption) (r FineTuningAlphaGraderService) {
 	r = FineTuningAlphaGraderService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
@@ -211,27 +211,27 @@ type FineTuningAlphaGraderValidateResponseGraderUnion struct {
 }
 
 func (u FineTuningAlphaGraderValidateResponseGraderUnion) AsStringCheckGrader() (v StringCheckGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u FineTuningAlphaGraderValidateResponseGraderUnion) AsTextSimilarityGrader() (v TextSimilarityGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u FineTuningAlphaGraderValidateResponseGraderUnion) AsPythonGrader() (v PythonGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u FineTuningAlphaGraderValidateResponseGraderUnion) AsScoreModelGrader() (v ScoreModelGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u FineTuningAlphaGraderValidateResponseGraderUnion) AsMultiGrader() (v MultiGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -274,13 +274,14 @@ type FineTuningAlphaGraderRunParams struct {
 	Grader FineTuningAlphaGraderRunParamsGraderUnion `json:"grader,omitzero" api:"required"`
 	// The model sample to be evaluated. This value will be used to populate the
 	// `sample` namespace. See
-	// [the guide](https://platform.openai.com/docs/guides/graders) for more details.
-	// The `output_json` variable will be populated if the model sample is a valid JSON
-	// string.
+	// [the guide](https://developers.openai.com/api/docs/guides/graders) for more
+	// details. The `output_json` variable will be populated if the model sample is a
+	// valid JSON string.
 	ModelSample string `json:"model_sample" api:"required"`
 	// The dataset item provided to the grader. This will be used to populate the
 	// `item` namespace. See
-	// [the guide](https://platform.openai.com/docs/guides/graders) for more details.
+	// [the guide](https://developers.openai.com/api/docs/guides/graders) for more
+	// details.
 	Item any `json:"item,omitzero"`
 	paramObj
 }
@@ -314,21 +315,6 @@ func (u FineTuningAlphaGraderRunParamsGraderUnion) MarshalJSON() ([]byte, error)
 }
 func (u *FineTuningAlphaGraderRunParamsGraderUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *FineTuningAlphaGraderRunParamsGraderUnion) asAny() any {
-	if !param.IsOmitted(u.OfStringCheck) {
-		return u.OfStringCheck
-	} else if !param.IsOmitted(u.OfTextSimilarity) {
-		return u.OfTextSimilarity
-	} else if !param.IsOmitted(u.OfPython) {
-		return u.OfPython
-	} else if !param.IsOmitted(u.OfScoreModel) {
-		return u.OfScoreModel
-	} else if !param.IsOmitted(u.OfMulti) {
-		return u.OfMulti
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -518,21 +504,6 @@ func (u FineTuningAlphaGraderValidateParamsGraderUnion) MarshalJSON() ([]byte, e
 }
 func (u *FineTuningAlphaGraderValidateParamsGraderUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *FineTuningAlphaGraderValidateParamsGraderUnion) asAny() any {
-	if !param.IsOmitted(u.OfStringCheckGrader) {
-		return u.OfStringCheckGrader
-	} else if !param.IsOmitted(u.OfTextSimilarityGrader) {
-		return u.OfTextSimilarityGrader
-	} else if !param.IsOmitted(u.OfPythonGrader) {
-		return u.OfPythonGrader
-	} else if !param.IsOmitted(u.OfScoreModelGrader) {
-		return u.OfScoreModelGrader
-	} else if !param.IsOmitted(u.OfMultiGrader) {
-		return u.OfMultiGrader
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.

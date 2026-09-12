@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package responses_test
 
@@ -47,7 +47,7 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		Metadata: shared.Metadata{
 			"foo": "string",
 		},
-		Model: shared.ResponsesModel("gpt-5.1"),
+		Model: shared.ResponsesModel("gpt-6-astra"),
 		Moderation: responses.ResponseNewParamsModeration{
 			Model: "model",
 			Policy: responses.ResponseNewParamsModerationPolicy{
@@ -72,8 +72,9 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		},
 		PromptCacheKey: openai.String("prompt-cache-key-1234"),
 		PromptCacheOptions: responses.ResponseNewParamsPromptCacheOptions{
-			Mode: "implicit",
-			Ttl:  "30m",
+			ComparisonResponseID: openai.String("resp_123"),
+			Mode:                 "implicit",
+			Ttl:                  "30m",
 		},
 		PromptCacheRetention: responses.ResponseNewParamsPromptCacheRetentionInMemory,
 		Reasoning: shared.ReasoningParam{
@@ -107,6 +108,7 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 				},
 				Strict:         openai.Bool(true),
 				AllowedCallers: []string{"direct"},
+				Async:          openai.Bool(true),
 				DeferLoading:   openai.Bool(true),
 				Description:    openai.String("description"),
 				OutputSchema: map[string]any{
@@ -219,7 +221,7 @@ func TestResponseCompactWithOptionalParams(t *testing.T) {
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Responses.Compact(context.TODO(), responses.ResponseCompactParams{
-		Model: responses.ResponseCompactParamsModelGPT5_6Sol,
+		Model: responses.ResponseCompactParamsModelGPT6Astra,
 		Input: responses.ResponseCompactParamsInputUnion{
 			OfString: openai.String("string"),
 		},
