@@ -82,11 +82,6 @@ func TestRegisterDecoderNormalizesExternalBodyCaseInsensitiveValues(t *testing.T
 			registered: "READ-WRITE",
 			response:   "read-write",
 		},
-		"mode": {
-			parameter:  "Mode",
-			registered: "IMAGE",
-			response:   "image",
-		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			registered := "message/external-body; " + test.parameter + "=" + test.registered
@@ -138,10 +133,6 @@ func TestRegisterDecoderNormalizesLogicalCaseInsensitiveParameters(t *testing.T)
 			registered: "multipart/signed; Protocol=\"Application/PGP-Signature\"",
 			response:   "Multipart/Signed; protocol=\"application/pgp-signature\"",
 		},
-		"multipart signed micalg": {
-			registered: "multipart/signed; Micalg=PGP-SHA256",
-			response:   "Multipart/Signed; micalg=pgp-sha256",
-		},
 		"multipart encrypted protocol": {
 			registered: "multipart/encrypted; Protocol=\"Application/PGP-Encrypted\"",
 			response:   "Multipart/Encrypted; protocol=\"application/pgp-encrypted\"",
@@ -149,10 +140,6 @@ func TestRegisterDecoderNormalizesLogicalCaseInsensitiveParameters(t *testing.T)
 		"multipart report type": {
 			registered: "multipart/report; Report-Type=DELIVERY-STATUS",
 			response:   "Multipart/Report; report-type=delivery-status",
-		},
-		"text csv header": {
-			registered: "text/csv; Header=PRESENT",
-			response:   "Text/CSV; header=present",
 		},
 		"unencoded format continuation": {
 			registered: "text/plain; Format*0=FLO; Format*1=WED",

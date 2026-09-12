@@ -72,10 +72,16 @@ func decoderContentTypeKey(contentType string) string {
 		return strings.ToLower(contentType)
 	}
 	normalizedBase := strings.ToLower(base)
-	return normalizedBase + ";" + normalizeMediaParameterTail(normalizedBase, params)
+	externalBodyAccessType := ""
+	if strings.EqualFold(strings.TrimSpace(normalizedBase), "message/external-body") {
+		if _, parsedParams, err := mime.ParseMediaType(contentType); err == nil {
+			externalBodyAccessType = strings.ToLower(parsedParams["access-type"])
+		}
+	}
+	return normalizedBase + ";" + normalizeMediaParameterTail(normalizedBase, params, externalBodyAccessType)
 }
 
-func normalizeMediaParameterTail(mediaType string, params string) string {
+func normalizeMediaParameterTail(mediaType string, params string, externalBodyAccessType string) string {
 	var normalized strings.Builder
 	segmentStart := 0
 	inQuotes := false
@@ -83,7 +89,7 @@ func normalizeMediaParameterTail(mediaType string, params string) string {
 
 	for i := 0; i <= len(params); i++ {
 		if i == len(params) || (!inQuotes && params[i] == ';') {
-			normalized.WriteString(normalizeMediaParameter(mediaType, params[segmentStart:i]))
+			normalized.WriteString(normalizeMediaParameter(mediaType, params[segmentStart:i], externalBodyAccessType))
 			if i < len(params) {
 				normalized.WriteByte(';')
 			}
@@ -108,7 +114,7 @@ func normalizeMediaParameterTail(mediaType string, params string) string {
 	return normalized.String()
 }
 
-func normalizeMediaParameter(mediaType string, param string) string {
+func normalizeMediaParameter(mediaType string, param string, externalBodyAccessType string) string {
 	equals := strings.IndexByte(param, '=')
 	if equals < 0 {
 		return param
@@ -130,7 +136,7 @@ func normalizeMediaParameter(mediaType string, param string) string {
 
 	value := param[equals+1:]
 	switch {
-	case isCaseInsensitiveMediaParameterValue(mediaType, logicalName):
+	case isCaseInsensitiveMediaParameterValue(mediaType, logicalName, externalBodyAccessType):
 		if strings.HasSuffix(name, "*") {
 			normalized.WriteString(normalizeCaseInsensitiveExtendedParameterValue(value, extendedMediaParameterHasMetadata(name)))
 		} else {
@@ -185,30 +191,30 @@ func isRFC2231Section(section string) bool {
 	return true
 }
 
-func isCaseInsensitiveMediaParameterValue(mediaType string, name string) bool {
+func isCaseInsensitiveMediaParameterValue(mediaType string, name string, externalBodyAccessType string) bool {
 	if strings.EqualFold(name, "charset") {
 		return true
 	}
 
-	switch strings.ToLower(strings.TrimSpace(mediaType)) {
+	switch strings.TrimSpace(mediaType) {
 	case "message/external-body":
 		switch strings.ToLower(name) {
-		case "access-type", "permission", "mode":
+		case "access-type", "permission":
 			return true
+		case "mode":
+			switch externalBodyAccessType {
+			case "ftp", "anon-ftp", "tftp":
+				return true
+			}
 		}
 	case "multipart/encrypted":
 		return strings.EqualFold(name, "protocol")
 	case "multipart/signed":
-		switch strings.ToLower(name) {
-		case "protocol", "micalg":
-			return true
-		}
+		return strings.EqualFold(name, "protocol")
 	case "multipart/report":
 		return strings.EqualFold(name, "report-type")
 	case "multipart/related":
 		return strings.EqualFold(name, "type")
-	case "text/csv":
-		return strings.EqualFold(name, "header")
 	case "text/plain":
 		switch strings.ToLower(name) {
 		case "format", "delsp":
