@@ -74,25 +74,123 @@ func decoderContentTypeKey(contentType string) string {
 	normalizedBase := strings.ToLower(base)
 	externalBodyAccessType := ""
 	if strings.EqualFold(strings.TrimSpace(normalizedBase), "message/external-body") {
-		if _, parsedParams, err := mime.ParseMediaType(contentType); err == nil {
-			externalBodyAccessType = strings.ToLower(parsedParams["access-type"])
-		}
+		externalBodyAccessType = parseExternalBodyAccessType(contentType, params)
 	}
 	return normalizedBase + ";" + normalizeMediaParameterTail(normalizedBase, params, externalBodyAccessType)
 }
 
+func parseExternalBodyAccessType(contentType string, params string) string {
+	_, parsedParams, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return ""
+	}
+	if accessType := standardExternalBodyAccessType(parsedParams["access-type"]); accessType != "" {
+		return accessType
+	}
+
+	asciiParams, changed := replaceExtendedParameterCharset(params, "access-type")
+	if !changed {
+		return ""
+	}
+	_, parsedParams, err = mime.ParseMediaType("message/external-body;" + asciiParams)
+	if err != nil {
+		return ""
+	}
+	return standardExternalBodyAccessType(parsedParams["access-type"])
+}
+
+func standardExternalBodyAccessType(accessType string) string {
+	switch strings.ToLower(accessType) {
+	case "ftp", "anon-ftp", "tftp":
+		return strings.ToLower(accessType)
+	default:
+		return ""
+	}
+}
+
+// replaceExtendedParameterCharset lets the standard library assemble RFC 2231
+// continuations even when it does not recognize the declared charset. The
+// external-body access mechanisms handled here are ASCII tokens, so only the
+// metadata charset is substituted; encoded value bytes remain unchanged.
+func replaceExtendedParameterCharset(params string, logicalName string) (string, bool) {
+	var rewritten strings.Builder
+	changed := false
+	first := true
+	forEachMediaParameter(params, func(param string) {
+		if !first {
+			rewritten.WriteByte(';')
+		}
+		first = false
+
+		equals := strings.IndexByte(param, '=')
+		if equals < 0 {
+			rewritten.WriteString(param)
+			return
+		}
+		nameStart, nameEnd := trimOWSBounds(param[:equals])
+		name := param[nameStart:nameEnd]
+		if !strings.EqualFold(mediaParameterLogicalName(name), logicalName) ||
+			!strings.HasSuffix(name, "*") || !extendedMediaParameterHasMetadata(name) {
+			rewritten.WriteString(param)
+			return
+		}
+
+		value := param[equals+1:]
+		valueStart, valueEnd := trimOWSBounds(value)
+		core := value[valueStart:valueEnd]
+		quoted := false
+		if strings.HasPrefix(core, "\"") {
+			var ok bool
+			core, ok = quotedMediaParameterContents(core)
+			if !ok {
+				rewritten.WriteString(param)
+				return
+			}
+			quoted = true
+		}
+		firstQuote := strings.IndexByte(core, '\'')
+		if firstQuote < 0 || strings.IndexByte(core[firstQuote+1:], '\'') < 0 {
+			rewritten.WriteString(param)
+			return
+		}
+
+		rewritten.WriteString(param[:equals+1])
+		rewritten.WriteString(value[:valueStart])
+		if quoted {
+			rewritten.WriteByte('"')
+		}
+		rewritten.WriteString("US-ASCII")
+		rewritten.WriteString(core[firstQuote:])
+		if quoted {
+			rewritten.WriteByte('"')
+		}
+		rewritten.WriteString(value[valueEnd:])
+		changed = true
+	})
+	return rewritten.String(), changed
+}
+
 func normalizeMediaParameterTail(mediaType string, params string, externalBodyAccessType string) string {
 	var normalized strings.Builder
+	first := true
+	forEachMediaParameter(params, func(param string) {
+		if !first {
+			normalized.WriteByte(';')
+		}
+		first = false
+		normalized.WriteString(normalizeMediaParameter(mediaType, param, externalBodyAccessType))
+	})
+	return normalized.String()
+}
+
+func forEachMediaParameter(params string, visit func(string)) {
 	segmentStart := 0
 	inQuotes := false
 	escaped := false
 
 	for i := 0; i <= len(params); i++ {
 		if i == len(params) || (!inQuotes && params[i] == ';') {
-			normalized.WriteString(normalizeMediaParameter(mediaType, params[segmentStart:i], externalBodyAccessType))
-			if i < len(params) {
-				normalized.WriteByte(';')
-			}
+			visit(params[segmentStart:i])
 			segmentStart = i + 1
 			continue
 		}
@@ -110,8 +208,6 @@ func normalizeMediaParameterTail(mediaType string, params string, externalBodyAc
 		}
 		escaped = false
 	}
-
-	return normalized.String()
 }
 
 func normalizeMediaParameter(mediaType string, param string, externalBodyAccessType string) string {
