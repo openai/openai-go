@@ -163,13 +163,15 @@ func validEncodedParameterValue(value string, hasMetadata bool) bool {
 		}
 	}
 	if hasMetadata {
-		if firstQuote := strings.IndexByte(core, '\''); firstQuote >= 0 {
-			secondQuote := strings.IndexByte(core[firstQuote+1:], '\'')
-			if secondQuote < 0 {
-				return false
-			}
-			core = core[firstQuote+secondQuote+2:]
+		firstQuote := strings.IndexByte(core, '\'')
+		if firstQuote <= 0 {
+			return false
 		}
+		secondQuote := strings.IndexByte(core[firstQuote+1:], '\'')
+		if secondQuote < 0 {
+			return false
+		}
+		core = core[firstQuote+secondQuote+2:]
 	}
 	for i := 0; i < len(core); i++ {
 		if core[i] != '%' {

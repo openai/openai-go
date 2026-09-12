@@ -33,6 +33,11 @@ func TestRegisterDecoderDoesNotFoldProtocolDefinedOrExtensionValues(t *testing.T
 			registered: "message/external-body; access-type*=ISO-8859-1''X-TEST; mode=V1",
 			response:   "message/external-body; access-type*=iso-8859-1''x-test; mode=v1",
 		},
+		"smime type": {
+			base:       "application/pkcs7-mime",
+			registered: "application/pkcs7-mime; smime-type=SIGNED-DATA",
+			response:   "application/pkcs7-mime; smime-type=signed-data",
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			wantBare := &testDecoder{}
@@ -61,6 +66,8 @@ func TestRegisterDecoderDoesNotFoldExternalBodyModeForMalformedContinuation(t *t
 		"malformed section zero":  "access-type*0*=UTF-8''%ZZ; access-type*1*=FTP",
 		"malformed later section": "access-type*0*=UTF-8''FTP; access-type*1*=%ZZ",
 		"missing section":         "access-type*0*=UTF-8''FTP; access-type*2*=X",
+		"missing metadata":        "access-type*0*=BROKEN; access-type*1*=FTP",
+		"empty charset":           "access-type*0*=''FTP; access-type*1*=X",
 	} {
 		t.Run(name, func(t *testing.T) {
 			registered := base + "; " + accessType + "; mode=IMAGE"
