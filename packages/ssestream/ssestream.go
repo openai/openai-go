@@ -164,14 +164,23 @@ func validEncodedParameterValue(value string, hasMetadata bool) bool {
 	}
 	if hasMetadata {
 		firstQuote := strings.IndexByte(core, '\'')
-		if firstQuote <= 0 {
+		if firstQuote < 0 {
 			return false
 		}
-		secondQuote := strings.IndexByte(core[firstQuote+1:], '\'')
-		if secondQuote < 0 {
+		secondOffset := strings.IndexByte(core[firstQuote+1:], '\'')
+		if secondOffset < 0 {
 			return false
 		}
-		core = core[firstQuote+secondQuote+2:]
+		secondQuote := firstQuote + secondOffset + 1
+		charset := core[:firstQuote]
+		language := core[firstQuote+1 : secondQuote]
+		if charset != "" && !isMIMECharset(charset) {
+			return false
+		}
+		if language != "" && !isRFC1766LanguageTag(language) {
+			return false
+		}
+		core = core[secondQuote+1:]
 	}
 	for i := 0; i < len(core); i++ {
 		if core[i] != '%' {
@@ -181,6 +190,43 @@ func validEncodedParameterValue(value string, hasMetadata bool) bool {
 			return false
 		}
 		i += 2
+	}
+	return true
+}
+
+func isMIMECharset(charset string) bool {
+	for i := 0; i < len(charset); i++ {
+		c := charset[i]
+		if c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c >= '0' && c <= '9' {
+			continue
+		}
+		switch c {
+		case '!', '#', '$', '%', '&', '+', '-', '^', '_', '`', '~':
+			continue
+		default:
+			return false
+		}
+	}
+	return len(charset) > 0
+}
+
+func isRFC1766LanguageTag(language string) bool {
+	partLength := 0
+	for i := 0; i <= len(language); i++ {
+		if i == len(language) || language[i] == '-' {
+			if partLength == 0 || partLength > 8 {
+				return false
+			}
+			partLength = 0
+			continue
+		}
+		c := language[i]
+		if c < 'A' || c > 'Z' {
+			if c < 'a' || c > 'z' {
+				return false
+			}
+		}
+		partLength++
 	}
 	return true
 }

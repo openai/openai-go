@@ -67,7 +67,8 @@ func TestRegisterDecoderDoesNotFoldExternalBodyModeForMalformedContinuation(t *t
 		"malformed later section": "access-type*0*=UTF-8''FTP; access-type*1*=%ZZ",
 		"missing section":         "access-type*0*=UTF-8''FTP; access-type*2*=X",
 		"missing metadata":        "access-type*0*=BROKEN; access-type*1*=FTP",
-		"empty charset":           "access-type*0*=''FTP; access-type*1*=X",
+		"invalid charset syntax":  `access-type*="BAD CHAR''FTP"`,
+		"invalid language syntax": `access-type*="UTF-8'BAD LANG'FTP"`,
 	} {
 		t.Run(name, func(t *testing.T) {
 			registered := base + "; " + accessType + "; mode=IMAGE"
@@ -112,6 +113,14 @@ func TestRegisterDecoderFoldsExternalBodyModeWithUnsupportedExtendedCharset(t *t
 		"mode before access type": {
 			registered: "message/external-body; mode=IMAGE; access-type*=ISO-8859-1''FTP",
 			response:   "Message/External-Body; mode=image; access-type*=iso-8859-1''ftp",
+		},
+		"empty charset and language": {
+			registered: "message/external-body; access-type*=''FTP; mode=IMAGE",
+			response:   "Message/External-Body; access-type*=''ftp; mode=image",
+		},
+		"valid language tag": {
+			registered: "message/external-body; access-type*=UTF-8'en-US'FTP; mode=IMAGE",
+			response:   "Message/External-Body; access-type*=utf-8'EN-us'ftp; mode=image",
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
