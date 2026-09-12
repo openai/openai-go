@@ -33,6 +33,16 @@ func TestRegisterDecoderDoesNotFoldProtocolDefinedOrExtensionValues(t *testing.T
 			registered: "message/external-body; access-type*=ISO-8859-1''X-TEST; mode=V1",
 			response:   "message/external-body; access-type*=iso-8859-1''x-test; mode=v1",
 		},
+		"external body utf16 extension mode": {
+			base:       "message/external-body",
+			registered: "message/external-body; access-type*=UTF-16BE''%00X%00-%00T%00E%00S%00T; mode=V1",
+			response:   "message/external-body; access-type*=utf-16be''%00x%00-%00t%00e%00s%00t; mode=v1",
+		},
+		"external body unsupported utf32 mode": {
+			base:       "message/external-body",
+			registered: "message/external-body; access-type*=UTF-32BE''%00%00%00F%00%00%00T%00%00%00P; mode=IMAGE",
+			response:   "message/external-body; access-type*=utf-32be''%00%00%00f%00%00%00t%00%00%00p; mode=image",
+		},
 		"smime type": {
 			base:       "application/pkcs7-mime",
 			registered: "application/pkcs7-mime; smime-type=SIGNED-DATA",
@@ -121,6 +131,18 @@ func TestRegisterDecoderFoldsExternalBodyModeWithUnsupportedExtendedCharset(t *t
 		"valid language tag": {
 			registered: "message/external-body; access-type*=UTF-8'en-US'FTP; mode=IMAGE",
 			response:   "Message/External-Body; access-type*=utf-8'EN-us'ftp; mode=image",
+		},
+		"utf16be value": {
+			registered: "message/external-body; access-type*=UTF-16BE''%00F%00T%00P; mode=IMAGE",
+			response:   "Message/External-Body; access-type*=utf-16be''%00f%00t%00p; mode=image",
+		},
+		"utf16be continued value": {
+			registered: "message/external-body; access-type*0*=UTF-16BE''%00F%00; access-type*1*=T%00P; mode=IMAGE",
+			response:   "Message/External-Body; access-type*0*=utf-16be''%00f%00; access-type*1*=t%00p; mode=image",
+		},
+		"ebcdic value": {
+			registered: "message/external-body; access-type*=IBM037''%C6%E3%D7; mode=IMAGE",
+			response:   "Message/External-Body; access-type*=ibm037''%86%A3%97; mode=image",
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
