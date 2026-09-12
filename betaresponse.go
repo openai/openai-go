@@ -122,7 +122,7 @@ func (r *BetaResponseService) GetStreaming(ctx context.Context, responseID strin
 	}
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
-	opts = append(opts, option.WithJSONSet("stream", true))
+	opts = append(opts, option.WithQuery("stream", "true"))
 	if responseID == "" {
 		err = errors.New("missing required response_id parameter")
 		return ssestream.NewStream[BetaResponseStreamEventUnion](nil, err)
