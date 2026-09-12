@@ -55,6 +55,36 @@ func TestRegisterDecoderDoesNotFoldProtocolDefinedOrExtensionValues(t *testing.T
 	}
 }
 
+func TestRegisterDecoderDoesNotFoldExternalBodyModeForMalformedContinuation(t *testing.T) {
+	const base = "message/external-body"
+	for name, accessType := range map[string]string{
+		"malformed section zero":  "access-type*0*=UTF-8''%ZZ; access-type*1*=FTP",
+		"malformed later section": "access-type*0*=UTF-8''FTP; access-type*1*=%ZZ",
+		"missing section":         "access-type*0*=UTF-8''FTP; access-type*2*=X",
+	} {
+		t.Run(name, func(t *testing.T) {
+			registered := base + "; " + accessType + "; mode=IMAGE"
+			response := base + "; " + accessType + "; mode=image"
+			wantBare := &testDecoder{}
+			wantSpecific := &testDecoder{}
+			RegisterDecoder(base, func(io.ReadCloser) Decoder { return wantBare })
+			RegisterDecoder(registered, func(io.ReadCloser) Decoder { return wantSpecific })
+			t.Cleanup(func() {
+				delete(decoderTypes, decoderContentTypeKey(base))
+				delete(decoderTypes, decoderContentTypeKey(registered))
+			})
+
+			decoder := NewDecoder(&http.Response{
+				Header: http.Header{"Content-Type": {response}},
+				Body:   io.NopCloser(strings.NewReader("")),
+			})
+			if decoder != wantBare {
+				t.Fatalf("decoder = %T, want bare decoder for malformed continuation", decoder)
+			}
+		})
+	}
+}
+
 func TestRegisterDecoderFoldsExternalBodyModeWithUnsupportedExtendedCharset(t *testing.T) {
 	for name, test := range map[string]struct {
 		registered string

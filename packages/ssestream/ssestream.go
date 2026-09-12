@@ -8,6 +8,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -80,6 +81,10 @@ func decoderContentTypeKey(contentType string) string {
 }
 
 func parseExternalBodyAccessType(contentType string, params string) string {
+	if !validExtendedParameterContinuations(params, "access-type") {
+		return ""
+	}
+
 	_, parsedParams, err := mime.ParseMediaType(contentType)
 	if err != nil {
 		return ""
@@ -97,6 +102,85 @@ func parseExternalBodyAccessType(contentType string, params string) string {
 		return ""
 	}
 	return standardExternalBodyAccessType(parsedParams["access-type"])
+}
+
+// validExtendedParameterContinuations rejects partial RFC 2231 values before
+// mime.ParseMediaType can silently assemble a later valid segment on its own.
+func validExtendedParameterContinuations(params string, logicalName string) bool {
+	sections := map[int]struct{}{}
+	maxSection := -1
+	sawSingle := false
+	valid := true
+
+	forEachMediaParameter(params, func(param string) {
+		equals := strings.IndexByte(param, '=')
+		if !valid || equals < 0 {
+			return
+		}
+		nameStart, nameEnd := trimOWSBounds(param[:equals])
+		name := param[nameStart:nameEnd]
+		if !strings.EqualFold(mediaParameterLogicalName(name), logicalName) || strings.EqualFold(name, logicalName) {
+			return
+		}
+
+		encoded := strings.HasSuffix(name, "*")
+		sectionName := strings.TrimSuffix(name, "*")
+		if strings.EqualFold(sectionName, logicalName) {
+			valid = encoded && !sawSingle && len(sections) == 0 && validEncodedParameterValue(param[equals+1:], true)
+			sawSingle = valid
+			return
+		}
+
+		star := strings.LastIndexByte(sectionName, '*')
+		section, err := strconv.Atoi(sectionName[star+1:])
+		if err != nil || section > len(params) || sawSingle {
+			valid = false
+			return
+		}
+		if _, duplicate := sections[section]; duplicate {
+			valid = false
+			return
+		}
+		if encoded && !validEncodedParameterValue(param[equals+1:], section == 0) {
+			valid = false
+			return
+		}
+		sections[section] = struct{}{}
+		maxSection = max(maxSection, section)
+	})
+
+	return valid && (maxSection < 0 || len(sections) == maxSection+1)
+}
+
+func validEncodedParameterValue(value string, hasMetadata bool) bool {
+	valueStart, valueEnd := trimOWSBounds(value)
+	core := value[valueStart:valueEnd]
+	if strings.HasPrefix(core, "\"") {
+		var ok bool
+		core, ok = quotedMediaParameterContents(core)
+		if !ok {
+			return false
+		}
+	}
+	if hasMetadata {
+		if firstQuote := strings.IndexByte(core, '\''); firstQuote >= 0 {
+			secondQuote := strings.IndexByte(core[firstQuote+1:], '\'')
+			if secondQuote < 0 {
+				return false
+			}
+			core = core[firstQuote+secondQuote+2:]
+		}
+	}
+	for i := 0; i < len(core); i++ {
+		if core[i] != '%' {
+			continue
+		}
+		if i+2 >= len(core) || !isHexDigit(core[i+1]) || !isHexDigit(core[i+2]) {
+			return false
+		}
+		i += 2
+	}
+	return true
 }
 
 func standardExternalBodyAccessType(accessType string) string {
