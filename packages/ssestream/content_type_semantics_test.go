@@ -322,9 +322,19 @@ func TestRegisterDecoderFoldsCaseInsensitiveExtendedValuesAcrossCharsets(t *test
 }
 
 func TestRegisterDecoderFoldsExternalBodyModeForStandardAccessTypes(t *testing.T) {
-	for _, accessType := range []string{"FTP", "ANON-FTP", "TFTP"} {
-		t.Run(accessType, func(t *testing.T) {
-			registered := "message/external-body; access-type=" + accessType + "; mode=IMAGE"
+	for name, test := range map[string]struct {
+		accessType string
+		mode       string
+	}{
+		"ftp image":       {accessType: "FTP", mode: "IMAGE"},
+		"ftp local":       {accessType: "FTP", mode: "LOCAL8"},
+		"anon ftp ebcdic": {accessType: "ANON-FTP", mode: "EBCDIC"},
+		"tftp netascii":   {accessType: "TFTP", mode: "NETASCII"},
+		"tftp octet":      {accessType: "TFTP", mode: "OCTET"},
+		"tftp mail":       {accessType: "TFTP", mode: "MAIL"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			registered := "message/external-body; access-type=" + test.accessType + "; mode=" + test.mode
 			want := &testDecoder{}
 			RegisterDecoder(registered, func(io.ReadCloser) Decoder { return want })
 			t.Cleanup(func() {
@@ -333,7 +343,7 @@ func TestRegisterDecoderFoldsExternalBodyModeForStandardAccessTypes(t *testing.T
 
 			decoder := NewDecoder(&http.Response{
 				Header: http.Header{
-					"Content-Type": {"Message/External-Body; access-type=" + strings.ToLower(accessType) + "; mode=image"},
+					"Content-Type": {"Message/External-Body; access-type=" + strings.ToLower(test.accessType) + "; mode=" + strings.ToLower(test.mode)},
 				},
 				Body: io.NopCloser(strings.NewReader("")),
 			})
@@ -730,6 +740,50 @@ func TestRegisterDecoderDoesNotFoldUnknownTextPlainOptionValues(t *testing.T) {
 			decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {test.response}}, Body: io.NopCloser(strings.NewReader(""))})
 			if decoder != wantBare {
 				t.Fatalf("decoder = %T, want bare decoder for unknown text/plain option", decoder)
+			}
+		})
+	}
+}
+
+func TestRegisterDecoderDoesNotFoldUnknownExternalBodyOptionValues(t *testing.T) {
+	const base = "message/external-body"
+	for name, test := range map[string]struct {
+		registered string
+		response   string
+	}{
+		"permission ordinary": {
+			registered: "message/external-body; access-type=FTP; permission=x-openai-v1",
+			response:   "Message/External-Body; access-type=ftp; permission=X-OPENAI-V1",
+		},
+		"permission extended": {
+			registered: "message/external-body; access-type=FTP; permission*=UTF-8''x-openai-v1",
+			response:   "Message/External-Body; access-type=ftp; permission*=utf-8''X-OPENAI-V1",
+		},
+		"ftp mode ordinary": {
+			registered: "message/external-body; access-type=FTP; mode=x-openai-v1",
+			response:   "Message/External-Body; access-type=ftp; mode=X-OPENAI-V1",
+		},
+		"tftp mode extended": {
+			registered: "message/external-body; access-type=TFTP; mode*=UTF-8''x-openai-v1",
+			response:   "Message/External-Body; access-type=tftp; mode*=utf-8''X-OPENAI-V1",
+		},
+		"tftp image invalid": {
+			registered: "message/external-body; access-type=TFTP; mode=IMAGE",
+			response:   "Message/External-Body; access-type=tftp; mode=image",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			wantBare := &testDecoder{}
+			wantSpecific := &testDecoder{}
+			RegisterDecoder(base, func(io.ReadCloser) Decoder { return wantBare })
+			RegisterDecoder(test.registered, func(io.ReadCloser) Decoder { return wantSpecific })
+			t.Cleanup(func() {
+				delete(decoderTypes, decoderContentTypeKey(base))
+				delete(decoderTypes, decoderContentTypeKey(test.registered))
+			})
+			decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {test.response}}, Body: io.NopCloser(strings.NewReader(""))})
+			if decoder != wantBare {
+				t.Fatalf("decoder = %T, want bare decoder for unknown external-body option", decoder)
 			}
 		})
 	}

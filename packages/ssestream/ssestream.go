@@ -775,8 +775,15 @@ func validCaseInsensitiveMediaParameterValue(mediaType string, name string, valu
 	switch strings.TrimSpace(mediaType) {
 	case "message/external-body":
 		switch asciiLower(name) {
-		case "access-type", "permission", "mode":
+		case "access-type":
 			return isMIMEToken(value)
+		case "permission":
+			switch asciiLower(value) {
+			case "read", "read-write":
+				return true
+			}
+		case "mode":
+			return validExternalBodyMode(externalBodyAccessType, value)
 		case "expiration":
 			return validRFC822DateTime(value)
 		}
@@ -813,6 +820,32 @@ func validCaseInsensitiveMediaParameterValue(mediaType string, name string, valu
 	case "video/h264":
 		if strings.EqualFold(name, "profile-level-id") {
 			return validH264ProfileLevelID(value)
+		}
+	}
+	return false
+}
+
+func validExternalBodyMode(accessType string, value string) bool {
+	mode := asciiLower(value)
+	switch accessType {
+	case "ftp", "anon-ftp":
+		switch mode {
+		case "ascii", "ebcdic", "image":
+			return true
+		}
+		if !strings.HasPrefix(mode, "local") || len(mode) == len("local") {
+			return false
+		}
+		for i := len("local"); i < len(mode); i++ {
+			if mode[i] < '0' || mode[i] > '9' {
+				return false
+			}
+		}
+		return true
+	case "tftp":
+		switch mode {
+		case "netascii", "octet", "mail":
+			return true
 		}
 	}
 	return false
