@@ -694,3 +694,43 @@ func TestRegisterDecoderDoesNotUsePlainFallbackForInvalidExtendedSyntax(t *testi
 		})
 	}
 }
+
+func TestRegisterDecoderDoesNotFoldUnknownTextPlainOptionValues(t *testing.T) {
+	const base = "text/plain"
+	for name, test := range map[string]struct {
+		registered string
+		response   string
+	}{
+		"format ordinary": {
+			registered: "text/plain; format=x-openai-v1",
+			response:   "Text/Plain; format=X-OPENAI-V1",
+		},
+		"delsp ordinary": {
+			registered: "text/plain; delsp=x-openai-v1",
+			response:   "Text/Plain; delsp=X-OPENAI-V1",
+		},
+		"format extended": {
+			registered: "text/plain; format*=UTF-8''x-openai-v1",
+			response:   "Text/Plain; format*=utf-8''X-OPENAI-V1",
+		},
+		"delsp extended": {
+			registered: "text/plain; delsp*=UTF-8''x-openai-v1",
+			response:   "Text/Plain; delsp*=utf-8''X-OPENAI-V1",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			wantBare := &testDecoder{}
+			wantSpecific := &testDecoder{}
+			RegisterDecoder(base, func(io.ReadCloser) Decoder { return wantBare })
+			RegisterDecoder(test.registered, func(io.ReadCloser) Decoder { return wantSpecific })
+			t.Cleanup(func() {
+				delete(decoderTypes, decoderContentTypeKey(base))
+				delete(decoderTypes, decoderContentTypeKey(test.registered))
+			})
+			decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {test.response}}, Body: io.NopCloser(strings.NewReader(""))})
+			if decoder != wantBare {
+				t.Fatalf("decoder = %T, want bare decoder for unknown text/plain option", decoder)
+			}
+		})
+	}
+}

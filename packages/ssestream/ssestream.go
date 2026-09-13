@@ -794,8 +794,16 @@ func validCaseInsensitiveMediaParameterValue(mediaType string, name string, valu
 		}
 	case "text/plain":
 		switch asciiLower(name) {
-		case "format", "delsp":
-			return isMIMEToken(value)
+		case "format":
+			switch asciiLower(value) {
+			case "fixed", "flowed":
+				return true
+			}
+		case "delsp":
+			switch asciiLower(value) {
+			case "yes", "no":
+				return true
+			}
 		}
 	case "text/calendar":
 		switch asciiLower(name) {
