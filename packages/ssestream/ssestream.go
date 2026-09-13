@@ -530,6 +530,9 @@ func isCaseInsensitiveMediaParameterValue(mediaType string, name string, externa
 	case "multipart/encrypted":
 		return strings.EqualFold(name, "protocol")
 	case "multipart/signed":
+		// RFC 1847 makes micalg value syntax and semantics protocol-defined.
+		// RFC 2045 therefore leaves micalg case-sensitive unless that selected
+		// protocol explicitly defines otherwise; do not fold it generically.
 		return strings.EqualFold(name, "protocol")
 	case "multipart/report":
 		return strings.EqualFold(name, "report-type")

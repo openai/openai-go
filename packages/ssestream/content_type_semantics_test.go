@@ -13,8 +13,10 @@ func TestRegisterDecoderDoesNotFoldProtocolDefinedOrExtensionValues(t *testing.T
 		registered string
 		response   string
 	}{
-		"multipart signed micalg": {
-			base:       "multipart/signed",
+		"multipart signed protocol-defined micalg": {
+			base: "multipart/signed",
+			// RFC 1847 delegates micalg value semantics to the selected protocol.
+			// This extension protocol intentionally treats V1 and v1 as distinct.
 			registered: `multipart/signed; protocol="application/x-test-signature"; micalg=V1`,
 			response:   `multipart/signed; protocol="application/x-test-signature"; micalg=v1`,
 		},
