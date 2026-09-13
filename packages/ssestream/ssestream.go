@@ -114,6 +114,7 @@ func decodeExtendedMediaParameter(params string, logicalName string) (string, st
 	var single extendedMediaParameterSegment
 	hasSingle := false
 	sections := map[int]extendedMediaParameterSegment{}
+	plainValue := ""
 	plainFound := false
 	found := false
 	valid := true
@@ -132,10 +133,11 @@ func decodeExtendedMediaParameter(params string, logicalName string) (string, st
 			if plainFound {
 				valid = false
 			}
-			core, quoted, ok := mediaParameterValueCore(param[equals+1:])
-			if !ok || (!quoted && !isMIMEToken(core)) {
+			parsed, ok := parsePlainMediaParameterValue(param[equals+1:])
+			if !ok {
 				valid = false
 			}
+			plainValue = parsed
 			plainFound = true
 			return
 		}
@@ -178,20 +180,35 @@ func decodeExtendedMediaParameter(params string, logicalName string) (string, st
 		return "", "", true, false
 	}
 	if hasSingle {
+		fallbackPlain := func() (string, string, bool, bool) {
+			if plainFound {
+				return plainValue, "", true, true
+			}
+			return "", "", true, false
+		}
 		core, quoted, ok := mediaParameterValueCore(single.value)
 		if !ok {
 			return "", "", true, false
 		}
 		charset, language, data, ok := splitExtendedInitialValue(core)
-		if !ok || (!quoted && !validRFC2231ExtendedData(data)) {
+		if !ok {
+			return fallbackPlain()
+		}
+		if !quoted && !validRFC2231ExtendedData(data) {
+			if malformedRFC2231PercentEncodingOnly(data) {
+				return fallbackPlain()
+			}
 			return "", "", true, false
 		}
 		raw, ok := decodeExtendedOctets(data)
 		if !ok {
-			return "", "", true, false
+			return fallbackPlain()
 		}
 		decoded, ok := decodeMIMEParameterValue(charset, raw)
-		return decoded, language, true, ok
+		if !ok {
+			return fallbackPlain()
+		}
+		return decoded, language, true, true
 	}
 	if len(sections) == 0 {
 		return "", "", true, false
@@ -281,6 +298,15 @@ func mediaParameterValueCore(value string) (string, bool, bool) {
 	return decoded.String(), true, true
 }
 
+func parsePlainMediaParameterValue(value string) (string, bool) {
+	_, params, err := mime.ParseMediaType("application/octet-stream; x=" + value)
+	if err != nil {
+		return "", false
+	}
+	parsed, ok := params["x"]
+	return parsed, ok
+}
+
 func splitExtendedInitialValue(value string) (string, string, string, bool) {
 	firstQuote := strings.IndexByte(value, '\'')
 	if firstQuote < 0 {
@@ -321,6 +347,24 @@ func validRFC2231ExtendedData(value string) bool {
 		}
 	}
 	return true
+}
+
+func malformedRFC2231PercentEncodingOnly(value string) bool {
+	malformedPercent := false
+	for i := 0; i < len(value); i++ {
+		if value[i] == '%' {
+			if i+2 >= len(value) || !isHexDigit(value[i+1]) || !isHexDigit(value[i+2]) {
+				malformedPercent = true
+				continue
+			}
+			i += 2
+			continue
+		}
+		if !isRFC2231AttributeChar(value[i]) {
+			return false
+		}
+	}
+	return malformedPercent
 }
 
 func isRFC2231AttributeChar(value byte) bool {

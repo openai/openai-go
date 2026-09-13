@@ -620,6 +620,11 @@ func TestRegisterDecoderRejectsMalformedPlainFallbackWithExtendedValue(t *testin
 			registered: `multipart/signed; protocol="application/pgp-signature"; protocol*=UTF-8''application%2Fpgp-signature`,
 			response:   `multipart/signed; protocol=application/pgp-signature; protocol*=utf-8''application%2fpgp-signature`,
 		},
+		"quoted fallback with newline": {
+			base:       "text/plain",
+			registered: "text/plain; charset=UTF-8; charset*=UTF-8''UTF-8",
+			response:   "text/plain; charset=\"BAD\nVALUE\"; charset*=utf-8''utf-8",
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			wantBare := &testDecoder{}
@@ -637,6 +642,54 @@ func TestRegisterDecoderRejectsMalformedPlainFallbackWithExtendedValue(t *testin
 			decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {test.response}}, Body: io.NopCloser(strings.NewReader(""))})
 			if decoder == wantSpecific {
 				t.Fatal("malformed plain fallback selected parameter-specific decoder")
+			}
+		})
+	}
+}
+
+func TestRegisterDecoderUsesPlainFallbackWhenSingleExtendedValueCannotDecode(t *testing.T) {
+	for name, test := range map[string]struct {
+		registered string
+		response   string
+	}{
+		"invalid percent encoding": {
+			registered: "text/plain; charset=UTF-8; charset*=utf-8''%zz",
+			response:   "Text/Plain; charset=utf-8; charset*=UTF-8''%ZZ",
+		},
+		"missing extended metadata": {
+			registered: "text/plain; charset=UTF-8; charset*=BROKEN",
+			response:   "Text/Plain; charset=utf-8; charset*=broken",
+		},
+		"external body access type": {
+			registered: "message/external-body; access-type=FTP; access-type*=utf-8''%zz; mode=IMAGE",
+			response:   "Message/External-Body; access-type=ftp; access-type*=UTF-8''%ZZ; mode=image",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			want := &testDecoder{}
+			RegisterDecoder(test.registered, func(io.ReadCloser) Decoder { return want })
+			t.Cleanup(func() { delete(decoderTypes, decoderContentTypeKey(test.registered)) })
+			decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {test.response}}, Body: io.NopCloser(strings.NewReader(""))})
+			if decoder != want {
+				t.Fatalf("decoder = %T, want registered decoder via plain fallback", decoder)
+			}
+		})
+	}
+}
+
+func TestRegisterDecoderDoesNotUsePlainFallbackForInvalidExtendedSyntax(t *testing.T) {
+	registered := "text/plain; charset=UTF-8; charset*=UTF-8''UTF-8"
+	for name, response := range map[string]string{
+		"continuation gap": "Text/Plain; charset=utf-8; charset*0*=utf-8''UT; charset*2*=F-8",
+		"unescaped slash":  "Text/Plain; charset=utf-8; charset*=UTF-8''BAD/VALUE",
+	} {
+		t.Run(name, func(t *testing.T) {
+			want := &testDecoder{}
+			RegisterDecoder(registered, func(io.ReadCloser) Decoder { return want })
+			t.Cleanup(func() { delete(decoderTypes, decoderContentTypeKey(registered)) })
+			decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {response}}, Body: io.NopCloser(strings.NewReader(""))})
+			if decoder == want {
+				t.Fatal("invalid extended syntax selected parameter-specific decoder through plain fallback")
 			}
 		})
 	}
