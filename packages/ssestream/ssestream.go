@@ -9,6 +9,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"net/mail"
 	"strconv"
 	"strings"
 	"sync"
@@ -361,6 +362,50 @@ func asciiLower(value string) string {
 	return string(bytes)
 }
 
+func asciiUpper(value string) string {
+	bytes := []byte(value)
+	for i := range bytes {
+		if bytes[i] >= 0x80 {
+			return ""
+		}
+		if bytes[i] >= 'a' && bytes[i] <= 'z' {
+			bytes[i] -= 'a' - 'A'
+		}
+	}
+	return string(bytes)
+}
+
+func validRFC822DateTime(value string) bool {
+	normalized := asciiUpper(value)
+	if normalized == "" {
+		return false
+	}
+	parsed, err := mail.ParseDate(normalized)
+	if err != nil {
+		return false
+	}
+	if comma := strings.IndexByte(normalized, ','); comma >= 0 {
+		day := strings.TrimSpace(normalized[:comma])
+		wantDay := asciiUpper(parsed.Weekday().String()[:3])
+		if day != wantDay {
+			return false
+		}
+	}
+	return true
+}
+
+func validH264ProfileLevelID(value string) bool {
+	if len(value) != 6 {
+		return false
+	}
+	for i := 0; i < len(value); i++ {
+		if !isHexDigit(value[i]) {
+			return false
+		}
+	}
+	return true
+}
+
 func decodeExtendedOctets(value string) ([]byte, bool) {
 	decoded := make([]byte, 0, len(value))
 	for i := 0; i < len(value); i++ {
@@ -636,7 +681,7 @@ func isCaseInsensitiveMediaParameterValue(mediaType string, name string, externa
 	switch strings.TrimSpace(mediaType) {
 	case "message/external-body":
 		switch asciiLower(name) {
-		case "access-type", "permission":
+		case "access-type", "permission", "expiration":
 			return true
 		case "mode":
 			switch externalBodyAccessType {
@@ -665,6 +710,8 @@ func isCaseInsensitiveMediaParameterValue(mediaType string, name string, externa
 		case "method", "component":
 			return true
 		}
+	case "video/h264":
+		return strings.EqualFold(name, "profile-level-id")
 	}
 	return false
 }
@@ -682,6 +729,8 @@ func validCaseInsensitiveMediaParameterValue(mediaType string, name string, valu
 		switch asciiLower(name) {
 		case "access-type", "permission", "mode":
 			return isMIMEToken(value)
+		case "expiration":
+			return validRFC822DateTime(value)
 		}
 	case "multipart/encrypted", "multipart/signed":
 		if strings.EqualFold(name, "protocol") {
@@ -704,6 +753,10 @@ func validCaseInsensitiveMediaParameterValue(mediaType string, name string, valu
 		switch asciiLower(name) {
 		case "method", "component":
 			return isMIMEToken(value)
+		}
+	case "video/h264":
+		if strings.EqualFold(name, "profile-level-id") {
+			return validH264ProfileLevelID(value)
 		}
 	}
 	return false

@@ -487,3 +487,119 @@ func TestRegisterDecoderDoesNotTreatRFC2231LeadingZeroSectionsAsContinuations(t 
 		t.Fatal("invalid leading-zero RFC 2231 sections selected parameter-specific decoder")
 	}
 }
+
+func TestRegisterDecoderFoldsExternalBodyExpirationDateTokens(t *testing.T) {
+	for name, test := range map[string]struct {
+		registered string
+		response   string
+	}{
+		"ordinary": {
+			registered: `message/external-body; access-type=FTP; expiration="Fri, 14 Jun 2024 12:00:00 GMT"`,
+			response:   `Message/External-Body; access-type=ftp; expiration="fri, 14 jun 2024 12:00:00 gmt"`,
+		},
+		"extended": {
+			registered: `message/external-body; access-type=FTP; expiration*=UTF-8''Fri%2C%2014%20Jun%202024%2012%3A00%3A00%20GMT`,
+			response:   `Message/External-Body; access-type=ftp; expiration*=utf-8''fri%2c%2014%20jun%202024%2012%3a00%3a00%20gmt`,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			want := &testDecoder{}
+			RegisterDecoder(test.registered, func(io.ReadCloser) Decoder { return want })
+			t.Cleanup(func() { delete(decoderTypes, decoderContentTypeKey(test.registered)) })
+			decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {test.response}}, Body: io.NopCloser(strings.NewReader(""))})
+			if decoder != want {
+				t.Fatalf("decoder = %T, want registered decoder", decoder)
+			}
+		})
+	}
+}
+
+func TestRegisterDecoderDoesNotFoldInvalidExternalBodyExpiration(t *testing.T) {
+	const base = "message/external-body"
+	for name, test := range map[string]struct {
+		registered string
+		response   string
+	}{
+		"not a date": {
+			registered: `message/external-body; access-type=FTP; expiration="NOT-A-DATE"`,
+			response:   `Message/External-Body; access-type=ftp; expiration="not-a-date"`,
+		},
+		"wrong weekday": {
+			registered: `message/external-body; access-type=FTP; expiration="Thu, 14 Jun 2024 12:00:00 GMT"`,
+			response:   `Message/External-Body; access-type=ftp; expiration="thu, 14 jun 2024 12:00:00 gmt"`,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			wantBare := &testDecoder{}
+			wantSpecific := &testDecoder{}
+			RegisterDecoder(base, func(io.ReadCloser) Decoder { return wantBare })
+			RegisterDecoder(test.registered, func(io.ReadCloser) Decoder { return wantSpecific })
+			t.Cleanup(func() {
+				delete(decoderTypes, decoderContentTypeKey(base))
+				delete(decoderTypes, decoderContentTypeKey(test.registered))
+			})
+			decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {test.response}}, Body: io.NopCloser(strings.NewReader(""))})
+			if decoder != wantBare {
+				t.Fatalf("decoder = %T, want bare decoder for invalid expiration date", decoder)
+			}
+		})
+	}
+}
+
+func TestRegisterDecoderFoldsH264ProfileLevelID(t *testing.T) {
+	for name, test := range map[string]struct {
+		registered string
+		response   string
+	}{
+		"ordinary": {
+			registered: "video/H264; profile-level-id=42E01F",
+			response:   "Video/H264; profile-level-id=42e01f",
+		},
+		"extended": {
+			registered: "video/H264; profile-level-id*=UTF-8''42E01F",
+			response:   "Video/H264; profile-level-id*=utf-8''42e01f",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			want := &testDecoder{}
+			RegisterDecoder(test.registered, func(io.ReadCloser) Decoder { return want })
+			t.Cleanup(func() { delete(decoderTypes, decoderContentTypeKey(test.registered)) })
+			decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {test.response}}, Body: io.NopCloser(strings.NewReader(""))})
+			if decoder != want {
+				t.Fatalf("decoder = %T, want registered decoder", decoder)
+			}
+		})
+	}
+}
+
+func TestRegisterDecoderDoesNotFoldInvalidOrCaseSensitiveH264Values(t *testing.T) {
+	const base = "video/H264"
+	for name, test := range map[string]struct {
+		registered string
+		response   string
+	}{
+		"invalid profile-level-id": {
+			registered: "video/H264; profile-level-id=42E01",
+			response:   "video/H264; profile-level-id=42e01",
+		},
+		"sprop parameter sets": {
+			registered: "video/H264; sprop-parameter-sets=QUJD",
+			response:   "video/H264; sprop-parameter-sets=qujd",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			wantBare := &testDecoder{}
+			wantSpecific := &testDecoder{}
+			RegisterDecoder(base, func(io.ReadCloser) Decoder { return wantBare })
+			RegisterDecoder(test.registered, func(io.ReadCloser) Decoder { return wantSpecific })
+			t.Cleanup(func() {
+				delete(decoderTypes, decoderContentTypeKey(base))
+				delete(decoderTypes, decoderContentTypeKey(test.registered))
+			})
+			decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {test.response}}, Body: io.NopCloser(strings.NewReader(""))})
+			if decoder != wantBare {
+				t.Fatalf("decoder = %T, want bare decoder", decoder)
+			}
+		})
+	}
+}
