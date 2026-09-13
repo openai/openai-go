@@ -17,6 +17,7 @@ import (
 	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
 	"github.com/tidwall/gjson"
 	"golang.org/x/text/encoding/ianaindex"
+	"golang.org/x/text/encoding/unicode/utf32"
 )
 
 type Decoder interface {
@@ -385,11 +386,24 @@ func decodeMIMEParameterValue(charset string, value []byte) (string, bool) {
 	if charset == "" {
 		return string(value), true
 	}
-	encoding, err := ianaindex.IANA.Encoding(charset)
-	if err != nil || encoding == nil {
+
+	decoderEncoding, err := ianaindex.IANA.Encoding(charset)
+	if err != nil {
 		return "", false
 	}
-	decoded, err := encoding.NewDecoder().Bytes(value)
+	if decoderEncoding == nil {
+		switch asciiLower(charset) {
+		case "utf-32be", "csutf32be":
+			decoderEncoding = utf32.UTF32(utf32.BigEndian, utf32.IgnoreBOM)
+		case "utf-32le", "csutf32le":
+			decoderEncoding = utf32.UTF32(utf32.LittleEndian, utf32.IgnoreBOM)
+		case "utf-32", "csutf32":
+			decoderEncoding = utf32.UTF32(utf32.BigEndian, utf32.ExpectBOM)
+		default:
+			return "", false
+		}
+	}
+	decoded, err := decoderEncoding.NewDecoder().Bytes(value)
 	if err != nil {
 		return "", false
 	}
@@ -603,6 +617,8 @@ func extendedMediaParameterHasMetadata(name string) bool {
 }
 
 func isRFC2231Section(section string) bool {
+	// RFC 2231 section 3 explicitly forbids leading zeroes and gaps.
+	// The initial section is exactly "0"; subsequent sections start 1-9.
 	if section == "0" {
 		return true
 	}

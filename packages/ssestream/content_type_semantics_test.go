@@ -40,11 +40,6 @@ func TestRegisterDecoderDoesNotFoldProtocolDefinedOrExtensionValues(t *testing.T
 			registered: "message/external-body; access-type*=UTF-16BE''%00X%00-%00T%00E%00S%00T; mode=V1",
 			response:   "message/external-body; access-type*=utf-16be''%00x%00-%00t%00e%00s%00t; mode=v1",
 		},
-		"external body unsupported utf32 mode": {
-			base:       "message/external-body",
-			registered: "message/external-body; access-type*=UTF-32BE''%00%00%00F%00%00%00T%00%00%00P; mode=IMAGE",
-			response:   "message/external-body; access-type*=utf-32be''%00%00%00f%00%00%00t%00%00%00p; mode=image",
-		},
 		"smime type": {
 			base:       "application/pkcs7-mime",
 			registered: "application/pkcs7-mime; smime-type=SIGNED-DATA",
@@ -105,7 +100,7 @@ func TestRegisterDecoderDoesNotFoldExternalBodyModeForMalformedContinuation(t *t
 	}
 }
 
-func TestRegisterDecoderFoldsExternalBodyModeWithUnsupportedExtendedCharset(t *testing.T) {
+func TestRegisterDecoderFoldsExternalBodyModeForExtendedAccessTypes(t *testing.T) {
 	for name, test := range map[string]struct {
 		registered string
 		response   string
@@ -149,6 +144,22 @@ func TestRegisterDecoderFoldsExternalBodyModeWithUnsupportedExtendedCharset(t *t
 		"ebcdic value": {
 			registered: "message/external-body; access-type*=IBM037''%C6%E3%D7; mode=IMAGE",
 			response:   "Message/External-Body; access-type*=ibm037''%86%A3%97; mode=image",
+		},
+		"utf32be value": {
+			registered: "message/external-body; access-type*=UTF-32BE''%00%00%00F%00%00%00T%00%00%00P; mode=IMAGE",
+			response:   "Message/External-Body; access-type*=utf-32be''%00%00%00f%00%00%00t%00%00%00p; mode=image",
+		},
+		"utf32le value": {
+			registered: "message/external-body; access-type*=UTF-32LE''F%00%00%00T%00%00%00P%00%00%00; mode=IMAGE",
+			response:   "Message/External-Body; access-type*=utf-32le''f%00%00%00t%00%00%00p%00%00%00; mode=image",
+		},
+		"utf32 value with bom": {
+			registered: "message/external-body; access-type*=UTF-32''%00%00%FE%FF%00%00%00F%00%00%00T%00%00%00P; mode=IMAGE",
+			response:   "Message/External-Body; access-type*=utf-32''%00%00%fe%ff%00%00%00f%00%00%00t%00%00%00p; mode=image",
+		},
+		"utf32be iana alias": {
+			registered: "message/external-body; access-type*=csUTF32BE''%00%00%00F%00%00%00T%00%00%00P; mode=IMAGE",
+			response:   "Message/External-Body; access-type*=csutf32be''%00%00%00f%00%00%00t%00%00%00p; mode=image",
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -454,5 +465,21 @@ func TestRegisterDecoderDoesNotFoldInvalidRFC1766DigitSubtag(t *testing.T) {
 	decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {response}}, Body: io.NopCloser(strings.NewReader(""))})
 	if decoder != wantBare {
 		t.Fatalf("decoder = %T, want bare decoder for invalid RFC 1766 language tag", decoder)
+	}
+}
+
+func TestRegisterDecoderDoesNotTreatRFC2231LeadingZeroSectionsAsContinuations(t *testing.T) {
+	registered := "text/plain; format*00=FLOW; format*01=ED"
+	response := "Text/Plain; format*00=flow; format*01=ed"
+	wantSpecific := &testDecoder{}
+	RegisterDecoder(registered, func(io.ReadCloser) Decoder { return wantSpecific })
+	t.Cleanup(func() { delete(decoderTypes, decoderContentTypeKey(registered)) })
+
+	if registeredKey, responseKey := decoderContentTypeKey(registered), decoderContentTypeKey(response); registeredKey == responseKey {
+		t.Fatalf("invalid leading-zero RFC 2231 sections share decoder key %q", registeredKey)
+	}
+	decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {response}}, Body: io.NopCloser(strings.NewReader(""))})
+	if decoder == wantSpecific {
+		t.Fatal("invalid leading-zero RFC 2231 sections selected parameter-specific decoder")
 	}
 }
