@@ -788,3 +788,18 @@ func TestRegisterDecoderDoesNotFoldUnknownExternalBodyOptionValues(t *testing.T)
 		})
 	}
 }
+
+func TestDecoderContentTypeKeyPreservesPaddedBaseWithSemanticNormalization(t *testing.T) {
+	padding := strings.Repeat(" ", 4096)
+	extra := strings.Repeat("; x=v", 512)
+	upper := "Message/External-Body" + padding + "; access-type=FTP; mode=IMAGE" + extra
+	lower := "message/external-body" + padding + "; access-type=ftp; mode=image" + extra
+	upperKey := decoderContentTypeKey(upper)
+	lowerKey := decoderContentTypeKey(lower)
+	if upperKey != lowerKey {
+		t.Fatalf("equivalent padded content types produced different keys")
+	}
+	if !strings.HasPrefix(upperKey, "message/external-body"+padding+";") {
+		t.Fatal("decoder key did not preserve padded raw media-type prefix")
+	}
+}

@@ -77,13 +77,14 @@ func decoderContentTypeKey(contentType string) string {
 		return asciiLower(contentType)
 	}
 	normalizedBase := asciiLower(base)
+	semanticMediaType := strings.TrimSpace(normalizedBase)
 	externalBodyAccessType := ""
 	externalBodyAccessLanguage := ""
 	hasExternalBodyAccessType := false
-	if strings.EqualFold(strings.TrimSpace(normalizedBase), "message/external-body") {
+	if semanticMediaType == "message/external-body" {
 		externalBodyAccessType, externalBodyAccessLanguage, hasExternalBodyAccessType = parseExternalBodyAccessType(contentType, params)
 	}
-	return normalizedBase + ";" + normalizeMediaParameterTail(normalizedBase, params, externalBodyAccessType, externalBodyAccessLanguage, hasExternalBodyAccessType)
+	return normalizedBase + ";" + normalizeMediaParameterTail(semanticMediaType, params, externalBodyAccessType, externalBodyAccessLanguage, hasExternalBodyAccessType)
 }
 
 func parseExternalBodyAccessType(contentType string, params string) (string, string, bool) {
@@ -590,7 +591,7 @@ func normalizeMediaParameter(mediaType string, params string, param string, exte
 	normalized.WriteByte('=')
 
 	value := param[equals+1:]
-	isExternalBodyAccessType := strings.TrimSpace(mediaType) == "message/external-body" && strings.EqualFold(logicalName, "access-type")
+	isExternalBodyAccessType := mediaType == "message/external-body" && strings.EqualFold(logicalName, "access-type")
 	switch {
 	case isExternalBodyAccessType:
 		normalized.WriteString(normalizeCanonicalMediaParameterValue(name, value, "access-type", externalBodyAccessType, externalBodyAccessLanguage, hasExternalBodyAccessType))
@@ -726,7 +727,7 @@ func isCaseInsensitiveMediaParameterValue(mediaType string, name string, externa
 		return true
 	}
 
-	switch strings.TrimSpace(mediaType) {
+	switch mediaType {
 	case "message/external-body":
 		switch asciiLower(name) {
 		case "access-type", "permission", "expiration":
@@ -772,7 +773,7 @@ func validCaseInsensitiveMediaParameterValue(mediaType string, name string, valu
 		return isMIMEToken(value)
 	}
 
-	switch strings.TrimSpace(mediaType) {
+	switch mediaType {
 	case "message/external-body":
 		switch asciiLower(name) {
 		case "access-type":
