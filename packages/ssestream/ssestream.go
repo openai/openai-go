@@ -397,6 +397,8 @@ func decodeMIMEParameterValue(charset string, value []byte) (string, bool) {
 }
 
 func isRFC1766LanguageTag(language string) bool {
+	// RFC 1766: Primary-tag = 1*8ALPHA, Subtag = 1*8ALPHA.
+	// Digits are not valid in either the primary tag or its subtags.
 	partLength := 0
 	for i := 0; i <= len(language); i++ {
 		if i == len(language) || language[i] == '-' {
@@ -658,11 +660,10 @@ func isCaseInsensitiveMediaParameterValue(mediaType string, name string, externa
 
 func validCaseInsensitiveMediaParameterValue(mediaType string, name string, value string, externalBodyAccessType string) bool {
 	if strings.EqualFold(name, "charset") {
-		if value == "" {
-			return false
-		}
-		_, err := ianaindex.IANA.Encoding(value)
-		return err == nil
+		// RFC 2046 defines charset values as case-insensitive and permits
+		// private X-* names; registry lookup is only required when decoding
+		// RFC 2231 octets, not when comparing the charset parameter value.
+		return isMIMEToken(value)
 	}
 
 	switch strings.TrimSpace(mediaType) {

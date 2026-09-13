@@ -415,3 +415,44 @@ func TestRegisterDecoderDoesNotFoldInvalidUnicodeIntoMIMEProtocol(t *testing.T) 
 		t.Fatal("invalid Unicode protocol selected valid parameter-specific decoder")
 	}
 }
+
+func TestRegisterDecoderFoldsPrivateCharsetTokens(t *testing.T) {
+	for name, test := range map[string]struct{ registered, response string }{
+		"ordinary": {
+			registered: "text/plain; charset=X-OPENAI-TEST",
+			response:   "Text/Plain; charset=x-openai-test",
+		},
+		"extended value": {
+			registered: "text/plain; charset*=UTF-8''X-OPENAI-TEST",
+			response:   "Text/Plain; charset*=utf-8''x-openai-test",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			want := &testDecoder{}
+			RegisterDecoder(test.registered, func(io.ReadCloser) Decoder { return want })
+			t.Cleanup(func() { delete(decoderTypes, decoderContentTypeKey(test.registered)) })
+			decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {test.response}}, Body: io.NopCloser(strings.NewReader(""))})
+			if decoder != want {
+				t.Fatalf("decoder = %T, want registered decoder", decoder)
+			}
+		})
+	}
+}
+
+func TestRegisterDecoderDoesNotFoldInvalidRFC1766DigitSubtag(t *testing.T) {
+	const base = "text/plain"
+	registered := "text/plain; format*=UTF-8'x-1'FLOWED"
+	response := "Text/Plain; format*=utf-8'x-1'flowed"
+	wantBare := &testDecoder{}
+	wantSpecific := &testDecoder{}
+	RegisterDecoder(base, func(io.ReadCloser) Decoder { return wantBare })
+	RegisterDecoder(registered, func(io.ReadCloser) Decoder { return wantSpecific })
+	t.Cleanup(func() {
+		delete(decoderTypes, decoderContentTypeKey(base))
+		delete(decoderTypes, decoderContentTypeKey(registered))
+	})
+	decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {response}}, Body: io.NopCloser(strings.NewReader(""))})
+	if decoder != wantBare {
+		t.Fatalf("decoder = %T, want bare decoder for invalid RFC 1766 language tag", decoder)
+	}
+}
