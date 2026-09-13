@@ -128,15 +128,10 @@ func decodeExtendedMediaParameter(params string, logicalName string) (string, st
 			return
 		}
 		if strings.EqualFold(name, logicalName) {
-			if found {
+			if plainFound {
 				valid = false
 			}
 			plainFound = true
-			return
-		}
-		if plainFound {
-			found = true
-			valid = false
 			return
 		}
 		found = true

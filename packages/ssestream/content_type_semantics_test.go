@@ -231,30 +231,34 @@ func TestRegisterDecoderExternalBodyAccessTypeKeysDoNotCollide(t *testing.T) {
 	}
 }
 
-func TestRegisterDecoderDoesNotFoldExternalBodyModeForAmbiguousAccessType(t *testing.T) {
+func TestRegisterDecoderUsesExtendedExternalBodyAccessTypeOverPlainFallback(t *testing.T) {
 	const base = "message/external-body"
-	for name, accessTypes := range map[string]string{
-		"plain then extended": "access-type=X-TEST; access-type*=UTF-8''FTP",
-		"extended then plain": "access-type*=UTF-8''FTP; access-type=X-TEST",
+	for name, test := range map[string]struct {
+		registered string
+		response   string
+	}{
+		"plain then extended": {
+			registered: "access-type=X-TEST; access-type*=UTF-8''FTP",
+			response:   "access-type=x-test; access-type*=utf-8''ftp",
+		},
+		"extended then plain": {
+			registered: "access-type*=UTF-8''FTP; access-type=X-TEST",
+			response:   "access-type*=utf-8''ftp; access-type=x-test",
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			registered := base + "; " + accessTypes + "; mode=IMAGE"
-			response := base + "; " + accessTypes + "; mode=image"
-			wantSpecific := &testDecoder{}
-			RegisterDecoder(registered, func(io.ReadCloser) Decoder { return wantSpecific })
-			t.Cleanup(func() {
-				delete(decoderTypes, decoderContentTypeKey(registered))
-			})
+			registered := base + "; " + test.registered + "; mode=IMAGE"
+			response := base + "; " + test.response + "; mode=image"
+			want := &testDecoder{}
+			RegisterDecoder(registered, func(io.ReadCloser) Decoder { return want })
+			t.Cleanup(func() { delete(decoderTypes, decoderContentTypeKey(registered)) })
 
-			if registeredKey, responseKey := decoderContentTypeKey(registered), decoderContentTypeKey(response); registeredKey == responseKey {
-				t.Fatalf("ambiguous duplicate access-type folded mode into shared key %q", registeredKey)
-			}
 			decoder := NewDecoder(&http.Response{
 				Header: http.Header{"Content-Type": {response}},
 				Body:   io.NopCloser(strings.NewReader("")),
 			})
-			if decoder == wantSpecific {
-				t.Fatal("ambiguous duplicate access-type selected parameter-specific decoder")
+			if decoder != want {
+				t.Fatalf("decoder = %T, want extended access-type registration", decoder)
 			}
 		})
 	}
