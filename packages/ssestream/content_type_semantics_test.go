@@ -328,3 +328,90 @@ func TestRegisterDecoderFoldsExternalBodyModeForStandardAccessTypes(t *testing.T
 		})
 	}
 }
+
+func TestRegisterDecoderRejectsMalformedUnquotedExtendedValueCollision(t *testing.T) {
+	registered := `multipart/signed; protocol*="UTF-8''application/pgp-signature"`
+	malformed := `multipart/signed; protocol*=UTF-8''application/pgp-signature`
+	want := &testDecoder{}
+	RegisterDecoder(registered, func(io.ReadCloser) Decoder { return want })
+	t.Cleanup(func() { delete(decoderTypes, decoderContentTypeKey(registered)) })
+
+	if registeredKey, malformedKey := decoderContentTypeKey(registered), decoderContentTypeKey(malformed); registeredKey == malformedKey {
+		t.Fatalf("malformed unquoted extended value shares decoder key %q", registeredKey)
+	}
+	decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {malformed}}, Body: io.NopCloser(strings.NewReader(""))})
+	if decoder == want {
+		t.Fatal("malformed unquoted extended value selected parameter-specific decoder")
+	}
+}
+
+func TestRegisterDecoderFoldsTextCalendarMIMEParameters(t *testing.T) {
+	for name, test := range map[string]struct{ registered, response string }{
+		"component": {
+			registered: "text/calendar; component=VEVENT",
+			response:   "Text/Calendar; component=vevent",
+		},
+		"method": {
+			registered: "text/calendar; method=REQUEST",
+			response:   "Text/Calendar; method=request",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			want := &testDecoder{}
+			RegisterDecoder(test.registered, func(io.ReadCloser) Decoder { return want })
+			t.Cleanup(func() { delete(decoderTypes, decoderContentTypeKey(test.registered)) })
+			decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {test.response}}, Body: io.NopCloser(strings.NewReader(""))})
+			if decoder != want {
+				t.Fatalf("decoder = %T, want registered decoder", decoder)
+			}
+		})
+	}
+}
+
+func TestRegisterDecoderDecodesMixedRFC2231ContinuationSegments(t *testing.T) {
+	registered := "text/plain; charset*0*=UTF-16BE''%00U; charset*1=TF-8"
+	response := "Text/Plain; charset*0*=utf-16be''%00u; charset*1=tf-8"
+	want := &testDecoder{}
+	RegisterDecoder(registered, func(io.ReadCloser) Decoder { return want })
+	t.Cleanup(func() { delete(decoderTypes, decoderContentTypeKey(registered)) })
+	decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {response}}, Body: io.NopCloser(strings.NewReader(""))})
+	if decoder != want {
+		t.Fatalf("decoder = %T, want registered decoder", decoder)
+	}
+}
+
+func TestRegisterDecoderPreservesRFC2231LanguageIdentity(t *testing.T) {
+	en := "text/plain; format*=UTF-8'en'FLOWED"
+	fr := "text/plain; format*=UTF-8'fr'FLOWED"
+	enResponse := "Text/Plain; format*=utf-8'EN'flowed"
+	wantEN := &testDecoder{}
+	wantFR := &testDecoder{}
+	RegisterDecoder(en, func(io.ReadCloser) Decoder { return wantEN })
+	RegisterDecoder(fr, func(io.ReadCloser) Decoder { return wantFR })
+	t.Cleanup(func() {
+		delete(decoderTypes, decoderContentTypeKey(en))
+		delete(decoderTypes, decoderContentTypeKey(fr))
+	})
+	if enKey, frKey := decoderContentTypeKey(en), decoderContentTypeKey(fr); enKey == frKey {
+		t.Fatalf("distinct language tags share decoder key %q", enKey)
+	}
+	decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {enResponse}}, Body: io.NopCloser(strings.NewReader(""))})
+	if decoder != wantEN {
+		t.Fatalf("decoder = %T, want English registration", decoder)
+	}
+}
+
+func TestRegisterDecoderDoesNotFoldInvalidUnicodeIntoMIMEProtocol(t *testing.T) {
+	registered := "multipart/signed; protocol*=UTF-8''application%2FK"
+	malformed := "multipart/signed; protocol*=UTF-8''application%2F%E2%84%AA"
+	want := &testDecoder{}
+	RegisterDecoder(registered, func(io.ReadCloser) Decoder { return want })
+	t.Cleanup(func() { delete(decoderTypes, decoderContentTypeKey(registered)) })
+	if registeredKey, malformedKey := decoderContentTypeKey(registered), decoderContentTypeKey(malformed); registeredKey == malformedKey {
+		t.Fatalf("invalid Unicode protocol shares valid MIME decoder key %q", registeredKey)
+	}
+	decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {malformed}}, Body: io.NopCloser(strings.NewReader(""))})
+	if decoder == want {
+		t.Fatal("invalid Unicode protocol selected valid parameter-specific decoder")
+	}
+}

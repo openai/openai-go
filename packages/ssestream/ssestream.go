@@ -72,34 +72,35 @@ func decoderContentTypes(contentType string) (string, string) {
 func decoderContentTypeKey(contentType string) string {
 	base, params, found := strings.Cut(contentType, ";")
 	if !found {
-		return strings.ToLower(contentType)
+		return asciiLower(contentType)
 	}
-	normalizedBase := strings.ToLower(base)
+	normalizedBase := asciiLower(base)
 	externalBodyAccessType := ""
+	externalBodyAccessLanguage := ""
 	hasExternalBodyAccessType := false
 	if strings.EqualFold(strings.TrimSpace(normalizedBase), "message/external-body") {
-		externalBodyAccessType, hasExternalBodyAccessType = parseExternalBodyAccessType(contentType, params)
+		externalBodyAccessType, externalBodyAccessLanguage, hasExternalBodyAccessType = parseExternalBodyAccessType(contentType, params)
 	}
-	return normalizedBase + ";" + normalizeMediaParameterTail(normalizedBase, params, externalBodyAccessType, hasExternalBodyAccessType)
+	return normalizedBase + ";" + normalizeMediaParameterTail(normalizedBase, params, externalBodyAccessType, externalBodyAccessLanguage, hasExternalBodyAccessType)
 }
 
-func parseExternalBodyAccessType(contentType string, params string) (string, bool) {
-	if accessType, found, ok := decodeExtendedMediaParameter(params, "access-type"); found {
-		if !ok {
-			return "", false
+func parseExternalBodyAccessType(contentType string, params string) (string, string, bool) {
+	if accessType, language, found, ok := decodeExtendedMediaParameter(params, "access-type"); found {
+		if !ok || !isMIMEToken(accessType) {
+			return "", "", false
 		}
-		return strings.ToLower(accessType), true
+		return asciiLower(accessType), asciiLower(language), true
 	}
 
 	_, parsedParams, err := mime.ParseMediaType(contentType)
 	if err != nil {
-		return "", false
+		return "", "", false
 	}
 	accessType, ok := parsedParams["access-type"]
-	if !ok {
-		return "", false
+	if !ok || !isMIMEToken(accessType) {
+		return "", "", false
 	}
-	return strings.ToLower(accessType), true
+	return asciiLower(accessType), "", true
 }
 
 type extendedMediaParameterSegment struct {
@@ -107,7 +108,7 @@ type extendedMediaParameterSegment struct {
 	value   string
 }
 
-func decodeExtendedMediaParameter(params string, logicalName string) (string, bool, bool) {
+func decodeExtendedMediaParameter(params string, logicalName string) (string, string, bool, bool) {
 	var single extendedMediaParameterSegment
 	hasSingle := false
 	sections := map[int]extendedMediaParameterSegment{}
@@ -170,114 +171,198 @@ func decodeExtendedMediaParameter(params string, logicalName string) (string, bo
 	})
 
 	if !found {
-		return "", false, false
+		return "", "", false, false
 	}
 	if !valid {
-		return "", true, false
+		return "", "", true, false
 	}
 	if hasSingle {
-		core, ok := decodedMediaParameterCore(single.value)
+		core, quoted, ok := mediaParameterValueCore(single.value)
 		if !ok {
-			return "", true, false
+			return "", "", true, false
 		}
-		charset, data, ok := splitExtendedInitialValue(core)
-		if !ok {
-			return "", true, false
+		charset, language, data, ok := splitExtendedInitialValue(core)
+		if !ok || (!quoted && !validRFC2231ExtendedData(data)) {
+			return "", "", true, false
 		}
 		raw, ok := decodeExtendedOctets(data)
 		if !ok {
-			return "", true, false
+			return "", "", true, false
 		}
 		decoded, ok := decodeMIMEParameterValue(charset, raw)
-		return decoded, true, ok
+		return decoded, language, true, ok
 	}
 	if len(sections) == 0 {
-		return "", true, false
+		return "", "", true, false
 	}
 
-	var raw []byte
+	var decoded strings.Builder
+	var encodedRun []byte
 	charset := ""
+	language := ""
+	flushEncoded := func() bool {
+		if len(encodedRun) == 0 {
+			return true
+		}
+		text, ok := decodeMIMEParameterValue(charset, encodedRun)
+		if !ok {
+			return false
+		}
+		decoded.WriteString(text)
+		encodedRun = encodedRun[:0]
+		return true
+	}
+
 	for section := 0; section < len(sections); section++ {
 		segment, ok := sections[section]
 		if !ok {
-			return "", true, false
+			return "", "", true, false
 		}
-		core, ok := decodedMediaParameterCore(segment.value)
+		core, quoted, ok := mediaParameterValueCore(segment.value)
 		if !ok {
-			return "", true, false
+			return "", "", true, false
 		}
 		data := core
 		if section == 0 && segment.encoded {
-			charset, data, ok = splitExtendedInitialValue(core)
+			charset, language, data, ok = splitExtendedInitialValue(core)
 			if !ok {
-				return "", true, false
+				return "", "", true, false
 			}
 		}
 
-		var octets []byte
 		if segment.encoded {
-			octets, ok = decodeExtendedOctets(data)
-			if !ok {
-				return "", true, false
+			if !quoted && !validRFC2231ExtendedData(data) {
+				return "", "", true, false
 			}
-		} else {
-			octets = []byte(data)
+			octets, ok := decodeExtendedOctets(data)
+			if !ok {
+				return "", "", true, false
+			}
+			encodedRun = append(encodedRun, octets...)
+			continue
 		}
-		raw = append(raw, octets...)
-	}
 
-	decoded, ok := decodeMIMEParameterValue(charset, raw)
-	return decoded, true, ok
+		if !quoted && !isMIMEToken(data) {
+			return "", "", true, false
+		}
+		if !flushEncoded() {
+			return "", "", true, false
+		}
+		decoded.WriteString(data)
+	}
+	if !flushEncoded() {
+		return "", "", true, false
+	}
+	return decoded.String(), language, true, true
 }
 
-func decodedMediaParameterCore(value string) (string, bool) {
+func mediaParameterValueCore(value string) (string, bool, bool) {
 	valueStart, valueEnd := trimOWSBounds(value)
 	core := value[valueStart:valueEnd]
 	if !strings.HasPrefix(core, "\"") {
-		return core, true
+		return core, false, true
 	}
 	contents, ok := quotedMediaParameterContents(core)
 	if !ok {
-		return "", false
+		return "", false, false
 	}
 
 	var decoded strings.Builder
 	for i := 0; i < len(contents); i++ {
 		if contents[i] == '\\' {
 			if i+1 >= len(contents) {
-				return "", false
+				return "", false, false
 			}
 			i++
 		}
 		decoded.WriteByte(contents[i])
 	}
-	return decoded.String(), true
+	return decoded.String(), true, true
 }
 
-func splitExtendedInitialValue(value string) (string, string, bool) {
+func splitExtendedInitialValue(value string) (string, string, string, bool) {
 	firstQuote := strings.IndexByte(value, '\'')
 	if firstQuote < 0 {
-		return "", "", false
+		return "", "", "", false
 	}
 	secondOffset := strings.IndexByte(value[firstQuote+1:], '\'')
 	if secondOffset < 0 {
-		return "", "", false
+		return "", "", "", false
 	}
 	secondQuote := firstQuote + secondOffset + 1
 	charset := value[:firstQuote]
 	language := value[firstQuote+1 : secondQuote]
 	if charset != "" {
 		if charset != strings.TrimSpace(charset) {
-			return "", "", false
+			return "", "", "", false
 		}
 		if _, err := ianaindex.IANA.Encoding(charset); err != nil {
-			return "", "", false
+			return "", "", "", false
 		}
 	}
 	if language != "" && !isRFC1766LanguageTag(language) {
-		return "", "", false
+		return "", "", "", false
 	}
-	return charset, value[secondQuote+1:], true
+	return charset, language, value[secondQuote+1:], true
+}
+
+func validRFC2231ExtendedData(value string) bool {
+	for i := 0; i < len(value); i++ {
+		if value[i] == '%' {
+			if i+2 >= len(value) || !isHexDigit(value[i+1]) || !isHexDigit(value[i+2]) {
+				return false
+			}
+			i += 2
+			continue
+		}
+		if !isRFC2231AttributeChar(value[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func isRFC2231AttributeChar(value byte) bool {
+	return isMIMETokenChar(value) && value != '*' && value != '\'' && value != '%'
+}
+
+func isMIMEToken(value string) bool {
+	if value == "" {
+		return false
+	}
+	for i := 0; i < len(value); i++ {
+		if !isMIMETokenChar(value[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func isMIMETokenChar(value byte) bool {
+	if value <= ' ' || value >= 0x7f {
+		return false
+	}
+	switch value {
+	case '(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '=':
+		return false
+	default:
+		return true
+	}
+}
+
+func validMIMEMediaType(value string) bool {
+	typePart, subtype, found := strings.Cut(value, "/")
+	return found && !strings.Contains(subtype, "/") && isMIMEToken(typePart) && isMIMEToken(subtype)
+}
+
+func asciiLower(value string) string {
+	bytes := []byte(value)
+	for i := range bytes {
+		if bytes[i] >= 'A' && bytes[i] <= 'Z' {
+			bytes[i] += 'a' - 'A'
+		}
+	}
+	return string(bytes)
 }
 
 func decodeExtendedOctets(value string) ([]byte, bool) {
@@ -333,12 +418,13 @@ func isRFC1766LanguageTag(language string) bool {
 }
 
 type decodedExtendedParameterState struct {
-	value   string
-	found   bool
-	decoded bool
+	value    string
+	language string
+	found    bool
+	decoded  bool
 }
 
-func normalizeMediaParameterTail(mediaType string, params string, externalBodyAccessType string, hasExternalBodyAccessType bool) string {
+func normalizeMediaParameterTail(mediaType string, params string, externalBodyAccessType string, externalBodyAccessLanguage string, hasExternalBodyAccessType bool) string {
 	decodedParameters := map[string]decodedExtendedParameterState{}
 	var normalized strings.Builder
 	first := true
@@ -347,7 +433,7 @@ func normalizeMediaParameterTail(mediaType string, params string, externalBodyAc
 			normalized.WriteByte(';')
 		}
 		first = false
-		normalized.WriteString(normalizeMediaParameter(mediaType, params, param, externalBodyAccessType, hasExternalBodyAccessType, decodedParameters))
+		normalized.WriteString(normalizeMediaParameter(mediaType, params, param, externalBodyAccessType, externalBodyAccessLanguage, hasExternalBodyAccessType, decodedParameters))
 	})
 	return normalized.String()
 }
@@ -379,7 +465,7 @@ func forEachMediaParameter(params string, visit func(string)) {
 	}
 }
 
-func normalizeMediaParameter(mediaType string, params string, param string, externalBodyAccessType string, hasExternalBodyAccessType bool, decodedParameters map[string]decodedExtendedParameterState) string {
+func normalizeMediaParameter(mediaType string, params string, param string, externalBodyAccessType string, externalBodyAccessLanguage string, hasExternalBodyAccessType bool, decodedParameters map[string]decodedExtendedParameterState) string {
 	equals := strings.IndexByte(param, '=')
 	if equals < 0 {
 		return param
@@ -395,7 +481,7 @@ func normalizeMediaParameter(mediaType string, params string, param string, exte
 
 	var normalized strings.Builder
 	normalized.WriteString(namePart[:nameStart])
-	normalized.WriteString(strings.ToLower(name))
+	normalized.WriteString(asciiLower(name))
 	normalized.WriteString(namePart[nameEnd:])
 	normalized.WriteByte('=')
 
@@ -403,16 +489,21 @@ func normalizeMediaParameter(mediaType string, params string, param string, exte
 	isExternalBodyAccessType := strings.TrimSpace(mediaType) == "message/external-body" && strings.EqualFold(logicalName, "access-type")
 	switch {
 	case isExternalBodyAccessType:
-		normalized.WriteString(normalizeCanonicalMediaParameterValue(name, value, "access-type", externalBodyAccessType, hasExternalBodyAccessType))
+		normalized.WriteString(normalizeCanonicalMediaParameterValue(name, value, "access-type", externalBodyAccessType, externalBodyAccessLanguage, hasExternalBodyAccessType))
 	case isCaseInsensitiveMediaParameterValue(mediaType, logicalName, externalBodyAccessType):
-		state := decodedCaseInsensitiveParameter(params, logicalName, decodedParameters)
+		state := decodedCaseInsensitiveParameter(mediaType, params, logicalName, externalBodyAccessType, decodedParameters)
 		if state.found {
-			normalized.WriteString(normalizeCanonicalMediaParameterValue(name, value, logicalName, state.value, state.decoded))
+			normalized.WriteString(normalizeCanonicalMediaParameterValue(name, value, logicalName, state.value, state.language, state.decoded))
 		} else {
-			valueStart, valueEnd := trimOWSBounds(value)
-			normalized.WriteString(value[:valueStart])
-			normalized.WriteString(strings.ToLower(value[valueStart:valueEnd]))
-			normalized.WriteString(value[valueEnd:])
+			core, _, ok := mediaParameterValueCore(value)
+			if ok && validCaseInsensitiveMediaParameterValue(mediaType, logicalName, core, externalBodyAccessType) {
+				valueStart, valueEnd := trimOWSBounds(value)
+				normalized.WriteString(value[:valueStart])
+				normalized.WriteString(asciiLower(value[valueStart:valueEnd]))
+				normalized.WriteString(value[valueEnd:])
+			} else {
+				normalized.WriteString(value)
+			}
 		}
 	case strings.HasSuffix(name, "*"):
 		normalized.WriteString(normalizeExtendedParameterValue(value, extendedMediaParameterHasMetadata(name)))
@@ -423,25 +514,30 @@ func normalizeMediaParameter(mediaType string, params string, param string, exte
 	return normalized.String()
 }
 
-func decodedCaseInsensitiveParameter(params string, logicalName string, cache map[string]decodedExtendedParameterState) decodedExtendedParameterState {
-	key := strings.ToLower(logicalName)
+func decodedCaseInsensitiveParameter(mediaType string, params string, logicalName string, externalBodyAccessType string, cache map[string]decodedExtendedParameterState) decodedExtendedParameterState {
+	key := asciiLower(logicalName)
 	if state, ok := cache[key]; ok {
 		return state
 	}
-	value, found, decoded := decodeExtendedMediaParameter(params, logicalName)
+	value, language, found, decoded := decodeExtendedMediaParameter(params, logicalName)
 	if decoded {
-		value = strings.ToLower(value)
+		if validCaseInsensitiveMediaParameterValue(mediaType, logicalName, value, externalBodyAccessType) {
+			value = asciiLower(value)
+			language = asciiLower(language)
+		} else {
+			decoded = false
+		}
 	}
-	state := decodedExtendedParameterState{value: value, found: found, decoded: decoded}
+	state := decodedExtendedParameterState{value: value, language: language, found: found, decoded: decoded}
 	cache[key] = state
 	return state
 }
 
-func normalizeCanonicalMediaParameterValue(name string, value string, logicalName string, decodedValue string, decoded bool) string {
+func normalizeCanonicalMediaParameterValue(name string, value string, logicalName string, decodedValue string, decodedLanguage string, decoded bool) string {
 	if decoded {
 		canonical := "d"
 		if isInitialMediaParameterSegment(name, logicalName) {
-			canonical = encodeDecoderKeyValue('d', decodedValue)
+			canonical = encodeDecodedDecoderKeyValue(decodedLanguage, decodedValue)
 		}
 		valueStart, valueEnd := trimOWSBounds(value)
 		return value[:valueStart] + canonical + value[valueEnd:]
@@ -453,6 +549,14 @@ func normalizeCanonicalMediaParameterValue(name string, value string, logicalNam
 	}
 	valueStart, valueEnd := trimOWSBounds(normalizedValue)
 	return normalizedValue[:valueStart] + encodeDecoderKeyValue('r', normalizedValue[valueStart:valueEnd]) + normalizedValue[valueEnd:]
+}
+
+func encodeDecodedDecoderKeyValue(language string, value string) string {
+	languageHex := make([]byte, hex.EncodedLen(len(language)))
+	hex.Encode(languageHex, []byte(language))
+	valueHex := make([]byte, hex.EncodedLen(len(value)))
+	hex.Encode(valueHex, []byte(value))
+	return "d" + string(languageHex) + "g" + string(valueHex)
 }
 
 func encodeDecoderKeyValue(prefix byte, value string) string {
@@ -518,7 +622,7 @@ func isCaseInsensitiveMediaParameterValue(mediaType string, name string, externa
 
 	switch strings.TrimSpace(mediaType) {
 	case "message/external-body":
-		switch strings.ToLower(name) {
+		switch asciiLower(name) {
 		case "access-type", "permission":
 			return true
 		case "mode":
@@ -539,19 +643,61 @@ func isCaseInsensitiveMediaParameterValue(mediaType string, name string, externa
 	case "multipart/related":
 		return strings.EqualFold(name, "type")
 	case "text/plain":
-		switch strings.ToLower(name) {
+		switch asciiLower(name) {
 		case "format", "delsp":
+			return true
+		}
+	case "text/calendar":
+		switch asciiLower(name) {
+		case "method", "component":
 			return true
 		}
 	}
 	return false
 }
 
-func normalizeExtendedParameterValue(value string, hasMetadata bool) string {
-	return normalizeExtendedParameterValueWithData(value, hasMetadata, normalizePercentEncoding)
+func validCaseInsensitiveMediaParameterValue(mediaType string, name string, value string, externalBodyAccessType string) bool {
+	if strings.EqualFold(name, "charset") {
+		if value == "" {
+			return false
+		}
+		_, err := ianaindex.IANA.Encoding(value)
+		return err == nil
+	}
+
+	switch strings.TrimSpace(mediaType) {
+	case "message/external-body":
+		switch asciiLower(name) {
+		case "access-type", "permission", "mode":
+			return isMIMEToken(value)
+		}
+	case "multipart/encrypted", "multipart/signed":
+		if strings.EqualFold(name, "protocol") {
+			return validMIMEMediaType(value)
+		}
+	case "multipart/report":
+		if strings.EqualFold(name, "report-type") {
+			return isMIMEToken(value)
+		}
+	case "multipart/related":
+		if strings.EqualFold(name, "type") {
+			return validMIMEMediaType(value)
+		}
+	case "text/plain":
+		switch asciiLower(name) {
+		case "format", "delsp":
+			return isMIMEToken(value)
+		}
+	case "text/calendar":
+		switch asciiLower(name) {
+		case "method", "component":
+			return isMIMEToken(value)
+		}
+	}
+	return false
 }
 
-func normalizeExtendedParameterValueWithData(value string, hasMetadata bool, normalizeData func(string) string) string {
+func normalizeExtendedParameterValue(value string, hasMetadata bool) string {
 	valueStart, valueEnd := trimOWSBounds(value)
 	core := value[valueStart:valueEnd]
 	quoted := false
@@ -577,11 +723,11 @@ func normalizeExtendedParameterValueWithData(value string, hasMetadata bool, nor
 
 	var normalized string
 	if firstQuote >= 0 && secondQuote >= 0 {
-		normalized = strings.ToLower(core[:firstQuote]) + "'" +
-			strings.ToLower(core[firstQuote+1:secondQuote]) + "'" +
-			normalizeData(core[secondQuote+1:])
+		normalized = asciiLower(core[:firstQuote]) + "'" +
+			asciiLower(core[firstQuote+1:secondQuote]) + "'" +
+			normalizePercentEncoding(core[secondQuote+1:])
 	} else {
-		normalized = normalizeData(core)
+		normalized = normalizePercentEncoding(core)
 	}
 	if quoted {
 		normalized = "\"" + normalized + "\""
