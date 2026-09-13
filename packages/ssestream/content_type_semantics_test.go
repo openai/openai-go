@@ -603,3 +603,41 @@ func TestRegisterDecoderDoesNotFoldInvalidOrCaseSensitiveH264Values(t *testing.T
 		})
 	}
 }
+
+func TestRegisterDecoderRejectsMalformedPlainFallbackWithExtendedValue(t *testing.T) {
+	for name, test := range map[string]struct {
+		base       string
+		registered string
+		response   string
+	}{
+		"charset": {
+			base:       "text/plain",
+			registered: "text/plain; charset=UTF-8; charset*=UTF-8''UTF-8",
+			response:   "text/plain; charset=BAD/VALUE; charset*=utf-8''utf-8",
+		},
+		"multipart protocol": {
+			base:       "multipart/signed",
+			registered: `multipart/signed; protocol="application/pgp-signature"; protocol*=UTF-8''application%2Fpgp-signature`,
+			response:   `multipart/signed; protocol=application/pgp-signature; protocol*=utf-8''application%2fpgp-signature`,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			wantBare := &testDecoder{}
+			wantSpecific := &testDecoder{}
+			RegisterDecoder(test.base, func(io.ReadCloser) Decoder { return wantBare })
+			RegisterDecoder(test.registered, func(io.ReadCloser) Decoder { return wantSpecific })
+			t.Cleanup(func() {
+				delete(decoderTypes, decoderContentTypeKey(test.base))
+				delete(decoderTypes, decoderContentTypeKey(test.registered))
+			})
+
+			if registeredKey, responseKey := decoderContentTypeKey(test.registered), decoderContentTypeKey(test.response); registeredKey == responseKey {
+				t.Fatalf("malformed plain fallback shares decoder key %q", registeredKey)
+			}
+			decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {test.response}}, Body: io.NopCloser(strings.NewReader(""))})
+			if decoder == wantSpecific {
+				t.Fatal("malformed plain fallback selected parameter-specific decoder")
+			}
+		})
+	}
+}

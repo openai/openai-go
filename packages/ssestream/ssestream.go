@@ -132,6 +132,10 @@ func decodeExtendedMediaParameter(params string, logicalName string) (string, st
 			if plainFound {
 				valid = false
 			}
+			core, quoted, ok := mediaParameterValueCore(param[equals+1:])
+			if !ok || (!quoted && !isMIMEToken(core)) {
+				valid = false
+			}
 			plainFound = true
 			return
 		}
