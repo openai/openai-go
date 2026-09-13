@@ -114,8 +114,8 @@ func TestRegisterDecoderFoldsExternalBodyModeForExtendedAccessTypes(t *testing.T
 			response:   "Message/External-Body; access-type*0*=iso-8859-1''anon%2d; access-type*1*=ftp; mode=image",
 		},
 		"quoted extended value": {
-			registered: "message/external-body; access-type*=\"ISO-8859-1''TFTP\"; mode=IMAGE",
-			response:   "Message/External-Body; access-type*=\"iso-8859-1''tftp\"; mode=image",
+			registered: "message/external-body; access-type*=\"ISO-8859-1''TFTP\"; mode=NETASCII",
+			response:   "Message/External-Body; access-type*=\"iso-8859-1''tftp\"; mode=netascii",
 		},
 		"mode before access type": {
 			registered: "message/external-body; mode=IMAGE; access-type*=ISO-8859-1''FTP",
