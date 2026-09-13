@@ -511,6 +511,14 @@ func TestRegisterDecoderFoldsExternalBodyExpirationDateTokens(t *testing.T) {
 			registered: `message/external-body; access-type=FTP; expiration*=UTF-8''Fri%2C%2014%20Jun%202024%2012%3A00%3A00%20GMT`,
 			response:   `Message/External-Body; access-type=ftp; expiration*=utf-8''fri%2c%2014%20jun%202024%2012%3a00%3a00%20gmt`,
 		},
+		"military zone ordinary": {
+			registered: `message/external-body; access-type=FTP; expiration="Fri, 14 Jun 2024 12:00:00 Z"`,
+			response:   `Message/External-Body; access-type=ftp; expiration="fri, 14 jun 2024 12:00:00 z"`,
+		},
+		"military zone extended": {
+			registered: `message/external-body; access-type=FTP; expiration*=UTF-8''Fri%2C%2014%20Jun%202024%2012%3A00%3A00%20A`,
+			response:   `Message/External-Body; access-type=ftp; expiration*=utf-8''fri%2c%2014%20jun%202024%2012%3a00%3a00%20a`,
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			want := &testDecoder{}
@@ -537,6 +545,10 @@ func TestRegisterDecoderDoesNotFoldInvalidExternalBodyExpiration(t *testing.T) {
 		"wrong weekday": {
 			registered: `message/external-body; access-type=FTP; expiration="Thu, 14 Jun 2024 12:00:00 GMT"`,
 			response:   `Message/External-Body; access-type=ftp; expiration="thu, 14 jun 2024 12:00:00 gmt"`,
+		},
+		"unused military zone": {
+			registered: `message/external-body; access-type=FTP; expiration="Fri, 14 Jun 2024 12:00:00 J"`,
+			response:   `Message/External-Body; access-type=ftp; expiration="fri, 14 jun 2024 12:00:00 j"`,
 		},
 	} {
 		t.Run(name, func(t *testing.T) {

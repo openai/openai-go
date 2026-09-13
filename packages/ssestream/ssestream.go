@@ -431,7 +431,18 @@ func validRFC822DateTime(value string) bool {
 	}
 	parsed, err := mail.ParseDate(normalized)
 	if err != nil {
-		return false
+		zoneStart := strings.LastIndexAny(normalized, " \t")
+		if zoneStart < 0 || len(normalized)-zoneStart-1 != 1 {
+			return false
+		}
+		zone := normalized[len(normalized)-1]
+		if zone < 'A' || zone > 'Z' || zone == 'J' {
+			return false
+		}
+		parsed, err = mail.ParseDate(normalized[:zoneStart+1] + "+0000")
+		if err != nil {
+			return false
+		}
 	}
 	if comma := strings.IndexByte(normalized, ','); comma >= 0 {
 		day := strings.TrimSpace(normalized[:comma])
