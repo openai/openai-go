@@ -604,11 +604,12 @@ func (cfg *RequestConfig) Execute() (err error) {
 			cfg.Request.Body, _ = cfg.Request.GetBody()
 		case *bytes.Reader:
 			cfg.Request.ContentLength = int64(body.Len())
+			snapshot := *body
 			cfg.Request.GetBody = func() (io.ReadCloser, error) {
-				_, seekErr := body.Seek(0, 0)
-				return io.NopCloser(body), seekErr
+				replay := snapshot
+				return io.NopCloser(&replay), nil
 			}
-			cfg.Request.Body, _ = cfg.Request.GetBody()
+			cfg.Request.Body = io.NopCloser(body)
 		default:
 			if rc, ok := body.(io.ReadCloser); ok {
 				cfg.Request.Body = rc
