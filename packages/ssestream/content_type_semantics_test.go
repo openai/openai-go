@@ -1464,3 +1464,116 @@ func TestRegisterDecoderEqualPlainFallbacksDoNotHideExtendedValue(t *testing.T) 
 		})
 	}
 }
+
+func TestRegisterDecoderXOPTypeRejectsMixedSingleAndContinuedRFC2231Values(t *testing.T) {
+	const base = "application/xop+xml"
+	registered := `application/xop+xml; type="application/soap+xml; action*=UTF-8''V1; action*0*=UTF-8''LEFT; action*1*=ONE"`
+	response := `Application/Xop+Xml; type="application/soap+xml; action*=utf-8''V1; action*0*=utf-8''RIGHT; action*1*=TWO"`
+
+	if registeredKey, responseKey := decoderContentTypeKey(registered), decoderContentTypeKey(response); registeredKey == responseKey {
+		t.Fatalf("mixed single/continued XOP RFC 2231 values share decoder key %q", registeredKey)
+	}
+
+	wantBare := &testDecoder{}
+	wantSpecific := &testDecoder{}
+	RegisterDecoder(base, func(io.ReadCloser) Decoder { return wantBare })
+	RegisterDecoder(registered, func(io.ReadCloser) Decoder { return wantSpecific })
+	t.Cleanup(func() {
+		delete(decoderTypes, decoderContentTypeKey(base))
+		delete(decoderTypes, decoderContentTypeKey(registered))
+	})
+
+	decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {response}}, Body: io.NopCloser(strings.NewReader(""))})
+	if decoder != wantBare {
+		t.Fatalf("decoder = %T, want bare decoder for mixed single/continued XOP RFC 2231 value", decoder)
+	}
+}
+
+func TestRegisterDecoderXOPTypeSeparatesUnsupportedRFC2231LaterContinuationData(t *testing.T) {
+	const base = "application/xop+xml"
+	registered := `application/xop+xml; type="application/soap+xml; action*0*=X-UNKNOWN'en'V; action*1*=ONE"`
+	response := `Application/Xop+Xml; type="application/soap+xml; action*0*=x-unknown'EN'V; action*1*=TWO"`
+
+	if registeredKey, responseKey := decoderContentTypeKey(registered), decoderContentTypeKey(response); registeredKey == responseKey {
+		t.Fatalf("unsupported XOP RFC 2231 continuations with distinct later data share decoder key %q", registeredKey)
+	}
+
+	wantBare := &testDecoder{}
+	wantSpecific := &testDecoder{}
+	RegisterDecoder(base, func(io.ReadCloser) Decoder { return wantBare })
+	RegisterDecoder(registered, func(io.ReadCloser) Decoder { return wantSpecific })
+	t.Cleanup(func() {
+		delete(decoderTypes, decoderContentTypeKey(base))
+		delete(decoderTypes, decoderContentTypeKey(registered))
+	})
+
+	decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {response}}, Body: io.NopCloser(strings.NewReader(""))})
+	if decoder != wantBare {
+		t.Fatalf("decoder = %T, want bare decoder for distinct unsupported RFC 2231 continuation data", decoder)
+	}
+}
+
+func TestRegisterDecoderXOPTypeRejectsMixedRFC2231SectionEncodings(t *testing.T) {
+	const base = "application/xop+xml"
+	registered := `application/xop+xml; type="application/soap+xml; action*0=V1; action*0*=UTF-8''LEFT; action*1=Z"`
+	response := `Application/Xop+Xml; type="application/soap+xml; action*0=V1; action*0*=utf-8''RIGHT; action*1=Z"`
+
+	if registeredKey, responseKey := decoderContentTypeKey(registered), decoderContentTypeKey(response); registeredKey == responseKey {
+		t.Fatalf("mixed encoded/unencoded XOP RFC 2231 sections share decoder key %q", registeredKey)
+	}
+
+	wantBare := &testDecoder{}
+	wantSpecific := &testDecoder{}
+	RegisterDecoder(base, func(io.ReadCloser) Decoder { return wantBare })
+	RegisterDecoder(registered, func(io.ReadCloser) Decoder { return wantSpecific })
+	t.Cleanup(func() {
+		delete(decoderTypes, decoderContentTypeKey(base))
+		delete(decoderTypes, decoderContentTypeKey(registered))
+	})
+
+	decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {response}}, Body: io.NopCloser(strings.NewReader(""))})
+	if decoder != wantBare {
+		t.Fatalf("decoder = %T, want bare decoder for mixed encoded/unencoded RFC 2231 section", decoder)
+	}
+}
+
+func TestRegisterDecoderXOPTypeRejectsInvalidRFC2231SectionNames(t *testing.T) {
+	const base = "application/xop+xml"
+	for name, test := range map[string]struct {
+		registered string
+		response   string
+	}{
+		"encoded leading zero": {
+			registered: `application/xop+xml; type="application/soap+xml; action*00*=LEFT"`,
+			response:   `Application/Xop+Xml; type="application/soap+xml; action*00*=RIGHT"`,
+		},
+		"unencoded leading zero": {
+			registered: `application/xop+xml; type="application/soap+xml; action*00=LEFT"`,
+			response:   `Application/Xop+Xml; type="application/soap+xml; action*00=RIGHT"`,
+		},
+		"nonnumeric section": {
+			registered: `application/xop+xml; type="application/soap+xml; action*x*=LEFT"`,
+			response:   `Application/Xop+Xml; type="application/soap+xml; action*x*=RIGHT"`,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if registeredKey, responseKey := decoderContentTypeKey(test.registered), decoderContentTypeKey(test.response); registeredKey == responseKey {
+				t.Fatalf("invalid RFC 2231 section names share decoder key %q", registeredKey)
+			}
+
+			wantBare := &testDecoder{}
+			wantSpecific := &testDecoder{}
+			RegisterDecoder(base, func(io.ReadCloser) Decoder { return wantBare })
+			RegisterDecoder(test.registered, func(io.ReadCloser) Decoder { return wantSpecific })
+			t.Cleanup(func() {
+				delete(decoderTypes, decoderContentTypeKey(base))
+				delete(decoderTypes, decoderContentTypeKey(test.registered))
+			})
+
+			decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {test.response}}, Body: io.NopCloser(strings.NewReader(""))})
+			if decoder != wantBare {
+				t.Fatalf("decoder = %T, want bare decoder for invalid RFC 2231 section name", decoder)
+			}
+		})
+	}
+}

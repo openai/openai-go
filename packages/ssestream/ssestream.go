@@ -1205,7 +1205,7 @@ func canonicalRFC2231MediaParameterIdentity(params string, estimatedIdentities i
 		}
 		name := param[nameStart:nameEnd]
 		logicalName := mediaParameterLogicalName(name)
-		if !strings.HasSuffix(name, "*") && strings.EqualFold(name, logicalName) {
+		if !strings.Contains(name, "*") {
 			return
 		}
 
@@ -1234,6 +1234,12 @@ func canonicalRFC2231MediaParameterIdentity(params string, estimatedIdentities i
 		if segment, ok := extendedContinuationSection(param, logicalName); ok {
 			identity.section = segment.section
 			identity.continuation = true
+		}
+		if !hasMetadata && !identity.continuation {
+			// ParseMediaType silently drops malformed RFC 2231 star forms.
+			// Keep them out of canonical keys rather than losing their payload.
+			valid = false
+			return
 		}
 		if hasMetadata {
 			charset, language, data, ok := splitRFC2231IdentityMetadata(core)
@@ -1277,28 +1283,51 @@ func canonicalRFC2231MediaParameterIdentity(params string, estimatedIdentities i
 		return compareASCIIFold(identities[i].language, identities[j].language) < 0
 	})
 
-	var continuationLogicalName string
+	var currentLogicalName string
+	var previousContinuationName string
 	var previousSection uint32
+	haveLogicalName := false
+	haveSingleExtended := false
 	haveContinuation := false
 	for _, identity := range identities {
+		if !haveLogicalName || !strings.EqualFold(identity.logicalName, currentLogicalName) {
+			currentLogicalName = identity.logicalName
+			previousContinuationName = ""
+			haveLogicalName = true
+			haveSingleExtended = false
+			haveContinuation = false
+		}
+
 		if !identity.continuation {
+			haveSingleExtended = true
 			continue
 		}
-		if !haveContinuation || !strings.EqualFold(identity.logicalName, continuationLogicalName) {
+		// ParseMediaType prefers a single extended value over continuations.
+		// Reject that ambiguous mix so ignored payload cannot collapse keys.
+		if haveSingleExtended {
+			return "", false
+		}
+		if !haveContinuation {
 			if identity.section != 0 {
 				return "", false
 			}
-			continuationLogicalName = identity.logicalName
+			previousContinuationName = identity.name
 			previousSection = 0
 			haveContinuation = true
 			continue
 		}
 		if identity.section == previousSection {
+			// ParseMediaType prefers the unencoded spelling when both forms
+			// exist for one section; reject that lossy representation too.
+			if !strings.EqualFold(identity.name, previousContinuationName) {
+				return "", false
+			}
 			continue
 		}
 		if previousSection == ^uint32(0) || identity.section != previousSection+1 {
 			return "", false
 		}
+		previousContinuationName = identity.name
 		previousSection = identity.section
 	}
 
