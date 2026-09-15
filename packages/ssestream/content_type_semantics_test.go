@@ -717,6 +717,69 @@ func TestDecoderContentTypeKeyWritesExtendedValuesWithoutPerParameterAllocations
 	}
 }
 
+func TestDecoderContentTypeKeyAvoidsHexExpansionForUndecodableExtendedValue(t *testing.T) {
+	payload := strings.Repeat("A", 1<<20)
+	contentType := "text/plain; charset*=" + payload
+	key := decoderContentTypeKey(contentType)
+	if len(key) > len(contentType)+128 {
+		t.Fatalf("decoder key expanded from %d to %d bytes", len(contentType), len(key))
+	}
+}
+
+func TestParsePlainMediaParameterValueAvoidsSyntheticMediaTypeAllocations(t *testing.T) {
+	value := `"` + strings.Repeat("A", 256<<10) + `"`
+	var decoded string
+	var ok bool
+	allocs := testing.AllocsPerRun(5, func() {
+		decoded, ok = parsePlainMediaParameterValue(value)
+	})
+	if !ok || len(decoded) != len(value)-2 {
+		t.Fatal("large quoted parameter did not parse")
+	}
+	if allocs > 1 {
+		t.Fatalf("plain parameter allocations = %.0f, want <= 1", allocs)
+	}
+}
+
+func TestParsePlainMediaParameterValueMatchesMIMEParser(t *testing.T) {
+	for _, value := range []string{
+		"token",
+		`"quoted;value"`,
+		`"escaped\\\"quote"`,
+		`"C:\\dev\\go\\foo.txt"`,
+		`""`,
+		"BAD/VALUE",
+		`"unterminated`,
+		"\"line\nbreak\"",
+	} {
+		t.Run(value, func(t *testing.T) {
+			_, params, err := mime.ParseMediaType("application/octet-stream; x=" + value)
+			want, wantOK := params["x"]
+			if err != nil {
+				wantOK = false
+			}
+			got, gotOK := parsePlainMediaParameterValue(value)
+			if gotOK != wantOK || got != want {
+				t.Fatalf("parsePlainMediaParameterValue(%q) = %q, %v; want %q, %v", value, got, gotOK, want, wantOK)
+			}
+		})
+	}
+}
+
+func TestWriteEncodedDecoderKeyValueIsLengthDelimited(t *testing.T) {
+	var first strings.Builder
+	writeEncodedDecoderKeyValue(&first, 'r', "a")
+	first.WriteString("bc")
+
+	var second strings.Builder
+	writeEncodedDecoderKeyValue(&second, 'r', "ab")
+	second.WriteString("c")
+
+	if first.String() == second.String() {
+		t.Fatalf("length-delimited values collided at %q", first.String())
+	}
+}
+
 func TestDecoderContentTypeKeyReusesBufferForTinyParameters(t *testing.T) {
 	contentType := "text/event-stream" + strings.Repeat(";a=", (256<<10)/3)
 	allocs := testing.AllocsPerRun(3, func() {

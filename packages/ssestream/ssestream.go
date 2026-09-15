@@ -440,12 +440,20 @@ func isMIMETSpecial(value byte) bool {
 }
 
 func parsePlainMediaParameterValue(value string) (string, bool) {
-	_, params, err := mime.ParseMediaType("application/octet-stream; x=" + value)
-	if err != nil {
+	core, quoted, ok := mediaParameterValueCore(value)
+	if !ok {
 		return "", false
 	}
-	parsed, ok := params["x"]
-	return parsed, ok
+	if quoted {
+		if strings.ContainsAny(core, "\r\n") {
+			return "", false
+		}
+		return core, true
+	}
+	if !isMIMEToken(core) {
+		return "", false
+	}
+	return core, true
 }
 
 func splitExtendedInitialValue(value string) (string, string, string, bool) {
@@ -987,7 +995,11 @@ func writeDecodedDecoderKeyValue(dst *strings.Builder, language string, value st
 
 func writeEncodedDecoderKeyValue(dst *strings.Builder, prefix byte, value string) {
 	dst.WriteByte(prefix)
-	writeHex(dst, value)
+	var lengthBuffer [20]byte
+	encodedLength := strconv.AppendUint(lengthBuffer[:0], uint64(len(value)), 10)
+	dst.Write(encodedLength)
+	dst.WriteByte(':')
+	dst.WriteString(value)
 }
 
 func writeHex(dst *strings.Builder, value string) {
