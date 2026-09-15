@@ -7192,11 +7192,11 @@ type SessionTurnError struct {
 	// A stable, machine-readable failure category.
 	//
 	// Any of "context_length_exceeded", "session_budget_exceeded",
-	// "usage_limit_exceeded", "rate_limit_exceeded", "server_overloaded",
-	// "cyber_policy", "connection_failed", "server_error", "authentication_error",
-	// "invalid_request", "resource_not_found", "sandbox_error",
-	// "executor_version_incompatible", "active_turn_not_steerable", "request_timeout",
-	// "internal_error".
+	// "usage_limit_exceeded", "credit_balance_exhausted", "rate_limit_exceeded",
+	// "server_overloaded", "cyber_policy", "connection_failed", "server_error",
+	// "authentication_error", "invalid_request", "resource_not_found",
+	// "sandbox_error", "executor_version_incompatible", "active_turn_not_steerable",
+	// "request_timeout", "internal_error".
 	Code SessionTurnErrorCode `json:"code" api:"required"`
 	// A customer-safe explanation of the failure.
 	Message string `json:"message" api:"required"`
@@ -7222,6 +7222,7 @@ const (
 	SessionTurnErrorCodeContextLengthExceeded       SessionTurnErrorCode = "context_length_exceeded"
 	SessionTurnErrorCodeSessionBudgetExceeded       SessionTurnErrorCode = "session_budget_exceeded"
 	SessionTurnErrorCodeUsageLimitExceeded          SessionTurnErrorCode = "usage_limit_exceeded"
+	SessionTurnErrorCodeCreditBalanceExhausted      SessionTurnErrorCode = "credit_balance_exhausted"
 	SessionTurnErrorCodeRateLimitExceeded           SessionTurnErrorCode = "rate_limit_exceeded"
 	SessionTurnErrorCodeServerOverloaded            SessionTurnErrorCode = "server_overloaded"
 	SessionTurnErrorCodeCyberPolicy                 SessionTurnErrorCode = "cyber_policy"
