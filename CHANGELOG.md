@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.61.1](https://github.com/openai/openai-go/compare/v3.61.0...v3.61.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* **ci:** retry Go documentation indexing after releases ([#909](https://github.com/openai/openai-go/issues/909)) ([ca920ba](https://github.com/openai/openai-go/commit/ca920ba89517ba9441d6a61676e59352d62311bd))
+
 ## [3.61.0](https://github.com/openai/openai-go/compare/v3.60.0...v3.61.0) (2026-09-10)
 
 
