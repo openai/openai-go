@@ -1,10 +1,10 @@
 # Amazon Bedrock
 
-Use the `bedrock` package to configure the normal OpenAI client for Amazon Bedrock's OpenAI-compatible API. The default Mantle endpoint and its existing authentication behavior remain unchanged.
+Use the `bedrock` package to configure the normal OpenAI client for Amazon Bedrock's OpenAI-compatible API.
 
 | Endpoint | Default API root | SigV4 service |
 | --- | --- | --- |
-| `bedrock.EndpointMantle` (default) | `https://bedrock-mantle.<region>.api.aws/openai/v1` | `bedrock-mantle` |
+| `bedrock.EndpointMantle` (default) | `https://bedrock-mantle.<region>.api.aws/v1` | `bedrock-mantle` |
 | `bedrock.EndpointRuntime` | `https://bedrock-runtime.<region>.amazonaws.com/openai/v1` | `bedrock` |
 
 Runtime hostnames use the correct suffix for the selected AWS partition. Canonical Runtime, FIPS, and dual-stack `BaseURL` overrides automatically select the endpoint family when `Endpoint` is omitted. Canonical AWS hosts must use HTTPS and match the configured region and endpoint. Custom or proxy hosts default to the Mantle signer; set `EndpointRuntime` explicitly when a custom host requires Runtime signing.
