@@ -1129,7 +1129,13 @@ func isCanonicalMediaTypeParameterValue(mediaType string, name string) bool {
 	return mediaType == "application/xop+xml" && strings.EqualFold(name, "type")
 }
 
+const maxNestedXOPTypeDepth = 16
+
 func canonicalMIMEMediaTypeValue(value string) (string, bool) {
+	return canonicalMIMEMediaTypeValueDepth(value, 0)
+}
+
+func canonicalMIMEMediaTypeValueDepth(value string, depth int) (string, bool) {
 	mediaType, params, err := mime.ParseMediaType(value)
 	if err != nil {
 		return "", false
@@ -1201,10 +1207,15 @@ func canonicalMIMEMediaTypeValue(value string) (string, bool) {
 	}
 
 	for name, paramValue := range params {
-		// Avoid recursively canonicalizing nested XOP type parameters here.
-		// The outer XOP type is normalized once, while its case-sensitive
-		// nested parameter values remain intact.
 		if mediaType == "application/xop+xml" && strings.EqualFold(name, "type") {
+			if depth >= maxNestedXOPTypeDepth {
+				return "", false
+			}
+			canonical, ok := canonicalMIMEMediaTypeValueDepth(paramValue, depth+1)
+			if !ok {
+				return "", false
+			}
+			params[name] = canonical
 			continue
 		}
 		if !isCaseInsensitiveMediaParameterValue(mediaType, name, externalBodyAccessType) {

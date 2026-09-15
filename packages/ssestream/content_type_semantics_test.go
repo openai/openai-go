@@ -650,6 +650,28 @@ func TestRegisterDecoderXOPTypePreservesNestedParameterValueCase(t *testing.T) {
 	}
 }
 
+func TestRegisterDecoderXOPTypeCanonicalizesNestedXOPType(t *testing.T) {
+	const base = "application/xop+xml"
+	registered := `application/xop+xml; type="application/xop+xml; type=\"TEXT/PLAIN\""`
+	response := `Application/Xop+Xml; type="Application/Xop+Xml; type=\"text/plain\""`
+	wantBare := &testDecoder{}
+	wantSpecific := &testDecoder{}
+	RegisterDecoder(base, func(io.ReadCloser) Decoder { return wantBare })
+	RegisterDecoder(registered, func(io.ReadCloser) Decoder { return wantSpecific })
+	t.Cleanup(func() {
+		delete(decoderTypes, decoderContentTypeKey(base))
+		delete(decoderTypes, decoderContentTypeKey(registered))
+	})
+
+	if registeredKey, responseKey := decoderContentTypeKey(registered), decoderContentTypeKey(response); registeredKey != responseKey {
+		t.Fatalf("equivalent nested XOP types produced different keys:\nregistered: %q\nresponse:   %q", registeredKey, responseKey)
+	}
+	decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {response}}, Body: io.NopCloser(strings.NewReader(""))})
+	if decoder != wantSpecific {
+		t.Fatalf("decoder = %T, want nested-XOP registration", decoder)
+	}
+}
+
 func TestDecoderContentTypeKeyCachesDuplicateSemanticValidation(t *testing.T) {
 	contentType := "message/external-body; access-type=FTP" + strings.Repeat("; expiration=x", (256<<10)/14)
 	allocs := testing.AllocsPerRun(3, func() {
