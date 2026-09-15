@@ -521,6 +521,14 @@ func TestRegisterDecoderFoldsExternalBodyExpirationDateTokens(t *testing.T) {
 			registered: `message/external-body; access-type=FTP; expiration*=UTF-8''Fri%2C%2014%20Jun%202024%2012%3A00%3A00%20A`,
 			response:   `Message/External-Body; access-type=ftp; expiration*=utf-8''fri%2c%2014%20jun%202024%2012%3a00%3a00%20a`,
 		},
+		"military zone with trailing comment": {
+			registered: `message/external-body; access-type=FTP; expiration="14 Jun 2024 12:00:00 A (NOTE)"`,
+			response:   `Message/External-Body; access-type=ftp; expiration="14 jun 2024 12:00:00 a (note)"`,
+		},
+		"trailing comment containing comma": {
+			registered: `message/external-body; access-type=FTP; expiration="14 Jun 2024 12:00:00 GMT (NOTE, EXTRA)"`,
+			response:   `Message/External-Body; access-type=ftp; expiration="14 jun 2024 12:00:00 gmt (note, extra)"`,
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			want := &testDecoder{}
@@ -1023,6 +1031,29 @@ func TestRegisterDecoderRejectsMalformedPlainFallbackWithExtendedValue(t *testin
 				t.Fatal("malformed plain fallback selected parameter-specific decoder")
 			}
 		})
+	}
+}
+
+func TestRegisterDecoderRejectsInvalidUnquotedEqualDuplicateParameter(t *testing.T) {
+	const base = "multipart/signed"
+	registered := `multipart/signed; protocol="application/pgp-signature"; protocol="application/pgp-signature"`
+	response := `multipart/signed; protocol="application/pgp-signature"; protocol=application/pgp-signature`
+
+	wantBare := &testDecoder{}
+	wantSpecific := &testDecoder{}
+	RegisterDecoder(base, func(io.ReadCloser) Decoder { return wantBare })
+	RegisterDecoder(registered, func(io.ReadCloser) Decoder { return wantSpecific })
+	t.Cleanup(func() {
+		delete(decoderTypes, decoderContentTypeKey(base))
+		delete(decoderTypes, decoderContentTypeKey(registered))
+	})
+
+	if registeredKey, responseKey := decoderContentTypeKey(registered), decoderContentTypeKey(response); registeredKey == responseKey {
+		t.Fatalf("invalid unquoted duplicate shares decoder key %q", registeredKey)
+	}
+	decoder := NewDecoder(&http.Response{Header: http.Header{"Content-Type": {response}}, Body: io.NopCloser(strings.NewReader(""))})
+	if decoder == wantSpecific {
+		t.Fatal("invalid unquoted duplicate selected parameter-specific decoder")
 	}
 }
 

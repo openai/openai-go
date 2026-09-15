@@ -574,6 +574,52 @@ func asciiUpper(value string) string {
 	return string(bytes)
 }
 
+func stripRFC822Comments(value string) (string, bool) {
+	if !strings.ContainsAny(value, "()") {
+		return value, true
+	}
+	var stripped strings.Builder
+	stripped.Grow(len(value))
+	depth := 0
+	escaped := false
+	for i := 0; i < len(value); i++ {
+		current := value[i]
+		if depth == 0 {
+			if current == ')' {
+				return "", false
+			}
+			if current == '(' {
+				depth = 1
+				continue
+			}
+			stripped.WriteByte(current)
+			continue
+		}
+
+		if escaped {
+			escaped = false
+			continue
+		}
+		switch current {
+		case '\\':
+			escaped = true
+		case '(':
+			depth++
+		case ')':
+			depth--
+			if depth == 0 {
+				// RFC 822 comments are semantically equivalent to linear
+				// whitespace. Preserve token separation when removing them.
+				stripped.WriteByte(' ')
+			}
+		}
+	}
+	if depth != 0 || escaped {
+		return "", false
+	}
+	return stripped.String(), true
+}
+
 func validRFC822DateTime(value string) bool {
 	// RFC 822 date-time values necessarily contain a time separator and
 	// whitespace separating the date/time components. Reject obvious junk
@@ -585,6 +631,11 @@ func validRFC822DateTime(value string) bool {
 	if normalized == "" {
 		return false
 	}
+	normalized, ok := stripRFC822Comments(normalized)
+	if !ok {
+		return false
+	}
+	normalized = strings.TrimSpace(normalized)
 	parsed, err := mail.ParseDate(normalized)
 	if err != nil {
 		zoneStart := strings.LastIndexAny(normalized, " \t")
@@ -885,8 +936,8 @@ func scanPlainMediaParameter(params string, logicalName string) (string, int, bo
 		if !strings.EqualFold(param[nameStart:nameEnd], logicalName) {
 			return
 		}
-		core, _, ok := mediaParameterValueCore(param[equals+1:])
-		if !ok {
+		core, quoted, ok := mediaParameterValueCore(param[equals+1:])
+		if !ok || (!quoted && !isMIMEToken(core)) || (quoted && strings.ContainsAny(core, "\r\n")) {
 			valid = false
 			count++
 			return
