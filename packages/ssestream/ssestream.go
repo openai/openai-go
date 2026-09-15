@@ -779,6 +779,7 @@ type decodedExtendedParameterState struct {
 	found          bool
 	decoded        bool
 	duplicatePlain bool
+	emitted        bool
 }
 
 func normalizeMediaParameterTail(mediaType string, params string, externalBodyAccessType string, externalBodyAccessLanguage string, hasExternalBodyAccessType bool) string {
@@ -848,13 +849,28 @@ func writeNormalizedMediaParameter(normalized *strings.Builder, mediaType string
 	isExternalBodyAccessType := mediaType == "message/external-body" && strings.EqualFold(logicalName, "access-type")
 	switch {
 	case isExternalBodyAccessType:
-		writeCanonicalMediaParameterValue(normalized, name, value, "access-type", externalBodyAccessType, externalBodyAccessLanguage, hasExternalBodyAccessType)
+		key := asciiLower(logicalName)
+		state := decodedParameters[key]
+		if !state.found && hasExternalBodyAccessType {
+			state = decodedExtendedParameterState{value: externalBodyAccessType, language: externalBodyAccessLanguage, found: true, decoded: true}
+		}
+		emitDecoded := state.decoded && !state.emitted
+		writeCanonicalMediaParameterValue(normalized, name, value, state.value, state.language, state.decoded, emitDecoded)
+		if emitDecoded {
+			state.emitted = true
+			decodedParameters[key] = state
+		}
 	case isCaseInsensitiveMediaParameterValue(mediaType, logicalName, externalBodyAccessType):
 		state := decodedCaseInsensitiveParameter(mediaType, params, logicalName, externalBodyAccessType, decodedParameters)
 		if state.duplicatePlain {
 			normalized.WriteString(value)
 		} else if state.found {
-			writeCanonicalMediaParameterValue(normalized, name, value, logicalName, state.value, state.language, state.decoded)
+			emitDecoded := state.decoded && !state.emitted
+			writeCanonicalMediaParameterValue(normalized, name, value, state.value, state.language, state.decoded, emitDecoded)
+			if emitDecoded {
+				state.emitted = true
+				decodedParameters[asciiLower(logicalName)] = state
+			}
 		} else {
 			core, _, parsed := mediaParameterValueCore(value)
 			canonical, ok := normalizeCaseInsensitiveMediaParameterValue(mediaType, logicalName, core, externalBodyAccessType)
@@ -960,11 +976,11 @@ func scanPlainMediaParameter(params string, logicalName string) (string, int, bo
 	return value, count, equal, valid
 }
 
-func writeCanonicalMediaParameterValue(dst *strings.Builder, name string, value string, logicalName string, decodedValue string, decodedLanguage string, decoded bool) {
+func writeCanonicalMediaParameterValue(dst *strings.Builder, name string, value string, decodedValue string, decodedLanguage string, decoded bool, emitDecoded bool) {
 	if decoded {
 		valueStart, valueEnd := trimOWSBounds(value)
 		dst.WriteString(value[:valueStart])
-		if isInitialMediaParameterSegment(name, logicalName) {
+		if emitDecoded {
 			writeDecodedDecoderKeyValue(dst, decodedLanguage, decodedValue)
 		} else {
 			dst.WriteByte('d')
@@ -988,38 +1004,21 @@ func writeCanonicalMediaParameterValue(dst *strings.Builder, name string, value 
 
 func writeDecodedDecoderKeyValue(dst *strings.Builder, language string, value string) {
 	dst.WriteByte('d')
-	writeHex(dst, language)
-	dst.WriteByte('g')
-	writeHex(dst, value)
+	writeLengthPrefixedDecoderKeyValue(dst, language)
+	writeLengthPrefixedDecoderKeyValue(dst, value)
 }
 
 func writeEncodedDecoderKeyValue(dst *strings.Builder, prefix byte, value string) {
 	dst.WriteByte(prefix)
+	writeLengthPrefixedDecoderKeyValue(dst, value)
+}
+
+func writeLengthPrefixedDecoderKeyValue(dst *strings.Builder, value string) {
 	var lengthBuffer [20]byte
 	encodedLength := strconv.AppendUint(lengthBuffer[:0], uint64(len(value)), 10)
 	dst.Write(encodedLength)
 	dst.WriteByte(':')
 	dst.WriteString(value)
-}
-
-func writeHex(dst *strings.Builder, value string) {
-	const digits = "0123456789abcdef"
-	for i := 0; i < len(value); i++ {
-		dst.WriteByte(digits[value[i]>>4])
-		dst.WriteByte(digits[value[i]&0x0f])
-	}
-}
-
-func isInitialMediaParameterSegment(name string, logicalName string) bool {
-	if strings.EqualFold(name, logicalName) {
-		return true
-	}
-	sectionName := strings.TrimSuffix(name, "*")
-	if strings.EqualFold(sectionName, logicalName) {
-		return true
-	}
-	star := strings.LastIndexByte(sectionName, '*')
-	return star >= 0 && strings.EqualFold(sectionName[:star], logicalName) && sectionName[star+1:] == "0"
 }
 
 func mediaParameterLogicalName(name string) string {

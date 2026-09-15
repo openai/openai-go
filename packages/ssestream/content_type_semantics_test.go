@@ -726,6 +726,30 @@ func TestDecoderContentTypeKeyAvoidsHexExpansionForUndecodableExtendedValue(t *t
 	}
 }
 
+func TestDecoderContentTypeKeyAvoidsHexExpansionForDecodedExtendedValue(t *testing.T) {
+	payload := strings.Repeat("A", 1<<20)
+	contentType := "text/plain; charset*=UTF-8''" + payload
+	key := decoderContentTypeKey(contentType)
+	if len(key) > len(contentType)+128 {
+		t.Fatalf("decoded extended decoder key expanded from %d to %d bytes", len(contentType), len(key))
+	}
+}
+
+func TestDecoderContentTypeKeyEmitsDecodedExtendedValueOnceAcrossFallbacks(t *testing.T) {
+	payload := strings.Repeat("A", 4<<10)
+	var contentType strings.Builder
+	contentType.WriteString("text/plain; charset*=UTF-8''")
+	contentType.WriteString(payload)
+	for i := 0; i < 128; i++ {
+		contentType.WriteString("; charset=x")
+	}
+	value := contentType.String()
+	key := decoderContentTypeKey(value)
+	if len(key) > len(value)*4 {
+		t.Fatalf("decoded fallback decoder key expanded from %d to %d bytes", len(value), len(key))
+	}
+}
+
 func TestParsePlainMediaParameterValueAvoidsSyntheticMediaTypeAllocations(t *testing.T) {
 	value := `"` + strings.Repeat("A", 256<<10) + `"`
 	var decoded string
@@ -777,6 +801,18 @@ func TestWriteEncodedDecoderKeyValueIsLengthDelimited(t *testing.T) {
 
 	if first.String() == second.String() {
 		t.Fatalf("length-delimited values collided at %q", first.String())
+	}
+}
+
+func TestWriteDecodedDecoderKeyValueIsLengthDelimited(t *testing.T) {
+	var first strings.Builder
+	writeDecodedDecoderKeyValue(&first, "a", "bc")
+
+	var second strings.Builder
+	writeDecodedDecoderKeyValue(&second, "ab", "c")
+
+	if first.String() == second.String() {
+		t.Fatalf("length-delimited decoded fields collided at %q", first.String())
 	}
 }
 
