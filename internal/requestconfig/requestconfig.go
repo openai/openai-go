@@ -733,10 +733,14 @@ func (cfg *RequestConfig) Execute() (err error) {
 
 		// Load the contents into the error format if it is provided.
 		aerr := apierror.Error{Request: cfg.Request, Response: res, StatusCode: res.StatusCode}
-		unwrapped := gjson.GetBytes(contents, "error").Raw
-		err = aerr.UnmarshalJSON([]byte(unwrapped))
-		if err != nil {
-			return err
+		errorJSON := gjson.GetBytes(contents, "error")
+		if errorJSON.Type != gjson.JSON || aerr.UnmarshalJSON([]byte(errorJSON.Raw)) != nil {
+			// The error payload isn't in the expected object shape, e.g. a
+			// missing, null, or string error value, or a non-JSON document
+			// entirely. Surface the raw body on the API error instead of
+			// returning the decode failure, so callers keep the status code
+			// and response.
+			aerr.Message = string(contents)
 		}
 		return &aerr
 	}
