@@ -820,6 +820,7 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseCodeInterpreterCallInProgressEvent">BetaResponseCodeInterpreterCallInProgressEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseCodeInterpreterCallInterpretingEvent">BetaResponseCodeInterpreterCallInterpretingEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseCodeInterpreterToolCall">BetaResponseCodeInterpreterToolCall</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseCompactionCompactingEvent">BetaResponseCompactionCompactingEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseCompactionItem">BetaResponseCompactionItem</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseCompactionItemParamResp">BetaResponseCompactionItemParamResp</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseCompletedEvent">BetaResponseCompletedEvent</a>

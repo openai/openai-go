@@ -339,6 +339,7 @@ type ResponseCodeInterpreterCallCompleted string             // Always "response
 type ResponseCodeInterpreterCallInProgress string            // Always "response.code_interpreter_call.in_progress"
 type ResponseCodeInterpreterCallInterpreting string          // Always "response.code_interpreter_call.interpreting"
 type ResponseCompaction string                               // Always "response.compaction"
+type ResponseCompactionCompacting string                     // Always "response.compaction.compacting"
 type ResponseCompleted string                                // Always "response.completed"
 type ResponseContentPartAdded string                         // Always "response.content_part.added"
 type ResponseContentPartDone string                          // Always "response.content_part.done"
@@ -1055,7 +1056,10 @@ func (c ResponseCodeInterpreterCallInterpreting) Default() ResponseCodeInterpret
 	return "response.code_interpreter_call.interpreting"
 }
 func (c ResponseCompaction) Default() ResponseCompaction { return "response.compaction" }
-func (c ResponseCompleted) Default() ResponseCompleted   { return "response.completed" }
+func (c ResponseCompactionCompacting) Default() ResponseCompactionCompacting {
+	return "response.compaction.compacting"
+}
+func (c ResponseCompleted) Default() ResponseCompleted { return "response.completed" }
 func (c ResponseContentPartAdded) Default() ResponseContentPartAdded {
 	return "response.content_part.added"
 }
@@ -1735,6 +1739,7 @@ func (c ResponseCodeInterpreterCallInterpreting) MarshalJSON() ([]byte, error) {
 	return marshalString(c)
 }
 func (c ResponseCompaction) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c ResponseCompactionCompacting) MarshalJSON() ([]byte, error)          { return marshalString(c) }
 func (c ResponseCompleted) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c ResponseContentPartAdded) MarshalJSON() ([]byte, error)              { return marshalString(c) }
 func (c ResponseContentPartDone) MarshalJSON() ([]byte, error)               { return marshalString(c) }
