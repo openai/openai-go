@@ -132,9 +132,6 @@ const ChatModelGPT5_1_2025_11_13 = shared.ChatModelGPT5_1_2025_11_13
 // Equals "gpt-5.1-codex"
 const ChatModelGPT5_1Codex = shared.ChatModelGPT5_1Codex
 
-// Equals "gpt-5.1-mini"
-const ChatModelGPT5_1Mini = shared.ChatModelGPT5_1Mini
-
 // Equals "gpt-5.1-chat-latest"
 const ChatModelGPT5_1ChatLatest = shared.ChatModelGPT5_1ChatLatest
 
@@ -224,6 +221,12 @@ const ChatModelGPT4o2024_08_06 = shared.ChatModelGPT4o2024_08_06
 
 // Equals "gpt-4o-2024-05-13"
 const ChatModelGPT4o2024_05_13 = shared.ChatModelGPT4o2024_05_13
+
+// Equals "gpt-audio-mini"
+const ChatModelGPTAudioMini = shared.ChatModelGPTAudioMini
+
+// Equals "gpt-audio-mini-2025-12-15"
+const ChatModelGPTAudioMini2025_12_15 = shared.ChatModelGPTAudioMini2025_12_15
 
 // Equals "gpt-4o-audio-preview"
 const ChatModelGPT4oAudioPreview = shared.ChatModelGPT4oAudioPreview
@@ -323,6 +326,9 @@ const ChatModelGPT3_5Turbo0125 = shared.ChatModelGPT3_5Turbo0125
 
 // Equals "gpt-3.5-turbo-16k-0613"
 const ChatModelGPT3_5Turbo16k0613 = shared.ChatModelGPT3_5Turbo16k0613
+
+// Equals "gpt-5.1-mini"
+const ChatModelGPT5_1Mini = shared.ChatModelGPT5_1Mini
 
 // A filter used to compare a specified attribute key to a given value using a
 // defined comparison operation.
