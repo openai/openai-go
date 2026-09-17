@@ -6,13 +6,16 @@ import (
 	"testing"
 
 	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/packages/param"
 )
 
 func TestBetaAgentSessionUpdateSerialization(t *testing.T) {
-	resetReasoning := openai.BetaAgentSessionUpdateParamsAgentReasoning{}
-	resetReasoning.SetExtraFields(map[string]any{"effort": nil})
-	resetAgent := openai.BetaAgentSessionUpdateParamsAgent{Reasoning: resetReasoning}
-	resetAgent.SetExtraFields(map[string]any{"service_tier": nil})
+	resetAgent := openai.BetaAgentSessionUpdateParamsAgent{
+		Reasoning: openai.BetaAgentSessionUpdateParamsAgentReasoning{
+			Effort: param.Null[string](),
+		},
+		ServiceTier: param.Null[string](),
+	}
 	clearMetadata := openai.BetaAgentSessionUpdateParams{}
 	clearMetadata.SetExtraFields(map[string]any{"metadata": nil})
 
@@ -35,9 +38,9 @@ func TestBetaAgentSessionUpdateSerialization(t *testing.T) {
 				Agent: openai.BetaAgentSessionUpdateParamsAgent{
 					Model: openai.String("gpt-5"),
 					Reasoning: openai.BetaAgentSessionUpdateParamsAgentReasoning{
-						Effort: "low",
+						Effort: openai.String("low"),
 					},
-					ServiceTier: "priority",
+					ServiceTier: openai.String("priority"),
 				},
 			},
 			want: map[string]any{"agent": map[string]any{
