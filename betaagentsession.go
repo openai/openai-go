@@ -91,7 +91,8 @@ func (r *BetaAgentSessionService) Get(ctx context.Context, sessionID string, opt
 	return res, err
 }
 
-// Updates session metadata. Omitted fields are unchanged. See
+// Updates session metadata, model, reasoning effort, or service tier. Model
+// settings apply to subsequent turns. Omitted fields are unchanged. See
 // [managing sessions](https://developers.openai.com/api/docs/guides/agents-api/sessions/manage).
 func (r *BetaAgentSessionService) Update(ctx context.Context, sessionID string, body BetaAgentSessionUpdateParams, opts ...option.RequestOption) (res *AgentSession, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
@@ -235,6 +236,8 @@ type BetaAgentSessionUpdateParams struct {
 	// Up to 16 string key-value pairs, with keys up to 64 and values up to 512
 	// characters.
 	Metadata map[string]string `json:"metadata,omitzero"`
+	// Model settings for subsequent turns. Omitted fields stay unchanged.
+	Agent BetaAgentSessionUpdateParamsAgent `json:"agent,omitzero"`
 	paramObj
 }
 
@@ -243,6 +246,44 @@ func (r BetaAgentSessionUpdateParams) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *BetaAgentSessionUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Model settings for subsequent turns. Omitted fields stay unchanged.
+type BetaAgentSessionUpdateParamsAgent struct {
+	// The model for subsequent turns. Omit to keep the current model.
+	Model param.Opt[string] `json:"model,omitzero"`
+	// The service tier used for model requests.
+	//
+	// Any of "auto", "default", "flex", "priority", "fast".
+	ServiceTier param.Opt[string] `json:"service_tier,omitzero"`
+	// Reasoning settings to update. Omit to keep the current effort.
+	Reasoning BetaAgentSessionUpdateParamsAgentReasoning `json:"reasoning,omitzero"`
+	paramObj
+}
+
+func (r BetaAgentSessionUpdateParamsAgent) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentSessionUpdateParamsAgent
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentSessionUpdateParamsAgent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Reasoning settings to update. Omit to keep the current effort.
+type BetaAgentSessionUpdateParamsAgentReasoning struct {
+	// The amount of reasoning effort the model should use.
+	//
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
+	Effort param.Opt[string] `json:"effort,omitzero"`
+	paramObj
+}
+
+func (r BetaAgentSessionUpdateParamsAgentReasoning) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentSessionUpdateParamsAgentReasoning
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentSessionUpdateParamsAgentReasoning) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

@@ -117,6 +117,13 @@ func TestBetaAgentSessionUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"session_id",
 		openai.BetaAgentSessionUpdateParams{
+			Agent: openai.BetaAgentSessionUpdateParamsAgent{
+				Model: openai.String("model"),
+				Reasoning: openai.BetaAgentSessionUpdateParamsAgentReasoning{
+					Effort: openai.String("none"),
+				},
+				ServiceTier: openai.String("auto"),
+			},
 			Metadata: map[string]string{
 				"foo": "string",
 			},
