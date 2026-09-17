@@ -9,6 +9,22 @@ Use the `bedrock` package to configure the normal OpenAI client for Amazon Bedro
 
 Runtime hostnames use the correct suffix for the selected AWS partition. Canonical Runtime, FIPS, and dual-stack `BaseURL` overrides automatically select the endpoint family when `Endpoint` is omitted. Canonical AWS hosts must use HTTPS and match the configured region and endpoint. Custom or proxy hosts default to the Mantle signer; set `EndpointRuntime` explicitly when a custom host requires Runtime signing.
 
+### Mantle API roots
+
+Amazon Bedrock exposes more than one OpenAI-compatible API root on `bedrock-mantle`, and the route depends on the model family. OpenAI model pages such as [GPT-5.5](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-openai-gpt-55.html) document `/openai/v1`, while other model pages such as [Kimi K2.5](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-moonshot-ai-kimi-k2-5.html) document `/v1`. `EndpointMantle` keeps `/openai/v1` as its default for backwards compatibility; choosing `EndpointMantle` does not automatically select a route from the model name.
+
+When the AWS model card for a deployment documents `/v1`, set the Mantle `BaseURL` explicitly:
+
+```go
+bedrock.Config{
+	Endpoint:  bedrock.EndpointMantle,
+	AWSRegion: "us-east-1",
+	BaseURL:   "https://bedrock-mantle.us-east-1.api.aws/v1",
+}
+```
+
+See the AWS model card for the model you are using before choosing the route. For example, AWS documents `https://bedrock-mantle.<region>.api.aws/openai/v1` for GPT-5.5 and `https://bedrock-mantle.<region>.api.aws/v1` for Kimi K2.5.
+
 ## Runtime Chat Completions
 
 ```go
