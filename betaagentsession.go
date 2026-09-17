@@ -256,7 +256,7 @@ type BetaAgentSessionUpdateParamsAgent struct {
 	// The service tier used for model requests.
 	//
 	// Any of "auto", "default", "flex", "priority", "fast".
-	ServiceTier string `json:"service_tier,omitzero"`
+	ServiceTier param.Opt[string] `json:"service_tier,omitzero"`
 	// Reasoning settings to update. Omit to keep the current effort.
 	Reasoning BetaAgentSessionUpdateParamsAgentReasoning `json:"reasoning,omitzero"`
 	paramObj
@@ -270,18 +270,12 @@ func (r *BetaAgentSessionUpdateParamsAgent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func init() {
-	apijson.RegisterFieldValidator[BetaAgentSessionUpdateParamsAgent](
-		"service_tier", "auto", "default", "flex", "priority", "fast",
-	)
-}
-
 // Reasoning settings to update. Omit to keep the current effort.
 type BetaAgentSessionUpdateParamsAgentReasoning struct {
 	// The amount of reasoning effort the model should use.
 	//
 	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
-	Effort string `json:"effort,omitzero"`
+	Effort param.Opt[string] `json:"effort,omitzero"`
 	paramObj
 }
 
@@ -291,12 +285,6 @@ func (r BetaAgentSessionUpdateParamsAgentReasoning) MarshalJSON() (data []byte, 
 }
 func (r *BetaAgentSessionUpdateParamsAgentReasoning) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[BetaAgentSessionUpdateParamsAgentReasoning](
-		"effort", "none", "minimal", "low", "medium", "high", "xhigh", "max",
-	)
 }
 
 type BetaAgentSessionListParams struct {
