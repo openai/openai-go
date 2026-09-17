@@ -66,7 +66,6 @@ const (
 	ChatModelGPT5_1                           ChatModel = "gpt-5.1"
 	ChatModelGPT5_1_2025_11_13                ChatModel = "gpt-5.1-2025-11-13"
 	ChatModelGPT5_1Codex                      ChatModel = "gpt-5.1-codex"
-	ChatModelGPT5_1Mini                       ChatModel = "gpt-5.1-mini"
 	ChatModelGPT5_1ChatLatest                 ChatModel = "gpt-5.1-chat-latest"
 	ChatModelGPT5                             ChatModel = "gpt-5"
 	ChatModelGPT5Mini                         ChatModel = "gpt-5-mini"
@@ -97,6 +96,8 @@ const (
 	ChatModelGPT4o2024_11_20                  ChatModel = "gpt-4o-2024-11-20"
 	ChatModelGPT4o2024_08_06                  ChatModel = "gpt-4o-2024-08-06"
 	ChatModelGPT4o2024_05_13                  ChatModel = "gpt-4o-2024-05-13"
+	ChatModelGPTAudioMini                     ChatModel = "gpt-audio-mini"
+	ChatModelGPTAudioMini2025_12_15           ChatModel = "gpt-audio-mini-2025-12-15"
 	ChatModelGPT4oAudioPreview                ChatModel = "gpt-4o-audio-preview"
 	ChatModelGPT4oAudioPreview2024_10_01      ChatModel = "gpt-4o-audio-preview-2024-10-01"
 	ChatModelGPT4oAudioPreview2024_12_17      ChatModel = "gpt-4o-audio-preview-2024-12-17"
@@ -130,6 +131,7 @@ const (
 	ChatModelGPT3_5Turbo1106                  ChatModel = "gpt-3.5-turbo-1106"
 	ChatModelGPT3_5Turbo0125                  ChatModel = "gpt-3.5-turbo-0125"
 	ChatModelGPT3_5Turbo16k0613               ChatModel = "gpt-3.5-turbo-16k-0613"
+	ChatModelGPT5_1Mini                       ChatModel = "gpt-5.1-mini"
 )
 
 // A filter used to compare a specified attribute key to a given value using a
