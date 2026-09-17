@@ -7,7 +7,7 @@ This SDK includes breaking changes to improve the ergonomics of constructing par
 To reduce verbosity, the `openai.F(...)` and `param.Field[T]` have been removed.
 All calls to `openai.F(...)` can be deleted.
 
-The SDK now uses the <code>\`json:"...,omitzero"\`</code> struct tag to omit fields. Nested structs, arrays and maps
+The SDK now uses the `` `json:"...,omitzero"` `` struct tag to omit fields. Nested structs, arrays and maps
 can be declared like normal.
 
 The old SDK used interfaces for unions in requests, which required
@@ -25,7 +25,7 @@ which may be shared by multiple variants.
 > **This change can cause new behavior in existing code, without compiler warnings.**
 
 While migrating, ensure that all required fields are explicitly set. A required primitive
-field `Age` will use the <code>\`json:"age,required"\`</code> struct tag without `omitzero`.
+field `Age` will use the `` `json:"age,required"` `` struct tag without `omitzero`.
 
 If a required primitive field is not set, the zero value will be serialized.
 This was not the case in with `param.Field[T]`.
@@ -68,14 +68,14 @@ _ = FooParams{
 </tr>
 </table>
 
-The required field `"age"` is now present as `0`. Fields without the <code>\`json:"...,omitzero"\`</code> struct tag
+The required field `"age"` is now present as `0`. Fields without the `` `json:"...,omitzero"` `` struct tag
 are always serialized, including their zero values.
 
 ## Transition from `param.Field[T]` to `omitzero`
 
 The `openai.F(...)` function and `param.Field[T]` type are no longer present in the new SDK.
 
-To represent omitted fields, the SDK uses <a href="https://pkg.go.dev/encoding/json#Marshal"><code>\`json:"...,omitzero"\`</code> semantics</a> from Go 1.24+ for JSON encoding[^1]. `omitzero` always omits fields
+To represent omitted fields, the SDK uses <a href="https://pkg.go.dev/encoding/json#Marshal">`` `json:"...,omitzero"` `` semantics</a> from Go 1.24+ for JSON encoding[^1]. `omitzero` always omits fields
 with zero values.
 
 In all cases other than optional primitives, `openai.F()` can simply be removed.

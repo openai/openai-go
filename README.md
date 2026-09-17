@@ -391,13 +391,13 @@ func main() {
 The openai library uses the [`omitzero`](https://tip.golang.org/doc/go1.24#encodingjsonpkgencodingjson)
 semantics from the Go 1.24+ `encoding/json` release for request fields.
 
-Required primitive fields (`int64`, `string`, etc.) feature the tag <code>\`api:"required"\`</code>. These
+Required primitive fields (`int64`, `string`, etc.) feature the tag `` `api:"required"` ``. These
 fields are always serialized, even their zero values.
 
 Optional primitive types are wrapped in a `param.Opt[T]`. These fields can be set with the provided constructors, `openai.String(string)`, `openai.Int(int64)`, etc.
 
 Any `param.Opt[T]`, map, slice, struct or string enum uses the
-tag <code>\`json:"...,omitzero"\`</code>. Its zero value is considered omitted.
+tag `` `json:"...,omitzero"` ``. Its zero value is considered omitted.
 
 The `param.IsOmitted(any)` function can confirm the presence of any `omitzero` field.
 
