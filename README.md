@@ -355,6 +355,147 @@ func main() {
 
 </details>
 
+### Responses WebSockets
+
+Use `client.Responses.Connect(ctx, responses.ResponseConnectionOptions{}, opts...)`
+to open a reusable Responses connection. Client and per-connection request options,
+including `option.WithHeader`, apply to the opening handshake. See the
+[WebSocket example](examples/responses-websocket/main.go).
+`option.WithResponseInto` exposes the opening HTTP response. A rejected workload-identity
+handshake can refresh its token within the configured retry budget; application
+messages are never replayed. These connections require native HTTP transport
+support and are unavailable in `js/wasm`; other SDK APIs remain usable there.
+
+The default options do not cap message size or the receive buffer. Set
+`MaxMessageBytes`, `MaxBufferedBytes` or `MaxBufferedEvents` to a positive value
+to opt into a receive limit. Connections default to 16 pending sends and 64
+distinct lane IDs over the connection's lifetime, including closed lanes.
+Reuse an open lane for sequential responses. Exceeding an explicit receive bound
+fails the connection without silently dropping events. Consume incoming events promptly or configure a buffer
+limit appropriate for the application.
+`CloseTimeout` defaults to five seconds and tears down an unresponsive connection
+after that interval. Always call `Close` or `Abort` when finished.
+
+#### Turns, lanes, and recovery
+
+Responses WebSockets use `response.create` and the normal Responses events, not
+Realtime sessions. Leave `stream` and `background` unset. Use `Create` followed by
+`FinalResponse` for a complete terminal snapshot, including tool calls; failed and
+incomplete responses retain their status. `Recv` exposes individual typed events
+and their `RawJSON`. A terminal response ends a turn, not the socket.
+
+Continue with `PreviousResponseID: openai.String(previous.ID)` and **only new input**.
+For example, return a function result using its original call ID, then add a new
+user message. The application executes tools and retains their results:
+
+```go
+output := responses.ResponseInputItemParamOfFunctionCallOutput("tool result")
+output.OfFunctionCallOutput.CallID = openai.String(callID)
+input := responses.ResponseInputParam{
+    output,
+    responses.ResponseInputItemParamOfMessage("Explain the result.", responses.EasyInputMessageRoleUser),
+}
+err := connection.Create(ctx, responses.ResponsesClientEventResponseCreateParam{
+    Model: "gpt-4o-mini",
+    PreviousResponseID: openai.String(previous.ID),
+    Input: responses.ResponsesClientEventResponseCreateInputUnionParam{OfResponse: &input},
+})
+```
+
+For an optional warmup, add `generate: false` to a create request using
+`request.SetExtraFields(map[string]any{"generate": false})`. Receive its terminal
+response and use its ID as the next `PreviousResponseID`; warmup produces no model
+output. Clear that extra field with `request.SetExtraFields(nil)` if reusing the
+request for a generated response. The
+[runnable example](examples/responses-websocket/main.go) shows a normal two-turn
+exchange on one connection.
+
+`StreamID` controls routing and server FIFO execution; `PreviousResponseID`
+controls lineage. Reusing a lane without a parent ID starts a new chain. Register
+`connection.Lane("fork")` before sending its create; Go lanes receive events, so
+set `StreamID` on commands sent through the connection. One physical reader routes
+interleaved events to their lanes. Sequential creates on one lane execute FIFO at
+the service; different lanes may run concurrently. Keep consuming the connection's
+unclaimed/default stream for connection-scoped errors too.
+
+To fork a `store=false`/ZDR response, use its parent ID on a different lane and wait
+for that lane's `response.in_progress` **before advancing the source lane**:
+
+```go
+fork, err := connection.Lane("fork")
+if err != nil { return err }
+defer fork.Close()
+if err := connection.Create(ctx, responses.ResponsesClientEventResponseCreateParam{
+    Model: "gpt-4o-mini", Store: openai.Bool(false),
+    StreamID: openai.String("fork"), PreviousResponseID: openai.String(previous.ID),
+    Input: responses.ResponsesClientEventResponseCreateInputUnionParam{OfString: openai.String("Explore another approach.")},
+}); err != nil { return err }
+for {
+    event, err := fork.Recv(ctx)
+    if err != nil { return err }
+    if event.Type == "error" { return &responses.ResponseProtocolError{Event: event} }
+    if event.Type == "response.in_progress" { break }
+    if event.Type == "response.completed" || event.Type == "response.failed" || event.Type == "response.incomplete" {
+        return fmt.Errorf("fork ended before becoming ready")
+    }
+}
+// The source lane may now advance; continue draining both lanes.
+```
+
+The service keeps recent parents in a connection-local cache. With `store=true`,
+older IDs may be hydrated from persisted state; with `store=false` or ZDR an
+uncached ID fails with `previous_response_not_found`. A same-lane continuation
+returning 4xx/5xx evicts its referenced parent; a failed cross-lane fork preserves
+the shared parent for the source lane. The SDK does not maintain this server cache.
+
+#### Compaction and service limits
+
+Server compaction uses `ContextManagement` entries with `Type: "compaction"` and
+`CompactThreshold: openai.Int(20000)`. Continue normally with the latest response
+ID and new input. Standalone `client.Responses.Compact` instead returns a compacted
+input window. Preserve **all** its output items, including unknown fields, and
+start a new chain with `PreviousResponseID` omitted or null. Its compaction resource
+ID is not a continuation response ID. Using `encoding/json` and `packages/param`:
+
+```go
+var input responses.ResponseInputParam
+for _, item := range compacted.Output {
+    input = append(input, param.Override[responses.ResponseInputItemUnionParam](json.RawMessage(item.RawJSON())))
+}
+err := connection.Create(ctx, responses.ResponsesClientEventResponseCreateParam{
+    Model: "gpt-4o-mini",
+    Input: responses.ResponsesClientEventResponseCreateInputUnionParam{OfResponse: &input},
+})
+```
+
+The [WebSocket mode guide](https://developers.openai.com/api/docs/guides/websocket-mode)
+defines service limits separately from SDK buffering: up to 16 active responses
+(additional creates queue), 32 distinct named streams per connection (the default
+lane does not count), and a 60-minute connection lifetime. Stream IDs contain
+1–256 letters, digits, underscores, hyphens or periods. Omit the ID for the default
+lane; an empty string is invalid. Closing a local lane does not free a distinct
+stream ID at the service. SDK `MaxLanes` bounds distinct lane IDs over the
+connection lifetime, including closed lanes; `MaxPendingSends` bounds local
+writes, not active server responses.
+
+`Recv` returns protocol errors as events; `FinalResponse` returns a
+`*responses.ResponseProtocolError` retaining the event. Inspect the nested code:
+`previous_response_not_found` requires a usable persisted parent or a fresh chain
+with saved full context; `invalid_stream_id` requires correcting the ID;
+`websocket_stream_limit_reached` requires reusing an existing stream or explicitly
+opening a new connection; `websocket_connection_limit_reached` requires a new
+connection. Named request errors route to their lane; no-ID errors route to the
+connection. Errors do not by themselves imply a successful turn.
+
+`Reconnect`/`Recover` are explicit and never replay old commands or ambiguous
+writes. Every lane's server cache is lost, even if the old ID was recently used.
+On the replacement, register needed lanes again and resume from a persisted ID
+when available, or send saved full context as a new chain without a parent ID.
+Retain tool results so recovery does not execute tools twice. A `Restore` callback
+may run for each explicitly configured recovery attempt; it owns any commands it
+sends and their replay/idempotency decisions. Do not automatically retry a
+`websocket.DeliveryError` whose `MayHaveBeenSent` is true.
+
 ### Chat Completions API
 
 The previous standard (supported indefinitely) for generating text is the [Chat Completions API](https://platform.openai.com/docs/api-reference/chat). You can use that API to generate text from the model with the code below.
@@ -1290,9 +1431,14 @@ Token exchange is pinned to `https://mtls.auth.openai.com/oauth/token`; API
 requests use `https://mtls.api.openai.com/v1/`. Existing `OPENAI_BASE_URL` and
 explicit endpoint settings must match that global API endpoint; an explicit
 default `:443` port is equivalent. Azure, Amazon Bedrock, regional endpoints,
-HTTPS proxies, dynamic certificate selection, HTTP trace hooks, and separate
-custom HTTP clients are not supported. A legacy `http.Transport.Dial` remains
-supported for compatibility when `DialContext` is unset, but its in-progress
+HTTPS proxies, dynamic certificate selection, HTTP trace hooks, arbitrary protocol
+upgrades, and separate custom HTTP clients are not supported. Responses WebSocket
+connections use the same attested transport and bearer-token exchange, including
+custom request headers and the configured opening retry budget. Close each
+WebSocket connection to release its stream; capability `Close` retains its
+ordinary behavior of allowing already active requests to finish.
+A legacy `http.Transport.Dial` remains supported for compatibility when
+`DialContext` is unset, but its in-progress
 dial call cannot itself be interrupted by context cancellation. The capability
 admits at most 32 concurrent dial calls; additional live requests wait for
 admission, while canceled or completed requests release their waiters. This
