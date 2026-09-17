@@ -74,6 +74,7 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		PromptCacheOptions: responses.ResponseNewParamsPromptCacheOptions{
 			ComparisonResponseID: openai.String("resp_123"),
 			Mode:                 "implicit",
+			Prewarm:              openai.Bool(true),
 			Ttl:                  "30m",
 		},
 		PromptCacheRetention: responses.ResponseNewParamsPromptCacheRetentionInMemory,

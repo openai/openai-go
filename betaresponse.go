@@ -34013,6 +34013,9 @@ type BetaResponseNewParamsPromptCacheOptions struct {
 	// The ID of a response to compare when diagnosing prompt cache reuse. Supplying
 	// this field requests prompt cache diagnostics when the feature is enabled.
 	ComparisonResponseID param.Opt[string] `json:"comparison_response_id,omitzero"`
+	// Prepares the prompt cache without generating output. Defaults to `false`. When
+	// set to `true`, overrides the `generate` field to `false`.
+	Prewarm param.Opt[bool] `json:"prewarm,omitzero"`
 	// Controls whether OpenAI automatically creates an implicit cache breakpoint.
 	// Defaults to `implicit`. With `implicit`, OpenAI creates one implicit breakpoint
 	// and writes up to the latest three explicit breakpoints in the request. With
