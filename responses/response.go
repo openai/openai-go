@@ -22805,6 +22805,64 @@ const (
 	ResponseStatusIncomplete ResponseStatus = "incomplete"
 )
 
+// Emitted when steering input has been validated and queued. Acceptance means the
+// server owns the input, not that it has been applied. The successor's
+// `response.created` event is the commit point. If accepted input cannot be
+// committed, `response.steer.failed` returns it with the same steering ID.
+//
+// When the response stops for client-owned tool output or approval, the input
+// remains queued and `response.steer.pending` is emitted after
+// `response.completed`. Fill the pending event's `required_input` stubs with saved
+// results and send one matching explicit `response.create` per parent. Do not
+// resend accepted input while it is still queued.
+type ResponseSteerAcceptedEvent struct {
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The accepted steering submission.
+	Steer ResponseSteerAcceptedEventSteer `json:"steer" api:"required"`
+	// The event discriminator. Always `response.steer.accepted`.
+	Type constant.ResponseSteerAccepted `json:"type" default:"response.steer.accepted"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// target response's `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		SequenceNumber respjson.Field
+		Steer          respjson.Field
+		Type           respjson.Field
+		StreamID       respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseSteerAcceptedEvent) RawJSON() string { return r.JSON.raw }
+func (r *ResponseSteerAcceptedEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The accepted steering submission.
+type ResponseSteerAcceptedEventSteer struct {
+	// The ID assigned to the steering submission.
+	ID string `json:"id" api:"required"`
+	// The ID of the response being steered.
+	PreviousResponseID string `json:"previous_response_id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                 respjson.Field
+		PreviousResponseID respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseSteerAcceptedEventSteer) RawJSON() string { return r.JSON.raw }
+func (r *ResponseSteerAcceptedEventSteer) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // A machine-readable steering error code. Clients should handle unknown values
 // because additional codes may be introduced. Known values include:
 //
@@ -22830,6 +22888,1203 @@ const (
 	ResponseSteerErrorCodeSuccessorCreationFailed  ResponseSteerErrorCode = "successor_creation_failed"
 )
 
+// Queues user input to steer a response on this WebSocket connection. Input can
+// contain text, images, and files. Steering is supported only for single-agent
+// responses on models and execution modes that support steering. Responses bound
+// to a conversation or using automatic compaction do not support steering.
+//
+// A `response.steer.accepted` event acknowledges that the server owns the queued
+// input, not that it has been applied. The successor's `response.created` event is
+// the commit point. Input that cannot be committed is returned in
+// `response.steer.failed`.
+//
+// Steering may cause the active response to finish at a safe output boundary with
+// `response.incomplete` and `incomplete_details.reason` set to `steered`, followed
+// automatically by a successor `response.created`. Normal completion can also be
+// followed by an automatic successor. Automatic successors inherit the previous
+// response's settings and continue from it with the queued input.
+//
+// If the response stops for client-owned tool output or approval, accepted
+// steering input remains queued and `response.steer.pending` is emitted after
+// `response.completed`. Fill the `required_input` stubs from that event with saved
+// tool results or approval decisions, and send one explicit `response.create` per
+// parent with the same `previous_response_id` and WebSocket lane. Do not rerun
+// tools or resend accepted steering input. The queued input is prepended in
+// submission order to that request's input, and the explicit request retains its
+// own settings.
+//
+// This event accepts only `type`, `previous_response_id`, and `input`. Do not send
+// `stream_id`; the target response determines the WebSocket lane.
+//
+// The properties Input, PreviousResponseID, Type are required.
+type ResponseSteerEventParam struct {
+	// Input to queue for a continuation of the response. Uses the same string or
+	// input-item shape as `response.create.input`, with a non-empty array when
+	// supplying input items.
+	//
+	// Steering accepts only messages with the `user` role. Each message may contain
+	// only `type`, `role`, and `content`, with `content` as a string or an array of
+	// `input_text`, `input_image`, and `input_file` parts. The optional `type` must be
+	// `message`. Other roles, tool outputs, and item types are not supported for
+	// steering.
+	Input ResponseSteerInputUnionParam `json:"input,omitzero" api:"required"`
+	// The ID of the response to steer on this WebSocket connection.
+	PreviousResponseID string `json:"previous_response_id" api:"required"`
+	// The event discriminator. Always `response.steer`.
+	//
+	// This field can be elided, and will marshal its zero value as "response.steer".
+	Type constant.ResponseSteer `json:"type" default:"response.steer"`
+	paramObj
+}
+
+func (r ResponseSteerEventParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseSteerEventParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseSteerEventParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when steering input is rejected or cannot be committed to a successor
+// response. Returns the original, uncommitted input so the client can carry it
+// into `response.create` when appropriate. Invalid input must be corrected before
+// retrying.
+//
+// Failures after acceptance include the same steering ID. Failures before an ID is
+// allocated omit `steer.id`. A lost connection or missing acknowledgement leaves
+// the outcome unknown; it is not proof that the input was rejected.
+type ResponseSteerFailedEvent struct {
+	// Information about why the input could not be committed.
+	Error ResponseSteerFailedEventError `json:"error" api:"required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The steering submission that could not be committed.
+	Steer ResponseSteerFailedEventSteer `json:"steer" api:"required"`
+	// The event discriminator. Always `response.steer.failed`.
+	Type constant.ResponseSteerFailed `json:"type" default:"response.steer.failed"`
+	// The WebSocket lane that emitted this event, when the target response is
+	// available and its `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Error          respjson.Field
+		SequenceNumber respjson.Field
+		Steer          respjson.Field
+		Type           respjson.Field
+		StreamID       respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseSteerFailedEvent) RawJSON() string { return r.JSON.raw }
+func (r *ResponseSteerFailedEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Information about why the input could not be committed.
+type ResponseSteerFailedEventError struct {
+	// A machine-readable steering error code. Clients should handle unknown values
+	// because additional codes may be introduced. Known values include:
+	//
+	//   - `response_not_found`: The target response is not available on this connection.
+	//   - `invalid_input`: The event or input failed validation.
+	//   - `steering_not_supported`: The model or response execution mode does not
+	//     support steering.
+	//   - `too_many_pending_steers`: Too much steering input is pending for the
+	//     response.
+	//   - `response_already_completed`: The response completed and is no longer
+	//     accepting steering input.
+	//   - `response_not_active`: The response is no longer accepting steering input.
+	//   - `successor_creation_failed`: The successor response could not be created.
+	Code ResponseSteerErrorCode `json:"code" api:"required"`
+	// A human-readable description of the error.
+	Message string `json:"message" api:"required"`
+	// The error type. Always `invalid_request_error`.
+	Type constant.InvalidRequestError `json:"type" default:"invalid_request_error"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Message     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseSteerFailedEventError) RawJSON() string { return r.JSON.raw }
+func (r *ResponseSteerFailedEventError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The steering submission that could not be committed.
+type ResponseSteerFailedEventSteer struct {
+	// Input to queue for a continuation of the response. Uses the same string or
+	// input-item shape as `response.create.input`, with a non-empty array when
+	// supplying input items.
+	//
+	// Steering accepts only messages with the `user` role. Each message may contain
+	// only `type`, `role`, and `content`, with `content` as a string or an array of
+	// `input_text`, `input_image`, and `input_file` parts. The optional `type` must be
+	// `message`. Other roles, tool outputs, and item types are not supported for
+	// steering.
+	Input ResponseSteerInputUnion `json:"input" api:"required"`
+	// The ID of the response that was targeted for steering.
+	PreviousResponseID string `json:"previous_response_id" api:"required"`
+	// The ID assigned to the steering submission, if one was allocated.
+	ID string `json:"id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Input              respjson.Field
+		PreviousResponseID respjson.Field
+		ID                 respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseSteerFailedEventSteer) RawJSON() string { return r.JSON.raw }
+func (r *ResponseSteerFailedEventSteer) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponseSteerInputUnion contains all possible properties and values from
+// [string], [[]ResponseSteerInputResponseSteerInputItemListUnion].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfResponseSteerInputItemList]
+type ResponseSteerInputUnion struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a
+	// [[]ResponseSteerInputResponseSteerInputItemListUnion] instead of an object.
+	OfResponseSteerInputItemList []ResponseSteerInputResponseSteerInputItemListUnion `json:",inline"`
+	JSON                         struct {
+		OfString                     respjson.Field
+		OfResponseSteerInputItemList respjson.Field
+		raw                          string
+	} `json:"-"`
+}
+
+func (u ResponseSteerInputUnion) AsString() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseSteerInputUnion) AsResponseSteerInputItemList() (v []ResponseSteerInputResponseSteerInputItemListUnion) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponseSteerInputUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ResponseSteerInputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this ResponseSteerInputUnion to a ResponseSteerInputUnionParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ResponseSteerInputUnionParam.Overrides()
+func (r ResponseSteerInputUnion) ToParam() ResponseSteerInputUnionParam {
+	return param.Override[ResponseSteerInputUnionParam](json.RawMessage(r.RawJSON()))
+}
+
+// ResponseSteerInputResponseSteerInputItemListUnion contains all possible
+// properties and values from
+// [ResponseSteerInputResponseSteerInputItemListMessage],
+// [ResponseSteerInputResponseSteerInputItemListFunctionCallOutput].
+//
+// Use the [ResponseSteerInputResponseSteerInputItemListUnion.AsAny] method to
+// switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ResponseSteerInputResponseSteerInputItemListUnion struct {
+	OfResponseSteerInputResponseSteerInputItemListMessage            ResponseSteerInputResponseSteerInputItemListMessage            `json:",inline"`
+	OfResponseSteerInputResponseSteerInputItemListFunctionCallOutput ResponseSteerInputResponseSteerInputItemListFunctionCallOutput `json:",inline"`
+	Type                                                             string                                                         `json:"type"`
+	JSON                                                             struct {
+		OfResponseSteerInputResponseSteerInputItemListMessage            respjson.Field
+		OfResponseSteerInputResponseSteerInputItemListFunctionCallOutput respjson.Field
+		Type                                                             respjson.Field
+		raw                                                              string
+	} `json:"-"`
+}
+
+// anyResponseSteerInputResponseSteerInputItemList is implemented by each variant
+// of [ResponseSteerInputResponseSteerInputItemListUnion] to add type safety for
+// the return type of [ResponseSteerInputResponseSteerInputItemListUnion.AsAny]
+type anyResponseSteerInputResponseSteerInputItemList interface {
+	implResponseSteerInputResponseSteerInputItemListUnion()
+}
+
+func (ResponseSteerInputResponseSteerInputItemListMessage) implResponseSteerInputResponseSteerInputItemListUnion() {
+}
+func (ResponseSteerInputResponseSteerInputItemListFunctionCallOutput) implResponseSteerInputResponseSteerInputItemListUnion() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ResponseSteerInputResponseSteerInputItemListUnion.AsAny().(type) {
+//	case responses.ResponseSteerInputResponseSteerInputItemListMessage:
+//	case responses.ResponseSteerInputResponseSteerInputItemListFunctionCallOutput:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ResponseSteerInputResponseSteerInputItemListUnion) AsAny() anyResponseSteerInputResponseSteerInputItemList {
+	switch u.Type {
+	case "message":
+		return u.AsResponseSteerInputResponseSteerInputItemListMessage()
+	case "function_call_output":
+		return u.AsResponseSteerInputResponseSteerInputItemListFunctionCallOutput()
+	}
+	return nil
+}
+
+func (u ResponseSteerInputResponseSteerInputItemListUnion) AsResponseSteerInputResponseSteerInputItemListMessage() (v ResponseSteerInputResponseSteerInputItemListMessage) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseSteerInputResponseSteerInputItemListUnion) AsResponseSteerInputResponseSteerInputItemListFunctionCallOutput() (v ResponseSteerInputResponseSteerInputItemListFunctionCallOutput) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponseSteerInputResponseSteerInputItemListUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ResponseSteerInputResponseSteerInputItemListUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponseSteerInputResponseSteerInputItemListMessage struct {
+	// The message content, as an array of content parts.
+	Content ResponseSteerInputResponseSteerInputItemListItemMessageContentUnion `json:"content" api:"required"`
+	// The unique ID of this message item.
+	ID string `json:"id" api:"nullable"`
+	// The message role. Always `user`.
+	Role constant.User `json:"role" default:"user"`
+	// The status of the message item.
+	Status string `json:"status" api:"nullable"`
+	// The item type. Always `message`.
+	Type constant.Message `json:"type" default:"message"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Content     respjson.Field
+		ID          respjson.Field
+		Role        respjson.Field
+		Status      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseSteerInputResponseSteerInputItemListMessage) RawJSON() string { return r.JSON.raw }
+func (r *ResponseSteerInputResponseSteerInputItemListMessage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponseSteerInputResponseSteerInputItemListItemMessageContentUnion contains all
+// possible properties and values from [[]ResponseSteerInputContentUnion],
+// [string].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfArrayOfResponseSteerInputContentUnion OfString]
+type ResponseSteerInputResponseSteerInputItemListItemMessageContentUnion struct {
+	// This field will be present if the value is a [[]ResponseSteerInputContentUnion]
+	// instead of an object.
+	OfArrayOfResponseSteerInputContentUnion []ResponseSteerInputContentUnion `json:",inline"`
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	JSON     struct {
+		OfArrayOfResponseSteerInputContentUnion respjson.Field
+		OfString                                respjson.Field
+		raw                                     string
+	} `json:"-"`
+}
+
+func (u ResponseSteerInputResponseSteerInputItemListItemMessageContentUnion) AsArrayOfResponseSteerInputContentUnion() (v []ResponseSteerInputContentUnion) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseSteerInputResponseSteerInputItemListItemMessageContentUnion) AsString() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponseSteerInputResponseSteerInputItemListItemMessageContentUnion) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *ResponseSteerInputResponseSteerInputItemListItemMessageContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The output of a function tool call.
+type ResponseSteerInputResponseSteerInputItemListFunctionCallOutput struct {
+	// The unique ID of the function tool call generated by the model.
+	CallID string `json:"call_id" api:"nullable"`
+	// The execution context that produced this tool call.
+	Caller ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion `json:"caller" api:"nullable"`
+	// The unique ID of the function tool call output. Populated when this item is
+	// returned via API.
+	ID string `json:"id" api:"nullable"`
+	// The name of the tool that produced the output.
+	Name string `json:"name" api:"nullable"`
+	// The namespace of the tool that produced the output.
+	Namespace string `json:"namespace" api:"nullable"`
+	// Text, image, or file output of the function tool call.
+	Output ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnion `json:"output" api:"required"`
+	// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
+	// Populated when items are returned via API.
+	//
+	// Any of "in_progress", "completed", "incomplete".
+	Status string `json:"status" api:"nullable"`
+	// The type of the function tool call output. Always `function_call_output`.
+	Type constant.FunctionCallOutput `json:"type" default:"function_call_output"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CallID      respjson.Field
+		Caller      respjson.Field
+		ID          respjson.Field
+		Name        respjson.Field
+		Namespace   respjson.Field
+		Output      respjson.Field
+		Status      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseSteerInputResponseSteerInputItemListFunctionCallOutput) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponseSteerInputResponseSteerInputItemListFunctionCallOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnion
+// contains all possible properties and values from [string],
+// [ResponseFunctionCallOutputItemList].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfResponseFunctionCallOutputItemArray]
+type ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnion struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a
+	// [ResponseFunctionCallOutputItemList] instead of an object.
+	OfResponseFunctionCallOutputItemArray ResponseFunctionCallOutputItemList `json:",inline"`
+	JSON                                  struct {
+		OfString                              respjson.Field
+		OfResponseFunctionCallOutputItemArray respjson.Field
+		raw                                   string
+	} `json:"-"`
+}
+
+func (u ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnion) AsString() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnion) AsResponseFunctionCallOutputItemArray() (v ResponseFunctionCallOutputItemList) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnion) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion
+// contains all possible properties and values from
+// [ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect],
+// [ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram].
+//
+// Use the
+// [ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion.AsAny]
+// method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion struct {
+	OfResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect  ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect  `json:",inline"`
+	OfResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram `json:",inline"`
+	Type                                                                          string                                                                      `json:"type"`
+	JSON                                                                          struct {
+		OfResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect  respjson.Field
+		OfResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram respjson.Field
+		Type                                                                          respjson.Field
+		raw                                                                           string
+	} `json:"-"`
+}
+
+// anyResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCaller is
+// implemented by each variant of
+// [ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion]
+// to add type safety for the return type of
+// [ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion.AsAny]
+type anyResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCaller interface {
+	implResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion()
+}
+
+func (ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect) implResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion() {
+}
+func (ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram) implResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion.AsAny().(type) {
+//	case responses.ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect:
+//	case responses.ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion) AsAny() anyResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCaller {
+	switch u.Type {
+	case "direct":
+		return u.AsResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect()
+	case "program":
+		return u.AsResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram()
+	}
+	return nil
+}
+
+func (u ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion) AsResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect() (v ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion) AsResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram() (v ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The execution context that produced this tool call.
+type ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect struct {
+	// The caller type. Always `direct`.
+	Type constant.Direct `json:"type" default:"direct"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram struct {
+	// The call ID of the program item that produced this tool call.
+	CallerID string `json:"caller_id" api:"required"`
+	// The caller type. Always `program`.
+	Type constant.Program `json:"type" default:"program"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CallerID    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponseSteerInputUnionParam struct {
+	OfString                     param.Opt[string]                                            `json:",omitzero,inline"`
+	OfResponseSteerInputItemList []ResponseSteerInputResponseSteerInputItemListItemUnionParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponseSteerInputUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfResponseSteerInputItemList)
+}
+func (u *ResponseSteerInputUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *ResponseSteerInputUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfResponseSteerInputItemList) {
+		return &u.OfResponseSteerInputItemList
+	}
+	return nil
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponseSteerInputResponseSteerInputItemListItemUnionParam struct {
+	OfMessage            *ResponseSteerInputResponseSteerInputItemListItemMessageParam            `json:",omitzero,inline"`
+	OfFunctionCallOutput *ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponseSteerInputResponseSteerInputItemListItemUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfMessage, u.OfFunctionCallOutput)
+}
+func (u *ResponseSteerInputResponseSteerInputItemListItemUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputResponseSteerInputItemListItemUnionParam) GetContent() *ResponseSteerInputResponseSteerInputItemListItemMessageContentUnionParam {
+	if vt := u.OfMessage; vt != nil {
+		return &vt.Content
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputResponseSteerInputItemListItemUnionParam) GetOutput() *ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnionParam {
+	if vt := u.OfFunctionCallOutput; vt != nil {
+		return &vt.Output
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputResponseSteerInputItemListItemUnionParam) GetCallID() *string {
+	if vt := u.OfFunctionCallOutput; vt != nil && vt.CallID.Valid() {
+		return &vt.CallID.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputResponseSteerInputItemListItemUnionParam) GetCaller() *ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnionParam {
+	if vt := u.OfFunctionCallOutput; vt != nil {
+		return &vt.Caller
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputResponseSteerInputItemListItemUnionParam) GetName() *string {
+	if vt := u.OfFunctionCallOutput; vt != nil && vt.Name.Valid() {
+		return &vt.Name.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputResponseSteerInputItemListItemUnionParam) GetNamespace() *string {
+	if vt := u.OfFunctionCallOutput; vt != nil && vt.Namespace.Valid() {
+		return &vt.Namespace.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputResponseSteerInputItemListItemUnionParam) GetRole() *string {
+	if vt := u.OfMessage; vt != nil {
+		return (*string)(&vt.Role)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputResponseSteerInputItemListItemUnionParam) GetType() *string {
+	if vt := u.OfMessage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFunctionCallOutput; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputResponseSteerInputItemListItemUnionParam) GetID() *string {
+	if vt := u.OfMessage; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
+	} else if vt := u.OfFunctionCallOutput; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputResponseSteerInputItemListItemUnionParam) GetStatus() *string {
+	if vt := u.OfMessage; vt != nil && vt.Status.Valid() {
+		return &vt.Status.Value
+	} else if vt := u.OfFunctionCallOutput; vt != nil {
+		return (*string)(&vt.Status)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseSteerInputResponseSteerInputItemListItemUnionParam](
+		"type",
+		apijson.Discriminator[ResponseSteerInputResponseSteerInputItemListItemMessageParam]("message"),
+		apijson.Discriminator[ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputParam]("function_call_output"),
+	)
+}
+
+// The properties Content, Role, Type are required.
+type ResponseSteerInputResponseSteerInputItemListItemMessageParam struct {
+	// The message content, as an array of content parts.
+	Content ResponseSteerInputResponseSteerInputItemListItemMessageContentUnionParam `json:"content,omitzero" api:"required"`
+	// The unique ID of this message item.
+	ID param.Opt[string] `json:"id,omitzero"`
+	// The status of the message item.
+	Status param.Opt[string] `json:"status,omitzero"`
+	// The message role. Always `user`.
+	//
+	// This field can be elided, and will marshal its zero value as "user".
+	Role constant.User `json:"role" default:"user"`
+	// The item type. Always `message`.
+	//
+	// This field can be elided, and will marshal its zero value as "message".
+	Type constant.Message `json:"type" default:"message"`
+	paramObj
+}
+
+func (r ResponseSteerInputResponseSteerInputItemListItemMessageParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseSteerInputResponseSteerInputItemListItemMessageParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseSteerInputResponseSteerInputItemListItemMessageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponseSteerInputResponseSteerInputItemListItemMessageContentUnionParam struct {
+	OfArrayOfSteerInputs []ResponseSteerInputContentUnionParam `json:",omitzero,inline"`
+	OfString             param.Opt[string]                     `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponseSteerInputResponseSteerInputItemListItemMessageContentUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfArrayOfSteerInputs, u.OfString)
+}
+func (u *ResponseSteerInputResponseSteerInputItemListItemMessageContentUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// The output of a function tool call.
+//
+// The properties Output, Type are required.
+type ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputParam struct {
+	// Text, image, or file output of the function tool call.
+	Output ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnionParam `json:"output,omitzero" api:"required"`
+	// The unique ID of the function tool call output. Populated when this item is
+	// returned via API.
+	ID param.Opt[string] `json:"id,omitzero"`
+	// The unique ID of the function tool call generated by the model.
+	CallID param.Opt[string] `json:"call_id,omitzero"`
+	// The name of the tool that produced the output.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// The namespace of the tool that produced the output.
+	Namespace param.Opt[string] `json:"namespace,omitzero"`
+	// The execution context that produced this tool call.
+	Caller ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnionParam `json:"caller,omitzero"`
+	// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
+	// Populated when items are returned via API.
+	//
+	// Any of "in_progress", "completed", "incomplete".
+	Status string `json:"status,omitzero"`
+	// The type of the function tool call output. Always `function_call_output`.
+	//
+	// This field can be elided, and will marshal its zero value as
+	// "function_call_output".
+	Type constant.FunctionCallOutput `json:"type" default:"function_call_output"`
+	paramObj
+}
+
+func (r ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnionParam struct {
+	OfString                              param.Opt[string]                       `json:",omitzero,inline"`
+	OfResponseFunctionCallOutputItemArray ResponseFunctionCallOutputItemListParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfResponseFunctionCallOutputItemArray)
+}
+func (u *ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnionParam struct {
+	OfDirect  *ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam  `json:",omitzero,inline"`
+	OfProgram *ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerProgramParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfDirect, u.OfProgram)
+}
+func (u *ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnionParam) GetCallerID() *string {
+	if vt := u.OfProgram; vt != nil {
+		return &vt.CallerID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnionParam) GetType() *string {
+	if vt := u.OfDirect; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfProgram; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnionParam](
+		"type",
+		apijson.Discriminator[ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam]("direct"),
+		apijson.Discriminator[ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerProgramParam]("program"),
+	)
+}
+
+func NewResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam() ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam {
+	return ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam{
+		Type: "direct",
+	}
+}
+
+// The execution context that produced this tool call.
+//
+// This struct has a constant value, construct it with
+// [NewResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam].
+type ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam struct {
+	// The caller type. Always `direct`.
+	Type constant.Direct `json:"type" default:"direct"`
+	paramObj
+}
+
+func (r ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties CallerID, Type are required.
+type ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerProgramParam struct {
+	// The call ID of the program item that produced this tool call.
+	CallerID string `json:"caller_id" api:"required"`
+	// The caller type. Always `program`.
+	//
+	// This field can be elided, and will marshal its zero value as "program".
+	Type constant.Program `json:"type" default:"program"`
+	paramObj
+}
+
+func (r ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerProgramParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerProgramParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerProgramParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponseSteerInputContentUnion contains all possible properties and values from
+// [ResponseInputTextContent], [ResponseInputImageContent],
+// [ResponseInputFileContent].
+//
+// Use the [ResponseSteerInputContentUnion.AsAny] method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ResponseSteerInputContentUnion struct {
+	// This field is from variant [ResponseInputTextContent].
+	Text string `json:"text"`
+	// Any of "input_text", "input_image", "input_file".
+	Type string `json:"type"`
+	// This field is a union of [ResponseInputTextContentPromptCacheBreakpoint],
+	// [ResponseInputImageContentPromptCacheBreakpoint],
+	// [ResponseInputFileContentPromptCacheBreakpoint]
+	PromptCacheBreakpoint ResponseSteerInputContentUnionPromptCacheBreakpoint `json:"prompt_cache_breakpoint"`
+	Detail                string                                              `json:"detail"`
+	FileID                string                                              `json:"file_id"`
+	// This field is from variant [ResponseInputImageContent].
+	ImageURL string `json:"image_url"`
+	// This field is from variant [ResponseInputFileContent].
+	FileData string `json:"file_data"`
+	// This field is from variant [ResponseInputFileContent].
+	FileURL string `json:"file_url"`
+	// This field is from variant [ResponseInputFileContent].
+	Filename string `json:"filename"`
+	JSON     struct {
+		Text                  respjson.Field
+		Type                  respjson.Field
+		PromptCacheBreakpoint respjson.Field
+		Detail                respjson.Field
+		FileID                respjson.Field
+		ImageURL              respjson.Field
+		FileData              respjson.Field
+		FileURL               respjson.Field
+		Filename              respjson.Field
+		raw                   string
+	} `json:"-"`
+}
+
+// anyResponseSteerInputContent is implemented by each variant of
+// [ResponseSteerInputContentUnion] to add type safety for the return type of
+// [ResponseSteerInputContentUnion.AsAny]
+type anyResponseSteerInputContent interface {
+	implResponseSteerInputContentUnion()
+}
+
+func (ResponseInputTextContent) implResponseSteerInputContentUnion()  {}
+func (ResponseInputImageContent) implResponseSteerInputContentUnion() {}
+func (ResponseInputFileContent) implResponseSteerInputContentUnion()  {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ResponseSteerInputContentUnion.AsAny().(type) {
+//	case responses.ResponseInputTextContent:
+//	case responses.ResponseInputImageContent:
+//	case responses.ResponseInputFileContent:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ResponseSteerInputContentUnion) AsAny() anyResponseSteerInputContent {
+	switch u.Type {
+	case "input_text":
+		return u.AsInputText()
+	case "input_image":
+		return u.AsInputImage()
+	case "input_file":
+		return u.AsInputFile()
+	}
+	return nil
+}
+
+func (u ResponseSteerInputContentUnion) AsInputText() (v ResponseInputTextContent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseSteerInputContentUnion) AsInputImage() (v ResponseInputImageContent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseSteerInputContentUnion) AsInputFile() (v ResponseInputFileContent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponseSteerInputContentUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ResponseSteerInputContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponseSteerInputContentUnionPromptCacheBreakpoint is an implicit subunion of
+// [ResponseSteerInputContentUnion].
+// ResponseSteerInputContentUnionPromptCacheBreakpoint provides convenient access
+// to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [ResponseSteerInputContentUnion].
+type ResponseSteerInputContentUnionPromptCacheBreakpoint struct {
+	// This field is from variant [ResponseInputTextContentPromptCacheBreakpoint].
+	Mode constant.Explicit `json:"mode"`
+	JSON struct {
+		Mode respjson.Field
+		raw  string
+	} `json:"-"`
+}
+
+func (r *ResponseSteerInputContentUnionPromptCacheBreakpoint) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this ResponseSteerInputContentUnion to a
+// ResponseSteerInputContentUnionParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ResponseSteerInputContentUnionParam.Overrides()
+func (r ResponseSteerInputContentUnion) ToParam() ResponseSteerInputContentUnionParam {
+	return param.Override[ResponseSteerInputContentUnionParam](json.RawMessage(r.RawJSON()))
+}
+
+func ResponseSteerInputContentParamOfInputText(text string) ResponseSteerInputContentUnionParam {
+	var inputText ResponseInputTextContentParam
+	inputText.Text = text
+	return ResponseSteerInputContentUnionParam{OfInputText: &inputText}
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponseSteerInputContentUnionParam struct {
+	OfInputText  *ResponseInputTextContentParam  `json:",omitzero,inline"`
+	OfInputImage *ResponseInputImageContentParam `json:",omitzero,inline"`
+	OfInputFile  *ResponseInputFileContentParam  `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponseSteerInputContentUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfInputText, u.OfInputImage, u.OfInputFile)
+}
+func (u *ResponseSteerInputContentUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputContentUnionParam) GetText() *string {
+	if vt := u.OfInputText; vt != nil {
+		return &vt.Text
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputContentUnionParam) GetImageURL() *string {
+	if vt := u.OfInputImage; vt != nil && vt.ImageURL.Valid() {
+		return &vt.ImageURL.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputContentUnionParam) GetFileData() *string {
+	if vt := u.OfInputFile; vt != nil && vt.FileData.Valid() {
+		return &vt.FileData.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputContentUnionParam) GetFileURL() *string {
+	if vt := u.OfInputFile; vt != nil && vt.FileURL.Valid() {
+		return &vt.FileURL.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputContentUnionParam) GetFilename() *string {
+	if vt := u.OfInputFile; vt != nil && vt.Filename.Valid() {
+		return &vt.Filename.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputContentUnionParam) GetType() *string {
+	if vt := u.OfInputText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfInputImage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfInputFile; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputContentUnionParam) GetDetail() *string {
+	if vt := u.OfInputImage; vt != nil {
+		return (*string)(&vt.Detail)
+	} else if vt := u.OfInputFile; vt != nil {
+		return (*string)(&vt.Detail)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseSteerInputContentUnionParam) GetFileID() *string {
+	if vt := u.OfInputImage; vt != nil && vt.FileID.Valid() {
+		return &vt.FileID.Value
+	} else if vt := u.OfInputFile; vt != nil && vt.FileID.Valid() {
+		return &vt.FileID.Value
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u ResponseSteerInputContentUnionParam) GetPromptCacheBreakpoint() (res responseSteerInputContentUnionParamPromptCacheBreakpoint) {
+	if vt := u.OfInputText; vt != nil {
+		res.any = &vt.PromptCacheBreakpoint
+	} else if vt := u.OfInputImage; vt != nil {
+		res.any = &vt.PromptCacheBreakpoint
+	} else if vt := u.OfInputFile; vt != nil {
+		res.any = &vt.PromptCacheBreakpoint
+	}
+	return
+}
+
+// Can have the runtime types
+// [*ResponseInputTextContentPromptCacheBreakpointParam],
+// [*ResponseInputImageContentPromptCacheBreakpointParam],
+// [*ResponseInputFileContentPromptCacheBreakpointParam]
+type responseSteerInputContentUnionParamPromptCacheBreakpoint struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *responses.ResponseInputTextContentPromptCacheBreakpointParam:
+//	case *responses.ResponseInputImageContentPromptCacheBreakpointParam:
+//	case *responses.ResponseInputFileContentPromptCacheBreakpointParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u responseSteerInputContentUnionParamPromptCacheBreakpoint) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u responseSteerInputContentUnionParamPromptCacheBreakpoint) GetMode() *string {
+	switch vt := u.any.(type) {
+	case *ResponseInputTextContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Mode)
+	case *ResponseInputImageContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Mode)
+	case *ResponseInputFileContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Mode)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseSteerInputContentUnionParam](
+		"type",
+		apijson.Discriminator[ResponseInputTextContentParam]("input_text"),
+		apijson.Discriminator[ResponseInputImageContentParam]("input_image"),
+		apijson.Discriminator[ResponseInputFileContentParam]("input_file"),
+	)
+}
+
+// Emitted when accepted steering input remains queued after the target response
+// completes. The server still owns the input. Do not resend it. The successor's
+// `response.created` event is the commit point.
+//
+// When `reason` is `waiting_for_required_input`, this event follows
+// `response.completed` while the response waits for the tool results or approval
+// decisions identified by `required_input`. Copy those stubs, fill their result
+// fields using the ordinary `response.create` input schemas, and submit one
+// continuation per parent with the same `previous_response_id` and WebSocket lane.
+// Use saved results without rerunning tools. The queued steering input is
+// prepended in submission order to the continuation's input. That explicit request
+// retains its own settings.
+//
+// This notification is emitted at most once per steering submission. Multiple
+// submissions for the same parent can report the same required inputs; they do not
+// each require a separate continuation.
+type ResponseSteerPendingEvent struct {
+	// An extensible enum describing why accepted steering input is still queued.
+	// Clients should handle unknown values because additional reasons may be
+	// introduced. Known values include:
+	//
+	//   - `waiting_for_required_input`: The response is waiting for the tool results or
+	//     approval decisions identified by `required_input`.
+	Reason ResponseSteerPendingReason `json:"reason" api:"required"`
+	// Input stubs identifying outstanding client-owned tool results or approval
+	// decisions. Each stub contains identifying fields only; the client supplies the
+	// result before including it in `response.create`.
+	RequiredInput []ResponseSteerRequiredInputUnion `json:"required_input" api:"required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The steering submission that remains queued.
+	Steer ResponseSteerPendingEventSteer `json:"steer" api:"required"`
+	// The event discriminator. Always `response.steer.pending`.
+	Type constant.ResponseSteerPending `json:"type" default:"response.steer.pending"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// target response's `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Reason         respjson.Field
+		RequiredInput  respjson.Field
+		SequenceNumber respjson.Field
+		Steer          respjson.Field
+		Type           respjson.Field
+		StreamID       respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseSteerPendingEvent) RawJSON() string { return r.JSON.raw }
+func (r *ResponseSteerPendingEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // An extensible enum describing why accepted steering input is still queued.
 // Clients should handle unknown values because additional reasons may be
 // introduced. Known values include:
@@ -22841,6 +24096,295 @@ type ResponseSteerPendingReason = string
 const (
 	ResponseSteerPendingReasonWaitingForRequiredInput ResponseSteerPendingReason = "waiting_for_required_input"
 )
+
+// The steering submission that remains queued.
+type ResponseSteerPendingEventSteer struct {
+	// The ID assigned to the steering submission.
+	ID string `json:"id" api:"required"`
+	// The ID of the response being steered.
+	PreviousResponseID string `json:"previous_response_id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                 respjson.Field
+		PreviousResponseID respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseSteerPendingEventSteer) RawJSON() string { return r.JSON.raw }
+func (r *ResponseSteerPendingEventSteer) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponseSteerRequiredInputUnion contains all possible properties and values from
+// [ResponseSteerRequiredInputFunctionCallOutput],
+// [ResponseSteerRequiredInputCustomToolCallOutput],
+// [ResponseSteerRequiredInputComputerCallOutput],
+// [ResponseSteerRequiredInputShellCallOutput],
+// [ResponseSteerRequiredInputApplyPatchCallOutput],
+// [ResponseSteerRequiredInputToolSearchOutput],
+// [ResponseSteerRequiredInputMcpApprovalResponse].
+//
+// Use the [ResponseSteerRequiredInputUnion.AsAny] method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ResponseSteerRequiredInputUnion struct {
+	OfResponseSteerRequiredInputFunctionCallOutput   ResponseSteerRequiredInputFunctionCallOutput   `json:",inline"`
+	OfResponseSteerRequiredInputCustomToolCallOutput ResponseSteerRequiredInputCustomToolCallOutput `json:",inline"`
+	OfResponseSteerRequiredInputComputerCallOutput   ResponseSteerRequiredInputComputerCallOutput   `json:",inline"`
+	OfResponseSteerRequiredInputShellCallOutput      ResponseSteerRequiredInputShellCallOutput      `json:",inline"`
+	OfResponseSteerRequiredInputApplyPatchCallOutput ResponseSteerRequiredInputApplyPatchCallOutput `json:",inline"`
+	OfResponseSteerRequiredInputToolSearchOutput     ResponseSteerRequiredInputToolSearchOutput     `json:",inline"`
+	OfResponseSteerRequiredInputMcpApprovalResponse  ResponseSteerRequiredInputMcpApprovalResponse  `json:",inline"`
+	Type                                             string                                         `json:"type"`
+	JSON                                             struct {
+		OfResponseSteerRequiredInputFunctionCallOutput   respjson.Field
+		OfResponseSteerRequiredInputCustomToolCallOutput respjson.Field
+		OfResponseSteerRequiredInputComputerCallOutput   respjson.Field
+		OfResponseSteerRequiredInputShellCallOutput      respjson.Field
+		OfResponseSteerRequiredInputApplyPatchCallOutput respjson.Field
+		OfResponseSteerRequiredInputToolSearchOutput     respjson.Field
+		OfResponseSteerRequiredInputMcpApprovalResponse  respjson.Field
+		Type                                             respjson.Field
+		raw                                              string
+	} `json:"-"`
+}
+
+// anyResponseSteerRequiredInput is implemented by each variant of
+// [ResponseSteerRequiredInputUnion] to add type safety for the return type of
+// [ResponseSteerRequiredInputUnion.AsAny]
+type anyResponseSteerRequiredInput interface {
+	implResponseSteerRequiredInputUnion()
+}
+
+func (ResponseSteerRequiredInputFunctionCallOutput) implResponseSteerRequiredInputUnion()   {}
+func (ResponseSteerRequiredInputCustomToolCallOutput) implResponseSteerRequiredInputUnion() {}
+func (ResponseSteerRequiredInputComputerCallOutput) implResponseSteerRequiredInputUnion()   {}
+func (ResponseSteerRequiredInputShellCallOutput) implResponseSteerRequiredInputUnion()      {}
+func (ResponseSteerRequiredInputApplyPatchCallOutput) implResponseSteerRequiredInputUnion() {}
+func (ResponseSteerRequiredInputToolSearchOutput) implResponseSteerRequiredInputUnion()     {}
+func (ResponseSteerRequiredInputMcpApprovalResponse) implResponseSteerRequiredInputUnion()  {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ResponseSteerRequiredInputUnion.AsAny().(type) {
+//	case responses.ResponseSteerRequiredInputFunctionCallOutput:
+//	case responses.ResponseSteerRequiredInputCustomToolCallOutput:
+//	case responses.ResponseSteerRequiredInputComputerCallOutput:
+//	case responses.ResponseSteerRequiredInputShellCallOutput:
+//	case responses.ResponseSteerRequiredInputApplyPatchCallOutput:
+//	case responses.ResponseSteerRequiredInputToolSearchOutput:
+//	case responses.ResponseSteerRequiredInputMcpApprovalResponse:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ResponseSteerRequiredInputUnion) AsAny() anyResponseSteerRequiredInput {
+	switch u.Type {
+	case "function_call_output":
+		return u.AsResponseSteerRequiredInputFunctionCallOutput()
+	case "custom_tool_call_output":
+		return u.AsResponseSteerRequiredInputCustomToolCallOutput()
+	case "computer_call_output":
+		return u.AsResponseSteerRequiredInputComputerCallOutput()
+	case "shell_call_output":
+		return u.AsResponseSteerRequiredInputShellCallOutput()
+	case "apply_patch_call_output":
+		return u.AsResponseSteerRequiredInputApplyPatchCallOutput()
+	case "tool_search_output":
+		return u.AsResponseSteerRequiredInputToolSearchOutput()
+	case "mcp_approval_response":
+		return u.AsResponseSteerRequiredInputMcpApprovalResponse()
+	}
+	return nil
+}
+
+func (u ResponseSteerRequiredInputUnion) AsResponseSteerRequiredInputFunctionCallOutput() (v ResponseSteerRequiredInputFunctionCallOutput) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseSteerRequiredInputUnion) AsResponseSteerRequiredInputCustomToolCallOutput() (v ResponseSteerRequiredInputCustomToolCallOutput) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseSteerRequiredInputUnion) AsResponseSteerRequiredInputComputerCallOutput() (v ResponseSteerRequiredInputComputerCallOutput) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseSteerRequiredInputUnion) AsResponseSteerRequiredInputShellCallOutput() (v ResponseSteerRequiredInputShellCallOutput) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseSteerRequiredInputUnion) AsResponseSteerRequiredInputApplyPatchCallOutput() (v ResponseSteerRequiredInputApplyPatchCallOutput) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseSteerRequiredInputUnion) AsResponseSteerRequiredInputToolSearchOutput() (v ResponseSteerRequiredInputToolSearchOutput) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseSteerRequiredInputUnion) AsResponseSteerRequiredInputMcpApprovalResponse() (v ResponseSteerRequiredInputMcpApprovalResponse) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponseSteerRequiredInputUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ResponseSteerRequiredInputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Supply `output` using the function tool call output input schema.
+type ResponseSteerRequiredInputFunctionCallOutput struct {
+	CallID string                      `json:"call_id" api:"required"`
+	Name   string                      `json:"name" api:"required"`
+	Type   constant.FunctionCallOutput `json:"type" default:"function_call_output"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CallID      respjson.Field
+		Name        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseSteerRequiredInputFunctionCallOutput) RawJSON() string { return r.JSON.raw }
+func (r *ResponseSteerRequiredInputFunctionCallOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Supply `output` using the custom tool call output input schema. The original
+// custom tool call supplies the tool's name.
+type ResponseSteerRequiredInputCustomToolCallOutput struct {
+	CallID string                        `json:"call_id" api:"required"`
+	Type   constant.CustomToolCallOutput `json:"type" default:"custom_tool_call_output"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CallID      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseSteerRequiredInputCustomToolCallOutput) RawJSON() string { return r.JSON.raw }
+func (r *ResponseSteerRequiredInputCustomToolCallOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Supply `output` using the computer tool call output input schema, including any
+// required `acknowledged_safety_checks`.
+type ResponseSteerRequiredInputComputerCallOutput struct {
+	CallID string                      `json:"call_id" api:"required"`
+	Type   constant.ComputerCallOutput `json:"type" default:"computer_call_output"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CallID      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseSteerRequiredInputComputerCallOutput) RawJSON() string { return r.JSON.raw }
+func (r *ResponseSteerRequiredInputComputerCallOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Supply `output` using the shell tool call output input schema. Each output entry
+// includes `stdout`, `stderr`, and `outcome`.
+type ResponseSteerRequiredInputShellCallOutput struct {
+	CallID string                   `json:"call_id" api:"required"`
+	Type   constant.ShellCallOutput `json:"type" default:"shell_call_output"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CallID      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseSteerRequiredInputShellCallOutput) RawJSON() string { return r.JSON.raw }
+func (r *ResponseSteerRequiredInputShellCallOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Supply `status` and optional `output` using the apply patch tool call output
+// input schema.
+type ResponseSteerRequiredInputApplyPatchCallOutput struct {
+	CallID string                        `json:"call_id" api:"required"`
+	Type   constant.ApplyPatchCallOutput `json:"type" default:"apply_patch_call_output"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CallID      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseSteerRequiredInputApplyPatchCallOutput) RawJSON() string { return r.JSON.raw }
+func (r *ResponseSteerRequiredInputApplyPatchCallOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Supply `tools` using the tool search output input schema, retaining
+// `execution: "client"`.
+type ResponseSteerRequiredInputToolSearchOutput struct {
+	CallID    string                    `json:"call_id" api:"required"`
+	Execution constant.Client           `json:"execution" default:"client"`
+	Type      constant.ToolSearchOutput `json:"type" default:"tool_search_output"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CallID      respjson.Field
+		Execution   respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseSteerRequiredInputToolSearchOutput) RawJSON() string { return r.JSON.raw }
+func (r *ResponseSteerRequiredInputToolSearchOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Supply `approve` using the MCP approval response input schema. An optional
+// `reason` can be supplied when denying the request. The original approval request
+// identifies the tool and server.
+type ResponseSteerRequiredInputMcpApprovalResponse struct {
+	ApprovalRequestID string                       `json:"approval_request_id" api:"required"`
+	Type              constant.McpApprovalResponse `json:"type" default:"mcp_approval_response"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ApprovalRequestID respjson.Field
+		Type              respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseSteerRequiredInputMcpApprovalResponse) RawJSON() string { return r.JSON.raw }
+func (r *ResponseSteerRequiredInputMcpApprovalResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // ResponseStreamEventUnion contains all possible properties and values from
 // [ResponseAudioDeltaEvent], [ResponseAudioDoneEvent],
@@ -24237,6 +25781,4104 @@ type ResponseWebSearchCallSearchingEvent struct {
 // Returns the unmodified JSON received from the API
 func (r ResponseWebSearchCallSearchingEvent) RawJSON() string { return r.JSON.raw }
 func (r *ResponseWebSearchCallSearchingEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func ResponsesClientEventParamOfResponseSteer[
+	T string | []ResponseSteerInputResponseSteerInputItemListItemUnionParam,
+](input T, previousResponseID string) ResponsesClientEventUnionParam {
+	var responseSteer ResponseSteerEventParam
+	switch v := any(input).(type) {
+	case string:
+		responseSteer.Input.OfString = param.NewOpt(v)
+	case []ResponseSteerInputResponseSteerInputItemListItemUnionParam:
+		responseSteer.Input.OfResponseSteerInputItemList = v
+	}
+	responseSteer.PreviousResponseID = previousResponseID
+	return ResponsesClientEventUnionParam{OfResponseSteer: &responseSteer}
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponsesClientEventUnionParam struct {
+	OfResponseCreate *ResponsesClientEventResponseCreateParam `json:",omitzero,inline"`
+	OfResponseSteer  *ResponseSteerEventParam                 `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponsesClientEventUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfResponseCreate, u.OfResponseSteer)
+}
+func (u *ResponsesClientEventUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetBackground() *bool {
+	if vt := u.OfResponseCreate; vt != nil && vt.Background.Valid() {
+		return &vt.Background.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetContextManagement() []ResponsesClientEventResponseCreateContextManagementParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return vt.ContextManagement
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetConversation() *ResponsesClientEventResponseCreateConversationUnionParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.Conversation
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetInclude() []ResponseIncludable {
+	if vt := u.OfResponseCreate; vt != nil {
+		return vt.Include
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetInstructions() *string {
+	if vt := u.OfResponseCreate; vt != nil && vt.Instructions.Valid() {
+		return &vt.Instructions.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetMaxOutputTokens() *int64 {
+	if vt := u.OfResponseCreate; vt != nil && vt.MaxOutputTokens.Valid() {
+		return &vt.MaxOutputTokens.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetMaxToolCalls() *int64 {
+	if vt := u.OfResponseCreate; vt != nil && vt.MaxToolCalls.Valid() {
+		return &vt.MaxToolCalls.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetMetadata() shared.Metadata {
+	if vt := u.OfResponseCreate; vt != nil {
+		return vt.Metadata
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetModel() *shared.ResponsesModel {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.Model
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetModeration() *ResponsesClientEventResponseCreateModerationParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.Moderation
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetParallelToolCalls() *bool {
+	if vt := u.OfResponseCreate; vt != nil && vt.ParallelToolCalls.Valid() {
+		return &vt.ParallelToolCalls.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetPrompt() *ResponsePromptParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.Prompt
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetPromptCacheKey() *string {
+	if vt := u.OfResponseCreate; vt != nil && vt.PromptCacheKey.Valid() {
+		return &vt.PromptCacheKey.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetPromptCacheOptions() *ResponsesClientEventResponseCreatePromptCacheOptionsParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.PromptCacheOptions
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetPromptCacheRetention() *string {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.PromptCacheRetention
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetReasoning() *shared.ReasoningParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.Reasoning
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetSafetyIdentifier() *string {
+	if vt := u.OfResponseCreate; vt != nil && vt.SafetyIdentifier.Valid() {
+		return &vt.SafetyIdentifier.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetServiceTier() *string {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.ServiceTier
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetStore() *bool {
+	if vt := u.OfResponseCreate; vt != nil && vt.Store.Valid() {
+		return &vt.Store.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetStream() *bool {
+	if vt := u.OfResponseCreate; vt != nil && vt.Stream.Valid() {
+		return &vt.Stream.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetStreamID() *string {
+	if vt := u.OfResponseCreate; vt != nil && vt.StreamID.Valid() {
+		return &vt.StreamID.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetStreamOptions() *ResponsesClientEventResponseCreateStreamOptionsParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.StreamOptions
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetTemperature() *float64 {
+	if vt := u.OfResponseCreate; vt != nil && vt.Temperature.Valid() {
+		return &vt.Temperature.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetText() *ResponseTextConfigParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.Text
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetToolChoice() *ResponsesClientEventResponseCreateToolChoiceUnionParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.ToolChoice
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetTools() []ToolUnionParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return vt.Tools
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetTopLogprobs() *int64 {
+	if vt := u.OfResponseCreate; vt != nil && vt.TopLogprobs.Valid() {
+		return &vt.TopLogprobs.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetTopP() *float64 {
+	if vt := u.OfResponseCreate; vt != nil && vt.TopP.Valid() {
+		return &vt.TopP.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetTruncation() *string {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.Truncation
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetUser() *string {
+	if vt := u.OfResponseCreate; vt != nil && vt.User.Valid() {
+		return &vt.User.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetType() *string {
+	if vt := u.OfResponseCreate; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponseSteer; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetPreviousResponseID() *string {
+	if vt := u.OfResponseCreate; vt != nil && vt.PreviousResponseID.Valid() {
+		return &vt.PreviousResponseID.Value
+	} else if vt := u.OfResponseSteer; vt != nil {
+		return (*string)(&vt.PreviousResponseID)
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u ResponsesClientEventUnionParam) GetInput() (res responsesClientEventUnionParamInput) {
+	if vt := u.OfResponseCreate; vt != nil {
+		res.any = vt.Input.asAny()
+	} else if vt := u.OfResponseSteer; vt != nil {
+		res.any = vt.Input.asAny()
+	}
+	return
+}
+
+// Can have the runtime types [*string], [*ResponseInputParam],
+// [\*[]ResponseSteerInputResponseSteerInputItemListItemUnionParam]
+type responsesClientEventUnionParamInput struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *string:
+//	case *responses.ResponseInputParam:
+//	case *[]responses.ResponseSteerInputResponseSteerInputItemListItemUnionParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u responsesClientEventUnionParamInput) AsAny() any { return u.any }
+
+func init() {
+	apijson.RegisterUnion[ResponsesClientEventUnionParam](
+		"type",
+		apijson.Discriminator[ResponsesClientEventResponseCreateParam]("response.create"),
+		apijson.Discriminator[ResponseSteerEventParam]("response.steer"),
+	)
+}
+
+// Client event for creating a response over a persistent WebSocket connection.
+// This payload uses the same top-level fields as `POST /v1/responses`, plus
+// WebSocket-only envelope metadata.
+//
+// Notes:
+//
+// - `stream` is implicit over WebSocket and should not be sent.
+// - `background` is not supported over WebSocket.
+// - `stream_id` is WebSocket-only and is not part of `POST /v1/responses`.
+//
+// The property Type is required.
+type ResponsesClientEventResponseCreateParam struct {
+	// A system (or developer) message inserted into the model's context.
+	//
+	// When using along with `previous_response_id`, the instructions from a previous
+	// response will not be carried over to the next response. This makes it simple to
+	// swap out system (or developer) messages in new responses.
+	Instructions param.Opt[string] `json:"instructions,omitzero"`
+	// An upper bound for the number of tokens that can be generated for a response,
+	// including visible output tokens and
+	// [reasoning tokens](https://developers.openai.com/api/docs/guides/reasoning).
+	MaxOutputTokens param.Opt[int64] `json:"max_output_tokens,omitzero"`
+	// The maximum number of total calls to built-in tools that can be processed in a
+	// response. This maximum number applies across all built-in tool calls, not per
+	// individual tool. Any further attempts to call a tool by the model will be
+	// ignored.
+	MaxToolCalls param.Opt[int64] `json:"max_tool_calls,omitzero"`
+	// Whether to allow the model to run tool calls in parallel.
+	ParallelToolCalls param.Opt[bool] `json:"parallel_tool_calls,omitzero"`
+	// The unique ID of the previous response to the model. Use this to create
+	// multi-turn conversations. Learn more about
+	// [conversation state](https://developers.openai.com/api/docs/guides/conversation-state).
+	// Cannot be used in conjunction with `conversation`.
+	PreviousResponseID param.Opt[string] `json:"previous_response_id,omitzero"`
+	// Used by OpenAI to cache responses for similar requests to optimize your cache
+	// hit rates. Replaces the `user` field.
+	// [Learn more](https://developers.openai.com/api/docs/guides/prompt-caching).
+	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
+	// A stable identifier used to help detect users of your application that may be
+	// violating OpenAI's usage policies. The IDs should be a string that uniquely
+	// identifies each user, with a maximum length of 64 characters. We recommend
+	// hashing their username or email address, in order to avoid sending us any
+	// identifying information.
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
+	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
+	// Whether to store the generated model response for later retrieval via API.
+	// Defaults to true when omitted. If set to true, response data will be stored for
+	// at least 30 days, subject to the
+	// [data retention exceptions](https://developers.openai.com/api/docs/guides/your-data#v1responses).
+	Store param.Opt[bool] `json:"store,omitzero"`
+	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
+	// make the output more random, while lower values like 0.2 will make it more
+	// focused and deterministic. We generally recommend altering this or `top_p` but
+	// not both.
+	Temperature param.Opt[float64] `json:"temperature,omitzero"`
+	// An integer between 0 and 20 specifying the maximum number of most likely tokens
+	// to return at each token position, each with an associated log probability. In
+	// some cases, the number of returned tokens may be fewer than requested.
+	TopLogprobs param.Opt[int64] `json:"top_logprobs,omitzero"`
+	// An alternative to sampling with temperature, called nucleus sampling, where the
+	// model considers the results of the tokens with top_p probability mass. So 0.1
+	// means only the tokens comprising the top 10% probability mass are considered.
+	//
+	// We generally recommend altering this or `temperature` but not both.
+	TopP param.Opt[float64] `json:"top_p,omitzero"`
+	// Whether to run the model response in the background.
+	// [Learn more](https://developers.openai.com/api/docs/guides/background).
+	Background param.Opt[bool] `json:"background,omitzero"`
+	// If set to true, the model response data will be streamed to the client as it is
+	// generated using
+	// [server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#Event_stream_format).
+	// See the
+	// [Streaming section below](https://developers.openai.com/api/reference/resources/responses/streaming-events)
+	// for more information.
+	Stream param.Opt[bool] `json:"stream,omitzero"`
+	// Specify additional output data to include in the model response. Currently
+	// supported values are:
+	//
+	//   - `web_search_call.action.sources`: Include the sources of the web search tool
+	//     call.
+	//   - `code_interpreter_call.outputs`: Includes the outputs of python code execution
+	//     in code interpreter tool call items.
+	//   - `computer_call_output.output.image_url`: Include image urls from the computer
+	//     call output.
+	//   - `file_search_call.results`: Include the search results of the file search tool
+	//     call.
+	//   - `message.input_image.image_url`: Include image urls from the input message.
+	//   - `message.output_text.logprobs`: Include logprobs with assistant messages.
+	//   - `reasoning.encrypted_content`: Includes an encrypted version of reasoning
+	//     tokens in reasoning item outputs. This enables reasoning items to be used in
+	//     multi-turn conversations when using the Responses API statelessly (like when
+	//     the `store` parameter is set to `false`, or when an organization is enrolled
+	//     in the zero data retention program).
+	Include []ResponseIncludable `json:"include,omitzero"`
+	// The WebSocket lane for this response. Requests with the same `stream_id` are
+	// processed FIFO, and events for the response echo the same `stream_id`.
+	//
+	// `stream_id` controls routing; `previous_response_id` controls conversation
+	// lineage, so a new lane can fork from a response created on another lane.
+	StreamID param.Opt[string] `json:"stream_id,omitzero"`
+	// This field is being replaced by `safety_identifier` and `prompt_cache_key`. Use
+	// `prompt_cache_key` instead to maintain caching optimizations. A stable
+	// identifier for your end-users. Used to boost cache hit rates by better bucketing
+	// similar requests and to help OpenAI detect and prevent abuse.
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
+	//
+	// Deprecated: deprecated
+	User param.Opt[string] `json:"user,omitzero"`
+	// Context management configuration for this request.
+	ContextManagement []ResponsesClientEventResponseCreateContextManagementParam `json:"context_management,omitzero"`
+	// The conversation that this response belongs to. Items from this conversation are
+	// prepended to `input_items` for this response request. Input items and output
+	// items from this response are automatically added to this conversation after this
+	// response completes.
+	Conversation ResponsesClientEventResponseCreateConversationUnionParam `json:"conversation,omitzero"`
+	// Set of 16 key-value pairs that can be attached to an object. This can be useful
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata shared.Metadata `json:"metadata,omitzero"`
+	// Configuration for running moderation on the input and output of this response.
+	Moderation ResponsesClientEventResponseCreateModerationParam `json:"moderation,omitzero"`
+	// Reference to a prompt template and its variables.
+	// [Learn more](https://developers.openai.com/api/docs/guides/text?api-mode=responses#version-prompts-in-code).
+	Prompt ResponsePromptParam `json:"prompt,omitzero"`
+	// Deprecated. Use `prompt_cache_options.ttl` instead.
+	//
+	// The retention policy for the prompt cache. Set to `24h` to enable extended
+	// prompt caching, which keeps cached prefixes active for longer, up to a maximum
+	// of 24 hours.
+	// [Learn more](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-retention).
+	// This field expresses a maximum retention policy, while
+	// `prompt_cache_options.ttl` expresses a minimum cache lifetime. The two fields
+	// are independent and do not interact. For `gpt-5.5`, `gpt-5.5-pro`, and future
+	// models, only `24h` is supported.
+	//
+	// For older models that support both `in_memory` and `24h`, the default depends on
+	// your organization's data retention policy:
+	//
+	//   - Organizations without ZDR enabled default to `24h`.
+	//   - Organizations with ZDR enabled default to `in_memory` when
+	//     `prompt_cache_retention` is not specified.
+	//
+	// Any of "in_memory", "24h".
+	//
+	// Deprecated: deprecated
+	PromptCacheRetention string `json:"prompt_cache_retention,omitzero"`
+	// Specifies the processing type used for serving the request.
+	//
+	//   - If set to 'auto', then the request will be processed with the service tier
+	//     configured in the Project settings. Unless otherwise configured, the Project
+	//     will use 'default'.
+	//   - If set to 'default', then the request will be processed with the standard
+	//     pricing and performance for the selected model.
+	//   - If set to
+	//     '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+	//     the request will be processed with the Flex Processing service tier.
+	//   - To opt-in to
+	//     [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+	//     request level, include the `service_tier=fast` or `service_tier=priority`
+	//     parameter for Responses or Chat Completions. The response will show
+	//     `service_tier=priority` regardless of if you specify `service_tier=fast` or
+	//     `priority` in your request.
+	//   - If set to 'ultrafast', then the request will be processed with the
+	//     access-controlled Ultrafast Processing service tier. This tier is currently
+	//     available for `gpt-5.6-sol`; a response served through it will show
+	//     `service_tier=ultrafast`.
+	//   - When not set, the default behavior is 'auto'.
+	//
+	// When the `service_tier` parameter is set, the response body will include the
+	// `service_tier` value based on the processing mode actually used to serve the
+	// request. This response value may be different from the value set in the
+	// parameter.
+	//
+	// Any of "auto", "default", "flex", "scale", "priority", "fast", "ultrafast".
+	ServiceTier string `json:"service_tier,omitzero"`
+	// Options for streaming responses. Only set this when you set `stream: true`.
+	StreamOptions ResponsesClientEventResponseCreateStreamOptionsParam `json:"stream_options,omitzero"`
+	// The truncation strategy to use for the model response.
+	//
+	//   - `auto`: If the input to this Response exceeds the model's context window size,
+	//     the model will truncate the response to fit the context window by dropping
+	//     items from the beginning of the conversation.
+	//   - `disabled` (default): If the input size will exceed the context window size
+	//     for a model, the request will fail with a 400 error.
+	//
+	// Any of "auto", "disabled".
+	//
+	// Deprecated: deprecated
+	Truncation string `json:"truncation,omitzero"`
+	// Text, image, or file inputs to the model, used to generate a response.
+	//
+	// Learn more:
+	//
+	//   - [Text inputs and outputs](https://developers.openai.com/api/docs/guides/text)
+	//   - [Image inputs](https://developers.openai.com/api/docs/guides/images-vision)
+	//   - [File inputs](https://developers.openai.com/api/docs/guides/file-inputs)
+	//   - [Conversation state](https://developers.openai.com/api/docs/guides/conversation-state)
+	//   - [Function calling](https://developers.openai.com/api/docs/guides/function-calling)
+	Input ResponsesClientEventResponseCreateInputUnionParam `json:"input,omitzero"`
+	// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
+	// range of models with different capabilities, performance characteristics, and
+	// price points. Refer to the
+	// [model guide](https://developers.openai.com/api/docs/models) to browse and
+	// compare available models.
+	Model shared.ResponsesModel `json:"model,omitzero"`
+	// Options for prompt caching. Supported for `gpt-5.6` and later models. By
+	// default, OpenAI automatically chooses one implicit cache breakpoint. You can add
+	// explicit breakpoints to content blocks with `prompt_cache_breakpoint`. Each
+	// request can write up to four breakpoints. For cache matching, OpenAI considers
+	// up to the latest 80 breakpoints in the conversation, without a content-block
+	// lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
+	// `ttl` defaults to `30m`, which is currently the only supported value. See the
+	// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
+	// for current details.
+	PromptCacheOptions ResponsesClientEventResponseCreatePromptCacheOptionsParam `json:"prompt_cache_options,omitzero"`
+	// Configuration options for
+	// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
+	Reasoning shared.ReasoningParam `json:"reasoning,omitzero"`
+	// Configuration options for a text response from the model. Can be plain text or
+	// structured JSON data. Learn more:
+	//
+	//   - [Text inputs and outputs](https://developers.openai.com/api/docs/guides/text)
+	//   - [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
+	Text ResponseTextConfigParam `json:"text,omitzero"`
+	// How the model should select which tool (or tools) to use when generating a
+	// response. See the `tools` parameter to see how to specify which tools the model
+	// can call.
+	ToolChoice ResponsesClientEventResponseCreateToolChoiceUnionParam `json:"tool_choice,omitzero"`
+	// An array of tools the model may call while generating a response. You can
+	// specify which tool to use by setting the `tool_choice` parameter.
+	//
+	// We support the following categories of tools:
+	//
+	//   - **Built-in tools**: Tools that are provided by OpenAI that extend the model's
+	//     capabilities, like
+	//     [web search](https://developers.openai.com/api/docs/guides/tools-web-search)
+	//     or
+	//     [file search](https://developers.openai.com/api/docs/guides/tools-file-search).
+	//     Learn more about
+	//     [built-in tools](https://developers.openai.com/api/docs/guides/tools).
+	//   - **MCP Tools**: Integrations with third-party systems via custom MCP servers or
+	//     predefined connectors such as Google Drive and SharePoint. Learn more about
+	//     [MCP Tools](https://developers.openai.com/api/docs/guides/tools-connectors-mcp).
+	//   - **Function calls (custom tools)**: Functions that are defined by you, enabling
+	//     the model to call your own code with strongly typed arguments and outputs.
+	//     Learn more about
+	//     [function calling](https://developers.openai.com/api/docs/guides/function-calling).
+	//     You can also use custom tools to call your own code.
+	Tools []ToolUnionParam `json:"tools,omitzero"`
+	// The type of the client event. Always `response.create`.
+	//
+	// This field can be elided, and will marshal its zero value as "response.create".
+	Type constant.ResponseCreate `json:"type" default:"response.create"`
+	paramObj
+}
+
+func (r ResponsesClientEventResponseCreateParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesClientEventResponseCreateParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesClientEventResponseCreateParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponsesClientEventResponseCreateParam](
+		"prompt_cache_retention", "in_memory", "24h",
+	)
+	apijson.RegisterFieldValidator[ResponsesClientEventResponseCreateParam](
+		"service_tier", "auto", "default", "flex", "scale", "priority", "fast", "ultrafast",
+	)
+	apijson.RegisterFieldValidator[ResponsesClientEventResponseCreateParam](
+		"truncation", "auto", "disabled",
+	)
+}
+
+// The property Type is required.
+type ResponsesClientEventResponseCreateContextManagementParam struct {
+	// The context management entry type. Currently only 'compaction' is supported.
+	Type string `json:"type" api:"required"`
+	// Token threshold at which compaction should be triggered for this entry.
+	CompactThreshold param.Opt[int64] `json:"compact_threshold,omitzero"`
+	paramObj
+}
+
+func (r ResponsesClientEventResponseCreateContextManagementParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesClientEventResponseCreateContextManagementParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesClientEventResponseCreateContextManagementParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponsesClientEventResponseCreateConversationUnionParam struct {
+	OfString               param.Opt[string]          `json:",omitzero,inline"`
+	OfResponseConversation *ResponseConversationParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponsesClientEventResponseCreateConversationUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfResponseConversation)
+}
+func (u *ResponsesClientEventResponseCreateConversationUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponsesClientEventResponseCreateInputUnionParam struct {
+	OfString   param.Opt[string]   `json:",omitzero,inline"`
+	OfResponse *ResponseInputParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponsesClientEventResponseCreateInputUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfResponse)
+}
+func (u *ResponsesClientEventResponseCreateInputUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *ResponsesClientEventResponseCreateInputUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfResponse) {
+		return u.OfResponse
+	}
+	return nil
+}
+
+// Configuration for running moderation on the input and output of this response.
+//
+// The property Model is required.
+type ResponsesClientEventResponseCreateModerationParam struct {
+	// The moderation model to use for moderated completions, e.g.
+	// 'omni-moderation-latest'.
+	Model string `json:"model" api:"required"`
+	// The policy to apply to moderated response input and output.
+	Policy ResponsesClientEventResponseCreateModerationPolicyParam `json:"policy,omitzero"`
+	paramObj
+}
+
+func (r ResponsesClientEventResponseCreateModerationParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesClientEventResponseCreateModerationParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesClientEventResponseCreateModerationParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The policy to apply to moderated response input and output.
+type ResponsesClientEventResponseCreateModerationPolicyParam struct {
+	// The moderation policy for the response input.
+	Input ResponsesClientEventResponseCreateModerationPolicyInputParam `json:"input,omitzero"`
+	// The moderation policy for the response output.
+	Output ResponsesClientEventResponseCreateModerationPolicyOutputParam `json:"output,omitzero"`
+	paramObj
+}
+
+func (r ResponsesClientEventResponseCreateModerationPolicyParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesClientEventResponseCreateModerationPolicyParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesClientEventResponseCreateModerationPolicyParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The moderation policy for the response input.
+//
+// The property Mode is required.
+type ResponsesClientEventResponseCreateModerationPolicyInputParam struct {
+	// Any of "score", "block".
+	Mode string `json:"mode,omitzero" api:"required"`
+	paramObj
+}
+
+func (r ResponsesClientEventResponseCreateModerationPolicyInputParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesClientEventResponseCreateModerationPolicyInputParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesClientEventResponseCreateModerationPolicyInputParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponsesClientEventResponseCreateModerationPolicyInputParam](
+		"mode", "score", "block",
+	)
+}
+
+// The moderation policy for the response output.
+//
+// The property Mode is required.
+type ResponsesClientEventResponseCreateModerationPolicyOutputParam struct {
+	// Any of "score", "block".
+	Mode string `json:"mode,omitzero" api:"required"`
+	paramObj
+}
+
+func (r ResponsesClientEventResponseCreateModerationPolicyOutputParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesClientEventResponseCreateModerationPolicyOutputParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesClientEventResponseCreateModerationPolicyOutputParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponsesClientEventResponseCreateModerationPolicyOutputParam](
+		"mode", "score", "block",
+	)
+}
+
+// Options for prompt caching. Supported for `gpt-5.6` and later models. By
+// default, OpenAI automatically chooses one implicit cache breakpoint. You can add
+// explicit breakpoints to content blocks with `prompt_cache_breakpoint`. Each
+// request can write up to four breakpoints. For cache matching, OpenAI considers
+// up to the latest 80 breakpoints in the conversation, without a content-block
+// lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
+// `ttl` defaults to `30m`, which is currently the only supported value. See the
+// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
+// for current details.
+type ResponsesClientEventResponseCreatePromptCacheOptionsParam struct {
+	// The ID of a response to compare when diagnosing prompt cache reuse. Supplying
+	// this field requests prompt cache diagnostics when the feature is enabled.
+	ComparisonResponseID param.Opt[string] `json:"comparison_response_id,omitzero"`
+	// Prepares the prompt cache without generating output. Defaults to `false`. When
+	// set to `true`, overrides the `generate` field to `false`.
+	Prewarm param.Opt[bool] `json:"prewarm,omitzero"`
+	// Controls whether OpenAI automatically creates an implicit cache breakpoint.
+	// Defaults to `implicit`. With `implicit`, OpenAI creates one implicit breakpoint
+	// and writes up to the latest three explicit breakpoints in the request. With
+	// `explicit`, OpenAI does not create an implicit breakpoint and writes up to the
+	// latest four explicit breakpoints. If there are no explicit breakpoints, the
+	// request does not use prompt caching.
+	//
+	// Any of "implicit", "explicit".
+	Mode string `json:"mode,omitzero"`
+	// The minimum lifetime applied to every implicit and explicit cache breakpoint
+	// written by the request. Defaults to `30m`, which is currently the only supported
+	// value. The backend may retain cache entries for longer.
+	//
+	// Any of "30m".
+	Ttl string `json:"ttl,omitzero"`
+	paramObj
+}
+
+func (r ResponsesClientEventResponseCreatePromptCacheOptionsParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesClientEventResponseCreatePromptCacheOptionsParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesClientEventResponseCreatePromptCacheOptionsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponsesClientEventResponseCreatePromptCacheOptionsParam](
+		"mode", "implicit", "explicit",
+	)
+	apijson.RegisterFieldValidator[ResponsesClientEventResponseCreatePromptCacheOptionsParam](
+		"ttl", "30m",
+	)
+}
+
+// Options for streaming responses. Only set this when you set `stream: true`.
+type ResponsesClientEventResponseCreateStreamOptionsParam struct {
+	// When true, stream obfuscation will be enabled. Stream obfuscation adds random
+	// characters to an `obfuscation` field on streaming delta events to normalize
+	// payload sizes as a mitigation to certain side-channel attacks. These obfuscation
+	// fields are included by default, but add a small amount of overhead to the data
+	// stream. You can set `include_obfuscation` to false to optimize for bandwidth if
+	// you trust the network links between your application and the OpenAI API.
+	IncludeObfuscation param.Opt[bool] `json:"include_obfuscation,omitzero"`
+	paramObj
+}
+
+func (r ResponsesClientEventResponseCreateStreamOptionsParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesClientEventResponseCreateStreamOptionsParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesClientEventResponseCreateStreamOptionsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponsesClientEventResponseCreateToolChoiceUnionParam struct {
+	// Check if union is this variant with !param.IsOmitted(union.OfToolChoiceMode)
+	OfToolChoiceMode               param.Opt[ToolChoiceOptions]                                                      `json:",omitzero,inline"`
+	OfAllowedTools                 *ToolChoiceAllowedParam                                                           `json:",omitzero,inline"`
+	OfHostedTool                   *ToolChoiceTypesParam                                                             `json:",omitzero,inline"`
+	OfFunctionTool                 *ToolChoiceFunctionParam                                                          `json:",omitzero,inline"`
+	OfMcpTool                      *ToolChoiceMcpParam                                                               `json:",omitzero,inline"`
+	OfCustomTool                   *ToolChoiceCustomParam                                                            `json:",omitzero,inline"`
+	OfProgrammaticToolCalling      *ResponsesClientEventResponseCreateToolChoiceSpecificProgrammaticToolCallingParam `json:",omitzero,inline"`
+	OfSpecificApplyPatchToolChoice *ToolChoiceApplyPatchParam                                                        `json:",omitzero,inline"`
+	OfSpecificShellToolChoice      *ToolChoiceShellParam                                                             `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponsesClientEventResponseCreateToolChoiceUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfToolChoiceMode,
+		u.OfAllowedTools,
+		u.OfHostedTool,
+		u.OfFunctionTool,
+		u.OfMcpTool,
+		u.OfCustomTool,
+		u.OfProgrammaticToolCalling,
+		u.OfSpecificApplyPatchToolChoice,
+		u.OfSpecificShellToolChoice)
+}
+func (u *ResponsesClientEventResponseCreateToolChoiceUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventResponseCreateToolChoiceUnionParam) GetMode() *string {
+	if vt := u.OfAllowedTools; vt != nil {
+		return (*string)(&vt.Mode)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventResponseCreateToolChoiceUnionParam) GetTools() []map[string]any {
+	if vt := u.OfAllowedTools; vt != nil {
+		return vt.Tools
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventResponseCreateToolChoiceUnionParam) GetServerLabel() *string {
+	if vt := u.OfMcpTool; vt != nil {
+		return &vt.ServerLabel
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventResponseCreateToolChoiceUnionParam) GetType() *string {
+	if vt := u.OfAllowedTools; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfHostedTool; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFunctionTool; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfMcpTool; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCustomTool; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfProgrammaticToolCalling; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfSpecificApplyPatchToolChoice; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfSpecificShellToolChoice; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventResponseCreateToolChoiceUnionParam) GetName() *string {
+	if vt := u.OfFunctionTool; vt != nil {
+		return (*string)(&vt.Name)
+	} else if vt := u.OfMcpTool; vt != nil && vt.Name.Valid() {
+		return &vt.Name.Value
+	} else if vt := u.OfCustomTool; vt != nil {
+		return (*string)(&vt.Name)
+	}
+	return nil
+}
+
+func NewResponsesClientEventResponseCreateToolChoiceSpecificProgrammaticToolCallingParam() ResponsesClientEventResponseCreateToolChoiceSpecificProgrammaticToolCallingParam {
+	return ResponsesClientEventResponseCreateToolChoiceSpecificProgrammaticToolCallingParam{
+		Type: "programmatic_tool_calling",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesClientEventResponseCreateToolChoiceSpecificProgrammaticToolCallingParam].
+type ResponsesClientEventResponseCreateToolChoiceSpecificProgrammaticToolCallingParam struct {
+	// The tool to call. Always `programmatic_tool_calling`.
+	Type constant.ProgrammaticToolCalling `json:"type" default:"programmatic_tool_calling"`
+	paramObj
+}
+
+func (r ResponsesClientEventResponseCreateToolChoiceSpecificProgrammaticToolCallingParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesClientEventResponseCreateToolChoiceSpecificProgrammaticToolCallingParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesClientEventResponseCreateToolChoiceSpecificProgrammaticToolCallingParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponsesServerEventUnion contains all possible properties and values from
+// [ResponsesServerEventResponseAudioWsDelta],
+// [ResponsesServerEventResponseAudioWsDone],
+// [ResponsesServerEventResponseAudioTranscriptWsDelta],
+// [ResponsesServerEventResponseAudioTranscriptWsDone],
+// [ResponsesServerEventResponseCodeInterpreterCallCodeWsDelta],
+// [ResponsesServerEventResponseCodeInterpreterCallCodeWsDone],
+// [ResponsesServerEventResponseCodeInterpreterCallWsCompleted],
+// [ResponsesServerEventResponseCodeInterpreterCallInWsProgress],
+// [ResponsesServerEventResponseCodeInterpreterCallWsInterpreting],
+// [ResponsesServerEventResponseCompactionWsCompacting],
+// [ResponsesServerEventResponseWsCompleted],
+// [ResponsesServerEventResponseContentPartWsAdded],
+// [ResponsesServerEventResponseContentPartWsDone],
+// [ResponsesServerEventResponseWsCreated],
+// [ResponsesServerEventResponseFileSearchCallWsCompleted],
+// [ResponsesServerEventResponseFileSearchCallInWsProgress],
+// [ResponsesServerEventResponseFileSearchCallWsSearching],
+// [ResponsesServerEventResponseFunctionCallArgumentsWsDelta],
+// [ResponsesServerEventResponseFunctionCallArgumentsWsDone],
+// [ResponsesServerEventResponseShellCallCommandWsAdded],
+// [ResponsesServerEventResponseShellCallCommandWsDelta],
+// [ResponsesServerEventResponseShellCallCommandWsDone],
+// [ResponsesServerEventResponseShellCallOutputContentWsDelta],
+// [ResponsesServerEventResponseShellCallOutputContentWsDone],
+// [ResponsesServerEventResponseInWsProgress],
+// [ResponsesServerEventResponseWsFailed],
+// [ResponsesServerEventResponseWsIncomplete],
+// [ResponsesServerEventResponseOutputItemWsAdded],
+// [ResponsesServerEventResponseOutputItemWsDone],
+// [ResponsesServerEventResponseReasoningSummaryPartWsAdded],
+// [ResponsesServerEventResponseReasoningSummaryPartWsDone],
+// [ResponsesServerEventResponseReasoningSummaryTextWsDelta],
+// [ResponsesServerEventResponseReasoningSummaryTextWsDone],
+// [ResponsesServerEventResponseReasoningTextWsDelta],
+// [ResponsesServerEventResponseReasoningTextWsDone],
+// [ResponsesServerEventResponseRefusalWsDelta],
+// [ResponsesServerEventResponseRefusalWsDone],
+// [ResponsesServerEventResponseTextWsDelta],
+// [ResponsesServerEventResponseTextWsDone],
+// [ResponsesServerEventResponseWebSearchCallWsCompleted],
+// [ResponsesServerEventResponseWebSearchCallInWsProgress],
+// [ResponsesServerEventResponseWebSearchCallWsSearching],
+// [ResponsesServerEventResponseImageGenCallWsCompleted],
+// [ResponsesServerEventResponseImageGenCallWsGenerating],
+// [ResponsesServerEventResponseImageGenCallInWsProgress],
+// [ResponsesServerEventResponseImageGenCallPartialWsImage],
+// [ResponsesServerEventResponseMcpCallArgumentsWsDelta],
+// [ResponsesServerEventResponseMcpCallArgumentsWsDone],
+// [ResponsesServerEventResponseMcpCallWsCompleted],
+// [ResponsesServerEventResponseMcpCallWsFailed],
+// [ResponsesServerEventResponseMcpCallInWsProgress],
+// [ResponsesServerEventResponseMcpListToolsWsCompleted],
+// [ResponsesServerEventResponseMcpListToolsWsFailed],
+// [ResponsesServerEventResponseMcpListToolsInWsProgress],
+// [ResponsesServerEventResponseOutputTextAnnotationWsAdded],
+// [ResponsesServerEventResponseWsQueued],
+// [ResponsesServerEventResponseCustomToolCallInputWsDelta],
+// [ResponsesServerEventResponseCustomToolCallInputWsDone],
+// [ResponsesServerEventResponseWsError], [ResponseSteerAcceptedEvent],
+// [ResponseSteerPendingEvent], [ResponseSteerFailedEvent].
+//
+// Use the [ResponsesServerEventUnion.AsAny] method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ResponsesServerEventUnion struct {
+	OfResponsesServerEventResponseAudioWsDelta                      ResponsesServerEventResponseAudioWsDelta                      `json:",inline"`
+	OfResponsesServerEventResponseAudioWsDone                       ResponsesServerEventResponseAudioWsDone                       `json:",inline"`
+	OfResponsesServerEventResponseAudioTranscriptWsDelta            ResponsesServerEventResponseAudioTranscriptWsDelta            `json:",inline"`
+	OfResponsesServerEventResponseAudioTranscriptWsDone             ResponsesServerEventResponseAudioTranscriptWsDone             `json:",inline"`
+	OfResponsesServerEventResponseCodeInterpreterCallCodeWsDelta    ResponsesServerEventResponseCodeInterpreterCallCodeWsDelta    `json:",inline"`
+	OfResponsesServerEventResponseCodeInterpreterCallCodeWsDone     ResponsesServerEventResponseCodeInterpreterCallCodeWsDone     `json:",inline"`
+	OfResponsesServerEventResponseCodeInterpreterCallWsCompleted    ResponsesServerEventResponseCodeInterpreterCallWsCompleted    `json:",inline"`
+	OfResponsesServerEventResponseCodeInterpreterCallInWsProgress   ResponsesServerEventResponseCodeInterpreterCallInWsProgress   `json:",inline"`
+	OfResponsesServerEventResponseCodeInterpreterCallWsInterpreting ResponsesServerEventResponseCodeInterpreterCallWsInterpreting `json:",inline"`
+	OfResponsesServerEventResponseCompactionWsCompacting            ResponsesServerEventResponseCompactionWsCompacting            `json:",inline"`
+	OfResponsesServerEventResponseWsCompleted                       ResponsesServerEventResponseWsCompleted                       `json:",inline"`
+	OfResponsesServerEventResponseContentPartWsAdded                ResponsesServerEventResponseContentPartWsAdded                `json:",inline"`
+	OfResponsesServerEventResponseContentPartWsDone                 ResponsesServerEventResponseContentPartWsDone                 `json:",inline"`
+	OfResponsesServerEventResponseWsCreated                         ResponsesServerEventResponseWsCreated                         `json:",inline"`
+	OfResponsesServerEventResponseFileSearchCallWsCompleted         ResponsesServerEventResponseFileSearchCallWsCompleted         `json:",inline"`
+	OfResponsesServerEventResponseFileSearchCallInWsProgress        ResponsesServerEventResponseFileSearchCallInWsProgress        `json:",inline"`
+	OfResponsesServerEventResponseFileSearchCallWsSearching         ResponsesServerEventResponseFileSearchCallWsSearching         `json:",inline"`
+	OfResponsesServerEventResponseFunctionCallArgumentsWsDelta      ResponsesServerEventResponseFunctionCallArgumentsWsDelta      `json:",inline"`
+	OfResponsesServerEventResponseFunctionCallArgumentsWsDone       ResponsesServerEventResponseFunctionCallArgumentsWsDone       `json:",inline"`
+	OfResponsesServerEventResponseShellCallCommandWsAdded           ResponsesServerEventResponseShellCallCommandWsAdded           `json:",inline"`
+	OfResponsesServerEventResponseShellCallCommandWsDelta           ResponsesServerEventResponseShellCallCommandWsDelta           `json:",inline"`
+	OfResponsesServerEventResponseShellCallCommandWsDone            ResponsesServerEventResponseShellCallCommandWsDone            `json:",inline"`
+	OfResponsesServerEventResponseShellCallOutputContentWsDelta     ResponsesServerEventResponseShellCallOutputContentWsDelta     `json:",inline"`
+	OfResponsesServerEventResponseShellCallOutputContentWsDone      ResponsesServerEventResponseShellCallOutputContentWsDone      `json:",inline"`
+	OfResponsesServerEventResponseInWsProgress                      ResponsesServerEventResponseInWsProgress                      `json:",inline"`
+	OfResponsesServerEventResponseWsFailed                          ResponsesServerEventResponseWsFailed                          `json:",inline"`
+	OfResponsesServerEventResponseWsIncomplete                      ResponsesServerEventResponseWsIncomplete                      `json:",inline"`
+	OfResponsesServerEventResponseOutputItemWsAdded                 ResponsesServerEventResponseOutputItemWsAdded                 `json:",inline"`
+	OfResponsesServerEventResponseOutputItemWsDone                  ResponsesServerEventResponseOutputItemWsDone                  `json:",inline"`
+	OfResponsesServerEventResponseReasoningSummaryPartWsAdded       ResponsesServerEventResponseReasoningSummaryPartWsAdded       `json:",inline"`
+	OfResponsesServerEventResponseReasoningSummaryPartWsDone        ResponsesServerEventResponseReasoningSummaryPartWsDone        `json:",inline"`
+	OfResponsesServerEventResponseReasoningSummaryTextWsDelta       ResponsesServerEventResponseReasoningSummaryTextWsDelta       `json:",inline"`
+	OfResponsesServerEventResponseReasoningSummaryTextWsDone        ResponsesServerEventResponseReasoningSummaryTextWsDone        `json:",inline"`
+	OfResponsesServerEventResponseReasoningTextWsDelta              ResponsesServerEventResponseReasoningTextWsDelta              `json:",inline"`
+	OfResponsesServerEventResponseReasoningTextWsDone               ResponsesServerEventResponseReasoningTextWsDone               `json:",inline"`
+	OfResponsesServerEventResponseRefusalWsDelta                    ResponsesServerEventResponseRefusalWsDelta                    `json:",inline"`
+	OfResponsesServerEventResponseRefusalWsDone                     ResponsesServerEventResponseRefusalWsDone                     `json:",inline"`
+	OfResponsesServerEventResponseTextWsDelta                       ResponsesServerEventResponseTextWsDelta                       `json:",inline"`
+	OfResponsesServerEventResponseTextWsDone                        ResponsesServerEventResponseTextWsDone                        `json:",inline"`
+	OfResponsesServerEventResponseWebSearchCallWsCompleted          ResponsesServerEventResponseWebSearchCallWsCompleted          `json:",inline"`
+	OfResponsesServerEventResponseWebSearchCallInWsProgress         ResponsesServerEventResponseWebSearchCallInWsProgress         `json:",inline"`
+	OfResponsesServerEventResponseWebSearchCallWsSearching          ResponsesServerEventResponseWebSearchCallWsSearching          `json:",inline"`
+	OfResponsesServerEventResponseImageGenCallWsCompleted           ResponsesServerEventResponseImageGenCallWsCompleted           `json:",inline"`
+	OfResponsesServerEventResponseImageGenCallWsGenerating          ResponsesServerEventResponseImageGenCallWsGenerating          `json:",inline"`
+	OfResponsesServerEventResponseImageGenCallInWsProgress          ResponsesServerEventResponseImageGenCallInWsProgress          `json:",inline"`
+	OfResponsesServerEventResponseImageGenCallPartialWsImage        ResponsesServerEventResponseImageGenCallPartialWsImage        `json:",inline"`
+	OfResponsesServerEventResponseMcpCallArgumentsWsDelta           ResponsesServerEventResponseMcpCallArgumentsWsDelta           `json:",inline"`
+	OfResponsesServerEventResponseMcpCallArgumentsWsDone            ResponsesServerEventResponseMcpCallArgumentsWsDone            `json:",inline"`
+	OfResponsesServerEventResponseMcpCallWsCompleted                ResponsesServerEventResponseMcpCallWsCompleted                `json:",inline"`
+	OfResponsesServerEventResponseMcpCallWsFailed                   ResponsesServerEventResponseMcpCallWsFailed                   `json:",inline"`
+	OfResponsesServerEventResponseMcpCallInWsProgress               ResponsesServerEventResponseMcpCallInWsProgress               `json:",inline"`
+	OfResponsesServerEventResponseMcpListToolsWsCompleted           ResponsesServerEventResponseMcpListToolsWsCompleted           `json:",inline"`
+	OfResponsesServerEventResponseMcpListToolsWsFailed              ResponsesServerEventResponseMcpListToolsWsFailed              `json:",inline"`
+	OfResponsesServerEventResponseMcpListToolsInWsProgress          ResponsesServerEventResponseMcpListToolsInWsProgress          `json:",inline"`
+	OfResponsesServerEventResponseOutputTextAnnotationWsAdded       ResponsesServerEventResponseOutputTextAnnotationWsAdded       `json:",inline"`
+	OfResponsesServerEventResponseWsQueued                          ResponsesServerEventResponseWsQueued                          `json:",inline"`
+	OfResponsesServerEventResponseCustomToolCallInputWsDelta        ResponsesServerEventResponseCustomToolCallInputWsDelta        `json:",inline"`
+	OfResponsesServerEventResponseCustomToolCallInputWsDone         ResponsesServerEventResponseCustomToolCallInputWsDone         `json:",inline"`
+	OfResponsesServerEventResponseWsError                           ResponsesServerEventResponseWsError                           `json:",inline"`
+	OfResponseSteerAcceptedEvent                                    ResponseSteerAcceptedEvent                                    `json:",inline"`
+	OfResponseSteerPendingEvent                                     ResponseSteerPendingEvent                                     `json:",inline"`
+	OfResponseSteerFailedEvent                                      ResponseSteerFailedEvent                                      `json:",inline"`
+	Type                                                            string                                                        `json:"type"`
+	JSON                                                            struct {
+		OfResponsesServerEventResponseAudioWsDelta                      respjson.Field
+		OfResponsesServerEventResponseAudioWsDone                       respjson.Field
+		OfResponsesServerEventResponseAudioTranscriptWsDelta            respjson.Field
+		OfResponsesServerEventResponseAudioTranscriptWsDone             respjson.Field
+		OfResponsesServerEventResponseCodeInterpreterCallCodeWsDelta    respjson.Field
+		OfResponsesServerEventResponseCodeInterpreterCallCodeWsDone     respjson.Field
+		OfResponsesServerEventResponseCodeInterpreterCallWsCompleted    respjson.Field
+		OfResponsesServerEventResponseCodeInterpreterCallInWsProgress   respjson.Field
+		OfResponsesServerEventResponseCodeInterpreterCallWsInterpreting respjson.Field
+		OfResponsesServerEventResponseCompactionWsCompacting            respjson.Field
+		OfResponsesServerEventResponseWsCompleted                       respjson.Field
+		OfResponsesServerEventResponseContentPartWsAdded                respjson.Field
+		OfResponsesServerEventResponseContentPartWsDone                 respjson.Field
+		OfResponsesServerEventResponseWsCreated                         respjson.Field
+		OfResponsesServerEventResponseFileSearchCallWsCompleted         respjson.Field
+		OfResponsesServerEventResponseFileSearchCallInWsProgress        respjson.Field
+		OfResponsesServerEventResponseFileSearchCallWsSearching         respjson.Field
+		OfResponsesServerEventResponseFunctionCallArgumentsWsDelta      respjson.Field
+		OfResponsesServerEventResponseFunctionCallArgumentsWsDone       respjson.Field
+		OfResponsesServerEventResponseShellCallCommandWsAdded           respjson.Field
+		OfResponsesServerEventResponseShellCallCommandWsDelta           respjson.Field
+		OfResponsesServerEventResponseShellCallCommandWsDone            respjson.Field
+		OfResponsesServerEventResponseShellCallOutputContentWsDelta     respjson.Field
+		OfResponsesServerEventResponseShellCallOutputContentWsDone      respjson.Field
+		OfResponsesServerEventResponseInWsProgress                      respjson.Field
+		OfResponsesServerEventResponseWsFailed                          respjson.Field
+		OfResponsesServerEventResponseWsIncomplete                      respjson.Field
+		OfResponsesServerEventResponseOutputItemWsAdded                 respjson.Field
+		OfResponsesServerEventResponseOutputItemWsDone                  respjson.Field
+		OfResponsesServerEventResponseReasoningSummaryPartWsAdded       respjson.Field
+		OfResponsesServerEventResponseReasoningSummaryPartWsDone        respjson.Field
+		OfResponsesServerEventResponseReasoningSummaryTextWsDelta       respjson.Field
+		OfResponsesServerEventResponseReasoningSummaryTextWsDone        respjson.Field
+		OfResponsesServerEventResponseReasoningTextWsDelta              respjson.Field
+		OfResponsesServerEventResponseReasoningTextWsDone               respjson.Field
+		OfResponsesServerEventResponseRefusalWsDelta                    respjson.Field
+		OfResponsesServerEventResponseRefusalWsDone                     respjson.Field
+		OfResponsesServerEventResponseTextWsDelta                       respjson.Field
+		OfResponsesServerEventResponseTextWsDone                        respjson.Field
+		OfResponsesServerEventResponseWebSearchCallWsCompleted          respjson.Field
+		OfResponsesServerEventResponseWebSearchCallInWsProgress         respjson.Field
+		OfResponsesServerEventResponseWebSearchCallWsSearching          respjson.Field
+		OfResponsesServerEventResponseImageGenCallWsCompleted           respjson.Field
+		OfResponsesServerEventResponseImageGenCallWsGenerating          respjson.Field
+		OfResponsesServerEventResponseImageGenCallInWsProgress          respjson.Field
+		OfResponsesServerEventResponseImageGenCallPartialWsImage        respjson.Field
+		OfResponsesServerEventResponseMcpCallArgumentsWsDelta           respjson.Field
+		OfResponsesServerEventResponseMcpCallArgumentsWsDone            respjson.Field
+		OfResponsesServerEventResponseMcpCallWsCompleted                respjson.Field
+		OfResponsesServerEventResponseMcpCallWsFailed                   respjson.Field
+		OfResponsesServerEventResponseMcpCallInWsProgress               respjson.Field
+		OfResponsesServerEventResponseMcpListToolsWsCompleted           respjson.Field
+		OfResponsesServerEventResponseMcpListToolsWsFailed              respjson.Field
+		OfResponsesServerEventResponseMcpListToolsInWsProgress          respjson.Field
+		OfResponsesServerEventResponseOutputTextAnnotationWsAdded       respjson.Field
+		OfResponsesServerEventResponseWsQueued                          respjson.Field
+		OfResponsesServerEventResponseCustomToolCallInputWsDelta        respjson.Field
+		OfResponsesServerEventResponseCustomToolCallInputWsDone         respjson.Field
+		OfResponsesServerEventResponseWsError                           respjson.Field
+		OfResponseSteerAcceptedEvent                                    respjson.Field
+		OfResponseSteerPendingEvent                                     respjson.Field
+		OfResponseSteerFailedEvent                                      respjson.Field
+		Type                                                            respjson.Field
+		raw                                                             string
+	} `json:"-"`
+}
+
+// anyResponsesServerEvent is implemented by each variant of
+// [ResponsesServerEventUnion] to add type safety for the return type of
+// [ResponsesServerEventUnion.AsAny]
+type anyResponsesServerEvent interface {
+	implResponsesServerEventUnion()
+}
+
+func (ResponsesServerEventResponseAudioWsDelta) implResponsesServerEventUnion()                    {}
+func (ResponsesServerEventResponseAudioWsDone) implResponsesServerEventUnion()                     {}
+func (ResponsesServerEventResponseAudioTranscriptWsDelta) implResponsesServerEventUnion()          {}
+func (ResponsesServerEventResponseAudioTranscriptWsDone) implResponsesServerEventUnion()           {}
+func (ResponsesServerEventResponseCodeInterpreterCallCodeWsDelta) implResponsesServerEventUnion()  {}
+func (ResponsesServerEventResponseCodeInterpreterCallCodeWsDone) implResponsesServerEventUnion()   {}
+func (ResponsesServerEventResponseCodeInterpreterCallWsCompleted) implResponsesServerEventUnion()  {}
+func (ResponsesServerEventResponseCodeInterpreterCallInWsProgress) implResponsesServerEventUnion() {}
+func (ResponsesServerEventResponseCodeInterpreterCallWsInterpreting) implResponsesServerEventUnion() {
+}
+func (ResponsesServerEventResponseCompactionWsCompacting) implResponsesServerEventUnion()        {}
+func (ResponsesServerEventResponseWsCompleted) implResponsesServerEventUnion()                   {}
+func (ResponsesServerEventResponseContentPartWsAdded) implResponsesServerEventUnion()            {}
+func (ResponsesServerEventResponseContentPartWsDone) implResponsesServerEventUnion()             {}
+func (ResponsesServerEventResponseWsCreated) implResponsesServerEventUnion()                     {}
+func (ResponsesServerEventResponseFileSearchCallWsCompleted) implResponsesServerEventUnion()     {}
+func (ResponsesServerEventResponseFileSearchCallInWsProgress) implResponsesServerEventUnion()    {}
+func (ResponsesServerEventResponseFileSearchCallWsSearching) implResponsesServerEventUnion()     {}
+func (ResponsesServerEventResponseFunctionCallArgumentsWsDelta) implResponsesServerEventUnion()  {}
+func (ResponsesServerEventResponseFunctionCallArgumentsWsDone) implResponsesServerEventUnion()   {}
+func (ResponsesServerEventResponseShellCallCommandWsAdded) implResponsesServerEventUnion()       {}
+func (ResponsesServerEventResponseShellCallCommandWsDelta) implResponsesServerEventUnion()       {}
+func (ResponsesServerEventResponseShellCallCommandWsDone) implResponsesServerEventUnion()        {}
+func (ResponsesServerEventResponseShellCallOutputContentWsDelta) implResponsesServerEventUnion() {}
+func (ResponsesServerEventResponseShellCallOutputContentWsDone) implResponsesServerEventUnion()  {}
+func (ResponsesServerEventResponseInWsProgress) implResponsesServerEventUnion()                  {}
+func (ResponsesServerEventResponseWsFailed) implResponsesServerEventUnion()                      {}
+func (ResponsesServerEventResponseWsIncomplete) implResponsesServerEventUnion()                  {}
+func (ResponsesServerEventResponseOutputItemWsAdded) implResponsesServerEventUnion()             {}
+func (ResponsesServerEventResponseOutputItemWsDone) implResponsesServerEventUnion()              {}
+func (ResponsesServerEventResponseReasoningSummaryPartWsAdded) implResponsesServerEventUnion()   {}
+func (ResponsesServerEventResponseReasoningSummaryPartWsDone) implResponsesServerEventUnion()    {}
+func (ResponsesServerEventResponseReasoningSummaryTextWsDelta) implResponsesServerEventUnion()   {}
+func (ResponsesServerEventResponseReasoningSummaryTextWsDone) implResponsesServerEventUnion()    {}
+func (ResponsesServerEventResponseReasoningTextWsDelta) implResponsesServerEventUnion()          {}
+func (ResponsesServerEventResponseReasoningTextWsDone) implResponsesServerEventUnion()           {}
+func (ResponsesServerEventResponseRefusalWsDelta) implResponsesServerEventUnion()                {}
+func (ResponsesServerEventResponseRefusalWsDone) implResponsesServerEventUnion()                 {}
+func (ResponsesServerEventResponseTextWsDelta) implResponsesServerEventUnion()                   {}
+func (ResponsesServerEventResponseTextWsDone) implResponsesServerEventUnion()                    {}
+func (ResponsesServerEventResponseWebSearchCallWsCompleted) implResponsesServerEventUnion()      {}
+func (ResponsesServerEventResponseWebSearchCallInWsProgress) implResponsesServerEventUnion()     {}
+func (ResponsesServerEventResponseWebSearchCallWsSearching) implResponsesServerEventUnion()      {}
+func (ResponsesServerEventResponseImageGenCallWsCompleted) implResponsesServerEventUnion()       {}
+func (ResponsesServerEventResponseImageGenCallWsGenerating) implResponsesServerEventUnion()      {}
+func (ResponsesServerEventResponseImageGenCallInWsProgress) implResponsesServerEventUnion()      {}
+func (ResponsesServerEventResponseImageGenCallPartialWsImage) implResponsesServerEventUnion()    {}
+func (ResponsesServerEventResponseMcpCallArgumentsWsDelta) implResponsesServerEventUnion()       {}
+func (ResponsesServerEventResponseMcpCallArgumentsWsDone) implResponsesServerEventUnion()        {}
+func (ResponsesServerEventResponseMcpCallWsCompleted) implResponsesServerEventUnion()            {}
+func (ResponsesServerEventResponseMcpCallWsFailed) implResponsesServerEventUnion()               {}
+func (ResponsesServerEventResponseMcpCallInWsProgress) implResponsesServerEventUnion()           {}
+func (ResponsesServerEventResponseMcpListToolsWsCompleted) implResponsesServerEventUnion()       {}
+func (ResponsesServerEventResponseMcpListToolsWsFailed) implResponsesServerEventUnion()          {}
+func (ResponsesServerEventResponseMcpListToolsInWsProgress) implResponsesServerEventUnion()      {}
+func (ResponsesServerEventResponseOutputTextAnnotationWsAdded) implResponsesServerEventUnion()   {}
+func (ResponsesServerEventResponseWsQueued) implResponsesServerEventUnion()                      {}
+func (ResponsesServerEventResponseCustomToolCallInputWsDelta) implResponsesServerEventUnion()    {}
+func (ResponsesServerEventResponseCustomToolCallInputWsDone) implResponsesServerEventUnion()     {}
+func (ResponsesServerEventResponseWsError) implResponsesServerEventUnion()                       {}
+func (ResponseSteerAcceptedEvent) implResponsesServerEventUnion()                                {}
+func (ResponseSteerPendingEvent) implResponsesServerEventUnion()                                 {}
+func (ResponseSteerFailedEvent) implResponsesServerEventUnion()                                  {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ResponsesServerEventUnion.AsAny().(type) {
+//	case responses.ResponsesServerEventResponseAudioWsDelta:
+//	case responses.ResponsesServerEventResponseAudioWsDone:
+//	case responses.ResponsesServerEventResponseAudioTranscriptWsDelta:
+//	case responses.ResponsesServerEventResponseAudioTranscriptWsDone:
+//	case responses.ResponsesServerEventResponseCodeInterpreterCallCodeWsDelta:
+//	case responses.ResponsesServerEventResponseCodeInterpreterCallCodeWsDone:
+//	case responses.ResponsesServerEventResponseCodeInterpreterCallWsCompleted:
+//	case responses.ResponsesServerEventResponseCodeInterpreterCallInWsProgress:
+//	case responses.ResponsesServerEventResponseCodeInterpreterCallWsInterpreting:
+//	case responses.ResponsesServerEventResponseCompactionWsCompacting:
+//	case responses.ResponsesServerEventResponseWsCompleted:
+//	case responses.ResponsesServerEventResponseContentPartWsAdded:
+//	case responses.ResponsesServerEventResponseContentPartWsDone:
+//	case responses.ResponsesServerEventResponseWsCreated:
+//	case responses.ResponsesServerEventResponseFileSearchCallWsCompleted:
+//	case responses.ResponsesServerEventResponseFileSearchCallInWsProgress:
+//	case responses.ResponsesServerEventResponseFileSearchCallWsSearching:
+//	case responses.ResponsesServerEventResponseFunctionCallArgumentsWsDelta:
+//	case responses.ResponsesServerEventResponseFunctionCallArgumentsWsDone:
+//	case responses.ResponsesServerEventResponseShellCallCommandWsAdded:
+//	case responses.ResponsesServerEventResponseShellCallCommandWsDelta:
+//	case responses.ResponsesServerEventResponseShellCallCommandWsDone:
+//	case responses.ResponsesServerEventResponseShellCallOutputContentWsDelta:
+//	case responses.ResponsesServerEventResponseShellCallOutputContentWsDone:
+//	case responses.ResponsesServerEventResponseInWsProgress:
+//	case responses.ResponsesServerEventResponseWsFailed:
+//	case responses.ResponsesServerEventResponseWsIncomplete:
+//	case responses.ResponsesServerEventResponseOutputItemWsAdded:
+//	case responses.ResponsesServerEventResponseOutputItemWsDone:
+//	case responses.ResponsesServerEventResponseReasoningSummaryPartWsAdded:
+//	case responses.ResponsesServerEventResponseReasoningSummaryPartWsDone:
+//	case responses.ResponsesServerEventResponseReasoningSummaryTextWsDelta:
+//	case responses.ResponsesServerEventResponseReasoningSummaryTextWsDone:
+//	case responses.ResponsesServerEventResponseReasoningTextWsDelta:
+//	case responses.ResponsesServerEventResponseReasoningTextWsDone:
+//	case responses.ResponsesServerEventResponseRefusalWsDelta:
+//	case responses.ResponsesServerEventResponseRefusalWsDone:
+//	case responses.ResponsesServerEventResponseTextWsDelta:
+//	case responses.ResponsesServerEventResponseTextWsDone:
+//	case responses.ResponsesServerEventResponseWebSearchCallWsCompleted:
+//	case responses.ResponsesServerEventResponseWebSearchCallInWsProgress:
+//	case responses.ResponsesServerEventResponseWebSearchCallWsSearching:
+//	case responses.ResponsesServerEventResponseImageGenCallWsCompleted:
+//	case responses.ResponsesServerEventResponseImageGenCallWsGenerating:
+//	case responses.ResponsesServerEventResponseImageGenCallInWsProgress:
+//	case responses.ResponsesServerEventResponseImageGenCallPartialWsImage:
+//	case responses.ResponsesServerEventResponseMcpCallArgumentsWsDelta:
+//	case responses.ResponsesServerEventResponseMcpCallArgumentsWsDone:
+//	case responses.ResponsesServerEventResponseMcpCallWsCompleted:
+//	case responses.ResponsesServerEventResponseMcpCallWsFailed:
+//	case responses.ResponsesServerEventResponseMcpCallInWsProgress:
+//	case responses.ResponsesServerEventResponseMcpListToolsWsCompleted:
+//	case responses.ResponsesServerEventResponseMcpListToolsWsFailed:
+//	case responses.ResponsesServerEventResponseMcpListToolsInWsProgress:
+//	case responses.ResponsesServerEventResponseOutputTextAnnotationWsAdded:
+//	case responses.ResponsesServerEventResponseWsQueued:
+//	case responses.ResponsesServerEventResponseCustomToolCallInputWsDelta:
+//	case responses.ResponsesServerEventResponseCustomToolCallInputWsDone:
+//	case responses.ResponsesServerEventResponseWsError:
+//	case responses.ResponseSteerAcceptedEvent:
+//	case responses.ResponseSteerPendingEvent:
+//	case responses.ResponseSteerFailedEvent:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ResponsesServerEventUnion) AsAny() anyResponsesServerEvent {
+	switch u.Type {
+	case "response.audio.delta":
+		return u.AsResponseAudioDelta()
+	case "response.audio.done":
+		return u.AsResponseAudioDone()
+	case "response.audio.transcript.delta":
+		return u.AsResponseAudioTranscriptDelta()
+	case "response.audio.transcript.done":
+		return u.AsResponseAudioTranscriptDone()
+	case "response.code_interpreter_call_code.delta":
+		return u.AsResponseCodeInterpreterCallCodeDelta()
+	case "response.code_interpreter_call_code.done":
+		return u.AsResponseCodeInterpreterCallCodeDone()
+	case "response.code_interpreter_call.completed":
+		return u.AsResponseCodeInterpreterCallCompleted()
+	case "response.code_interpreter_call.in_progress":
+		return u.AsResponseCodeInterpreterCallInProgress()
+	case "response.code_interpreter_call.interpreting":
+		return u.AsResponseCodeInterpreterCallInterpreting()
+	case "response.compaction.compacting":
+		return u.AsResponseCompactionCompacting()
+	case "response.completed":
+		return u.AsResponseCompleted()
+	case "response.content_part.added":
+		return u.AsResponseContentPartAdded()
+	case "response.content_part.done":
+		return u.AsResponseContentPartDone()
+	case "response.created":
+		return u.AsResponseCreated()
+	case "response.file_search_call.completed":
+		return u.AsResponseFileSearchCallCompleted()
+	case "response.file_search_call.in_progress":
+		return u.AsResponseFileSearchCallInProgress()
+	case "response.file_search_call.searching":
+		return u.AsResponseFileSearchCallSearching()
+	case "response.function_call_arguments.delta":
+		return u.AsResponseFunctionCallArgumentsDelta()
+	case "response.function_call_arguments.done":
+		return u.AsResponseFunctionCallArgumentsDone()
+	case "response.shell_call_command.added":
+		return u.AsResponseShellCallCommandAdded()
+	case "response.shell_call_command.delta":
+		return u.AsResponseShellCallCommandDelta()
+	case "response.shell_call_command.done":
+		return u.AsResponseShellCallCommandDone()
+	case "response.shell_call_output_content.delta":
+		return u.AsResponseShellCallOutputContentDelta()
+	case "response.shell_call_output_content.done":
+		return u.AsResponseShellCallOutputContentDone()
+	case "response.in_progress":
+		return u.AsResponseInProgress()
+	case "response.failed":
+		return u.AsResponseFailed()
+	case "response.incomplete":
+		return u.AsResponseIncomplete()
+	case "response.output_item.added":
+		return u.AsResponseOutputItemAdded()
+	case "response.output_item.done":
+		return u.AsResponseOutputItemDone()
+	case "response.reasoning_summary_part.added":
+		return u.AsResponseReasoningSummaryPartAdded()
+	case "response.reasoning_summary_part.done":
+		return u.AsResponseReasoningSummaryPartDone()
+	case "response.reasoning_summary_text.delta":
+		return u.AsResponseReasoningSummaryTextDelta()
+	case "response.reasoning_summary_text.done":
+		return u.AsResponseReasoningSummaryTextDone()
+	case "response.reasoning_text.delta":
+		return u.AsResponseReasoningTextDelta()
+	case "response.reasoning_text.done":
+		return u.AsResponseReasoningTextDone()
+	case "response.refusal.delta":
+		return u.AsResponseRefusalDelta()
+	case "response.refusal.done":
+		return u.AsResponseRefusalDone()
+	case "response.output_text.delta":
+		return u.AsResponseOutputTextDelta()
+	case "response.output_text.done":
+		return u.AsResponseOutputTextDone()
+	case "response.web_search_call.completed":
+		return u.AsResponseWebSearchCallCompleted()
+	case "response.web_search_call.in_progress":
+		return u.AsResponseWebSearchCallInProgress()
+	case "response.web_search_call.searching":
+		return u.AsResponseWebSearchCallSearching()
+	case "response.image_generation_call.completed":
+		return u.AsResponseImageGenerationCallCompleted()
+	case "response.image_generation_call.generating":
+		return u.AsResponseImageGenerationCallGenerating()
+	case "response.image_generation_call.in_progress":
+		return u.AsResponseImageGenerationCallInProgress()
+	case "response.image_generation_call.partial_image":
+		return u.AsResponseImageGenerationCallPartialImage()
+	case "response.mcp_call_arguments.delta":
+		return u.AsResponseMcpCallArgumentsDelta()
+	case "response.mcp_call_arguments.done":
+		return u.AsResponseMcpCallArgumentsDone()
+	case "response.mcp_call.completed":
+		return u.AsResponseMcpCallCompleted()
+	case "response.mcp_call.failed":
+		return u.AsResponseMcpCallFailed()
+	case "response.mcp_call.in_progress":
+		return u.AsResponseMcpCallInProgress()
+	case "response.mcp_list_tools.completed":
+		return u.AsResponseMcpListToolsCompleted()
+	case "response.mcp_list_tools.failed":
+		return u.AsResponseMcpListToolsFailed()
+	case "response.mcp_list_tools.in_progress":
+		return u.AsResponseMcpListToolsInProgress()
+	case "response.output_text.annotation.added":
+		return u.AsResponseOutputTextAnnotationAdded()
+	case "response.queued":
+		return u.AsResponseQueued()
+	case "response.custom_tool_call_input.delta":
+		return u.AsResponseCustomToolCallInputDelta()
+	case "response.custom_tool_call_input.done":
+		return u.AsResponseCustomToolCallInputDone()
+	case "error":
+		return u.AsResponsesServerEventResponseWsError()
+	case "response.steer.accepted":
+		return u.AsResponseSteerAcceptedEvent()
+	case "response.steer.pending":
+		return u.AsResponseSteerPendingEvent()
+	case "response.steer.failed":
+		return u.AsResponseSteerFailedEvent()
+	}
+	return nil
+}
+
+func (u ResponsesServerEventUnion) AsResponseAudioDelta() (v ResponsesServerEventResponseAudioWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseAudioDone() (v ResponsesServerEventResponseAudioWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseAudioTranscriptDelta() (v ResponsesServerEventResponseAudioTranscriptWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseAudioTranscriptDone() (v ResponsesServerEventResponseAudioTranscriptWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseCodeInterpreterCallCodeDelta() (v ResponsesServerEventResponseCodeInterpreterCallCodeWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseCodeInterpreterCallCodeDone() (v ResponsesServerEventResponseCodeInterpreterCallCodeWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseCodeInterpreterCallCompleted() (v ResponsesServerEventResponseCodeInterpreterCallWsCompleted) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseCodeInterpreterCallInProgress() (v ResponsesServerEventResponseCodeInterpreterCallInWsProgress) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseCodeInterpreterCallInterpreting() (v ResponsesServerEventResponseCodeInterpreterCallWsInterpreting) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseCompactionCompacting() (v ResponsesServerEventResponseCompactionWsCompacting) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseCompleted() (v ResponsesServerEventResponseWsCompleted) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseContentPartAdded() (v ResponsesServerEventResponseContentPartWsAdded) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseContentPartDone() (v ResponsesServerEventResponseContentPartWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseCreated() (v ResponsesServerEventResponseWsCreated) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseFileSearchCallCompleted() (v ResponsesServerEventResponseFileSearchCallWsCompleted) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseFileSearchCallInProgress() (v ResponsesServerEventResponseFileSearchCallInWsProgress) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseFileSearchCallSearching() (v ResponsesServerEventResponseFileSearchCallWsSearching) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseFunctionCallArgumentsDelta() (v ResponsesServerEventResponseFunctionCallArgumentsWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseFunctionCallArgumentsDone() (v ResponsesServerEventResponseFunctionCallArgumentsWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseShellCallCommandAdded() (v ResponsesServerEventResponseShellCallCommandWsAdded) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseShellCallCommandDelta() (v ResponsesServerEventResponseShellCallCommandWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseShellCallCommandDone() (v ResponsesServerEventResponseShellCallCommandWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseShellCallOutputContentDelta() (v ResponsesServerEventResponseShellCallOutputContentWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseShellCallOutputContentDone() (v ResponsesServerEventResponseShellCallOutputContentWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseInProgress() (v ResponsesServerEventResponseInWsProgress) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseFailed() (v ResponsesServerEventResponseWsFailed) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseIncomplete() (v ResponsesServerEventResponseWsIncomplete) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseOutputItemAdded() (v ResponsesServerEventResponseOutputItemWsAdded) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseOutputItemDone() (v ResponsesServerEventResponseOutputItemWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseReasoningSummaryPartAdded() (v ResponsesServerEventResponseReasoningSummaryPartWsAdded) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseReasoningSummaryPartDone() (v ResponsesServerEventResponseReasoningSummaryPartWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseReasoningSummaryTextDelta() (v ResponsesServerEventResponseReasoningSummaryTextWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseReasoningSummaryTextDone() (v ResponsesServerEventResponseReasoningSummaryTextWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseReasoningTextDelta() (v ResponsesServerEventResponseReasoningTextWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseReasoningTextDone() (v ResponsesServerEventResponseReasoningTextWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseRefusalDelta() (v ResponsesServerEventResponseRefusalWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseRefusalDone() (v ResponsesServerEventResponseRefusalWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseOutputTextDelta() (v ResponsesServerEventResponseTextWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseOutputTextDone() (v ResponsesServerEventResponseTextWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseWebSearchCallCompleted() (v ResponsesServerEventResponseWebSearchCallWsCompleted) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseWebSearchCallInProgress() (v ResponsesServerEventResponseWebSearchCallInWsProgress) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseWebSearchCallSearching() (v ResponsesServerEventResponseWebSearchCallWsSearching) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseImageGenerationCallCompleted() (v ResponsesServerEventResponseImageGenCallWsCompleted) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseImageGenerationCallGenerating() (v ResponsesServerEventResponseImageGenCallWsGenerating) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseImageGenerationCallInProgress() (v ResponsesServerEventResponseImageGenCallInWsProgress) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseImageGenerationCallPartialImage() (v ResponsesServerEventResponseImageGenCallPartialWsImage) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseMcpCallArgumentsDelta() (v ResponsesServerEventResponseMcpCallArgumentsWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseMcpCallArgumentsDone() (v ResponsesServerEventResponseMcpCallArgumentsWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseMcpCallCompleted() (v ResponsesServerEventResponseMcpCallWsCompleted) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseMcpCallFailed() (v ResponsesServerEventResponseMcpCallWsFailed) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseMcpCallInProgress() (v ResponsesServerEventResponseMcpCallInWsProgress) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseMcpListToolsCompleted() (v ResponsesServerEventResponseMcpListToolsWsCompleted) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseMcpListToolsFailed() (v ResponsesServerEventResponseMcpListToolsWsFailed) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseMcpListToolsInProgress() (v ResponsesServerEventResponseMcpListToolsInWsProgress) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseOutputTextAnnotationAdded() (v ResponsesServerEventResponseOutputTextAnnotationWsAdded) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseQueued() (v ResponsesServerEventResponseWsQueued) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseCustomToolCallInputDelta() (v ResponsesServerEventResponseCustomToolCallInputWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseCustomToolCallInputDone() (v ResponsesServerEventResponseCustomToolCallInputWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponsesServerEventResponseWsError() (v ResponsesServerEventResponseWsError) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseSteerAcceptedEvent() (v ResponseSteerAcceptedEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseSteerPendingEvent() (v ResponseSteerPendingEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesServerEventUnion) AsResponseSteerFailedEvent() (v ResponseSteerFailedEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponsesServerEventUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ResponsesServerEventUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// unmarshalWebsocketEvent decodes only the event selected by its type. Public
+// UnmarshalJSON keeps the existing general-purpose union decoding behavior.
+func (r *ResponsesServerEventUnion) unmarshalWebsocketEvent(data []byte) error {
+	var envelope struct {
+		Type json.RawMessage `json:"type"`
+	}
+	if err := json.Unmarshal(data, &envelope); err != nil {
+		return err
+	}
+	var eventType string
+	if err := json.Unmarshal(envelope.Type, &eventType); err != nil {
+		return err
+	}
+	*r = ResponsesServerEventUnion{Type: eventType}
+	r.JSON.raw = string(data)
+	r.JSON.Type = respjson.NewField(string(envelope.Type))
+	switch eventType {
+	case "response.audio.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseAudioWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseAudioWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.audio.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseAudioWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseAudioWsDone = respjson.NewField(r.JSON.raw)
+	case "response.audio.transcript.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseAudioTranscriptWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseAudioTranscriptWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.audio.transcript.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseAudioTranscriptWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseAudioTranscriptWsDone = respjson.NewField(r.JSON.raw)
+	case "response.code_interpreter_call_code.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseCodeInterpreterCallCodeWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseCodeInterpreterCallCodeWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.code_interpreter_call_code.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseCodeInterpreterCallCodeWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseCodeInterpreterCallCodeWsDone = respjson.NewField(r.JSON.raw)
+	case "response.code_interpreter_call.completed":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseCodeInterpreterCallWsCompleted); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseCodeInterpreterCallWsCompleted = respjson.NewField(r.JSON.raw)
+	case "response.code_interpreter_call.in_progress":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseCodeInterpreterCallInWsProgress); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseCodeInterpreterCallInWsProgress = respjson.NewField(r.JSON.raw)
+	case "response.code_interpreter_call.interpreting":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseCodeInterpreterCallWsInterpreting); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseCodeInterpreterCallWsInterpreting = respjson.NewField(r.JSON.raw)
+	case "response.compaction.compacting":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseCompactionWsCompacting); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseCompactionWsCompacting = respjson.NewField(r.JSON.raw)
+	case "response.completed":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseWsCompleted); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseWsCompleted = respjson.NewField(r.JSON.raw)
+	case "response.content_part.added":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseContentPartWsAdded); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseContentPartWsAdded = respjson.NewField(r.JSON.raw)
+	case "response.content_part.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseContentPartWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseContentPartWsDone = respjson.NewField(r.JSON.raw)
+	case "response.created":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseWsCreated); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseWsCreated = respjson.NewField(r.JSON.raw)
+	case "response.file_search_call.completed":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseFileSearchCallWsCompleted); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseFileSearchCallWsCompleted = respjson.NewField(r.JSON.raw)
+	case "response.file_search_call.in_progress":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseFileSearchCallInWsProgress); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseFileSearchCallInWsProgress = respjson.NewField(r.JSON.raw)
+	case "response.file_search_call.searching":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseFileSearchCallWsSearching); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseFileSearchCallWsSearching = respjson.NewField(r.JSON.raw)
+	case "response.function_call_arguments.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseFunctionCallArgumentsWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseFunctionCallArgumentsWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.function_call_arguments.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseFunctionCallArgumentsWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseFunctionCallArgumentsWsDone = respjson.NewField(r.JSON.raw)
+	case "response.shell_call_command.added":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseShellCallCommandWsAdded); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseShellCallCommandWsAdded = respjson.NewField(r.JSON.raw)
+	case "response.shell_call_command.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseShellCallCommandWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseShellCallCommandWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.shell_call_command.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseShellCallCommandWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseShellCallCommandWsDone = respjson.NewField(r.JSON.raw)
+	case "response.shell_call_output_content.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseShellCallOutputContentWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseShellCallOutputContentWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.shell_call_output_content.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseShellCallOutputContentWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseShellCallOutputContentWsDone = respjson.NewField(r.JSON.raw)
+	case "response.in_progress":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseInWsProgress); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseInWsProgress = respjson.NewField(r.JSON.raw)
+	case "response.failed":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseWsFailed); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseWsFailed = respjson.NewField(r.JSON.raw)
+	case "response.incomplete":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseWsIncomplete); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseWsIncomplete = respjson.NewField(r.JSON.raw)
+	case "response.output_item.added":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseOutputItemWsAdded); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseOutputItemWsAdded = respjson.NewField(r.JSON.raw)
+	case "response.output_item.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseOutputItemWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseOutputItemWsDone = respjson.NewField(r.JSON.raw)
+	case "response.reasoning_summary_part.added":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseReasoningSummaryPartWsAdded); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseReasoningSummaryPartWsAdded = respjson.NewField(r.JSON.raw)
+	case "response.reasoning_summary_part.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseReasoningSummaryPartWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseReasoningSummaryPartWsDone = respjson.NewField(r.JSON.raw)
+	case "response.reasoning_summary_text.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseReasoningSummaryTextWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseReasoningSummaryTextWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.reasoning_summary_text.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseReasoningSummaryTextWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseReasoningSummaryTextWsDone = respjson.NewField(r.JSON.raw)
+	case "response.reasoning_text.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseReasoningTextWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseReasoningTextWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.reasoning_text.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseReasoningTextWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseReasoningTextWsDone = respjson.NewField(r.JSON.raw)
+	case "response.refusal.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseRefusalWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseRefusalWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.refusal.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseRefusalWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseRefusalWsDone = respjson.NewField(r.JSON.raw)
+	case "response.output_text.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseTextWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseTextWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.output_text.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseTextWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseTextWsDone = respjson.NewField(r.JSON.raw)
+	case "response.web_search_call.completed":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseWebSearchCallWsCompleted); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseWebSearchCallWsCompleted = respjson.NewField(r.JSON.raw)
+	case "response.web_search_call.in_progress":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseWebSearchCallInWsProgress); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseWebSearchCallInWsProgress = respjson.NewField(r.JSON.raw)
+	case "response.web_search_call.searching":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseWebSearchCallWsSearching); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseWebSearchCallWsSearching = respjson.NewField(r.JSON.raw)
+	case "response.image_generation_call.completed":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseImageGenCallWsCompleted); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseImageGenCallWsCompleted = respjson.NewField(r.JSON.raw)
+	case "response.image_generation_call.generating":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseImageGenCallWsGenerating); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseImageGenCallWsGenerating = respjson.NewField(r.JSON.raw)
+	case "response.image_generation_call.in_progress":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseImageGenCallInWsProgress); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseImageGenCallInWsProgress = respjson.NewField(r.JSON.raw)
+	case "response.image_generation_call.partial_image":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseImageGenCallPartialWsImage); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseImageGenCallPartialWsImage = respjson.NewField(r.JSON.raw)
+	case "response.mcp_call_arguments.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseMcpCallArgumentsWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseMcpCallArgumentsWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.mcp_call_arguments.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseMcpCallArgumentsWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseMcpCallArgumentsWsDone = respjson.NewField(r.JSON.raw)
+	case "response.mcp_call.completed":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseMcpCallWsCompleted); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseMcpCallWsCompleted = respjson.NewField(r.JSON.raw)
+	case "response.mcp_call.failed":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseMcpCallWsFailed); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseMcpCallWsFailed = respjson.NewField(r.JSON.raw)
+	case "response.mcp_call.in_progress":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseMcpCallInWsProgress); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseMcpCallInWsProgress = respjson.NewField(r.JSON.raw)
+	case "response.mcp_list_tools.completed":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseMcpListToolsWsCompleted); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseMcpListToolsWsCompleted = respjson.NewField(r.JSON.raw)
+	case "response.mcp_list_tools.failed":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseMcpListToolsWsFailed); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseMcpListToolsWsFailed = respjson.NewField(r.JSON.raw)
+	case "response.mcp_list_tools.in_progress":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseMcpListToolsInWsProgress); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseMcpListToolsInWsProgress = respjson.NewField(r.JSON.raw)
+	case "response.output_text.annotation.added":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseOutputTextAnnotationWsAdded); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseOutputTextAnnotationWsAdded = respjson.NewField(r.JSON.raw)
+	case "response.queued":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseWsQueued); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseWsQueued = respjson.NewField(r.JSON.raw)
+	case "response.custom_tool_call_input.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseCustomToolCallInputWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseCustomToolCallInputWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.custom_tool_call_input.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseCustomToolCallInputWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseCustomToolCallInputWsDone = respjson.NewField(r.JSON.raw)
+	case "error":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseWsError); err != nil {
+			return err
+		}
+		r.JSON.OfResponsesServerEventResponseWsError = respjson.NewField(r.JSON.raw)
+	case "response.steer.accepted":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponseSteerAcceptedEvent); err != nil {
+			return err
+		}
+		r.JSON.OfResponseSteerAcceptedEvent = respjson.NewField(r.JSON.raw)
+	case "response.steer.pending":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponseSteerPendingEvent); err != nil {
+			return err
+		}
+		r.JSON.OfResponseSteerPendingEvent = respjson.NewField(r.JSON.raw)
+	case "response.steer.failed":
+		if err := apijson.UnmarshalRoot(data, &r.OfResponseSteerFailedEvent); err != nil {
+			return err
+		}
+		r.JSON.OfResponseSteerFailedEvent = respjson.NewField(r.JSON.raw)
+	}
+	return nil
+}
+
+// Emitted when there is a partial audio response.
+type ResponsesServerEventResponseAudioWsDelta struct {
+	// A chunk of Base64 encoded response audio bytes.
+	Delta string `json:"delta" api:"required"`
+	// A sequence number for this chunk of the stream response.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.audio.delta`.
+	Type constant.ResponseAudioDelta `json:"type" default:"response.audio.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Delta          respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseAudioWsDelta) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseAudioWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the audio response is complete.
+type ResponsesServerEventResponseAudioWsDone struct {
+	// The sequence number of the delta.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.audio.done`.
+	Type constant.ResponseAudioDone `json:"type" default:"response.audio.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseAudioWsDone) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseAudioWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when there is a partial transcript of audio.
+type ResponsesServerEventResponseAudioTranscriptWsDelta struct {
+	// The partial transcript of the audio response.
+	Delta string `json:"delta" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.audio.transcript.delta`.
+	Type constant.ResponseAudioTranscriptDelta `json:"type" default:"response.audio.transcript.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Delta          respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseAudioTranscriptWsDelta) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseAudioTranscriptWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the full audio transcript is completed.
+type ResponsesServerEventResponseAudioTranscriptWsDone struct {
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.audio.transcript.done`.
+	Type constant.ResponseAudioTranscriptDone `json:"type" default:"response.audio.transcript.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseAudioTranscriptWsDone) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseAudioTranscriptWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a partial code snippet is streamed by the code interpreter.
+type ResponsesServerEventResponseCodeInterpreterCallCodeWsDelta struct {
+	// The partial code snippet being streamed by the code interpreter.
+	Delta string `json:"delta" api:"required"`
+	// The unique identifier of the code interpreter tool call item.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response for which the code is being
+	// streamed.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event, used to order streaming events.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.code_interpreter_call_code.delta`.
+	Type constant.ResponseCodeInterpreterCallCodeDelta `json:"type" default:"response.code_interpreter_call_code.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseCodeInterpreterCallCodeWsDelta) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesServerEventResponseCodeInterpreterCallCodeWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the code snippet is finalized by the code interpreter.
+type ResponsesServerEventResponseCodeInterpreterCallCodeWsDone struct {
+	// The final code snippet output by the code interpreter.
+	Code string `json:"code" api:"required"`
+	// The unique identifier of the code interpreter tool call item.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response for which the code is finalized.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event, used to order streaming events.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.code_interpreter_call_code.done`.
+	Type constant.ResponseCodeInterpreterCallCodeDone `json:"type" default:"response.code_interpreter_call_code.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code           respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseCodeInterpreterCallCodeWsDone) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesServerEventResponseCodeInterpreterCallCodeWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the code interpreter call is completed.
+type ResponsesServerEventResponseCodeInterpreterCallWsCompleted struct {
+	// The unique identifier of the code interpreter tool call item.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response for which the code interpreter call
+	// is completed.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event, used to order streaming events.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.code_interpreter_call.completed`.
+	Type constant.ResponseCodeInterpreterCallCompleted `json:"type" default:"response.code_interpreter_call.completed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseCodeInterpreterCallWsCompleted) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesServerEventResponseCodeInterpreterCallWsCompleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a code interpreter call is in progress.
+type ResponsesServerEventResponseCodeInterpreterCallInWsProgress struct {
+	// The unique identifier of the code interpreter tool call item.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response for which the code interpreter call
+	// is in progress.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event, used to order streaming events.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.code_interpreter_call.in_progress`.
+	Type constant.ResponseCodeInterpreterCallInProgress `json:"type" default:"response.code_interpreter_call.in_progress"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseCodeInterpreterCallInWsProgress) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesServerEventResponseCodeInterpreterCallInWsProgress) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the code interpreter is actively interpreting the code snippet.
+type ResponsesServerEventResponseCodeInterpreterCallWsInterpreting struct {
+	// The unique identifier of the code interpreter tool call item.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response for which the code interpreter is
+	// interpreting code.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event, used to order streaming events.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.code_interpreter_call.interpreting`.
+	Type constant.ResponseCodeInterpreterCallInterpreting `json:"type" default:"response.code_interpreter_call.interpreting"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseCodeInterpreterCallWsInterpreting) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesServerEventResponseCodeInterpreterCallWsInterpreting) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when new summary content is sampled for a compaction trigger. Contains
+// no summary content.
+type ResponsesServerEventResponseCompactionWsCompacting struct {
+	// The ID of the compaction output item.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the compaction output item.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the event that was emitted.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event, always `response.compaction.compacting`.
+	Type constant.ResponseCompactionCompacting `json:"type" default:"response.compaction.compacting"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseCompactionWsCompacting) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseCompactionWsCompacting) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the model response is complete.
+type ResponsesServerEventResponseWsCompleted struct {
+	// Properties of the completed response.
+	Response Response `json:"response" api:"required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.completed`.
+	Type constant.ResponseCompleted `json:"type" default:"response.completed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Response       respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseWsCompleted) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseWsCompleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a new content part is added.
+type ResponsesServerEventResponseContentPartWsAdded struct {
+	// The index of the content part that was added.
+	ContentIndex int64 `json:"content_index" api:"required"`
+	// The ID of the output item that the content part was added to.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the content part was added to.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The content part that was added.
+	Part ResponseContentPartAddedEventPartUnion `json:"part" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.content_part.added`.
+	Type constant.ResponseContentPartAdded `json:"type" default:"response.content_part.added"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ContentIndex   respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		Part           respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseContentPartWsAdded) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseContentPartWsAdded) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a content part is done.
+type ResponsesServerEventResponseContentPartWsDone struct {
+	// The index of the content part that is done.
+	ContentIndex int64 `json:"content_index" api:"required"`
+	// The ID of the output item that the content part was added to.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the content part was added to.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The content part that is done.
+	Part ResponseContentPartDoneEventPartUnion `json:"part" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.content_part.done`.
+	Type constant.ResponseContentPartDone `json:"type" default:"response.content_part.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ContentIndex   respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		Part           respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseContentPartWsDone) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseContentPartWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An event that is emitted when a response is created.
+type ResponsesServerEventResponseWsCreated struct {
+	// The response that was created.
+	Response Response `json:"response" api:"required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.created`.
+	Type constant.ResponseCreated `json:"type" default:"response.created"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Response       respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseWsCreated) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseWsCreated) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a file search call is completed (results found).
+type ResponsesServerEventResponseFileSearchCallWsCompleted struct {
+	// The ID of the output item that the file search call is initiated.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the file search call is initiated.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.file_search_call.completed`.
+	Type constant.ResponseFileSearchCallCompleted `json:"type" default:"response.file_search_call.completed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseFileSearchCallWsCompleted) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseFileSearchCallWsCompleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a file search call is initiated.
+type ResponsesServerEventResponseFileSearchCallInWsProgress struct {
+	// The ID of the output item that the file search call is initiated.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the file search call is initiated.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.file_search_call.in_progress`.
+	Type constant.ResponseFileSearchCallInProgress `json:"type" default:"response.file_search_call.in_progress"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseFileSearchCallInWsProgress) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseFileSearchCallInWsProgress) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a file search is currently searching.
+type ResponsesServerEventResponseFileSearchCallWsSearching struct {
+	// The ID of the output item that the file search call is initiated.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the file search call is searching.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.file_search_call.searching`.
+	Type constant.ResponseFileSearchCallSearching `json:"type" default:"response.file_search_call.searching"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseFileSearchCallWsSearching) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseFileSearchCallWsSearching) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when there is a partial function-call arguments delta.
+type ResponsesServerEventResponseFunctionCallArgumentsWsDelta struct {
+	// The function-call arguments delta that is added.
+	Delta string `json:"delta" api:"required"`
+	// The ID of the output item that the function-call arguments delta is added to.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the function-call arguments delta is added to.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.function_call_arguments.delta`.
+	Type constant.ResponseFunctionCallArgumentsDelta `json:"type" default:"response.function_call_arguments.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseFunctionCallArgumentsWsDelta) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseFunctionCallArgumentsWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when function-call arguments are finalized.
+type ResponsesServerEventResponseFunctionCallArgumentsWsDone struct {
+	// The function-call arguments.
+	Arguments string `json:"arguments" api:"required"`
+	// The ID of the item.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string                                     `json:"stream_id"`
+	Type     constant.ResponseFunctionCallArgumentsDone `json:"type" default:"response.function_call_arguments.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Arguments      respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseFunctionCallArgumentsWsDone) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseFunctionCallArgumentsWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A streaming event that indicated a shell command was added to a tool call.
+type ResponsesServerEventResponseShellCallCommandWsAdded struct {
+	// The shell command that was added.
+	Command string `json:"command" api:"required"`
+	// The index of the shell command that was added.
+	CommandIndex int64 `json:"command_index" api:"required"`
+	// The index of the output item that was updated.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the event that was emitted.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event, always `response.shell_call_command.added`.
+	Type constant.ResponseShellCallCommandAdded `json:"type" default:"response.shell_call_command.added"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Command        respjson.Field
+		CommandIndex   respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseShellCallCommandWsAdded) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseShellCallCommandWsAdded) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A streaming event that indicated a shell command was incrementally updated.
+type ResponsesServerEventResponseShellCallCommandWsDelta struct {
+	// The index of the shell command that was updated.
+	CommandIndex int64 `json:"command_index" api:"required"`
+	// The shell command delta that was appended.
+	Delta string `json:"delta" api:"required"`
+	// An obfuscation string that was added to pad the event payload.
+	Obfuscation string `json:"obfuscation"`
+	// The index of the output item that was updated.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the event that was emitted.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event, always `response.shell_call_command.delta`.
+	Type constant.ResponseShellCallCommandDelta `json:"type" default:"response.shell_call_command.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CommandIndex   respjson.Field
+		Delta          respjson.Field
+		Obfuscation    respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseShellCallCommandWsDelta) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseShellCallCommandWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A streaming event that indicated a shell command was completed.
+type ResponsesServerEventResponseShellCallCommandWsDone struct {
+	// The final shell command that was emitted.
+	Command string `json:"command" api:"required"`
+	// The index of the shell command that was completed.
+	CommandIndex int64 `json:"command_index" api:"required"`
+	// The index of the output item that was updated.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the event that was emitted.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event, always `response.shell_call_command.done`.
+	Type constant.ResponseShellCallCommandDone `json:"type" default:"response.shell_call_command.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Command        respjson.Field
+		CommandIndex   respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseShellCallCommandWsDone) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseShellCallCommandWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A streaming event that indicated shell call output was incrementally added.
+type ResponsesServerEventResponseShellCallOutputContentWsDelta struct {
+	// The index of the shell command that produced output.
+	CommandIndex int64 `json:"command_index" api:"required"`
+	// The stdout/stderr delta that was emitted.
+	Delta ResponseShellCallOutputContentDeltaEventDelta `json:"delta" api:"required"`
+	// The ID of the output item that was updated.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that was updated.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the event that was emitted.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event, always `response.shell_call_output_content.delta`.
+	Type constant.ResponseShellCallOutputContentDelta `json:"type" default:"response.shell_call_output_content.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CommandIndex   respjson.Field
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseShellCallOutputContentWsDelta) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesServerEventResponseShellCallOutputContentWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A streaming event that indicated shell call output was completed.
+type ResponsesServerEventResponseShellCallOutputContentWsDone struct {
+	// The index of the shell command that produced output.
+	CommandIndex int64 `json:"command_index" api:"required"`
+	// The ID of the output item that was updated.
+	ItemID string `json:"item_id" api:"required"`
+	// The output contents emitted for the shell command.
+	Output []ResponseShellCallOutputContentDoneEventOutput `json:"output" api:"required"`
+	// The index of the output item that was updated.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the event that was emitted.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event, always `response.shell_call_output_content.done`.
+	Type constant.ResponseShellCallOutputContentDone `json:"type" default:"response.shell_call_output_content.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CommandIndex   respjson.Field
+		ItemID         respjson.Field
+		Output         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseShellCallOutputContentWsDone) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseShellCallOutputContentWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the response is in progress.
+type ResponsesServerEventResponseInWsProgress struct {
+	// The response that is in progress.
+	Response Response `json:"response" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.in_progress`.
+	Type constant.ResponseInProgress `json:"type" default:"response.in_progress"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Response       respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseInWsProgress) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseInWsProgress) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An event that is emitted when a response fails.
+type ResponsesServerEventResponseWsFailed struct {
+	// The response that failed.
+	Response Response `json:"response" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.failed`.
+	Type constant.ResponseFailed `json:"type" default:"response.failed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Response       respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseWsFailed) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseWsFailed) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An event that is emitted when a response finishes as incomplete.
+//
+// Over WebSocket, steering can finish a response with
+// `response.incomplete_details.reason` set to `steered`, followed automatically by
+// a successor `response.created` that commits the queued steering input.
+type ResponsesServerEventResponseWsIncomplete struct {
+	// The response that was incomplete.
+	Response Response `json:"response" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.incomplete`.
+	Type constant.ResponseIncomplete `json:"type" default:"response.incomplete"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Response       respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseWsIncomplete) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseWsIncomplete) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a new output item is added.
+type ResponsesServerEventResponseOutputItemWsAdded struct {
+	// The output item that was added. For reasoning items, `encrypted_content` may be
+	// incomplete while the item is in progress. Use the reasoning item from the
+	// corresponding `response.output_item.done` event when passing it as input to a
+	// subsequent request.
+	Item ResponseOutputItemUnion `json:"item" api:"required"`
+	// The index of the output item that was added.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.output_item.added`.
+	Type constant.ResponseOutputItemAdded `json:"type" default:"response.output_item.added"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Item           respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseOutputItemWsAdded) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseOutputItemWsAdded) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when an output item is marked done.
+type ResponsesServerEventResponseOutputItemWsDone struct {
+	// The output item that was marked done.
+	Item ResponseOutputItemUnion `json:"item" api:"required"`
+	// The index of the output item that was marked done.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.output_item.done`.
+	Type constant.ResponseOutputItemDone `json:"type" default:"response.output_item.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Item           respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseOutputItemWsDone) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseOutputItemWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a new reasoning summary part is added.
+type ResponsesServerEventResponseReasoningSummaryPartWsAdded struct {
+	// The ID of the item this summary part is associated with.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item this summary part is associated with.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The summary part that was added.
+	Part ResponseReasoningSummaryPartAddedEventPart `json:"part" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The index of the summary part within the reasoning summary.
+	SummaryIndex int64 `json:"summary_index" api:"required"`
+	// The type of the event. Always `response.reasoning_summary_part.added`.
+	Type constant.ResponseReasoningSummaryPartAdded `json:"type" default:"response.reasoning_summary_part.added"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		Part           respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		SummaryIndex   respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseReasoningSummaryPartWsAdded) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseReasoningSummaryPartWsAdded) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a reasoning summary part is completed.
+type ResponsesServerEventResponseReasoningSummaryPartWsDone struct {
+	// The ID of the item this summary part is associated with.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item this summary part is associated with.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The completed summary part.
+	Part ResponseReasoningSummaryPartDoneEventPart `json:"part" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The completion status of the summary part. Omitted when the part completed
+	// normally and set to `incomplete` when generation was interrupted.
+	//
+	// Any of "incomplete".
+	Status ResponseReasoningSummaryPartDoneEventStatus `json:"status"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The index of the summary part within the reasoning summary.
+	SummaryIndex int64 `json:"summary_index" api:"required"`
+	// The type of the event. Always `response.reasoning_summary_part.done`.
+	Type constant.ResponseReasoningSummaryPartDone `json:"type" default:"response.reasoning_summary_part.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		Part           respjson.Field
+		SequenceNumber respjson.Field
+		Status         respjson.Field
+		StreamID       respjson.Field
+		SummaryIndex   respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseReasoningSummaryPartWsDone) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseReasoningSummaryPartWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a delta is added to a reasoning summary text.
+type ResponsesServerEventResponseReasoningSummaryTextWsDelta struct {
+	// The text delta that was added to the summary.
+	Delta string `json:"delta" api:"required"`
+	// The ID of the item this summary text delta is associated with.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item this summary text delta is associated with.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The index of the summary part within the reasoning summary.
+	SummaryIndex int64 `json:"summary_index" api:"required"`
+	// The type of the event. Always `response.reasoning_summary_text.delta`.
+	Type constant.ResponseReasoningSummaryTextDelta `json:"type" default:"response.reasoning_summary_text.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		SummaryIndex   respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseReasoningSummaryTextWsDelta) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseReasoningSummaryTextWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a reasoning summary text is completed.
+type ResponsesServerEventResponseReasoningSummaryTextWsDone struct {
+	// The ID of the item this summary text is associated with.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item this summary text is associated with.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The index of the summary part within the reasoning summary.
+	SummaryIndex int64 `json:"summary_index" api:"required"`
+	// The full text of the completed reasoning summary.
+	Text string `json:"text" api:"required"`
+	// The type of the event. Always `response.reasoning_summary_text.done`.
+	Type constant.ResponseReasoningSummaryTextDone `json:"type" default:"response.reasoning_summary_text.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		SummaryIndex   respjson.Field
+		Text           respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseReasoningSummaryTextWsDone) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseReasoningSummaryTextWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a delta is added to a reasoning text.
+type ResponsesServerEventResponseReasoningTextWsDelta struct {
+	// The index of the reasoning content part this delta is associated with.
+	ContentIndex int64 `json:"content_index" api:"required"`
+	// The text delta that was added to the reasoning content.
+	Delta string `json:"delta" api:"required"`
+	// The ID of the item this reasoning text delta is associated with.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item this reasoning text delta is associated with.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.reasoning_text.delta`.
+	Type constant.ResponseReasoningTextDelta `json:"type" default:"response.reasoning_text.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ContentIndex   respjson.Field
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseReasoningTextWsDelta) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseReasoningTextWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a reasoning text is completed.
+type ResponsesServerEventResponseReasoningTextWsDone struct {
+	// The index of the reasoning content part.
+	ContentIndex int64 `json:"content_index" api:"required"`
+	// The ID of the item this reasoning text is associated with.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item this reasoning text is associated with.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The full text of the completed reasoning content.
+	Text string `json:"text" api:"required"`
+	// The type of the event. Always `response.reasoning_text.done`.
+	Type constant.ResponseReasoningTextDone `json:"type" default:"response.reasoning_text.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ContentIndex   respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Text           respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseReasoningTextWsDone) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseReasoningTextWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when there is a partial refusal text.
+type ResponsesServerEventResponseRefusalWsDelta struct {
+	// The index of the content part that the refusal text is added to.
+	ContentIndex int64 `json:"content_index" api:"required"`
+	// The refusal text that is added.
+	Delta string `json:"delta" api:"required"`
+	// The ID of the output item that the refusal text is added to.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the refusal text is added to.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.refusal.delta`.
+	Type constant.ResponseRefusalDelta `json:"type" default:"response.refusal.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ContentIndex   respjson.Field
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseRefusalWsDelta) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseRefusalWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when refusal text is finalized.
+type ResponsesServerEventResponseRefusalWsDone struct {
+	// The index of the content part that the refusal text is finalized.
+	ContentIndex int64 `json:"content_index" api:"required"`
+	// The ID of the output item that the refusal text is finalized.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the refusal text is finalized.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The refusal text that is finalized.
+	Refusal string `json:"refusal" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.refusal.done`.
+	Type constant.ResponseRefusalDone `json:"type" default:"response.refusal.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ContentIndex   respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		Refusal        respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseRefusalWsDone) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseRefusalWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when there is an additional text delta.
+type ResponsesServerEventResponseTextWsDelta struct {
+	// The index of the content part that the text delta was added to.
+	ContentIndex int64 `json:"content_index" api:"required"`
+	// The text delta that was added.
+	Delta string `json:"delta" api:"required"`
+	// The ID of the output item that the text delta was added to.
+	ItemID string `json:"item_id" api:"required"`
+	// The log probabilities of the tokens in the delta.
+	Logprobs []ResponseTextDeltaEventLogprob `json:"logprobs" api:"required"`
+	// The index of the output item that the text delta was added to.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.output_text.delta`.
+	Type constant.ResponseOutputTextDelta `json:"type" default:"response.output_text.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ContentIndex   respjson.Field
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		Logprobs       respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseTextWsDelta) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseTextWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when text content is finalized.
+type ResponsesServerEventResponseTextWsDone struct {
+	// The index of the content part that the text content is finalized.
+	ContentIndex int64 `json:"content_index" api:"required"`
+	// The ID of the output item that the text content is finalized.
+	ItemID string `json:"item_id" api:"required"`
+	// The log probabilities of the tokens in the delta.
+	Logprobs []ResponseTextDoneEventLogprob `json:"logprobs" api:"required"`
+	// The index of the output item that the text content is finalized.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The text content that is finalized.
+	Text string `json:"text" api:"required"`
+	// The type of the event. Always `response.output_text.done`.
+	Type constant.ResponseOutputTextDone `json:"type" default:"response.output_text.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ContentIndex   respjson.Field
+		ItemID         respjson.Field
+		Logprobs       respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Text           respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseTextWsDone) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseTextWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a web search call is completed.
+type ResponsesServerEventResponseWebSearchCallWsCompleted struct {
+	// Unique ID for the output item associated with the web search call.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the web search call is associated with.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the web search call being processed.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.web_search_call.completed`.
+	Type constant.ResponseWebSearchCallCompleted `json:"type" default:"response.web_search_call.completed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseWebSearchCallWsCompleted) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseWebSearchCallWsCompleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a web search call is initiated.
+type ResponsesServerEventResponseWebSearchCallInWsProgress struct {
+	// Unique ID for the output item associated with the web search call.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the web search call is associated with.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the web search call being processed.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.web_search_call.in_progress`.
+	Type constant.ResponseWebSearchCallInProgress `json:"type" default:"response.web_search_call.in_progress"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseWebSearchCallInWsProgress) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseWebSearchCallInWsProgress) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a web search call is executing.
+type ResponsesServerEventResponseWebSearchCallWsSearching struct {
+	// Unique ID for the output item associated with the web search call.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the web search call is associated with.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the web search call being processed.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.web_search_call.searching`.
+	Type constant.ResponseWebSearchCallSearching `json:"type" default:"response.web_search_call.searching"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseWebSearchCallWsSearching) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseWebSearchCallWsSearching) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when an image generation tool call has completed and the final image is
+// available.
+type ResponsesServerEventResponseImageGenCallWsCompleted struct {
+	// The unique identifier of the image generation item being processed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response's output array.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.image_generation_call.completed'.
+	Type constant.ResponseImageGenerationCallCompleted `json:"type" default:"response.image_generation_call.completed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseImageGenCallWsCompleted) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseImageGenCallWsCompleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when an image generation tool call is actively generating an image
+// (intermediate state).
+type ResponsesServerEventResponseImageGenCallWsGenerating struct {
+	// The unique identifier of the image generation item being processed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response's output array.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the image generation item being processed.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.image_generation_call.generating'.
+	Type constant.ResponseImageGenerationCallGenerating `json:"type" default:"response.image_generation_call.generating"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseImageGenCallWsGenerating) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseImageGenCallWsGenerating) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when an image generation tool call is in progress.
+type ResponsesServerEventResponseImageGenCallInWsProgress struct {
+	// The unique identifier of the image generation item being processed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response's output array.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the image generation item being processed.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.image_generation_call.in_progress'.
+	Type constant.ResponseImageGenerationCallInProgress `json:"type" default:"response.image_generation_call.in_progress"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseImageGenCallInWsProgress) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseImageGenCallInWsProgress) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a partial image is available during image generation streaming.
+type ResponsesServerEventResponseImageGenCallPartialWsImage struct {
+	// The background setting that was used.
+	Background string `json:"background"`
+	// The unique identifier of the image generation item being processed.
+	ItemID string `json:"item_id" api:"required"`
+	// The output format that was used.
+	OutputFormat string `json:"output_format"`
+	// The index of the output item in the response's output array.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// Base64-encoded partial image data, suitable for rendering as an image.
+	PartialImageB64 string `json:"partial_image_b64" api:"required"`
+	// 0-based index for the partial image (backend is 1-based, but this is 0-based for
+	// the user).
+	PartialImageIndex int64 `json:"partial_image_index" api:"required"`
+	// The image quality that was used.
+	Quality string `json:"quality"`
+	// The sequence number of the image generation item being processed.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The image size that was used.
+	Size string `json:"size"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.image_generation_call.partial_image'.
+	Type constant.ResponseImageGenerationCallPartialImage `json:"type" default:"response.image_generation_call.partial_image"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Background        respjson.Field
+		ItemID            respjson.Field
+		OutputFormat      respjson.Field
+		OutputIndex       respjson.Field
+		PartialImageB64   respjson.Field
+		PartialImageIndex respjson.Field
+		Quality           respjson.Field
+		SequenceNumber    respjson.Field
+		Size              respjson.Field
+		StreamID          respjson.Field
+		Type              respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseImageGenCallPartialWsImage) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseImageGenCallPartialWsImage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when there is a delta (partial update) to the arguments of an MCP tool
+// call.
+type ResponsesServerEventResponseMcpCallArgumentsWsDelta struct {
+	// A JSON string containing the partial update to the arguments for the MCP tool
+	// call.
+	Delta string `json:"delta" api:"required"`
+	// The unique identifier of the MCP tool call item being processed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response's output array.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.mcp_call_arguments.delta'.
+	Type constant.ResponseMcpCallArgumentsDelta `json:"type" default:"response.mcp_call_arguments.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseMcpCallArgumentsWsDelta) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseMcpCallArgumentsWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the arguments for an MCP tool call are finalized.
+type ResponsesServerEventResponseMcpCallArgumentsWsDone struct {
+	// A JSON string containing the finalized arguments for the MCP tool call.
+	Arguments string `json:"arguments" api:"required"`
+	// The unique identifier of the MCP tool call item being processed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response's output array.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.mcp_call_arguments.done'.
+	Type constant.ResponseMcpCallArgumentsDone `json:"type" default:"response.mcp_call_arguments.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Arguments      respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseMcpCallArgumentsWsDone) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseMcpCallArgumentsWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when an MCP tool call has completed successfully.
+type ResponsesServerEventResponseMcpCallWsCompleted struct {
+	// The ID of the MCP tool call item that completed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that completed.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.mcp_call.completed'.
+	Type constant.ResponseMcpCallCompleted `json:"type" default:"response.mcp_call.completed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseMcpCallWsCompleted) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseMcpCallWsCompleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when an MCP tool call has failed.
+type ResponsesServerEventResponseMcpCallWsFailed struct {
+	// The ID of the MCP tool call item that failed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that failed.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.mcp_call.failed'.
+	Type constant.ResponseMcpCallFailed `json:"type" default:"response.mcp_call.failed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseMcpCallWsFailed) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseMcpCallWsFailed) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when an MCP tool call is in progress.
+type ResponsesServerEventResponseMcpCallInWsProgress struct {
+	// The unique identifier of the MCP tool call item being processed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response's output array.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.mcp_call.in_progress'.
+	Type constant.ResponseMcpCallInProgress `json:"type" default:"response.mcp_call.in_progress"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseMcpCallInWsProgress) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseMcpCallInWsProgress) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the list of available MCP tools has been successfully retrieved.
+type ResponsesServerEventResponseMcpListToolsWsCompleted struct {
+	// The ID of the MCP tool call item that produced this output.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that was processed.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.mcp_list_tools.completed'.
+	Type constant.ResponseMcpListToolsCompleted `json:"type" default:"response.mcp_list_tools.completed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseMcpListToolsWsCompleted) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseMcpListToolsWsCompleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the attempt to list available MCP tools has failed.
+type ResponsesServerEventResponseMcpListToolsWsFailed struct {
+	// The ID of the MCP tool call item that failed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that failed.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.mcp_list_tools.failed'.
+	Type constant.ResponseMcpListToolsFailed `json:"type" default:"response.mcp_list_tools.failed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseMcpListToolsWsFailed) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseMcpListToolsWsFailed) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the system is in the process of retrieving the list of available
+// MCP tools.
+type ResponsesServerEventResponseMcpListToolsInWsProgress struct {
+	// The ID of the MCP tool call item that is being processed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that is being processed.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.mcp_list_tools.in_progress'.
+	Type constant.ResponseMcpListToolsInProgress `json:"type" default:"response.mcp_list_tools.in_progress"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseMcpListToolsInWsProgress) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseMcpListToolsInWsProgress) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when an annotation is added to output text content.
+type ResponsesServerEventResponseOutputTextAnnotationWsAdded struct {
+	// An annotation that applies to a span of output text.
+	Annotation ResponseOutputTextAnnotationAddedEventAnnotationUnion `json:"annotation" api:"required"`
+	// The index of the annotation within the content part.
+	AnnotationIndex int64 `json:"annotation_index" api:"required"`
+	// The index of the content part within the output item.
+	ContentIndex int64 `json:"content_index" api:"required"`
+	// The unique identifier of the item to which the annotation is being added.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response's output array.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.output_text.annotation.added'.
+	Type constant.ResponseOutputTextAnnotationAdded `json:"type" default:"response.output_text.annotation.added"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Annotation      respjson.Field
+		AnnotationIndex respjson.Field
+		ContentIndex    respjson.Field
+		ItemID          respjson.Field
+		OutputIndex     respjson.Field
+		SequenceNumber  respjson.Field
+		StreamID        respjson.Field
+		Type            respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseOutputTextAnnotationWsAdded) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseOutputTextAnnotationWsAdded) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a response is queued and waiting to be processed.
+type ResponsesServerEventResponseWsQueued struct {
+	// The full response object that is queued.
+	Response Response `json:"response" api:"required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.queued'.
+	Type constant.ResponseQueued `json:"type" default:"response.queued"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Response       respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseWsQueued) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseWsQueued) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Event representing a delta (partial update) to the input of a custom tool call.
+type ResponsesServerEventResponseCustomToolCallInputWsDelta struct {
+	// The incremental input data (delta) for the custom tool call.
+	Delta string `json:"delta" api:"required"`
+	// Unique identifier for the API item associated with this event.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output this delta applies to.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The event type identifier.
+	Type constant.ResponseCustomToolCallInputDelta `json:"type" default:"response.custom_tool_call_input.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseCustomToolCallInputWsDelta) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseCustomToolCallInputWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Event indicating that input for a custom tool call is complete.
+type ResponsesServerEventResponseCustomToolCallInputWsDone struct {
+	// The complete input data for the custom tool call.
+	Input string `json:"input" api:"required"`
+	// Unique identifier for the API item associated with this event.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output this event applies to.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The event type identifier.
+	Type constant.ResponseCustomToolCallInputDone `json:"type" default:"response.custom_tool_call_input.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Input          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseCustomToolCallInputWsDone) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseCustomToolCallInputWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when an error occurs while processing a Responses WebSocket request.
+type ResponsesServerEventResponseWsError struct {
+	// Details about the error.
+	Error ResponsesServerEventResponseWsErrorError `json:"error" api:"required"`
+	// The sequence number of an error emitted by the response stream.
+	SequenceNumber int64 `json:"sequence_number"`
+	// The HTTP status code associated with a WebSocket protocol error.
+	Status int64 `json:"status"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `error`.
+	Type constant.Error `json:"type" default:"error"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Error          respjson.Field
+		SequenceNumber respjson.Field
+		Status         respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseWsError) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseWsError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Details about the error.
+type ResponsesServerEventResponseWsErrorError struct {
+	// The error code that was emitted, if any.
+	Code string `json:"code" api:"required"`
+	// The human-readable error message that was emitted.
+	Message string `json:"message" api:"required"`
+	// The parameter name that was associated with the error, if any.
+	Param string `json:"param" api:"required"`
+	// The error type that was emitted.
+	Type string `json:"type" api:"required"`
+	// The response headers that were emitted with the error, if any.
+	Headers      map[string]string                                    `json:"headers"`
+	Misalignment ResponsesServerEventResponseWsErrorErrorMisalignment `json:"misalignment"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code         respjson.Field
+		Message      respjson.Field
+		Param        respjson.Field
+		Type         respjson.Field
+		Headers      respjson.Field
+		Misalignment respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseWsErrorError) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseWsErrorError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesServerEventResponseWsErrorErrorMisalignment struct {
+	// The public explanation for this block.
+	DetailedExplanation string `json:"detailed_explanation"`
+	// An optional classification; clients must accept additional values.
+	ErrorType string `json:"error_type"`
+	// An optional public continuation instruction.
+	Steer ResponsesServerEventResponseWsErrorErrorMisalignmentSteer `json:"steer"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		DetailedExplanation respjson.Field
+		ErrorType           respjson.Field
+		Steer               respjson.Field
+		ExtraFields         map[string]respjson.Field
+		raw                 string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseWsErrorErrorMisalignment) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesServerEventResponseWsErrorErrorMisalignment) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An optional public continuation instruction.
+type ResponsesServerEventResponseWsErrorErrorMisalignmentSteer struct {
+	// The public continuation instruction.
+	Message string `json:"message" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesServerEventResponseWsErrorErrorMisalignmentSteer) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesServerEventResponseWsErrorErrorMisalignmentSteer) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
