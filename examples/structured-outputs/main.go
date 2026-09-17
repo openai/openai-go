@@ -29,14 +29,29 @@ type Origin struct {
 }
 
 func GenerateSchema[T any]() (map[string]any, error) {
-	// Structured Outputs uses a subset of JSON schema
-	// These flags are necessary to comply with the subset
+	// Structured Outputs requires object schemas to disallow additional
+	// properties. Keep definitions referenced so recursive Go types terminate.
 	reflector := jsonschema.Reflector{
 		AllowAdditionalProperties: false,
-		DoNotReference:            true,
 	}
 	var v T
 	schema := reflector.Reflect(v)
+	if schema.Ref != "" {
+		const definitionsPrefix = "#/$defs/"
+		if len(schema.Ref) <= len(definitionsPrefix) || schema.Ref[:len(definitionsPrefix)] != definitionsPrefix {
+			return nil, fmt.Errorf("expand root JSON schema reference %q: unsupported reference", schema.Ref)
+		}
+		definition, ok := schema.Definitions[schema.Ref[len(definitionsPrefix):]]
+		if !ok {
+			return nil, fmt.Errorf("expand root JSON schema reference %q: definition not found", schema.Ref)
+		}
+		expanded := *definition
+		expanded.Version = schema.Version
+		expanded.ID = schema.ID
+		expanded.Anchor = schema.Anchor
+		expanded.Definitions = schema.Definitions
+		schema = &expanded
+	}
 	data, err := json.Marshal(schema)
 	if err != nil {
 		return nil, fmt.Errorf("marshal JSON schema: %w", err)
