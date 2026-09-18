@@ -541,6 +541,9 @@ type WaitForSubagentsCall string                             // Always "wait_for
 type Wandb string                                            // Always "wandb"
 type WebSearch string                                        // Always "web_search"
 type WebSearchCall string                                    // Always "web_search_call"
+type WebhookEndpoint string                                  // Always "webhook_endpoint"
+type WebhookEndpointDeleted string                           // Always "webhook_endpoint.deleted"
+type WebhookEndpointTest string                              // Always "webhook_endpoint.test"
 type Webrtc string                                           // Always "webrtc"
 
 func (c Active) Default() Active                             { return "active" }
@@ -1377,14 +1380,17 @@ func (c VectorStoreFilesBatch) Default() VectorStoreFilesBatch   { return "vecto
 func (c VectorStoreSearchResultsPage) Default() VectorStoreSearchResultsPage {
 	return "vector_store.search_results.page"
 }
-func (c Video) Default() Video                               { return "video" }
-func (c VideoDeleted) Default() VideoDeleted                 { return "video.deleted" }
-func (c Wait) Default() Wait                                 { return "wait" }
-func (c WaitForSubagentsCall) Default() WaitForSubagentsCall { return "wait_for_subagents_call" }
-func (c Wandb) Default() Wandb                               { return "wandb" }
-func (c WebSearch) Default() WebSearch                       { return "web_search" }
-func (c WebSearchCall) Default() WebSearchCall               { return "web_search_call" }
-func (c Webrtc) Default() Webrtc                             { return "webrtc" }
+func (c Video) Default() Video                                   { return "video" }
+func (c VideoDeleted) Default() VideoDeleted                     { return "video.deleted" }
+func (c Wait) Default() Wait                                     { return "wait" }
+func (c WaitForSubagentsCall) Default() WaitForSubagentsCall     { return "wait_for_subagents_call" }
+func (c Wandb) Default() Wandb                                   { return "wandb" }
+func (c WebSearch) Default() WebSearch                           { return "web_search" }
+func (c WebSearchCall) Default() WebSearchCall                   { return "web_search_call" }
+func (c WebhookEndpoint) Default() WebhookEndpoint               { return "webhook_endpoint" }
+func (c WebhookEndpointDeleted) Default() WebhookEndpointDeleted { return "webhook_endpoint.deleted" }
+func (c WebhookEndpointTest) Default() WebhookEndpointTest       { return "webhook_endpoint.test" }
+func (c Webrtc) Default() Webrtc                                 { return "webrtc" }
 
 func (c Active) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c AdditionalTools) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
@@ -1943,6 +1949,9 @@ func (c WaitForSubagentsCall) MarshalJSON() ([]byte, error)                { ret
 func (c Wandb) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c WebSearch) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c WebSearchCall) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c WebhookEndpoint) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
+func (c WebhookEndpointDeleted) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c WebhookEndpointTest) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c Webrtc) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 
 type constant[T any] interface {

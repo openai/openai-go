@@ -3,13 +3,20 @@
 package webhooks
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
+	"net/url"
+	"slices"
 	"time"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/apiquery"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/pagination"
+	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/packages/respjson"
 	"github.com/openai/openai-go/v3/shared/constant"
 )
@@ -21,7 +28,8 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewWebhookService] method instead.
 type WebhookService struct {
-	Options []option.RequestOption
+	Options    []option.RequestOption
+	EventTypes EventTypeService
 }
 
 // NewWebhookService generates a new service that applies the given options to each
@@ -30,7 +38,106 @@ type WebhookService struct {
 func NewWebhookService(opts ...option.RequestOption) (r WebhookService) {
 	r = WebhookService{}
 	r.Options = requestconfig.InheritedOptions(opts...)
+	r.EventTypes = NewEventTypeService(opts...)
 	return
+}
+
+// Creates a webhook endpoint for the authenticated project.
+func (r *WebhookService) New(ctx context.Context, body WebhookNewParams, opts ...option.RequestOption) (res *WebhookEndpointWithSecret, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	path := "webhook_endpoints"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	return res, err
+}
+
+// Retrieves a webhook endpoint for the authenticated project.
+func (r *WebhookService) Get(ctx context.Context, webhookEndpointID string, opts ...option.RequestOption) (res *WebhookEndpoint, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if webhookEndpointID == "" {
+		err = errors.New("missing required webhook_endpoint_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("webhook_endpoints/%s", webhookEndpointID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	return res, err
+}
+
+// Updates a webhook endpoint for the authenticated project.
+func (r *WebhookService) Update(ctx context.Context, webhookEndpointID string, body WebhookUpdateParams, opts ...option.RequestOption) (res *WebhookEndpoint, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if webhookEndpointID == "" {
+		err = errors.New("missing required webhook_endpoint_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("webhook_endpoints/%s", webhookEndpointID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	return res, err
+}
+
+// Returns webhook endpoints for the authenticated project in newest-first order.
+func (r *WebhookService) List(ctx context.Context, query WebhookListParams, opts ...option.RequestOption) (res *pagination.CursorPage[WebhookEndpoint], err error) {
+	var raw *http.Response
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
+	path := "webhook_endpoints"
+	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
+	if err != nil {
+		return nil, err
+	}
+	err = cfg.Execute()
+	if err != nil {
+		return nil, err
+	}
+	res.SetPageConfig(cfg, raw)
+	return res, nil
+}
+
+// Returns webhook endpoints for the authenticated project in newest-first order.
+func (r *WebhookService) ListAutoPaging(ctx context.Context, query WebhookListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[WebhookEndpoint] {
+	return pagination.NewCursorPageAutoPager(r.List(ctx, query, opts...))
+}
+
+// Deletes a webhook endpoint for the authenticated project.
+func (r *WebhookService) Delete(ctx context.Context, webhookEndpointID string, opts ...option.RequestOption) (res *DeletedWebhookEndpoint, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if webhookEndpointID == "" {
+		err = errors.New("missing required webhook_endpoint_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("webhook_endpoints/%s", webhookEndpointID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
+	return res, err
+}
+
+// Rotates the signing secret for a webhook endpoint in the authenticated project.
+func (r *WebhookService) RotateSecret(ctx context.Context, webhookEndpointID string, body WebhookRotateSecretParams, opts ...option.RequestOption) (res *WebhookEndpointWithSecret, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if webhookEndpointID == "" {
+		err = errors.New("missing required webhook_endpoint_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("webhook_endpoints/%s/rotate_secret", webhookEndpointID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	return res, err
+}
+
+// Sends a sample event to a webhook endpoint for the authenticated project.
+func (r *WebhookService) Test(ctx context.Context, webhookEndpointID string, body WebhookTestParams, opts ...option.RequestOption) (res *WebhookEndpointTestResult, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if webhookEndpointID == "" {
+		err = errors.New("missing required webhook_endpoint_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("webhook_endpoints/%s/test", webhookEndpointID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	return res, err
 }
 
 // Validates that the given payload was sent by OpenAI and parses the payload.
@@ -300,6 +407,29 @@ type BatchFailedWebhookEventObject string
 const (
 	BatchFailedWebhookEventObjectEvent BatchFailedWebhookEventObject = "event"
 )
+
+type DeletedWebhookEndpoint struct {
+	// The ID of the deleted webhook endpoint.
+	ID string `json:"id" api:"required"`
+	// Whether the endpoint was deleted.
+	Deleted bool `json:"deleted" api:"required"`
+	// The object type, which is always webhook_endpoint.deleted.
+	Object constant.WebhookEndpointDeleted `json:"object" default:"webhook_endpoint.deleted"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Deleted     respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DeletedWebhookEndpoint) RawJSON() string { return r.JSON.raw }
+func (r *DeletedWebhookEndpoint) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Sent when an eval run has been canceled.
 type EvalRunCanceledWebhookEvent struct {
@@ -1537,3 +1667,292 @@ type UnwrapWebhookEventUnionDataSipHeaders struct {
 func (r *UnwrapWebhookEventUnionDataSipHeaders) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+type WebhookEndpoint struct {
+	// The unique ID of the webhook endpoint.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp when the endpoint was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// The event types that trigger deliveries to this endpoint.
+	EventTypes []string `json:"event_types" api:"required"`
+	// The human-readable name of the endpoint.
+	Name string `json:"name" api:"required"`
+	// The object type, which is always webhook_endpoint.
+	Object constant.WebhookEndpoint `json:"object" default:"webhook_endpoint"`
+	// A masked hint for the endpoint's signing secret.
+	SigningSecretHint string `json:"signing_secret_hint" api:"required"`
+	// The HTTPS URL that receives webhook deliveries.
+	URL string `json:"url" api:"required"`
+	// The Unix timestamp of the last endpoint configuration or signing-secret change.
+	// Initialized at creation; tests and unchanged updates do not advance it.
+	UpdatedAt int64 `json:"updated_at" format:"unixtime"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                respjson.Field
+		CreatedAt         respjson.Field
+		EventTypes        respjson.Field
+		Name              respjson.Field
+		Object            respjson.Field
+		SigningSecretHint respjson.Field
+		URL               respjson.Field
+		UpdatedAt         respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookEndpoint) RawJSON() string { return r.JSON.raw }
+func (r *WebhookEndpoint) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type WebhookEndpointList struct {
+	// The webhook endpoints in this page.
+	Data []WebhookEndpoint `json:"data" api:"required"`
+	// The ID of the first endpoint in this page.
+	FirstID string `json:"first_id" api:"required"`
+	// Whether more webhook endpoints are available.
+	HasMore bool `json:"has_more" api:"required"`
+	// The ID of the last endpoint in this page.
+	LastID string `json:"last_id" api:"required"`
+	// The object type, which is always list.
+	Object constant.List `json:"object" default:"list"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		FirstID     respjson.Field
+		HasMore     respjson.Field
+		LastID      respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookEndpointList) RawJSON() string { return r.JSON.raw }
+func (r *WebhookEndpointList) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type WebhookEndpointTestResult struct {
+	// The event type sent in the test.
+	EventType string `json:"event_type" api:"required"`
+	// The object type, which is always webhook_endpoint.test.
+	Object constant.WebhookEndpointTest `json:"object" default:"webhook_endpoint.test"`
+	// The HTTP status code returned by the endpoint.
+	StatusCode int64 `json:"status_code" api:"required"`
+	// Whether the test request completed. Always true for returned results; use
+	// status_code to determine the endpoint response.
+	//
+	// Any of true.
+	Success bool `json:"success" api:"required"`
+	// The ID of the webhook endpoint that received the test.
+	WebhookEndpointID string `json:"webhook_endpoint_id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		EventType         respjson.Field
+		Object            respjson.Field
+		StatusCode        respjson.Field
+		Success           respjson.Field
+		WebhookEndpointID respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookEndpointTestResult) RawJSON() string { return r.JSON.raw }
+func (r *WebhookEndpointTestResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type WebhookEndpointWithSecret struct {
+	// The unique ID of the webhook endpoint.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp when the endpoint was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// The event types that trigger deliveries to this endpoint.
+	EventTypes []string `json:"event_types" api:"required"`
+	// The human-readable name of the endpoint.
+	Name string `json:"name" api:"required"`
+	// The object type, which is always webhook_endpoint.
+	Object constant.WebhookEndpoint `json:"object" default:"webhook_endpoint"`
+	// The endpoint's signing secret. This is returned only when the endpoint is
+	// created or the secret is rotated.
+	SigningSecret string `json:"signing_secret" api:"required"`
+	// A masked hint for the endpoint's signing secret.
+	SigningSecretHint string `json:"signing_secret_hint" api:"required"`
+	// The HTTPS URL that receives webhook deliveries.
+	URL string `json:"url" api:"required"`
+	// The Unix timestamp of the last endpoint configuration or signing-secret change.
+	// Initialized at creation; tests and unchanged updates do not advance it.
+	UpdatedAt int64 `json:"updated_at" format:"unixtime"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                respjson.Field
+		CreatedAt         respjson.Field
+		EventTypes        respjson.Field
+		Name              respjson.Field
+		Object            respjson.Field
+		SigningSecret     respjson.Field
+		SigningSecretHint respjson.Field
+		URL               respjson.Field
+		UpdatedAt         respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookEndpointWithSecret) RawJSON() string { return r.JSON.raw }
+func (r *WebhookEndpointWithSecret) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type WebhookEventTypeList struct {
+	// The webhook event types available to the authenticated project.
+	Data []string `json:"data" api:"required"`
+	// The object type, which is always list.
+	Object constant.List `json:"object" default:"list"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookEventTypeList) RawJSON() string { return r.JSON.raw }
+func (r *WebhookEventTypeList) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type WebhookNewParams struct {
+	// The event types that trigger deliveries to this endpoint.
+	//
+	// Any of "batch.completed", "batch.failed", "batch.expired", "batch.cancelled",
+	// "response.completed", "response.failed", "response.cancelled",
+	// "response.incomplete", "eval.run.succeeded", "eval.run.failed",
+	// "eval.run.canceled", "fine_tuning.job.succeeded", "fine_tuning.job.failed",
+	// "fine_tuning.job.cancelled", "realtime.call.incoming", "video.completed",
+	// "video.failed", "safety.alert.created".
+	EventTypes []string `json:"event_types,omitzero" api:"required"`
+	// A human-readable name for the webhook endpoint.
+	Name string `json:"name" api:"required"`
+	// The HTTPS URL that receives webhook deliveries.
+	URL string `json:"url" api:"required"`
+	paramObj
+}
+
+func (r WebhookNewParams) MarshalJSON() (data []byte, err error) {
+	type shadow WebhookNewParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *WebhookNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type WebhookUpdateParams struct {
+	// A new human-readable name for the webhook endpoint.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// A new HTTPS URL that receives webhook deliveries.
+	URL param.Opt[string] `json:"url,omitzero"`
+	// The complete set of event types that should trigger deliveries.
+	//
+	// Any of "batch.completed", "batch.failed", "batch.expired", "batch.cancelled",
+	// "response.completed", "response.failed", "response.cancelled",
+	// "response.incomplete", "eval.run.succeeded", "eval.run.failed",
+	// "eval.run.canceled", "fine_tuning.job.succeeded", "fine_tuning.job.failed",
+	// "fine_tuning.job.cancelled", "realtime.call.incoming", "video.completed",
+	// "video.failed", "safety.alert.created".
+	EventTypes []string `json:"event_types,omitzero"`
+	paramObj
+}
+
+func (r WebhookUpdateParams) MarshalJSON() (data []byte, err error) {
+	type shadow WebhookUpdateParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *WebhookUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type WebhookListParams struct {
+	// ID of the last webhook endpoint from the previous page.
+	After param.Opt[string] `query:"after,omitzero" json:"-"`
+	// Maximum number of webhook endpoints to return. Defaults to 20.
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
+	paramObj
+}
+
+// URLQuery serializes [WebhookListParams]'s query parameters as `url.Values`.
+func (r WebhookListParams) URLQuery() (v url.Values, err error) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
+}
+
+type WebhookRotateSecretParams struct {
+	// Whether to keep the previous signing secret valid for 24 hours after rotation.
+	// Defaults to false, which invalidates the previous secret immediately.
+	KeepOldSecretActiveFor24Hours param.Opt[bool] `json:"keep_old_secret_active_for_24_hours,omitzero"`
+	paramObj
+}
+
+func (r WebhookRotateSecretParams) MarshalJSON() (data []byte, err error) {
+	type shadow WebhookRotateSecretParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *WebhookRotateSecretParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type WebhookTestParams struct {
+	// The event type to send as a sample delivery.
+	//
+	// Any of "batch.completed", "batch.failed", "batch.expired", "batch.cancelled",
+	// "response.completed", "response.failed", "response.cancelled",
+	// "response.incomplete", "eval.run.succeeded", "eval.run.failed",
+	// "eval.run.canceled", "fine_tuning.job.succeeded", "fine_tuning.job.failed",
+	// "fine_tuning.job.cancelled", "realtime.call.incoming", "video.completed",
+	// "video.failed", "safety.alert.created".
+	EventType WebhookTestParamsEventType `json:"event_type,omitzero" api:"required"`
+	paramObj
+}
+
+func (r WebhookTestParams) MarshalJSON() (data []byte, err error) {
+	type shadow WebhookTestParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *WebhookTestParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The event type to send as a sample delivery.
+type WebhookTestParamsEventType string
+
+const (
+	WebhookTestParamsEventTypeBatchCompleted         WebhookTestParamsEventType = "batch.completed"
+	WebhookTestParamsEventTypeBatchFailed            WebhookTestParamsEventType = "batch.failed"
+	WebhookTestParamsEventTypeBatchExpired           WebhookTestParamsEventType = "batch.expired"
+	WebhookTestParamsEventTypeBatchCancelled         WebhookTestParamsEventType = "batch.cancelled"
+	WebhookTestParamsEventTypeResponseCompleted      WebhookTestParamsEventType = "response.completed"
+	WebhookTestParamsEventTypeResponseFailed         WebhookTestParamsEventType = "response.failed"
+	WebhookTestParamsEventTypeResponseCancelled      WebhookTestParamsEventType = "response.cancelled"
+	WebhookTestParamsEventTypeResponseIncomplete     WebhookTestParamsEventType = "response.incomplete"
+	WebhookTestParamsEventTypeEvalRunSucceeded       WebhookTestParamsEventType = "eval.run.succeeded"
+	WebhookTestParamsEventTypeEvalRunFailed          WebhookTestParamsEventType = "eval.run.failed"
+	WebhookTestParamsEventTypeEvalRunCanceled        WebhookTestParamsEventType = "eval.run.canceled"
+	WebhookTestParamsEventTypeFineTuningJobSucceeded WebhookTestParamsEventType = "fine_tuning.job.succeeded"
+	WebhookTestParamsEventTypeFineTuningJobFailed    WebhookTestParamsEventType = "fine_tuning.job.failed"
+	WebhookTestParamsEventTypeFineTuningJobCancelled WebhookTestParamsEventType = "fine_tuning.job.cancelled"
+	WebhookTestParamsEventTypeRealtimeCallIncoming   WebhookTestParamsEventType = "realtime.call.incoming"
+	WebhookTestParamsEventTypeVideoCompleted         WebhookTestParamsEventType = "video.completed"
+	WebhookTestParamsEventTypeVideoFailed            WebhookTestParamsEventType = "video.failed"
+	WebhookTestParamsEventTypeSafetyAlertCreated     WebhookTestParamsEventType = "safety.alert.created"
+)
