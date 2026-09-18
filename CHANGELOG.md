@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.63.0](https://github.com/openai/openai-go/compare/v3.62.0...v3.63.0) (2026-09-18)
+
+
+### Features
+
+* **api:** add webhook endpoint management ([#928](https://github.com/openai/openai-go/issues/928)) ([16ccefe](https://github.com/openai/openai-go/commit/16ccefe23d8b52ce6521b2fe287a516cd7cb201a))
+
+
+### Chores
+
+* **api:** deprecate MCP connector_id ([#930](https://github.com/openai/openai-go/issues/930)) ([cef21f6](https://github.com/openai/openai-go/commit/cef21f6c95bef90e3b9c6c24763b1d4c74942df7))
+
 ## [3.62.0](https://github.com/openai/openai-go/compare/v3.61.0...v3.62.0) (2026-09-17)
 
 
