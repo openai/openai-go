@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.63.1](https://github.com/openai/openai-go/compare/v3.63.0...v3.63.1) (2026-09-18)
+
+
+### Chores
+
+* **api:** clarify agent session cancellation and deletion ([#931](https://github.com/openai/openai-go/issues/931)) ([ce4292c](https://github.com/openai/openai-go/commit/ce4292cf0afa8005c63b3852503e80207e98de43))
+
 ## [3.63.0](https://github.com/openai/openai-go/compare/v3.62.0...v3.63.0) (2026-09-18)
 
 
