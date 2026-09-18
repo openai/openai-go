@@ -30301,6 +30301,10 @@ type ToolMcp struct {
 	// service connectors
 	// [here](https://developers.openai.com/api/docs/guides/tools-connectors-mcp#connectors).
 	//
+	// This field is deprecated for models released after September 1, 2026. Use
+	// `server_url` to connect to a remote MCP server, or `tunnel_id` to connect
+	// through a Secure MCP Tunnel.
+	//
 	// Currently supported `connector_id` values are:
 	//
 	// - Dropbox: `connector_dropbox`
@@ -30315,6 +30319,8 @@ type ToolMcp struct {
 	// Any of "connector_dropbox", "connector_gmail", "connector_googlecalendar",
 	// "connector_googledrive", "connector_microsoftteams",
 	// "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint".
+	//
+	// Deprecated: deprecated
 	ConnectorID string `json:"connector_id"`
 	// Whether this MCP tool is deferred and discovered via tool search.
 	DeferLoading bool `json:"defer_loading"`
@@ -31701,6 +31707,10 @@ type ToolMcpParam struct {
 	// service connectors
 	// [here](https://developers.openai.com/api/docs/guides/tools-connectors-mcp#connectors).
 	//
+	// This field is deprecated for models released after September 1, 2026. Use
+	// `server_url` to connect to a remote MCP server, or `tunnel_id` to connect
+	// through a Secure MCP Tunnel.
+	//
 	// Currently supported `connector_id` values are:
 	//
 	// - Dropbox: `connector_dropbox`
@@ -31715,6 +31725,8 @@ type ToolMcpParam struct {
 	// Any of "connector_dropbox", "connector_gmail", "connector_googlecalendar",
 	// "connector_googledrive", "connector_microsoftteams",
 	// "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint".
+	//
+	// Deprecated: deprecated
 	ConnectorID string `json:"connector_id,omitzero"`
 	// The type of the MCP tool. Always `mcp`.
 	//
