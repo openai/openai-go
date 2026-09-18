@@ -160,6 +160,7 @@ type Email string                                            // Always "email"
 type Embedding string                                        // Always "embedding"
 type EncryptedContent string                                 // Always "encrypted_content"
 type EnvironmentConnection string                            // Always "environment_connection"
+type EnvironmentVariable string                              // Always "environment_variable"
 type Error string                                            // Always "error"
 type EvalRunCanceled string                                  // Always "eval.run.canceled"
 type EvalRunFailed string                                    // Always "eval.run.failed"
@@ -225,6 +226,7 @@ type JSONSchema string                                       // Always "json_sch
 type Keypress string                                         // Always "keypress"
 type LabelModel string                                       // Always "label_model"
 type LastActiveAt string                                     // Always "last_active_at"
+type Limited string                                          // Always "limited"
 type List string                                             // Always "list"
 type Live string                                             // Always "live"
 type LiveCallIncoming string                                 // Always "live.call.incoming"
@@ -516,6 +518,7 @@ type TransportFailed string                                  // Always "transpor
 type TransportRinging string                                 // Always "transport.ringing"
 type Type string                                             // Always "type"
 type Unavailable string                                      // Always "unavailable"
+type Unrestricted string                                     // Always "unrestricted"
 type UpdateFile string                                       // Always "update_file"
 type Upload string                                           // Always "upload"
 type UploadPart string                                       // Always "upload.part"
@@ -772,6 +775,7 @@ func (c Email) Default() Email                                   { return "email
 func (c Embedding) Default() Embedding                           { return "embedding" }
 func (c EncryptedContent) Default() EncryptedContent             { return "encrypted_content" }
 func (c EnvironmentConnection) Default() EnvironmentConnection   { return "environment_connection" }
+func (c EnvironmentVariable) Default() EnvironmentVariable       { return "environment_variable" }
 func (c Error) Default() Error                                   { return "error" }
 func (c EvalRunCanceled) Default() EvalRunCanceled               { return "eval.run.canceled" }
 func (c EvalRunFailed) Default() EvalRunFailed                   { return "eval.run.failed" }
@@ -855,6 +859,7 @@ func (c JSONSchema) Default() JSONSchema                         { return "json_
 func (c Keypress) Default() Keypress                             { return "keypress" }
 func (c LabelModel) Default() LabelModel                         { return "label_model" }
 func (c LastActiveAt) Default() LastActiveAt                     { return "last_active_at" }
+func (c Limited) Default() Limited                               { return "limited" }
 func (c List) Default() List                                     { return "list" }
 func (c Live) Default() Live                                     { return "live" }
 func (c LiveCallIncoming) Default() LiveCallIncoming             { return "live.call.incoming" }
@@ -1358,6 +1363,7 @@ func (c TransportFailed) Default() TransportFailed               { return "trans
 func (c TransportRinging) Default() TransportRinging             { return "transport.ringing" }
 func (c Type) Default() Type                                     { return "type" }
 func (c Unavailable) Default() Unavailable                       { return "unavailable" }
+func (c Unrestricted) Default() Unrestricted                     { return "unrestricted" }
 func (c UpdateFile) Default() UpdateFile                         { return "update_file" }
 func (c Upload) Default() Upload                                 { return "upload" }
 func (c UploadPart) Default() UploadPart                         { return "upload.part" }
@@ -1552,6 +1558,7 @@ func (c Email) MarshalJSON() ([]byte, error)                               { ret
 func (c Embedding) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c EncryptedContent) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c EnvironmentConnection) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c EnvironmentVariable) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c Error) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c EvalRunCanceled) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c EvalRunFailed) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
@@ -1617,6 +1624,7 @@ func (c JSONSchema) MarshalJSON() ([]byte, error)                          { ret
 func (c Keypress) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c LabelModel) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c LastActiveAt) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c Limited) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c List) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Live) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c LiveCallIncoming) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
@@ -1924,6 +1932,7 @@ func (c TransportFailed) MarshalJSON() ([]byte, error)                     { ret
 func (c TransportRinging) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c Type) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Unavailable) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
+func (c Unrestricted) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c UpdateFile) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c Upload) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c UploadPart) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
