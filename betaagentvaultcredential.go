@@ -145,11 +145,11 @@ func (r *BetaAgentVaultCredentialService) Delete(ctx context.Context, vaultID st
 	return res, err
 }
 
-// Metadata for a stored MCP server credential. Secret values are never returned.
+// Metadata for a stored credential. Secret values are never returned.
 type Credential struct {
 	// The ID of the credential.
 	ID string `json:"id" api:"required"`
-	// The authentication method and non-secret configuration for the MCP server.
+	// The authentication method and non-secret configuration of the credential.
 	Auth CredentialAuthUnion `json:"auth" api:"required"`
 	// The Unix timestamp, in seconds, when the credential was created.
 	CreatedAt int64 `json:"created_at" api:"required"`
@@ -182,7 +182,8 @@ func (r *Credential) UnmarshalJSON(data []byte) error {
 }
 
 // CredentialAuthUnion contains all possible properties and values from
-// [CredentialAuthMcpOAuth], [CredentialAuthStaticBearer].
+// [CredentialAuthMcpOAuth], [CredentialAuthStaticBearer],
+// [CredentialAuthEnvironmentVariable].
 //
 // Use the [CredentialAuthUnion.AsAny] method to switch on the variant.
 //
@@ -193,13 +194,19 @@ type CredentialAuthUnion struct {
 	McpServerURL string `json:"mcp_server_url"`
 	// This field is from variant [CredentialAuthMcpOAuth].
 	Refresh CredentialAuthMcpOAuthRefresh `json:"refresh"`
-	// Any of "mcp_oauth", "static_bearer".
+	// Any of "mcp_oauth", "static_bearer", "environment_variable".
 	Type string `json:"type"`
-	JSON struct {
+	// This field is from variant [CredentialAuthEnvironmentVariable].
+	Networking CredentialNetworkingUnion `json:"networking"`
+	// This field is from variant [CredentialAuthEnvironmentVariable].
+	SecretName string `json:"secret_name"`
+	JSON       struct {
 		ExpiresAt    respjson.Field
 		McpServerURL respjson.Field
 		Refresh      respjson.Field
 		Type         respjson.Field
+		Networking   respjson.Field
+		SecretName   respjson.Field
 		raw          string
 	} `json:"-"`
 }
@@ -210,14 +217,16 @@ type anyCredentialAuth interface {
 	implCredentialAuthUnion()
 }
 
-func (CredentialAuthMcpOAuth) implCredentialAuthUnion()     {}
-func (CredentialAuthStaticBearer) implCredentialAuthUnion() {}
+func (CredentialAuthMcpOAuth) implCredentialAuthUnion()            {}
+func (CredentialAuthStaticBearer) implCredentialAuthUnion()        {}
+func (CredentialAuthEnvironmentVariable) implCredentialAuthUnion() {}
 
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := CredentialAuthUnion.AsAny().(type) {
 //	case openai.CredentialAuthMcpOAuth:
 //	case openai.CredentialAuthStaticBearer:
+//	case openai.CredentialAuthEnvironmentVariable:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -227,6 +236,8 @@ func (u CredentialAuthUnion) AsAny() anyCredentialAuth {
 		return u.AsMcpOAuth()
 	case "static_bearer":
 		return u.AsStaticBearer()
+	case "environment_variable":
+		return u.AsEnvironmentVariable()
 	}
 	return nil
 }
@@ -237,6 +248,11 @@ func (u CredentialAuthUnion) AsMcpOAuth() (v CredentialAuthMcpOAuth) {
 }
 
 func (u CredentialAuthUnion) AsStaticBearer() (v CredentialAuthStaticBearer) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u CredentialAuthUnion) AsEnvironmentVariable() (v CredentialAuthEnvironmentVariable) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -330,6 +346,34 @@ func (r *CredentialAuthStaticBearer) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Metadata for an HTTP credential used only in OpenAI-hosted environments. Sandbox
+// code receives a placeholder. The proxy substitutes the secret for allowed HTTPS
+// destinations on ports 443 and 8443. The real secret is not available to sandbox
+// code for local computation and is never returned in this resource.
+type CredentialAuthEnvironmentVariable struct {
+	// The destinations where the proxy can substitute the secret, subject to the
+	// environment network policy.
+	Networking CredentialNetworkingUnion `json:"networking" api:"required"`
+	// The environment variable name that receives the placeholder in the sandbox.
+	SecretName string `json:"secret_name" api:"required"`
+	// The type of the object. Always `environment_variable`.
+	Type constant.EnvironmentVariable `json:"type" default:"environment_variable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Networking  respjson.Field
+		SecretName  respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r CredentialAuthEnvironmentVariable) RawJSON() string { return r.JSON.raw }
+func (r *CredentialAuthEnvironmentVariable) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 func CredentialAuthCreateParamOfParamMcpOAuth(accessToken string, mcpServerURL string) CredentialAuthCreateParamUnion {
 	var paramMcpOAuth CredentialAuthCreateParamMcpOAuth
 	paramMcpOAuth.AccessToken = accessToken
@@ -344,17 +388,33 @@ func CredentialAuthCreateParamOfParamStaticBearer(mcpServerURL string, token str
 	return CredentialAuthCreateParamUnion{OfParamStaticBearer: &paramStaticBearer}
 }
 
+func CredentialAuthCreateParamOfParamEnvironmentVariable[
+	T CredentialNetworkingParamUnrestricted | CredentialNetworkingParamLimited,
+](networking T, secretName string, secretValue string) CredentialAuthCreateParamUnion {
+	var paramEnvironmentVariable CredentialAuthCreateParamEnvironmentVariable
+	switch v := any(networking).(type) {
+	case CredentialNetworkingParamUnrestricted:
+		paramEnvironmentVariable.Networking.OfParamUnrestricted = &v
+	case CredentialNetworkingParamLimited:
+		paramEnvironmentVariable.Networking.OfParamLimited = &v
+	}
+	paramEnvironmentVariable.SecretName = secretName
+	paramEnvironmentVariable.SecretValue = secretValue
+	return CredentialAuthCreateParamUnion{OfParamEnvironmentVariable: &paramEnvironmentVariable}
+}
+
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type CredentialAuthCreateParamUnion struct {
-	OfParamMcpOAuth     *CredentialAuthCreateParamMcpOAuth     `json:",omitzero,inline"`
-	OfParamStaticBearer *CredentialAuthCreateParamStaticBearer `json:",omitzero,inline"`
+	OfParamMcpOAuth            *CredentialAuthCreateParamMcpOAuth            `json:",omitzero,inline"`
+	OfParamStaticBearer        *CredentialAuthCreateParamStaticBearer        `json:",omitzero,inline"`
+	OfParamEnvironmentVariable *CredentialAuthCreateParamEnvironmentVariable `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u CredentialAuthCreateParamUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfParamMcpOAuth, u.OfParamStaticBearer)
+	return param.MarshalUnion(u, u.OfParamMcpOAuth, u.OfParamStaticBearer, u.OfParamEnvironmentVariable)
 }
 func (u *CredentialAuthCreateParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -393,6 +453,30 @@ func (u CredentialAuthCreateParamUnion) GetToken() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u CredentialAuthCreateParamUnion) GetNetworking() *CredentialNetworkingParamUnion {
+	if vt := u.OfParamEnvironmentVariable; vt != nil {
+		return &vt.Networking
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u CredentialAuthCreateParamUnion) GetSecretName() *string {
+	if vt := u.OfParamEnvironmentVariable; vt != nil {
+		return &vt.SecretName
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u CredentialAuthCreateParamUnion) GetSecretValue() *string {
+	if vt := u.OfParamEnvironmentVariable; vt != nil {
+		return &vt.SecretValue
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u CredentialAuthCreateParamUnion) GetMcpServerURL() *string {
 	if vt := u.OfParamMcpOAuth; vt != nil {
 		return (*string)(&vt.McpServerURL)
@@ -408,6 +492,8 @@ func (u CredentialAuthCreateParamUnion) GetType() *string {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfParamStaticBearer; vt != nil {
 		return (*string)(&vt.Type)
+	} else if vt := u.OfParamEnvironmentVariable; vt != nil {
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -417,6 +503,7 @@ func init() {
 		"type",
 		apijson.Discriminator[CredentialAuthCreateParamMcpOAuth]("mcp_oauth"),
 		apijson.Discriminator[CredentialAuthCreateParamStaticBearer]("static_bearer"),
+		apijson.Discriminator[CredentialAuthCreateParamEnvironmentVariable]("environment_variable"),
 	)
 }
 
@@ -502,23 +589,67 @@ func (r *CredentialAuthCreateParamStaticBearer) UnmarshalJSON(data []byte) error
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// An HTTP credential for OpenAI-hosted environments only. The sandbox receives an
+// environment variable containing a placeholder, not the secret. Use the
+// placeholder unchanged in outgoing requests. The egress proxy replaces the
+// placeholder with the secret for allowed HTTPS destinations on ports 443 and
+// 8443. Sandbox code cannot read the real secret or use it for local computation,
+// such as signing a request.
+//
+// The properties Networking, SecretName, SecretValue, Type are required.
+type CredentialAuthCreateParamEnvironmentVariable struct {
+	// The destinations where the proxy can substitute this secret. The environment
+	// network policy must also allow them.
+	Networking CredentialNetworkingParamUnion `json:"networking,omitzero" api:"required"`
+	// The environment variable name that receives the placeholder, such as
+	// `SERVICE_API_KEY`. Use ASCII letters, digits, and underscores, starting with a
+	// letter or underscore. Names starting with `CODEX_` and managed proxy or
+	// certificate variable names are reserved.
+	SecretName string `json:"secret_name" api:"required"`
+	// The write-only secret to store. Never returned in credential resources or
+	// supplied directly to sandbox code. Must be nonempty and must not contain
+	// carriage returns, newlines, or NUL bytes.
+	SecretValue string `json:"secret_value" api:"required"`
+	// The type of the object. Always `environment_variable`.
+	//
+	// This field can be elided, and will marshal its zero value as
+	// "environment_variable".
+	Type constant.EnvironmentVariable `json:"type" default:"environment_variable"`
+	paramObj
+}
+
+func (r CredentialAuthCreateParamEnvironmentVariable) MarshalJSON() (data []byte, err error) {
+	type shadow CredentialAuthCreateParamEnvironmentVariable
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *CredentialAuthCreateParamEnvironmentVariable) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 func CredentialAuthRotateParamOfParamStaticBearer(token string) CredentialAuthRotateParamUnion {
 	var paramStaticBearer CredentialAuthRotateParamStaticBearer
 	paramStaticBearer.Token = token
 	return CredentialAuthRotateParamUnion{OfParamStaticBearer: &paramStaticBearer}
 }
 
+func CredentialAuthRotateParamOfParamEnvironmentVariable(secretValue string) CredentialAuthRotateParamUnion {
+	var paramEnvironmentVariable CredentialAuthRotateParamEnvironmentVariable
+	paramEnvironmentVariable.SecretValue = secretValue
+	return CredentialAuthRotateParamUnion{OfParamEnvironmentVariable: &paramEnvironmentVariable}
+}
+
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type CredentialAuthRotateParamUnion struct {
-	OfParamMcpOAuth     *CredentialAuthRotateParamMcpOAuth     `json:",omitzero,inline"`
-	OfParamStaticBearer *CredentialAuthRotateParamStaticBearer `json:",omitzero,inline"`
+	OfParamMcpOAuth            *CredentialAuthRotateParamMcpOAuth            `json:",omitzero,inline"`
+	OfParamStaticBearer        *CredentialAuthRotateParamStaticBearer        `json:",omitzero,inline"`
+	OfParamEnvironmentVariable *CredentialAuthRotateParamEnvironmentVariable `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u CredentialAuthRotateParamUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfParamMcpOAuth, u.OfParamStaticBearer)
+	return param.MarshalUnion(u, u.OfParamMcpOAuth, u.OfParamStaticBearer, u.OfParamEnvironmentVariable)
 }
 func (u *CredentialAuthRotateParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -557,10 +688,20 @@ func (u CredentialAuthRotateParamUnion) GetToken() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u CredentialAuthRotateParamUnion) GetSecretValue() *string {
+	if vt := u.OfParamEnvironmentVariable; vt != nil {
+		return &vt.SecretValue
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u CredentialAuthRotateParamUnion) GetType() *string {
 	if vt := u.OfParamMcpOAuth; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfParamStaticBearer; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfParamEnvironmentVariable; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -571,6 +712,7 @@ func init() {
 		"type",
 		apijson.Discriminator[CredentialAuthRotateParamMcpOAuth]("mcp_oauth"),
 		apijson.Discriminator[CredentialAuthRotateParamStaticBearer]("static_bearer"),
+		apijson.Discriminator[CredentialAuthRotateParamEnvironmentVariable]("environment_variable"),
 	)
 }
 
@@ -645,6 +787,31 @@ func (r *CredentialAuthRotateParamStaticBearer) UnmarshalJSON(data []byte) error
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Replace the secret for an OpenAI-hosted environment credential. The environment
+// variable name and networking configuration remain unchanged.
+//
+// The properties SecretValue, Type are required.
+type CredentialAuthRotateParamEnvironmentVariable struct {
+	// The write-only replacement secret. Never returned in credential resources or
+	// supplied directly to sandbox code. Must be nonempty and must not contain
+	// carriage returns, newlines, or NUL bytes.
+	SecretValue string `json:"secret_value" api:"required"`
+	// The type of the object. Always `environment_variable`.
+	//
+	// This field can be elided, and will marshal its zero value as
+	// "environment_variable".
+	Type constant.EnvironmentVariable `json:"type" default:"environment_variable"`
+	paramObj
+}
+
+func (r CredentialAuthRotateParamEnvironmentVariable) MarshalJSON() (data []byte, err error) {
+	type shadow CredentialAuthRotateParamEnvironmentVariable
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *CredentialAuthRotateParamEnvironmentVariable) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Confirmation that a vault credential was deleted.
 type CredentialDeleted struct {
 	// The ID of the deleted credential.
@@ -666,6 +833,211 @@ type CredentialDeleted struct {
 // Returns the unmodified JSON received from the API
 func (r CredentialDeleted) RawJSON() string { return r.JSON.raw }
 func (r *CredentialDeleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// CredentialNetworkingUnion contains all possible properties and values from
+// [CredentialNetworkingUnrestricted], [CredentialNetworkingLimited].
+//
+// Use the [CredentialNetworkingUnion.AsAny] method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type CredentialNetworkingUnion struct {
+	// Any of "unrestricted", "limited".
+	Type string `json:"type"`
+	// This field is from variant [CredentialNetworkingLimited].
+	AllowedHosts []string `json:"allowed_hosts"`
+	JSON         struct {
+		Type         respjson.Field
+		AllowedHosts respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// anyCredentialNetworking is implemented by each variant of
+// [CredentialNetworkingUnion] to add type safety for the return type of
+// [CredentialNetworkingUnion.AsAny]
+type anyCredentialNetworking interface {
+	implCredentialNetworkingUnion()
+}
+
+func (CredentialNetworkingUnrestricted) implCredentialNetworkingUnion() {}
+func (CredentialNetworkingLimited) implCredentialNetworkingUnion()      {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := CredentialNetworkingUnion.AsAny().(type) {
+//	case openai.CredentialNetworkingUnrestricted:
+//	case openai.CredentialNetworkingLimited:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u CredentialNetworkingUnion) AsAny() anyCredentialNetworking {
+	switch u.Type {
+	case "unrestricted":
+		return u.AsUnrestricted()
+	case "limited":
+		return u.AsLimited()
+	}
+	return nil
+}
+
+func (u CredentialNetworkingUnion) AsUnrestricted() (v CredentialNetworkingUnrestricted) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u CredentialNetworkingUnion) AsLimited() (v CredentialNetworkingLimited) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u CredentialNetworkingUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *CredentialNetworkingUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Allows substitution for destinations permitted by the environment network
+// policy. Requires `environment.network.access` to be `restricted`, with explicit
+// `allowed_domains`.
+type CredentialNetworkingUnrestricted struct {
+	// The type of the object. Always `unrestricted`.
+	Type constant.Unrestricted `json:"type" default:"unrestricted"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r CredentialNetworkingUnrestricted) RawJSON() string { return r.JSON.raw }
+func (r *CredentialNetworkingUnrestricted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Allows substitution only for the listed hosts. The environment network policy
+// must also allow these hosts.
+type CredentialNetworkingLimited struct {
+	// The 1 to 16 distinct allowed hostnames or IPv4 addresses, normalized to
+	// lowercase. Entries contain no scheme, path, port, or wildcard. IPv6 addresses
+	// are not supported.
+	AllowedHosts []string `json:"allowed_hosts" api:"required"`
+	// The type of the object. Always `limited`.
+	Type constant.Limited `json:"type" default:"limited"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AllowedHosts respjson.Field
+		Type         respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r CredentialNetworkingLimited) RawJSON() string { return r.JSON.raw }
+func (r *CredentialNetworkingLimited) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func CredentialNetworkingParamOfParamLimited(allowedHosts []string) CredentialNetworkingParamUnion {
+	var paramLimited CredentialNetworkingParamLimited
+	paramLimited.AllowedHosts = allowedHosts
+	return CredentialNetworkingParamUnion{OfParamLimited: &paramLimited}
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type CredentialNetworkingParamUnion struct {
+	OfParamUnrestricted *CredentialNetworkingParamUnrestricted `json:",omitzero,inline"`
+	OfParamLimited      *CredentialNetworkingParamLimited      `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u CredentialNetworkingParamUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfParamUnrestricted, u.OfParamLimited)
+}
+func (u *CredentialNetworkingParamUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u CredentialNetworkingParamUnion) GetAllowedHosts() []string {
+	if vt := u.OfParamLimited; vt != nil {
+		return vt.AllowedHosts
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u CredentialNetworkingParamUnion) GetType() *string {
+	if vt := u.OfParamUnrestricted; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfParamLimited; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[CredentialNetworkingParamUnion](
+		"type",
+		apijson.Discriminator[CredentialNetworkingParamUnrestricted]("unrestricted"),
+		apijson.Discriminator[CredentialNetworkingParamLimited]("limited"),
+	)
+}
+
+func NewCredentialNetworkingParamUnrestricted() CredentialNetworkingParamUnrestricted {
+	return CredentialNetworkingParamUnrestricted{
+		Type: "unrestricted",
+	}
+}
+
+// Allows substitution for destinations permitted by the environment network
+// policy. Requires `environment.network.access` to be `restricted`, with explicit
+// `allowed_domains`.
+//
+// This struct has a constant value, construct it with
+// [NewCredentialNetworkingParamUnrestricted].
+type CredentialNetworkingParamUnrestricted struct {
+	// The type of the object. Always `unrestricted`.
+	Type constant.Unrestricted `json:"type" default:"unrestricted"`
+	paramObj
+}
+
+func (r CredentialNetworkingParamUnrestricted) MarshalJSON() (data []byte, err error) {
+	type shadow CredentialNetworkingParamUnrestricted
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *CredentialNetworkingParamUnrestricted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Allows substitution only for the listed hosts. The environment network policy
+// must also allow these hosts.
+//
+// The properties AllowedHosts, Type are required.
+type CredentialNetworkingParamLimited struct {
+	// The 1 to 16 distinct allowed hostnames or IPv4 addresses, normalized to
+	// lowercase. Entries contain no scheme, path, port, or wildcard. IPv6 addresses
+	// are not supported.
+	AllowedHosts []string `json:"allowed_hosts,omitzero" api:"required"`
+	// The type of the object. Always `limited`.
+	//
+	// This field can be elided, and will marshal its zero value as "limited".
+	Type constant.Limited `json:"type" default:"limited"`
+	paramObj
+}
+
+func (r CredentialNetworkingParamLimited) MarshalJSON() (data []byte, err error) {
+	type shadow CredentialNetworkingParamLimited
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *CredentialNetworkingParamLimited) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -1012,7 +1384,7 @@ func (r *McpOAuthTokenEndpointAuthRotateParamClientSecretPost) UnmarshalJSON(dat
 }
 
 type BetaAgentVaultCredentialNewParams struct {
-	// The authentication method and secret values to store for the MCP server.
+	// The authentication method and write-only secret values to store.
 	Auth CredentialAuthCreateParamUnion `json:"auth,omitzero" api:"required"`
 	// The name is trimmed before storage. It must contain 1 to 256 UTF-8 bytes after
 	// trimming.

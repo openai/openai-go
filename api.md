@@ -609,6 +609,7 @@ Params Types:
 
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#CredentialAuthCreateParamUnion">CredentialAuthCreateParamUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#CredentialAuthRotateParamUnion">CredentialAuthRotateParamUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#CredentialNetworkingParamUnion">CredentialNetworkingParamUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#McpOAuthTokenEndpointAuthCreateParamUnion">McpOAuthTokenEndpointAuthCreateParamUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#McpOAuthTokenEndpointAuthRotateParamUnion">McpOAuthTokenEndpointAuthRotateParamUnion</a>
 
@@ -617,6 +618,7 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Credential">Credential</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#CredentialAuthUnion">CredentialAuthUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#CredentialDeleted">CredentialDeleted</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#CredentialNetworkingUnion">CredentialNetworkingUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#McpOAuthTokenEndpointAuthUnion">McpOAuthTokenEndpointAuthUnion</a>
 
 Methods:
