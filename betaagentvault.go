@@ -107,8 +107,7 @@ func (r *BetaAgentVaultService) Delete(ctx context.Context, vaultID string, opts
 	return res, err
 }
 
-// A collection of credentials that agent tools can use to authenticate to MCP
-// servers.
+// A collection of credentials for MCP servers and OpenAI-hosted environments.
 type Vault struct {
 	// The ID of the vault.
 	ID string `json:"id" api:"required"`
