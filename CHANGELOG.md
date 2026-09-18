@@ -1,5 +1,32 @@
 # Changelog
 
+## [3.62.0](https://github.com/openai/openai-go/compare/v3.61.0...v3.62.0) (2026-09-17)
+
+
+### Features
+
+* **api:** add agent session model settings ([#921](https://github.com/openai/openai-go/issues/921)) ([90fd9b1](https://github.com/openai/openai-go/commit/90fd9b1422c94cfed420b38835f2d78b9aab1d4d))
+* **api:** add audio-mini model choices ([#924](https://github.com/openai/openai-go/issues/924)) ([6124cd0](https://github.com/openai/openai-go/commit/6124cd09d3f7a5872823689c6908ab9c9ae77574))
+* **api:** add compaction progress events ([#919](https://github.com/openai/openai-go/issues/919)) ([13ab937](https://github.com/openai/openai-go/commit/13ab9372e62c3f694b874a1827a60c412de15fce))
+* **api:** add managed Responses WebSocket connections ([#927](https://github.com/openai/openai-go/issues/927)) ([b924edd](https://github.com/openai/openai-go/commit/b924eddce40bf401ff33ae29738eb34332c0581d))
+* **api:** add prompt-cache prewarming ([#925](https://github.com/openai/openai-go/issues/925)) ([99bbbd0](https://github.com/openai/openai-go/commit/99bbbd0fde7177e535f0788d1d4d30d0791ef5f2))
+
+
+### Bug Fixes
+
+* **ci:** retry Go documentation indexing after releases ([#909](https://github.com/openai/openai-go/issues/909)) ([ca920ba](https://github.com/openai/openai-go/commit/ca920ba89517ba9441d6a61676e59352d62311bd))
+
+
+### Chores
+
+* **api:** clarify incoming SIP call ID usage ([#923](https://github.com/openai/openai-go/issues/923)) ([3064e59](https://github.com/openai/openai-go/commit/3064e59784617895e01bdbb9c1e9be7b17812b8c))
+* **api:** update image request examples ([#926](https://github.com/openai/openai-go/issues/926)) ([bc0a139](https://github.com/openai/openai-go/commit/bc0a13981816d60236798804ec950d1b16c9165a))
+
+
+### Documentation
+
+* Preserve literal struct tags in Markdown ([#922](https://github.com/openai/openai-go/issues/922)) ([0b0efb3](https://github.com/openai/openai-go/commit/0b0efb348925dd20fb59569e61eefc6a101da636))
+
 ## [3.61.0](https://github.com/openai/openai-go/compare/v3.60.0...v3.61.0) (2026-09-10)
 
 
