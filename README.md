@@ -113,6 +113,57 @@ fmt.Println("Second response:", response.OutputText())
 </details>
 
 <details>
+<summary>Manually managed Responses history</summary>
+
+For ordinary multi-turn conversations, prefer `PreviousResponseID` or a
+Conversation. If you manage a stateless history yourself, preserve every returned
+output item in its original order. Do not keep only `message` items: a message can
+require the immediately preceding `reasoning` item.
+
+`Response.ToInput()` copies every item from a completed response, including
+encrypted reasoning content and unknown fields. Append your new user or tool input
+to the returned value, and start a new request without `PreviousResponseID`.
+
+```go
+history := responses.ResponseInputParam{
+	responses.ResponseInputItemParamOfMessage(
+		"Write a Python prime checker.",
+		responses.EasyInputMessageRoleUser,
+	),
+}
+
+response, err := client.Responses.New(ctx, responses.ResponseNewParams{
+	Model: openai.ChatModelGPT5_2,
+	Store: openai.Bool(false),
+	Input: responses.ResponseNewParamsInputUnion{OfInputItemList: history},
+})
+if err != nil {
+	panic(err)
+}
+
+// Keep every output item; this retains a reasoning item with its message.
+history = append(history, response.ToInput()...)
+history = append(history, responses.ResponseInputItemParamOfMessage(
+	"Add type hints.",
+	responses.EasyInputMessageRoleUser,
+))
+
+response, err = client.Responses.New(ctx, responses.ResponseNewParams{
+	Model: openai.ChatModelGPT5_2,
+	Store: openai.Bool(false),
+	Input: responses.ResponseNewParamsInputUnion{OfInputItemList: history},
+})
+if err != nil {
+	panic(err)
+}
+```
+
+For streaming, add only completed output items—for example, from
+`response.output_item.done`—rather than an in-progress
+`response.output_item.added` event.
+</details>
+
+<details>
 <summary>Conversations</summary>
 
 ```go

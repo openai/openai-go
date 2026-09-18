@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/responses"
 )
 
@@ -67,5 +68,53 @@ func TestResponseOutputTextUsesCurrentFields(t *testing.T) {
 	}
 	if !reflect.DeepEqual(response.Output[0].Content, wantContent) || response.RawJSON() != body {
 		t.Fatal("OutputText mutated the input or response metadata")
+	}
+}
+
+func TestResponseToInputPreservesOutputItemsInOrder(t *testing.T) {
+	const body = `{"output":[{"id":"rs_123","type":"reasoning","summary":[{"type":"summary_text","text":"reasoned"}],"encrypted_content":"encrypted-reasoning","status":"completed","future_reasoning_field":{"version":1}},{"id":"msg_123","type":"message","role":"assistant","content":[{"type":"output_text","text":"hello"}],"status":"completed","future_message_field":true}]}`
+
+	var response responses.Response
+	if err := json.Unmarshal([]byte(body), &response); err != nil {
+		t.Fatal(err)
+	}
+
+	input := response.ToInput()
+	if len(input) != 2 {
+		t.Fatalf("ToInput() returned %d items, want 2", len(input))
+	}
+	for i, item := range input {
+		if _, ok := item.Overrides(); !ok {
+			t.Fatalf("ToInput()[%d] was not preserved as a raw API item", i)
+		}
+	}
+	input = append(input, responses.ResponseInputItemParamOfMessage(
+		"next instruction",
+		responses.EasyInputMessageRoleUser,
+	))
+
+	data, err := json.Marshal(responses.ResponseNewParams{
+		Model: openai.ChatModelGPT5_2,
+		Store: openai.Bool(false),
+		Input: responses.ResponseNewParamsInputUnion{OfInputItemList: input},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var request struct {
+		Input []map[string]json.RawMessage `json:"input"`
+	}
+	if err := json.Unmarshal(data, &request); err != nil {
+		t.Fatal(err)
+	}
+	items := request.Input
+	if len(items) != 3 || string(items[0]["type"]) != `"reasoning"` || string(items[1]["type"]) != `"message"` || string(items[2]["role"]) != `"user"` || string(items[2]["content"]) != `"next instruction"` {
+		t.Fatalf("ToInput() changed item ordering: %s", data)
+	}
+	if string(items[0]["encrypted_content"]) != `"encrypted-reasoning"` {
+		t.Fatalf("ToInput() dropped encrypted reasoning content: %s", data)
+	}
+	if string(items[0]["future_reasoning_field"]) != `{"version":1}` || string(items[1]["future_message_field"]) != "true" {
+		t.Fatalf("ToInput() dropped unknown fields: %s", data)
 	}
 }
