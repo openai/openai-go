@@ -136,7 +136,9 @@ func (r *BetaAgentSessionService) ListAutoPaging(ctx context.Context, query Beta
 }
 
 // Removes a managed agent session from the public API and returns a deletion
-// confirmation. Physical cleanup may continue asynchronously. See
+// confirmation. If backend execution has ended, deletion can cancel a still-open
+// public turn and abandon unpublished outputs. Running execution must be cancelled
+// first. Physical cleanup may continue asynchronously. See
 // [managing sessions](https://developers.openai.com/api/docs/guides/agents-api/sessions/manage).
 func (r *BetaAgentSessionService) Delete(ctx context.Context, sessionID string, opts ...option.RequestOption) (res *AgentSessionDeleted, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}

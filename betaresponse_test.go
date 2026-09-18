@@ -29,7 +29,7 @@ func TestBetaResponseNewWithOptionalParams(t *testing.T) {
 	_, err := client.Beta.Responses.New(context.TODO(), openai.BetaResponseNewParams{
 		Background: openai.Bool(true),
 		ContextManagement: []openai.BetaResponseNewParamsContextManagement{{
-			Type:             "type",
+			Type:             "compaction",
 			CompactThreshold: openai.Int(1000),
 		}},
 		Conversation: openai.BetaResponseNewParamsConversationUnion{
