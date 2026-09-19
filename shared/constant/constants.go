@@ -413,7 +413,9 @@ type Role string                                             // Always "role"
 type RoleDeleted string                                      // Always "role.deleted"
 type SafetyAlert string                                      // Always "safety.alert"
 type SafetyAlertCreated string                               // Always "safety.alert.created"
+type SafetyDeactivationIssued string                         // Always "safety.deactivation_issued"
 type SafetyOrgAlertCreated string                            // Always "safety.org_alert.created"
+type SafetyWarningIssued string                              // Always "safety.warning_issued"
 type ScoreModel string                                       // Always "score_model"
 type Screenshot string                                       // Always "screenshot"
 type Scroll string                                           // Always "scroll"
@@ -1213,14 +1215,18 @@ func (c ResponseWebSearchCallInProgress) Default() ResponseWebSearchCallInProgre
 func (c ResponseWebSearchCallSearching) Default() ResponseWebSearchCallSearching {
 	return "response.web_search_call.searching"
 }
-func (c Responses) Default() Responses                         { return "responses" }
-func (c ResumeSubagentCall) Default() ResumeSubagentCall       { return "resume_subagent_call" }
-func (c RetentionRatio) Default() RetentionRatio               { return "retention_ratio" }
-func (c Role) Default() Role                                   { return "role" }
-func (c RoleDeleted) Default() RoleDeleted                     { return "role.deleted" }
-func (c SafetyAlert) Default() SafetyAlert                     { return "safety.alert" }
-func (c SafetyAlertCreated) Default() SafetyAlertCreated       { return "safety.alert.created" }
+func (c Responses) Default() Responses                   { return "responses" }
+func (c ResumeSubagentCall) Default() ResumeSubagentCall { return "resume_subagent_call" }
+func (c RetentionRatio) Default() RetentionRatio         { return "retention_ratio" }
+func (c Role) Default() Role                             { return "role" }
+func (c RoleDeleted) Default() RoleDeleted               { return "role.deleted" }
+func (c SafetyAlert) Default() SafetyAlert               { return "safety.alert" }
+func (c SafetyAlertCreated) Default() SafetyAlertCreated { return "safety.alert.created" }
+func (c SafetyDeactivationIssued) Default() SafetyDeactivationIssued {
+	return "safety.deactivation_issued"
+}
 func (c SafetyOrgAlertCreated) Default() SafetyOrgAlertCreated { return "safety.org_alert.created" }
+func (c SafetyWarningIssued) Default() SafetyWarningIssued     { return "safety.warning_issued" }
 func (c ScoreModel) Default() ScoreModel                       { return "score_model" }
 func (c Screenshot) Default() Screenshot                       { return "screenshot" }
 func (c Scroll) Default() Scroll                               { return "scroll" }
@@ -1827,7 +1833,9 @@ func (c Role) MarshalJSON() ([]byte, error)                                { ret
 func (c RoleDeleted) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c SafetyAlert) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c SafetyAlertCreated) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c SafetyDeactivationIssued) MarshalJSON() ([]byte, error)            { return marshalString(c) }
 func (c SafetyOrgAlertCreated) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c SafetyWarningIssued) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c ScoreModel) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c Screenshot) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c Scroll) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
