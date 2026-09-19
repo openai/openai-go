@@ -819,12 +819,18 @@ type LiveCallIncomingWebhookEventData struct {
 	// names, values, repeated entries, and order are preserved. Treat these values as
 	// untrusted call metadata.
 	SipHeaders []LiveCallIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
+	// Media protection selected on the SIP leg during SDP negotiation. `srtp`
+	// indicates SRTP; `rtp` indicates unencrypted RTP. Omitted when unknown. This does
+	// not describe SIP signaling security or confirm that media has flowed. Clients
+	// should handle unrecognized values as unknown.
+	SipMediaSecurity string `json:"sip_media_security"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		SessionID   respjson.Field
-		SipHeaders  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		SessionID        respjson.Field
+		SipHeaders       respjson.Field
+		SipMediaSecurity respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 
@@ -907,13 +913,19 @@ type LiveTransportIncomingWebhookEventData struct {
 	SipHeaders []LiveTransportIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
 	// The incoming transport type. Always `sip`.
 	Type constant.Sip `json:"type" default:"sip"`
+	// Media protection selected on the SIP leg during SDP negotiation. `srtp`
+	// indicates SRTP; `rtp` indicates unencrypted RTP. Omitted when unknown. This does
+	// not describe SIP signaling security or confirm that media has flowed. Clients
+	// should handle unrecognized values as unknown.
+	SipMediaSecurity string `json:"sip_media_security"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		SessionID   respjson.Field
-		SipHeaders  respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		SessionID        respjson.Field
+		SipHeaders       respjson.Field
+		Type             respjson.Field
+		SipMediaSecurity respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 
@@ -995,12 +1007,18 @@ type RealtimeCallIncomingWebhookEventData struct {
 	// names, values, repeated entries, and order are preserved. Treat these values as
 	// untrusted call metadata.
 	SipHeaders []RealtimeCallIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
+	// Media protection selected on the SIP leg during SDP negotiation. `srtp`
+	// indicates SRTP; `rtp` indicates unencrypted RTP. Omitted when unknown. This does
+	// not describe SIP signaling security or confirm that media has flowed. Clients
+	// should handle unrecognized values as unknown.
+	SipMediaSecurity string `json:"sip_media_security"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		CallID      respjson.Field
-		SipHeaders  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		CallID           respjson.Field
+		SipHeaders       respjson.Field
+		SipMediaSecurity respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 
@@ -1616,18 +1634,20 @@ type UnwrapWebhookEventUnionData struct {
 	// This field is a union of [[]LiveCallIncomingWebhookEventDataSipHeader],
 	// [[]LiveTransportIncomingWebhookEventDataSipHeader],
 	// [[]RealtimeCallIncomingWebhookEventDataSipHeader]
-	SipHeaders UnwrapWebhookEventUnionDataSipHeaders `json:"sip_headers"`
+	SipHeaders       UnwrapWebhookEventUnionDataSipHeaders `json:"sip_headers"`
+	SipMediaSecurity string                                `json:"sip_media_security"`
 	// This field is from variant [LiveTransportIncomingWebhookEventData].
 	Type constant.Sip `json:"type"`
 	// This field is from variant [RealtimeCallIncomingWebhookEventData].
 	CallID string `json:"call_id"`
 	JSON   struct {
-		ID         respjson.Field
-		SessionID  respjson.Field
-		SipHeaders respjson.Field
-		Type       respjson.Field
-		CallID     respjson.Field
-		raw        string
+		ID               respjson.Field
+		SessionID        respjson.Field
+		SipHeaders       respjson.Field
+		SipMediaSecurity respjson.Field
+		Type             respjson.Field
+		CallID           respjson.Field
+		raw              string
 	} `json:"-"`
 }
 
