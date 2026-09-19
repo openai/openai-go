@@ -1,5 +1,22 @@
 # Changelog
 
+## [3.64.0](https://github.com/openai/openai-go/compare/v3.63.1...v3.64.0) (2026-09-19)
+
+
+### Features
+
+* **api:** add environment-variable vault credentials ([#935](https://github.com/openai/openai-go/issues/935)) ([825408c](https://github.com/openai/openai-go/commit/825408c645f2a22407e9016ec733996fc9676b24))
+* **api:** add external storage configuration management ([#939](https://github.com/openai/openai-go/issues/939)) ([72cdb7d](https://github.com/openai/openai-go/commit/72cdb7def6f96db1403bac1880d6a656c37fea6b))
+* **api:** add safety case retrieval ([#940](https://github.com/openai/openai-go/issues/940)) ([1fcb8bb](https://github.com/openai/openai-go/commit/1fcb8bbdfa352cc729ddefff4fed4f8bb7ceb19b))
+* **api:** add safety warning and deactivation webhook events ([#938](https://github.com/openai/openai-go/issues/938)) ([f7ef9d0](https://github.com/openai/openai-go/commit/f7ef9d030c5db0cd9419352d738834370b9620fe))
+* **api:** add session environment reset events ([#942](https://github.com/openai/openai-go/issues/942)) ([bb3efb9](https://github.com/openai/openai-go/commit/bb3efb92a16862ce83207a15d375f114cb457a8e))
+* **api:** add SIP media security to incoming call events ([#937](https://github.com/openai/openai-go/issues/937)) ([c5573ed](https://github.com/openai/openai-go/commit/c5573ed7af6a1eb612ecce316a2b5975f250fa22))
+
+
+### Chores
+
+* **api:** document response management resources ([#941](https://github.com/openai/openai-go/issues/941)) ([0253af9](https://github.com/openai/openai-go/commit/0253af9d2f129a11df2d4921be519f20f6209b02))
+
 ## [3.63.1](https://github.com/openai/openai-go/compare/v3.63.0...v3.63.1) (2026-09-18)
 
 
