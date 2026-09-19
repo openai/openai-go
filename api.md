@@ -507,6 +507,7 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEnvironmentFailedEvent">AgentSessionEnvironmentFailedEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEnvironmentPendingEvent">AgentSessionEnvironmentPendingEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEnvironmentReadyEvent">AgentSessionEnvironmentReadyEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEnvironmentResetEvent">AgentSessionEnvironmentResetEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEnvironmentState">AgentSessionEnvironmentState</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionErrorEvent">AgentSessionErrorEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEventUnion">AgentSessionEventUnion</a>

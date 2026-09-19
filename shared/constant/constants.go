@@ -38,6 +38,7 @@ type AgentSessionEnvironmentDisconnected string              // Always "agent.se
 type AgentSessionEnvironmentFailed string                    // Always "agent.session.environment.failed"
 type AgentSessionEnvironmentPending string                   // Always "agent.session.environment.pending"
 type AgentSessionEnvironmentReady string                     // Always "agent.session.environment.ready"
+type AgentSessionEnvironmentReset string                     // Always "agent.session.environment.reset"
 type AgentSessionFailed string                               // Always "agent.session.failed"
 type AgentSessionIdle string                                 // Always "agent.session.idle"
 type AgentSessionInProgress string                           // Always "agent.session.in_progress"
@@ -593,6 +594,9 @@ func (c AgentSessionEnvironmentPending) Default() AgentSessionEnvironmentPending
 }
 func (c AgentSessionEnvironmentReady) Default() AgentSessionEnvironmentReady {
 	return "agent.session.environment.ready"
+}
+func (c AgentSessionEnvironmentReset) Default() AgentSessionEnvironmentReset {
+	return "agent.session.environment.reset"
 }
 func (c AgentSessionFailed) Default() AgentSessionFailed         { return "agent.session.failed" }
 func (c AgentSessionIdle) Default() AgentSessionIdle             { return "agent.session.idle" }
@@ -1440,6 +1444,7 @@ func (c AgentSessionEnvironmentDisconnected) MarshalJSON() ([]byte, error) { ret
 func (c AgentSessionEnvironmentFailed) MarshalJSON() ([]byte, error)       { return marshalString(c) }
 func (c AgentSessionEnvironmentPending) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c AgentSessionEnvironmentReady) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c AgentSessionEnvironmentReset) MarshalJSON() ([]byte, error)        { return marshalString(c) }
 func (c AgentSessionFailed) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c AgentSessionIdle) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c AgentSessionInProgress) MarshalJSON() ([]byte, error)              { return marshalString(c) }
