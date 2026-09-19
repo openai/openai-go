@@ -4,6 +4,7 @@ package openai
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"slices"
@@ -74,7 +75,8 @@ type AdminOrganizationAuditLogListResponse struct {
 	// "certificate.created", "certificate.updated", "certificate.deleted",
 	// "certificates.activated", "certificates.deactivated",
 	// "checkpoint.permission.created", "checkpoint.permission.deleted",
-	// "external_key.registered", "external_key.removed", "group.created",
+	// "external_key.registered", "external_key.removed",
+	// "external_storage.registered", "external_storage.removed", "group.created",
 	// "group.updated", "group.deleted", "invite.sent", "invite.accepted",
 	// "invite.deleted", "ip_allowlist.created", "ip_allowlist.updated",
 	// "ip_allowlist.deleted", "ip_allowlist.config.activated",
@@ -169,6 +171,10 @@ type AdminOrganizationAuditLogListResponse struct {
 	ExternalKeyRegistered AdminOrganizationAuditLogListResponseExternalKeyRegistered `json:"external_key.registered"`
 	// The details for events with this `type`.
 	ExternalKeyRemoved AdminOrganizationAuditLogListResponseExternalKeyRemoved `json:"external_key.removed"`
+	// The details for events with this `type`.
+	ExternalStorageRegistered AdminOrganizationAuditLogListResponseExternalStorageRegistered `json:"external_storage.registered"`
+	// The details for events with this `type`.
+	ExternalStorageRemoved AdminOrganizationAuditLogListResponseExternalStorageRemoved `json:"external_storage.removed"`
 	// The details for events with this `type`.
 	GroupCreated AdminOrganizationAuditLogListResponseGroupCreated `json:"group.created"`
 	// The details for events with this `type`.
@@ -277,6 +283,8 @@ type AdminOrganizationAuditLogListResponse struct {
 		CheckpointPermissionDeleted            respjson.Field
 		ExternalKeyRegistered                  respjson.Field
 		ExternalKeyRemoved                     respjson.Field
+		ExternalStorageRegistered              respjson.Field
+		ExternalStorageRemoved                 respjson.Field
 		GroupCreated                           respjson.Field
 		GroupDeleted                           respjson.Field
 		GroupUpdated                           respjson.Field
@@ -348,6 +356,8 @@ const (
 	AdminOrganizationAuditLogListResponseTypeCheckpointPermissionDeleted                    AdminOrganizationAuditLogListResponseType = "checkpoint.permission.deleted"
 	AdminOrganizationAuditLogListResponseTypeExternalKeyRegistered                          AdminOrganizationAuditLogListResponseType = "external_key.registered"
 	AdminOrganizationAuditLogListResponseTypeExternalKeyRemoved                             AdminOrganizationAuditLogListResponseType = "external_key.removed"
+	AdminOrganizationAuditLogListResponseTypeExternalStorageRegistered                      AdminOrganizationAuditLogListResponseType = "external_storage.registered"
+	AdminOrganizationAuditLogListResponseTypeExternalStorageRemoved                         AdminOrganizationAuditLogListResponseType = "external_storage.removed"
 	AdminOrganizationAuditLogListResponseTypeGroupCreated                                   AdminOrganizationAuditLogListResponseType = "group.created"
 	AdminOrganizationAuditLogListResponseTypeGroupUpdated                                   AdminOrganizationAuditLogListResponseType = "group.updated"
 	AdminOrganizationAuditLogListResponseTypeGroupDeleted                                   AdminOrganizationAuditLogListResponseType = "group.deleted"
@@ -974,6 +984,170 @@ type AdminOrganizationAuditLogListResponseExternalKeyRemoved struct {
 // Returns the unmodified JSON received from the API
 func (r AdminOrganizationAuditLogListResponseExternalKeyRemoved) RawJSON() string { return r.JSON.raw }
 func (r *AdminOrganizationAuditLogListResponseExternalKeyRemoved) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The details for events with this `type`.
+type AdminOrganizationAuditLogListResponseExternalStorageRegistered struct {
+	// The ID of the external storage configuration.
+	ID string `json:"id"`
+	// The configuration for the external storage.
+	Data AdminOrganizationAuditLogListResponseExternalStorageRegisteredData `json:"data"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Data        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationAuditLogListResponseExternalStorageRegistered) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationAuditLogListResponseExternalStorageRegistered) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The configuration for the external storage.
+type AdminOrganizationAuditLogListResponseExternalStorageRegisteredData struct {
+	// The OpenAI geography derived from the storage region.
+	Geography string `json:"geography"`
+	// The external storage provider configuration.
+	Provider AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion `json:"provider"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Geography   respjson.Field
+		Provider    respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationAuditLogListResponseExternalStorageRegisteredData) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationAuditLogListResponseExternalStorageRegisteredData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion
+// contains all possible properties and values from [AwsExternalStorageProvider],
+// [AzureExternalStorageProvider].
+//
+// Use the
+// [AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion.AsAny]
+// method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion struct {
+	// This field is from variant [AwsExternalStorageProvider].
+	AccountID string `json:"account_id"`
+	// This field is from variant [AwsExternalStorageProvider].
+	Bucket string `json:"bucket"`
+	// This field is from variant [AwsExternalStorageProvider].
+	ExternalID string `json:"external_id"`
+	Region     string `json:"region"`
+	// This field is from variant [AwsExternalStorageProvider].
+	RoleArn string `json:"role_arn"`
+	// Any of "aws", "azure".
+	Type string `json:"type"`
+	// This field is from variant [AzureExternalStorageProvider].
+	AccountName string `json:"account_name"`
+	// This field is from variant [AzureExternalStorageProvider].
+	Container string `json:"container"`
+	// This field is from variant [AzureExternalStorageProvider].
+	ResourceGroup string `json:"resource_group"`
+	// This field is from variant [AzureExternalStorageProvider].
+	SubscriptionID string `json:"subscription_id"`
+	// This field is from variant [AzureExternalStorageProvider].
+	TenantID string `json:"tenant_id"`
+	JSON     struct {
+		AccountID      respjson.Field
+		Bucket         respjson.Field
+		ExternalID     respjson.Field
+		Region         respjson.Field
+		RoleArn        respjson.Field
+		Type           respjson.Field
+		AccountName    respjson.Field
+		Container      respjson.Field
+		ResourceGroup  respjson.Field
+		SubscriptionID respjson.Field
+		TenantID       respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// anyAdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProvider is
+// implemented by each variant of
+// [AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion]
+// to add type safety for the return type of
+// [AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion.AsAny]
+type anyAdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProvider interface {
+	implAdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion()
+}
+
+func (AwsExternalStorageProvider) implAdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion() {
+}
+func (AzureExternalStorageProvider) implAdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion.AsAny().(type) {
+//	case openai.AwsExternalStorageProvider:
+//	case openai.AzureExternalStorageProvider:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion) AsAny() anyAdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProvider {
+	switch u.Type {
+	case "aws":
+		return u.AsAws()
+	case "azure":
+		return u.AsAzure()
+	}
+	return nil
+}
+
+func (u AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion) AsAws() (v AwsExternalStorageProvider) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion) AsAzure() (v AzureExternalStorageProvider) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The details for events with this `type`.
+type AdminOrganizationAuditLogListResponseExternalStorageRemoved struct {
+	// The ID of the external storage configuration.
+	ID string `json:"id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationAuditLogListResponseExternalStorageRemoved) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationAuditLogListResponseExternalStorageRemoved) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -2325,7 +2499,8 @@ type AdminOrganizationAuditLogListParams struct {
 	// "certificate.created", "certificate.updated", "certificate.deleted",
 	// "certificates.activated", "certificates.deactivated",
 	// "checkpoint.permission.created", "checkpoint.permission.deleted",
-	// "external_key.registered", "external_key.removed", "group.created",
+	// "external_key.registered", "external_key.removed",
+	// "external_storage.registered", "external_storage.removed", "group.created",
 	// "group.updated", "group.deleted", "invite.sent", "invite.accepted",
 	// "invite.deleted", "ip_allowlist.created", "ip_allowlist.updated",
 	// "ip_allowlist.deleted", "ip_allowlist.config.activated",
