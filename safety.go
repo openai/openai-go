@@ -16,6 +16,7 @@ import (
 type SafetyService struct {
 	Options []option.RequestOption
 	Alerts  SafetyAlertService
+	Cases   SafetyCaseService
 }
 
 // NewSafetyService generates a new service that applies the given options to each
@@ -25,5 +26,6 @@ func NewSafetyService(opts ...option.RequestOption) (r SafetyService) {
 	r = SafetyService{}
 	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Alerts = NewSafetyAlertService(opts...)
+	r.Cases = NewSafetyCaseService(opts...)
 	return
 }
