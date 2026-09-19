@@ -735,9 +735,18 @@ func (cfg *RequestConfig) Execute() (err error) {
 		// Load the contents into the error format if it is provided.
 		aerr := apierror.Error{Request: cfg.Request, Response: res, StatusCode: res.StatusCode}
 		unwrapped := gjson.GetBytes(contents, "error").Raw
-		err = aerr.UnmarshalJSON([]byte(unwrapped))
-		if err != nil {
-			return err
+		if unwrapped != "" {
+			err = aerr.UnmarshalJSON([]byte(unwrapped))
+			if err != nil {
+				return err
+			}
+		} else {
+			// A non-API server can return an HTTP error without the API error
+			// envelope. Preserve the response for diagnostics while supplying
+			// only the HTTP details that are known to the SDK.
+			aerr.Code = fmt.Sprintf("http_%d", res.StatusCode)
+			aerr.Message = fmt.Sprintf("unexpected HTTP %d %s response", res.StatusCode, http.StatusText(res.StatusCode))
+			aerr.Type = "http_error"
 		}
 		return &aerr
 	}
