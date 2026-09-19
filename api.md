@@ -432,6 +432,16 @@ Methods:
 
 - <code title="get /safety/alerts/{id}">client.Safety.Alerts.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SafetyAlertService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SafetyAlert">SafetyAlert</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
+## Cases
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SafetyCase">SafetyCase</a>
+
+Methods:
+
+- <code title="get /safety/cases/{id}">client.Safety.Cases.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SafetyCaseService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SafetyCase">SafetyCase</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
 # [Webhooks](webhooks/api.md)
 
 Methods:

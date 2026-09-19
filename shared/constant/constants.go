@@ -417,6 +417,7 @@ type Role string                                             // Always "role"
 type RoleDeleted string                                      // Always "role.deleted"
 type SafetyAlert string                                      // Always "safety.alert"
 type SafetyAlertCreated string                               // Always "safety.alert.created"
+type SafetyCase string                                       // Always "safety.case"
 type SafetyDeactivationIssued string                         // Always "safety.deactivation_issued"
 type SafetyOrgAlertCreated string                            // Always "safety.org_alert.created"
 type SafetyWarningIssued string                              // Always "safety.warning_issued"
@@ -1234,6 +1235,7 @@ func (c Role) Default() Role                             { return "role" }
 func (c RoleDeleted) Default() RoleDeleted               { return "role.deleted" }
 func (c SafetyAlert) Default() SafetyAlert               { return "safety.alert" }
 func (c SafetyAlertCreated) Default() SafetyAlertCreated { return "safety.alert.created" }
+func (c SafetyCase) Default() SafetyCase                 { return "safety.case" }
 func (c SafetyDeactivationIssued) Default() SafetyDeactivationIssued {
 	return "safety.deactivation_issued"
 }
@@ -1849,6 +1851,7 @@ func (c Role) MarshalJSON() ([]byte, error)                                { ret
 func (c RoleDeleted) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c SafetyAlert) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c SafetyAlertCreated) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c SafetyCase) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c SafetyDeactivationIssued) MarshalJSON() ([]byte, error)            { return marshalString(c) }
 func (c SafetyOrgAlertCreated) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c SafetyWarningIssued) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
