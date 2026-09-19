@@ -111,7 +111,7 @@ func (r *ResponseService) GetStreaming(ctx context.Context, responseID string, q
 	)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
-	opts = append(opts, option.WithJSONSet("stream", true))
+	opts = append(opts, option.WithQuery("stream", "true"))
 	if responseID == "" {
 		err = errors.New("missing required response_id parameter")
 		return ssestream.NewStream[ResponseStreamEventUnion](nil, err)
