@@ -21,7 +21,9 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#ResponseFailedWebhookEvent">ResponseFailedWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#ResponseIncompleteWebhookEvent">ResponseIncompleteWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#SafetyAlertCreatedWebhookEvent">SafetyAlertCreatedWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#SafetyDeactivationIssuedWebhookEvent">SafetyDeactivationIssuedWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#SafetyOrgAlertCreatedWebhookEvent">SafetyOrgAlertCreatedWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#SafetyWarningIssuedWebhookEvent">SafetyWarningIssuedWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#UnwrapWebhookEventUnion">UnwrapWebhookEventUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#WebhookEndpoint">WebhookEndpoint</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#WebhookEndpointList">WebhookEndpointList</a>
