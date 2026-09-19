@@ -77,6 +77,8 @@ type AudioPCM string                                         // Always "audio/pc
 type AudioPCMA string                                        // Always "audio/pcma"
 type AudioPCMU string                                        // Always "audio/pcmu"
 type Auto string                                             // Always "auto"
+type Aws string                                              // Always "aws"
+type Azure string                                            // Always "azure"
 type Base64 string                                           // Always "base64"
 type Batch string                                            // Always "batch"
 type BatchCancelled string                                   // Always "batch.cancelled"
@@ -268,6 +270,8 @@ type OrganizationCertificateActivation string                // Always "organiza
 type OrganizationCertificateDeactivation string              // Always "organization.certificate.deactivation"
 type OrganizationCostsResult string                          // Always "organization.costs.result"
 type OrganizationDataRetention string                        // Always "organization.data_retention"
+type OrganizationExternalStorage string                      // Always "organization.external_storage"
+type OrganizationExternalStorageDeleted string               // Always "organization.external_storage.deleted"
 type OrganizationInvite string                               // Always "organization.invite"
 type OrganizationInviteDeleted string                        // Always "organization.invite.deleted"
 type OrganizationProject string                              // Always "organization.project"
@@ -670,6 +674,8 @@ func (c AudioPCM) Default() AudioPCM                           { return "audio/p
 func (c AudioPCMA) Default() AudioPCMA                         { return "audio/pcma" }
 func (c AudioPCMU) Default() AudioPCMU                         { return "audio/pcmu" }
 func (c Auto) Default() Auto                                   { return "auto" }
+func (c Aws) Default() Aws                                     { return "aws" }
+func (c Azure) Default() Azure                                 { return "azure" }
 func (c Base64) Default() Base64                               { return "base64" }
 func (c Batch) Default() Batch                                 { return "batch" }
 func (c BatchCancelled) Default() BatchCancelled               { return "batch.cancelled" }
@@ -914,6 +920,12 @@ func (c OrganizationCostsResult) Default() OrganizationCostsResult {
 }
 func (c OrganizationDataRetention) Default() OrganizationDataRetention {
 	return "organization.data_retention"
+}
+func (c OrganizationExternalStorage) Default() OrganizationExternalStorage {
+	return "organization.external_storage"
+}
+func (c OrganizationExternalStorageDeleted) Default() OrganizationExternalStorageDeleted {
+	return "organization.external_storage.deleted"
 }
 func (c OrganizationInvite) Default() OrganizationInvite { return "organization.invite" }
 func (c OrganizationInviteDeleted) Default() OrganizationInviteDeleted {
@@ -1473,6 +1485,8 @@ func (c AudioPCM) MarshalJSON() ([]byte, error)                   { return marsh
 func (c AudioPCMA) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c AudioPCMU) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c Auto) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c Aws) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c Azure) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c Base64) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c Batch) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c BatchCancelled) MarshalJSON() ([]byte, error)             { return marshalString(c) }
@@ -1672,6 +1686,8 @@ func (c OrganizationCertificateActivation) MarshalJSON() ([]byte, error)   { ret
 func (c OrganizationCertificateDeactivation) MarshalJSON() ([]byte, error) { return marshalString(c) }
 func (c OrganizationCostsResult) MarshalJSON() ([]byte, error)             { return marshalString(c) }
 func (c OrganizationDataRetention) MarshalJSON() ([]byte, error)           { return marshalString(c) }
+func (c OrganizationExternalStorage) MarshalJSON() ([]byte, error)         { return marshalString(c) }
+func (c OrganizationExternalStorageDeleted) MarshalJSON() ([]byte, error)  { return marshalString(c) }
 func (c OrganizationInvite) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c OrganizationInviteDeleted) MarshalJSON() ([]byte, error)           { return marshalString(c) }
 func (c OrganizationProject) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
