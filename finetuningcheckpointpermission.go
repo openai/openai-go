@@ -40,7 +40,8 @@ func NewFineTuningCheckpointPermissionService(opts ...option.RequestOption) (r F
 	return
 }
 
-// **NOTE:** Calling this endpoint requires an [admin API key](../admin-api-keys).
+// **NOTE:** Calling this endpoint requires an
+// [admin API key](https://developers.openai.com/api/reference/resources/admin/subresources/organization/subresources/admin_api_keys).
 //
 // This enables organization owners to share fine-tuned models with other projects
 // in their organization.
@@ -66,7 +67,8 @@ func (r *FineTuningCheckpointPermissionService) New(ctx context.Context, fineTun
 	return res, nil
 }
 
-// **NOTE:** Calling this endpoint requires an [admin API key](../admin-api-keys).
+// **NOTE:** Calling this endpoint requires an
+// [admin API key](https://developers.openai.com/api/reference/resources/admin/subresources/organization/subresources/admin_api_keys).
 //
 // This enables organization owners to share fine-tuned models with other projects
 // in their organization.
@@ -74,7 +76,8 @@ func (r *FineTuningCheckpointPermissionService) NewAutoPaging(ctx context.Contex
 	return pagination.NewPageAutoPager(r.New(ctx, fineTunedModelCheckpoint, body, opts...))
 }
 
-// **NOTE:** This endpoint requires an [admin API key](../admin-api-keys).
+// **NOTE:** This endpoint requires an
+// [admin API key](https://developers.openai.com/api/reference/resources/admin/subresources/organization/subresources/admin_api_keys).
 //
 // Organization owners can use this endpoint to view all permissions for a
 // fine-tuned model checkpoint.
@@ -93,7 +96,8 @@ func (r *FineTuningCheckpointPermissionService) Get(ctx context.Context, fineTun
 	return res, err
 }
 
-// **NOTE:** This endpoint requires an [admin API key](../admin-api-keys).
+// **NOTE:** This endpoint requires an
+// [admin API key](https://developers.openai.com/api/reference/resources/admin/subresources/organization/subresources/admin_api_keys).
 //
 // Organization owners can use this endpoint to view all permissions for a
 // fine-tuned model checkpoint.
@@ -119,7 +123,8 @@ func (r *FineTuningCheckpointPermissionService) List(ctx context.Context, fineTu
 	return res, nil
 }
 
-// **NOTE:** This endpoint requires an [admin API key](../admin-api-keys).
+// **NOTE:** This endpoint requires an
+// [admin API key](https://developers.openai.com/api/reference/resources/admin/subresources/organization/subresources/admin_api_keys).
 //
 // Organization owners can use this endpoint to view all permissions for a
 // fine-tuned model checkpoint.
@@ -127,7 +132,8 @@ func (r *FineTuningCheckpointPermissionService) ListAutoPaging(ctx context.Conte
 	return pagination.NewConversationCursorPageAutoPager(r.List(ctx, fineTunedModelCheckpoint, query, opts...))
 }
 
-// **NOTE:** This endpoint requires an [admin API key](../admin-api-keys).
+// **NOTE:** This endpoint requires an
+// [admin API key](https://developers.openai.com/api/reference/resources/admin/subresources/organization/subresources/admin_api_keys).
 //
 // Organization owners can use this endpoint to delete a permission for a
 // fine-tuned model checkpoint.

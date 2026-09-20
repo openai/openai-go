@@ -41,24 +41,24 @@ func NewUploadService(opts ...option.RequestOption) (r UploadService) {
 }
 
 // Creates an intermediate
-// [Upload](https://platform.openai.com/docs/api-reference/uploads/object) object
+// [Upload](https://developers.openai.com/api/reference/resources/uploads) object
 // that you can add
-// [Parts](https://platform.openai.com/docs/api-reference/uploads/part-object) to.
-// Currently, an Upload can accept at most 8 GB in total and expires after an hour
-// after you create it.
+// [Parts](https://developers.openai.com/api/reference/resources/uploads/subresources/parts)
+// to. Currently, an Upload can accept at most 8 GB in total and expires after an
+// hour after you create it.
 //
 // Once you complete the Upload, we will create a
-// [File](https://platform.openai.com/docs/api-reference/files/object) object that
+// [File](https://developers.openai.com/api/reference/resources/files) object that
 // contains all the parts you uploaded. This File is usable in the rest of our
 // platform as a regular File object.
 //
 // For certain `purpose` values, the correct `mime_type` must be specified. Please
 // refer to documentation for the
-// [supported MIME types for your use case](https://platform.openai.com/docs/assistants/tools/file-search#supported-files).
+// [supported MIME types for your use case](https://developers.openai.com/api/docs/guides/tools-file-search#supported-files).
 //
 // For guidance on the proper filename extensions for each purpose, please follow
 // the documentation on
-// [creating a File](https://platform.openai.com/docs/api-reference/files/create).
+// [creating a File](https://developers.openai.com/api/reference/resources/files/methods/create).
 //
 // Returns the Upload object with status `pending`.
 func (r *UploadService) New(ctx context.Context, body UploadNewParams, opts ...option.RequestOption) (res *Upload, err error) {
@@ -85,10 +85,10 @@ func (r *UploadService) Cancel(ctx context.Context, uploadID string, opts ...opt
 }
 
 // Completes the
-// [Upload](https://platform.openai.com/docs/api-reference/uploads/object).
+// [Upload](https://developers.openai.com/api/reference/resources/uploads).
 //
 // Within the returned Upload object, there is a nested
-// [File](https://platform.openai.com/docs/api-reference/files/object) object that
+// [File](https://developers.openai.com/api/reference/resources/files) object that
 // is ready to use in the rest of the platform.
 //
 // You can specify the order of the Parts by passing in an ordered list of the Part
@@ -126,7 +126,7 @@ type Upload struct {
 	// The object type, which is always "upload".
 	Object constant.Upload `json:"object" default:"upload"`
 	// The intended purpose of the file.
-	// [Please refer here](https://platform.openai.com/docs/api-reference/files/object#files/object-purpose)
+	// [Please refer here](https://developers.openai.com/api/reference/resources/files#%28resource%29%20files%20%3E%20%28model%29%20file_object%20%3E%20%28schema%29%20%3E%20%28property%29%20purpose)
 	// for acceptable values.
 	Purpose string `json:"purpose" api:"required"`
 	// The status of the Upload.
@@ -180,7 +180,7 @@ type UploadNewParams struct {
 	// The intended purpose of the uploaded file.
 	//
 	// See the
-	// [documentation on File purposes](https://platform.openai.com/docs/api-reference/files/create#files-create-purpose).
+	// [documentation on File purposes](https://developers.openai.com/api/reference/resources/files/methods/create#%28resource%29%20files%20%3E%20%28method%29%20create%20%3E%20%28params%29%200%20%3E%20%28param%29%20purpose%20%3E%20%28schema%29).
 	//
 	// Any of "assistants", "batch", "fine-tune", "vision", "user_data", "evals".
 	Purpose FilePurpose `json:"purpose,omitzero" api:"required"`

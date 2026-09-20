@@ -476,7 +476,7 @@ func (r *TranscriptionStreamEventUnionLogprobs) UnmarshalJSON(data []byte) error
 
 // Emitted when there is an additional text delta. This is also the first event
 // emitted when the transcription starts. Only emitted when you
-// [create a transcription](https://platform.openai.com/docs/api-reference/audio/create-transcription)
+// [create a transcription](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create)
 // with the `Stream` parameter set to `true`.
 type TranscriptionTextDeltaEvent struct {
 	// The text delta that was additionally transcribed.
@@ -484,7 +484,7 @@ type TranscriptionTextDeltaEvent struct {
 	// The type of the event. Always `transcript.text.delta`.
 	Type constant.TranscriptTextDelta `json:"type" default:"transcript.text.delta"`
 	// The log probabilities of the delta. Only included if you
-	// [create a transcription](https://platform.openai.com/docs/api-reference/audio/create-transcription)
+	// [create a transcription](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create)
 	// with the `include[]` parameter set to `logprobs`.
 	Logprobs []TranscriptionTextDeltaEventLogprob `json:"logprobs"`
 	// Identifier of the diarized segment that this delta belongs to. Only present when
@@ -532,7 +532,7 @@ func (r *TranscriptionTextDeltaEventLogprob) UnmarshalJSON(data []byte) error {
 
 // Emitted when the transcription is complete. Contains the complete transcription
 // text. Only emitted when you
-// [create a transcription](https://platform.openai.com/docs/api-reference/audio/create-transcription)
+// [create a transcription](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create)
 // with the `Stream` parameter set to `true`.
 type TranscriptionTextDoneEvent struct {
 	// The text that was transcribed.
@@ -544,7 +544,7 @@ type TranscriptionTextDoneEvent struct {
 	Languages []TranscriptionLanguage `json:"languages"`
 	// The log probabilities of the individual tokens in the transcription. Only
 	// included if you
-	// [create a transcription](https://platform.openai.com/docs/api-reference/audio/create-transcription)
+	// [create a transcription](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create)
 	// with the `include[]` parameter set to `logprobs`.
 	Logprobs []TranscriptionTextDoneEventLogprob `json:"logprobs"`
 	// Usage statistics for models billed by token usage.
@@ -643,7 +643,7 @@ func (r *TranscriptionTextDoneEventUsageInputTokenDetails) UnmarshalJSON(data []
 
 // Emitted when a diarized transcription returns a completed segment with speaker
 // information. Only emitted when you
-// [create a transcription](https://platform.openai.com/docs/api-reference/audio/create-transcription)
+// [create a transcription](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create)
 // with `stream` set to `true` and `response_format` set to `diarized_json`.
 type TranscriptionTextSegmentEvent struct {
 	// Unique identifier for the segment.
@@ -854,7 +854,7 @@ type AudioTranscriptionNewParams struct {
 	Language param.Opt[string] `json:"language,omitzero"`
 	// An optional text to guide the model's style or continue a previous audio
 	// segment. The
-	// [prompt](https://platform.openai.com/docs/guides/speech-to-text#prompting)
+	// [prompt](https://developers.openai.com/api/docs/guides/speech-to-text#prompting)
 	// should match the audio language. This field is not supported when using
 	// `gpt-4o-transcribe-diarize`.
 	Prompt param.Opt[string] `json:"prompt,omitzero"`

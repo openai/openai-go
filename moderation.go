@@ -38,7 +38,8 @@ func NewModerationService(opts ...option.RequestOption) (r ModerationService) {
 }
 
 // Classifies if text and/or image inputs are potentially harmful. Learn more in
-// the [moderation guide](https://platform.openai.com/docs/guides/moderation).
+// the
+// [moderation guide](https://developers.openai.com/api/docs/guides/moderation).
 func (r *ModerationService) New(ctx context.Context, body ModerationNewParams, opts ...option.RequestOption) (res *ModerationNewResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -437,9 +438,9 @@ type ModerationNewParams struct {
 	// an array of multi-modal input objects similar to other models.
 	Input ModerationNewParamsInputUnion `json:"input,omitzero" api:"required"`
 	// The content moderation model you would like to use. Learn more in
-	// [the moderation guide](https://platform.openai.com/docs/guides/moderation), and
-	// learn about available models
-	// [here](https://platform.openai.com/docs/models#moderation).
+	// [the moderation guide](https://developers.openai.com/api/docs/guides/moderation),
+	// and learn about available models
+	// [here](https://developers.openai.com/api/docs/guides/moderation).
 	Model ModerationModel `json:"model,omitzero"`
 	paramObj
 }

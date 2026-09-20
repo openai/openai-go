@@ -166,6 +166,7 @@ func WithHeaderDel(key string) RequestOption {
 // any value if there was one already present.
 func WithQuery(key, value string) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		r.RecordQueryChange(key, true)
 		query := r.Request.URL.Query()
 		query.Set(key, value)
 		r.Request.URL.RawQuery = query.Encode()
@@ -177,6 +178,7 @@ func WithQuery(key, value string) RequestOption {
 // onto any existing values.
 func WithQueryAdd(key, value string) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		r.RecordQueryChange(key, false)
 		query := r.Request.URL.Query()
 		query.Add(key, value)
 		r.Request.URL.RawQuery = query.Encode()
@@ -187,6 +189,7 @@ func WithQueryAdd(key, value string) RequestOption {
 // WithQueryDel returns a RequestOption that deletes the query value(s) associated with the key.
 func WithQueryDel(key string) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		r.RecordQueryChange(key, true)
 		query := r.Request.URL.Query()
 		query.Del(key)
 		r.Request.URL.RawQuery = query.Encode()

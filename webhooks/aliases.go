@@ -4,8 +4,12 @@ package webhooks
 
 import (
 	"github.com/openai/openai-go/v3/internal/apierror"
+	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/shared"
 )
+
+// aliased to make [param.APIObject] private when embedding
+type paramObj = param.APIObject
 
 type Error = apierror.Error
 
@@ -132,9 +136,6 @@ const ChatModelGPT5_1_2025_11_13 = shared.ChatModelGPT5_1_2025_11_13
 // Equals "gpt-5.1-codex"
 const ChatModelGPT5_1Codex = shared.ChatModelGPT5_1Codex
 
-// Equals "gpt-5.1-mini"
-const ChatModelGPT5_1Mini = shared.ChatModelGPT5_1Mini
-
 // Equals "gpt-5.1-chat-latest"
 const ChatModelGPT5_1ChatLatest = shared.ChatModelGPT5_1ChatLatest
 
@@ -224,6 +225,12 @@ const ChatModelGPT4o2024_08_06 = shared.ChatModelGPT4o2024_08_06
 
 // Equals "gpt-4o-2024-05-13"
 const ChatModelGPT4o2024_05_13 = shared.ChatModelGPT4o2024_05_13
+
+// Equals "gpt-audio-mini"
+const ChatModelGPTAudioMini = shared.ChatModelGPTAudioMini
+
+// Equals "gpt-audio-mini-2025-12-15"
+const ChatModelGPTAudioMini2025_12_15 = shared.ChatModelGPTAudioMini2025_12_15
 
 // Equals "gpt-4o-audio-preview"
 const ChatModelGPT4oAudioPreview = shared.ChatModelGPT4oAudioPreview
@@ -323,6 +330,9 @@ const ChatModelGPT3_5Turbo0125 = shared.ChatModelGPT3_5Turbo0125
 
 // Equals "gpt-3.5-turbo-16k-0613"
 const ChatModelGPT3_5Turbo16k0613 = shared.ChatModelGPT3_5Turbo16k0613
+
+// Equals "gpt-5.1-mini"
+const ChatModelGPT5_1Mini = shared.ChatModelGPT5_1Mini
 
 // A filter used to compare a specified attribute key to a given value using a
 // defined comparison operation.
@@ -474,8 +484,8 @@ type FunctionDefinition = shared.FunctionDefinition
 type FunctionDefinitionParam = shared.FunctionDefinitionParam
 
 // The parameters the functions accepts, described as a JSON Schema object. See the
-// [guide](https://platform.openai.com/docs/guides/function-calling) for examples,
-// and the
+// [guide](https://developers.openai.com/api/docs/guides/function-calling) for
+// examples, and the
 // [JSON Schema reference](https://json-schema.org/understanding-json-schema/) for
 // documentation about the format.
 //
@@ -504,7 +514,7 @@ const OAuthErrorCodeInvalidGrant = shared.OAuthErrorCodeInvalidGrant
 const OAuthErrorCodeInvalidSubjectToken = shared.OAuthErrorCodeInvalidSubjectToken
 
 // Configuration options for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 //
 // This is an alias to an internal type.
 type Reasoning = shared.Reasoning
@@ -579,7 +589,7 @@ const ReasoningSummaryConcise = shared.ReasoningSummaryConcise
 const ReasoningSummaryDetailed = shared.ReasoningSummaryDetailed
 
 // Configuration options for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 //
 // This is an alias to an internal type.
 type ReasoningParam = shared.ReasoningParam
@@ -588,7 +598,7 @@ type ReasoningParam = shared.ReasoningParam
 // are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
 // reasoning effort can result in faster responses and fewer tokens used on
 // reasoning in a response. Not all reasoning models support every value. See the
-// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+// [reasoning guide](https://developers.openai.com/api/docs/guides/reasoning) for
 // model-specific support.
 //
 // This is an alias to an internal type.
@@ -631,7 +641,7 @@ type ResponseFormatJSONObjectParam = shared.ResponseFormatJSONObjectParam
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
-// [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
+// [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 //
 // This is an alias to an internal type.
 type ResponseFormatJSONSchema = shared.ResponseFormatJSONSchema
@@ -643,7 +653,7 @@ type ResponseFormatJSONSchemaJSONSchema = shared.ResponseFormatJSONSchemaJSONSch
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
-// [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
+// [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 //
 // This is an alias to an internal type.
 type ResponseFormatJSONSchemaParam = shared.ResponseFormatJSONSchemaParam

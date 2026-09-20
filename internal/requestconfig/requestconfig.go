@@ -344,6 +344,7 @@ type RequestConfig struct {
 	dataResidencyEndpoint      bool
 	authentication             authenticationState
 	cloneError                 error
+	queryChanges               map[string]bool
 	// DefaultBaseURL will be used if BaseURL is not explicitly overridden using
 	// WithBaseURL.
 	DefaultBaseURL *url.URL

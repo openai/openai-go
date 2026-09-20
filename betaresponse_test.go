@@ -29,7 +29,7 @@ func TestBetaResponseNewWithOptionalParams(t *testing.T) {
 	_, err := client.Beta.Responses.New(context.TODO(), openai.BetaResponseNewParams{
 		Background: openai.Bool(true),
 		ContextManagement: []openai.BetaResponseNewParamsContextManagement{{
-			Type:             "type",
+			Type:             "compaction",
 			CompactThreshold: openai.Int(1000),
 		}},
 		Conversation: openai.BetaResponseNewParamsConversationUnion{
@@ -76,6 +76,7 @@ func TestBetaResponseNewWithOptionalParams(t *testing.T) {
 		PromptCacheOptions: openai.BetaResponseNewParamsPromptCacheOptions{
 			ComparisonResponseID: openai.String("resp_123"),
 			Mode:                 "implicit",
+			Prewarm:              openai.Bool(true),
 			Ttl:                  "30m",
 		},
 		PromptCacheRetention: openai.BetaResponseNewParamsPromptCacheRetentionInMemory,

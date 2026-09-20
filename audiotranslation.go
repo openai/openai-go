@@ -75,7 +75,7 @@ type AudioTranslationNewParams struct {
 	Model AudioModel `json:"model,omitzero" api:"required"`
 	// An optional text to guide the model's style or continue a previous audio
 	// segment. The
-	// [prompt](https://platform.openai.com/docs/guides/speech-to-text#prompting)
+	// [prompt](https://developers.openai.com/api/docs/guides/speech-to-text#prompting)
 	// should be in English.
 	Prompt param.Opt[string] `json:"prompt,omitzero"`
 	// The sampling temperature, between 0 and 1. Higher values like 0.8 will make the
