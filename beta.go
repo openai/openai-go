@@ -14,9 +14,8 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewBetaService] method instead.
 type BetaService struct {
-	Options []option.RequestOption
-	Agents  BetaAgentService
-	// Create and manage model responses.
+	Options   []option.RequestOption
+	Agents    BetaAgentService
 	Responses BetaResponseService
 	ChatKit   BetaChatKitService
 	// Build Assistants that can call models and use tools.

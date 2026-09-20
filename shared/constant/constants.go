@@ -38,7 +38,6 @@ type AgentSessionEnvironmentDisconnected string              // Always "agent.se
 type AgentSessionEnvironmentFailed string                    // Always "agent.session.environment.failed"
 type AgentSessionEnvironmentPending string                   // Always "agent.session.environment.pending"
 type AgentSessionEnvironmentReady string                     // Always "agent.session.environment.ready"
-type AgentSessionEnvironmentReset string                     // Always "agent.session.environment.reset"
 type AgentSessionFailed string                               // Always "agent.session.failed"
 type AgentSessionIdle string                                 // Always "agent.session.idle"
 type AgentSessionInProgress string                           // Always "agent.session.in_progress"
@@ -418,7 +417,6 @@ type Role string                                             // Always "role"
 type RoleDeleted string                                      // Always "role.deleted"
 type SafetyAlert string                                      // Always "safety.alert"
 type SafetyAlertCreated string                               // Always "safety.alert.created"
-type SafetyCase string                                       // Always "safety.case"
 type SafetyDeactivationIssued string                         // Always "safety.deactivation_issued"
 type SafetyOrgAlertCreated string                            // Always "safety.org_alert.created"
 type SafetyWarningIssued string                              // Always "safety.warning_issued"
@@ -594,9 +592,6 @@ func (c AgentSessionEnvironmentPending) Default() AgentSessionEnvironmentPending
 }
 func (c AgentSessionEnvironmentReady) Default() AgentSessionEnvironmentReady {
 	return "agent.session.environment.ready"
-}
-func (c AgentSessionEnvironmentReset) Default() AgentSessionEnvironmentReset {
-	return "agent.session.environment.reset"
 }
 func (c AgentSessionFailed) Default() AgentSessionFailed         { return "agent.session.failed" }
 func (c AgentSessionIdle) Default() AgentSessionIdle             { return "agent.session.idle" }
@@ -1239,7 +1234,6 @@ func (c Role) Default() Role                             { return "role" }
 func (c RoleDeleted) Default() RoleDeleted               { return "role.deleted" }
 func (c SafetyAlert) Default() SafetyAlert               { return "safety.alert" }
 func (c SafetyAlertCreated) Default() SafetyAlertCreated { return "safety.alert.created" }
-func (c SafetyCase) Default() SafetyCase                 { return "safety.case" }
 func (c SafetyDeactivationIssued) Default() SafetyDeactivationIssued {
 	return "safety.deactivation_issued"
 }
@@ -1444,7 +1438,6 @@ func (c AgentSessionEnvironmentDisconnected) MarshalJSON() ([]byte, error) { ret
 func (c AgentSessionEnvironmentFailed) MarshalJSON() ([]byte, error)       { return marshalString(c) }
 func (c AgentSessionEnvironmentPending) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c AgentSessionEnvironmentReady) MarshalJSON() ([]byte, error)        { return marshalString(c) }
-func (c AgentSessionEnvironmentReset) MarshalJSON() ([]byte, error)        { return marshalString(c) }
 func (c AgentSessionFailed) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c AgentSessionIdle) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c AgentSessionInProgress) MarshalJSON() ([]byte, error)              { return marshalString(c) }
@@ -1856,7 +1849,6 @@ func (c Role) MarshalJSON() ([]byte, error)                                { ret
 func (c RoleDeleted) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c SafetyAlert) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c SafetyAlertCreated) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
-func (c SafetyCase) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c SafetyDeactivationIssued) MarshalJSON() ([]byte, error)            { return marshalString(c) }
 func (c SafetyOrgAlertCreated) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c SafetyWarningIssued) MarshalJSON() ([]byte, error)                 { return marshalString(c) }

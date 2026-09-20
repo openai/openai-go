@@ -23,8 +23,6 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
-// Create and manage model responses.
-//
 // BetaResponseService contains methods and other services that help with
 // interacting with the openai API.
 //
@@ -32,10 +30,8 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewBetaResponseService] method instead.
 type BetaResponseService struct {
-	Options []option.RequestOption
-	// Create and manage model responses.
-	InputItems BetaResponseInputItemService
-	// Create and manage model responses.
+	Options     []option.RequestOption
+	InputItems  BetaResponseInputItemService
 	InputTokens BetaResponseInputTokenService
 }
 

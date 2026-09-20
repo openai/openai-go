@@ -1603,40 +1603,6 @@ func (r *AgentSessionEnvironmentReadyEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Emitted after a hosted sandbox is replaced. Conversation history survives;
-// changes to the previous sandbox's files and processes do not.
-type AgentSessionEnvironmentResetEvent struct {
-	// The stable environment ID, retained across sandbox replacements.
-	EnvironmentID string `json:"environment_id" api:"required"`
-	// The unique ID of the event.
-	EventID string `json:"event_id" api:"required"`
-	// Monotonically increasing reset number. Repeated notifications share this number.
-	ResetCount int64 `json:"reset_count" api:"required"`
-	// The ID of the session associated with the event.
-	SessionID string `json:"session_id" api:"required"`
-	// The associated turn, when applicable.
-	TurnID string `json:"turn_id" api:"required"`
-	// The type of the object. Always `agent.session.environment.reset`.
-	Type constant.AgentSessionEnvironmentReset `json:"type" default:"agent.session.environment.reset"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		EnvironmentID respjson.Field
-		EventID       respjson.Field
-		ResetCount    respjson.Field
-		SessionID     respjson.Field
-		TurnID        respjson.Field
-		Type          respjson.Field
-		ExtraFields   map[string]respjson.Field
-		raw           string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r AgentSessionEnvironmentResetEvent) RawJSON() string { return r.JSON.raw }
-func (r *AgentSessionEnvironmentResetEvent) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 // The current state of a session environment.
 type AgentSessionEnvironmentState struct {
 	// The public ID of the environment.
@@ -1730,7 +1696,6 @@ func (r *AgentSessionErrorEvent) UnmarshalJSON(data []byte) error {
 
 // AgentSessionEventUnion contains all possible properties and values from
 // [AgentSessionErrorEvent], [AgentSessionEnvironmentReadyEvent],
-// [AgentSessionEnvironmentResetEvent],
 // [AgentOutputCommandExecutionOutputDeltaEvent], [AgentSessionCreatedEvent],
 // [AgentSessionTurnCreatedEvent], [AgentSessionTurnInProgressEvent],
 // [AgentSessionTurnCompletedEvent], [AgentSessionTurnFailedEvent],
@@ -1758,7 +1723,6 @@ type AgentSessionEventUnion struct {
 	EventID   string       `json:"event_id"`
 	SessionID string       `json:"session_id"`
 	// Any of "error", "agent.session.environment.ready",
-	// "agent.session.environment.reset",
 	// "agent.output.command_execution_output.delta", "agent.session.created",
 	// "agent.session.turn.created", "agent.session.turn.in_progress",
 	// "agent.session.turn.completed", "agent.session.turn.failed",
@@ -1779,13 +1743,9 @@ type AgentSessionEventUnion struct {
 	// This field is from variant [AgentSessionEnvironmentReadyEvent].
 	Environment AgentSessionEnvironmentState `json:"environment"`
 	TurnID      string                       `json:"turn_id"`
-	// This field is from variant [AgentSessionEnvironmentResetEvent].
-	EnvironmentID string `json:"environment_id"`
-	// This field is from variant [AgentSessionEnvironmentResetEvent].
-	ResetCount  int64  `json:"reset_count"`
-	Delta       string `json:"delta"`
-	ItemID      string `json:"item_id"`
-	OutputIndex int64  `json:"output_index"`
+	Delta       string                       `json:"delta"`
+	ItemID      string                       `json:"item_id"`
+	OutputIndex int64                        `json:"output_index"`
 	// This field is from variant [AgentSessionCreatedEvent].
 	Session AgentSession `json:"session"`
 	// This field is from variant [AgentSessionTurnCreatedEvent].
@@ -1804,28 +1764,26 @@ type AgentSessionEventUnion struct {
 	// This field is from variant [AgentSessionTurnReasoningSummaryPartDoneEvent].
 	Status constant.Incomplete `json:"status"`
 	JSON   struct {
-		Error         respjson.Field
-		EventID       respjson.Field
-		SessionID     respjson.Field
-		Type          respjson.Field
-		Environment   respjson.Field
-		TurnID        respjson.Field
-		EnvironmentID respjson.Field
-		ResetCount    respjson.Field
-		Delta         respjson.Field
-		ItemID        respjson.Field
-		OutputIndex   respjson.Field
-		Session       respjson.Field
-		Turn          respjson.Field
-		Usage         respjson.Field
-		Item          respjson.Field
-		Subagent      respjson.Field
-		ContentIndex  respjson.Field
-		Part          respjson.Field
-		Text          respjson.Field
-		SummaryIndex  respjson.Field
-		Status        respjson.Field
-		raw           string
+		Error        respjson.Field
+		EventID      respjson.Field
+		SessionID    respjson.Field
+		Type         respjson.Field
+		Environment  respjson.Field
+		TurnID       respjson.Field
+		Delta        respjson.Field
+		ItemID       respjson.Field
+		OutputIndex  respjson.Field
+		Session      respjson.Field
+		Turn         respjson.Field
+		Usage        respjson.Field
+		Item         respjson.Field
+		Subagent     respjson.Field
+		ContentIndex respjson.Field
+		Part         respjson.Field
+		Text         respjson.Field
+		SummaryIndex respjson.Field
+		Status       respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -1837,7 +1795,6 @@ type anyAgentSessionEvent interface {
 
 func (AgentSessionErrorEvent) implAgentSessionEventUnion()                         {}
 func (AgentSessionEnvironmentReadyEvent) implAgentSessionEventUnion()              {}
-func (AgentSessionEnvironmentResetEvent) implAgentSessionEventUnion()              {}
 func (AgentOutputCommandExecutionOutputDeltaEvent) implAgentSessionEventUnion()    {}
 func (AgentSessionCreatedEvent) implAgentSessionEventUnion()                       {}
 func (AgentSessionTurnCreatedEvent) implAgentSessionEventUnion()                   {}
@@ -1872,7 +1829,6 @@ func (AgentSessionTurnReasoningSummaryTextDoneEvent) implAgentSessionEventUnion(
 //	switch variant := AgentSessionEventUnion.AsAny().(type) {
 //	case openai.AgentSessionErrorEvent:
 //	case openai.AgentSessionEnvironmentReadyEvent:
-//	case openai.AgentSessionEnvironmentResetEvent:
 //	case openai.AgentOutputCommandExecutionOutputDeltaEvent:
 //	case openai.AgentSessionCreatedEvent:
 //	case openai.AgentSessionTurnCreatedEvent:
@@ -1910,8 +1866,6 @@ func (u AgentSessionEventUnion) AsAny() anyAgentSessionEvent {
 		return u.AsError()
 	case "agent.session.environment.ready":
 		return u.AsAgentSessionEnvironmentReady()
-	case "agent.session.environment.reset":
-		return u.AsAgentSessionEnvironmentReset()
 	case "agent.output.command_execution_output.delta":
 		return u.AsAgentOutputCommandExecutionOutputDelta()
 	case "agent.session.created":
@@ -1978,11 +1932,6 @@ func (u AgentSessionEventUnion) AsError() (v AgentSessionErrorEvent) {
 }
 
 func (u AgentSessionEventUnion) AsAgentSessionEnvironmentReady() (v AgentSessionEnvironmentReadyEvent) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u AgentSessionEventUnion) AsAgentSessionEnvironmentReset() (v AgentSessionEnvironmentResetEvent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
