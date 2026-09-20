@@ -18,6 +18,7 @@ func TestEndpointPathRouting(t *testing.T) {
 		name, endpoint, override, route, want string
 		multipart, retry                      bool
 	}{
+		{name: "double leading slash", endpoint: "https://azure.example//apim", route: "embeddings", want: "//apim/openai/deployments/model/embeddings"},
 		{name: "chat", endpoint: "https://azure.example/apim", route: "chat/completions", want: "/apim/openai/deployments/model/chat/completions"},
 		{name: "embeddings trailing slash", endpoint: "https://azure.example/apim/", route: "embeddings", want: "/apim/openai/deployments/model/embeddings"},
 		{name: "nested prefix", endpoint: "https://azure.example/tenant/service", route: "embeddings", want: "/tenant/service/openai/deployments/model/embeddings"},

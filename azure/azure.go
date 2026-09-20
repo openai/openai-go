@@ -613,12 +613,12 @@ func getReplacementPathWithDeployment(req *http.Request, escapedPath string) (st
 }
 
 func setEscapedPath(u *url.URL, escapedPath string) error {
-	parsed, err := url.Parse(escapedPath)
+	path, err := url.PathUnescape(escapedPath)
 	if err != nil {
 		return err
 	}
-	u.Path = parsed.Path
-	u.RawPath = parsed.RawPath
+	u.Path = path
+	u.RawPath = escapedPath
 	return nil
 }
 
