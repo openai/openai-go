@@ -60,6 +60,10 @@ func (cfg *RequestConfig) CloneWithError(ctx context.Context) (*RequestConfig, e
 		req.Body = body
 	}
 	clone := *cfg
+	clone.queryChanges = make(map[string]bool, len(cfg.queryChanges))
+	for key, replaced := range cfg.queryChanges {
+		clone.queryChanges[key] = replaced
+	}
 	clone.Context = ctx
 	clone.Request = req
 	clone.Middlewares = append([]middleware(nil), cfg.Middlewares...)

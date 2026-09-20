@@ -52,8 +52,7 @@ func (r *ImageService) NewVariation(ctx context.Context, body ImageNewVariationP
 }
 
 // Creates an edited or extended image given one or more source images and a
-// prompt. This endpoint supports GPT Image models (`gpt-image-1.5`, `gpt-image-1`,
-// `gpt-image-1-mini`, and `chatgpt-image-latest`) and `dall-e-2`.
+// prompt. This endpoint supports GPT Image models and `dall-e-2`.
 func (r *ImageService) Edit(ctx context.Context, body ImageEditParams, opts ...option.RequestOption) (res *ImagesResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -63,8 +62,7 @@ func (r *ImageService) Edit(ctx context.Context, body ImageEditParams, opts ...o
 }
 
 // Creates an edited or extended image given one or more source images and a
-// prompt. This endpoint supports GPT Image models (`gpt-image-1.5`, `gpt-image-1`,
-// `gpt-image-1-mini`, and `chatgpt-image-latest`) and `dall-e-2`.
+// prompt. This endpoint supports GPT Image models and `dall-e-2`.
 func (r *ImageService) EditStreaming(ctx context.Context, body ImageEditParams, opts ...option.RequestOption) (stream *ssestream.Stream[ImageEditStreamEventUnion]) {
 	var (
 		raw *http.Response
@@ -81,7 +79,7 @@ func (r *ImageService) EditStreaming(ctx context.Context, body ImageEditParams, 
 }
 
 // Creates an image given a prompt.
-// [Learn more](https://platform.openai.com/docs/guides/images).
+// [Learn more](https://developers.openai.com/api/docs/guides/images-vision).
 func (r *ImageService) Generate(ctx context.Context, body ImageGenerateParams, opts ...option.RequestOption) (res *ImagesResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -91,7 +89,7 @@ func (r *ImageService) Generate(ctx context.Context, body ImageGenerateParams, o
 }
 
 // Creates an image given a prompt.
-// [Learn more](https://platform.openai.com/docs/guides/images).
+// [Learn more](https://developers.openai.com/api/docs/guides/images-vision).
 func (r *ImageService) GenerateStreaming(ctx context.Context, body ImageGenerateParams, opts ...option.RequestOption) (stream *ssestream.Stream[ImageGenStreamEventUnion]) {
 	var (
 		raw *http.Response
@@ -149,11 +147,9 @@ type ImageEditCompletedEvent struct {
 	OutputFormat ImageEditCompletedEventOutputFormat `json:"output_format" api:"required"`
 	// The quality setting for the edited image.
 	//
-	// Any of "low", "medium", "high", "auto".
+	// Any of "low", "medium", "high", "xhigh", "max", "auto".
 	Quality ImageEditCompletedEventQuality `json:"quality" api:"required"`
-	// The size of the edited image.
-	//
-	// Any of "1024x1024", "1024x1536", "1536x1024", "auto".
+	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size ImageEditCompletedEventSize `json:"size" api:"required"`
 	// The type of the event. Always `image_edit.completed`.
 	Type constant.ImageEditCompleted `json:"type" default:"image_edit.completed"`
@@ -206,10 +202,12 @@ const (
 	ImageEditCompletedEventQualityLow    ImageEditCompletedEventQuality = "low"
 	ImageEditCompletedEventQualityMedium ImageEditCompletedEventQuality = "medium"
 	ImageEditCompletedEventQualityHigh   ImageEditCompletedEventQuality = "high"
+	ImageEditCompletedEventQualityXhigh  ImageEditCompletedEventQuality = "xhigh"
+	ImageEditCompletedEventQualityMax    ImageEditCompletedEventQuality = "max"
 	ImageEditCompletedEventQualityAuto   ImageEditCompletedEventQuality = "auto"
 )
 
-// The size of the edited image.
+// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 type ImageEditCompletedEventSize string
 
 const (
@@ -286,11 +284,9 @@ type ImageEditPartialImageEvent struct {
 	PartialImageIndex int64 `json:"partial_image_index" api:"required"`
 	// The quality setting for the requested edited image.
 	//
-	// Any of "low", "medium", "high", "auto".
+	// Any of "low", "medium", "high", "xhigh", "max", "auto".
 	Quality ImageEditPartialImageEventQuality `json:"quality" api:"required"`
-	// The size of the requested edited image.
-	//
-	// Any of "1024x1024", "1024x1536", "1536x1024", "auto".
+	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size ImageEditPartialImageEventSize `json:"size" api:"required"`
 	// The type of the event. Always `image_edit.partial_image`.
 	Type constant.ImageEditPartialImage `json:"type" default:"image_edit.partial_image"`
@@ -340,10 +336,12 @@ const (
 	ImageEditPartialImageEventQualityLow    ImageEditPartialImageEventQuality = "low"
 	ImageEditPartialImageEventQualityMedium ImageEditPartialImageEventQuality = "medium"
 	ImageEditPartialImageEventQualityHigh   ImageEditPartialImageEventQuality = "high"
+	ImageEditPartialImageEventQualityXhigh  ImageEditPartialImageEventQuality = "xhigh"
+	ImageEditPartialImageEventQualityMax    ImageEditPartialImageEventQuality = "max"
 	ImageEditPartialImageEventQualityAuto   ImageEditPartialImageEventQuality = "auto"
 )
 
-// The size of the requested edited image.
+// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 type ImageEditPartialImageEventSize string
 
 const (
@@ -447,11 +445,9 @@ type ImageGenCompletedEvent struct {
 	OutputFormat ImageGenCompletedEventOutputFormat `json:"output_format" api:"required"`
 	// The quality setting for the generated image.
 	//
-	// Any of "low", "medium", "high", "auto".
+	// Any of "low", "medium", "high", "xhigh", "max", "auto".
 	Quality ImageGenCompletedEventQuality `json:"quality" api:"required"`
-	// The size of the generated image.
-	//
-	// Any of "1024x1024", "1024x1536", "1536x1024", "auto".
+	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size ImageGenCompletedEventSize `json:"size" api:"required"`
 	// The type of the event. Always `image_generation.completed`.
 	Type constant.ImageGenerationCompleted `json:"type" default:"image_generation.completed"`
@@ -504,10 +500,12 @@ const (
 	ImageGenCompletedEventQualityLow    ImageGenCompletedEventQuality = "low"
 	ImageGenCompletedEventQualityMedium ImageGenCompletedEventQuality = "medium"
 	ImageGenCompletedEventQualityHigh   ImageGenCompletedEventQuality = "high"
+	ImageGenCompletedEventQualityXhigh  ImageGenCompletedEventQuality = "xhigh"
+	ImageGenCompletedEventQualityMax    ImageGenCompletedEventQuality = "max"
 	ImageGenCompletedEventQualityAuto   ImageGenCompletedEventQuality = "auto"
 )
 
-// The size of the generated image.
+// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 type ImageGenCompletedEventSize string
 
 const (
@@ -584,11 +582,9 @@ type ImageGenPartialImageEvent struct {
 	PartialImageIndex int64 `json:"partial_image_index" api:"required"`
 	// The quality setting for the requested image.
 	//
-	// Any of "low", "medium", "high", "auto".
+	// Any of "low", "medium", "high", "xhigh", "max", "auto".
 	Quality ImageGenPartialImageEventQuality `json:"quality" api:"required"`
-	// The size of the requested image.
-	//
-	// Any of "1024x1024", "1024x1536", "1536x1024", "auto".
+	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size ImageGenPartialImageEventSize `json:"size" api:"required"`
 	// The type of the event. Always `image_generation.partial_image`.
 	Type constant.ImageGenerationPartialImage `json:"type" default:"image_generation.partial_image"`
@@ -638,10 +634,12 @@ const (
 	ImageGenPartialImageEventQualityLow    ImageGenPartialImageEventQuality = "low"
 	ImageGenPartialImageEventQualityMedium ImageGenPartialImageEventQuality = "medium"
 	ImageGenPartialImageEventQualityHigh   ImageGenPartialImageEventQuality = "high"
+	ImageGenPartialImageEventQualityXhigh  ImageGenPartialImageEventQuality = "xhigh"
+	ImageGenPartialImageEventQualityMax    ImageGenPartialImageEventQuality = "max"
 	ImageGenPartialImageEventQualityAuto   ImageGenPartialImageEventQuality = "auto"
 )
 
-// The size of the requested image.
+// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 type ImageGenPartialImageEventSize string
 
 const (
@@ -732,14 +730,18 @@ func (r *ImageGenStreamEventUnion) UnmarshalJSON(data []byte) error {
 type ImageModel = string
 
 const (
-	ImageModelGPTImage1            ImageModel = "gpt-image-1"
-	ImageModelGPTImage1Mini        ImageModel = "gpt-image-1-mini"
-	ImageModelGPTImage2            ImageModel = "gpt-image-2"
-	ImageModelGPTImage2_2026_04_21 ImageModel = "gpt-image-2-2026-04-21"
-	ImageModelGPTImage1_5          ImageModel = "gpt-image-1.5"
-	ImageModelChatgptImageLatest   ImageModel = "chatgpt-image-latest"
-	ImageModelDallE2               ImageModel = "dall-e-2"
-	ImageModelDallE3               ImageModel = "dall-e-3"
+	ImageModelGPTImage1                     ImageModel = "gpt-image-1"
+	ImageModelGPTImage1Mini                 ImageModel = "gpt-image-1-mini"
+	ImageModelGPTImage2                     ImageModel = "gpt-image-2"
+	ImageModelGPTImage2_2026_04_21          ImageModel = "gpt-image-2-2026-04-21"
+	ImageModelGPTImage2_5Sunburst           ImageModel = "gpt-image-2.5-sunburst"
+	ImageModelGPTImage2_5Sunburst2026_09_08 ImageModel = "gpt-image-2.5-sunburst-2026-09-08"
+	ImageModelGPTImage2_5Flare              ImageModel = "gpt-image-2.5-flare"
+	ImageModelGPTImage2_5Flare2026_09_08    ImageModel = "gpt-image-2.5-flare-2026-09-08"
+	ImageModelGPTImage1_5                   ImageModel = "gpt-image-1.5"
+	ImageModelChatgptImageLatest            ImageModel = "chatgpt-image-latest"
+	ImageModelDallE2                        ImageModel = "dall-e-2"
+	ImageModelDallE3                        ImageModel = "dall-e-3"
 )
 
 // The response from the image generation endpoint.
@@ -757,14 +759,12 @@ type ImagesResponse struct {
 	//
 	// Any of "png", "webp", "jpeg".
 	OutputFormat ImagesResponseOutputFormat `json:"output_format"`
-	// The quality of the image generated. Either `low`, `medium`, or `high`.
+	// The quality of the image generated. One of `low`, `medium`, `high`, `xhigh`, or
+	// `max`.
 	//
-	// Any of "low", "medium", "high".
+	// Any of "low", "medium", "high", "xhigh", "max".
 	Quality ImagesResponseQuality `json:"quality"`
-	// The size of the image generated. Either `1024x1024`, `1024x1536`, or
-	// `1536x1024`.
-	//
-	// Any of "1024x1024", "1024x1536", "1536x1024".
+	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size ImagesResponseSize `json:"size"`
 	// For `gpt-image-1` only, the token usage information for the image generation.
 	Usage ImagesResponseUsage `json:"usage"`
@@ -806,17 +806,19 @@ const (
 	ImagesResponseOutputFormatJPEG ImagesResponseOutputFormat = "jpeg"
 )
 
-// The quality of the image generated. Either `low`, `medium`, or `high`.
+// The quality of the image generated. One of `low`, `medium`, `high`, `xhigh`, or
+// `max`.
 type ImagesResponseQuality string
 
 const (
 	ImagesResponseQualityLow    ImagesResponseQuality = "low"
 	ImagesResponseQualityMedium ImagesResponseQuality = "medium"
 	ImagesResponseQualityHigh   ImagesResponseQuality = "high"
+	ImagesResponseQualityXhigh  ImagesResponseQuality = "xhigh"
+	ImagesResponseQualityMax    ImagesResponseQuality = "max"
 )
 
-// The size of the image generated. Either `1024x1024`, `1024x1536`, or
-// `1536x1024`.
+// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 type ImagesResponseSize string
 
 const (
@@ -905,7 +907,7 @@ type ImageNewVariationParams struct {
 	N param.Opt[int64] `json:"n,omitzero"`
 	// A unique identifier representing your end-user, which can help OpenAI to monitor
 	// and detect abuse.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
 	User param.Opt[string] `json:"user,omitzero"`
 	// The model to use for image generation. Only `dall-e-2` is supported at this
 	// time.
@@ -966,9 +968,11 @@ type ImageEditParams struct {
 	// The image(s) to edit. Must be a supported image file or an array of images.
 	//
 	// For the GPT image models (`gpt-image-1`, `gpt-image-1-mini`, `gpt-image-1.5`,
-	// `gpt-image-2`, `gpt-image-2-2026-04-21`, and `chatgpt-image-latest`), each image
-	// should be a `png`, `webp`, or `jpg` file less than 50MB. You can provide up to
-	// 16 images.
+	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
+	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
+	// `gpt-image-2.5-flare-2026-09-08`, and `chatgpt-image-latest`), each image should
+	// be a `png`, `webp`, or `jpg` file less than 50MB. You can provide up to 16
+	// images.
 	//
 	// For `dall-e-2`, you can only provide one image, and it should be a square `png`
 	// file less than 4MB.
@@ -991,15 +995,17 @@ type ImageEditParams struct {
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
 	// A unique identifier representing your end-user, which can help OpenAI to monitor
 	// and detect abuse.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
 	User param.Opt[string] `json:"user,omitzero"`
 	// Allows to set transparency for the background of the generated image(s). Must be
 	// one of `transparent`, `opaque`, or `auto` (default value). When `auto` is used,
 	// the model will automatically determine the best background for the image.
 	//
-	// Transparent backgrounds are available for supported GPT Image models. For
-	// `gpt-image-2` and `gpt-image-2-2026-04-21`, this support is in preview. When
-	// using `transparent`, set the output format to `png` or `webp`.
+	// `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`, including their `2026-09-08`
+	// snapshots, support `opaque` and `transparent` backgrounds. Transparent
+	// backgrounds are available for supported GPT Image models. For `gpt-image-2` and
+	// `gpt-image-2-2026-04-21`, this support is in preview. When using `transparent`,
+	// set the output format to `png` or `webp`.
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background ImageEditParamsBackground `json:"background,omitzero"`
@@ -1012,7 +1018,9 @@ type ImageEditParams struct {
 	InputFidelity ImageEditParamsInputFidelity `json:"input_fidelity,omitzero"`
 	// The model to use for image generation. One of `dall-e-2` or a GPT image model
 	// (`gpt-image-1`, `gpt-image-1-mini`, `gpt-image-1.5`, `gpt-image-2`,
-	// `gpt-image-2-2026-04-21`, or `chatgpt-image-latest`). Defaults to
+	// `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
+	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
+	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`). Defaults to
 	// `gpt-image-1.5`.
 	Model ImageModel `json:"model,omitzero"`
 	// The format in which the generated images are returned. This parameter is only
@@ -1021,10 +1029,12 @@ type ImageEditParams struct {
 	//
 	// Any of "png", "jpeg", "webp".
 	OutputFormat ImageEditParamsOutputFormat `json:"output_format,omitzero"`
-	// The quality of the image that will be generated for GPT image models. Defaults
-	// to `auto`.
+	// The quality of the image that will be generated for GPT image models. The GPT
+	// image models support `low`, `medium`, and `high`. `gpt-image-2.5-sunburst` and
+	// `gpt-image-2.5-flare`, including their `2026-09-08` snapshots, also support
+	// `xhigh` and `max`. Defaults to `auto`.
 	//
-	// Any of "standard", "low", "medium", "high", "auto".
+	// Any of "standard", "low", "medium", "high", "xhigh", "max", "auto".
 	Quality ImageEditParamsQuality `json:"quality,omitzero"`
 	// The format in which the generated images are returned. Must be one of `url` or
 	// `b64_json`. URLs are only valid for 60 minutes after the image has been
@@ -1033,17 +1043,18 @@ type ImageEditParams struct {
 	//
 	// Any of "url", "b64_json".
 	ResponseFormat ImageEditParamsResponseFormat `json:"response_format,omitzero"`
-	// The size of the generated images. For `gpt-image-2` and
-	// `gpt-image-2-2026-04-21`, arbitrary resolutions are supported as `WIDTHxHEIGHT`
-	// strings, for example `1536x864`. Width and height must both be divisible by 16
-	// and the requested aspect ratio must be between 1:3 and 3:1. Resolutions above
-	// `2560x1440` are experimental, and the maximum supported resolution is
-	// `3840x2160`. The requested size must also satisfy the model's current pixel and
-	// edge limits. The standard sizes `1024x1024`, `1536x1024`, and `1024x1536` are
-	// supported by the GPT image models; `auto` is supported for models that allow
-	// automatic sizing. For `dall-e-2`, use one of `256x256`, `512x512`, or
-	// `1024x1024`. For `dall-e-3`, use one of `1024x1024`, `1792x1024`, or
-	// `1024x1792`.
+	// The size of the generated images. For `gpt-image-2`, `gpt-image-2-2026-04-21`,
+	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
+	// `gpt-image-2.5-flare`, and `gpt-image-2.5-flare-2026-09-08`, arbitrary
+	// resolutions are supported as `WIDTHxHEIGHT` strings, for example `1536x864`.
+	// Width and height must both be divisible by 16 and the requested aspect ratio
+	// must be between 1:3 and 3:1. Resolutions above `2560x1440` are experimental, and
+	// the maximum supported resolution is `3840x2160`. The requested size must also
+	// satisfy the model's current pixel and edge limits. The standard sizes
+	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
+	// `auto` is supported for models that allow automatic sizing. For `dall-e-2`, use
+	// one of `256x256`, `512x512`, or `1024x1024`. For `dall-e-3`, use one of
+	// `1024x1024`, `1792x1024`, or `1024x1792`.
 	Size ImageEditParamsSize `json:"size,omitzero"`
 	// An additional image whose fully transparent areas (e.g. where alpha is zero)
 	// indicate where `image` should be edited. If there are multiple images provided,
@@ -1091,9 +1102,11 @@ func (u *ImageEditParamsImageUnion) UnmarshalJSON(data []byte) error {
 // one of `transparent`, `opaque`, or `auto` (default value). When `auto` is used,
 // the model will automatically determine the best background for the image.
 //
-// Transparent backgrounds are available for supported GPT Image models. For
-// `gpt-image-2` and `gpt-image-2-2026-04-21`, this support is in preview. When
-// using `transparent`, set the output format to `png` or `webp`.
+// `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`, including their `2026-09-08`
+// snapshots, support `opaque` and `transparent` backgrounds. Transparent
+// backgrounds are available for supported GPT Image models. For `gpt-image-2` and
+// `gpt-image-2-2026-04-21`, this support is in preview. When using `transparent`,
+// set the output format to `png` or `webp`.
 type ImageEditParamsBackground string
 
 const (
@@ -1124,8 +1137,10 @@ const (
 	ImageEditParamsOutputFormatWebP ImageEditParamsOutputFormat = "webp"
 )
 
-// The quality of the image that will be generated for GPT image models. Defaults
-// to `auto`.
+// The quality of the image that will be generated for GPT image models. The GPT
+// image models support `low`, `medium`, and `high`. `gpt-image-2.5-sunburst` and
+// `gpt-image-2.5-flare`, including their `2026-09-08` snapshots, also support
+// `xhigh` and `max`. Defaults to `auto`.
 type ImageEditParamsQuality string
 
 const (
@@ -1133,6 +1148,8 @@ const (
 	ImageEditParamsQualityLow      ImageEditParamsQuality = "low"
 	ImageEditParamsQualityMedium   ImageEditParamsQuality = "medium"
 	ImageEditParamsQualityHigh     ImageEditParamsQuality = "high"
+	ImageEditParamsQualityXhigh    ImageEditParamsQuality = "xhigh"
+	ImageEditParamsQualityMax      ImageEditParamsQuality = "max"
 	ImageEditParamsQualityAuto     ImageEditParamsQuality = "auto"
 )
 
@@ -1147,17 +1164,18 @@ const (
 	ImageEditParamsResponseFormatB64JSON ImageEditParamsResponseFormat = "b64_json"
 )
 
-// The size of the generated images. For `gpt-image-2` and
-// `gpt-image-2-2026-04-21`, arbitrary resolutions are supported as `WIDTHxHEIGHT`
-// strings, for example `1536x864`. Width and height must both be divisible by 16
-// and the requested aspect ratio must be between 1:3 and 3:1. Resolutions above
-// `2560x1440` are experimental, and the maximum supported resolution is
-// `3840x2160`. The requested size must also satisfy the model's current pixel and
-// edge limits. The standard sizes `1024x1024`, `1536x1024`, and `1024x1536` are
-// supported by the GPT image models; `auto` is supported for models that allow
-// automatic sizing. For `dall-e-2`, use one of `256x256`, `512x512`, or
-// `1024x1024`. For `dall-e-3`, use one of `1024x1024`, `1792x1024`, or
-// `1024x1792`.
+// The size of the generated images. For `gpt-image-2`, `gpt-image-2-2026-04-21`,
+// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
+// `gpt-image-2.5-flare`, and `gpt-image-2.5-flare-2026-09-08`, arbitrary
+// resolutions are supported as `WIDTHxHEIGHT` strings, for example `1536x864`.
+// Width and height must both be divisible by 16 and the requested aspect ratio
+// must be between 1:3 and 3:1. Resolutions above `2560x1440` are experimental, and
+// the maximum supported resolution is `3840x2160`. The requested size must also
+// satisfy the model's current pixel and edge limits. The standard sizes
+// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
+// `auto` is supported for models that allow automatic sizing. For `dall-e-2`, use
+// one of `256x256`, `512x512`, or `1024x1024`. For `dall-e-3`, use one of
+// `1024x1024`, `1792x1024`, or `1024x1792`.
 type ImageEditParamsSize string
 
 const (
@@ -1190,22 +1208,26 @@ type ImageGenerateParams struct {
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
 	// A unique identifier representing your end-user, which can help OpenAI to monitor
 	// and detect abuse.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
 	User param.Opt[string] `json:"user,omitzero"`
 	// Allows to set transparency for the background of the generated image(s). Must be
 	// one of `transparent`, `opaque`, or `auto` (default value). When `auto` is used,
 	// the model will automatically determine the best background for the image.
 	//
-	// Transparent backgrounds are available for supported GPT Image models. For
-	// `gpt-image-2` and `gpt-image-2-2026-04-21`, this support is in preview. When
-	// using `transparent`, set the output format to `png` or `webp`.
+	// `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`, including their `2026-09-08`
+	// snapshots, support `opaque` and `transparent` backgrounds. Transparent
+	// backgrounds are available for supported GPT Image models. For `gpt-image-2` and
+	// `gpt-image-2-2026-04-21`, this support is in preview. When using `transparent`,
+	// set the output format to `png` or `webp`.
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background ImageGenerateParamsBackground `json:"background,omitzero"`
 	// The model to use for image generation. One of `dall-e-2`, `dall-e-3`, or a GPT
 	// image model (`gpt-image-1`, `gpt-image-1-mini`, `gpt-image-1.5`, `gpt-image-2`,
-	// or `gpt-image-2-2026-04-21`). Defaults to `dall-e-2` unless a parameter specific
-	// to the GPT image models is used.
+	// `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
+	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
+	// `gpt-image-2.5-flare-2026-09-08`). Defaults to `dall-e-2` unless a parameter
+	// specific to the GPT image models is used.
 	Model ImageModel `json:"model,omitzero"`
 	// Control the content-moderation level for images generated by the GPT image
 	// models. Must be either `low` for less restrictive filtering or `auto` (default
@@ -1223,10 +1245,12 @@ type ImageGenerateParams struct {
 	//   - `auto` (default value) will automatically select the best quality for the
 	//     given model.
 	//   - `high`, `medium` and `low` are supported for the GPT image models.
+	//   - `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`, including their
+	//     `2026-09-08` snapshots, also support `xhigh` and `max`.
 	//   - `hd` and `standard` are supported for `dall-e-3`.
 	//   - `standard` is the only option for `dall-e-2`.
 	//
-	// Any of "standard", "hd", "low", "medium", "high", "auto".
+	// Any of "standard", "hd", "low", "medium", "high", "xhigh", "max", "auto".
 	Quality ImageGenerateParamsQuality `json:"quality,omitzero"`
 	// The format in which generated images with `dall-e-2` and `dall-e-3` are
 	// returned. Must be one of `url` or `b64_json`. URLs are only valid for 60 minutes
@@ -1235,17 +1259,18 @@ type ImageGenerateParams struct {
 	//
 	// Any of "url", "b64_json".
 	ResponseFormat ImageGenerateParamsResponseFormat `json:"response_format,omitzero"`
-	// The size of the generated images. For `gpt-image-2` and
-	// `gpt-image-2-2026-04-21`, arbitrary resolutions are supported as `WIDTHxHEIGHT`
-	// strings, for example `1536x864`. Width and height must both be divisible by 16
-	// and the requested aspect ratio must be between 1:3 and 3:1. Resolutions above
-	// `2560x1440` are experimental, and the maximum supported resolution is
-	// `3840x2160`. The requested size must also satisfy the model's current pixel and
-	// edge limits. The standard sizes `1024x1024`, `1536x1024`, and `1024x1536` are
-	// supported by the GPT image models; `auto` is supported for models that allow
-	// automatic sizing. For `dall-e-2`, use one of `256x256`, `512x512`, or
-	// `1024x1024`. For `dall-e-3`, use one of `1024x1024`, `1792x1024`, or
-	// `1024x1792`.
+	// The size of the generated images. For `gpt-image-2`, `gpt-image-2-2026-04-21`,
+	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
+	// `gpt-image-2.5-flare`, and `gpt-image-2.5-flare-2026-09-08`, arbitrary
+	// resolutions are supported as `WIDTHxHEIGHT` strings, for example `1536x864`.
+	// Width and height must both be divisible by 16 and the requested aspect ratio
+	// must be between 1:3 and 3:1. Resolutions above `2560x1440` are experimental, and
+	// the maximum supported resolution is `3840x2160`. The requested size must also
+	// satisfy the model's current pixel and edge limits. The standard sizes
+	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
+	// `auto` is supported for models that allow automatic sizing. For `dall-e-2`, use
+	// one of `256x256`, `512x512`, or `1024x1024`. For `dall-e-3`, use one of
+	// `1024x1024`, `1792x1024`, or `1024x1792`.
 	Size ImageGenerateParamsSize `json:"size,omitzero"`
 	// The style of the generated images. This parameter is only supported for
 	// `dall-e-3`. Must be one of `vivid` or `natural`. Vivid causes the model to lean
@@ -1269,9 +1294,11 @@ func (r *ImageGenerateParams) UnmarshalJSON(data []byte) error {
 // one of `transparent`, `opaque`, or `auto` (default value). When `auto` is used,
 // the model will automatically determine the best background for the image.
 //
-// Transparent backgrounds are available for supported GPT Image models. For
-// `gpt-image-2` and `gpt-image-2-2026-04-21`, this support is in preview. When
-// using `transparent`, set the output format to `png` or `webp`.
+// `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`, including their `2026-09-08`
+// snapshots, support `opaque` and `transparent` backgrounds. Transparent
+// backgrounds are available for supported GPT Image models. For `gpt-image-2` and
+// `gpt-image-2-2026-04-21`, this support is in preview. When using `transparent`,
+// set the output format to `png` or `webp`.
 type ImageGenerateParamsBackground string
 
 const (
@@ -1305,6 +1332,8 @@ const (
 //   - `auto` (default value) will automatically select the best quality for the
 //     given model.
 //   - `high`, `medium` and `low` are supported for the GPT image models.
+//   - `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`, including their
+//     `2026-09-08` snapshots, also support `xhigh` and `max`.
 //   - `hd` and `standard` are supported for `dall-e-3`.
 //   - `standard` is the only option for `dall-e-2`.
 type ImageGenerateParamsQuality string
@@ -1315,6 +1344,8 @@ const (
 	ImageGenerateParamsQualityLow      ImageGenerateParamsQuality = "low"
 	ImageGenerateParamsQualityMedium   ImageGenerateParamsQuality = "medium"
 	ImageGenerateParamsQualityHigh     ImageGenerateParamsQuality = "high"
+	ImageGenerateParamsQualityXhigh    ImageGenerateParamsQuality = "xhigh"
+	ImageGenerateParamsQualityMax      ImageGenerateParamsQuality = "max"
 	ImageGenerateParamsQualityAuto     ImageGenerateParamsQuality = "auto"
 )
 
@@ -1329,17 +1360,18 @@ const (
 	ImageGenerateParamsResponseFormatB64JSON ImageGenerateParamsResponseFormat = "b64_json"
 )
 
-// The size of the generated images. For `gpt-image-2` and
-// `gpt-image-2-2026-04-21`, arbitrary resolutions are supported as `WIDTHxHEIGHT`
-// strings, for example `1536x864`. Width and height must both be divisible by 16
-// and the requested aspect ratio must be between 1:3 and 3:1. Resolutions above
-// `2560x1440` are experimental, and the maximum supported resolution is
-// `3840x2160`. The requested size must also satisfy the model's current pixel and
-// edge limits. The standard sizes `1024x1024`, `1536x1024`, and `1024x1536` are
-// supported by the GPT image models; `auto` is supported for models that allow
-// automatic sizing. For `dall-e-2`, use one of `256x256`, `512x512`, or
-// `1024x1024`. For `dall-e-3`, use one of `1024x1024`, `1792x1024`, or
-// `1024x1792`.
+// The size of the generated images. For `gpt-image-2`, `gpt-image-2-2026-04-21`,
+// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
+// `gpt-image-2.5-flare`, and `gpt-image-2.5-flare-2026-09-08`, arbitrary
+// resolutions are supported as `WIDTHxHEIGHT` strings, for example `1536x864`.
+// Width and height must both be divisible by 16 and the requested aspect ratio
+// must be between 1:3 and 3:1. Resolutions above `2560x1440` are experimental, and
+// the maximum supported resolution is `3840x2160`. The requested size must also
+// satisfy the model's current pixel and edge limits. The standard sizes
+// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
+// `auto` is supported for models that allow automatic sizing. For `dall-e-2`, use
+// one of `256x256`, `512x512`, or `1024x1024`. For `dall-e-3`, use one of
+// `1024x1024`, `1792x1024`, or `1024x1792`.
 type ImageGenerateParamsSize string
 
 const (

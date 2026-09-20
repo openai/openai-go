@@ -32,6 +32,7 @@ func TestAdminOrganizationProjectServiceAccountNewWithOptionalParams(t *testing.
 		openai.AdminOrganizationProjectServiceAccountNewParams{
 			Name:                     "name",
 			CreateServiceAccountOnly: openai.Bool(true),
+			ExpiresInSeconds:         openai.Int(1),
 		},
 	)
 	if err != nil {

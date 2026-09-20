@@ -1,9 +1,13 @@
 # Repository security, workflow, dependency, and quality policy
 
-Use this reference for affected workflows, credentials, module graphs, Go
-versions, dependency updates, generated-code ownership, and quality gates.
-The root `AGENTS.md`, `GO_VERSION_POLICY.md`, `GO_CODE_QUALITY_POLICY.md`, and
-the current workflow files are authoritative.
+Use this reference as a procedural review checklist for affected workflows,
+credentials, module graphs, Go versions, dependency updates, generated-code
+ownership, and quality gates. For the repository's detailed threat model,
+trust-boundary classification, and severity calibration, defer to
+`docs/architecture/security-model.md`. The root `AGENTS.md`,
+`GO_VERSION_POLICY.md`, `GO_CODE_QUALITY_POLICY.md`, and current workflow files
+remain authoritative for review procedure, release policy, quality gates, and
+enforced behavior rather than as competing threat-model authority.
 
 ## Codex Security escalation
 
@@ -39,7 +43,7 @@ realistic exploit paths, defenses or counterevidence, confidence, validation
 method, incomplete coverage, and any missing plugin capability. Do not publish
 findings, modify code, or execute untrusted proofs without separate authority.
 
-## GitHub Actions trust boundaries
+## GitHub Actions review checklist
 
 - Keep `GITHUB_TOKEN` permissions least-privileged. Default to `contents:
   read`, grant write scopes only to the job that needs them, and do not give
@@ -93,9 +97,10 @@ validation/publication, and Actions dispatch:
 7. A distinct dispatcher can trigger required CI, compatibility, and CodeQL
    workflows but cannot write repository contents or pull requests.
 
-Treat cache restoration across model/publisher boundaries, token persistence,
-secret exposure to untrusted code, privilege recombination, widened patch
-allowlists, or executable untrusted workflow edits as consequential defects.
+Treat independently mutable artifacts crossing model or publisher boundaries,
+token persistence, secret exposure to candidate-controlled code, privilege
+recombination, widened patch allowlists, or candidate-controlled executable
+workflow edits reaching protected credentials as consequential defects.
 
 ## Go versions and module graphs
 

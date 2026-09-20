@@ -47,7 +47,7 @@ func NewClientSecretService(opts ...option.RequestOption) (r ClientSecretService
 // will be applied to any sessions created using that client secret, but these can
 // also be overridden by the client connection.
 //
-// [Learn more about authentication with client secrets over WebRTC](https://platform.openai.com/docs/guides/realtime-webrtc).
+// [Learn more about authentication with client secrets over WebRTC](https://developers.openai.com/api/docs/guides/realtime-webrtc).
 //
 // Returns the created client secret and the effective session object. The client
 // secret is a string that looks like `ek_1234`.
@@ -104,7 +104,7 @@ type RealtimeSessionCreateResponse struct {
 	// Any of "text", "audio".
 	OutputModalities []string `json:"output_modalities"`
 	// Reference to a prompt template and its variables.
-	// [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
+	// [Learn more](https://developers.openai.com/api/docs/guides/text?api-mode=responses#version-prompts-in-code).
 	Prompt responses.ResponsePrompt `json:"prompt" api:"nullable"`
 	// Configuration for reasoning-capable Realtime models such as `gpt-realtime-2`.
 	Reasoning RealtimeReasoning `json:"reasoning"`
@@ -668,7 +668,7 @@ func (r *RealtimeSessionCreateResponseToolUnion) UnmarshalJSON(data []byte) erro
 
 // Give the model access to additional tools via remote Model Context Protocol
 // (MCP) servers.
-// [Learn more about MCP](https://platform.openai.com/docs/guides/tools-remote-mcp).
+// [Learn more about MCP](https://developers.openai.com/api/docs/guides/tools-connectors-mcp).
 type RealtimeSessionCreateResponseToolMcpTool struct {
 	// A label for this MCP server, used to identify it in tool calls.
 	ServerLabel string `json:"server_label" api:"required"`
@@ -687,7 +687,11 @@ type RealtimeSessionCreateResponseToolMcpTool struct {
 	// Identifier for service connectors, like those available in ChatGPT. One of
 	// `server_url`, `connector_id`, or `tunnel_id` must be provided. Learn more about
 	// service connectors
-	// [here](https://platform.openai.com/docs/guides/tools-remote-mcp#connectors).
+	// [here](https://developers.openai.com/api/docs/guides/tools-connectors-mcp#connectors).
+	//
+	// This field is deprecated for models released after September 1, 2026. Use
+	// `server_url` to connect to a remote MCP server, or `tunnel_id` to connect
+	// through a Secure MCP Tunnel.
 	//
 	// Currently supported `connector_id` values are:
 	//
@@ -703,6 +707,8 @@ type RealtimeSessionCreateResponseToolMcpTool struct {
 	// Any of "connector_dropbox", "connector_gmail", "connector_googlecalendar",
 	// "connector_googledrive", "connector_microsoftteams",
 	// "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint".
+	//
+	// Deprecated: deprecated
 	ConnectorID string `json:"connector_id"`
 	// Whether this MCP tool is deferred and discovered via tool search.
 	DeferLoading bool `json:"defer_loading"`

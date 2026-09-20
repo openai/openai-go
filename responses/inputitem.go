@@ -19,6 +19,8 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Create and manage model responses.
+//
 // InputItemService contains methods and other services that help with interacting
 // with the openai API.
 //

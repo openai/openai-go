@@ -1,4 +1,4 @@
-package openai_test
+package azure_test
 
 import (
 	"context"

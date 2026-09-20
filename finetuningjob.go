@@ -51,7 +51,7 @@ func NewFineTuningJobService(opts ...option.RequestOption) (r FineTuningJobServi
 // Response includes details of the enqueued job including job status and the name
 // of the fine-tuned models once complete.
 //
-// [Learn more about fine-tuning](https://platform.openai.com/docs/guides/model-optimization)
+// [Learn more about fine-tuning](https://developers.openai.com/api/docs/guides/model-optimization)
 func (r *FineTuningJobService) New(ctx context.Context, body FineTuningJobNewParams, opts ...option.RequestOption) (res *FineTuningJob, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -62,7 +62,7 @@ func (r *FineTuningJobService) New(ctx context.Context, body FineTuningJobNewPar
 
 // Get info about a fine-tuning job.
 //
-// [Learn more about fine-tuning](https://platform.openai.com/docs/guides/model-optimization)
+// [Learn more about fine-tuning](https://developers.openai.com/api/docs/guides/model-optimization)
 func (r *FineTuningJobService) Get(ctx context.Context, fineTuningJobID string, opts ...option.RequestOption) (res *FineTuningJob, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -193,7 +193,7 @@ type FineTuningJob struct {
 	OrganizationID string `json:"organization_id" api:"required"`
 	// The compiled results file ID(s) for the fine-tuning job. You can retrieve the
 	// results with the
-	// [Files API](https://platform.openai.com/docs/api-reference/files/retrieve-contents).
+	// [Files API](https://developers.openai.com/api/reference/resources/files/methods/content).
 	ResultFiles []string `json:"result_files" api:"required"`
 	// The seed used for the fine-tuning job.
 	Seed int64 `json:"seed" api:"required"`
@@ -207,11 +207,11 @@ type FineTuningJob struct {
 	// will be null if the fine-tuning job is still running.
 	TrainedTokens int64 `json:"trained_tokens" api:"required"`
 	// The file ID used for training. You can retrieve the training data with the
-	// [Files API](https://platform.openai.com/docs/api-reference/files/retrieve-contents).
+	// [Files API](https://developers.openai.com/api/reference/resources/files/methods/content).
 	TrainingFile string `json:"training_file" api:"required"`
 	// The file ID used for validation. You can retrieve the validation results with
 	// the
-	// [Files API](https://platform.openai.com/docs/api-reference/files/retrieve-contents).
+	// [Files API](https://developers.openai.com/api/reference/resources/files/methods/content).
 	ValidationFile string `json:"validation_file" api:"required"`
 	// The Unix timestamp (in seconds) for when the fine-tuning job is estimated to
 	// finish. The value will be null if the fine-tuning job is not running.
@@ -583,25 +583,26 @@ func (r *FineTuningJobWandbIntegrationObject) UnmarshalJSON(data []byte) error {
 
 type FineTuningJobNewParams struct {
 	// The name of the model to fine-tune. You can select one of the
-	// [supported models](https://platform.openai.com/docs/guides/fine-tuning#which-models-can-be-fine-tuned).
+	// [supported models](https://developers.openai.com/api/docs/guides/model-optimization#fine-tuning-methods).
 	Model FineTuningJobNewParamsModel `json:"model,omitzero" api:"required"`
 	// The ID of an uploaded file that contains training data.
 	//
-	// See [upload file](https://platform.openai.com/docs/api-reference/files/create)
+	// See
+	// [upload file](https://developers.openai.com/api/reference/resources/files/methods/create)
 	// for how to upload a file.
 	//
 	// Your dataset must be formatted as a JSONL file. Additionally, you must upload
 	// your file with the purpose `fine-tune`.
 	//
 	// The contents of the file should differ depending on if the model uses the
-	// [chat](https://platform.openai.com/docs/api-reference/fine-tuning/chat-input),
-	// [completions](https://platform.openai.com/docs/api-reference/fine-tuning/completions-input)
+	// [chat](https://developers.openai.com/api/docs/guides/supervised-fine-tuning#formatting-your-data),
+	// [completions](https://developers.openai.com/api/docs/guides/supervised-fine-tuning#formatting-your-data)
 	// format, or if the fine-tuning method uses the
-	// [preference](https://platform.openai.com/docs/api-reference/fine-tuning/preference-input)
+	// [preference](https://developers.openai.com/api/docs/guides/direct-preference-optimization)
 	// format.
 	//
 	// See the
-	// [fine-tuning guide](https://platform.openai.com/docs/guides/model-optimization)
+	// [fine-tuning guide](https://developers.openai.com/api/docs/guides/model-optimization)
 	// for more details.
 	TrainingFile string `json:"training_file" api:"required"`
 	// The seed controls the reproducibility of the job. Passing in the same seed and
@@ -625,7 +626,7 @@ type FineTuningJobNewParams struct {
 	// the purpose `fine-tune`.
 	//
 	// See the
-	// [fine-tuning guide](https://platform.openai.com/docs/guides/model-optimization)
+	// [fine-tuning guide](https://developers.openai.com/api/docs/guides/model-optimization)
 	// for more details.
 	ValidationFile param.Opt[string] `json:"validation_file,omitzero"`
 	// A list of integrations to enable for your fine-tuning job.
@@ -654,7 +655,7 @@ func (r *FineTuningJobNewParams) UnmarshalJSON(data []byte) error {
 }
 
 // The name of the model to fine-tune. You can select one of the
-// [supported models](https://platform.openai.com/docs/guides/fine-tuning#which-models-can-be-fine-tuned).
+// [supported models](https://developers.openai.com/api/docs/guides/model-optimization#fine-tuning-methods).
 type FineTuningJobNewParamsModel string
 
 const (

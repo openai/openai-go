@@ -167,6 +167,7 @@ func TestAdminOrganizationUsageCostsWithOptionalParams(t *testing.T) {
 		EndTime:     openai.Int(0),
 		GroupBy:     []string{"project_id"},
 		Limit:       openai.Int(0),
+		LineItems:   []string{"string"},
 		Page:        openai.String("page"),
 		ProjectIDs:  []string{"string"},
 	})

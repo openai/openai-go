@@ -597,6 +597,39 @@ func (body *x509ResponseBody) finishRequest() {
 // capability owns its isolated pool. OAuth authentication is configured
 // separately.
 func (transport *X509Transport) Do(request *http.Request) (*http.Response, error) {
+	return transport.do(request, false)
+}
+
+// WebSocketHTTPClient returns an adapter for SDK-owned Responses WebSocket
+// upgrades. It preserves this capability's attestation, origin, redirect and
+// lifecycle policy; closing a connection releases its upgraded stream.
+func (transport *X509Transport) WebSocketHTTPClient() *http.Client {
+	return &http.Client{
+		Transport:     x509WebSocketRoundTripper{transport},
+		CheckRedirect: func(*http.Request, []*http.Request) error { return errX509Redirect },
+	}
+}
+
+type x509WebSocketRoundTripper struct{ transport *X509Transport }
+
+func (adapter x509WebSocketRoundTripper) RoundTrip(request *http.Request) (*http.Response, error) {
+	return adapter.transport.do(request, true)
+}
+
+type x509WebSocketBody struct {
+	*x509ResponseBody
+	writer io.Writer
+}
+
+func (body *x509WebSocketBody) Write(data []byte) (int, error) {
+	written, err := body.writer.Write(data)
+	if err != nil {
+		body.finishRequest()
+	}
+	return written, err
+}
+
+func (transport *X509Transport) do(request *http.Request, upgrade bool) (*http.Response, error) {
 	if request == nil {
 		return nil, errors.New("X.509 transport requires a non-nil HTTP request")
 	}
@@ -622,7 +655,18 @@ func (transport *X509Transport) Do(request *http.Request) (*http.Response, error
 	if err := transport.validateAttestation(); err != nil {
 		return nil, err
 	}
-	if err := validateX509Request(request); err != nil {
+	validation := request
+	if upgrade {
+		var err error
+		validation, err = requestconfig.WebSocketValidationRequest(request)
+		if err != nil {
+			return nil, err
+		}
+		if validation == request || request.URL.Hostname() != x509APIHost {
+			return nil, errors.New("X.509 transport requires an SDK-owned Responses WebSocket upgrade")
+		}
+	}
+	if err := validateX509Request(validation); err != nil {
 		return nil, err
 	}
 	if !transport.lifecycle.beginRequest() {
@@ -671,11 +715,21 @@ func (transport *X509Transport) Do(request *http.Request) (*http.Response, error
 	if response.Body == nil {
 		transport.lifecycle.endRequest()
 	} else {
-		response.Body = &x509ResponseBody{ReadCloser: response.Body, lifecycle: transport.lifecycle}
+		body := &x509ResponseBody{ReadCloser: response.Body, lifecycle: transport.lifecycle}
+		if writable, ok := response.Body.(io.ReadWriteCloser); upgrade && ok && response.StatusCode == http.StatusSwitchingProtocols {
+			response.Body = &x509WebSocketBody{x509ResponseBody: body, writer: writable}
+		} else {
+			response.Body = body
+		}
 	}
 	requestActive = false
 	if response.StatusCode == http.StatusSwitchingProtocols {
-		_ = response.Body.Close()
+		if _, ok := response.Body.(io.ReadWriteCloser); upgrade && ok {
+			return response, nil
+		}
+		if response.Body != nil {
+			_ = response.Body.Close()
+		}
 		return nil, errors.New("X.509 transport does not support protocol upgrades")
 	}
 	if response.StatusCode >= http.StatusMultipleChoices &&

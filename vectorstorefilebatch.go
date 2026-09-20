@@ -155,8 +155,8 @@ type VectorStoreFileBatch struct {
 	// Any of "in_progress", "completed", "cancelled", "failed".
 	Status VectorStoreFileBatchStatus `json:"status" api:"required"`
 	// The ID of the
-	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
-	// that the [File](https://platform.openai.com/docs/api-reference/files) is
+	// [vector store](https://developers.openai.com/api/reference/resources/vector_stores)
+	// that the [File](https://developers.openai.com/api/reference/resources/files) is
 	// attached to.
 	VectorStoreID string `json:"vector_store_id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -228,12 +228,12 @@ type VectorStoreFileBatchNewParams struct {
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy. Only applicable if `file_ids` is non-empty.
 	ChunkingStrategy FileChunkingStrategyParamUnion `json:"chunking_strategy,omitzero"`
-	// A list of [File](https://platform.openai.com/docs/api-reference/files) IDs that
-	// the vector store should use. Useful for tools like `file_search` that can access
-	// files. If `attributes` or `chunking_strategy` are provided, they will be applied
-	// to all files in the batch. The maximum batch size is 2000 files. This endpoint
-	// is recommended for multi-file ingestion and helps reduce per-vector-store write
-	// request pressure. Mutually exclusive with `files`.
+	// A list of [File](https://developers.openai.com/api/reference/resources/files)
+	// IDs that the vector store should use. Useful for tools like `file_search` that
+	// can access files. If `attributes` or `chunking_strategy` are provided, they will
+	// be applied to all files in the batch. The maximum batch size is 2000 files. This
+	// endpoint is recommended for multi-file ingestion and helps reduce
+	// per-vector-store write request pressure. Mutually exclusive with `files`.
 	FileIDs []string `json:"file_ids,omitzero"`
 	// A list of objects that each include a `file_id` plus optional `attributes` or
 	// `chunking_strategy`. Use this when you need to override metadata for specific
@@ -272,10 +272,10 @@ func (u *VectorStoreFileBatchNewParamsAttributeUnion) UnmarshalJSON(data []byte)
 
 // The property FileID is required.
 type VectorStoreFileBatchNewParamsFile struct {
-	// A [File](https://platform.openai.com/docs/api-reference/files) ID that the
-	// vector store should use. Useful for tools like `file_search` that can access
+	// A [File](https://developers.openai.com/api/reference/resources/files) ID that
+	// the vector store should use. Useful for tools like `file_search` that can access
 	// files. For multi-file ingestion, we recommend
-	// [`file_batches`](https://platform.openai.com/docs/api-reference/vector-stores-file-batches/createBatch)
+	// [`file_batches`](https://developers.openai.com/api/reference/resources/vector_stores/subresources/file_batches/methods/create)
 	// to minimize per-vector-store write requests.
 	FileID string `json:"file_id" api:"required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
