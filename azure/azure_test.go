@@ -60,7 +60,7 @@ func TestJSONRoute(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	replacementPath, err := getReplacementPathWithDeployment(req)
+	replacementPath, err := getReplacementPathWithDeployment(req, req.URL.EscapedPath())
 
 	if err != nil {
 		t.Fatal(err)
@@ -90,7 +90,7 @@ func TestJSONRouteRejectsInvalidBodies(t *testing.T) {
 				req.Body = io.NopCloser(bytes.NewReader(tc.body))
 			}
 
-			if _, err = getJSONRoute(req); err == nil {
+			if _, err = getJSONRoute(req, req.URL.EscapedPath()); err == nil {
 				t.Fatal("expected an error")
 			} else if !strings.Contains(err.Error(), tc.wantError) {
 				t.Fatalf("error = %q, want it to contain %q", err, tc.wantError)
@@ -245,7 +245,7 @@ func TestGetAudioMultipartRoute(t *testing.T) {
 
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 
-	replacementPath, err := getReplacementPathWithDeployment(req)
+	replacementPath, err := getReplacementPathWithDeployment(req, req.URL.EscapedPath())
 
 	if err != nil {
 		t.Fatal(err)
@@ -1334,7 +1334,7 @@ func TestJSONRoutePathConstruction(t *testing.T) {
 	}
 	for _, tc := range cases {
 		req, _ := http.NewRequest("POST", tc.path, bytes.NewReader([]byte(`{"model":"gpt-4"}`)))
-		got, _ := getReplacementPathWithDeployment(req)
+		got, _ := getReplacementPathWithDeployment(req, req.URL.EscapedPath())
 		if got != tc.expected {
 			t.Errorf("%s: got %q, expected %q", tc.path, got, tc.expected)
 		}
@@ -1362,7 +1362,7 @@ func TestModelWithSpecialCharsIsEscaped(t *testing.T) {
 	for name, model := range tests {
 		t.Run(name, func(t *testing.T) {
 			req, _ := http.NewRequest("POST", "/chat/completions", bytes.NewReader([]byte(`{"model":`+strconv.Quote(model)+`}`)))
-			got, err := getReplacementPathWithDeployment(req)
+			got, err := getReplacementPathWithDeployment(req, req.URL.EscapedPath())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1396,7 +1396,7 @@ func TestMultipartModelWithSpecialCharsIsEscaped(t *testing.T) {
 	for name, model := range tests {
 		t.Run(name, func(t *testing.T) {
 			req := newMultipartRouteRequest(t, "/audio/transcriptions", model)
-			got, err := getReplacementPathWithDeployment(req)
+			got, err := getReplacementPathWithDeployment(req, req.URL.EscapedPath())
 			if err != nil {
 				t.Fatal(err)
 			}
