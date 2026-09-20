@@ -51,9 +51,8 @@ type Client struct {
 	// Create large batches of API requests to run asynchronously.
 	Batches BatchService
 	// Use Uploads to upload large files in multiple parts.
-	Uploads UploadService
-	Admin   AdminService
-	// Create and manage model responses.
+	Uploads   UploadService
+	Admin     AdminService
 	Responses responses.ResponseService
 	Live      live.LiveService
 	Realtime  realtime.RealtimeService

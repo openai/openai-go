@@ -24,8 +24,6 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
-// Create and manage model responses.
-//
 // ResponseService contains methods and other services that help with interacting
 // with the openai API.
 //
@@ -33,10 +31,8 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewResponseService] method instead.
 type ResponseService struct {
-	Options []option.RequestOption
-	// Create and manage model responses.
-	InputItems InputItemService
-	// Create and manage model responses.
+	Options     []option.RequestOption
+	InputItems  InputItemService
 	InputTokens InputTokenService
 }
 
