@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.64.2](https://github.com/openai/openai-go/compare/v3.64.1...v3.64.2) (2026-09-21)
+
+
+### Build System
+
+* **deps:** bump github.com/aws/aws-sdk-go-v2 in / ([#869](https://github.com/openai/openai-go/issues/869)) ([0c41290](https://github.com/openai/openai-go/commit/0c4129020548bf762bffabce0bfe21b64b81390b))
+* **deps:** bump github.com/Azure/azure-sdk-for-go/sdk/azcore in / ([#902](https://github.com/openai/openai-go/issues/902)) ([0e818e6](https://github.com/openai/openai-go/commit/0e818e6c1407ca5cb5b318885dc0379c24b6269b))
+
 ## [3.64.1](https://github.com/openai/openai-go/compare/v3.64.0...v3.64.1) (2026-09-21)
 
 
