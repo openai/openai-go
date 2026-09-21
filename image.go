@@ -1062,7 +1062,8 @@ type ImageEditParams struct {
 	// the maximum supported resolution is `3840x2160`. The requested size must also
 	// satisfy the model's current pixel and edge limits. The standard sizes
 	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
-	// `auto` is supported for models that allow automatic sizing.
+	// `auto` is supported for models that allow automatic sizing. Legacy sizes for the
+	// retired `dall-e-2` model were `256x256`, `512x512`, and `1024x1024`.
 	Size ImageEditParamsSize `json:"size,omitzero"`
 	// An additional image whose fully transparent areas (e.g. where alpha is zero)
 	// indicate where `image` should be edited. If there are multiple images provided,
@@ -1183,7 +1184,8 @@ const (
 // the maximum supported resolution is `3840x2160`. The requested size must also
 // satisfy the model's current pixel and edge limits. The standard sizes
 // `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
-// `auto` is supported for models that allow automatic sizing.
+// `auto` is supported for models that allow automatic sizing. Legacy sizes for the
+// retired `dall-e-2` model were `256x256`, `512x512`, and `1024x1024`.
 type ImageEditParamsSize string
 
 const (
