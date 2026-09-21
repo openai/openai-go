@@ -31241,9 +31241,7 @@ type BetaToolImageGeneration struct {
 	// the maximum supported resolution is `3840x2160`. The requested size must also
 	// satisfy the model's current pixel and edge limits. The standard sizes
 	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
-	// `auto` is supported for models that allow automatic sizing. For `dall-e-2`, use
-	// one of `256x256`, `512x512`, or `1024x1024`. For `dall-e-3`, use one of
-	// `1024x1024`, `1792x1024`, or `1024x1792`.
+	// `auto` is supported for models that allow automatic sizing.
 	Size string `json:"size"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -32512,9 +32510,7 @@ type BetaToolImageGenerationParam struct {
 	// the maximum supported resolution is `3840x2160`. The requested size must also
 	// satisfy the model's current pixel and edge limits. The standard sizes
 	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
-	// `auto` is supported for models that allow automatic sizing. For `dall-e-2`, use
-	// one of `256x256`, `512x512`, or `1024x1024`. For `dall-e-3`, use one of
-	// `1024x1024`, `1792x1024`, or `1024x1792`.
+	// `auto` is supported for models that allow automatic sizing.
 	Size string `json:"size,omitzero"`
 	// The type of the image generation tool. Always `image_generation`.
 	//
