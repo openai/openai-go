@@ -1,5 +1,22 @@
 # Changelog
 
+## [4.0.0](https://github.com/openai/openai-go/compare/v3.64.0...v4.0.0) (2026-09-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* **api:** declare required local shell output call IDs ([#953](https://github.com/openai/openai-go/issues/953))
+
+### Bug Fixes
+
+* **api:** declare required local shell output call IDs ([#953](https://github.com/openai/openai-go/issues/953)) ([2e06670](https://github.com/openai/openai-go/commit/2e06670d325bf07d95452e8aac672a9f5a8dd8f1))
+* **param:** emit extra fields in sorted key order ([#901](https://github.com/openai/openai-go/issues/901)) ([923e128](https://github.com/openai/openai-go/commit/923e128f47c407f1e15e8aa58692f261eff991b9))
+
+
+### Documentation
+
+* add streaming tool calling example ([#706](https://github.com/openai/openai-go/issues/706)) ([abd798a](https://github.com/openai/openai-go/commit/abd798a43c7cd375947328c88d17c8c31da50997)), closes [#402](https://github.com/openai/openai-go/issues/402)
+
 ## [3.64.0](https://github.com/openai/openai-go/compare/v3.63.1...v3.64.0) (2026-09-20)
 
 
