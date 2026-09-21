@@ -16,7 +16,8 @@ func TestX509WorkloadIdentityRequiresExactGlobalBaseURL(t *testing.T) {
 		{name: "non-mTLS global endpoint", target: "https://api.openai.com/v1/"},
 		{name: "regional endpoint", target: "https://eu.api.openai.com/v1/"},
 		{name: "attacker suffix", target: "https://mtls.api.openai.com.attacker.test/v1/"},
-		{name: "explicit port", target: "https://mtls.api.openai.com:443/v1/"},
+		{name: "explicit default port", target: "https://mtls.api.openai.com:443/v1/", valid: true},
+		{name: "explicit nondefault port", target: "https://mtls.api.openai.com:444/v1/"},
 		{name: "plaintext", target: "http://mtls.api.openai.com/v1/"},
 		{name: "credentials", target: "https://user@mtls.api.openai.com/v1/"},
 		{name: "query", target: "https://mtls.api.openai.com/v1/?signature=synthetic"},
@@ -35,6 +36,21 @@ func TestX509WorkloadIdentityRequiresExactGlobalBaseURL(t *testing.T) {
 	}
 	if validX509WorkloadAPIBaseURL(nil) {
 		t.Error("nil endpoint unexpectedly validated")
+	}
+}
+
+func TestX509WorkloadIdentityAcceptsExactGlobalRequestsWithExplicitDefaultPort(t *testing.T) {
+	request, err := http.NewRequestWithContext(t.Context(), http.MethodGet,
+		"https://mtls.api.openai.com:443/v1/models", nil)
+	if err != nil {
+		t.Fatalf("construct explicit-port X.509 API request: %v", err)
+	}
+	if !validX509WorkloadAPIRequest(request) {
+		t.Error("exact global X.509 API request with explicit default port was rejected")
+	}
+	request.URL.Host = "mtls.api.openai.com:444"
+	if validX509WorkloadAPIRequest(request) {
+		t.Error("X.509 API request with nondefault port was accepted")
 	}
 }
 

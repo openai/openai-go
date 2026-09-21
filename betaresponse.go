@@ -3,6 +3,7 @@
 package openai
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -22,6 +23,8 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Create and manage model responses.
+//
 // BetaResponseService contains methods and other services that help with
 // interacting with the openai API.
 //
@@ -29,8 +32,10 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewBetaResponseService] method instead.
 type BetaResponseService struct {
-	Options     []option.RequestOption
-	InputItems  BetaResponseInputItemService
+	Options []option.RequestOption
+	// Create and manage model responses.
+	InputItems BetaResponseInputItemService
+	// Create and manage model responses.
 	InputTokens BetaResponseInputTokenService
 }
 
@@ -46,16 +51,16 @@ func NewBetaResponseService(opts ...option.RequestOption) (r BetaResponseService
 }
 
 // Creates a model response. Provide
-// [text](https://platform.openai.com/docs/guides/text) or
-// [image](https://platform.openai.com/docs/guides/images) inputs to generate
-// [text](https://platform.openai.com/docs/guides/text) or
-// [JSON](https://platform.openai.com/docs/guides/structured-outputs) outputs. Have
-// the model call your own
-// [custom code](https://platform.openai.com/docs/guides/function-calling) or use
-// built-in [tools](https://platform.openai.com/docs/guides/tools) like
-// [web search](https://platform.openai.com/docs/guides/tools-web-search) or
-// [file search](https://platform.openai.com/docs/guides/tools-file-search) to use
-// your own data as input for the model's response.
+// [text](https://developers.openai.com/api/docs/guides/text) or
+// [image](https://developers.openai.com/api/docs/guides/images-vision) inputs to
+// generate [text](https://developers.openai.com/api/docs/guides/text) or
+// [JSON](https://developers.openai.com/api/docs/guides/structured-outputs)
+// outputs. Have the model call your own
+// [custom code](https://developers.openai.com/api/docs/guides/function-calling) or
+// use built-in [tools](https://developers.openai.com/api/docs/guides/tools) like
+// [web search](https://developers.openai.com/api/docs/guides/tools-web-search) or
+// [file search](https://developers.openai.com/api/docs/guides/tools-file-search)
+// to use your own data as input for the model's response.
 func (r *BetaResponseService) New(ctx context.Context, params BetaResponseNewParams, opts ...option.RequestOption) (res *BetaResponse, err error) {
 	for _, v := range params.Betas {
 		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
@@ -68,16 +73,16 @@ func (r *BetaResponseService) New(ctx context.Context, params BetaResponseNewPar
 }
 
 // Creates a model response. Provide
-// [text](https://platform.openai.com/docs/guides/text) or
-// [image](https://platform.openai.com/docs/guides/images) inputs to generate
-// [text](https://platform.openai.com/docs/guides/text) or
-// [JSON](https://platform.openai.com/docs/guides/structured-outputs) outputs. Have
-// the model call your own
-// [custom code](https://platform.openai.com/docs/guides/function-calling) or use
-// built-in [tools](https://platform.openai.com/docs/guides/tools) like
-// [web search](https://platform.openai.com/docs/guides/tools-web-search) or
-// [file search](https://platform.openai.com/docs/guides/tools-file-search) to use
-// your own data as input for the model's response.
+// [text](https://developers.openai.com/api/docs/guides/text) or
+// [image](https://developers.openai.com/api/docs/guides/images-vision) inputs to
+// generate [text](https://developers.openai.com/api/docs/guides/text) or
+// [JSON](https://developers.openai.com/api/docs/guides/structured-outputs)
+// outputs. Have the model call your own
+// [custom code](https://developers.openai.com/api/docs/guides/function-calling) or
+// use built-in [tools](https://developers.openai.com/api/docs/guides/tools) like
+// [web search](https://developers.openai.com/api/docs/guides/tools-web-search) or
+// [file search](https://developers.openai.com/api/docs/guides/tools-file-search)
+// to use your own data as input for the model's response.
 func (r *BetaResponseService) NewStreaming(ctx context.Context, params BetaResponseNewParams, opts ...option.RequestOption) (stream *ssestream.Stream[BetaResponseStreamEventUnion]) {
 	var (
 		raw *http.Response
@@ -150,7 +155,7 @@ func (r *BetaResponseService) Delete(ctx context.Context, responseID string, bod
 
 // Cancels a model response with the given ID. Only responses created with the
 // `background` parameter set to `true` can be cancelled.
-// [Learn more](https://platform.openai.com/docs/guides/background).
+// [Learn more](https://developers.openai.com/api/docs/guides/background).
 func (r *BetaResponseService) Cancel(ctx context.Context, responseID string, body BetaResponseCancelParams, opts ...option.RequestOption) (res *BetaResponse, err error) {
 	for _, v := range body.Betas {
 		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
@@ -169,9 +174,9 @@ func (r *BetaResponseService) Cancel(ctx context.Context, responseID string, bod
 // Compact a conversation. Returns a compacted response object.
 //
 // Learn when and how to compact long-running conversations in the
-// [conversation state guide](https://platform.openai.com/docs/guides/conversation-state#managing-the-context-window).
+// [conversation state guide](https://developers.openai.com/api/docs/guides/conversation-state#managing-the-context-window).
 // For ZDR-compatible compaction details, see
-// [Compaction (advanced)](https://platform.openai.com/docs/guides/conversation-state#compaction-advanced).
+// [Compaction (advanced)](https://developers.openai.com/api/docs/guides/conversation-state#compaction-advanced).
 func (r *BetaResponseService) Compact(ctx context.Context, params BetaResponseCompactParams, opts ...option.RequestOption) (res *BetaCompactedResponse, err error) {
 	for _, v := range params.Betas {
 		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
@@ -1179,7 +1184,7 @@ type BetaComputerActionList []BetaComputerActionUnion
 type BetaComputerActionListParam []BetaComputerActionUnionParam
 
 // A tool that controls a virtual computer. Learn more about the
-// [computer tool](https://platform.openai.com/docs/guides/tools-computer-use).
+// [computer tool](https://developers.openai.com/api/docs/guides/tools-computer-use).
 type BetaComputerTool struct {
 	// The type of the computer tool. Always `computer`.
 	Type constant.Computer `json:"type" default:"computer"`
@@ -1213,7 +1218,7 @@ func NewBetaComputerToolParam() BetaComputerToolParam {
 }
 
 // A tool that controls a virtual computer. Learn more about the
-// [computer tool](https://platform.openai.com/docs/guides/tools-computer-use).
+// [computer tool](https://developers.openai.com/api/docs/guides/tools-computer-use).
 //
 // This struct has a constant value, construct it with [NewBetaComputerToolParam].
 type BetaComputerToolParam struct {
@@ -1231,7 +1236,7 @@ func (r *BetaComputerToolParam) UnmarshalJSON(data []byte) error {
 }
 
 // A tool that controls a virtual computer. Learn more about the
-// [computer tool](https://platform.openai.com/docs/guides/tools-computer-use).
+// [computer tool](https://developers.openai.com/api/docs/guides/tools-computer-use).
 type BetaComputerUsePreviewTool struct {
 	// The height of the computer display.
 	DisplayHeight int64 `json:"display_height" api:"required"`
@@ -1282,7 +1287,7 @@ const (
 )
 
 // A tool that controls a virtual computer. Learn more about the
-// [computer tool](https://platform.openai.com/docs/guides/tools-computer-use).
+// [computer tool](https://developers.openai.com/api/docs/guides/tools-computer-use).
 //
 // The properties DisplayHeight, DisplayWidth, Environment, Type are required.
 type BetaComputerUsePreviewToolParam struct {
@@ -1859,7 +1864,7 @@ func (r *BetaContainerReferenceParam) UnmarshalJSON(data []byte) error {
 }
 
 // A custom tool that processes input using a specified format. Learn more about
-// [custom tools](https://platform.openai.com/docs/guides/function-calling#custom-tools)
+// [custom tools](https://developers.openai.com/api/docs/guides/function-calling#custom-tools)
 type BetaCustomTool struct {
 	// The name of the custom tool, used to identify it in tool calls.
 	Name string `json:"name" api:"required"`
@@ -1869,6 +1874,9 @@ type BetaCustomTool struct {
 	//
 	// Any of "direct", "programmatic".
 	AllowedCallers []string `json:"allowed_callers" api:"nullable"`
+	// Whether the tool response can be returned asynchronously versus immediately
+	// returned on next response creation.
+	Async bool `json:"async"`
 	// Whether this tool should be deferred and discovered via tool search.
 	DeferLoading bool `json:"defer_loading"`
 	// Optional description of the custom tool, used to provide more context.
@@ -1880,6 +1888,7 @@ type BetaCustomTool struct {
 		Name           respjson.Field
 		Type           respjson.Field
 		AllowedCallers respjson.Field
+		Async          respjson.Field
 		DeferLoading   respjson.Field
 		Description    respjson.Field
 		Format         respjson.Field
@@ -2014,12 +2023,15 @@ func (r *BetaCustomToolFormatGrammar) UnmarshalJSON(data []byte) error {
 }
 
 // A custom tool that processes input using a specified format. Learn more about
-// [custom tools](https://platform.openai.com/docs/guides/function-calling#custom-tools)
+// [custom tools](https://developers.openai.com/api/docs/guides/function-calling#custom-tools)
 //
 // The properties Name, Type are required.
 type BetaCustomToolParam struct {
 	// The name of the custom tool, used to identify it in tool calls.
 	Name string `json:"name" api:"required"`
+	// Whether the tool response can be returned asynchronously versus immediately
+	// returned on next response creation.
+	Async param.Opt[bool] `json:"async,omitzero"`
 	// Whether this tool should be deferred and discovered via tool search.
 	DeferLoading param.Opt[bool] `json:"defer_loading,omitzero"`
 	// Optional description of the custom tool, used to provide more context.
@@ -2332,7 +2344,7 @@ func (u *BetaEasyInputMessageContentUnionParam) asAny() any {
 
 // A tool that searches for relevant content from uploaded files. Learn more about
 // the
-// [file search tool](https://platform.openai.com/docs/guides/tools-file-search).
+// [file search tool](https://developers.openai.com/api/docs/guides/tools-file-search).
 type BetaFileSearchTool struct {
 	// The type of the file search tool. Always `file_search`.
 	Type constant.FileSearch `json:"type" default:"file_search"`
@@ -2791,7 +2803,7 @@ func (r *BetaFileSearchToolRankingOptionsHybridSearch) UnmarshalJSON(data []byte
 
 // A tool that searches for relevant content from uploaded files. Learn more about
 // the
-// [file search tool](https://platform.openai.com/docs/guides/tools-file-search).
+// [file search tool](https://developers.openai.com/api/docs/guides/tools-file-search).
 //
 // The properties Type, VectorStoreIDs are required.
 type BetaFileSearchToolParam struct {
@@ -3453,7 +3465,7 @@ func init() {
 
 // Defines a function in your own code the model can choose to call. Learn more
 // about
-// [function calling](https://platform.openai.com/docs/guides/function-calling).
+// [function calling](https://developers.openai.com/api/docs/guides/function-calling).
 type BetaFunctionTool struct {
 	// The name of the function to call.
 	Name string `json:"name" api:"required"`
@@ -3467,6 +3479,7 @@ type BetaFunctionTool struct {
 	//
 	// Any of "direct", "programmatic".
 	AllowedCallers []string `json:"allowed_callers" api:"nullable"`
+	Async          bool     `json:"async"`
 	// Whether this function is deferred and loaded via tool search.
 	DeferLoading bool `json:"defer_loading"`
 	// A description of the function. Used by the model to determine whether or not to
@@ -3482,6 +3495,7 @@ type BetaFunctionTool struct {
 		Strict         respjson.Field
 		Type           respjson.Field
 		AllowedCallers respjson.Field
+		Async          respjson.Field
 		DeferLoading   respjson.Field
 		Description    respjson.Field
 		OutputSchema   respjson.Field
@@ -3507,7 +3521,7 @@ func (r BetaFunctionTool) ToParam() BetaFunctionToolParam {
 
 // Defines a function in your own code the model can choose to call. Learn more
 // about
-// [function calling](https://platform.openai.com/docs/guides/function-calling).
+// [function calling](https://developers.openai.com/api/docs/guides/function-calling).
 //
 // The properties Name, Parameters, Strict, Type are required.
 type BetaFunctionToolParam struct {
@@ -3520,6 +3534,7 @@ type BetaFunctionToolParam struct {
 	// A description of the function. Used by the model to determine whether or not to
 	// call the function.
 	Description param.Opt[string] `json:"description,omitzero"`
+	Async       param.Opt[bool]   `json:"async,omitzero"`
 	// Whether this function is deferred and loaded via tool search.
 	DeferLoading param.Opt[bool] `json:"defer_loading,omitzero"`
 	// The tool invocation context(s).
@@ -4100,6 +4115,7 @@ type BetaNamespaceToolToolUnion struct {
 	// Any of "function", "custom".
 	Type           string   `json:"type"`
 	AllowedCallers []string `json:"allowed_callers"`
+	Async          bool     `json:"async"`
 	DeferLoading   bool     `json:"defer_loading"`
 	Description    string   `json:"description"`
 	// This field is from variant [BetaNamespaceToolToolFunction].
@@ -4114,6 +4130,7 @@ type BetaNamespaceToolToolUnion struct {
 		Name           respjson.Field
 		Type           respjson.Field
 		AllowedCallers respjson.Field
+		Async          respjson.Field
 		DeferLoading   respjson.Field
 		Description    respjson.Field
 		OutputSchema   respjson.Field
@@ -4176,6 +4193,9 @@ type BetaNamespaceToolToolFunction struct {
 	//
 	// Any of "direct", "programmatic".
 	AllowedCallers []string `json:"allowed_callers" api:"nullable"`
+	// Whether the tool response can be returned asynchronously versus immediately
+	// returned on next response creation.
+	Async bool `json:"async"`
 	// Whether this function should be deferred and discovered via tool search.
 	DeferLoading bool   `json:"defer_loading"`
 	Description  string `json:"description" api:"nullable"`
@@ -4192,6 +4212,7 @@ type BetaNamespaceToolToolFunction struct {
 		Name           respjson.Field
 		Type           respjson.Field
 		AllowedCallers respjson.Field
+		Async          respjson.Field
 		DeferLoading   respjson.Field
 		Description    respjson.Field
 		OutputSchema   respjson.Field
@@ -4302,6 +4323,16 @@ func (u BetaNamespaceToolToolUnionParam) GetType() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u BetaNamespaceToolToolUnionParam) GetAsync() *bool {
+	if vt := u.OfFunction; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
+	} else if vt := u.OfCustom; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u BetaNamespaceToolToolUnionParam) GetDeferLoading() *bool {
 	if vt := u.OfFunction; vt != nil && vt.DeferLoading.Valid() {
 		return &vt.DeferLoading.Value
@@ -4348,6 +4379,9 @@ type BetaNamespaceToolToolFunctionParam struct {
 	// to use strict validation when the schema is compatible, and falls back to
 	// non-strict validation otherwise.
 	Strict param.Opt[bool] `json:"strict,omitzero"`
+	// Whether the tool response can be returned asynchronously versus immediately
+	// returned on next response creation.
+	Async param.Opt[bool] `json:"async,omitzero"`
 	// Whether this function should be deferred and discovered via tool search.
 	DeferLoading param.Opt[bool] `json:"defer_loading,omitzero"`
 	// The tool invocation context(s).
@@ -4393,11 +4427,11 @@ type BetaResponse struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata map[string]string `json:"metadata" api:"required"`
-	// Model ID used to generate the response, like `gpt-4o` or `o3`. OpenAI offers a
-	// wide range of models with different capabilities, performance characteristics,
-	// and price points. Refer to the
-	// [model guide](https://platform.openai.com/docs/models) to browse and compare
-	// available models.
+	// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
+	// range of models with different capabilities, performance characteristics, and
+	// price points. Refer to the
+	// [model guide](https://developers.openai.com/api/docs/models) to browse and
+	// compare available models.
 	Model BetaResponseModel `json:"model" api:"required"`
 	// The object type of this resource - always set to `response`.
 	Object constant.Response `json:"object" default:"response"`
@@ -4427,17 +4461,18 @@ type BetaResponse struct {
 	//
 	//   - **Built-in tools**: Tools that are provided by OpenAI that extend the model's
 	//     capabilities, like
-	//     [web search](https://platform.openai.com/docs/guides/tools-web-search) or
-	//     [file search](https://platform.openai.com/docs/guides/tools-file-search).
+	//     [web search](https://developers.openai.com/api/docs/guides/tools-web-search)
+	//     or
+	//     [file search](https://developers.openai.com/api/docs/guides/tools-file-search).
 	//     Learn more about
-	//     [built-in tools](https://platform.openai.com/docs/guides/tools).
+	//     [built-in tools](https://developers.openai.com/api/docs/guides/tools).
 	//   - **MCP Tools**: Integrations with third-party systems via custom MCP servers or
 	//     predefined connectors such as Google Drive and SharePoint. Learn more about
-	//     [MCP Tools](https://platform.openai.com/docs/guides/tools-connectors-mcp).
+	//     [MCP Tools](https://developers.openai.com/api/docs/guides/tools-connectors-mcp).
 	//   - **Function calls (custom tools)**: Functions that are defined by you, enabling
 	//     the model to call your own code with strongly typed arguments and outputs.
 	//     Learn more about
-	//     [function calling](https://platform.openai.com/docs/guides/function-calling).
+	//     [function calling](https://developers.openai.com/api/docs/guides/function-calling).
 	//     You can also use custom tools to call your own code.
 	Tools []BetaToolUnion `json:"tools" api:"required"`
 	// An alternative to sampling with temperature, called nucleus sampling, where the
@@ -4447,7 +4482,7 @@ type BetaResponse struct {
 	// We generally recommend altering this or `temperature` but not both.
 	TopP float64 `json:"top_p" api:"required"`
 	// Whether to run the model response in the background.
-	// [Learn more](https://platform.openai.com/docs/guides/background).
+	// [Learn more](https://developers.openai.com/api/docs/guides/background).
 	Background bool `json:"background" api:"nullable"`
 	// Unix timestamp (in seconds) of when this Response was completed. Only present
 	// when the status is `completed`.
@@ -4457,7 +4492,7 @@ type BetaResponse struct {
 	Conversation BetaResponseConversation `json:"conversation" api:"nullable"`
 	// An upper bound for the number of tokens that can be generated for a response,
 	// including visible output tokens and
-	// [reasoning tokens](https://platform.openai.com/docs/guides/reasoning).
+	// [reasoning tokens](https://developers.openai.com/api/docs/guides/reasoning).
 	MaxOutputTokens int64 `json:"max_output_tokens" api:"nullable"`
 	// The maximum number of total calls to built-in tools that can be processed in a
 	// response. This maximum number applies across all built-in tool calls, not per
@@ -4469,15 +4504,17 @@ type BetaResponse struct {
 	Moderation BetaResponseModeration `json:"moderation" api:"nullable"`
 	// The unique ID of the previous response to the model. Use this to create
 	// multi-turn conversations. Learn more about
-	// [conversation state](https://platform.openai.com/docs/guides/conversation-state).
+	// [conversation state](https://developers.openai.com/api/docs/guides/conversation-state).
 	// Cannot be used in conjunction with `conversation`.
 	PreviousResponseID string `json:"previous_response_id" api:"nullable"`
 	// Reference to a prompt template and its variables.
-	// [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
+	// [Learn more](https://developers.openai.com/api/docs/guides/text?api-mode=responses#version-prompts-in-code).
 	Prompt BetaResponsePrompt `json:"prompt" api:"nullable"`
+	// Prompt cache diagnostics requested for this response.
+	PromptCacheDiagnostics BetaResponsePromptCacheDiagnosticsUnion `json:"prompt_cache_diagnostics"`
 	// Used by OpenAI to cache responses for similar requests to optimize your cache
 	// hit rates. Replaces the `user` field.
-	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
+	// [Learn more](https://developers.openai.com/api/docs/guides/prompt-caching).
 	PromptCacheKey string `json:"prompt_cache_key" api:"nullable"`
 	// The prompt-caching options that were applied to the response. Supported for
 	// `gpt-5.6` and later models.
@@ -4487,7 +4524,7 @@ type BetaResponse struct {
 	// The retention policy for the prompt cache. Set to `24h` to enable extended
 	// prompt caching, which keeps cached prefixes active for longer, up to a maximum
 	// of 24 hours.
-	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching#prompt-cache-retention).
+	// [Learn more](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-retention).
 	// This field expresses a maximum retention policy, while
 	// `prompt_cache_options.ttl` expresses a minimum cache lifetime. The two fields
 	// are independent and do not interact. For `gpt-5.5`, `gpt-5.5-pro`, and future
@@ -4504,17 +4541,15 @@ type BetaResponse struct {
 	//
 	// Deprecated: deprecated
 	PromptCacheRetention BetaResponsePromptCacheRetention `json:"prompt_cache_retention" api:"nullable"`
-	// **gpt-5 and o-series models only**
-	//
 	// Configuration options for
-	// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+	// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 	Reasoning BetaResponseReasoning `json:"reasoning" api:"nullable"`
 	// A stable identifier used to help detect users of your application that may be
 	// violating OpenAI's usage policies. The IDs should be a string that uniquely
 	// identifies each user, with a maximum length of 64 characters. We recommend
 	// hashing their username or email address, in order to avoid sending us any
 	// identifying information.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
 	SafetyIdentifier string `json:"safety_identifier" api:"nullable"`
 	// Specifies the processing type used for serving the request.
 	//
@@ -4523,13 +4558,15 @@ type BetaResponse struct {
 	//     will use 'default'.
 	//   - If set to 'default', then the request will be processed with the standard
 	//     pricing and performance for the selected model.
-	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)',
-	//     then the request will be processed with the Flex Processing service tier.
-	//   - To opt-in to [Fast mode](/api/docs/guides/fast-mode) at the request level,
-	//     include the `service_tier=fast` or `service_tier=priority` parameter for
-	//     Responses or Chat Completions. The response will show `service_tier=priority`
-	//     regardless of if you specify `service_tier=fast` or `priority` in your
-	//     request.
+	//   - If set to
+	//     '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+	//     the request will be processed with the Flex Processing service tier.
+	//   - To opt-in to
+	//     [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+	//     request level, include the `service_tier=fast` or `service_tier=priority`
+	//     parameter for Responses or Chat Completions. The response will show
+	//     `service_tier=priority` regardless of if you specify `service_tier=fast` or
+	//     `priority` in your request.
 	//   - If set to 'ultrafast', then the request will be processed with the
 	//     access-controlled Ultrafast Processing service tier. This tier is currently
 	//     available for `gpt-5.6-sol`; a response served through it will show
@@ -4552,8 +4589,8 @@ type BetaResponse struct {
 	// Configuration options for a text response from the model. Can be plain text or
 	// structured JSON data. Learn more:
 	//
-	// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
-	// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
+	//   - [Text inputs and outputs](https://developers.openai.com/api/docs/guides/text)
+	//   - [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
 	Text BetaResponseTextConfig `json:"text"`
 	// An integer between 0 and 20 specifying the maximum number of most likely tokens
 	// to return at each token position, each with an associated log probability. In
@@ -4576,48 +4613,49 @@ type BetaResponse struct {
 	// `prompt_cache_key` instead to maintain caching optimizations. A stable
 	// identifier for your end-users. Used to boost cache hit rates by better bucketing
 	// similar requests and to help OpenAI detect and prevent abuse.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
 	//
 	// Deprecated: deprecated
 	User string `json:"user"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID                   respjson.Field
-		CreatedAt            respjson.Field
-		Error                respjson.Field
-		IncompleteDetails    respjson.Field
-		Instructions         respjson.Field
-		Metadata             respjson.Field
-		Model                respjson.Field
-		Object               respjson.Field
-		Output               respjson.Field
-		ParallelToolCalls    respjson.Field
-		Temperature          respjson.Field
-		ToolChoice           respjson.Field
-		Tools                respjson.Field
-		TopP                 respjson.Field
-		Background           respjson.Field
-		CompletedAt          respjson.Field
-		Conversation         respjson.Field
-		MaxOutputTokens      respjson.Field
-		MaxToolCalls         respjson.Field
-		Moderation           respjson.Field
-		PreviousResponseID   respjson.Field
-		Prompt               respjson.Field
-		PromptCacheKey       respjson.Field
-		PromptCacheOptions   respjson.Field
-		PromptCacheRetention respjson.Field
-		Reasoning            respjson.Field
-		SafetyIdentifier     respjson.Field
-		ServiceTier          respjson.Field
-		Status               respjson.Field
-		Text                 respjson.Field
-		TopLogprobs          respjson.Field
-		Truncation           respjson.Field
-		Usage                respjson.Field
-		User                 respjson.Field
-		ExtraFields          map[string]respjson.Field
-		raw                  string
+		ID                     respjson.Field
+		CreatedAt              respjson.Field
+		Error                  respjson.Field
+		IncompleteDetails      respjson.Field
+		Instructions           respjson.Field
+		Metadata               respjson.Field
+		Model                  respjson.Field
+		Object                 respjson.Field
+		Output                 respjson.Field
+		ParallelToolCalls      respjson.Field
+		Temperature            respjson.Field
+		ToolChoice             respjson.Field
+		Tools                  respjson.Field
+		TopP                   respjson.Field
+		Background             respjson.Field
+		CompletedAt            respjson.Field
+		Conversation           respjson.Field
+		MaxOutputTokens        respjson.Field
+		MaxToolCalls           respjson.Field
+		Moderation             respjson.Field
+		PreviousResponseID     respjson.Field
+		Prompt                 respjson.Field
+		PromptCacheDiagnostics respjson.Field
+		PromptCacheKey         respjson.Field
+		PromptCacheOptions     respjson.Field
+		PromptCacheRetention   respjson.Field
+		Reasoning              respjson.Field
+		SafetyIdentifier       respjson.Field
+		ServiceTier            respjson.Field
+		Status                 respjson.Field
+		Text                   respjson.Field
+		TopLogprobs            respjson.Field
+		Truncation             respjson.Field
+		Usage                  respjson.Field
+		User                   respjson.Field
+		ExtraFields            map[string]respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -4629,9 +4667,11 @@ func (r *BetaResponse) UnmarshalJSON(data []byte) error {
 
 // Details about why the response is incomplete.
 type BetaResponseIncompleteDetails struct {
-	// The reason why the response is incomplete.
+	// The reason why the response is incomplete. `steered` means the response stopped
+	// at a safe output boundary after a WebSocket `response.steer` event. The server
+	// can then create a successor response automatically with the queued input.
 	//
-	// Any of "max_output_tokens", "content_filter".
+	// Any of "max_output_tokens", "max_messages", "content_filter", "steered".
 	Reason string `json:"reason"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -4684,14 +4724,15 @@ func (r *BetaResponseInstructionsUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Model ID used to generate the response, like `gpt-4o` or `o3`. OpenAI offers a
-// wide range of models with different capabilities, performance characteristics,
-// and price points. Refer to the
-// [model guide](https://platform.openai.com/docs/models) to browse and compare
-// available models.
+// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
+// range of models with different capabilities, performance characteristics, and
+// price points. Refer to the
+// [model guide](https://developers.openai.com/api/docs/models) to browse and
+// compare available models.
 type BetaResponseModel string
 
 const (
+	BetaResponseModelGPT6Astra                        BetaResponseModel = "gpt-6-astra"
 	BetaResponseModelGPT5_6Sol                        BetaResponseModel = "gpt-5.6-sol"
 	BetaResponseModelGPT5_6Terra                      BetaResponseModel = "gpt-5.6-terra"
 	BetaResponseModelGPT5_6Luna                       BetaResponseModel = "gpt-5.6-luna"
@@ -4711,7 +4752,6 @@ const (
 	BetaResponseModelGPT5_1                           BetaResponseModel = "gpt-5.1"
 	BetaResponseModelGPT5_1_2025_11_13                BetaResponseModel = "gpt-5.1-2025-11-13"
 	BetaResponseModelGPT5_1Codex                      BetaResponseModel = "gpt-5.1-codex"
-	BetaResponseModelGPT5_1Mini                       BetaResponseModel = "gpt-5.1-mini"
 	BetaResponseModelGPT5_1ChatLatest                 BetaResponseModel = "gpt-5.1-chat-latest"
 	BetaResponseModelGPT5                             BetaResponseModel = "gpt-5"
 	BetaResponseModelGPT5Mini                         BetaResponseModel = "gpt-5-mini"
@@ -4742,6 +4782,8 @@ const (
 	BetaResponseModelGPT4o2024_11_20                  BetaResponseModel = "gpt-4o-2024-11-20"
 	BetaResponseModelGPT4o2024_08_06                  BetaResponseModel = "gpt-4o-2024-08-06"
 	BetaResponseModelGPT4o2024_05_13                  BetaResponseModel = "gpt-4o-2024-05-13"
+	BetaResponseModelGPTAudioMini                     BetaResponseModel = "gpt-audio-mini"
+	BetaResponseModelGPTAudioMini2025_12_15           BetaResponseModel = "gpt-audio-mini-2025-12-15"
 	BetaResponseModelGPT4oAudioPreview                BetaResponseModel = "gpt-4o-audio-preview"
 	BetaResponseModelGPT4oAudioPreview2024_10_01      BetaResponseModel = "gpt-4o-audio-preview-2024-10-01"
 	BetaResponseModelGPT4oAudioPreview2024_12_17      BetaResponseModel = "gpt-4o-audio-preview-2024-12-17"
@@ -4775,6 +4817,7 @@ const (
 	BetaResponseModelGPT3_5Turbo1106                  BetaResponseModel = "gpt-3.5-turbo-1106"
 	BetaResponseModelGPT3_5Turbo0125                  BetaResponseModel = "gpt-3.5-turbo-0125"
 	BetaResponseModelGPT3_5Turbo16k0613               BetaResponseModel = "gpt-3.5-turbo-16k-0613"
+	BetaResponseModelGPT5_1Mini                       BetaResponseModel = "gpt-5.1-mini"
 	BetaResponseModelO1Pro                            BetaResponseModel = "o1-pro"
 	BetaResponseModelO1Pro2025_03_19                  BetaResponseModel = "o1-pro-2025-03-19"
 	BetaResponseModelO3Pro                            BetaResponseModel = "o3-pro"
@@ -5225,6 +5268,179 @@ func (r *BetaResponseModerationOutputError) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// BetaResponsePromptCacheDiagnosticsUnion contains all possible properties and
+// values from [BetaResponsePromptCacheDiagnosticsCacheMiss],
+// [BetaResponsePromptCacheDiagnosticsCacheHit],
+// [BetaResponsePromptCacheDiagnosticsComparisonResponseNotFound],
+// [BetaResponsePromptCacheDiagnosticsUnavailable].
+//
+// Use the [BetaResponsePromptCacheDiagnosticsUnion.AsAny] method to switch on the
+// variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaResponsePromptCacheDiagnosticsUnion struct {
+	// This field is from variant [BetaResponsePromptCacheDiagnosticsCacheMiss].
+	CacheMissedTokens int64 `json:"cache_missed_tokens"`
+	// This field is from variant [BetaResponsePromptCacheDiagnosticsCacheMiss].
+	Reason string `json:"reason"`
+	// Any of "cache_miss", "cache_hit", "comparison_response_not_found",
+	// "unavailable".
+	Type string `json:"type"`
+	// This field is from variant [BetaResponsePromptCacheDiagnosticsCacheMiss].
+	ComparisonReusableTokens int64 `json:"comparison_reusable_tokens"`
+	JSON                     struct {
+		CacheMissedTokens        respjson.Field
+		Reason                   respjson.Field
+		Type                     respjson.Field
+		ComparisonReusableTokens respjson.Field
+		raw                      string
+	} `json:"-"`
+}
+
+// anyBetaResponsePromptCacheDiagnostics is implemented by each variant of
+// [BetaResponsePromptCacheDiagnosticsUnion] to add type safety for the return type
+// of [BetaResponsePromptCacheDiagnosticsUnion.AsAny]
+type anyBetaResponsePromptCacheDiagnostics interface {
+	implBetaResponsePromptCacheDiagnosticsUnion()
+}
+
+func (BetaResponsePromptCacheDiagnosticsCacheMiss) implBetaResponsePromptCacheDiagnosticsUnion() {}
+func (BetaResponsePromptCacheDiagnosticsCacheHit) implBetaResponsePromptCacheDiagnosticsUnion()  {}
+func (BetaResponsePromptCacheDiagnosticsComparisonResponseNotFound) implBetaResponsePromptCacheDiagnosticsUnion() {
+}
+func (BetaResponsePromptCacheDiagnosticsUnavailable) implBetaResponsePromptCacheDiagnosticsUnion() {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := BetaResponsePromptCacheDiagnosticsUnion.AsAny().(type) {
+//	case openai.BetaResponsePromptCacheDiagnosticsCacheMiss:
+//	case openai.BetaResponsePromptCacheDiagnosticsCacheHit:
+//	case openai.BetaResponsePromptCacheDiagnosticsComparisonResponseNotFound:
+//	case openai.BetaResponsePromptCacheDiagnosticsUnavailable:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u BetaResponsePromptCacheDiagnosticsUnion) AsAny() anyBetaResponsePromptCacheDiagnostics {
+	switch u.Type {
+	case "cache_miss":
+		return u.AsCacheMiss()
+	case "cache_hit":
+		return u.AsCacheHit()
+	case "comparison_response_not_found":
+		return u.AsComparisonResponseNotFound()
+	case "unavailable":
+		return u.AsUnavailable()
+	}
+	return nil
+}
+
+func (u BetaResponsePromptCacheDiagnosticsUnion) AsCacheMiss() (v BetaResponsePromptCacheDiagnosticsCacheMiss) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsePromptCacheDiagnosticsUnion) AsCacheHit() (v BetaResponsePromptCacheDiagnosticsCacheHit) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsePromptCacheDiagnosticsUnion) AsComparisonResponseNotFound() (v BetaResponsePromptCacheDiagnosticsComparisonResponseNotFound) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsePromptCacheDiagnosticsUnion) AsUnavailable() (v BetaResponsePromptCacheDiagnosticsUnavailable) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponsePromptCacheDiagnosticsUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *BetaResponsePromptCacheDiagnosticsUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponsePromptCacheDiagnosticsCacheMiss struct {
+	// The estimated number of input tokens affected after the first detected
+	// divergence.
+	CacheMissedTokens int64 `json:"cache_missed_tokens" api:"required"`
+	// The reason prompt cache reuse did not occur.
+	//
+	// Any of "model_changed", "prompt_cache_key_changed", "tools_changed",
+	// "text_format_changed", "reasoning_effort_changed", "verbosity_changed",
+	// "context_compacted", "input_changed", "service_tier_changed".
+	Reason string             `json:"reason" api:"required"`
+	Type   constant.CacheMiss `json:"type" default:"cache_miss"`
+	// The raw token count of the reusable prefix in the compared response.
+	ComparisonReusableTokens int64 `json:"comparison_reusable_tokens"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CacheMissedTokens        respjson.Field
+		Reason                   respjson.Field
+		Type                     respjson.Field
+		ComparisonReusableTokens respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsePromptCacheDiagnosticsCacheMiss) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsePromptCacheDiagnosticsCacheMiss) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponsePromptCacheDiagnosticsCacheHit struct {
+	Type constant.CacheHit `json:"type" default:"cache_hit"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsePromptCacheDiagnosticsCacheHit) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsePromptCacheDiagnosticsCacheHit) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponsePromptCacheDiagnosticsComparisonResponseNotFound struct {
+	Type constant.ComparisonResponseNotFound `json:"type" default:"comparison_response_not_found"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsePromptCacheDiagnosticsComparisonResponseNotFound) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsePromptCacheDiagnosticsComparisonResponseNotFound) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponsePromptCacheDiagnosticsUnavailable struct {
+	Type constant.Unavailable `json:"type" default:"unavailable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsePromptCacheDiagnosticsUnavailable) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsePromptCacheDiagnosticsUnavailable) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The prompt-caching options that were applied to the response. Supported for
 // `gpt-5.6` and later models.
 type BetaResponsePromptCacheOptions struct {
@@ -5236,12 +5452,15 @@ type BetaResponsePromptCacheOptions struct {
 	//
 	// Any of "30m".
 	Ttl string `json:"ttl" api:"required"`
+	// The response ID supplied as the prompt cache diagnostics comparison.
+	ComparisonResponseID string `json:"comparison_response_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Mode        respjson.Field
-		Ttl         respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Mode                 respjson.Field
+		Ttl                  respjson.Field
+		ComparisonResponseID respjson.Field
+		ExtraFields          map[string]respjson.Field
+		raw                  string
 	} `json:"-"`
 }
 
@@ -5256,7 +5475,7 @@ func (r *BetaResponsePromptCacheOptions) UnmarshalJSON(data []byte) error {
 // The retention policy for the prompt cache. Set to `24h` to enable extended
 // prompt caching, which keeps cached prefixes active for longer, up to a maximum
 // of 24 hours.
-// [Learn more](https://platform.openai.com/docs/guides/prompt-caching#prompt-cache-retention).
+// [Learn more](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-retention).
 // This field expresses a maximum retention policy, while
 // `prompt_cache_options.ttl` expresses a minimum cache lifetime. The two fields
 // are independent and do not interact. For `gpt-5.5`, `gpt-5.5-pro`, and future
@@ -5275,10 +5494,8 @@ const (
 	BetaResponsePromptCacheRetention24h      BetaResponsePromptCacheRetention = "24h"
 )
 
-// **gpt-5 and o-series models only**
-//
 // Configuration options for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 type BetaResponseReasoning struct {
 	// Controls which reasoning items are rendered back to the model on later turns. If
 	// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
@@ -5293,7 +5510,7 @@ type BetaResponseReasoning struct {
 	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
 	// reasoning effort can result in faster responses and fewer tokens used on
 	// reasoning in a response. Not all reasoning models support every value. See the
-	// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+	// [reasoning guide](https://developers.openai.com/api/docs/guides/reasoning) for
 	// model-specific support.
 	//
 	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
@@ -5346,13 +5563,15 @@ func (r *BetaResponseReasoning) UnmarshalJSON(data []byte) error {
 //     will use 'default'.
 //   - If set to 'default', then the request will be processed with the standard
 //     pricing and performance for the selected model.
-//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)',
-//     then the request will be processed with the Flex Processing service tier.
-//   - To opt-in to [Fast mode](/api/docs/guides/fast-mode) at the request level,
-//     include the `service_tier=fast` or `service_tier=priority` parameter for
-//     Responses or Chat Completions. The response will show `service_tier=priority`
-//     regardless of if you specify `service_tier=fast` or `priority` in your
-//     request.
+//   - If set to
+//     '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+//     the request will be processed with the Flex Processing service tier.
+//   - To opt-in to
+//     [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+//     request level, include the `service_tier=fast` or `service_tier=priority`
+//     parameter for Responses or Chat Completions. The response will show
+//     `service_tier=priority` regardless of if you specify `service_tier=fast` or
+//     `priority` in your request.
 //   - If set to 'ultrafast', then the request will be processed with the
 //     access-controlled Ultrafast Processing service tier. This tier is currently
 //     available for `gpt-5.6-sol`; a response served through it will show
@@ -6637,8 +6856,57 @@ func (r *BetaResponseCodeInterpreterToolCallAgentParam) UnmarshalJSON(data []byt
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Emitted when new summary content is sampled for a compaction trigger. Contains
+// no summary content.
+type BetaResponseCompactionCompactingEvent struct {
+	// The ID of the compaction output item.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the compaction output item.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the event that was emitted.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The type of the event, always `response.compaction.compacting`.
+	Type constant.ResponseCompactionCompacting `json:"type" default:"response.compaction.compacting"`
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseCompactionCompactingEventAgent `json:"agent"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		Agent          respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseCompactionCompactingEvent) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseCompactionCompactingEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The agent that owns this multi-agent streaming event.
+type BetaResponseCompactionCompactingEventAgent struct {
+	// The canonical name of the agent that produced this item.
+	AgentName string `json:"agent_name" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AgentName   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseCompactionCompactingEventAgent) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseCompactionCompactingEventAgent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // A compaction item generated by the
-// [`v1/responses/compact` API](https://platform.openai.com/docs/api-reference/responses/compact).
+// [`v1/responses/compact` API](https://developers.openai.com/api/reference/resources/responses/methods/compact).
 type BetaResponseCompactionItem struct {
 	// The unique ID of the compaction item.
 	ID string `json:"id" api:"required"`
@@ -6687,7 +6955,7 @@ func (r *BetaResponseCompactionItemAgent) UnmarshalJSON(data []byte) error {
 }
 
 // A compaction item generated by the
-// [`v1/responses/compact` API](https://platform.openai.com/docs/api-reference/responses/compact).
+// [`v1/responses/compact` API](https://developers.openai.com/api/reference/resources/responses/methods/compact).
 type BetaResponseCompactionItemParamResp struct {
 	// The encrypted content of the compaction summary.
 	EncryptedContent string `json:"encrypted_content" api:"required"`
@@ -6743,7 +7011,7 @@ func (r *BetaResponseCompactionItemParamAgentResp) UnmarshalJSON(data []byte) er
 }
 
 // A compaction item generated by the
-// [`v1/responses/compact` API](https://platform.openai.com/docs/api-reference/responses/compact).
+// [`v1/responses/compact` API](https://developers.openai.com/api/reference/resources/responses/methods/compact).
 //
 // The properties EncryptedContent, Type are required.
 type BetaResponseCompactionItemParam struct {
@@ -6831,7 +7099,7 @@ func (r *BetaResponseCompletedEventAgent) UnmarshalJSON(data []byte) error {
 }
 
 // A tool call to a computer use tool. See the
-// [computer use guide](https://platform.openai.com/docs/guides/tools-computer-use)
+// [computer use guide](https://developers.openai.com/api/docs/guides/tools-computer-use)
 // for more information.
 type BetaResponseComputerToolCall struct {
 	// The unique ID of the computer call.
@@ -6947,7 +7215,7 @@ func (r *BetaResponseComputerToolCallAgent) UnmarshalJSON(data []byte) error {
 }
 
 // A tool call to a computer use tool. See the
-// [computer use guide](https://platform.openai.com/docs/guides/tools-computer-use)
+// [computer use guide](https://developers.openai.com/api/docs/guides/tools-computer-use)
 // for more information.
 //
 // The properties ID, CallID, PendingSafetyChecks, Status, Type are required.
@@ -7178,6 +7446,220 @@ func (r BetaResponseComputerToolCallOutputScreenshotParam) MarshalJSON() (data [
 }
 func (r *BetaResponseComputerToolCallOutputScreenshotParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// A configuration update that applies to subsequent responses until it is replaced
+// by another configuration update.
+type BetaResponseConfigurationUpdateItem struct {
+	// The unique ID of the configuration update item.
+	ID string `json:"id" api:"required"`
+	// The item type. Always `configuration_update`.
+	Type constant.ConfigurationUpdate `json:"type" default:"configuration_update"`
+	// The agent that produced this item.
+	Agent BetaResponseConfigurationUpdateItemAgent `json:"agent"`
+	// The reasoning configuration applied by this update.
+	Reasoning BetaResponseConfigurationUpdateItemReasoning `json:"reasoning"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Type        respjson.Field
+		Agent       respjson.Field
+		Reasoning   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseConfigurationUpdateItem) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseConfigurationUpdateItem) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The agent that produced this item.
+type BetaResponseConfigurationUpdateItemAgent struct {
+	// The canonical name of the agent that produced this item.
+	AgentName string `json:"agent_name" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AgentName   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseConfigurationUpdateItemAgent) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseConfigurationUpdateItemAgent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The reasoning configuration applied by this update.
+type BetaResponseConfigurationUpdateItemReasoning struct {
+	// The reasoning effort used for subsequent responses until another configuration
+	// update replaces it.
+	//
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
+	Effort string `json:"effort" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Effort      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseConfigurationUpdateItemReasoning) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseConfigurationUpdateItemReasoning) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An update to the conversation's response configuration. The configuration
+// remains in effect for subsequent responses until it is replaced by another
+// configuration update.
+type BetaResponseConfigurationUpdateItemParamResp struct {
+	// The item type. Always `configuration_update`.
+	Type constant.ConfigurationUpdate `json:"type" default:"configuration_update"`
+	// The unique ID of the configuration update item.
+	ID string `json:"id" api:"nullable"`
+	// The agent that produced this item.
+	Agent BetaResponseConfigurationUpdateItemParamAgentResp `json:"agent" api:"nullable"`
+	// Updates to reasoning configuration. Only effort is supported.
+	Reasoning BetaResponseConfigurationUpdateItemParamReasoningResp `json:"reasoning"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ID          respjson.Field
+		Agent       respjson.Field
+		Reasoning   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseConfigurationUpdateItemParamResp) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseConfigurationUpdateItemParamResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this BetaResponseConfigurationUpdateItemParamResp to a
+// BetaResponseConfigurationUpdateItemParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// BetaResponseConfigurationUpdateItemParam.Overrides()
+func (r BetaResponseConfigurationUpdateItemParamResp) ToParam() BetaResponseConfigurationUpdateItemParam {
+	return param.Override[BetaResponseConfigurationUpdateItemParam](json.RawMessage(r.RawJSON()))
+}
+
+// The agent that produced this item.
+type BetaResponseConfigurationUpdateItemParamAgentResp struct {
+	// The canonical name of the agent that produced this item.
+	AgentName string `json:"agent_name" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AgentName   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseConfigurationUpdateItemParamAgentResp) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseConfigurationUpdateItemParamAgentResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Updates to reasoning configuration. Only effort is supported.
+type BetaResponseConfigurationUpdateItemParamReasoningResp struct {
+	// The reasoning effort to use for subsequent responses until another configuration
+	// update replaces it.
+	//
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
+	Effort string `json:"effort" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Effort      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseConfigurationUpdateItemParamReasoningResp) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseConfigurationUpdateItemParamReasoningResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An update to the conversation's response configuration. The configuration
+// remains in effect for subsequent responses until it is replaced by another
+// configuration update.
+//
+// The property Type is required.
+type BetaResponseConfigurationUpdateItemParam struct {
+	// The unique ID of the configuration update item.
+	ID param.Opt[string] `json:"id,omitzero"`
+	// The agent that produced this item.
+	Agent BetaResponseConfigurationUpdateItemParamAgent `json:"agent,omitzero"`
+	// Updates to reasoning configuration. Only effort is supported.
+	Reasoning BetaResponseConfigurationUpdateItemParamReasoning `json:"reasoning,omitzero"`
+	// The item type. Always `configuration_update`.
+	//
+	// This field can be elided, and will marshal its zero value as
+	// "configuration_update".
+	Type constant.ConfigurationUpdate `json:"type" default:"configuration_update"`
+	paramObj
+}
+
+func (r BetaResponseConfigurationUpdateItemParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseConfigurationUpdateItemParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseConfigurationUpdateItemParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The agent that produced this item.
+//
+// The property AgentName is required.
+type BetaResponseConfigurationUpdateItemParamAgent struct {
+	// The canonical name of the agent that produced this item.
+	AgentName string `json:"agent_name" api:"required"`
+	paramObj
+}
+
+func (r BetaResponseConfigurationUpdateItemParamAgent) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseConfigurationUpdateItemParamAgent
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseConfigurationUpdateItemParamAgent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Updates to reasoning configuration. Only effort is supported.
+type BetaResponseConfigurationUpdateItemParamReasoning struct {
+	// The reasoning effort to use for subsequent responses until another configuration
+	// update replaces it.
+	//
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
+	Effort string `json:"effort,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseConfigurationUpdateItemParamReasoning) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseConfigurationUpdateItemParamReasoning
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseConfigurationUpdateItemParamReasoning) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseConfigurationUpdateItemParamReasoning](
+		"effort", "none", "minimal", "low", "medium", "high", "xhigh", "max",
+	)
 }
 
 // Represents a container created with /v1/containers.
@@ -7592,6 +8074,8 @@ type BetaResponseCustomToolCall struct {
 	ID string `json:"id"`
 	// The agent that produced this item.
 	Agent BetaResponseCustomToolCallAgent `json:"agent" api:"nullable"`
+	// Whether the custom tool call runs asynchronously.
+	Async bool `json:"async"`
 	// The execution context that produced this tool call.
 	Caller BetaResponseCustomToolCallCallerUnion `json:"caller" api:"nullable"`
 	// The namespace of the custom tool being called.
@@ -7604,6 +8088,7 @@ type BetaResponseCustomToolCall struct {
 		Type        respjson.Field
 		ID          respjson.Field
 		Agent       respjson.Field
+		Async       respjson.Field
 		Caller      respjson.Field
 		Namespace   respjson.Field
 		ExtraFields map[string]respjson.Field
@@ -7757,6 +8242,8 @@ type BetaResponseCustomToolCallParam struct {
 	Name string `json:"name" api:"required"`
 	// The unique ID of the custom tool call in the OpenAI platform.
 	ID param.Opt[string] `json:"id,omitzero"`
+	// Whether the custom tool call runs asynchronously.
+	Async param.Opt[bool] `json:"async,omitzero"`
 	// The namespace of the custom tool being called.
 	Namespace param.Opt[string] `json:"namespace,omitzero"`
 	// The agent that produced this item.
@@ -8681,21 +9168,23 @@ type BetaResponseError struct {
 	// The error code for the response.
 	//
 	// Any of "server_error", "rate_limit_exceeded", "invalid_prompt",
-	// "data_residency_mismatch", "bio_policy", "vector_store_timeout",
-	// "invalid_image", "invalid_image_format", "invalid_base64_image",
-	// "invalid_image_url", "image_too_large", "image_too_small", "image_parse_error",
-	// "image_content_policy_violation", "invalid_image_mode", "image_file_too_large",
-	// "unsupported_image_media_type", "empty_image_file", "failed_to_download_image",
-	// "image_file_not_found".
+	// "data_residency_mismatch", "bio_policy", "misalignment_policy_violation",
+	// "vector_store_timeout", "invalid_image", "invalid_image_format",
+	// "invalid_base64_image", "invalid_image_url", "image_too_large",
+	// "image_too_small", "image_parse_error", "image_content_policy_violation",
+	// "invalid_image_mode", "image_file_too_large", "unsupported_image_media_type",
+	// "empty_image_file", "failed_to_download_image", "image_file_not_found".
 	Code BetaResponseErrorCode `json:"code" api:"required"`
 	// A human-readable description of the error.
-	Message string `json:"message" api:"required"`
+	Message      string                        `json:"message" api:"required"`
+	Misalignment BetaResponseErrorMisalignment `json:"misalignment"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Code        respjson.Field
-		Message     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Code         respjson.Field
+		Message      respjson.Field
+		Misalignment respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -8714,6 +9203,7 @@ const (
 	BetaResponseErrorCodeInvalidPrompt               BetaResponseErrorCode = "invalid_prompt"
 	BetaResponseErrorCodeDataResidencyMismatch       BetaResponseErrorCode = "data_residency_mismatch"
 	BetaResponseErrorCodeBioPolicy                   BetaResponseErrorCode = "bio_policy"
+	BetaResponseErrorCodeMisalignmentPolicyViolation BetaResponseErrorCode = "misalignment_policy_violation"
 	BetaResponseErrorCodeVectorStoreTimeout          BetaResponseErrorCode = "vector_store_timeout"
 	BetaResponseErrorCodeInvalidImage                BetaResponseErrorCode = "invalid_image"
 	BetaResponseErrorCodeInvalidImageFormat          BetaResponseErrorCode = "invalid_image_format"
@@ -8730,6 +9220,47 @@ const (
 	BetaResponseErrorCodeFailedToDownloadImage       BetaResponseErrorCode = "failed_to_download_image"
 	BetaResponseErrorCodeImageFileNotFound           BetaResponseErrorCode = "image_file_not_found"
 )
+
+type BetaResponseErrorMisalignment struct {
+	// The public explanation for this block.
+	DetailedExplanation string `json:"detailed_explanation"`
+	// An optional classification; clients must accept additional values.
+	ErrorType string `json:"error_type"`
+	// An optional public continuation instruction.
+	Steer BetaResponseErrorMisalignmentSteer `json:"steer"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		DetailedExplanation respjson.Field
+		ErrorType           respjson.Field
+		Steer               respjson.Field
+		ExtraFields         map[string]respjson.Field
+		raw                 string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseErrorMisalignment) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseErrorMisalignment) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An optional public continuation instruction.
+type BetaResponseErrorMisalignmentSteer struct {
+	// The public continuation instruction.
+	Message string `json:"message" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseErrorMisalignmentSteer) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseErrorMisalignmentSteer) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Emitted when an error occurs.
 type BetaResponseErrorEvent struct {
@@ -8972,7 +9503,7 @@ func (r *BetaResponseFileSearchCallSearchingEventAgent) UnmarshalJSON(data []byt
 }
 
 // The results of a file search tool call. See the
-// [file search guide](https://platform.openai.com/docs/guides/tools-file-search)
+// [file search guide](https://developers.openai.com/api/docs/guides/tools-file-search)
 // for more information.
 type BetaResponseFileSearchToolCall struct {
 	// The unique ID of the file search tool call.
@@ -9127,7 +9658,7 @@ func (r *BetaResponseFileSearchToolCallResultAttributeUnion) UnmarshalJSON(data 
 }
 
 // The results of a file search tool call. See the
-// [file search guide](https://platform.openai.com/docs/guides/tools-file-search)
+// [file search guide](https://developers.openai.com/api/docs/guides/tools-file-search)
 // for more information.
 //
 // The properties ID, Queries, Status, Type are required.
@@ -9481,7 +10012,7 @@ func (r *BetaResponseFormatTextConfigJSONObjectParam) UnmarshalJSON(data []byte)
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
-// [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
+// [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 type BetaResponseFormatTextJSONSchemaConfig struct {
 	// The name of the response format. Must be a-z, A-Z, 0-9, or contain underscores
 	// and dashes, with a maximum length of 64.
@@ -9498,7 +10029,7 @@ type BetaResponseFormatTextJSONSchemaConfig struct {
 	// true, the model will always follow the exact schema defined in the `schema`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. To
 	// learn more, read the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	Strict bool `json:"strict" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -9530,7 +10061,7 @@ func (r BetaResponseFormatTextJSONSchemaConfig) ToParam() BetaResponseFormatText
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
-// [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
+// [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 //
 // The properties Name, Schema, Type are required.
 type BetaResponseFormatTextJSONSchemaConfigParam struct {
@@ -9544,7 +10075,7 @@ type BetaResponseFormatTextJSONSchemaConfigParam struct {
 	// true, the model will always follow the exact schema defined in the `schema`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. To
 	// learn more, read the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	Strict param.Opt[bool] `json:"strict,omitzero"`
 	// A description of what the response format is for, used by the model to determine
 	// how to respond in the format.
@@ -9621,8 +10152,6 @@ type BetaResponseFunctionCallArgumentsDoneEvent struct {
 	Arguments string `json:"arguments" api:"required"`
 	// The ID of the item.
 	ItemID string `json:"item_id" api:"required"`
-	// The name of the function that was called.
-	Name string `json:"name" api:"required"`
 	// The index of the output item.
 	OutputIndex int64 `json:"output_index" api:"required"`
 	// The sequence number of this event.
@@ -9634,7 +10163,6 @@ type BetaResponseFunctionCallArgumentsDoneEvent struct {
 	JSON struct {
 		Arguments      respjson.Field
 		ItemID         respjson.Field
-		Name           respjson.Field
 		OutputIndex    respjson.Field
 		SequenceNumber respjson.Field
 		Type           respjson.Field
@@ -10781,7 +11309,7 @@ func (r *BetaResponseFunctionShellToolCallOutputCallerProgram) UnmarshalJSON(dat
 }
 
 // A tool call to run a function. See the
-// [function calling guide](https://platform.openai.com/docs/guides/function-calling)
+// [function calling guide](https://developers.openai.com/api/docs/guides/function-calling)
 // for more information.
 type BetaResponseFunctionToolCall struct {
 	// A JSON string of the arguments to pass to the function.
@@ -10796,6 +11324,8 @@ type BetaResponseFunctionToolCall struct {
 	ID string `json:"id"`
 	// The agent that produced this item.
 	Agent BetaResponseFunctionToolCallAgent `json:"agent" api:"nullable"`
+	// Whether the function tool call runs asynchronously.
+	Async bool `json:"async"`
 	// The execution context that produced this tool call.
 	Caller BetaResponseFunctionToolCallCallerUnion `json:"caller" api:"nullable"`
 	// The namespace of the function to run.
@@ -10813,6 +11343,7 @@ type BetaResponseFunctionToolCall struct {
 		Type        respjson.Field
 		ID          respjson.Field
 		Agent       respjson.Field
+		Async       respjson.Field
 		Caller      respjson.Field
 		Namespace   respjson.Field
 		Status      respjson.Field
@@ -10966,7 +11497,7 @@ const (
 )
 
 // A tool call to run a function. See the
-// [function calling guide](https://platform.openai.com/docs/guides/function-calling)
+// [function calling guide](https://developers.openai.com/api/docs/guides/function-calling)
 // for more information.
 //
 // The properties Arguments, CallID, Name, Type are required.
@@ -10979,6 +11510,8 @@ type BetaResponseFunctionToolCallParam struct {
 	Name string `json:"name" api:"required"`
 	// The unique ID of the function tool call.
 	ID param.Opt[string] `json:"id,omitzero"`
+	// Whether the function tool call runs asynchronously.
+	Async param.Opt[bool] `json:"async,omitzero"`
 	// The namespace of the function to run.
 	Namespace param.Opt[string] `json:"namespace,omitzero"`
 	// The agent that produced this item.
@@ -11112,7 +11645,7 @@ func (r *BetaResponseFunctionToolCallCallerProgramParam) UnmarshalJSON(data []by
 }
 
 // A tool call to run a function. See the
-// [function calling guide](https://platform.openai.com/docs/guides/function-calling)
+// [function calling guide](https://developers.openai.com/api/docs/guides/function-calling)
 // for more information.
 type BetaResponseFunctionToolCallItem struct {
 	// The unique ID of the function tool call.
@@ -11144,8 +11677,6 @@ func (r *BetaResponseFunctionToolCallItem) UnmarshalJSON(data []byte) error {
 type BetaResponseFunctionToolCallOutputItem struct {
 	// The unique ID of the function call tool output.
 	ID string `json:"id" api:"required"`
-	// The unique ID of the function tool call generated by the model.
-	CallID string `json:"call_id" api:"required"`
 	// The output from the function call generated by your code. Can be a string or an
 	// list of output content.
 	Output BetaResponseFunctionToolCallOutputItemOutputUnion `json:"output" api:"required"`
@@ -11158,6 +11689,8 @@ type BetaResponseFunctionToolCallOutputItem struct {
 	Type constant.FunctionCallOutput `json:"type" default:"function_call_output"`
 	// The agent that produced this item.
 	Agent BetaResponseFunctionToolCallOutputItemAgent `json:"agent" api:"nullable"`
+	// The unique ID of the function tool call generated by the model.
+	CallID string `json:"call_id"`
 	// The execution context that produced this tool call.
 	Caller BetaResponseFunctionToolCallOutputItemCallerUnion `json:"caller" api:"nullable"`
 	// The identifier of the actor that created the item.
@@ -11169,11 +11702,11 @@ type BetaResponseFunctionToolCallOutputItem struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
-		CallID      respjson.Field
 		Output      respjson.Field
 		Status      respjson.Field
 		Type        respjson.Field
 		Agent       respjson.Field
+		CallID      respjson.Field
 		Caller      respjson.Field
 		CreatedBy   respjson.Field
 		Name        respjson.Field
@@ -11486,8 +12019,8 @@ func (r *BetaResponseFunctionToolCallOutputItemCallerProgram) UnmarshalJSON(data
 }
 
 // The results of a web search tool call. See the
-// [web search guide](https://platform.openai.com/docs/guides/tools-web-search) for
-// more information.
+// [web search guide](https://developers.openai.com/api/docs/guides/tools-web-search)
+// for more information.
 type BetaResponseFunctionWebSearch struct {
 	// The unique ID of the web search tool call.
 	ID string `json:"id" api:"required"`
@@ -11496,7 +12029,7 @@ type BetaResponseFunctionWebSearch struct {
 	Action BetaResponseFunctionWebSearchActionUnion `json:"action" api:"required"`
 	// The status of the web search tool call.
 	//
-	// Any of "in_progress", "searching", "completed", "failed".
+	// Any of "in_progress", "searching", "completed", "failed", "incomplete".
 	Status BetaResponseFunctionWebSearchStatus `json:"status" api:"required"`
 	// The type of the web search tool call. Always `web_search_call`.
 	Type constant.WebSearchCall `json:"type" default:"web_search_call"`
@@ -11719,6 +12252,7 @@ const (
 	BetaResponseFunctionWebSearchStatusSearching  BetaResponseFunctionWebSearchStatus = "searching"
 	BetaResponseFunctionWebSearchStatusCompleted  BetaResponseFunctionWebSearchStatus = "completed"
 	BetaResponseFunctionWebSearchStatusFailed     BetaResponseFunctionWebSearchStatus = "failed"
+	BetaResponseFunctionWebSearchStatusIncomplete BetaResponseFunctionWebSearchStatus = "incomplete"
 )
 
 // The agent that produced this item.
@@ -11740,8 +12274,8 @@ func (r *BetaResponseFunctionWebSearchAgent) UnmarshalJSON(data []byte) error {
 }
 
 // The results of a web search tool call. See the
-// [web search guide](https://platform.openai.com/docs/guides/tools-web-search) for
-// more information.
+// [web search guide](https://developers.openai.com/api/docs/guides/tools-web-search)
+// for more information.
 //
 // The properties ID, Action, Status, Type are required.
 type BetaResponseFunctionWebSearchParam struct {
@@ -11752,7 +12286,7 @@ type BetaResponseFunctionWebSearchParam struct {
 	Action BetaResponseFunctionWebSearchActionUnionParam `json:"action,omitzero" api:"required"`
 	// The status of the web search tool call.
 	//
-	// Any of "in_progress", "searching", "completed", "failed".
+	// Any of "in_progress", "searching", "completed", "failed", "incomplete".
 	Status BetaResponseFunctionWebSearchStatus `json:"status,omitzero" api:"required"`
 	// The agent that produced this item.
 	Agent BetaResponseFunctionWebSearchAgentParam `json:"agent,omitzero"`
@@ -12263,6 +12797,10 @@ const (
 )
 
 // An event that is emitted when a response finishes as incomplete.
+//
+// Over WebSocket, steering can finish a response with
+// `response.incomplete_details.reason` set to `steered`, followed automatically by
+// a successor `response.created` that commits the queued steering input.
 type BetaResponseIncompleteEvent struct {
 	// The response that was incomplete.
 	Response BetaResponse `json:"response" api:"required"`
@@ -12889,7 +13427,7 @@ func (r *BetaResponseInputFileContentPromptCacheBreakpointParam) UnmarshalJSON(d
 }
 
 // An image input to the model. Learn about
-// [image inputs](https://platform.openai.com/docs/guides/vision).
+// [image inputs](https://developers.openai.com/api/docs/guides/images-vision).
 type BetaResponseInputImage struct {
 	// The detail level of the image to be sent to the model. One of `high`, `low`,
 	// `auto`, or `original`. Defaults to `auto`.
@@ -12966,7 +13504,7 @@ func (r *BetaResponseInputImagePromptCacheBreakpoint) UnmarshalJSON(data []byte)
 }
 
 // An image input to the model. Learn about
-// [image inputs](https://platform.openai.com/docs/guides/vision).
+// [image inputs](https://developers.openai.com/api/docs/guides/images-vision).
 //
 // The properties Detail, Type are required.
 type BetaResponseInputImageParam struct {
@@ -13026,7 +13564,7 @@ func (r *BetaResponseInputImagePromptCacheBreakpointParam) UnmarshalJSON(data []
 }
 
 // An image input to the model. Learn about
-// [image inputs](https://platform.openai.com/docs/guides/vision)
+// [image inputs](https://developers.openai.com/api/docs/guides/images-vision)
 type BetaResponseInputImageContent struct {
 	// The type of the input item. Always `input_image`.
 	Type constant.InputImage `json:"type" default:"input_image"`
@@ -13104,7 +13642,7 @@ func (r *BetaResponseInputImageContentPromptCacheBreakpoint) UnmarshalJSON(data 
 }
 
 // An image input to the model. Learn about
-// [image inputs](https://platform.openai.com/docs/guides/vision)
+// [image inputs](https://developers.openai.com/api/docs/guides/images-vision)
 //
 // The property Type is required.
 type BetaResponseInputImageContentParam struct {
@@ -13173,7 +13711,8 @@ func (r *BetaResponseInputImageContentPromptCacheBreakpointParam) UnmarshalJSON(
 // [BetaResponseInputItemMultiAgentCallOutput],
 // [BetaResponseInputItemToolSearchCall],
 // [BetaResponseToolSearchOutputItemParamResp],
-// [BetaResponseInputItemAdditionalTools], [BetaResponseReasoningItem],
+// [BetaResponseInputItemAdditionalTools],
+// [BetaResponseConfigurationUpdateItemParamResp], [BetaResponseReasoningItem],
 // [BetaResponseCompactionItemParamResp],
 // [BetaResponseInputItemImageGenerationCall],
 // [BetaResponseCodeInterpreterToolCall], [BetaResponseInputItemLocalShellCall],
@@ -13202,13 +13741,13 @@ type BetaResponseInputItemUnion struct {
 	// "computer_call_output", "web_search_call", "function_call",
 	// "function_call_output", "agent_message", "multi_agent_call",
 	// "multi_agent_call_output", "tool_search_call", "tool_search_output",
-	// "additional_tools", "reasoning", "compaction", "image_generation_call",
-	// "code_interpreter_call", "local_shell_call", "local_shell_call_output",
-	// "shell_call", "shell_call_output", "apply_patch_call",
-	// "apply_patch_call_output", "mcp_list_tools", "mcp_approval_request",
-	// "mcp_approval_response", "mcp_call", "custom_tool_call_output",
-	// "custom_tool_call", "compaction_trigger", "item_reference", "program",
-	// "program_output".
+	// "additional_tools", "configuration_update", "reasoning", "compaction",
+	// "image_generation_call", "code_interpreter_call", "local_shell_call",
+	// "local_shell_call_output", "shell_call", "shell_call_output",
+	// "apply_patch_call", "apply_patch_call_output", "mcp_list_tools",
+	// "mcp_approval_request", "mcp_approval_response", "mcp_call",
+	// "custom_tool_call_output", "custom_tool_call", "compaction_trigger",
+	// "item_reference", "program", "program_output".
 	Type string `json:"type"`
 	// This field is a union of [BetaResponseInputItemMessageAgent],
 	// [BetaResponseOutputMessageAgent], [BetaResponseFileSearchToolCallAgent],
@@ -13221,8 +13760,9 @@ type BetaResponseInputItemUnion struct {
 	// [BetaResponseInputItemMultiAgentCallOutputAgent],
 	// [BetaResponseInputItemToolSearchCallAgent],
 	// [BetaResponseToolSearchOutputItemParamAgentResp],
-	// [BetaResponseInputItemAdditionalToolsAgent], [BetaResponseReasoningItemAgent],
-	// [BetaResponseCompactionItemParamAgentResp],
+	// [BetaResponseInputItemAdditionalToolsAgent],
+	// [BetaResponseConfigurationUpdateItemParamAgentResp],
+	// [BetaResponseReasoningItemAgent], [BetaResponseCompactionItemParamAgentResp],
 	// [BetaResponseInputItemImageGenerationCallAgent],
 	// [BetaResponseCodeInterpreterToolCallAgent],
 	// [BetaResponseInputItemLocalShellCallAgent],
@@ -13250,7 +13790,7 @@ type BetaResponseInputItemUnion struct {
 	// This field is from variant [BetaResponseComputerToolCall].
 	PendingSafetyChecks []BetaResponseComputerToolCallPendingSafetyCheck `json:"pending_safety_checks"`
 	// This field is a union of [BetaComputerActionUnion],
-	// [BetaResponseFunctionWebSearchActionUnion], [string], [string],
+	// [BetaResponseFunctionWebSearchActionUnion], [string], [string], [string],
 	// [BetaResponseInputItemLocalShellCallAction],
 	// [BetaResponseInputItemShellCallAction]
 	Action BetaResponseInputItemUnionAction `json:"action"`
@@ -13267,6 +13807,7 @@ type BetaResponseInputItemUnion struct {
 	// This field is a union of [string], [string], [any], [string], [string]
 	Arguments BetaResponseInputItemUnionArguments `json:"arguments"`
 	Name      string                              `json:"name"`
+	Async     bool                                `json:"async"`
 	// This field is a union of [BetaResponseFunctionToolCallCallerUnion],
 	// [BetaResponseInputItemFunctionCallOutputCallerUnion],
 	// [BetaResponseInputItemShellCallCallerUnion],
@@ -13285,11 +13826,23 @@ type BetaResponseInputItemUnion struct {
 	// This field is a union of [[]BetaToolUnion], [[]BetaToolUnion],
 	// [[]BetaResponseInputItemMcpListToolsTool]
 	Tools BetaResponseInputItemUnionTools `json:"tools"`
+	// This field is from variant [BetaResponseConfigurationUpdateItemParamResp].
+	Reasoning BetaResponseConfigurationUpdateItemParamReasoningResp `json:"reasoning"`
 	// This field is from variant [BetaResponseReasoningItem].
 	Summary          []BetaResponseReasoningItemSummary `json:"summary"`
 	EncryptedContent string                             `json:"encrypted_content"`
 	Result           string                             `json:"result"`
-	Code             string                             `json:"code"`
+	// This field is from variant [BetaResponseInputItemImageGenerationCall].
+	Background string `json:"background"`
+	// This field is from variant [BetaResponseInputItemImageGenerationCall].
+	OutputFormat string `json:"output_format"`
+	// This field is from variant [BetaResponseInputItemImageGenerationCall].
+	Quality string `json:"quality"`
+	// This field is from variant [BetaResponseInputItemImageGenerationCall].
+	RevisedPrompt string `json:"revised_prompt"`
+	// This field is from variant [BetaResponseInputItemImageGenerationCall].
+	Size string `json:"size"`
+	Code string `json:"code"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
 	ContainerID string `json:"container_id"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
@@ -13330,15 +13883,22 @@ type BetaResponseInputItemUnion struct {
 		AcknowledgedSafetyChecks respjson.Field
 		Arguments                respjson.Field
 		Name                     respjson.Field
+		Async                    respjson.Field
 		Caller                   respjson.Field
 		Namespace                respjson.Field
 		Author                   respjson.Field
 		Recipient                respjson.Field
 		Execution                respjson.Field
 		Tools                    respjson.Field
+		Reasoning                respjson.Field
 		Summary                  respjson.Field
 		EncryptedContent         respjson.Field
 		Result                   respjson.Field
+		Background               respjson.Field
+		OutputFormat             respjson.Field
+		Quality                  respjson.Field
+		RevisedPrompt            respjson.Field
+		Size                     respjson.Field
 		Code                     respjson.Field
 		ContainerID              respjson.Field
 		Outputs                  respjson.Field
@@ -13363,41 +13923,42 @@ type anyBetaResponseInputItem interface {
 	implBetaResponseInputItemUnion()
 }
 
-func (BetaEasyInputMessage) implBetaResponseInputItemUnion()                      {}
-func (BetaResponseInputItemMessage) implBetaResponseInputItemUnion()              {}
-func (BetaResponseOutputMessage) implBetaResponseInputItemUnion()                 {}
-func (BetaResponseFileSearchToolCall) implBetaResponseInputItemUnion()            {}
-func (BetaResponseComputerToolCall) implBetaResponseInputItemUnion()              {}
-func (BetaResponseInputItemComputerCallOutput) implBetaResponseInputItemUnion()   {}
-func (BetaResponseFunctionWebSearch) implBetaResponseInputItemUnion()             {}
-func (BetaResponseFunctionToolCall) implBetaResponseInputItemUnion()              {}
-func (BetaResponseInputItemFunctionCallOutput) implBetaResponseInputItemUnion()   {}
-func (BetaResponseInputItemAgentMessage) implBetaResponseInputItemUnion()         {}
-func (BetaResponseInputItemMultiAgentCall) implBetaResponseInputItemUnion()       {}
-func (BetaResponseInputItemMultiAgentCallOutput) implBetaResponseInputItemUnion() {}
-func (BetaResponseInputItemToolSearchCall) implBetaResponseInputItemUnion()       {}
-func (BetaResponseToolSearchOutputItemParamResp) implBetaResponseInputItemUnion() {}
-func (BetaResponseInputItemAdditionalTools) implBetaResponseInputItemUnion()      {}
-func (BetaResponseReasoningItem) implBetaResponseInputItemUnion()                 {}
-func (BetaResponseCompactionItemParamResp) implBetaResponseInputItemUnion()       {}
-func (BetaResponseInputItemImageGenerationCall) implBetaResponseInputItemUnion()  {}
-func (BetaResponseCodeInterpreterToolCall) implBetaResponseInputItemUnion()       {}
-func (BetaResponseInputItemLocalShellCall) implBetaResponseInputItemUnion()       {}
-func (BetaResponseInputItemLocalShellCallOutput) implBetaResponseInputItemUnion() {}
-func (BetaResponseInputItemShellCall) implBetaResponseInputItemUnion()            {}
-func (BetaResponseInputItemShellCallOutput) implBetaResponseInputItemUnion()      {}
-func (BetaResponseInputItemApplyPatchCall) implBetaResponseInputItemUnion()       {}
-func (BetaResponseInputItemApplyPatchCallOutput) implBetaResponseInputItemUnion() {}
-func (BetaResponseInputItemMcpListTools) implBetaResponseInputItemUnion()         {}
-func (BetaResponseInputItemMcpApprovalRequest) implBetaResponseInputItemUnion()   {}
-func (BetaResponseInputItemMcpApprovalResponse) implBetaResponseInputItemUnion()  {}
-func (BetaResponseInputItemMcpCall) implBetaResponseInputItemUnion()              {}
-func (BetaResponseCustomToolCallOutput) implBetaResponseInputItemUnion()          {}
-func (BetaResponseCustomToolCall) implBetaResponseInputItemUnion()                {}
-func (BetaResponseInputItemCompactionTrigger) implBetaResponseInputItemUnion()    {}
-func (BetaResponseInputItemItemReference) implBetaResponseInputItemUnion()        {}
-func (BetaResponseInputItemProgram) implBetaResponseInputItemUnion()              {}
-func (BetaResponseInputItemProgramOutput) implBetaResponseInputItemUnion()        {}
+func (BetaEasyInputMessage) implBetaResponseInputItemUnion()                         {}
+func (BetaResponseInputItemMessage) implBetaResponseInputItemUnion()                 {}
+func (BetaResponseOutputMessage) implBetaResponseInputItemUnion()                    {}
+func (BetaResponseFileSearchToolCall) implBetaResponseInputItemUnion()               {}
+func (BetaResponseComputerToolCall) implBetaResponseInputItemUnion()                 {}
+func (BetaResponseInputItemComputerCallOutput) implBetaResponseInputItemUnion()      {}
+func (BetaResponseFunctionWebSearch) implBetaResponseInputItemUnion()                {}
+func (BetaResponseFunctionToolCall) implBetaResponseInputItemUnion()                 {}
+func (BetaResponseInputItemFunctionCallOutput) implBetaResponseInputItemUnion()      {}
+func (BetaResponseInputItemAgentMessage) implBetaResponseInputItemUnion()            {}
+func (BetaResponseInputItemMultiAgentCall) implBetaResponseInputItemUnion()          {}
+func (BetaResponseInputItemMultiAgentCallOutput) implBetaResponseInputItemUnion()    {}
+func (BetaResponseInputItemToolSearchCall) implBetaResponseInputItemUnion()          {}
+func (BetaResponseToolSearchOutputItemParamResp) implBetaResponseInputItemUnion()    {}
+func (BetaResponseInputItemAdditionalTools) implBetaResponseInputItemUnion()         {}
+func (BetaResponseConfigurationUpdateItemParamResp) implBetaResponseInputItemUnion() {}
+func (BetaResponseReasoningItem) implBetaResponseInputItemUnion()                    {}
+func (BetaResponseCompactionItemParamResp) implBetaResponseInputItemUnion()          {}
+func (BetaResponseInputItemImageGenerationCall) implBetaResponseInputItemUnion()     {}
+func (BetaResponseCodeInterpreterToolCall) implBetaResponseInputItemUnion()          {}
+func (BetaResponseInputItemLocalShellCall) implBetaResponseInputItemUnion()          {}
+func (BetaResponseInputItemLocalShellCallOutput) implBetaResponseInputItemUnion()    {}
+func (BetaResponseInputItemShellCall) implBetaResponseInputItemUnion()               {}
+func (BetaResponseInputItemShellCallOutput) implBetaResponseInputItemUnion()         {}
+func (BetaResponseInputItemApplyPatchCall) implBetaResponseInputItemUnion()          {}
+func (BetaResponseInputItemApplyPatchCallOutput) implBetaResponseInputItemUnion()    {}
+func (BetaResponseInputItemMcpListTools) implBetaResponseInputItemUnion()            {}
+func (BetaResponseInputItemMcpApprovalRequest) implBetaResponseInputItemUnion()      {}
+func (BetaResponseInputItemMcpApprovalResponse) implBetaResponseInputItemUnion()     {}
+func (BetaResponseInputItemMcpCall) implBetaResponseInputItemUnion()                 {}
+func (BetaResponseCustomToolCallOutput) implBetaResponseInputItemUnion()             {}
+func (BetaResponseCustomToolCall) implBetaResponseInputItemUnion()                   {}
+func (BetaResponseInputItemCompactionTrigger) implBetaResponseInputItemUnion()       {}
+func (BetaResponseInputItemItemReference) implBetaResponseInputItemUnion()           {}
+func (BetaResponseInputItemProgram) implBetaResponseInputItemUnion()                 {}
+func (BetaResponseInputItemProgramOutput) implBetaResponseInputItemUnion()           {}
 
 // Use the following switch statement to find the correct variant
 //
@@ -13417,6 +13978,7 @@ func (BetaResponseInputItemProgramOutput) implBetaResponseInputItemUnion()      
 //	case openai.BetaResponseInputItemToolSearchCall:
 //	case openai.BetaResponseToolSearchOutputItemParamResp:
 //	case openai.BetaResponseInputItemAdditionalTools:
+//	case openai.BetaResponseConfigurationUpdateItemParamResp:
 //	case openai.BetaResponseReasoningItem:
 //	case openai.BetaResponseCompactionItemParamResp:
 //	case openai.BetaResponseInputItemImageGenerationCall:
@@ -13468,6 +14030,8 @@ func (u BetaResponseInputItemUnion) AsAny() anyBetaResponseInputItem {
 		return u.AsToolSearchOutput()
 	case "additional_tools":
 		return u.AsAdditionalTools()
+	case "configuration_update":
+		return u.AsConfigurationUpdate()
 	case "reasoning":
 		return u.AsReasoning()
 	case "compaction":
@@ -13583,6 +14147,11 @@ func (u BetaResponseInputItemUnion) AsToolSearchOutput() (v BetaResponseToolSear
 }
 
 func (u BetaResponseInputItemUnion) AsAdditionalTools() (v BetaResponseInputItemAdditionalTools) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseInputItemUnion) AsConfigurationUpdate() (v BetaResponseConfigurationUpdateItemParamResp) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -13829,7 +14398,20 @@ type BetaResponseInputItemUnionAction struct {
 }
 
 func (r *BetaResponseInputItemUnionAction) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded BetaResponseInputItemUnionAction
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfBetaResponseInputItemMultiAgentCallOutputAction.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into BetaResponseInputItemUnionAction: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // BetaResponseInputItemUnionOutput is an implicit subunion of
@@ -13879,7 +14461,24 @@ type BetaResponseInputItemUnionOutput struct {
 }
 
 func (r *BetaResponseInputItemUnionOutput) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded BetaResponseInputItemUnionOutput
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() ||
+			decoded.JSON.OfBetaResponseFunctionCallOutputItemArray.Valid() ||
+			decoded.JSON.OfBetaResponseInputItemMultiAgentCallOutputOutputArray.Valid() ||
+			decoded.JSON.OfBetaResponseFunctionShellCallOutputContentArray.Valid() ||
+			decoded.JSON.OfOutputContentList.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into BetaResponseInputItemUnionOutput: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // BetaResponseInputItemUnionArguments is an implicit subunion of
@@ -13982,7 +14581,20 @@ type BetaResponseInputItemUnionError struct {
 }
 
 func (r *BetaResponseInputItemUnionError) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded BetaResponseInputItemUnionError
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into BetaResponseInputItemUnionError: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // ToParam converts this BetaResponseInputItemUnion to a
@@ -14139,8 +14751,6 @@ func (r *BetaResponseInputItemComputerCallOutputAgent) UnmarshalJSON(data []byte
 
 // The output of a function tool call.
 type BetaResponseInputItemFunctionCallOutput struct {
-	// The unique ID of the function tool call generated by the model.
-	CallID string `json:"call_id" api:"required"`
 	// Text, image, or file output of the function tool call.
 	Output BetaResponseInputItemFunctionCallOutputOutputUnion `json:"output" api:"required"`
 	// The type of the function tool call output. Always `function_call_output`.
@@ -14150,6 +14760,8 @@ type BetaResponseInputItemFunctionCallOutput struct {
 	ID string `json:"id" api:"nullable"`
 	// The agent that produced this item.
 	Agent BetaResponseInputItemFunctionCallOutputAgent `json:"agent" api:"nullable"`
+	// The unique ID of the function tool call generated by the model.
+	CallID string `json:"call_id" api:"nullable"`
 	// The execution context that produced this tool call.
 	Caller BetaResponseInputItemFunctionCallOutputCallerUnion `json:"caller" api:"nullable"`
 	// The name of the tool that produced the output.
@@ -14163,11 +14775,11 @@ type BetaResponseInputItemFunctionCallOutput struct {
 	Status string `json:"status" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		CallID      respjson.Field
 		Output      respjson.Field
 		Type        respjson.Field
 		ID          respjson.Field
 		Agent       respjson.Field
+		CallID      respjson.Field
 		Caller      respjson.Field
 		Name        respjson.Field
 		Namespace   respjson.Field
@@ -14970,17 +15582,44 @@ type BetaResponseInputItemImageGenerationCall struct {
 	Status string `json:"status" api:"required"`
 	// The type of the image generation call. Always `image_generation_call`.
 	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
+	// The action used for image generation.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action" api:"nullable"`
 	// The agent that produced this item.
 	Agent BetaResponseInputItemImageGenerationCallAgent `json:"agent" api:"nullable"`
+	// The background setting used for generation.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background string `json:"background" api:"nullable"`
+	// The output format used for generation.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat string `json:"output_format" api:"nullable"`
+	// The quality of the image generated by the image generation tool call. One of
+	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
+	//
+	// Any of "low", "medium", "high", "xhigh", "max", "auto".
+	Quality string `json:"quality" api:"nullable"`
+	// The prompt that was used after any model prompt rewriting.
+	RevisedPrompt string `json:"revised_prompt" api:"nullable"`
+	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
+	Size string `json:"size" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Result      respjson.Field
-		Status      respjson.Field
-		Type        respjson.Field
-		Agent       respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID            respjson.Field
+		Result        respjson.Field
+		Status        respjson.Field
+		Type          respjson.Field
+		Action        respjson.Field
+		Agent         respjson.Field
+		Background    respjson.Field
+		OutputFormat  respjson.Field
+		Quality       respjson.Field
+		RevisedPrompt respjson.Field
+		Size          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -15096,8 +15735,10 @@ func (r *BetaResponseInputItemLocalShellCallAgent) UnmarshalJSON(data []byte) er
 
 // The output of a local shell tool call.
 type BetaResponseInputItemLocalShellCallOutput struct {
-	// The unique ID of the local shell tool call generated by the model.
+	// The unique ID of the local shell tool call output.
 	ID string `json:"id" api:"required"`
+	// The unique ID of the local shell tool call generated by the model.
+	CallID string `json:"call_id" api:"required"`
 	// A JSON string of the output of the local shell tool call.
 	Output string `json:"output" api:"required"`
 	// The type of the local shell tool call output. Always `local_shell_call_output`.
@@ -15111,6 +15752,7 @@ type BetaResponseInputItemLocalShellCallOutput struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
+		CallID      respjson.Field
 		Output      respjson.Field
 		Type        respjson.Field
 		Agent       respjson.Field
@@ -16546,9 +17188,8 @@ func BetaResponseInputItemParamOfFunctionCall(arguments string, callID string, n
 
 func BetaResponseInputItemParamOfFunctionCallOutput[
 	T string | BetaResponseFunctionCallOutputItemListParam,
-](callID string, output T) BetaResponseInputItemUnionParam {
+](output T) BetaResponseInputItemUnionParam {
 	var functionCallOutput BetaResponseInputItemFunctionCallOutputParam
-	functionCallOutput.CallID = callID
 	switch v := any(output).(type) {
 	case string:
 		functionCallOutput.Output.OfString = param.NewOpt(v)
@@ -16621,8 +17262,9 @@ func BetaResponseInputItemParamOfImageGenerationCall(id string, result string, s
 	return BetaResponseInputItemUnionParam{OfImageGenerationCall: &imageGenerationCall}
 }
 
-func BetaResponseInputItemParamOfLocalShellCallOutput(id string, output string) BetaResponseInputItemUnionParam {
+func BetaResponseInputItemParamOfLocalShellCallOutput(callID string, id string, output string) BetaResponseInputItemUnionParam {
 	var localShellCallOutput BetaResponseInputItemLocalShellCallOutputParam
+	localShellCallOutput.CallID = callID
 	localShellCallOutput.ID = id
 	localShellCallOutput.Output = output
 	return BetaResponseInputItemUnionParam{OfLocalShellCallOutput: &localShellCallOutput}
@@ -16728,6 +17370,7 @@ type BetaResponseInputItemUnionParam struct {
 	OfToolSearchCall       *BetaResponseInputItemToolSearchCallParam       `json:",omitzero,inline"`
 	OfToolSearchOutput     *BetaResponseToolSearchOutputItemParam          `json:",omitzero,inline"`
 	OfAdditionalTools      *BetaResponseInputItemAdditionalToolsParam      `json:",omitzero,inline"`
+	OfConfigurationUpdate  *BetaResponseConfigurationUpdateItemParam       `json:",omitzero,inline"`
 	OfReasoning            *BetaResponseReasoningItemParam                 `json:",omitzero,inline"`
 	OfCompaction           *BetaResponseCompactionItemParam                `json:",omitzero,inline"`
 	OfImageGenerationCall  *BetaResponseInputItemImageGenerationCallParam  `json:",omitzero,inline"`
@@ -16767,6 +17410,7 @@ func (u BetaResponseInputItemUnionParam) MarshalJSON() ([]byte, error) {
 		u.OfToolSearchCall,
 		u.OfToolSearchOutput,
 		u.OfAdditionalTools,
+		u.OfConfigurationUpdate,
 		u.OfReasoning,
 		u.OfCompaction,
 		u.OfImageGenerationCall,
@@ -16849,9 +17493,57 @@ func (u BetaResponseInputItemUnionParam) GetRecipient() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemUnionParam) GetReasoning() *BetaResponseConfigurationUpdateItemParamReasoning {
+	if vt := u.OfConfigurationUpdate; vt != nil {
+		return &vt.Reasoning
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u BetaResponseInputItemUnionParam) GetSummary() []BetaResponseReasoningItemSummaryParam {
 	if vt := u.OfReasoning; vt != nil {
 		return vt.Summary
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemUnionParam) GetBackground() *string {
+	if vt := u.OfImageGenerationCall; vt != nil && vt.Background.Valid() {
+		return &vt.Background.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemUnionParam) GetOutputFormat() *string {
+	if vt := u.OfImageGenerationCall; vt != nil && vt.OutputFormat.Valid() {
+		return &vt.OutputFormat.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemUnionParam) GetQuality() *string {
+	if vt := u.OfImageGenerationCall; vt != nil {
+		return &vt.Quality
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemUnionParam) GetRevisedPrompt() *string {
+	if vt := u.OfImageGenerationCall; vt != nil && vt.RevisedPrompt.Valid() {
+		return &vt.RevisedPrompt.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemUnionParam) GetSize() *string {
+	if vt := u.OfImageGenerationCall; vt != nil && vt.Size.Valid() {
+		return &vt.Size.Value
 	}
 	return nil
 }
@@ -16984,6 +17676,8 @@ func (u BetaResponseInputItemUnionParam) GetType() *string {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfAdditionalTools; vt != nil {
 		return (*string)(&vt.Type)
+	} else if vt := u.OfConfigurationUpdate; vt != nil {
+		return (*string)(&vt.Type)
 	} else if vt := u.OfReasoning; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfCompaction; vt != nil {
@@ -17104,6 +17798,8 @@ func (u BetaResponseInputItemUnionParam) GetID() *string {
 		return &vt.ID.Value
 	} else if vt := u.OfAdditionalTools; vt != nil && vt.ID.Valid() {
 		return &vt.ID.Value
+	} else if vt := u.OfConfigurationUpdate; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
 	} else if vt := u.OfReasoning; vt != nil {
 		return (*string)(&vt.ID)
 	} else if vt := u.OfCompaction; vt != nil && vt.ID.Valid() {
@@ -17154,8 +17850,8 @@ func (u BetaResponseInputItemUnionParam) GetCallID() *string {
 		return (*string)(&vt.CallID)
 	} else if vt := u.OfFunctionCall; vt != nil {
 		return (*string)(&vt.CallID)
-	} else if vt := u.OfFunctionCallOutput; vt != nil {
-		return (*string)(&vt.CallID)
+	} else if vt := u.OfFunctionCallOutput; vt != nil && vt.CallID.Valid() {
+		return &vt.CallID.Value
 	} else if vt := u.OfMultiAgentCall; vt != nil {
 		return (*string)(&vt.CallID)
 	} else if vt := u.OfMultiAgentCallOutput; vt != nil {
@@ -17165,6 +17861,8 @@ func (u BetaResponseInputItemUnionParam) GetCallID() *string {
 	} else if vt := u.OfToolSearchOutput; vt != nil && vt.CallID.Valid() {
 		return &vt.CallID.Value
 	} else if vt := u.OfLocalShellCall; vt != nil {
+		return (*string)(&vt.CallID)
+	} else if vt := u.OfLocalShellCallOutput; vt != nil {
 		return (*string)(&vt.CallID)
 	} else if vt := u.OfShellCall; vt != nil {
 		return (*string)(&vt.CallID)
@@ -17198,6 +17896,16 @@ func (u BetaResponseInputItemUnionParam) GetName() *string {
 		return (*string)(&vt.Name)
 	} else if vt := u.OfCustomToolCall; vt != nil {
 		return (*string)(&vt.Name)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemUnionParam) GetAsync() *bool {
+	if vt := u.OfFunctionCall; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
+	} else if vt := u.OfCustomToolCall; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
 	}
 	return nil
 }
@@ -17346,6 +18054,8 @@ func (u BetaResponseInputItemUnionParam) GetAgent() (res betaResponseInputItemUn
 		res.any = &vt.Agent
 	} else if vt := u.OfAdditionalTools; vt != nil {
 		res.any = &vt.Agent
+	} else if vt := u.OfConfigurationUpdate; vt != nil {
+		res.any = &vt.Agent
 	} else if vt := u.OfReasoning; vt != nil {
 		res.any = &vt.Agent
 	} else if vt := u.OfCompaction; vt != nil {
@@ -17404,6 +18114,7 @@ func (u BetaResponseInputItemUnionParam) GetAgent() (res betaResponseInputItemUn
 // [*BetaResponseInputItemToolSearchCallAgentParam],
 // [*BetaResponseToolSearchOutputItemParamAgent],
 // [*BetaResponseInputItemAdditionalToolsAgentParam],
+// [*BetaResponseConfigurationUpdateItemParamAgent],
 // [*BetaResponseReasoningItemAgentParam], [*BetaResponseCompactionItemParamAgent],
 // [*BetaResponseInputItemImageGenerationCallAgentParam],
 // [*BetaResponseCodeInterpreterToolCallAgentParam],
@@ -17442,6 +18153,7 @@ type betaResponseInputItemUnionParamAgent struct{ any }
 //	case *openai.BetaResponseInputItemToolSearchCallAgentParam:
 //	case *openai.BetaResponseToolSearchOutputItemParamAgent:
 //	case *openai.BetaResponseInputItemAdditionalToolsAgentParam:
+//	case *openai.BetaResponseConfigurationUpdateItemParamAgent:
 //	case *openai.BetaResponseReasoningItemAgentParam:
 //	case *openai.BetaResponseCompactionItemParamAgent:
 //	case *openai.BetaResponseInputItemImageGenerationCallAgentParam:
@@ -17497,6 +18209,8 @@ func (u betaResponseInputItemUnionParamAgent) GetAgentName() *string {
 	case *BetaResponseToolSearchOutputItemParamAgent:
 		return (*string)(&vt.AgentName)
 	case *BetaResponseInputItemAdditionalToolsAgentParam:
+		return (*string)(&vt.AgentName)
+	case *BetaResponseConfigurationUpdateItemParamAgent:
 		return (*string)(&vt.AgentName)
 	case *BetaResponseReasoningItemAgentParam:
 		return (*string)(&vt.AgentName)
@@ -17554,6 +18268,8 @@ func (u BetaResponseInputItemUnionParam) GetAction() (res betaResponseInputItemU
 		res.any = &vt.Action
 	} else if vt := u.OfMultiAgentCallOutput; vt != nil {
 		res.any = &vt.Action
+	} else if vt := u.OfImageGenerationCall; vt != nil && vt.Action.Valid() {
+		res.any = &vt.Action.Value
 	} else if vt := u.OfLocalShellCall; vt != nil {
 		res.any = &vt.Action
 	} else if vt := u.OfShellCall; vt != nil {
@@ -18092,6 +18808,7 @@ func init() {
 		apijson.Discriminator[BetaResponseInputItemToolSearchCallParam]("tool_search_call"),
 		apijson.Discriminator[BetaResponseToolSearchOutputItemParam]("tool_search_output"),
 		apijson.Discriminator[BetaResponseInputItemAdditionalToolsParam]("additional_tools"),
+		apijson.Discriminator[BetaResponseConfigurationUpdateItemParam]("configuration_update"),
 		apijson.Discriminator[BetaResponseReasoningItemParam]("reasoning"),
 		apijson.Discriminator[BetaResponseCompactionItemParam]("compaction"),
 		apijson.Discriminator[BetaResponseInputItemImageGenerationCallParam]("image_generation_call"),
@@ -18261,15 +18978,15 @@ func (r *BetaResponseInputItemComputerCallOutputAgentParam) UnmarshalJSON(data [
 
 // The output of a function tool call.
 //
-// The properties CallID, Output, Type are required.
+// The properties Output, Type are required.
 type BetaResponseInputItemFunctionCallOutputParam struct {
-	// The unique ID of the function tool call generated by the model.
-	CallID string `json:"call_id" api:"required"`
 	// Text, image, or file output of the function tool call.
 	Output BetaResponseInputItemFunctionCallOutputOutputUnionParam `json:"output,omitzero" api:"required"`
 	// The unique ID of the function tool call output. Populated when this item is
 	// returned via API.
 	ID param.Opt[string] `json:"id,omitzero"`
+	// The unique ID of the function tool call generated by the model.
+	CallID param.Opt[string] `json:"call_id,omitzero"`
 	// The name of the tool that produced the output.
 	Name param.Opt[string] `json:"name,omitzero"`
 	// The namespace of the tool that produced the output.
@@ -19056,8 +19773,29 @@ type BetaResponseInputItemImageGenerationCallParam struct {
 	//
 	// Any of "in_progress", "completed", "generating", "failed".
 	Status string `json:"status,omitzero" api:"required"`
+	// The prompt that was used after any model prompt rewriting.
+	RevisedPrompt param.Opt[string] `json:"revised_prompt,omitzero"`
+	// The action used for image generation.
+	//
+	// Any of "generate", "edit", "auto".
+	Action param.Opt[string] `json:"action,omitzero"`
 	// The agent that produced this item.
 	Agent BetaResponseInputItemImageGenerationCallAgentParam `json:"agent,omitzero"`
+	// The background setting used for generation.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background param.Opt[string] `json:"background,omitzero"`
+	// The output format used for generation.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat param.Opt[string] `json:"output_format,omitzero"`
+	// The quality of the image generated by the image generation tool call. One of
+	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
+	//
+	// Any of "low", "medium", "high", "xhigh", "max", "auto".
+	Quality string `json:"quality,omitzero"`
+	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
+	Size param.Opt[string] `json:"size,omitzero"`
 	// The type of the image generation call. Always `image_generation_call`.
 	//
 	// This field can be elided, and will marshal its zero value as
@@ -19077,6 +19815,9 @@ func (r *BetaResponseInputItemImageGenerationCallParam) UnmarshalJSON(data []byt
 func init() {
 	apijson.RegisterFieldValidator[BetaResponseInputItemImageGenerationCallParam](
 		"status", "in_progress", "completed", "generating", "failed",
+	)
+	apijson.RegisterFieldValidator[BetaResponseInputItemImageGenerationCallParam](
+		"quality", "low", "medium", "high", "xhigh", "max", "auto",
 	)
 }
 
@@ -19182,10 +19923,12 @@ func (r *BetaResponseInputItemLocalShellCallAgentParam) UnmarshalJSON(data []byt
 
 // The output of a local shell tool call.
 //
-// The properties ID, Output, Type are required.
+// The properties ID, CallID, Output, Type are required.
 type BetaResponseInputItemLocalShellCallOutputParam struct {
-	// The unique ID of the local shell tool call generated by the model.
+	// The unique ID of the local shell tool call output.
 	ID string `json:"id" api:"required"`
+	// The unique ID of the local shell tool call generated by the model.
+	CallID string `json:"call_id" api:"required"`
 	// A JSON string of the output of the local shell tool call.
 	Output string `json:"output" api:"required"`
 	// The agent that produced this item.
@@ -20749,15 +21492,16 @@ func (r *BetaResponseInputTextContentPromptCacheBreakpointParam) UnmarshalJSON(d
 // [BetaResponseItemAgentMessage], [BetaResponseItemMultiAgentCall],
 // [BetaResponseItemMultiAgentCallOutput], [BetaResponseToolSearchCall],
 // [BetaResponseToolSearchOutputItem], [BetaResponseItemAdditionalTools],
-// [BetaResponseReasoningItem], [BetaResponseItemProgram],
-// [BetaResponseItemProgramOutput], [BetaResponseCompactionItem],
-// [BetaResponseItemImageGenerationCall], [BetaResponseCodeInterpreterToolCall],
-// [BetaResponseItemLocalShellCall], [BetaResponseItemLocalShellCallOutput],
-// [BetaResponseFunctionShellToolCall], [BetaResponseFunctionShellToolCallOutput],
-// [BetaResponseApplyPatchToolCall], [BetaResponseApplyPatchToolCallOutput],
-// [BetaResponseItemMcpListTools], [BetaResponseItemMcpApprovalRequest],
-// [BetaResponseItemMcpApprovalResponse], [BetaResponseItemMcpCall],
-// [BetaResponseCustomToolCallItem], [BetaResponseCustomToolCallOutputItem].
+// [BetaResponseConfigurationUpdateItem], [BetaResponseReasoningItem],
+// [BetaResponseItemProgram], [BetaResponseItemProgramOutput],
+// [BetaResponseCompactionItem], [BetaResponseItemImageGenerationCall],
+// [BetaResponseCodeInterpreterToolCall], [BetaResponseItemLocalShellCall],
+// [BetaResponseItemLocalShellCallOutput], [BetaResponseFunctionShellToolCall],
+// [BetaResponseFunctionShellToolCallOutput], [BetaResponseApplyPatchToolCall],
+// [BetaResponseApplyPatchToolCallOutput], [BetaResponseItemMcpListTools],
+// [BetaResponseItemMcpApprovalRequest], [BetaResponseItemMcpApprovalResponse],
+// [BetaResponseItemMcpCall], [BetaResponseCustomToolCallItem],
+// [BetaResponseCustomToolCallOutputItem].
 //
 // Use the [BetaResponseItemUnion.AsAny] method to switch on the variant.
 //
@@ -20774,11 +21518,12 @@ type BetaResponseItemUnion struct {
 	// "computer_call_output", "web_search_call", "function_call",
 	// "function_call_output", "agent_message", "multi_agent_call",
 	// "multi_agent_call_output", "tool_search_call", "tool_search_output",
-	// "additional_tools", "reasoning", "program", "program_output", "compaction",
-	// "image_generation_call", "code_interpreter_call", "local_shell_call",
-	// "local_shell_call_output", "shell_call", "shell_call_output",
-	// "apply_patch_call", "apply_patch_call_output", "mcp_list_tools",
-	// "mcp_approval_request", "mcp_approval_response", "mcp_call", "custom_tool_call",
+	// "additional_tools", "configuration_update", "reasoning", "program",
+	// "program_output", "compaction", "image_generation_call",
+	// "code_interpreter_call", "local_shell_call", "local_shell_call_output",
+	// "shell_call", "shell_call_output", "apply_patch_call",
+	// "apply_patch_call_output", "mcp_list_tools", "mcp_approval_request",
+	// "mcp_approval_response", "mcp_call", "custom_tool_call",
 	// "custom_tool_call_output".
 	Type string `json:"type"`
 	// This field is a union of [BetaResponseInputMessageItemAgent],
@@ -20790,9 +21535,9 @@ type BetaResponseItemUnion struct {
 	// [BetaResponseItemAgentMessageAgent], [BetaResponseItemMultiAgentCallAgent],
 	// [BetaResponseItemMultiAgentCallOutputAgent], [BetaResponseToolSearchCallAgent],
 	// [BetaResponseToolSearchOutputItemAgent], [BetaResponseItemAdditionalToolsAgent],
-	// [BetaResponseReasoningItemAgent], [BetaResponseItemProgramAgent],
-	// [BetaResponseItemProgramOutputAgent], [BetaResponseCompactionItemAgent],
-	// [BetaResponseItemImageGenerationCallAgent],
+	// [BetaResponseConfigurationUpdateItemAgent], [BetaResponseReasoningItemAgent],
+	// [BetaResponseItemProgramAgent], [BetaResponseItemProgramOutputAgent],
+	// [BetaResponseCompactionItemAgent], [BetaResponseItemImageGenerationCallAgent],
 	// [BetaResponseCodeInterpreterToolCallAgent],
 	// [BetaResponseItemLocalShellCallAgent],
 	// [BetaResponseItemLocalShellCallOutputAgent],
@@ -20815,7 +21560,7 @@ type BetaResponseItemUnion struct {
 	// This field is from variant [BetaResponseComputerToolCall].
 	PendingSafetyChecks []BetaResponseComputerToolCallPendingSafetyCheck `json:"pending_safety_checks"`
 	// This field is a union of [BetaComputerActionUnion],
-	// [BetaResponseFunctionWebSearchActionUnion], [string], [string],
+	// [BetaResponseFunctionWebSearchActionUnion], [string], [string], [string],
 	// [BetaResponseItemLocalShellCallAction],
 	// [BetaResponseFunctionShellToolCallAction]
 	Action BetaResponseItemUnionAction `json:"action"`
@@ -20832,6 +21577,7 @@ type BetaResponseItemUnion struct {
 	// This field is a union of [string], [string], [any], [string], [string]
 	Arguments BetaResponseItemUnionArguments `json:"arguments"`
 	Name      string                         `json:"name"`
+	Async     bool                           `json:"async"`
 	// This field is a union of [BetaResponseFunctionToolCallCallerUnion],
 	// [BetaResponseFunctionToolCallOutputItemCallerUnion],
 	// [BetaResponseFunctionShellToolCallCallerUnion],
@@ -20850,6 +21596,8 @@ type BetaResponseItemUnion struct {
 	// This field is a union of [[]BetaToolUnion], [[]BetaToolUnion],
 	// [[]BetaResponseItemMcpListToolsTool]
 	Tools BetaResponseItemUnionTools `json:"tools"`
+	// This field is from variant [BetaResponseConfigurationUpdateItem].
+	Reasoning BetaResponseConfigurationUpdateItemReasoning `json:"reasoning"`
 	// This field is from variant [BetaResponseReasoningItem].
 	Summary          []BetaResponseReasoningItemSummary `json:"summary"`
 	EncryptedContent string                             `json:"encrypted_content"`
@@ -20857,6 +21605,16 @@ type BetaResponseItemUnion struct {
 	// This field is from variant [BetaResponseItemProgram].
 	Fingerprint string `json:"fingerprint"`
 	Result      string `json:"result"`
+	// This field is from variant [BetaResponseItemImageGenerationCall].
+	Background string `json:"background"`
+	// This field is from variant [BetaResponseItemImageGenerationCall].
+	OutputFormat string `json:"output_format"`
+	// This field is from variant [BetaResponseItemImageGenerationCall].
+	Quality string `json:"quality"`
+	// This field is from variant [BetaResponseItemImageGenerationCall].
+	RevisedPrompt string `json:"revised_prompt"`
+	// This field is from variant [BetaResponseItemImageGenerationCall].
+	Size string `json:"size"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
 	ContainerID string `json:"container_id"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
@@ -20896,17 +21654,24 @@ type BetaResponseItemUnion struct {
 		CreatedBy                respjson.Field
 		Arguments                respjson.Field
 		Name                     respjson.Field
+		Async                    respjson.Field
 		Caller                   respjson.Field
 		Namespace                respjson.Field
 		Author                   respjson.Field
 		Recipient                respjson.Field
 		Execution                respjson.Field
 		Tools                    respjson.Field
+		Reasoning                respjson.Field
 		Summary                  respjson.Field
 		EncryptedContent         respjson.Field
 		Code                     respjson.Field
 		Fingerprint              respjson.Field
 		Result                   respjson.Field
+		Background               respjson.Field
+		OutputFormat             respjson.Field
+		Quality                  respjson.Field
+		RevisedPrompt            respjson.Field
+		Size                     respjson.Field
 		ContainerID              respjson.Field
 		Outputs                  respjson.Field
 		Environment              respjson.Field
@@ -20942,6 +21707,7 @@ func (BetaResponseItemMultiAgentCallOutput) implBetaResponseItemUnion()    {}
 func (BetaResponseToolSearchCall) implBetaResponseItemUnion()              {}
 func (BetaResponseToolSearchOutputItem) implBetaResponseItemUnion()        {}
 func (BetaResponseItemAdditionalTools) implBetaResponseItemUnion()         {}
+func (BetaResponseConfigurationUpdateItem) implBetaResponseItemUnion()     {}
 func (BetaResponseReasoningItem) implBetaResponseItemUnion()               {}
 func (BetaResponseItemProgram) implBetaResponseItemUnion()                 {}
 func (BetaResponseItemProgramOutput) implBetaResponseItemUnion()           {}
@@ -20978,6 +21744,7 @@ func (BetaResponseCustomToolCallOutputItem) implBetaResponseItemUnion()    {}
 //	case openai.BetaResponseToolSearchCall:
 //	case openai.BetaResponseToolSearchOutputItem:
 //	case openai.BetaResponseItemAdditionalTools:
+//	case openai.BetaResponseConfigurationUpdateItem:
 //	case openai.BetaResponseReasoningItem:
 //	case openai.BetaResponseItemProgram:
 //	case openai.BetaResponseItemProgramOutput:
@@ -21027,6 +21794,8 @@ func (u BetaResponseItemUnion) AsAny() anyBetaResponseItem {
 		return u.AsToolSearchOutput()
 	case "additional_tools":
 		return u.AsAdditionalTools()
+	case "configuration_update":
+		return u.AsConfigurationUpdate()
 	case "reasoning":
 		return u.AsReasoning()
 	case "program":
@@ -21133,6 +21902,11 @@ func (u BetaResponseItemUnion) AsToolSearchOutput() (v BetaResponseToolSearchOut
 }
 
 func (u BetaResponseItemUnion) AsAdditionalTools() (v BetaResponseItemAdditionalTools) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseItemUnion) AsConfigurationUpdate() (v BetaResponseConfigurationUpdateItem) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -21365,7 +22139,20 @@ type BetaResponseItemUnionAction struct {
 }
 
 func (r *BetaResponseItemUnionAction) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded BetaResponseItemUnionAction
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfBetaResponseItemMultiAgentCallOutputAction.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into BetaResponseItemUnionAction: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // BetaResponseItemUnionOutput is an implicit subunion of [BetaResponseItemUnion].
@@ -21410,7 +22197,23 @@ type BetaResponseItemUnionOutput struct {
 }
 
 func (r *BetaResponseItemUnionOutput) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded BetaResponseItemUnionOutput
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() ||
+			decoded.JSON.OfOutputContentList.Valid() ||
+			decoded.JSON.OfBetaResponseOutputTextArray.Valid() ||
+			decoded.JSON.OfBetaResponseFunctionShellToolCallOutputOutputArray.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into BetaResponseItemUnionOutput: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // BetaResponseItemUnionArguments is an implicit subunion of
@@ -21513,7 +22316,20 @@ type BetaResponseItemUnionError struct {
 }
 
 func (r *BetaResponseItemUnionError) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded BetaResponseItemUnionError
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into BetaResponseItemUnionError: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 type BetaResponseItemAgentMessage struct {
@@ -22178,17 +22994,44 @@ type BetaResponseItemImageGenerationCall struct {
 	Status string `json:"status" api:"required"`
 	// The type of the image generation call. Always `image_generation_call`.
 	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
+	// The action used for image generation.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action" api:"nullable"`
 	// The agent that produced this item.
 	Agent BetaResponseItemImageGenerationCallAgent `json:"agent" api:"nullable"`
+	// The background setting used for generation.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background string `json:"background" api:"nullable"`
+	// The output format used for generation.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat string `json:"output_format" api:"nullable"`
+	// The quality of the image generated by the image generation tool call. One of
+	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
+	//
+	// Any of "low", "medium", "high", "xhigh", "max", "auto".
+	Quality string `json:"quality" api:"nullable"`
+	// The prompt that was used after any model prompt rewriting.
+	RevisedPrompt string `json:"revised_prompt" api:"nullable"`
+	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
+	Size string `json:"size" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Result      respjson.Field
-		Status      respjson.Field
-		Type        respjson.Field
-		Agent       respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID            respjson.Field
+		Result        respjson.Field
+		Status        respjson.Field
+		Type          respjson.Field
+		Action        respjson.Field
+		Agent         respjson.Field
+		Background    respjson.Field
+		OutputFormat  respjson.Field
+		Quality       respjson.Field
+		RevisedPrompt respjson.Field
+		Size          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -22304,8 +23147,10 @@ func (r *BetaResponseItemLocalShellCallAgent) UnmarshalJSON(data []byte) error {
 
 // The output of a local shell tool call.
 type BetaResponseItemLocalShellCallOutput struct {
-	// The unique ID of the local shell tool call generated by the model.
+	// The unique ID of the local shell tool call output.
 	ID string `json:"id" api:"required"`
+	// The unique ID of the local shell tool call generated by the model.
+	CallID string `json:"call_id" api:"required"`
 	// A JSON string of the output of the local shell tool call.
 	Output string `json:"output" api:"required"`
 	// The type of the local shell tool call output. Always `local_shell_call_output`.
@@ -22319,6 +23164,7 @@ type BetaResponseItemLocalShellCallOutput struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
+		CallID      respjson.Field
 		Output      respjson.Field
 		Type        respjson.Field
 		Agent       respjson.Field
@@ -23086,6 +23932,7 @@ type BetaResponseOutputItemUnion struct {
 	Arguments BetaResponseOutputItemUnionArguments `json:"arguments"`
 	CallID    string                               `json:"call_id"`
 	Name      string                               `json:"name"`
+	Async     bool                                 `json:"async"`
 	// This field is a union of [BetaResponseFunctionToolCallCallerUnion],
 	// [BetaResponseFunctionToolCallOutputItemCallerUnion],
 	// [BetaResponseFunctionShellToolCallCallerUnion],
@@ -23107,7 +23954,7 @@ type BetaResponseOutputItemUnion struct {
 	// This field is from variant [BetaResponseOutputItemAgentMessage].
 	Recipient string `json:"recipient"`
 	// This field is a union of [string], [string],
-	// [BetaResponseFunctionWebSearchActionUnion], [BetaComputerActionUnion],
+	// [BetaResponseFunctionWebSearchActionUnion], [BetaComputerActionUnion], [string],
 	// [BetaResponseOutputItemLocalShellCallAction],
 	// [BetaResponseFunctionShellToolCallAction]
 	Action BetaResponseOutputItemUnionAction `json:"action"`
@@ -23128,6 +23975,16 @@ type BetaResponseOutputItemUnion struct {
 	// This field is a union of [[]BetaToolUnion], [[]BetaToolUnion],
 	// [[]BetaResponseOutputItemMcpListToolsTool]
 	Tools BetaResponseOutputItemUnionTools `json:"tools"`
+	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
+	Background string `json:"background"`
+	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
+	OutputFormat string `json:"output_format"`
+	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
+	Quality string `json:"quality"`
+	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
+	RevisedPrompt string `json:"revised_prompt"`
+	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
+	Size string `json:"size"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
 	ContainerID string `json:"container_id"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
@@ -23161,6 +24018,7 @@ type BetaResponseOutputItemUnion struct {
 		Arguments                respjson.Field
 		CallID                   respjson.Field
 		Name                     respjson.Field
+		Async                    respjson.Field
 		Caller                   respjson.Field
 		Namespace                respjson.Field
 		Output                   respjson.Field
@@ -23178,6 +24036,11 @@ type BetaResponseOutputItemUnion struct {
 		Result                   respjson.Field
 		Execution                respjson.Field
 		Tools                    respjson.Field
+		Background               respjson.Field
+		OutputFormat             respjson.Field
+		Quality                  respjson.Field
+		RevisedPrompt            respjson.Field
+		Size                     respjson.Field
 		ContainerID              respjson.Field
 		Outputs                  respjson.Field
 		Environment              respjson.Field
@@ -23637,7 +24500,23 @@ type BetaResponseOutputItemUnionOutput struct {
 }
 
 func (r *BetaResponseOutputItemUnionOutput) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded BetaResponseOutputItemUnionOutput
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() ||
+			decoded.JSON.OfOutputContentList.Valid() ||
+			decoded.JSON.OfBetaResponseOutputTextArray.Valid() ||
+			decoded.JSON.OfBetaResponseFunctionShellToolCallOutputOutputArray.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into BetaResponseOutputItemUnionOutput: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // BetaResponseOutputItemUnionAction is an implicit subunion of
@@ -23716,7 +24595,20 @@ type BetaResponseOutputItemUnionAction struct {
 }
 
 func (r *BetaResponseOutputItemUnionAction) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded BetaResponseOutputItemUnionAction
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfBetaResponseOutputItemMultiAgentCallOutputAction.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into BetaResponseOutputItemUnionAction: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // BetaResponseOutputItemUnionTools is an implicit subunion of
@@ -23774,7 +24666,20 @@ type BetaResponseOutputItemUnionError struct {
 }
 
 func (r *BetaResponseOutputItemUnionError) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded BetaResponseOutputItemUnionError
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into BetaResponseOutputItemUnionError: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 type BetaResponseOutputItemAgentMessage struct {
@@ -24445,17 +25350,44 @@ type BetaResponseOutputItemImageGenerationCall struct {
 	Status string `json:"status" api:"required"`
 	// The type of the image generation call. Always `image_generation_call`.
 	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
+	// The action used for image generation.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action" api:"nullable"`
 	// The agent that produced this item.
 	Agent BetaResponseOutputItemImageGenerationCallAgent `json:"agent" api:"nullable"`
+	// The background setting used for generation.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background string `json:"background" api:"nullable"`
+	// The output format used for generation.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat string `json:"output_format" api:"nullable"`
+	// The quality of the image generated by the image generation tool call. One of
+	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
+	//
+	// Any of "low", "medium", "high", "xhigh", "max", "auto".
+	Quality string `json:"quality" api:"nullable"`
+	// The prompt that was used after any model prompt rewriting.
+	RevisedPrompt string `json:"revised_prompt" api:"nullable"`
+	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
+	Size string `json:"size" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Result      respjson.Field
-		Status      respjson.Field
-		Type        respjson.Field
-		Agent       respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID            respjson.Field
+		Result        respjson.Field
+		Status        respjson.Field
+		Type          respjson.Field
+		Action        respjson.Field
+		Agent         respjson.Field
+		Background    respjson.Field
+		OutputFormat  respjson.Field
+		Quality       respjson.Field
+		RevisedPrompt respjson.Field
+		Size          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -24571,8 +25503,10 @@ func (r *BetaResponseOutputItemLocalShellCallAgent) UnmarshalJSON(data []byte) e
 
 // The output of a local shell tool call.
 type BetaResponseOutputItemLocalShellCallOutput struct {
-	// The unique ID of the local shell tool call generated by the model.
+	// The unique ID of the local shell tool call output.
 	ID string `json:"id" api:"required"`
+	// The unique ID of the local shell tool call generated by the model.
+	CallID string `json:"call_id" api:"required"`
 	// A JSON string of the output of the local shell tool call.
 	Output string `json:"output" api:"required"`
 	// The type of the local shell tool call output. Always `local_shell_call_output`.
@@ -24586,6 +25520,7 @@ type BetaResponseOutputItemLocalShellCallOutput struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
+		CallID      respjson.Field
 		Output      respjson.Field
 		Type        respjson.Field
 		Agent       respjson.Field
@@ -25891,7 +26826,7 @@ func (r *BetaResponseOutputTextLogprobTopLogprobParam) UnmarshalJSON(data []byte
 
 // Emitted when an annotation is added to output text content.
 type BetaResponseOutputTextAnnotationAddedEvent struct {
-	// An annotation that applies to a span of output text.
+	// The annotation object being added. (See annotation schema for details.)
 	Annotation BetaResponseOutputTextAnnotationAddedEventAnnotationUnion `json:"annotation" api:"required"`
 	// The index of the annotation within the content part.
 	AnnotationIndex int64 `json:"annotation_index" api:"required"`
@@ -26181,7 +27116,7 @@ func (r *BetaResponseOutputTextAnnotationAddedEventAgent) UnmarshalJSON(data []b
 }
 
 // Reference to a prompt template and its variables.
-// [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
+// [Learn more](https://developers.openai.com/api/docs/guides/text?api-mode=responses#version-prompts-in-code).
 type BetaResponsePrompt struct {
 	// The unique identifier of the prompt template to use.
 	ID string `json:"id" api:"required"`
@@ -26307,7 +27242,7 @@ func (r *BetaResponsePromptVariableUnionPromptCacheBreakpoint) UnmarshalJSON(dat
 }
 
 // Reference to a prompt template and its variables.
-// [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
+// [Learn more](https://developers.openai.com/api/docs/guides/text?api-mode=responses#version-prompts-in-code).
 //
 // The property ID is required.
 type BetaResponsePromptParam struct {
@@ -26511,7 +27446,7 @@ func (r *BetaResponseQueuedEventAgent) UnmarshalJSON(data []byte) error {
 // A description of the chain of thought used by a reasoning model while generating
 // a response. Be sure to include these items in your `input` to the Responses API
 // for subsequent turns of a conversation if you are manually
-// [managing context](https://platform.openai.com/docs/guides/conversation-state).
+// [managing context](https://developers.openai.com/api/docs/guides/conversation-state).
 type BetaResponseReasoningItem struct {
 	// The unique identifier of the reasoning content.
 	ID string `json:"id" api:"required"`
@@ -26640,7 +27575,7 @@ const (
 // A description of the chain of thought used by a reasoning model while generating
 // a response. Be sure to include these items in your `input` to the Responses API
 // for subsequent turns of a conversation if you are manually
-// [managing context](https://platform.openai.com/docs/guides/conversation-state).
+// [managing context](https://developers.openai.com/api/docs/guides/conversation-state).
 //
 // The properties ID, Summary, Type are required.
 type BetaResponseReasoningItemParam struct {
@@ -27669,6 +28604,43 @@ const (
 	BetaResponseStatusIncomplete BetaResponseStatus = "incomplete"
 )
 
+// A machine-readable steering error code. Clients should handle unknown values
+// because additional codes may be introduced. Known values include:
+//
+//   - `response_not_found`: The target response is not available on this connection.
+//   - `invalid_input`: The event or input failed validation.
+//   - `steering_not_supported`: The model or response execution mode does not
+//     support steering.
+//   - `too_many_pending_steers`: Too much steering input is pending for the
+//     response.
+//   - `response_already_completed`: The response completed and is no longer
+//     accepting steering input.
+//   - `response_not_active`: The response is no longer accepting steering input.
+//   - `successor_creation_failed`: The successor response could not be created.
+type BetaResponseSteerErrorCode = string
+
+const (
+	BetaResponseSteerErrorCodeResponseNotFound         BetaResponseSteerErrorCode = "response_not_found"
+	BetaResponseSteerErrorCodeInvalidInput             BetaResponseSteerErrorCode = "invalid_input"
+	BetaResponseSteerErrorCodeSteeringNotSupported     BetaResponseSteerErrorCode = "steering_not_supported"
+	BetaResponseSteerErrorCodeTooManyPendingSteers     BetaResponseSteerErrorCode = "too_many_pending_steers"
+	BetaResponseSteerErrorCodeResponseAlreadyCompleted BetaResponseSteerErrorCode = "response_already_completed"
+	BetaResponseSteerErrorCodeResponseNotActive        BetaResponseSteerErrorCode = "response_not_active"
+	BetaResponseSteerErrorCodeSuccessorCreationFailed  BetaResponseSteerErrorCode = "successor_creation_failed"
+)
+
+// An extensible enum describing why accepted steering input is still queued.
+// Clients should handle unknown values because additional reasons may be
+// introduced. Known values include:
+//
+//   - `waiting_for_required_input`: The response is waiting for the tool results or
+//     approval decisions identified by `required_input`.
+type BetaResponseSteerPendingReason = string
+
+const (
+	BetaResponseSteerPendingReasonWaitingForRequiredInput BetaResponseSteerPendingReason = "waiting_for_required_input"
+)
+
 // BetaResponseStreamEventUnion contains all possible properties and values from
 // [BetaResponseAudioDeltaEvent], [BetaResponseAudioDoneEvent],
 // [BetaResponseAudioTranscriptDeltaEvent], [BetaResponseAudioTranscriptDoneEvent],
@@ -27677,9 +28649,10 @@ const (
 // [BetaResponseCodeInterpreterCallCompletedEvent],
 // [BetaResponseCodeInterpreterCallInProgressEvent],
 // [BetaResponseCodeInterpreterCallInterpretingEvent],
-// [BetaResponseCompletedEvent], [BetaResponseContentPartAddedEvent],
-// [BetaResponseContentPartDoneEvent], [BetaResponseCreatedEvent],
-// [BetaResponseErrorEvent], [BetaResponseFileSearchCallCompletedEvent],
+// [BetaResponseCompactionCompactingEvent], [BetaResponseCompletedEvent],
+// [BetaResponseContentPartAddedEvent], [BetaResponseContentPartDoneEvent],
+// [BetaResponseCreatedEvent], [BetaResponseErrorEvent],
+// [BetaResponseFileSearchCallCompletedEvent],
 // [BetaResponseFileSearchCallInProgressEvent],
 // [BetaResponseFileSearchCallSearchingEvent],
 // [BetaResponseFunctionCallArgumentsDeltaEvent],
@@ -27726,11 +28699,11 @@ type BetaResponseStreamEventUnion struct {
 	// "response.code_interpreter_call_code.done",
 	// "response.code_interpreter_call.completed",
 	// "response.code_interpreter_call.in_progress",
-	// "response.code_interpreter_call.interpreting", "response.completed",
-	// "response.content_part.added", "response.content_part.done", "response.created",
-	// "error", "response.file_search_call.completed",
-	// "response.file_search_call.in_progress", "response.file_search_call.searching",
-	// "response.function_call_arguments.delta",
+	// "response.code_interpreter_call.interpreting", "response.compaction.compacting",
+	// "response.completed", "response.content_part.added",
+	// "response.content_part.done", "response.created", "error",
+	// "response.file_search_call.completed", "response.file_search_call.in_progress",
+	// "response.file_search_call.searching", "response.function_call_arguments.delta",
 	// "response.function_call_arguments.done", "response.shell_call_command.added",
 	// "response.shell_call_command.delta", "response.shell_call_command.done",
 	// "response.shell_call_output_content.done", "response.in_progress",
@@ -27761,7 +28734,8 @@ type BetaResponseStreamEventUnion struct {
 	// [BetaResponseCodeInterpreterCallCompletedEventAgent],
 	// [BetaResponseCodeInterpreterCallInProgressEventAgent],
 	// [BetaResponseCodeInterpreterCallInterpretingEventAgent],
-	// [BetaResponseCompletedEventAgent], [BetaResponseContentPartAddedEventAgent],
+	// [BetaResponseCompactionCompactingEventAgent], [BetaResponseCompletedEventAgent],
+	// [BetaResponseContentPartAddedEventAgent],
 	// [BetaResponseContentPartDoneEventAgent], [BetaResponseCreatedEventAgent],
 	// [BetaResponseErrorEventAgent], [BetaResponseFileSearchCallCompletedEventAgent],
 	// [BetaResponseFileSearchCallInProgressEventAgent],
@@ -27816,10 +28790,8 @@ type BetaResponseStreamEventUnion struct {
 	// This field is from variant [BetaResponseErrorEvent].
 	Message string `json:"message"`
 	// This field is from variant [BetaResponseErrorEvent].
-	Param     string `json:"param"`
-	Arguments string `json:"arguments"`
-	// This field is from variant [BetaResponseFunctionCallArgumentsDoneEvent].
-	Name         string `json:"name"`
+	Param        string `json:"param"`
+	Arguments    string `json:"arguments"`
 	Command      string `json:"command"`
 	CommandIndex int64  `json:"command_index"`
 	// This field is from variant [BetaResponseShellCallCommandDeltaEvent].
@@ -27869,7 +28841,6 @@ type BetaResponseStreamEventUnion struct {
 		Message           respjson.Field
 		Param             respjson.Field
 		Arguments         respjson.Field
-		Name              respjson.Field
 		Command           respjson.Field
 		CommandIndex      respjson.Field
 		Obfuscation       respjson.Field
@@ -27909,6 +28880,7 @@ func (BetaResponseCodeInterpreterCallCodeDoneEvent) implBetaResponseStreamEventU
 func (BetaResponseCodeInterpreterCallCompletedEvent) implBetaResponseStreamEventUnion()    {}
 func (BetaResponseCodeInterpreterCallInProgressEvent) implBetaResponseStreamEventUnion()   {}
 func (BetaResponseCodeInterpreterCallInterpretingEvent) implBetaResponseStreamEventUnion() {}
+func (BetaResponseCompactionCompactingEvent) implBetaResponseStreamEventUnion()            {}
 func (BetaResponseCompletedEvent) implBetaResponseStreamEventUnion()                       {}
 func (BetaResponseContentPartAddedEvent) implBetaResponseStreamEventUnion()                {}
 func (BetaResponseContentPartDoneEvent) implBetaResponseStreamEventUnion()                 {}
@@ -27971,6 +28943,7 @@ func (BetaResponseCustomToolCallInputDoneEvent) implBetaResponseStreamEventUnion
 //	case openai.BetaResponseCodeInterpreterCallCompletedEvent:
 //	case openai.BetaResponseCodeInterpreterCallInProgressEvent:
 //	case openai.BetaResponseCodeInterpreterCallInterpretingEvent:
+//	case openai.BetaResponseCompactionCompactingEvent:
 //	case openai.BetaResponseCompletedEvent:
 //	case openai.BetaResponseContentPartAddedEvent:
 //	case openai.BetaResponseContentPartDoneEvent:
@@ -28043,6 +29016,8 @@ func (u BetaResponseStreamEventUnion) AsAny() anyBetaResponseStreamEvent {
 		return u.AsResponseCodeInterpreterCallInProgress()
 	case "response.code_interpreter_call.interpreting":
 		return u.AsResponseCodeInterpreterCallInterpreting()
+	case "response.compaction.compacting":
+		return u.AsResponseCompactionCompacting()
 	case "response.completed":
 		return u.AsResponseCompleted()
 	case "response.content_part.added":
@@ -28186,6 +29161,11 @@ func (u BetaResponseStreamEventUnion) AsResponseCodeInterpreterCallInProgress() 
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseCodeInterpreterCallInterpreting() (v BetaResponseCodeInterpreterCallInterpretingEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseStreamEventUnion) AsResponseCompactionCompacting() (v BetaResponseCompactionCompactingEvent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -28523,14 +29503,14 @@ func (r *BetaResponseStreamEventUnionLogprobs) UnmarshalJSON(data []byte) error 
 // Configuration options for a text response from the model. Can be plain text or
 // structured JSON data. Learn more:
 //
-// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
-// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
+//   - [Text inputs and outputs](https://developers.openai.com/api/docs/guides/text)
+//   - [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
 type BetaResponseTextConfig struct {
 	// An object specifying the format that the model must output.
 	//
 	// Configuring `{ "type": "json_schema" }` enables Structured Outputs, which
 	// ensures the model will match your supplied JSON schema. Learn more in the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	//
 	// The default format is `{ "type": "text" }` with no additional options.
 	//
@@ -28586,8 +29566,8 @@ const (
 // Configuration options for a text response from the model. Can be plain text or
 // structured JSON data. Learn more:
 //
-// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
-// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
+//   - [Text inputs and outputs](https://developers.openai.com/api/docs/guides/text)
+//   - [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
 type BetaResponseTextConfigParam struct {
 	// Constrains the verbosity of the model's response. Lower values will result in
 	// more concise responses, while higher values will result in more verbose
@@ -28600,7 +29580,7 @@ type BetaResponseTextConfigParam struct {
 	//
 	// Configuring `{ "type": "json_schema" }` enables Structured Outputs, which
 	// ensures the model will match your supplied JSON schema. Learn more in the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	//
 	// The default format is `{ "type": "text" }` with no additional options.
 	//
@@ -29152,7 +30132,7 @@ type BetaResponseUsageInputTokensDetails struct {
 	// The number of input tokens that were written to the cache.
 	CacheWriteTokens int64 `json:"cache_write_tokens" api:"required"`
 	// The number of tokens that were retrieved from the cache.
-	// [More on prompt caching](https://platform.openai.com/docs/guides/prompt-caching).
+	// [More on prompt caching](https://developers.openai.com/api/docs/guides/prompt-caching).
 	CachedTokens int64 `json:"cached_tokens" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -29406,6 +30386,7 @@ type BetaToolUnion struct {
 	// "apply_patch".
 	Type           string   `json:"type"`
 	AllowedCallers []string `json:"allowed_callers"`
+	Async          bool     `json:"async"`
 	DeferLoading   bool     `json:"defer_loading"`
 	Description    string   `json:"description"`
 	// This field is from variant [BetaFunctionTool].
@@ -29488,6 +30469,7 @@ type BetaToolUnion struct {
 		Strict             respjson.Field
 		Type               respjson.Field
 		AllowedCallers     respjson.Field
+		Async              respjson.Field
 		DeferLoading       respjson.Field
 		Description        respjson.Field
 		OutputSchema       respjson.Field
@@ -29751,7 +30733,7 @@ func (r BetaToolUnion) ToParam() BetaToolUnionParam {
 
 // Give the model access to additional tools via remote Model Context Protocol
 // (MCP) servers.
-// [Learn more about MCP](https://platform.openai.com/docs/guides/tools-remote-mcp).
+// [Learn more about MCP](https://developers.openai.com/api/docs/guides/tools-connectors-mcp).
 type BetaToolMcp struct {
 	// A label for this MCP server, used to identify it in tool calls.
 	ServerLabel string `json:"server_label" api:"required"`
@@ -29770,7 +30752,11 @@ type BetaToolMcp struct {
 	// Identifier for service connectors, like those available in ChatGPT. One of
 	// `server_url`, `connector_id`, or `tunnel_id` must be provided. Learn more about
 	// service connectors
-	// [here](https://platform.openai.com/docs/guides/tools-remote-mcp#connectors).
+	// [here](https://developers.openai.com/api/docs/guides/tools-connectors-mcp#connectors).
+	//
+	// This field is deprecated for models released after September 1, 2026. Use
+	// `server_url` to connect to a remote MCP server, or `tunnel_id` to connect
+	// through a Secure MCP Tunnel.
 	//
 	// Currently supported `connector_id` values are:
 	//
@@ -29786,6 +30772,8 @@ type BetaToolMcp struct {
 	// Any of "connector_dropbox", "connector_gmail", "connector_googlecalendar",
 	// "connector_googledrive", "connector_microsoftteams",
 	// "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint".
+	//
+	// Deprecated: deprecated
 	ConnectorID string `json:"connector_id"`
 	// Whether this MCP tool is deferred and discovered via tool search.
 	DeferLoading bool `json:"defer_loading"`
@@ -30220,16 +31208,17 @@ type BetaToolImageGeneration struct {
 	// one of `transparent`, `opaque`, or `auto` (default value). When `auto` is used,
 	// the model will automatically determine the best background for the image.
 	//
-	// Transparent backgrounds are available for supported GPT Image models. For
-	// `gpt-image-2` and `gpt-image-2-2026-04-21`, this support is in preview. When
-	// using `transparent`, set the output format to `png` or `webp`.
+	// `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`, including their `2026-09-08`
+	// snapshots, support `opaque` and `transparent` backgrounds. Transparent
+	// backgrounds are available for supported GPT Image models. For `gpt-image-2` and
+	// `gpt-image-2-2026-04-21`, this support is in preview. When using `transparent`,
+	// set the output format to `png` or `webp`.
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background"`
-	// Control how much effort the model will exert to match the style and features,
-	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1` and `gpt-image-1.5` and later models, unsupported for
-	// `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
+	// Controls fidelity to the original input image(s). This parameter is supported
+	// for GPT image models that support input fidelity. `gpt-image-2` and
+	// `gpt-image-2-2026-04-21` ignore this parameter.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity" api:"nullable"`
@@ -30237,7 +31226,9 @@ type BetaToolImageGeneration struct {
 	// `file_id` (string, optional).
 	InputImageMask BetaToolImageGenerationInputImageMask `json:"input_image_mask"`
 	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
-	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`, or
+	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`,
+	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
+	// `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, or
 	// `chatgpt-image-latest`. Default: `gpt-image-1`.
 	Model string `json:"model"`
 	// Moderation level for the generated image. Default: `auto`.
@@ -30254,22 +31245,25 @@ type BetaToolImageGeneration struct {
 	// Number of partial images to generate in streaming mode, from 0 (default value)
 	// to 3.
 	PartialImages int64 `json:"partial_images"`
-	// The quality of the generated image. One of `low`, `medium`, `high`, or `auto`.
-	// Default: `auto`.
+	// The quality of the generated image. The GPT image models support `low`,
+	// `medium`, and `high`. `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`,
+	// including their `2026-09-08` snapshots, also support `xhigh` and `max`. Default:
+	// `auto`.
 	//
-	// Any of "low", "medium", "high", "auto".
+	// Any of "low", "medium", "high", "xhigh", "max", "auto".
 	Quality string `json:"quality"`
-	// The size of the generated images. For `gpt-image-2` and
-	// `gpt-image-2-2026-04-21`, arbitrary resolutions are supported as `WIDTHxHEIGHT`
-	// strings, for example `1536x864`. Width and height must both be divisible by 16
-	// and the requested aspect ratio must be between 1:3 and 3:1. Resolutions above
-	// `2560x1440` are experimental, and the maximum supported resolution is
-	// `3840x2160`. The requested size must also satisfy the model's current pixel and
-	// edge limits. The standard sizes `1024x1024`, `1536x1024`, and `1024x1536` are
-	// supported by the GPT image models; `auto` is supported for models that allow
-	// automatic sizing. For `dall-e-2`, use one of `256x256`, `512x512`, or
-	// `1024x1024`. For `dall-e-3`, use one of `1024x1024`, `1792x1024`, or
-	// `1024x1792`.
+	// The size of the generated images. For `gpt-image-2`, `gpt-image-2-2026-04-21`,
+	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
+	// `gpt-image-2.5-flare`, and `gpt-image-2.5-flare-2026-09-08`, arbitrary
+	// resolutions are supported as `WIDTHxHEIGHT` strings, for example `1536x864`.
+	// Width and height must both be divisible by 16 and the requested aspect ratio
+	// must be between 1:3 and 3:1. Resolutions above `2560x1440` are experimental, and
+	// the maximum supported resolution is `3840x2160`. The requested size must also
+	// satisfy the model's current pixel and edge limits. The standard sizes
+	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
+	// `auto` is supported for models that allow automatic sizing. For `dall-e-2`, use
+	// one of `256x256`, `512x512`, or `1024x1024`. For `dall-e-3`, use one of
+	// `1024x1024`, `1792x1024`, or `1024x1792`.
 	Size string `json:"size"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -30763,6 +31757,16 @@ func (u BetaToolUnionParam) GetType() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolUnionParam) GetAsync() *bool {
+	if vt := u.OfFunction; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
+	} else if vt := u.OfCustom; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u BetaToolUnionParam) GetDeferLoading() *bool {
 	if vt := u.OfFunction; vt != nil && vt.DeferLoading.Valid() {
 		return &vt.DeferLoading.Value
@@ -31120,7 +32124,7 @@ func init() {
 
 // Give the model access to additional tools via remote Model Context Protocol
 // (MCP) servers.
-// [Learn more about MCP](https://platform.openai.com/docs/guides/tools-remote-mcp).
+// [Learn more about MCP](https://developers.openai.com/api/docs/guides/tools-connectors-mcp).
 //
 // The properties ServerLabel, Type are required.
 type BetaToolMcpParam struct {
@@ -31154,7 +32158,11 @@ type BetaToolMcpParam struct {
 	// Identifier for service connectors, like those available in ChatGPT. One of
 	// `server_url`, `connector_id`, or `tunnel_id` must be provided. Learn more about
 	// service connectors
-	// [here](https://platform.openai.com/docs/guides/tools-remote-mcp#connectors).
+	// [here](https://developers.openai.com/api/docs/guides/tools-connectors-mcp#connectors).
+	//
+	// This field is deprecated for models released after September 1, 2026. Use
+	// `server_url` to connect to a remote MCP server, or `tunnel_id` to connect
+	// through a Secure MCP Tunnel.
 	//
 	// Currently supported `connector_id` values are:
 	//
@@ -31170,6 +32178,8 @@ type BetaToolMcpParam struct {
 	// Any of "connector_dropbox", "connector_gmail", "connector_googlecalendar",
 	// "connector_googledrive", "connector_microsoftteams",
 	// "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint".
+	//
+	// Deprecated: deprecated
 	ConnectorID string `json:"connector_id,omitzero"`
 	// The type of the MCP tool. Always `mcp`.
 	//
@@ -31462,10 +32472,9 @@ type BetaToolImageGenerationParam struct {
 	// Number of partial images to generate in streaming mode, from 0 (default value)
 	// to 3.
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
-	// Control how much effort the model will exert to match the style and features,
-	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1` and `gpt-image-1.5` and later models, unsupported for
-	// `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
+	// Controls fidelity to the original input image(s). This parameter is supported
+	// for GPT image models that support input fidelity. `gpt-image-2` and
+	// `gpt-image-2-2026-04-21` ignore this parameter.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,omitzero"`
@@ -31477,9 +32486,11 @@ type BetaToolImageGenerationParam struct {
 	// one of `transparent`, `opaque`, or `auto` (default value). When `auto` is used,
 	// the model will automatically determine the best background for the image.
 	//
-	// Transparent backgrounds are available for supported GPT Image models. For
-	// `gpt-image-2` and `gpt-image-2-2026-04-21`, this support is in preview. When
-	// using `transparent`, set the output format to `png` or `webp`.
+	// `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`, including their `2026-09-08`
+	// snapshots, support `opaque` and `transparent` backgrounds. Transparent
+	// backgrounds are available for supported GPT Image models. For `gpt-image-2` and
+	// `gpt-image-2-2026-04-21`, this support is in preview. When using `transparent`,
+	// set the output format to `png` or `webp`.
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background,omitzero"`
@@ -31487,7 +32498,9 @@ type BetaToolImageGenerationParam struct {
 	// `file_id` (string, optional).
 	InputImageMask BetaToolImageGenerationInputImageMaskParam `json:"input_image_mask,omitzero"`
 	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
-	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`, or
+	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`,
+	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
+	// `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, or
 	// `chatgpt-image-latest`. Default: `gpt-image-1`.
 	Model string `json:"model,omitzero"`
 	// Moderation level for the generated image. Default: `auto`.
@@ -31499,22 +32512,25 @@ type BetaToolImageGenerationParam struct {
 	//
 	// Any of "png", "webp", "jpeg".
 	OutputFormat string `json:"output_format,omitzero"`
-	// The quality of the generated image. One of `low`, `medium`, `high`, or `auto`.
-	// Default: `auto`.
+	// The quality of the generated image. The GPT image models support `low`,
+	// `medium`, and `high`. `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`,
+	// including their `2026-09-08` snapshots, also support `xhigh` and `max`. Default:
+	// `auto`.
 	//
-	// Any of "low", "medium", "high", "auto".
+	// Any of "low", "medium", "high", "xhigh", "max", "auto".
 	Quality string `json:"quality,omitzero"`
-	// The size of the generated images. For `gpt-image-2` and
-	// `gpt-image-2-2026-04-21`, arbitrary resolutions are supported as `WIDTHxHEIGHT`
-	// strings, for example `1536x864`. Width and height must both be divisible by 16
-	// and the requested aspect ratio must be between 1:3 and 3:1. Resolutions above
-	// `2560x1440` are experimental, and the maximum supported resolution is
-	// `3840x2160`. The requested size must also satisfy the model's current pixel and
-	// edge limits. The standard sizes `1024x1024`, `1536x1024`, and `1024x1536` are
-	// supported by the GPT image models; `auto` is supported for models that allow
-	// automatic sizing. For `dall-e-2`, use one of `256x256`, `512x512`, or
-	// `1024x1024`. For `dall-e-3`, use one of `1024x1024`, `1792x1024`, or
-	// `1024x1792`.
+	// The size of the generated images. For `gpt-image-2`, `gpt-image-2-2026-04-21`,
+	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
+	// `gpt-image-2.5-flare`, and `gpt-image-2.5-flare-2026-09-08`, arbitrary
+	// resolutions are supported as `WIDTHxHEIGHT` strings, for example `1536x864`.
+	// Width and height must both be divisible by 16 and the requested aspect ratio
+	// must be between 1:3 and 3:1. Resolutions above `2560x1440` are experimental, and
+	// the maximum supported resolution is `3840x2160`. The requested size must also
+	// satisfy the model's current pixel and edge limits. The standard sizes
+	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
+	// `auto` is supported for models that allow automatic sizing. For `dall-e-2`, use
+	// one of `256x256`, `512x512`, or `1024x1024`. For `dall-e-3`, use one of
+	// `1024x1024`, `1792x1024`, or `1024x1792`.
 	Size string `json:"size,omitzero"`
 	// The type of the image generation tool. Always `image_generation`.
 	//
@@ -31548,7 +32564,7 @@ func init() {
 		"output_format", "png", "webp", "jpeg",
 	)
 	apijson.RegisterFieldValidator[BetaToolImageGenerationParam](
-		"quality", "low", "medium", "high", "auto",
+		"quality", "low", "medium", "high", "xhigh", "max", "auto",
 	)
 }
 
@@ -31981,10 +32997,10 @@ func (r *BetaToolChoiceShellParam) UnmarshalJSON(data []byte) error {
 }
 
 // Indicates that the model should use a built-in tool to generate a response.
-// [Learn more about built-in tools](https://platform.openai.com/docs/guides/tools).
+// [Learn more about built-in tools](https://developers.openai.com/api/docs/guides/tools).
 type BetaToolChoiceTypes struct {
 	// The type of hosted tool the model should to use. Learn more about
-	// [built-in tools](https://platform.openai.com/docs/guides/tools).
+	// [built-in tools](https://developers.openai.com/api/docs/guides/tools).
 	//
 	// Allowed values are:
 	//
@@ -32024,7 +33040,7 @@ func (r BetaToolChoiceTypes) ToParam() BetaToolChoiceTypesParam {
 }
 
 // The type of hosted tool the model should to use. Learn more about
-// [built-in tools](https://platform.openai.com/docs/guides/tools).
+// [built-in tools](https://developers.openai.com/api/docs/guides/tools).
 //
 // Allowed values are:
 //
@@ -32049,12 +33065,12 @@ const (
 )
 
 // Indicates that the model should use a built-in tool to generate a response.
-// [Learn more about built-in tools](https://platform.openai.com/docs/guides/tools).
+// [Learn more about built-in tools](https://developers.openai.com/api/docs/guides/tools).
 //
 // The property Type is required.
 type BetaToolChoiceTypesParam struct {
 	// The type of hosted tool the model should to use. Learn more about
-	// [built-in tools](https://platform.openai.com/docs/guides/tools).
+	// [built-in tools](https://developers.openai.com/api/docs/guides/tools).
 	//
 	// Allowed values are:
 	//
@@ -32156,7 +33172,7 @@ func (r *BetaToolSearchToolParam) UnmarshalJSON(data []byte) error {
 
 // This tool searches the web for relevant results to use in a response. Learn more
 // about the
-// [web search tool](https://platform.openai.com/docs/guides/tools-web-search).
+// [web search tool](https://developers.openai.com/api/docs/guides/tools-web-search).
 type BetaWebSearchPreviewTool struct {
 	// The type of the web search tool. One of `web_search_preview` or
 	// `web_search_preview_2025_03_11`.
@@ -32252,7 +33268,7 @@ func (r *BetaWebSearchPreviewToolUserLocation) UnmarshalJSON(data []byte) error 
 
 // This tool searches the web for relevant results to use in a response. Learn more
 // about the
-// [web search tool](https://platform.openai.com/docs/guides/tools-web-search).
+// [web search tool](https://developers.openai.com/api/docs/guides/tools-web-search).
 //
 // The property Type is required.
 type BetaWebSearchPreviewToolParam struct {
@@ -32311,7 +33327,7 @@ func (r *BetaWebSearchPreviewToolUserLocationParam) UnmarshalJSON(data []byte) e
 }
 
 // Search the Internet for sources related to the prompt. Learn more about the
-// [web search tool](https://platform.openai.com/docs/guides/tools-web-search).
+// [web search tool](https://developers.openai.com/api/docs/guides/tools-web-search).
 type BetaWebSearchTool struct {
 	// The type of the web search tool. One of `web_search` or `web_search_2025_08_26`.
 	//
@@ -32431,7 +33447,7 @@ func (r *BetaWebSearchToolUserLocation) UnmarshalJSON(data []byte) error {
 }
 
 // Search the Internet for sources related to the prompt. Learn more about the
-// [web search tool](https://platform.openai.com/docs/guides/tools-web-search).
+// [web search tool](https://developers.openai.com/api/docs/guides/tools-web-search).
 //
 // The property Type is required.
 type BetaWebSearchToolParam struct {
@@ -32516,7 +33532,7 @@ func init() {
 
 type BetaResponseNewParams struct {
 	// Whether to run the model response in the background.
-	// [Learn more](https://platform.openai.com/docs/guides/background).
+	// [Learn more](https://developers.openai.com/api/docs/guides/background).
 	Background param.Opt[bool] `json:"background,omitzero"`
 	// A system (or developer) message inserted into the model's context.
 	//
@@ -32526,7 +33542,7 @@ type BetaResponseNewParams struct {
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
 	// An upper bound for the number of tokens that can be generated for a response,
 	// including visible output tokens and
-	// [reasoning tokens](https://platform.openai.com/docs/guides/reasoning).
+	// [reasoning tokens](https://developers.openai.com/api/docs/guides/reasoning).
 	MaxOutputTokens param.Opt[int64] `json:"max_output_tokens,omitzero"`
 	// The maximum number of total calls to built-in tools that can be processed in a
 	// response. This maximum number applies across all built-in tool calls, not per
@@ -32537,21 +33553,24 @@ type BetaResponseNewParams struct {
 	ParallelToolCalls param.Opt[bool] `json:"parallel_tool_calls,omitzero"`
 	// The unique ID of the previous response to the model. Use this to create
 	// multi-turn conversations. Learn more about
-	// [conversation state](https://platform.openai.com/docs/guides/conversation-state).
+	// [conversation state](https://developers.openai.com/api/docs/guides/conversation-state).
 	// Cannot be used in conjunction with `conversation`.
 	PreviousResponseID param.Opt[string] `json:"previous_response_id,omitzero"`
 	// Used by OpenAI to cache responses for similar requests to optimize your cache
 	// hit rates. Replaces the `user` field.
-	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
+	// [Learn more](https://developers.openai.com/api/docs/guides/prompt-caching).
 	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
 	// A stable identifier used to help detect users of your application that may be
 	// violating OpenAI's usage policies. The IDs should be a string that uniquely
 	// identifies each user, with a maximum length of 64 characters. We recommend
 	// hashing their username or email address, in order to avoid sending us any
 	// identifying information.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
 	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
 	// Whether to store the generated model response for later retrieval via API.
+	// Defaults to true when omitted. If set to true, response data will be stored for
+	// at least 30 days, subject to the
+	// [data retention exceptions](https://developers.openai.com/api/docs/guides/your-data#v1responses).
 	Store param.Opt[bool] `json:"store,omitzero"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
 	// make the output more random, while lower values like 0.2 will make it more
@@ -32572,7 +33591,7 @@ type BetaResponseNewParams struct {
 	// `prompt_cache_key` instead to maintain caching optimizations. A stable
 	// identifier for your end-users. Used to boost cache hit rates by better bucketing
 	// similar requests and to help OpenAI detect and prevent abuse.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
 	User param.Opt[string] `json:"user,omitzero"`
 	// Context management configuration for this request.
 	ContextManagement []BetaResponseNewParamsContextManagement `json:"context_management,omitzero"`
@@ -32612,14 +33631,14 @@ type BetaResponseNewParams struct {
 	// Configuration for server-hosted multi-agent execution.
 	MultiAgent BetaResponseNewParamsMultiAgent `json:"multi_agent,omitzero"`
 	// Reference to a prompt template and its variables.
-	// [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
+	// [Learn more](https://developers.openai.com/api/docs/guides/text?api-mode=responses#version-prompts-in-code).
 	Prompt BetaResponsePromptParam `json:"prompt,omitzero"`
 	// Deprecated. Use `prompt_cache_options.ttl` instead.
 	//
 	// The retention policy for the prompt cache. Set to `24h` to enable extended
 	// prompt caching, which keeps cached prefixes active for longer, up to a maximum
 	// of 24 hours.
-	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching#prompt-cache-retention).
+	// [Learn more](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-retention).
 	// This field expresses a maximum retention policy, while
 	// `prompt_cache_options.ttl` expresses a minimum cache lifetime. The two fields
 	// are independent and do not interact. For `gpt-5.5`, `gpt-5.5-pro`, and future
@@ -32634,10 +33653,8 @@ type BetaResponseNewParams struct {
 	//
 	// Any of "in_memory", "24h".
 	PromptCacheRetention BetaResponseNewParamsPromptCacheRetention `json:"prompt_cache_retention,omitzero"`
-	// **gpt-5 and o-series models only**
-	//
 	// Configuration options for
-	// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+	// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 	Reasoning BetaResponseNewParamsReasoning `json:"reasoning,omitzero"`
 	// Specifies the processing type used for serving the request.
 	//
@@ -32646,13 +33663,15 @@ type BetaResponseNewParams struct {
 	//     will use 'default'.
 	//   - If set to 'default', then the request will be processed with the standard
 	//     pricing and performance for the selected model.
-	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)',
-	//     then the request will be processed with the Flex Processing service tier.
-	//   - To opt-in to [Fast mode](/api/docs/guides/fast-mode) at the request level,
-	//     include the `service_tier=fast` or `service_tier=priority` parameter for
-	//     Responses or Chat Completions. The response will show `service_tier=priority`
-	//     regardless of if you specify `service_tier=fast` or `priority` in your
-	//     request.
+	//   - If set to
+	//     '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+	//     the request will be processed with the Flex Processing service tier.
+	//   - To opt-in to
+	//     [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+	//     request level, include the `service_tier=fast` or `service_tier=priority`
+	//     parameter for Responses or Chat Completions. The response will show
+	//     `service_tier=priority` regardless of if you specify `service_tier=fast` or
+	//     `priority` in your request.
 	//   - If set to 'ultrafast', then the request will be processed with the
 	//     access-controlled Ultrafast Processing service tier. This tier is currently
 	//     available for `gpt-5.6-sol`; a response served through it will show
@@ -32682,17 +33701,17 @@ type BetaResponseNewParams struct {
 	//
 	// Learn more:
 	//
-	// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
-	// - [Image inputs](https://platform.openai.com/docs/guides/images)
-	// - [File inputs](https://platform.openai.com/docs/guides/pdf-files)
-	// - [Conversation state](https://platform.openai.com/docs/guides/conversation-state)
-	// - [Function calling](https://platform.openai.com/docs/guides/function-calling)
+	//   - [Text inputs and outputs](https://developers.openai.com/api/docs/guides/text)
+	//   - [Image inputs](https://developers.openai.com/api/docs/guides/images-vision)
+	//   - [File inputs](https://developers.openai.com/api/docs/guides/file-inputs)
+	//   - [Conversation state](https://developers.openai.com/api/docs/guides/conversation-state)
+	//   - [Function calling](https://developers.openai.com/api/docs/guides/function-calling)
 	Input BetaResponseNewParamsInputUnion `json:"input,omitzero"`
-	// Model ID used to generate the response, like `gpt-4o` or `o3`. OpenAI offers a
-	// wide range of models with different capabilities, performance characteristics,
-	// and price points. Refer to the
-	// [model guide](https://platform.openai.com/docs/models) to browse and compare
-	// available models.
+	// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
+	// range of models with different capabilities, performance characteristics, and
+	// price points. Refer to the
+	// [model guide](https://developers.openai.com/api/docs/models) to browse and
+	// compare available models.
 	Model BetaResponseNewParamsModel `json:"model,omitzero"`
 	// Options for prompt caching. Supported for `gpt-5.6` and later models. By
 	// default, OpenAI automatically chooses one implicit cache breakpoint. You can add
@@ -32701,14 +33720,14 @@ type BetaResponseNewParams struct {
 	// up to the latest 80 breakpoints in the conversation, without a content-block
 	// lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
 	// `ttl` defaults to `30m`, which is currently the only supported value. See the
-	// [prompt caching guide](https://platform.openai.com/docs/guides/prompt-caching)
+	// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 	// for current details.
 	PromptCacheOptions BetaResponseNewParamsPromptCacheOptions `json:"prompt_cache_options,omitzero"`
 	// Configuration options for a text response from the model. Can be plain text or
 	// structured JSON data. Learn more:
 	//
-	// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
-	// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
+	//   - [Text inputs and outputs](https://developers.openai.com/api/docs/guides/text)
+	//   - [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
 	Text BetaResponseTextConfigParam `json:"text,omitzero"`
 	// How the model should select which tool (or tools) to use when generating a
 	// response. See the `tools` parameter to see how to specify which tools the model
@@ -32721,17 +33740,18 @@ type BetaResponseNewParams struct {
 	//
 	//   - **Built-in tools**: Tools that are provided by OpenAI that extend the model's
 	//     capabilities, like
-	//     [web search](https://platform.openai.com/docs/guides/tools-web-search) or
-	//     [file search](https://platform.openai.com/docs/guides/tools-file-search).
+	//     [web search](https://developers.openai.com/api/docs/guides/tools-web-search)
+	//     or
+	//     [file search](https://developers.openai.com/api/docs/guides/tools-file-search).
 	//     Learn more about
-	//     [built-in tools](https://platform.openai.com/docs/guides/tools).
+	//     [built-in tools](https://developers.openai.com/api/docs/guides/tools).
 	//   - **MCP Tools**: Integrations with third-party systems via custom MCP servers or
 	//     predefined connectors such as Google Drive and SharePoint. Learn more about
-	//     [MCP Tools](https://platform.openai.com/docs/guides/tools-connectors-mcp).
+	//     [MCP Tools](https://developers.openai.com/api/docs/guides/tools-connectors-mcp).
 	//   - **Function calls (custom tools)**: Functions that are defined by you, enabling
 	//     the model to call your own code with strongly typed arguments and outputs.
 	//     Learn more about
-	//     [function calling](https://platform.openai.com/docs/guides/function-calling).
+	//     [function calling](https://developers.openai.com/api/docs/guides/function-calling).
 	//     You can also use custom tools to call your own code.
 	Tools []BetaToolUnionParam `json:"tools,omitzero"`
 	// Any of "responses_multi_agent=v1".
@@ -32796,14 +33816,15 @@ func (u *BetaResponseNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-// Model ID used to generate the response, like `gpt-4o` or `o3`. OpenAI offers a
-// wide range of models with different capabilities, performance characteristics,
-// and price points. Refer to the
-// [model guide](https://platform.openai.com/docs/models) to browse and compare
-// available models.
+// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
+// range of models with different capabilities, performance characteristics, and
+// price points. Refer to the
+// [model guide](https://developers.openai.com/api/docs/models) to browse and
+// compare available models.
 type BetaResponseNewParamsModel string
 
 const (
+	BetaResponseNewParamsModelGPT6Astra                        BetaResponseNewParamsModel = "gpt-6-astra"
 	BetaResponseNewParamsModelGPT5_6Sol                        BetaResponseNewParamsModel = "gpt-5.6-sol"
 	BetaResponseNewParamsModelGPT5_6Terra                      BetaResponseNewParamsModel = "gpt-5.6-terra"
 	BetaResponseNewParamsModelGPT5_6Luna                       BetaResponseNewParamsModel = "gpt-5.6-luna"
@@ -32823,7 +33844,6 @@ const (
 	BetaResponseNewParamsModelGPT5_1                           BetaResponseNewParamsModel = "gpt-5.1"
 	BetaResponseNewParamsModelGPT5_1_2025_11_13                BetaResponseNewParamsModel = "gpt-5.1-2025-11-13"
 	BetaResponseNewParamsModelGPT5_1Codex                      BetaResponseNewParamsModel = "gpt-5.1-codex"
-	BetaResponseNewParamsModelGPT5_1Mini                       BetaResponseNewParamsModel = "gpt-5.1-mini"
 	BetaResponseNewParamsModelGPT5_1ChatLatest                 BetaResponseNewParamsModel = "gpt-5.1-chat-latest"
 	BetaResponseNewParamsModelGPT5                             BetaResponseNewParamsModel = "gpt-5"
 	BetaResponseNewParamsModelGPT5Mini                         BetaResponseNewParamsModel = "gpt-5-mini"
@@ -32854,6 +33874,8 @@ const (
 	BetaResponseNewParamsModelGPT4o2024_11_20                  BetaResponseNewParamsModel = "gpt-4o-2024-11-20"
 	BetaResponseNewParamsModelGPT4o2024_08_06                  BetaResponseNewParamsModel = "gpt-4o-2024-08-06"
 	BetaResponseNewParamsModelGPT4o2024_05_13                  BetaResponseNewParamsModel = "gpt-4o-2024-05-13"
+	BetaResponseNewParamsModelGPTAudioMini                     BetaResponseNewParamsModel = "gpt-audio-mini"
+	BetaResponseNewParamsModelGPTAudioMini2025_12_15           BetaResponseNewParamsModel = "gpt-audio-mini-2025-12-15"
 	BetaResponseNewParamsModelGPT4oAudioPreview                BetaResponseNewParamsModel = "gpt-4o-audio-preview"
 	BetaResponseNewParamsModelGPT4oAudioPreview2024_10_01      BetaResponseNewParamsModel = "gpt-4o-audio-preview-2024-10-01"
 	BetaResponseNewParamsModelGPT4oAudioPreview2024_12_17      BetaResponseNewParamsModel = "gpt-4o-audio-preview-2024-12-17"
@@ -32887,6 +33909,7 @@ const (
 	BetaResponseNewParamsModelGPT3_5Turbo1106                  BetaResponseNewParamsModel = "gpt-3.5-turbo-1106"
 	BetaResponseNewParamsModelGPT3_5Turbo0125                  BetaResponseNewParamsModel = "gpt-3.5-turbo-0125"
 	BetaResponseNewParamsModelGPT3_5Turbo16k0613               BetaResponseNewParamsModel = "gpt-3.5-turbo-16k-0613"
+	BetaResponseNewParamsModelGPT5_1Mini                       BetaResponseNewParamsModel = "gpt-5.1-mini"
 	BetaResponseNewParamsModelO1Pro                            BetaResponseNewParamsModel = "o1-pro"
 	BetaResponseNewParamsModelO1Pro2025_03_19                  BetaResponseNewParamsModel = "o1-pro-2025-03-19"
 	BetaResponseNewParamsModelO3Pro                            BetaResponseNewParamsModel = "o3-pro"
@@ -33022,9 +34045,15 @@ func (r *BetaResponseNewParamsMultiAgent) UnmarshalJSON(data []byte) error {
 // up to the latest 80 breakpoints in the conversation, without a content-block
 // lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
 // `ttl` defaults to `30m`, which is currently the only supported value. See the
-// [prompt caching guide](https://platform.openai.com/docs/guides/prompt-caching)
+// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 // for current details.
 type BetaResponseNewParamsPromptCacheOptions struct {
+	// The ID of a response to compare when diagnosing prompt cache reuse. Supplying
+	// this field requests prompt cache diagnostics when the feature is enabled.
+	ComparisonResponseID param.Opt[string] `json:"comparison_response_id,omitzero"`
+	// Prepares the prompt cache without generating output. Defaults to `false`. When
+	// set to `true`, overrides the `generate` field to `false`.
+	Prewarm param.Opt[bool] `json:"prewarm,omitzero"`
 	// Controls whether OpenAI automatically creates an implicit cache breakpoint.
 	// Defaults to `implicit`. With `implicit`, OpenAI creates one implicit breakpoint
 	// and writes up to the latest three explicit breakpoints in the request. With
@@ -33065,7 +34094,7 @@ func init() {
 // The retention policy for the prompt cache. Set to `24h` to enable extended
 // prompt caching, which keeps cached prefixes active for longer, up to a maximum
 // of 24 hours.
-// [Learn more](https://platform.openai.com/docs/guides/prompt-caching#prompt-cache-retention).
+// [Learn more](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-retention).
 // This field expresses a maximum retention policy, while
 // `prompt_cache_options.ttl` expresses a minimum cache lifetime. The two fields
 // are independent and do not interact. For `gpt-5.5`, `gpt-5.5-pro`, and future
@@ -33084,10 +34113,8 @@ const (
 	BetaResponseNewParamsPromptCacheRetention24h      BetaResponseNewParamsPromptCacheRetention = "24h"
 )
 
-// **gpt-5 and o-series models only**
-//
 // Configuration options for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 type BetaResponseNewParamsReasoning struct {
 	// Controls which reasoning items are rendered back to the model on later turns. If
 	// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
@@ -33102,7 +34129,7 @@ type BetaResponseNewParamsReasoning struct {
 	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
 	// reasoning effort can result in faster responses and fewer tokens used on
 	// reasoning in a response. Not all reasoning models support every value. See the
-	// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+	// [reasoning guide](https://developers.openai.com/api/docs/guides/reasoning) for
 	// model-specific support.
 	//
 	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
@@ -33163,13 +34190,15 @@ func init() {
 //     will use 'default'.
 //   - If set to 'default', then the request will be processed with the standard
 //     pricing and performance for the selected model.
-//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)',
-//     then the request will be processed with the Flex Processing service tier.
-//   - To opt-in to [Fast mode](/api/docs/guides/fast-mode) at the request level,
-//     include the `service_tier=fast` or `service_tier=priority` parameter for
-//     Responses or Chat Completions. The response will show `service_tier=priority`
-//     regardless of if you specify `service_tier=fast` or `priority` in your
-//     request.
+//   - If set to
+//     '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+//     the request will be processed with the Flex Processing service tier.
+//   - To opt-in to
+//     [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+//     request level, include the `service_tier=fast` or `service_tier=priority`
+//     parameter for Responses or Chat Completions. The response will show
+//     `service_tier=priority` regardless of if you specify `service_tier=fast` or
+//     `priority` in your request.
 //   - If set to 'ultrafast', then the request will be processed with the
 //     access-controlled Ultrafast Processing service tier. This tier is currently
 //     available for `gpt-5.6-sol`; a response served through it will show
@@ -33377,11 +34406,11 @@ type BetaResponseCancelParams struct {
 }
 
 type BetaResponseCompactParams struct {
-	// Model ID used to generate the response, like `gpt-5` or `o3`. OpenAI offers a
-	// wide range of models with different capabilities, performance characteristics,
-	// and price points. Refer to the
-	// [model guide](https://platform.openai.com/docs/models) to browse and compare
-	// available models.
+	// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
+	// range of models with different capabilities, performance characteristics, and
+	// price points. Refer to the
+	// [model guide](https://developers.openai.com/api/docs/models) to browse and
+	// compare available models.
 	Model BetaResponseCompactParamsModel `json:"model,omitzero" api:"required"`
 	// A system (or developer) message inserted into the model's context. When used
 	// along with `previous_response_id`, the instructions from a previous response
@@ -33390,7 +34419,7 @@ type BetaResponseCompactParams struct {
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
 	// The unique ID of the previous response to the model. Use this to create
 	// multi-turn conversations. Learn more about
-	// [conversation state](https://platform.openai.com/docs/guides/conversation-state).
+	// [conversation state](https://developers.openai.com/api/docs/guides/conversation-state).
 	// Cannot be used in conjunction with `conversation`.
 	PreviousResponseID param.Opt[string] `json:"previous_response_id,omitzero"`
 	// A key to use when reading from or writing to the prompt cache.
@@ -33404,7 +34433,7 @@ type BetaResponseCompactParams struct {
 	// up to the latest 80 breakpoints in the conversation, without a content-block
 	// lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
 	// `ttl` defaults to `30m`, which is currently the only supported value. See the
-	// [prompt caching guide](https://platform.openai.com/docs/guides/prompt-caching)
+	// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 	// for current details.
 	PromptCacheOptions BetaResponseCompactParamsPromptCacheOptions `json:"prompt_cache_options,omitzero"`
 	// How long to retain a prompt cache entry created by this request.
@@ -33416,16 +34445,17 @@ type BetaResponseCompactParams struct {
 	// Project settings. Unless otherwise configured, the Project will use 'default'. -
 	// If set to 'default', then the request will be processed with the standard
 	// pricing and performance for the selected model. - If set to
-	// '[flex](https://platform.openai.com/docs/guides/flex-processing)', then the
-	// request will be processed with the Flex Processing service tier. - To opt-in to
-	// [Fast mode](/api/docs/guides/fast-mode) at the request level, include the
-	// `service_tier=fast` or `service_tier=priority` parameter for Responses or Chat
-	// Completions. The response will show `service_tier=priority` regardless of if you
-	// specify `service_tier=fast` or `priority` in your request. - When not set, the
-	// default behavior is 'auto'. When the `service_tier` parameter is set, the
-	// response body will include the `service_tier` value based on the processing mode
-	// actually used to serve the request. This response value may be different from
-	// the value set in the parameter.
+	// '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+	// the request will be processed with the Flex Processing service tier. - To opt-in
+	// to [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+	// request level, include the `service_tier=fast` or `service_tier=priority`
+	// parameter for Responses or Chat Completions. For models with a dedicated Fast
+	// tier, either value resolves to `service_tier=fast`; for other models, either
+	// value resolves to `service_tier=priority`. - When not set, the default behavior
+	// is 'auto'. When the `service_tier` parameter is set, the response body will
+	// include the `service_tier` value based on the processing mode actually used to
+	// serve the request. This response value may be different from the value set in
+	// the parameter.
 	//
 	// Any of "auto", "default", "fast", "flex", "priority".
 	ServiceTier BetaResponseCompactParamsServiceTier `json:"service_tier,omitzero"`
@@ -33442,14 +34472,15 @@ func (r *BetaResponseCompactParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Model ID used to generate the response, like `gpt-5` or `o3`. OpenAI offers a
-// wide range of models with different capabilities, performance characteristics,
-// and price points. Refer to the
-// [model guide](https://platform.openai.com/docs/models) to browse and compare
-// available models.
+// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
+// range of models with different capabilities, performance characteristics, and
+// price points. Refer to the
+// [model guide](https://developers.openai.com/api/docs/models) to browse and
+// compare available models.
 type BetaResponseCompactParamsModel string
 
 const (
+	BetaResponseCompactParamsModelGPT6Astra                        BetaResponseCompactParamsModel = "gpt-6-astra"
 	BetaResponseCompactParamsModelGPT5_6Sol                        BetaResponseCompactParamsModel = "gpt-5.6-sol"
 	BetaResponseCompactParamsModelGPT5_6Terra                      BetaResponseCompactParamsModel = "gpt-5.6-terra"
 	BetaResponseCompactParamsModelGPT5_6Luna                       BetaResponseCompactParamsModel = "gpt-5.6-luna"
@@ -33469,7 +34500,6 @@ const (
 	BetaResponseCompactParamsModelGPT5_1                           BetaResponseCompactParamsModel = "gpt-5.1"
 	BetaResponseCompactParamsModelGPT5_1_2025_11_13                BetaResponseCompactParamsModel = "gpt-5.1-2025-11-13"
 	BetaResponseCompactParamsModelGPT5_1Codex                      BetaResponseCompactParamsModel = "gpt-5.1-codex"
-	BetaResponseCompactParamsModelGPT5_1Mini                       BetaResponseCompactParamsModel = "gpt-5.1-mini"
 	BetaResponseCompactParamsModelGPT5_1ChatLatest                 BetaResponseCompactParamsModel = "gpt-5.1-chat-latest"
 	BetaResponseCompactParamsModelGPT5                             BetaResponseCompactParamsModel = "gpt-5"
 	BetaResponseCompactParamsModelGPT5Mini                         BetaResponseCompactParamsModel = "gpt-5-mini"
@@ -33500,6 +34530,8 @@ const (
 	BetaResponseCompactParamsModelGPT4o2024_11_20                  BetaResponseCompactParamsModel = "gpt-4o-2024-11-20"
 	BetaResponseCompactParamsModelGPT4o2024_08_06                  BetaResponseCompactParamsModel = "gpt-4o-2024-08-06"
 	BetaResponseCompactParamsModelGPT4o2024_05_13                  BetaResponseCompactParamsModel = "gpt-4o-2024-05-13"
+	BetaResponseCompactParamsModelGPTAudioMini                     BetaResponseCompactParamsModel = "gpt-audio-mini"
+	BetaResponseCompactParamsModelGPTAudioMini2025_12_15           BetaResponseCompactParamsModel = "gpt-audio-mini-2025-12-15"
 	BetaResponseCompactParamsModelGPT4oAudioPreview                BetaResponseCompactParamsModel = "gpt-4o-audio-preview"
 	BetaResponseCompactParamsModelGPT4oAudioPreview2024_10_01      BetaResponseCompactParamsModel = "gpt-4o-audio-preview-2024-10-01"
 	BetaResponseCompactParamsModelGPT4oAudioPreview2024_12_17      BetaResponseCompactParamsModel = "gpt-4o-audio-preview-2024-12-17"
@@ -33533,6 +34565,7 @@ const (
 	BetaResponseCompactParamsModelGPT3_5Turbo1106                  BetaResponseCompactParamsModel = "gpt-3.5-turbo-1106"
 	BetaResponseCompactParamsModelGPT3_5Turbo0125                  BetaResponseCompactParamsModel = "gpt-3.5-turbo-0125"
 	BetaResponseCompactParamsModelGPT3_5Turbo16k0613               BetaResponseCompactParamsModel = "gpt-3.5-turbo-16k-0613"
+	BetaResponseCompactParamsModelGPT5_1Mini                       BetaResponseCompactParamsModel = "gpt-5.1-mini"
 	BetaResponseCompactParamsModelO1Pro                            BetaResponseCompactParamsModel = "o1-pro"
 	BetaResponseCompactParamsModelO1Pro2025_03_19                  BetaResponseCompactParamsModel = "o1-pro-2025-03-19"
 	BetaResponseCompactParamsModelO3Pro                            BetaResponseCompactParamsModel = "o3-pro"
@@ -33577,7 +34610,7 @@ func (u *BetaResponseCompactParamsInputUnion) UnmarshalJSON(data []byte) error {
 // up to the latest 80 breakpoints in the conversation, without a content-block
 // lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
 // `ttl` defaults to `30m`, which is currently the only supported value. See the
-// [prompt caching guide](https://platform.openai.com/docs/guides/prompt-caching)
+// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 // for current details.
 type BetaResponseCompactParamsPromptCacheOptions struct {
 	// Controls whether OpenAI automatically creates an implicit cache breakpoint.
@@ -33628,16 +34661,17 @@ const (
 // Project settings. Unless otherwise configured, the Project will use 'default'. -
 // If set to 'default', then the request will be processed with the standard
 // pricing and performance for the selected model. - If set to
-// '[flex](https://platform.openai.com/docs/guides/flex-processing)', then the
-// request will be processed with the Flex Processing service tier. - To opt-in to
-// [Fast mode](/api/docs/guides/fast-mode) at the request level, include the
-// `service_tier=fast` or `service_tier=priority` parameter for Responses or Chat
-// Completions. The response will show `service_tier=priority` regardless of if you
-// specify `service_tier=fast` or `priority` in your request. - When not set, the
-// default behavior is 'auto'. When the `service_tier` parameter is set, the
-// response body will include the `service_tier` value based on the processing mode
-// actually used to serve the request. This response value may be different from
-// the value set in the parameter.
+// '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+// the request will be processed with the Flex Processing service tier. - To opt-in
+// to [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+// request level, include the `service_tier=fast` or `service_tier=priority`
+// parameter for Responses or Chat Completions. For models with a dedicated Fast
+// tier, either value resolves to `service_tier=fast`; for other models, either
+// value resolves to `service_tier=priority`. - When not set, the default behavior
+// is 'auto'. When the `service_tier` parameter is set, the response body will
+// include the `service_tier` value based on the processing mode actually used to
+// serve the request. This response value may be different from the value set in
+// the parameter.
 type BetaResponseCompactParamsServiceTier string
 
 const (

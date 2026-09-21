@@ -52,4 +52,6 @@ jobs:
         run: |
           version="$(jq -r '. | to_entries[0] | .value' .release-please-manifest.json)"
           module="$(awk '$1 == "module" { print $2; exit }' go.mod)"
-          curl --fail --show-error --silent -X POST "https://pkg.go.dev/fetch/${module}@v${version}"
+          curl --fail-with-body --show-error --silent --retry 5 --retry-all-errors \
+            --retry-delay 15 --retry-max-time 300 --connect-timeout 10 --max-time 45 \
+            -X POST "https://pkg.go.dev/fetch/${module}@v${version}"

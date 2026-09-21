@@ -20,10 +20,14 @@ func X509WorkloadIdentityMiddleware(
 	if request == nil || request.Header == nil || next == nil {
 		return nil, errors.New("X.509 workload identity requires a non-nil request and header map")
 	}
-	if err := validateX509Request(request); err != nil {
+	validation, err := requestconfig.WebSocketValidationRequest(request)
+	if err != nil {
 		return nil, err
 	}
-	if request.URL.Host != x509APIHost {
+	if err = validateX509Request(validation); err != nil {
+		return nil, err
+	}
+	if request.URL.Hostname() != x509APIHost {
 		return nil, errors.New("X.509 workload identity requires the global OpenAI mTLS API origin")
 	}
 	for name := range request.Header {

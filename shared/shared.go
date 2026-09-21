@@ -46,6 +46,7 @@ const (
 type ChatModel = string
 
 const (
+	ChatModelGPT6Astra                        ChatModel = "gpt-6-astra"
 	ChatModelGPT5_6Sol                        ChatModel = "gpt-5.6-sol"
 	ChatModelGPT5_6Terra                      ChatModel = "gpt-5.6-terra"
 	ChatModelGPT5_6Luna                       ChatModel = "gpt-5.6-luna"
@@ -65,7 +66,6 @@ const (
 	ChatModelGPT5_1                           ChatModel = "gpt-5.1"
 	ChatModelGPT5_1_2025_11_13                ChatModel = "gpt-5.1-2025-11-13"
 	ChatModelGPT5_1Codex                      ChatModel = "gpt-5.1-codex"
-	ChatModelGPT5_1Mini                       ChatModel = "gpt-5.1-mini"
 	ChatModelGPT5_1ChatLatest                 ChatModel = "gpt-5.1-chat-latest"
 	ChatModelGPT5                             ChatModel = "gpt-5"
 	ChatModelGPT5Mini                         ChatModel = "gpt-5-mini"
@@ -96,6 +96,8 @@ const (
 	ChatModelGPT4o2024_11_20                  ChatModel = "gpt-4o-2024-11-20"
 	ChatModelGPT4o2024_08_06                  ChatModel = "gpt-4o-2024-08-06"
 	ChatModelGPT4o2024_05_13                  ChatModel = "gpt-4o-2024-05-13"
+	ChatModelGPTAudioMini                     ChatModel = "gpt-audio-mini"
+	ChatModelGPTAudioMini2025_12_15           ChatModel = "gpt-audio-mini-2025-12-15"
 	ChatModelGPT4oAudioPreview                ChatModel = "gpt-4o-audio-preview"
 	ChatModelGPT4oAudioPreview2024_10_01      ChatModel = "gpt-4o-audio-preview-2024-10-01"
 	ChatModelGPT4oAudioPreview2024_12_17      ChatModel = "gpt-4o-audio-preview-2024-12-17"
@@ -129,6 +131,7 @@ const (
 	ChatModelGPT3_5Turbo1106                  ChatModel = "gpt-3.5-turbo-1106"
 	ChatModelGPT3_5Turbo0125                  ChatModel = "gpt-3.5-turbo-0125"
 	ChatModelGPT3_5Turbo16k0613               ChatModel = "gpt-3.5-turbo-16k-0613"
+	ChatModelGPT5_1Mini                       ChatModel = "gpt-5.1-mini"
 )
 
 // A filter used to compare a specified attribute key to a given value using a
@@ -761,24 +764,67 @@ func init() {
 }
 
 type ErrorObject struct {
-	Code    string `json:"code" api:"required"`
-	Message string `json:"message" api:"required"`
-	Param   string `json:"param" api:"required"`
-	Type    string `json:"type" api:"required"`
+	Code         string                  `json:"code" api:"required"`
+	Message      string                  `json:"message" api:"required"`
+	Param        string                  `json:"param" api:"required"`
+	Type         string                  `json:"type" api:"required"`
+	Misalignment ErrorObjectMisalignment `json:"misalignment"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Code        respjson.Field
-		Message     respjson.Field
-		Param       respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Code         respjson.Field
+		Message      respjson.Field
+		Param        respjson.Field
+		Type         respjson.Field
+		Misalignment respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
 // Returns the unmodified JSON received from the API
 func (r ErrorObject) RawJSON() string { return r.JSON.raw }
 func (r *ErrorObject) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ErrorObjectMisalignment struct {
+	// The public explanation for this block.
+	DetailedExplanation string `json:"detailed_explanation"`
+	// An optional classification; clients must accept additional values.
+	ErrorType string `json:"error_type"`
+	// An optional public continuation instruction.
+	Steer ErrorObjectMisalignmentSteer `json:"steer"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		DetailedExplanation respjson.Field
+		ErrorType           respjson.Field
+		Steer               respjson.Field
+		ExtraFields         map[string]respjson.Field
+		raw                 string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ErrorObjectMisalignment) RawJSON() string { return r.JSON.raw }
+func (r *ErrorObjectMisalignment) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An optional public continuation instruction.
+type ErrorObjectMisalignmentSteer struct {
+	// The public continuation instruction.
+	Message string `json:"message" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ErrorObjectMisalignmentSteer) RawJSON() string { return r.JSON.raw }
+func (r *ErrorObjectMisalignmentSteer) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -790,8 +836,8 @@ type FunctionDefinition struct {
 	// how to call the function.
 	Description string `json:"description"`
 	// The parameters the functions accepts, described as a JSON Schema object. See the
-	// [guide](https://platform.openai.com/docs/guides/function-calling) for examples,
-	// and the
+	// [guide](https://developers.openai.com/api/docs/guides/function-calling) for
+	// examples, and the
 	// [JSON Schema reference](https://json-schema.org/understanding-json-schema/) for
 	// documentation about the format.
 	//
@@ -801,7 +847,7 @@ type FunctionDefinition struct {
 	// set to true, the model will follow the exact schema defined in the `parameters`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
 	// more about Structured Outputs in the
-	// [function calling guide](https://platform.openai.com/docs/guides/function-calling).
+	// [function calling guide](https://developers.openai.com/api/docs/guides/function-calling).
 	Strict bool `json:"strict" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -838,14 +884,14 @@ type FunctionDefinitionParam struct {
 	// set to true, the model will follow the exact schema defined in the `parameters`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
 	// more about Structured Outputs in the
-	// [function calling guide](https://platform.openai.com/docs/guides/function-calling).
+	// [function calling guide](https://developers.openai.com/api/docs/guides/function-calling).
 	Strict param.Opt[bool] `json:"strict,omitzero"`
 	// A description of what the function does, used by the model to choose when and
 	// how to call the function.
 	Description param.Opt[string] `json:"description,omitzero"`
 	// The parameters the functions accepts, described as a JSON Schema object. See the
-	// [guide](https://platform.openai.com/docs/guides/function-calling) for examples,
-	// and the
+	// [guide](https://developers.openai.com/api/docs/guides/function-calling) for
+	// examples, and the
 	// [JSON Schema reference](https://json-schema.org/understanding-json-schema/) for
 	// documentation about the format.
 	//
@@ -873,10 +919,8 @@ const (
 	OAuthErrorCodeInvalidSubjectToken OAuthErrorCode = "invalid_subject_token"
 )
 
-// **gpt-5 and o-series models only**
-//
 // Configuration options for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 type Reasoning struct {
 	// Controls which reasoning items are rendered back to the model on later turns. If
 	// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
@@ -891,7 +935,7 @@ type Reasoning struct {
 	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
 	// reasoning effort can result in faster responses and fewer tokens used on
 	// reasoning in a response. Not all reasoning models support every value. See the
-	// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+	// [reasoning guide](https://developers.openai.com/api/docs/guides/reasoning) for
 	// model-specific support.
 	//
 	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
@@ -997,10 +1041,8 @@ const (
 	ReasoningSummaryDetailed ReasoningSummary = "detailed"
 )
 
-// **gpt-5 and o-series models only**
-//
 // Configuration options for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 type ReasoningParam struct {
 	// Controls which reasoning items are rendered back to the model on later turns. If
 	// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
@@ -1015,7 +1057,7 @@ type ReasoningParam struct {
 	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
 	// reasoning effort can result in faster responses and fewer tokens used on
 	// reasoning in a response. Not all reasoning models support every value. See the
-	// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+	// [reasoning guide](https://developers.openai.com/api/docs/guides/reasoning) for
 	// model-specific support.
 	//
 	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
@@ -1058,7 +1100,7 @@ func (r *ReasoningParam) UnmarshalJSON(data []byte) error {
 // are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
 // reasoning effort can result in faster responses and fewer tokens used on
 // reasoning in a response. Not all reasoning models support every value. See the
-// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+// [reasoning guide](https://developers.openai.com/api/docs/guides/reasoning) for
 // model-specific support.
 type ReasoningEffort string
 
@@ -1132,7 +1174,7 @@ func (r *ResponseFormatJSONObjectParam) UnmarshalJSON(data []byte) error {
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
-// [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
+// [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 type ResponseFormatJSONSchema struct {
 	// Structured Outputs configuration options, including a JSON Schema.
 	JSONSchema ResponseFormatJSONSchemaJSONSchema `json:"json_schema" api:"required"`
@@ -1178,7 +1220,7 @@ type ResponseFormatJSONSchemaJSONSchema struct {
 	// true, the model will always follow the exact schema defined in the `schema`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. To
 	// learn more, read the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	Strict bool `json:"strict" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -1199,7 +1241,7 @@ func (r *ResponseFormatJSONSchemaJSONSchema) UnmarshalJSON(data []byte) error {
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
-// [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
+// [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 //
 // The properties JSONSchema, Type are required.
 type ResponseFormatJSONSchemaParam struct {
@@ -1231,7 +1273,7 @@ type ResponseFormatJSONSchemaJSONSchemaParam struct {
 	// true, the model will always follow the exact schema defined in the `schema`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. To
 	// learn more, read the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	Strict param.Opt[bool] `json:"strict,omitzero"`
 	// A description of what the response format is for, used by the model to determine
 	// how to respond in the format.

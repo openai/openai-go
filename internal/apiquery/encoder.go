@@ -93,6 +93,17 @@ func (e *encoder) newTypeEncoder(t reflect.Type) encoderFunc {
 		return e.newRichFieldTypeEncoder(t)
 	}
 
+	// Parameter unions must use query encoding for the selected variant, even
+	// when generated code also provides JSON marshaling for request bodies.
+	if t.Kind() == reflect.Struct {
+		for i := 0; i < t.NumField(); i++ {
+			if t.Field(i).Type == paramUnionType && t.Field(i).Anonymous {
+				e.root = false
+				return e.newStructUnionTypeEncoder(t)
+			}
+		}
+	}
+
 	if !e.root && t.Implements(reflect.TypeOf((*json.Marshaler)(nil)).Elem()) {
 		return marshalerEncoder
 	}

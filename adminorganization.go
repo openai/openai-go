@@ -14,7 +14,8 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewAdminOrganizationService] method instead.
 type AdminOrganizationService struct {
-	Options []option.RequestOption
+	Options         []option.RequestOption
+	ExternalStorage AdminOrganizationExternalStorageService
 	// List user actions and configuration changes within this organization.
 	AuditLogs     AdminOrganizationAuditLogService
 	AdminAPIKeys  AdminOrganizationAdminAPIKeyService
@@ -36,6 +37,7 @@ type AdminOrganizationService struct {
 func NewAdminOrganizationService(opts ...option.RequestOption) (r AdminOrganizationService) {
 	r = AdminOrganizationService{}
 	r.Options = requestconfig.InheritedOptions(opts...)
+	r.ExternalStorage = NewAdminOrganizationExternalStorageService(opts...)
 	r.AuditLogs = NewAdminOrganizationAuditLogService(opts...)
 	r.AdminAPIKeys = NewAdminOrganizationAdminAPIKeyService(opts...)
 	r.Usage = NewAdminOrganizationUsageService(opts...)

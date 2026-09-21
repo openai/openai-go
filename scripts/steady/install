@@ -1,186 +1,39 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-set -e
+STEADY_ROOT="$(cd "$(dirname "$0")/../.." && pwd -P)"
+source "$STEADY_ROOT/scripts/steady/settings"
 
-cd "$(dirname "$0")/../.."
+mkdir -p "$STEADY_CACHE"
+[[ "$(cd "$STEADY_CACHE" && pwd -P)" == "$STEADY_CACHE" ]] || steady_fail 'Steady cache cannot be a symlink.'
+temporary="$(mktemp -d "$STEADY_CACHE/install.XXXXXXXX")"
+trap 'rm -rf "$temporary"' EXIT
 
-if ! command -v node >/dev/null || ! command -v npm >/dev/null; then
-  echo "Error: Node.js and npm are required; install them manually or with brew bundle" >&2
-  exit 1
-fi
-
-node_version="$(node --version)"
-node_major="${node_version#v}"
-if [[ "${node_major%%.*}" -lt 14 ]]; then
-  echo "Error: Node.js 14 or later is required for the Steady mock server (found $node_version)" >&2
-  exit 1
-fi
-
-npm_version="$(npm --version)"
-if [[ "${npm_version%%.*}" -lt 7 ]]; then
-  echo "Error: npm 7 or later is required for the locked Steady mock server (found $npm_version)" >&2
-  exit 1
-fi
-
-installation_name="$(node -e '
-  const fs = require("fs");
-  const crypto = require("crypto");
-  const contents = fs.readFileSync(process.argv[1]);
-  const lock = JSON.parse(contents);
-  const version = lock.packages["node_modules/@stdy/cli"].version;
-  if (!/^[a-zA-Z0-9][a-zA-Z0-9.+-]*$/.test(version)) {
-    throw new Error("invalid locked Steady version");
-  }
-  process.stdout.write(`${version}-${crypto.createHash("sha256").update(contents).digest("hex")}`);
-' scripts/steady/package-lock.json)"
-versions_directory="$(pwd -P)/scripts/steady/.versions"
-published_installation="$versions_directory/$installation_name"
-mkdir -p "$versions_directory"
-if [[ "$(cd "$versions_directory" && pwd -P)" != "$versions_directory" ]]; then
-  echo "Error: Steady installation versions directory cannot be a symlink" >&2
-  exit 1
-fi
-
-installation="$(mktemp -d scripts/steady/.install.XXXXXXXX)"
-installation="$(cd "$installation" && pwd -P)"
-publication_lock="$(pwd -P)/scripts/steady/.publication-lock"
-lock_owner="owner.$$.$RANDOM.$RANDOM"
-publication_lock_owned=0
-
-cleanup_installation() {
-  if [[ "$publication_lock_owned" -eq 1 ]]; then
-    rm -f "$publication_lock/$lock_owner"
-    rmdir "$publication_lock" 2>/dev/null || true
-  fi
-  rm -rf "$installation"
-}
-trap cleanup_installation EXIT
-
-cp scripts/steady/package.json scripts/steady/package-lock.json "$installation/"
-
-npm ci --prefix "$installation" --no-dry-run --no-package-lock-only --package-lock --no-global \
-  --ignore-scripts --include=optional --no-audit --no-fund >&2
-
-verify_installation() {
-  node -e '
-  const fs = require("fs");
-  const path = require("path");
-  const requestedRoot = path.resolve(process.argv[1]);
-  const root = fs.realpathSync(requestedRoot);
-  const modules = path.join(root, "node_modules");
-  const packageName = `@stdy/cli-${process.platform}-${process.arch}`;
-  const binaryName = process.platform === "win32" ? "steady.exe" : "steady";
-  let executable = path.join(modules, packageName, "bin", binaryName);
-  const contains = (directory, file) => {
-    const relative = path.relative(directory, file);
-    return relative !== "" && relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
-  };
-
-  try {
-    if (root !== requestedRoot) {
-      throw new Error("unexpected package installation location");
-    }
-    const lockFile = path.join(root, "package-lock.json");
-    const committedLock = fs.readFileSync(path.resolve("scripts/steady/package-lock.json"));
-    if (fs.realpathSync(lockFile) !== lockFile || !fs.readFileSync(lockFile).equals(committedLock)) {
-      throw new Error("unexpected package lockfile");
-    }
-    const lock = JSON.parse(committedLock);
-    const locked = lock.packages[`node_modules/${packageName}`];
-    const wrapper = fs.realpathSync(path.join(modules, "@stdy", "cli", "steady.js"));
-    const manifest = fs.realpathSync(require.resolve(`${packageName}/package.json`, { paths: [path.dirname(wrapper)] }));
-    if (!contains(modules, manifest) || path.basename(manifest) !== "package.json") {
-      throw new Error("unexpected package metadata location");
-    }
-    const packageDirectory = path.dirname(manifest);
-    const metadata = JSON.parse(fs.readFileSync(manifest, "utf8"));
-    executable = path.join(packageDirectory, "bin", binaryName);
-    if (!locked || metadata.name !== packageName || metadata.version !== locked.version ||
-        fs.realpathSync(modules) !== modules || !contains(modules, wrapper) ||
-        fs.realpathSync(executable) !== executable ||
-        !contains(packageDirectory, executable)) {
-      throw new Error("unexpected package version or executable location");
-    }
-    fs.accessSync(executable, fs.constants.X_OK);
-    process.stdout.write(process.platform === "win32" ? executable.replace(/\\/g, "/") : executable);
-  } catch (error) {
-    console.error(`Missing locked Steady platform-native executable: ${executable}`);
-    process.exit(1);
-  }
-' "$1"
+publish_directory() {
+  node "$STEADY_ROOT/scripts/steady/publish.cjs" "$1" "$2"
 }
 
-staged_executable="$(verify_installation "$installation")"
-"$staged_executable" --version >/dev/null
-
-lock_candidate="$installation/publication-lock"
-mkdir "$lock_candidate"
-: >"$lock_candidate/$lock_owner"
-
-for attempt in {1..300}; do
-  if node -e '
-    try {
-      require("fs").renameSync(process.argv[1], process.argv[2]);
-    } catch (error) {
-      if (["EEXIST", "ENOTEMPTY", "EPERM", "EACCES"].includes(error.code)) process.exit(1);
-      console.error(error);
-      process.exit(2);
-    }
-  ' "$lock_candidate" "$publication_lock"; then
-    publication_lock_owned=1
-    break
-  else
-    status=$?
-    if [[ "$status" -ne 1 ]]; then
-      exit "$status"
-    fi
-  fi
-
-  owners=("$publication_lock"/owner.*)
-  if [[ "${#owners[@]}" -eq 1 && -f "${owners[0]}" ]]; then
-    current_owner="${owners[0]##*/}"
-    current_pid="${current_owner#owner.}"
-    current_pid="${current_pid%%.*}"
-    if [[ "$current_pid" =~ ^[0-9]+$ ]] && ! kill -0 "$current_pid" 2>/dev/null; then
-      rm -f "$publication_lock/$current_owner"
-      rmdir "$publication_lock" 2>/dev/null || true
-    fi
-  else
-    rmdir "$publication_lock" 2>/dev/null || true
-  fi
-  sleep 0.05
-done
-
-if [[ "$publication_lock_owned" -ne 1 ]]; then
-  echo "Error: Timed out waiting to publish the locked Steady installation" >&2
-  exit 1
+if [[ ! -e "$STEADY_SOURCE" ]]; then
+  git init --quiet "$temporary/source" >&2
+  git -C "$temporary/source" fetch --quiet --no-tags "$STEADY_REPOSITORY" "$STEADY_REVISION" >&2
+  git -C "$temporary/source" -c advice.detachedHead=false -c core.autocrlf=false -c core.eol=lf checkout --quiet --detach "$STEADY_REVISION" >&2
+  # Atomic publication also handles concurrent bootstraps.
+  publish_directory "$temporary/source" "$STEADY_SOURCE"
 fi
 
-executable=""
-generations=("$published_installation" "$published_installation".*)
-for generation in "${generations[@]}"; do
-  if [[ -d "$generation" ]] &&
-    candidate="$(verify_installation "$generation" 2>/dev/null)" &&
-    cmp -s "$installation/node_modules/@stdy/cli/steady.js" \
-      "$generation/node_modules/@stdy/cli/steady.js" &&
-    cmp -s "$staged_executable" "$candidate"; then
-    executable="$candidate"
-    break
-  fi
-done
-
-if [[ -z "$executable" ]]; then
-  if [[ -e "$published_installation" || -L "$published_installation" ]]; then
-    published_installation="$(mktemp -d "$versions_directory/$installation_name.XXXXXXXX")"
-    rmdir "$published_installation"
-  fi
-  node -e 'require("fs").renameSync(process.argv[1], process.argv[2])' \
-    "$installation" "$published_installation"
-  executable="$(verify_installation "$published_installation")"
+if [[ ! -e "$DENO_DIRECTORY" ]]; then
+  mkdir "$temporary/deno"
+  curl --fail --location --proto '=https' --proto-redir '=https' --silent --show-error \
+    "https://github.com/denoland/deno/releases/download/v$DENO_VERSION/deno-$DENO_TARGET.zip" \
+    -o "$temporary/deno/deno.zip"
+  [[ "$(steady_sha256 < "$temporary/deno/deno.zip")" == "$DENO_SHA256" ]] || steady_fail 'Deno download checksum mismatch.'
+  unzip -q "$temporary/deno/deno.zip" -d "$temporary/deno"
+  publish_directory "$temporary/deno" "$DENO_DIRECTORY"
 fi
 
-"$executable" --version >/dev/null
+steady_verify
+"$DENO_DIRECTORY/$DENO_BINARY" cache --frozen --config "$STEADY_SOURCE/deno.json" "$STEADY_SOURCE/cmd/steady.ts" >&2
 
-if [[ "${1:-}" == "--print-executable" ]]; then
-  printf '%s\n' "$executable"
+if [[ "${1:-}" == '--print-executable' ]]; then
+  printf '%s\n' "$STEADY_ROOT/scripts/run-steady"
 fi

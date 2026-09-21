@@ -122,6 +122,9 @@ type ProjectAPIKey struct {
 	OwnerProjectAccess ProjectAPIKeyOwnerProjectAccess `json:"owner_project_access" api:"required"`
 	// The redacted value of the API key
 	RedactedValue string `json:"redacted_value" api:"required"`
+	// The Unix timestamp (in seconds) when the API key expires, or null if it does not
+	// expire.
+	ExpiresAt int64 `json:"expires_at" api:"nullable" format:"unixtime"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                 respjson.Field
@@ -132,6 +135,7 @@ type ProjectAPIKey struct {
 		Owner              respjson.Field
 		OwnerProjectAccess respjson.Field
 		RedactedValue      respjson.Field
+		ExpiresAt          respjson.Field
 		ExtraFields        map[string]respjson.Field
 		raw                string
 	} `json:"-"`
