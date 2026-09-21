@@ -1,6 +1,6 @@
 # Changelog
 
-## [4.0.0](https://github.com/openai/openai-go/compare/v3.64.0...v4.0.0) (2026-09-21)
+## [3.64.1](https://github.com/openai/openai-go/compare/v3.64.0...v3.64.1) (2026-09-21)
 
 
 ### Bug Fixes
