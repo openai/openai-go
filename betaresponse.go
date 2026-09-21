@@ -7292,7 +7292,7 @@ func (r *BetaResponseComputerToolCallAgentParam) UnmarshalJSON(data []byte) erro
 }
 
 type BetaResponseComputerToolCallOutputItem struct {
-	// The unique ID of the computer call tool output.
+	// The ID of the computer tool call output.
 	ID string `json:"id" api:"required"`
 	// The ID of the computer tool call that produced the output.
 	CallID string `json:"call_id" api:"required"`

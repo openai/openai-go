@@ -34736,10 +34736,6 @@ components:
       - $ref: '#/components/schemas/ComputerToolCallOutput'
       - type: object
         properties:
-          id:
-            type: string
-            description: |
-              The unique ID of the computer call tool output.
           status:
             description: |
               The status of the message input. One of `in_progress`, `completed`, or
@@ -90317,10 +90313,6 @@ components:
       - $ref: '#/components/schemas/BetaComputerToolCallOutput'
       - type: object
         properties:
-          id:
-            type: string
-            description: |
-              The unique ID of the computer call tool output.
           status:
             description: |
               The status of the message input. One of `in_progress`, `completed`, or
