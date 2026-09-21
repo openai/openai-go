@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.64.1](https://github.com/openai/openai-go/compare/v3.64.0...v3.64.1) (2026-09-21)
+
+
+### Bug Fixes
+
+* **param:** emit extra fields in sorted key order ([#901](https://github.com/openai/openai-go/issues/901)) ([923e128](https://github.com/openai/openai-go/commit/923e128f47c407f1e15e8aa58692f261eff991b9))
+
+
+### Documentation
+
+* add streaming tool calling example ([#706](https://github.com/openai/openai-go/issues/706)) ([abd798a](https://github.com/openai/openai-go/commit/abd798a43c7cd375947328c88d17c8c31da50997)), closes [#402](https://github.com/openai/openai-go/issues/402)
+
 ## [3.64.0](https://github.com/openai/openai-go/compare/v3.63.1...v3.64.0) (2026-09-20)
 
 
