@@ -4007,8 +4007,11 @@ type ChatCompletionNewParams struct {
 	//
 	// A list of functions the model may generate JSON inputs for.
 	Functions []ChatCompletionNewParamsFunction `json:"functions,omitzero"`
-	// Static predicted output content, such as the content of a text file that is
-	// being regenerated.
+	// Configuration for a
+	// [Predicted Output](https://developers.openai.com/api/docs/guides/predicted-outputs),
+	// which can greatly improve response times when large parts of the model response
+	// are known ahead of time. This is most common when you are regenerating a file
+	// with only minor changes to most of the content.
 	Prediction ChatCompletionPredictionContentParam `json:"prediction,omitzero"`
 	// Options for prompt caching. Supported for `gpt-5.6` and later models. By
 	// default, OpenAI automatically chooses one implicit cache breakpoint. You can add
