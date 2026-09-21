@@ -3,9 +3,6 @@
 ## [4.0.0](https://github.com/openai/openai-go/compare/v3.64.0...v4.0.0) (2026-09-21)
 
 
-### ⚠ BREAKING CHANGES
-
-
 ### Bug Fixes
 
 * **param:** emit extra fields in sorted key order ([#901](https://github.com/openai/openai-go/issues/901)) ([923e128](https://github.com/openai/openai-go/commit/923e128f47c407f1e15e8aa58692f261eff991b9))
