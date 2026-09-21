@@ -1009,10 +1009,9 @@ type ImageEditParams struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background ImageEditParamsBackground `json:"background,omitzero"`
-	// Control how much effort the model will exert to match the style and features,
-	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1` and `gpt-image-1.5` and later models, unsupported for
-	// `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
+	// Controls fidelity to the original input image(s). This parameter is supported
+	// for GPT image models that support input fidelity. `gpt-image-2` and
+	// `gpt-image-2-2026-04-21` ignore this parameter.
 	//
 	// Any of "high", "low".
 	InputFidelity ImageEditParamsInputFidelity `json:"input_fidelity,omitzero"`
@@ -1115,10 +1114,9 @@ const (
 	ImageEditParamsBackgroundAuto        ImageEditParamsBackground = "auto"
 )
 
-// Control how much effort the model will exert to match the style and features,
-// especially facial features, of input images. This parameter is only supported
-// for `gpt-image-1` and `gpt-image-1.5` and later models, unsupported for
-// `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
+// Controls fidelity to the original input image(s). This parameter is supported
+// for GPT image models that support input fidelity. `gpt-image-2` and
+// `gpt-image-2-2026-04-21` ignore this parameter.
 type ImageEditParamsInputFidelity string
 
 const (

@@ -7,7 +7,6 @@ import (
 	"context"
 	"io"
 	"mime/multipart"
-	"net/http"
 	"slices"
 
 	"github.com/openai/openai-go/v3/internal/apiform"
@@ -44,7 +43,9 @@ func (r *AudioTranslationService) New(ctx context.Context, body AudioTranslation
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "audio/translations"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	err = executeAudioTextRequest(ctx, path, body, &res, func(text string) {
+		res = &Translation{Text: text}
+	}, opts...)
 	return res, err
 }
 

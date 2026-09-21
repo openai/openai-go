@@ -601,6 +601,30 @@ paths:
               schema:
                 type: string
                 format: binary
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+            audio/aac:
+              schema:
+                type: string
+                format: binary
+            audio/opus:
+              schema:
+                type: string
+                format: binary
+            audio/flac:
+              schema:
+                type: string
+                format: binary
+            audio/pcm:
+              schema:
+                type: string
+                format: binary
+            audio/wav:
+              schema:
+                type: string
+                format: binary
             text/event-stream:
               schema:
                 $ref: '#/components/schemas/CreateSpeechResponseStreamEvent'
@@ -694,7 +718,8 @@ paths:
         Transcribes audio into the input language.
 
         Returns a transcription object in `json`, `diarized_json`, or `verbose_json`
-        format, or a stream of transcript events.
+        format, plain text in `text`, `srt`, or `vtt` format, or a stream of transcript
+        events. Supported formats depend on the model.
       requestBody:
         required: true
         content:
@@ -715,6 +740,9 @@ paths:
                 - $ref: '#/components/schemas/CreateTranscriptionResponseVerboseJson'
                 discriminator:
                   propertyName: task
+            text/plain:
+              schema:
+                type: string
             text/event-stream:
               schema:
                 $ref: '#/components/schemas/CreateTranscriptionResponseStreamEvent'
@@ -1271,6 +1299,9 @@ paths:
                 - $ref: '#/components/schemas/CreateTranslationResponseVerboseJson'
                   x-stainless-skip:
                   - go
+            text/plain:
+              schema:
+                type: string
         '429':
           $ref: '#/components/responses/InferenceRateLimited'
         '503':
