@@ -271,7 +271,8 @@ type CredentialAuthMcpOAuth struct {
 	ExpiresAt string `json:"expires_at" api:"required"`
 	// The HTTPS MCP server URL authorized by this credential.
 	McpServerURL string `json:"mcp_server_url" api:"required"`
-	// Public refresh metadata without refresh tokens or OAuth client secrets.
+	// Configuration used to refresh an MCP OAuth access token, excluding secret
+	// values.
 	Refresh CredentialAuthMcpOAuthRefresh `json:"refresh" api:"required"`
 	// The type of the object. Always `mcp_oauth`.
 	Type constant.McpOAuth `json:"type" default:"mcp_oauth"`
@@ -292,7 +293,8 @@ func (r *CredentialAuthMcpOAuth) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Public refresh metadata without refresh tokens or OAuth client secrets.
+// Configuration used to refresh an MCP OAuth access token, excluding secret
+// values.
 type CredentialAuthMcpOAuthRefresh struct {
 	// The OAuth client ID used when requesting a new access token.
 	ClientID string `json:"client_id" api:"required"`
@@ -515,7 +517,7 @@ type CredentialAuthCreateParamMcpOAuth struct {
 	McpServerURL string `json:"mcp_server_url" api:"required"`
 	// When the OAuth access token expires, as an RFC 3339 timestamp, if known.
 	ExpiresAt param.Opt[string] `json:"expires_at,omitzero"`
-	// Optional refresh configuration for an HTTPS OAuth token endpoint.
+	// Configuration for refreshing the access token of an MCP OAuth credential.
 	Refresh CredentialAuthCreateParamMcpOAuthRefresh `json:"refresh,omitzero"`
 	// The type of the object. Always `mcp_oauth`.
 	//
@@ -532,7 +534,7 @@ func (r *CredentialAuthCreateParamMcpOAuth) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Optional refresh configuration for an HTTPS OAuth token endpoint.
+// Configuration for refreshing the access token of an MCP OAuth credential.
 //
 // The properties ClientID, RefreshToken, TokenEndpoint, TokenEndpointAuth are
 // required.
@@ -724,7 +726,7 @@ type CredentialAuthRotateParamMcpOAuth struct {
 	// this field preserves the expiry unless a new access token is supplied, in which
 	// case the expiry is cleared.
 	ExpiresAt param.Opt[string] `json:"expires_at,omitzero"`
-	// Optional write-only refresh-token and client-secret updates.
+	// Updates to an MCP credential's existing OAuth refresh configuration.
 	Refresh CredentialAuthRotateParamMcpOAuthRefresh `json:"refresh,omitzero"`
 	// The type of the object. Always `mcp_oauth`.
 	//
@@ -741,7 +743,7 @@ func (r *CredentialAuthRotateParamMcpOAuth) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Optional write-only refresh-token and client-secret updates.
+// Updates to an MCP credential's existing OAuth refresh configuration.
 type CredentialAuthRotateParamMcpOAuthRefresh struct {
 	// The replacement refresh token. Omit or pass `null` to keep the stored token.
 	// This secret is never returned in resources.
@@ -749,7 +751,8 @@ type CredentialAuthRotateParamMcpOAuthRefresh struct {
 	// Replacement space-separated OAuth scopes for refresh requests. Omit to keep the
 	// scopes, or pass `null` to stop sending a scope parameter.
 	Scope param.Opt[string] `json:"scope,omitzero"`
-	// Client-secret updates for the existing token endpoint authentication method.
+	// Client-secret updates that preserve the credential's OAuth authentication
+	// method.
 	TokenEndpointAuth McpOAuthTokenEndpointAuthRotateParamUnion `json:"token_endpoint_auth,omitzero"`
 	paramObj
 }
