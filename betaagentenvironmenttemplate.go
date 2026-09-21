@@ -491,10 +491,9 @@ type BetaAgentEnvironmentTemplateNewParams struct {
 	Env map[string]string `json:"env,omitzero"`
 	// Files available before the agent starts. Defaults to an empty list.
 	Files []HostedEnvironmentFileParamUnion `json:"files,omitzero"`
-	// Network access policy for the environment. Defaults to disabled for GA requests
-	// and enabled for alpha/beta requests.
+	// Network access for an OpenAI-hosted environment.
 	Network BetaAgentEnvironmentTemplateNewParamsNetwork `json:"network,omitzero"`
-	// Packages to install in the environment. Defaults to empty package lists.
+	// Packages to install in an OpenAI-hosted environment.
 	Packages BetaAgentEnvironmentTemplateNewParamsPackages `json:"packages,omitzero"`
 	// Plugins provided as inline ZIP archives. Defaults to an empty list.
 	Plugins []HostedPluginParam `json:"plugins,omitzero"`
@@ -514,8 +513,7 @@ func (r *BetaAgentEnvironmentTemplateNewParams) UnmarshalJSON(data []byte) error
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Network access policy for the environment. Defaults to disabled for GA requests
-// and enabled for alpha/beta requests.
+// Network access for an OpenAI-hosted environment.
 //
 // The property Access is required.
 type BetaAgentEnvironmentTemplateNewParamsNetwork struct {
@@ -542,7 +540,7 @@ func init() {
 	)
 }
 
-// Packages to install in the environment. Defaults to empty package lists.
+// Packages to install in an OpenAI-hosted environment.
 type BetaAgentEnvironmentTemplateNewParamsPackages struct {
 	// npm packages to install globally. Defaults to an empty list.
 	Npm []string `json:"npm,omitzero"`
@@ -570,11 +568,9 @@ type BetaAgentEnvironmentTemplateUpdateParams struct {
 	Env map[string]string `json:"env,omitzero"`
 	// Replacement file configuration materialized for each new session.
 	Files []HostedEnvironmentFileParamUnion `json:"files,omitzero"`
-	// Network access available after setup completes. Omit to preserve the current
-	// policy, or pass `null` to reset to disabled for GA requests or enabled for
-	// alpha/beta requests.
+	// Network access for an OpenAI-hosted environment.
 	Network BetaAgentEnvironmentTemplateUpdateParamsNetwork `json:"network,omitzero"`
-	// Packages installed before the runtime network policy applies.
+	// Packages to install in an OpenAI-hosted environment.
 	Packages BetaAgentEnvironmentTemplateUpdateParamsPackages `json:"packages,omitzero"`
 	// Replacement plugin configuration installed for each new session.
 	Plugins []HostedPluginParam `json:"plugins,omitzero"`
@@ -593,9 +589,7 @@ func (r *BetaAgentEnvironmentTemplateUpdateParams) UnmarshalJSON(data []byte) er
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Network access available after setup completes. Omit to preserve the current
-// policy, or pass `null` to reset to disabled for GA requests or enabled for
-// alpha/beta requests.
+// Network access for an OpenAI-hosted environment.
 //
 // The property Access is required.
 type BetaAgentEnvironmentTemplateUpdateParamsNetwork struct {
@@ -622,7 +616,7 @@ func init() {
 	)
 }
 
-// Packages installed before the runtime network policy applies.
+// Packages to install in an OpenAI-hosted environment.
 type BetaAgentEnvironmentTemplateUpdateParamsPackages struct {
 	// npm packages to install globally. Defaults to an empty list.
 	Npm []string `json:"npm,omitzero"`
