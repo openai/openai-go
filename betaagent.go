@@ -927,11 +927,12 @@ const (
 
 // The reasoning configuration used by an agent.
 type AgentReasoning struct {
-	// The amount of reasoning effort used by an agent.
+	// The requested reasoning effort, or `null` when the model selects its own
+	// default.
 	//
 	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
 	Effort AgentReasoningEffort `json:"effort" api:"required"`
-	// The reasoning summary format requested from an agent.
+	// The requested reasoning summary format, or `null` when summaries are disabled.
 	//
 	// Any of "concise", "detailed", "auto".
 	Summary AgentReasoningSummary `json:"summary" api:"required"`
@@ -950,7 +951,8 @@ func (r *AgentReasoning) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The amount of reasoning effort used by an agent.
+// The requested reasoning effort, or `null` when the model selects its own
+// default.
 type AgentReasoningEffort string
 
 const (
@@ -963,7 +965,7 @@ const (
 	AgentReasoningEffortMax     AgentReasoningEffort = "max"
 )
 
-// The reasoning summary format requested from an agent.
+// The requested reasoning summary format, or `null` when summaries are disabled.
 type AgentReasoningSummary string
 
 const (
@@ -976,7 +978,7 @@ const (
 type AgentReasoningItem struct {
 	// The ID of the reasoning item.
 	ID string `json:"id" api:"required"`
-	// The status of an agent output item.
+	// The status of the reasoning item.
 	//
 	// Any of "in_progress", "completed", "incomplete".
 	Status AgentOutputItemStatus `json:"status" api:"required"`
@@ -1006,11 +1008,12 @@ func (r *AgentReasoningItem) UnmarshalJSON(data []byte) error {
 
 // Reasoning configuration for the agent.
 type AgentReasoningParam struct {
-	// The amount of reasoning effort the model should use.
+	// The amount of reasoning effort the model should use. Omission lets the model
+	// select it.
 	//
 	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
 	Effort AgentReasoningParamEffort `json:"effort,omitzero"`
-	// The reasoning summary format requested from the model.
+	// Controls whether the response includes a reasoning summary.
 	//
 	// Any of "concise", "detailed", "auto".
 	Summary AgentReasoningParamSummary `json:"summary,omitzero"`
@@ -1025,7 +1028,8 @@ func (r *AgentReasoningParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The amount of reasoning effort the model should use.
+// The amount of reasoning effort the model should use. Omission lets the model
+// select it.
 type AgentReasoningParamEffort string
 
 const (
@@ -1038,7 +1042,7 @@ const (
 	AgentReasoningParamEffortMax     AgentReasoningParamEffort = "max"
 )
 
-// The reasoning summary format requested from the model.
+// Controls whether the response includes a reasoning summary.
 type AgentReasoningParamSummary string
 
 const (
@@ -1144,7 +1148,8 @@ type AgentSession struct {
 	//
 	// Any of "idle", "in_progress", "requires_action", "failed".
 	Status AgentSessionStatus `json:"status" api:"required"`
-	// Recorded token usage for a session or turn. Usage is best effort and may change.
+	// Best-effort token usage for the session, or null if unknown. Recorded usage may
+	// change.
 	Usage TokenUsage `json:"usage" api:"required"`
 	// The IDs of vaults made available to the session.
 	VaultIDs []string `json:"vault_ids" api:"required"`
@@ -1361,7 +1366,7 @@ type AgentSessionAssistantMessage struct {
 	ID string `json:"id" api:"required"`
 	// The content of the message.
 	Content []OutputText `json:"content" api:"required"`
-	// The phase of an assistant message.
+	// The phase of the assistant message.
 	//
 	// Any of "commentary", "final_answer".
 	Phase AgentSessionAssistantMessagePhase `json:"phase" api:"required"`
@@ -1395,7 +1400,7 @@ func (r *AgentSessionAssistantMessage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The phase of an assistant message.
+// The phase of the assistant message.
 type AgentSessionAssistantMessagePhase string
 
 const (
@@ -1641,7 +1646,7 @@ func (r *AgentSessionEnvironmentResetEvent) UnmarshalJSON(data []byte) error {
 type AgentSessionEnvironmentState struct {
 	// The public ID of the environment.
 	ID string `json:"id" api:"required"`
-	// An error reported while preparing a session environment.
+	// The error reported while preparing the environment, if any.
 	Error AgentSessionEnvironmentStateError `json:"error" api:"required"`
 	// The environment's connection status.
 	//
@@ -1666,7 +1671,7 @@ func (r *AgentSessionEnvironmentState) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// An error reported while preparing a session environment.
+// The error reported while preparing the environment, if any.
 type AgentSessionEnvironmentStateError struct {
 	// A machine-readable error code.
 	Code string `json:"code" api:"required"`
@@ -2584,7 +2589,7 @@ type AgentSessionInputParamAgentSessionInputToolResult struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The error message when the call failed.
 	Error param.Opt[string] `json:"error,omitzero"`
-	// A function result represented as text or supported model-input content.
+	// The function result when the call succeeded.
 	Output AgentFunctionCallOutputParamUnion `json:"output,omitzero"`
 	// The type of the object. Always `agent.session.input.tool_result`.
 	//
@@ -2931,7 +2936,7 @@ type AgentSessionItemFunctionCallOutput struct {
 	CallID string `json:"call_id" api:"required"`
 	// The error message, if the call failed.
 	Error string `json:"error" api:"required"`
-	// The text or model-input content supplied as a function result.
+	// The function result, if the call succeeded.
 	Output AgentFunctionCallOutputUnion `json:"output" api:"required"`
 	// The status of the function call.
 	//
@@ -3001,7 +3006,7 @@ type AgentSessionMessage struct {
 	// The content of the message. User messages contain input text or images;
 	// assistant messages contain output text.
 	Content []AgentSessionMessageContentUnion `json:"content" api:"required"`
-	// The phase of an assistant message.
+	// The phase of an assistant message. Null for user messages.
 	//
 	// Any of "commentary", "final_answer".
 	Phase AgentSessionMessagePhase `json:"phase" api:"required"`
@@ -3037,7 +3042,7 @@ func (r *AgentSessionMessage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The phase of an assistant message.
+// The phase of an assistant message. Null for user messages.
 type AgentSessionMessagePhase string
 
 const (
@@ -3300,7 +3305,7 @@ type AgentSessionTurnCancelledEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.turn.cancelled`.
 	Type constant.AgentSessionTurnCancelled `json:"type" default:"agent.session.turn.cancelled"`
-	// Recorded token usage for a session or turn. Usage is best effort and may change.
+	// Token usage by the root agent during the turn, when available.
 	Usage TokenUsage `json:"usage" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -3333,7 +3338,7 @@ type AgentSessionTurnCompletedEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.turn.completed`.
 	Type constant.AgentSessionTurnCompleted `json:"type" default:"agent.session.turn.completed"`
-	// Recorded token usage for a session or turn. Usage is best effort and may change.
+	// Token usage by the root agent during the turn, when available.
 	Usage TokenUsage `json:"usage" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -3474,7 +3479,7 @@ type AgentSessionTurnFailedEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.turn.failed`.
 	Type constant.AgentSessionTurnFailed `json:"type" default:"agent.session.turn.failed"`
-	// Recorded token usage for a session or turn. Usage is best effort and may change.
+	// Token usage by the root agent during the turn, when available.
 	Usage TokenUsage `json:"usage" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -3864,9 +3869,10 @@ const (
 
 // Configuration for text generated by the agent.
 type AgentTextParam struct {
-	// The output format for generated text.
+	// The output format. Omission uses ordinary text (`{"type": "text"}`).
 	Format TextFormatParamUnion `json:"format,omitzero"`
-	// The amount of text the model should produce.
+	// The amount of text the model should produce. Defaults to `medium`, matching
+	// Responses.
 	//
 	// Any of "low", "medium", "high".
 	Verbosity AgentTextParamVerbosity `json:"verbosity,omitzero"`
@@ -3881,7 +3887,8 @@ func (r *AgentTextParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The amount of text the model should produce.
+// The amount of text the model should produce. Defaults to `medium`, matching
+// Responses.
 type AgentTextParamVerbosity string
 
 const (
@@ -4117,7 +4124,7 @@ type AgentToolWebSearch struct {
 	//
 	// Any of "low", "medium", "high".
 	ContextSize string `json:"context_size" api:"required"`
-	// Approximate user location used to localize web search results.
+	// Approximate location used to localize search results, if provided.
 	Location AgentToolWebSearchLocation `json:"location" api:"required"`
 	// The source used for web search results.
 	//
@@ -4143,7 +4150,7 @@ func (r *AgentToolWebSearch) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Approximate user location used to localize web search results.
+// Approximate location used to localize search results, if provided.
 type AgentToolWebSearchLocation struct {
 	// The city name.
 	City string `json:"city" api:"required"`
@@ -4460,7 +4467,9 @@ type AgentToolParamMcp struct {
 	Required param.Opt[bool] `json:"required,omitzero"`
 	// The MCP tools the agent may call. All server tools are allowed when omitted.
 	AllowedTools []string `json:"allowed_tools,omitzero"`
-	// Where outbound MCP HTTP connections originate.
+	// Selects where outbound MCP HTTP connections originate. Omitted or `service` uses
+	// the Managed Agents service network; `environment` uses the session's selected
+	// environment.
 	//
 	// Any of "service", "environment".
 	ConnectionOrigin string `json:"connection_origin,omitzero"`
@@ -4493,13 +4502,13 @@ func init() {
 type AgentToolParamWebSearch struct {
 	// Domains the search may include.
 	AllowedDomains []string `json:"allowed_domains,omitzero"`
-	// The amount of web search context made available to the model.
+	// The amount of search context made available to the model. Defaults to `medium`.
 	//
 	// Any of "low", "medium", "high".
 	ContextSize string `json:"context_size,omitzero"`
-	// Approximate user location used to localize web search results.
+	// Approximate location used to localize search results.
 	Location AgentToolParamWebSearchLocation `json:"location,omitzero"`
-	// The source used for web search results.
+	// The source used for web search results. Defaults to `live`.
 	//
 	// Any of "disabled", "cached", "live".
 	Mode string `json:"mode,omitzero"`
@@ -4527,7 +4536,7 @@ func init() {
 	)
 }
 
-// Approximate user location used to localize web search results.
+// Approximate location used to localize search results.
 type AgentToolParamWebSearchLocation struct {
 	// The city name.
 	City param.Opt[string] `json:"city,omitzero"`
@@ -4587,7 +4596,7 @@ func (r *AgentWaitForSubagentsCallItem) UnmarshalJSON(data []byte) error {
 type AgentWebSearchCallItem struct {
 	// The ID of the web search call.
 	ID string `json:"id" api:"required"`
-	// An action performed by the web search tool.
+	// The action performed by the web search tool.
 	Action WebSearchActionUnion `json:"action" api:"required"`
 	// The status of the web search call.
 	//
@@ -5015,9 +5024,10 @@ type EnvironmentParamOpenAIHosted struct {
 	CapabilityDirectories []string `json:"capability_directories,omitzero"`
 	// Environment variables made available to the agent.
 	Env map[string]string `json:"env,omitzero"`
-	// Network access for an OpenAI-hosted environment.
+	// Network access policy for the environment. Defaults to disabled for GA requests
+	// and enabled for alpha/beta requests.
 	Network EnvironmentParamOpenAIHostedNetwork `json:"network,omitzero"`
-	// Packages to install in an OpenAI-hosted environment.
+	// Packages to install in the environment. Defaults to empty package lists.
 	Packages EnvironmentParamOpenAIHostedPackages `json:"packages,omitzero"`
 	// The type of the object. Always `openai_hosted`.
 	//
@@ -5034,7 +5044,8 @@ func (r *EnvironmentParamOpenAIHosted) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Network access for an OpenAI-hosted environment.
+// Network access policy for the environment. Defaults to disabled for GA requests
+// and enabled for alpha/beta requests.
 //
 // The property Access is required.
 type EnvironmentParamOpenAIHostedNetwork struct {
@@ -5061,7 +5072,7 @@ func init() {
 	)
 }
 
-// Packages to install in an OpenAI-hosted environment.
+// Packages to install in the environment. Defaults to empty package lists.
 type EnvironmentParamOpenAIHostedPackages struct {
 	// npm packages to install globally. Defaults to an empty list.
 	Npm []string `json:"npm,omitzero"`
@@ -6503,7 +6514,7 @@ type PersistedAgentToolWebSearch struct {
 	//
 	// Any of "low", "medium", "high".
 	ContextSize string `json:"context_size" api:"required"`
-	// Approximate user location used to localize web search results.
+	// Approximate location used to localize search results, if provided.
 	Location PersistedAgentToolWebSearchLocation `json:"location" api:"required"`
 	// The source used for web search results.
 	//
@@ -6529,7 +6540,7 @@ func (r *PersistedAgentToolWebSearch) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Approximate user location used to localize web search results.
+// Approximate location used to localize search results, if provided.
 type PersistedAgentToolWebSearchLocation struct {
 	// The city name.
 	City string `json:"city" api:"required"`
@@ -6846,7 +6857,7 @@ type PersistedAgentToolParamMcp struct {
 	Required param.Opt[bool] `json:"required,omitzero"`
 	// The MCP tools the agent may call. All server tools are allowed when omitted.
 	AllowedTools []string `json:"allowed_tools,omitzero"`
-	// Where outbound MCP HTTP connections originate.
+	// Selects where outbound MCP HTTP connections originate.
 	//
 	// Any of "service", "environment".
 	ConnectionOrigin string `json:"connection_origin,omitzero"`
@@ -6879,13 +6890,13 @@ func init() {
 type PersistedAgentToolParamWebSearch struct {
 	// Domains the search may include.
 	AllowedDomains []string `json:"allowed_domains,omitzero"`
-	// The amount of web search context made available to the model.
+	// The amount of search context made available to the model. Defaults to `medium`.
 	//
 	// Any of "low", "medium", "high".
 	ContextSize string `json:"context_size,omitzero"`
-	// Approximate user location used to localize web search results.
+	// Approximate location used to localize search results.
 	Location PersistedAgentToolParamWebSearchLocation `json:"location,omitzero"`
-	// The source used for web search results.
+	// The source used for web search results. Defaults to `live`.
 	//
 	// Any of "disabled", "cached", "live".
 	Mode string `json:"mode,omitzero"`
@@ -6913,7 +6924,7 @@ func init() {
 	)
 }
 
-// Approximate user location used to localize web search results.
+// Approximate location used to localize search results.
 type PersistedAgentToolParamWebSearchLocation struct {
 	// The city name.
 	City param.Opt[string] `json:"city,omitzero"`
@@ -7839,17 +7850,19 @@ type BetaAgentNewParams struct {
 	// Up to 16 string key-value pairs, with keys up to 64 and values up to 512
 	// characters. Omission or null defaults to an empty map.
 	Metadata map[string]string `json:"metadata,omitzero"`
-	// The service tier used for model requests.
+	// The service tier used for model requests. Defaults to `auto`.
 	//
 	// Any of "auto", "default", "flex", "priority", "fast".
 	ServiceTier BetaAgentNewParamsServiceTier `json:"service_tier,omitzero"`
 	// Tools available to the agent. Defaults to an empty list.
 	Tools []PersistedAgentToolParamUnion `json:"tools,omitzero"`
-	// Explicit configuration for creating and coordinating subagents.
+	// Configuration for creating and coordinating subagents. Subagent tools are
+	// disabled by default.
 	MultiAgent MultiAgentConfigParam `json:"multi_agent,omitzero"`
-	// Reasoning configuration for the agent.
+	// Configuration for model reasoning. Omission uses the model's default effort.
 	Reasoning AgentReasoningParam `json:"reasoning,omitzero"`
-	// Configuration for text generated by the agent.
+	// Configuration for generated text. Defaults to the `text` format and medium
+	// verbosity.
 	Text AgentTextParam `json:"text,omitzero"`
 	paramObj
 }
@@ -7862,7 +7875,7 @@ func (r *BetaAgentNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The service tier used for model requests.
+// The service tier used for model requests. Defaults to `auto`.
 type BetaAgentNewParamsServiceTier string
 
 const (
@@ -7891,9 +7904,10 @@ type BetaAgentUpdateParams struct {
 	ServiceTier BetaAgentUpdateParamsServiceTier `json:"service_tier,omitzero"`
 	// Tools available to the agent.
 	Tools []PersistedAgentToolParamUnion `json:"tools,omitzero"`
-	// Explicit configuration for creating and coordinating subagents.
+	// Configuration for creating and coordinating subagents.
 	MultiAgent MultiAgentConfigParam `json:"multi_agent,omitzero"`
-	// Reasoning configuration for the agent.
+	// Configuration for model reasoning. Omit to keep the current settings; pass
+	// `null` to reset to the model's default effort.
 	Reasoning AgentReasoningParam `json:"reasoning,omitzero"`
 	// Configuration for text generated by the agent.
 	Text AgentTextParam `json:"text,omitzero"`
