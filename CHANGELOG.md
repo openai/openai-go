@@ -5,11 +5,9 @@
 
 ### ⚠ BREAKING CHANGES
 
-* **api:** declare required local shell output call IDs ([#953](https://github.com/openai/openai-go/issues/953))
 
 ### Bug Fixes
 
-* **api:** declare required local shell output call IDs ([#953](https://github.com/openai/openai-go/issues/953)) ([2e06670](https://github.com/openai/openai-go/commit/2e06670d325bf07d95452e8aac672a9f5a8dd8f1))
 * **param:** emit extra fields in sorted key order ([#901](https://github.com/openai/openai-go/issues/901)) ([923e128](https://github.com/openai/openai-go/commit/923e128f47c407f1e15e8aa58692f261eff991b9))
 
 
