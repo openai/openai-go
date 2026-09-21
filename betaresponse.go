@@ -31203,9 +31203,12 @@ type BetaToolImageGeneration struct {
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background"`
 	// Control how much effort the model will exert to match the style and features,
-	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1` and `gpt-image-1.5` and later models, unsupported for
-	// `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
+	// especially facial features, of input images. Supported models accept `high` and
+	// `low`, except `gpt-image-1-mini`, which accepts only `low`. Defaults to `low` on
+	// models that support this parameter. Omit this parameter for `gpt-image-2`,
+	// `gpt-image-2-2026-04-21`, and other models that do not support it. See the
+	// [image input fidelity guide](https://developers.openai.com/api/docs/guides/image-generation#image-input-fidelity)
+	// for model-specific guidance.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity" api:"nullable"`
@@ -31248,9 +31251,7 @@ type BetaToolImageGeneration struct {
 	// the maximum supported resolution is `3840x2160`. The requested size must also
 	// satisfy the model's current pixel and edge limits. The standard sizes
 	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
-	// `auto` is supported for models that allow automatic sizing. For `dall-e-2`, use
-	// one of `256x256`, `512x512`, or `1024x1024`. For `dall-e-3`, use one of
-	// `1024x1024`, `1792x1024`, or `1024x1792`.
+	// `auto` is supported for models that allow automatic sizing.
 	Size string `json:"size"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -32460,9 +32461,12 @@ type BetaToolImageGenerationParam struct {
 	// to 3.
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
 	// Control how much effort the model will exert to match the style and features,
-	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1` and `gpt-image-1.5` and later models, unsupported for
-	// `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
+	// especially facial features, of input images. Supported models accept `high` and
+	// `low`, except `gpt-image-1-mini`, which accepts only `low`. Defaults to `low` on
+	// models that support this parameter. Omit this parameter for `gpt-image-2`,
+	// `gpt-image-2-2026-04-21`, and other models that do not support it. See the
+	// [image input fidelity guide](https://developers.openai.com/api/docs/guides/image-generation#image-input-fidelity)
+	// for model-specific guidance.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,omitzero"`
@@ -32516,9 +32520,7 @@ type BetaToolImageGenerationParam struct {
 	// the maximum supported resolution is `3840x2160`. The requested size must also
 	// satisfy the model's current pixel and edge limits. The standard sizes
 	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
-	// `auto` is supported for models that allow automatic sizing. For `dall-e-2`, use
-	// one of `256x256`, `512x512`, or `1024x1024`. For `dall-e-3`, use one of
-	// `1024x1024`, `1792x1024`, or `1024x1792`.
+	// `auto` is supported for models that allow automatic sizing.
 	Size string `json:"size,omitzero"`
 	// The type of the image generation tool. Always `image_generation`.
 	//

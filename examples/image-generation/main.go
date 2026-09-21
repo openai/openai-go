@@ -19,28 +19,11 @@ func main() {
 	println(prompt)
 	println()
 
-	// Image URL
-
+	// GPT Image returns base64-encoded image data by default.
 	image, err := client.Images.Generate(ctx, openai.ImageGenerateParams{
-		Prompt:         prompt,
-		Model:          openai.ImageModelDallE3,
-		ResponseFormat: openai.ImageGenerateParamsResponseFormatURL,
-		N:              openai.Int(1),
-	})
-	if err != nil {
-		panic(err)
-	}
-	println("Image URL:")
-	println(image.Data[0].URL)
-	println()
-
-	// Base64
-
-	image, err = client.Images.Generate(ctx, openai.ImageGenerateParams{
-		Prompt:         prompt,
-		Model:          openai.ImageModelDallE3,
-		ResponseFormat: openai.ImageGenerateParamsResponseFormatB64JSON,
-		N:              openai.Int(1),
+		Prompt: prompt,
+		Model:  openai.ImageModelGPTImage1,
+		N:      openai.Int(1),
 	})
 	if err != nil {
 		panic(err)
