@@ -45,7 +45,8 @@ func NewAudioTranscriptionService(opts ...option.RequestOption) (r AudioTranscri
 // Transcribes audio into the input language.
 //
 // Returns a transcription object in `json`, `diarized_json`, or `verbose_json`
-// format, or a stream of transcript events.
+// format, plain text in `text`, `srt`, or `vtt` format, or a stream of transcript
+// events. Supported formats depend on the model.
 func (r *AudioTranscriptionService) New(ctx context.Context, body AudioTranscriptionNewParams, opts ...option.RequestOption) (res *AudioTranscriptionNewResponseUnion, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -57,7 +58,8 @@ func (r *AudioTranscriptionService) New(ctx context.Context, body AudioTranscrip
 // Transcribes audio into the input language.
 //
 // Returns a transcription object in `json`, `diarized_json`, or `verbose_json`
-// format, or a stream of transcript events.
+// format, plain text in `text`, `srt`, or `vtt` format, or a stream of transcript
+// events. Supported formats depend on the model.
 func (r *AudioTranscriptionService) NewStreaming(ctx context.Context, body AudioTranscriptionNewParams, opts ...option.RequestOption) (stream *ssestream.Stream[TranscriptionStreamEventUnion]) {
 	var (
 		raw *http.Response
