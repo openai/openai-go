@@ -35529,8 +35529,9 @@ components:
               propertyName: type
           seed:
             type: integer
-            minimum: -9.223372036854776e18
-            maximum: 9.223372036854776e18
+            format: int64
+            minimum: -9223372036854775808
+            maximum: 9223372036854775807
             nullable: true
             deprecated: true
             description: |
