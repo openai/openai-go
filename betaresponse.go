@@ -26812,7 +26812,7 @@ func (r *BetaResponseOutputTextLogprobTopLogprobParam) UnmarshalJSON(data []byte
 
 // Emitted when an annotation is added to output text content.
 type BetaResponseOutputTextAnnotationAddedEvent struct {
-	// An annotation that applies to a span of output text.
+	// The annotation object being added. (See annotation schema for details.)
 	Annotation BetaResponseOutputTextAnnotationAddedEventAnnotationUnion `json:"annotation" api:"required"`
 	// The index of the annotation within the content part.
 	AnnotationIndex int64 `json:"annotation_index" api:"required"`
@@ -31193,9 +31193,12 @@ type BetaToolImageGeneration struct {
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background"`
 	// Control how much effort the model will exert to match the style and features,
-	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1` and `gpt-image-1.5` and later models, unsupported for
-	// `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
+	// especially facial features, of input images. Supported models accept `high` and
+	// `low`, except `gpt-image-1-mini`, which accepts only `low`. Defaults to `low` on
+	// models that support this parameter. Omit this parameter for `gpt-image-2`,
+	// `gpt-image-2-2026-04-21`, and other models that do not support it. See the
+	// [image input fidelity guide](https://developers.openai.com/api/docs/guides/image-generation#image-input-fidelity)
+	// for model-specific guidance.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity" api:"nullable"`
@@ -32450,9 +32453,12 @@ type BetaToolImageGenerationParam struct {
 	// to 3.
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
 	// Control how much effort the model will exert to match the style and features,
-	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1` and `gpt-image-1.5` and later models, unsupported for
-	// `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
+	// especially facial features, of input images. Supported models accept `high` and
+	// `low`, except `gpt-image-1-mini`, which accepts only `low`. Defaults to `low` on
+	// models that support this parameter. Omit this parameter for `gpt-image-2`,
+	// `gpt-image-2-2026-04-21`, and other models that do not support it. See the
+	// [image input fidelity guide](https://developers.openai.com/api/docs/guides/image-generation#image-input-fidelity)
+	// for model-specific guidance.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,omitzero"`
