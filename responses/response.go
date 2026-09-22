@@ -33904,6 +33904,7 @@ const (
 	ResponseCompactParamsModelGPTDaybreakBlueLatest            ResponseCompactParamsModel = "gpt-daybreak-blue-latest"
 	ResponseCompactParamsModelGPTDaybreakRedLatest             ResponseCompactParamsModel = "gpt-daybreak-red-latest"
 	ResponseCompactParamsModelGPT5_6Cyber                      ResponseCompactParamsModel = "gpt-5.6-cyber"
+	ResponseCompactParamsModelGPTRosalindResearch              ResponseCompactParamsModel = "gpt-rosalind-research"
 )
 
 // Only one field can be non-zero.
