@@ -4752,6 +4752,7 @@ const (
 	BetaResponseModelGPT5_1                           BetaResponseModel = "gpt-5.1"
 	BetaResponseModelGPT5_1_2025_11_13                BetaResponseModel = "gpt-5.1-2025-11-13"
 	BetaResponseModelGPT5_1Codex                      BetaResponseModel = "gpt-5.1-codex"
+	BetaResponseModelGPT5_1Mini                       BetaResponseModel = "gpt-5.1-mini"
 	BetaResponseModelGPT5_1ChatLatest                 BetaResponseModel = "gpt-5.1-chat-latest"
 	BetaResponseModelGPT5                             BetaResponseModel = "gpt-5"
 	BetaResponseModelGPT5Mini                         BetaResponseModel = "gpt-5-mini"
@@ -4817,7 +4818,6 @@ const (
 	BetaResponseModelGPT3_5Turbo1106                  BetaResponseModel = "gpt-3.5-turbo-1106"
 	BetaResponseModelGPT3_5Turbo0125                  BetaResponseModel = "gpt-3.5-turbo-0125"
 	BetaResponseModelGPT3_5Turbo16k0613               BetaResponseModel = "gpt-3.5-turbo-16k-0613"
-	BetaResponseModelGPT5_1Mini                       BetaResponseModel = "gpt-5.1-mini"
 	BetaResponseModelO1Pro                            BetaResponseModel = "o1-pro"
 	BetaResponseModelO1Pro2025_03_19                  BetaResponseModel = "o1-pro-2025-03-19"
 	BetaResponseModelO3Pro                            BetaResponseModel = "o3-pro"
@@ -26812,7 +26812,7 @@ func (r *BetaResponseOutputTextLogprobTopLogprobParam) UnmarshalJSON(data []byte
 
 // Emitted when an annotation is added to output text content.
 type BetaResponseOutputTextAnnotationAddedEvent struct {
-	// An annotation that applies to a span of output text.
+	// The annotation object being added. (See annotation schema for details.)
 	Annotation BetaResponseOutputTextAnnotationAddedEventAnnotationUnion `json:"annotation" api:"required"`
 	// The index of the annotation within the content part.
 	AnnotationIndex int64 `json:"annotation_index" api:"required"`
@@ -31202,10 +31202,9 @@ type BetaToolImageGeneration struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background"`
-	// Control how much effort the model will exert to match the style and features,
-	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1` and `gpt-image-1.5` and later models, unsupported for
-	// `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
+	// Controls fidelity to the original input image(s). This parameter is supported
+	// for GPT image models that support input fidelity. `gpt-image-2` and
+	// `gpt-image-2-2026-04-21` ignore this parameter.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity" api:"nullable"`
@@ -32459,10 +32458,9 @@ type BetaToolImageGenerationParam struct {
 	// Number of partial images to generate in streaming mode, from 0 (default value)
 	// to 3.
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
-	// Control how much effort the model will exert to match the style and features,
-	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1` and `gpt-image-1.5` and later models, unsupported for
-	// `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
+	// Controls fidelity to the original input image(s). This parameter is supported
+	// for GPT image models that support input fidelity. `gpt-image-2` and
+	// `gpt-image-2-2026-04-21` ignore this parameter.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,omitzero"`
@@ -33832,6 +33830,7 @@ const (
 	BetaResponseNewParamsModelGPT5_1                           BetaResponseNewParamsModel = "gpt-5.1"
 	BetaResponseNewParamsModelGPT5_1_2025_11_13                BetaResponseNewParamsModel = "gpt-5.1-2025-11-13"
 	BetaResponseNewParamsModelGPT5_1Codex                      BetaResponseNewParamsModel = "gpt-5.1-codex"
+	BetaResponseNewParamsModelGPT5_1Mini                       BetaResponseNewParamsModel = "gpt-5.1-mini"
 	BetaResponseNewParamsModelGPT5_1ChatLatest                 BetaResponseNewParamsModel = "gpt-5.1-chat-latest"
 	BetaResponseNewParamsModelGPT5                             BetaResponseNewParamsModel = "gpt-5"
 	BetaResponseNewParamsModelGPT5Mini                         BetaResponseNewParamsModel = "gpt-5-mini"
@@ -33897,7 +33896,6 @@ const (
 	BetaResponseNewParamsModelGPT3_5Turbo1106                  BetaResponseNewParamsModel = "gpt-3.5-turbo-1106"
 	BetaResponseNewParamsModelGPT3_5Turbo0125                  BetaResponseNewParamsModel = "gpt-3.5-turbo-0125"
 	BetaResponseNewParamsModelGPT3_5Turbo16k0613               BetaResponseNewParamsModel = "gpt-3.5-turbo-16k-0613"
-	BetaResponseNewParamsModelGPT5_1Mini                       BetaResponseNewParamsModel = "gpt-5.1-mini"
 	BetaResponseNewParamsModelO1Pro                            BetaResponseNewParamsModel = "o1-pro"
 	BetaResponseNewParamsModelO1Pro2025_03_19                  BetaResponseNewParamsModel = "o1-pro-2025-03-19"
 	BetaResponseNewParamsModelO3Pro                            BetaResponseNewParamsModel = "o3-pro"
@@ -34488,6 +34486,7 @@ const (
 	BetaResponseCompactParamsModelGPT5_1                           BetaResponseCompactParamsModel = "gpt-5.1"
 	BetaResponseCompactParamsModelGPT5_1_2025_11_13                BetaResponseCompactParamsModel = "gpt-5.1-2025-11-13"
 	BetaResponseCompactParamsModelGPT5_1Codex                      BetaResponseCompactParamsModel = "gpt-5.1-codex"
+	BetaResponseCompactParamsModelGPT5_1Mini                       BetaResponseCompactParamsModel = "gpt-5.1-mini"
 	BetaResponseCompactParamsModelGPT5_1ChatLatest                 BetaResponseCompactParamsModel = "gpt-5.1-chat-latest"
 	BetaResponseCompactParamsModelGPT5                             BetaResponseCompactParamsModel = "gpt-5"
 	BetaResponseCompactParamsModelGPT5Mini                         BetaResponseCompactParamsModel = "gpt-5-mini"
@@ -34553,7 +34552,6 @@ const (
 	BetaResponseCompactParamsModelGPT3_5Turbo1106                  BetaResponseCompactParamsModel = "gpt-3.5-turbo-1106"
 	BetaResponseCompactParamsModelGPT3_5Turbo0125                  BetaResponseCompactParamsModel = "gpt-3.5-turbo-0125"
 	BetaResponseCompactParamsModelGPT3_5Turbo16k0613               BetaResponseCompactParamsModel = "gpt-3.5-turbo-16k-0613"
-	BetaResponseCompactParamsModelGPT5_1Mini                       BetaResponseCompactParamsModel = "gpt-5.1-mini"
 	BetaResponseCompactParamsModelO1Pro                            BetaResponseCompactParamsModel = "o1-pro"
 	BetaResponseCompactParamsModelO1Pro2025_03_19                  BetaResponseCompactParamsModel = "o1-pro-2025-03-19"
 	BetaResponseCompactParamsModelO3Pro                            BetaResponseCompactParamsModel = "o3-pro"

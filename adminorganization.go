@@ -14,21 +14,21 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewAdminOrganizationService] method instead.
 type AdminOrganizationService struct {
-	Options         []option.RequestOption
-	ExternalStorage AdminOrganizationExternalStorageService
+	Options []option.RequestOption
 	// List user actions and configuration changes within this organization.
-	AuditLogs     AdminOrganizationAuditLogService
-	AdminAPIKeys  AdminOrganizationAdminAPIKeyService
-	Usage         AdminOrganizationUsageService
-	Invites       AdminOrganizationInviteService
-	Users         AdminOrganizationUserService
-	Groups        AdminOrganizationGroupService
-	Roles         AdminOrganizationRoleService
-	DataRetention AdminOrganizationDataRetentionService
-	SpendLimit    AdminOrganizationSpendLimitService
-	SpendAlerts   AdminOrganizationSpendAlertService
-	Certificates  AdminOrganizationCertificateService
-	Projects      AdminOrganizationProjectService
+	AuditLogs       AdminOrganizationAuditLogService
+	AdminAPIKeys    AdminOrganizationAdminAPIKeyService
+	Usage           AdminOrganizationUsageService
+	Invites         AdminOrganizationInviteService
+	Users           AdminOrganizationUserService
+	Groups          AdminOrganizationGroupService
+	Roles           AdminOrganizationRoleService
+	DataRetention   AdminOrganizationDataRetentionService
+	ExternalStorage AdminOrganizationExternalStorageService
+	SpendLimit      AdminOrganizationSpendLimitService
+	SpendAlerts     AdminOrganizationSpendAlertService
+	Certificates    AdminOrganizationCertificateService
+	Projects        AdminOrganizationProjectService
 }
 
 // NewAdminOrganizationService generates a new service that applies the given
@@ -37,7 +37,6 @@ type AdminOrganizationService struct {
 func NewAdminOrganizationService(opts ...option.RequestOption) (r AdminOrganizationService) {
 	r = AdminOrganizationService{}
 	r.Options = requestconfig.InheritedOptions(opts...)
-	r.ExternalStorage = NewAdminOrganizationExternalStorageService(opts...)
 	r.AuditLogs = NewAdminOrganizationAuditLogService(opts...)
 	r.AdminAPIKeys = NewAdminOrganizationAdminAPIKeyService(opts...)
 	r.Usage = NewAdminOrganizationUsageService(opts...)
@@ -46,6 +45,7 @@ func NewAdminOrganizationService(opts ...option.RequestOption) (r AdminOrganizat
 	r.Groups = NewAdminOrganizationGroupService(opts...)
 	r.Roles = NewAdminOrganizationRoleService(opts...)
 	r.DataRetention = NewAdminOrganizationDataRetentionService(opts...)
+	r.ExternalStorage = NewAdminOrganizationExternalStorageService(opts...)
 	r.SpendLimit = NewAdminOrganizationSpendLimitService(opts...)
 	r.SpendAlerts = NewAdminOrganizationSpendAlertService(opts...)
 	r.Certificates = NewAdminOrganizationCertificateService(opts...)

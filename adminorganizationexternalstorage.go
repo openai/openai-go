@@ -85,7 +85,10 @@ func (r *AdminOrganizationExternalStorageService) ListAutoPaging(ctx context.Con
 	return pagination.NewCursorPageAutoPager(r.List(ctx, query, opts...))
 }
 
-// Soft-delete one customer-managed external storage configuration.
+// Disconnect a customer-managed external storage configuration. Removing the
+// project's last configuration restores organization-default retention if
+// customer-managed retention was active. Repeating a deletion also completes any
+// interrupted retention update. Cloud storage is unchanged.
 func (r *AdminOrganizationExternalStorageService) Delete(ctx context.Context, externalStorageID string, opts ...option.RequestOption) (res *ExternalStorageDeleted, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
