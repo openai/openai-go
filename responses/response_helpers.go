@@ -23,9 +23,9 @@ func responseOutputText(r Response) string {
 // every item in its original order.
 //
 // Use ToInput when manually managing stateless conversation history. It preserves
-// reasoning items together with their following messages, including encrypted
-// content and unknown fields. Append new input to the returned value and start a
-// new request without PreviousResponseID.
+// every output item in original order, including reasoning and tool items,
+// encrypted content, assistant phase, and unknown fields. Append new input to the
+// returned value and start a new request without PreviousResponseID.
 //
 // ToInput is intended for a completed response received from the API. For a
 // streamed response, use the completed response or output-item-done events rather

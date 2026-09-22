@@ -117,12 +117,14 @@ fmt.Println("Second response:", response.OutputText())
 
 For ordinary multi-turn conversations, prefer `PreviousResponseID` or a
 Conversation. If you manage a stateless history yourself, preserve every returned
-output item in its original order. Do not keep only `message` items: a message can
-require the immediately preceding `reasoning` item.
+output item in its original order. Do not filter the response down to `message`
+items: complete history can include reasoning and tool items, and assistant
+messages can carry `phase` metadata that must be replayed.
 
-`Response.ToInput()` copies every item from a completed response, including
-encrypted reasoning content and unknown fields. Append your new user or tool input
-to the returned value, and start a new request without `PreviousResponseID`.
+`Response.ToInput()` copies every item from a completed response in original
+order, including tool items, encrypted reasoning content, assistant phase, and
+unknown fields. Append your new user or tool input to the returned value, and start
+a new request without `PreviousResponseID`.
 
 ```go
 history := responses.ResponseInputParam{
@@ -141,7 +143,7 @@ if err != nil {
 	panic(err)
 }
 
-// Keep every output item; this retains a reasoning item with its message.
+// Keep every output item, including reasoning, tool items, and assistant phase.
 history = append(history, response.ToInput()...)
 history = append(history, responses.ResponseInputItemParamOfMessage(
 	"Add type hints.",

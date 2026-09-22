@@ -71,8 +71,8 @@ func TestResponseOutputTextUsesCurrentFields(t *testing.T) {
 	}
 }
 
-func TestResponseToInputPreservesOutputItemsInOrder(t *testing.T) {
-	const body = `{"output":[{"id":"rs_123","type":"reasoning","summary":[{"type":"summary_text","text":"reasoned"}],"encrypted_content":"encrypted-reasoning","status":"completed","future_reasoning_field":{"version":1}},{"id":"msg_123","type":"message","role":"assistant","content":[{"type":"output_text","text":"hello"}],"status":"completed","future_message_field":true}]}`
+func TestResponseToInputPreservesCompleteOutputForFollowupRequest(t *testing.T) {
+	const body = `{"output":[{"id":"rs_123","type":"reasoning","summary":[{"type":"summary_text","text":"reasoned"}],"encrypted_content":"encrypted-reasoning","status":"completed","future_reasoning_field":{"version":1}},{"id":"msg_123","type":"message","role":"assistant","phase":"commentary","content":[{"type":"output_text","text":"I'll check that."}],"status":"completed","future_message_field":true},{"id":"fc_123","type":"function_call","call_id":"call_123","name":"lookup","arguments":"{\\"city\\":\\"Paris\\"}","status":"completed","future_tool_field":{"version":2}}]}`
 
 	var response responses.Response
 	if err := json.Unmarshal([]byte(body), &response); err != nil {
@@ -80,16 +80,20 @@ func TestResponseToInputPreservesOutputItemsInOrder(t *testing.T) {
 	}
 
 	input := response.ToInput()
-	if len(input) != 2 {
-		t.Fatalf("ToInput() returned %d items, want 2", len(input))
+	if len(input) != 3 {
+		t.Fatalf("ToInput() returned %d items, want 3", len(input))
 	}
 	for i, item := range input {
 		if _, ok := item.Overrides(); !ok {
 			t.Fatalf("ToInput()[%d] was not preserved as a raw API item", i)
 		}
 	}
+
+	toolOutput := responses.ResponseInputItemParamOfFunctionCallOutput(`{"temperature_c":20}`)
+	toolOutput.OfFunctionCallOutput.CallID = openai.String("call_123")
+	input = append(input, toolOutput)
 	input = append(input, responses.ResponseInputItemParamOfMessage(
-		"next instruction",
+		"Use the tool result.",
 		responses.EasyInputMessageRoleUser,
 	))
 
@@ -107,14 +111,26 @@ func TestResponseToInputPreservesOutputItemsInOrder(t *testing.T) {
 	if err := json.Unmarshal(data, &request); err != nil {
 		t.Fatal(err)
 	}
+
 	items := request.Input
-	if len(items) != 3 || string(items[0]["type"]) != `"reasoning"` || string(items[1]["type"]) != `"message"` || string(items[2]["role"]) != `"user"` || string(items[2]["content"]) != `"next instruction"` {
-		t.Fatalf("ToInput() changed item ordering: %s", data)
+	if len(items) != 5 ||
+		string(items[0]["type"]) != `"reasoning"` ||
+		string(items[1]["type"]) != `"message"` ||
+		string(items[1]["phase"]) != `"commentary"` ||
+		string(items[2]["type"]) != `"function_call"` ||
+		string(items[2]["call_id"]) != `"call_123"` ||
+		string(items[3]["type"]) != `"function_call_output"` ||
+		string(items[3]["call_id"]) != `"call_123"` ||
+		string(items[4]["role"]) != `"user"` ||
+		string(items[4]["content"]) != `"Use the tool result."` {
+		t.Fatalf("ToInput() changed complete replay ordering: %s", data)
 	}
 	if string(items[0]["encrypted_content"]) != `"encrypted-reasoning"` {
 		t.Fatalf("ToInput() dropped encrypted reasoning content: %s", data)
 	}
-	if string(items[0]["future_reasoning_field"]) != `{"version":1}` || string(items[1]["future_message_field"]) != "true" {
-		t.Fatalf("ToInput() dropped unknown fields: %s", data)
+	if string(items[0]["future_reasoning_field"]) != `{"version":1}` ||
+		string(items[1]["future_message_field"]) != "true" ||
+		string(items[2]["future_tool_field"]) != `{"version":2}` {
+		t.Fatalf("ToInput() dropped output fields: %s", data)
 	}
 }
