@@ -66,6 +66,7 @@ const (
 	ChatModelGPT5_1                           ChatModel = "gpt-5.1"
 	ChatModelGPT5_1_2025_11_13                ChatModel = "gpt-5.1-2025-11-13"
 	ChatModelGPT5_1Codex                      ChatModel = "gpt-5.1-codex"
+	ChatModelGPT5_1Mini                       ChatModel = "gpt-5.1-mini"
 	ChatModelGPT5_1ChatLatest                 ChatModel = "gpt-5.1-chat-latest"
 	ChatModelGPT5                             ChatModel = "gpt-5"
 	ChatModelGPT5Mini                         ChatModel = "gpt-5-mini"
@@ -131,7 +132,6 @@ const (
 	ChatModelGPT3_5Turbo1106                  ChatModel = "gpt-3.5-turbo-1106"
 	ChatModelGPT3_5Turbo0125                  ChatModel = "gpt-3.5-turbo-0125"
 	ChatModelGPT3_5Turbo16k0613               ChatModel = "gpt-3.5-turbo-16k-0613"
-	ChatModelGPT5_1Mini                       ChatModel = "gpt-5.1-mini"
 )
 
 // A filter used to compare a specified attribute key to a given value using a
