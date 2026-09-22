@@ -188,6 +188,7 @@ type FineTuningJobSucceeded string                           // Always "fine_tun
 type Function string                                         // Always "function"
 type FunctionCall string                                     // Always "function_call"
 type FunctionCallOutput string                               // Always "function_call_output"
+type Gcp string                                              // Always "gcp"
 type Grammar string                                          // Always "grammar"
 type Group string                                            // Always "group"
 type GroupDeleted string                                     // Always "group.deleted"
@@ -815,6 +816,7 @@ func (c FineTuningJobSucceeded) Default() FineTuningJobSucceeded { return "fine_
 func (c Function) Default() Function                             { return "function" }
 func (c FunctionCall) Default() FunctionCall                     { return "function_call" }
 func (c FunctionCallOutput) Default() FunctionCallOutput         { return "function_call_output" }
+func (c Gcp) Default() Gcp                                       { return "gcp" }
 func (c Grammar) Default() Grammar                               { return "grammar" }
 func (c Group) Default() Group                                   { return "group" }
 func (c GroupDeleted) Default() GroupDeleted                     { return "group.deleted" }
@@ -1610,6 +1612,7 @@ func (c FineTuningJobSucceeded) MarshalJSON() ([]byte, error)              { ret
 func (c Function) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c FunctionCall) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c FunctionCallOutput) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c Gcp) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
 func (c Grammar) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c Group) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c GroupDeleted) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
