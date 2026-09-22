@@ -5003,7 +5003,8 @@ func (r *EnvironmentParamNone) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// An OpenAI-hosted environment, optionally based on a reusable template.
+// An existing OpenAI-hosted environment or new inline/template-based hosted
+// configuration.
 //
 // The property Type is required.
 type EnvironmentParamOpenAIHosted struct {

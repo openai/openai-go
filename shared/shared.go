@@ -40,6 +40,7 @@ const (
 	AllModelsGPTDaybreakBlueLatest        AllModels = "gpt-daybreak-blue-latest"
 	AllModelsGPTDaybreakRedLatest         AllModels = "gpt-daybreak-red-latest"
 	AllModelsGPT5_6Cyber                  AllModels = "gpt-5.6-cyber"
+	AllModelsGPTRosalindResearch          AllModels = "gpt-rosalind-research"
 	// Or some ...[ChatModel]
 )
 
@@ -1370,5 +1371,6 @@ const (
 	ResponsesModelGPTDaybreakBlueLatest        ResponsesModel = "gpt-daybreak-blue-latest"
 	ResponsesModelGPTDaybreakRedLatest         ResponsesModel = "gpt-daybreak-red-latest"
 	ResponsesModelGPT5_6Cyber                  ResponsesModel = "gpt-5.6-cyber"
+	ResponsesModelGPTRosalindResearch          ResponsesModel = "gpt-rosalind-research"
 	// Or some ...[ChatModel]
 )

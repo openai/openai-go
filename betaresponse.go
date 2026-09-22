@@ -4839,6 +4839,7 @@ const (
 	BetaResponseModelGPTDaybreakBlueLatest            BetaResponseModel = "gpt-daybreak-blue-latest"
 	BetaResponseModelGPTDaybreakRedLatest             BetaResponseModel = "gpt-daybreak-red-latest"
 	BetaResponseModelGPT5_6Cyber                      BetaResponseModel = "gpt-5.6-cyber"
+	BetaResponseModelGPTRosalindResearch              BetaResponseModel = "gpt-rosalind-research"
 )
 
 // BetaResponseToolChoiceUnion contains all possible properties and values from
@@ -33909,6 +33910,7 @@ const (
 	BetaResponseNewParamsModelGPTDaybreakBlueLatest            BetaResponseNewParamsModel = "gpt-daybreak-blue-latest"
 	BetaResponseNewParamsModelGPTDaybreakRedLatest             BetaResponseNewParamsModel = "gpt-daybreak-red-latest"
 	BetaResponseNewParamsModelGPT5_6Cyber                      BetaResponseNewParamsModel = "gpt-5.6-cyber"
+	BetaResponseNewParamsModelGPTRosalindResearch              BetaResponseNewParamsModel = "gpt-rosalind-research"
 )
 
 // Configuration for running moderation on the input and output of this response.
@@ -34567,6 +34569,7 @@ const (
 	BetaResponseCompactParamsModelGPTDaybreakBlueLatest            BetaResponseCompactParamsModel = "gpt-daybreak-blue-latest"
 	BetaResponseCompactParamsModelGPTDaybreakRedLatest             BetaResponseCompactParamsModel = "gpt-daybreak-red-latest"
 	BetaResponseCompactParamsModelGPT5_6Cyber                      BetaResponseCompactParamsModel = "gpt-5.6-cyber"
+	BetaResponseCompactParamsModelGPTRosalindResearch              BetaResponseCompactParamsModel = "gpt-rosalind-research"
 )
 
 // Only one field can be non-zero.
