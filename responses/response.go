@@ -21367,7 +21367,7 @@ func (r *ResponseOutputTextLogprobTopLogprobParam) UnmarshalJSON(data []byte) er
 
 // Emitted when an annotation is added to output text content.
 type ResponseOutputTextAnnotationAddedEvent struct {
-	// An annotation that applies to a span of output text.
+	// The annotation object being added. (See annotation schema for details.)
 	Annotation ResponseOutputTextAnnotationAddedEventAnnotationUnion `json:"annotation" api:"required"`
 	// The index of the annotation within the content part.
 	AnnotationIndex int64 `json:"annotation_index" api:"required"`
@@ -29630,7 +29630,7 @@ func (r *ResponsesServerEventResponseMcpListToolsInWsProgress) UnmarshalJSON(dat
 
 // Emitted when an annotation is added to output text content.
 type ResponsesServerEventResponseOutputTextAnnotationWsAdded struct {
-	// An annotation that applies to a span of output text.
+	// The annotation object being added. (See annotation schema for details.)
 	Annotation ResponseOutputTextAnnotationAddedEventAnnotationUnion `json:"annotation" api:"required"`
 	// The index of the annotation within the content part.
 	AnnotationIndex int64 `json:"annotation_index" api:"required"`
@@ -30767,10 +30767,9 @@ type ToolImageGeneration struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background"`
-	// Control how much effort the model will exert to match the style and features,
-	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1` and `gpt-image-1.5` and later models, unsupported for
-	// `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
+	// Controls fidelity to the original input image(s). This parameter is supported
+	// for GPT image models that support input fidelity. `gpt-image-2` and
+	// `gpt-image-2-2026-04-21` ignore this parameter.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity" api:"nullable"`
@@ -32023,10 +32022,9 @@ type ToolImageGenerationParam struct {
 	// Number of partial images to generate in streaming mode, from 0 (default value)
 	// to 3.
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
-	// Control how much effort the model will exert to match the style and features,
-	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1` and `gpt-image-1.5` and later models, unsupported for
-	// `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
+	// Controls fidelity to the original input image(s). This parameter is supported
+	// for GPT image models that support input fidelity. `gpt-image-2` and
+	// `gpt-image-2-2026-04-21` ignore this parameter.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,omitzero"`
@@ -33819,6 +33817,7 @@ const (
 	ResponseCompactParamsModelGPT5_1                           ResponseCompactParamsModel = "gpt-5.1"
 	ResponseCompactParamsModelGPT5_1_2025_11_13                ResponseCompactParamsModel = "gpt-5.1-2025-11-13"
 	ResponseCompactParamsModelGPT5_1Codex                      ResponseCompactParamsModel = "gpt-5.1-codex"
+	ResponseCompactParamsModelGPT5_1Mini                       ResponseCompactParamsModel = "gpt-5.1-mini"
 	ResponseCompactParamsModelGPT5_1ChatLatest                 ResponseCompactParamsModel = "gpt-5.1-chat-latest"
 	ResponseCompactParamsModelGPT5                             ResponseCompactParamsModel = "gpt-5"
 	ResponseCompactParamsModelGPT5Mini                         ResponseCompactParamsModel = "gpt-5-mini"
@@ -33884,7 +33883,6 @@ const (
 	ResponseCompactParamsModelGPT3_5Turbo1106                  ResponseCompactParamsModel = "gpt-3.5-turbo-1106"
 	ResponseCompactParamsModelGPT3_5Turbo0125                  ResponseCompactParamsModel = "gpt-3.5-turbo-0125"
 	ResponseCompactParamsModelGPT3_5Turbo16k0613               ResponseCompactParamsModel = "gpt-3.5-turbo-16k-0613"
-	ResponseCompactParamsModelGPT5_1Mini                       ResponseCompactParamsModel = "gpt-5.1-mini"
 	ResponseCompactParamsModelO1Pro                            ResponseCompactParamsModel = "o1-pro"
 	ResponseCompactParamsModelO1Pro2025_03_19                  ResponseCompactParamsModel = "o1-pro-2025-03-19"
 	ResponseCompactParamsModelO3Pro                            ResponseCompactParamsModel = "o3-pro"
