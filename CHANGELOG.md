@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.65.0](https://github.com/openai/openai-go/compare/v3.64.3...v3.65.0) (2026-09-22)
+
+
+### Features
+
+* **api:** add GPT-6 Sol and Luna model identifiers ([#960](https://github.com/openai/openai-go/issues/960)) ([6ac30dc](https://github.com/openai/openai-go/commit/6ac30dcba3ba94faad3226e32f1b441139128d39))
+
 ## [3.64.3](https://github.com/openai/openai-go/compare/v3.64.2...v3.64.3) (2026-09-22)
 
 
