@@ -72,7 +72,7 @@ func TestResponseOutputTextUsesCurrentFields(t *testing.T) {
 }
 
 func TestResponseToInputPreservesCompleteOutputForFollowupRequest(t *testing.T) {
-	const body = `{"output":[{"id":"rs_123","type":"reasoning","summary":[{"type":"summary_text","text":"reasoned"}],"encrypted_content":"encrypted-reasoning","status":"completed","future_reasoning_field":{"version":1}},{"id":"msg_123","type":"message","role":"assistant","phase":"commentary","content":[{"type":"output_text","text":"I'll check that."}],"status":"completed","future_message_field":true},{"id":"fc_123","type":"function_call","call_id":"call_123","name":"lookup","arguments":"{\\"city\\":\\"Paris\\"}","status":"completed","future_tool_field":{"version":2}}]}`
+	const body = `{"output":[{"id":"rs_123","type":"reasoning","summary":[{"type":"summary_text","text":"reasoned"}],"encrypted_content":"encrypted-reasoning","status":"completed","future_reasoning_field":{"version":1}},{"id":"msg_123","type":"message","role":"assistant","phase":"commentary","content":[{"type":"output_text","text":"I'll check that."}],"status":"completed","future_message_field":true},{"id":"fc_123","type":"function_call","call_id":"call_123","name":"lookup","arguments":"{\"city\":\"Paris\"}","status":"completed","future_tool_field":{"version":2}}]}`
 
 	var response responses.Response
 	if err := json.Unmarshal([]byte(body), &response); err != nil {
