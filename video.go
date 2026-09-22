@@ -296,12 +296,16 @@ type VideoCreateError struct {
 	// A machine-readable error code that was returned.
 	Code string `json:"code" api:"required"`
 	// A human-readable description of the error that was returned.
-	Message      string                       `json:"message" api:"required"`
+	Message string `json:"message" api:"required"`
+	// The Retry-After and Retry-After-Ms headers returned with the original error, if
+	// any.
+	Headers      map[string]string            `json:"headers"`
 	Misalignment VideoCreateErrorMisalignment `json:"misalignment"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Code         respjson.Field
 		Message      respjson.Field
+		Headers      respjson.Field
 		Misalignment respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
