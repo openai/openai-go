@@ -819,12 +819,18 @@ type LiveCallIncomingWebhookEventData struct {
 	// names, values, repeated entries, and order are preserved. Treat these values as
 	// untrusted call metadata.
 	SipHeaders []LiveCallIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
+	// Media protection selected on the SIP leg during SDP negotiation. `srtp`
+	// indicates SRTP; `rtp` indicates unencrypted RTP. Omitted when unknown. This does
+	// not describe SIP signaling security or confirm that media has flowed. Clients
+	// should handle unrecognized values as unknown.
+	SipMediaSecurity string `json:"sip_media_security"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		SessionID   respjson.Field
-		SipHeaders  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		SessionID        respjson.Field
+		SipHeaders       respjson.Field
+		SipMediaSecurity respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 
@@ -907,13 +913,19 @@ type LiveTransportIncomingWebhookEventData struct {
 	SipHeaders []LiveTransportIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
 	// The incoming transport type. Always `sip`.
 	Type constant.Sip `json:"type" default:"sip"`
+	// Media protection selected on the SIP leg during SDP negotiation. `srtp`
+	// indicates SRTP; `rtp` indicates unencrypted RTP. Omitted when unknown. This does
+	// not describe SIP signaling security or confirm that media has flowed. Clients
+	// should handle unrecognized values as unknown.
+	SipMediaSecurity string `json:"sip_media_security"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		SessionID   respjson.Field
-		SipHeaders  respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		SessionID        respjson.Field
+		SipHeaders       respjson.Field
+		Type             respjson.Field
+		SipMediaSecurity respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 
@@ -995,12 +1007,18 @@ type RealtimeCallIncomingWebhookEventData struct {
 	// names, values, repeated entries, and order are preserved. Treat these values as
 	// untrusted call metadata.
 	SipHeaders []RealtimeCallIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
+	// Media protection selected on the SIP leg during SDP negotiation. `srtp`
+	// indicates SRTP; `rtp` indicates unencrypted RTP. Omitted when unknown. This does
+	// not describe SIP signaling security or confirm that media has flowed. Clients
+	// should handle unrecognized values as unknown.
+	SipMediaSecurity string `json:"sip_media_security"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		CallID      respjson.Field
-		SipHeaders  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		CallID           respjson.Field
+		SipHeaders       respjson.Field
+		SipMediaSecurity respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 
@@ -1312,6 +1330,52 @@ func (r *SafetyAlertCreatedWebhookEventData) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Sent when a deactivation is issued for a safety identifier in your organization.
+type SafetyDeactivationIssuedWebhookEvent struct {
+	// The unique ID of the webhook event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp in seconds when the event was created.
+	CreatedAt int64                                    `json:"created_at" api:"required" format:"unixtime"`
+	Data      SafetyDeactivationIssuedWebhookEventData `json:"data" api:"required"`
+	// Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// Always `safety.deactivation_issued`.
+	Type constant.SafetyDeactivationIssued `json:"type" default:"safety.deactivation_issued"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SafetyDeactivationIssuedWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *SafetyDeactivationIssuedWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type SafetyDeactivationIssuedWebhookEventData struct {
+	// The safety case ID to pass to `GET /v1/safety/cases/{id}`.
+	ID string `json:"id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SafetyDeactivationIssuedWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *SafetyDeactivationIssuedWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Sent when an approved safety alert is available for an enterprise workspace.
 type SafetyOrgAlertCreatedWebhookEvent struct {
 	// The unique ID of the webhook event.
@@ -1358,6 +1422,52 @@ func (r *SafetyOrgAlertCreatedWebhookEventData) UnmarshalJSON(data []byte) error
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Sent when a warning is issued for a safety identifier in your organization.
+type SafetyWarningIssuedWebhookEvent struct {
+	// The unique ID of the webhook event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp in seconds when the event was created.
+	CreatedAt int64                               `json:"created_at" api:"required" format:"unixtime"`
+	Data      SafetyWarningIssuedWebhookEventData `json:"data" api:"required"`
+	// Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// Always `safety.warning_issued`.
+	Type constant.SafetyWarningIssued `json:"type" default:"safety.warning_issued"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SafetyWarningIssuedWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *SafetyWarningIssuedWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type SafetyWarningIssuedWebhookEventData struct {
+	// The safety case ID to pass to `GET /v1/safety/cases/{id}`.
+	ID string `json:"id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SafetyWarningIssuedWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *SafetyWarningIssuedWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // UnwrapWebhookEventUnion contains all possible properties and values from
 // [BatchCancelledWebhookEvent], [BatchCompletedWebhookEvent],
 // [BatchExpiredWebhookEvent], [BatchFailedWebhookEvent],
@@ -1368,7 +1478,8 @@ func (r *SafetyOrgAlertCreatedWebhookEventData) UnmarshalJSON(data []byte) error
 // [RealtimeCallIncomingWebhookEvent], [ResponseCancelledWebhookEvent],
 // [ResponseCompletedWebhookEvent], [ResponseFailedWebhookEvent],
 // [ResponseIncompleteWebhookEvent], [SafetyAlertCreatedWebhookEvent],
-// [SafetyOrgAlertCreatedWebhookEvent].
+// [SafetyDeactivationIssuedWebhookEvent], [SafetyOrgAlertCreatedWebhookEvent],
+// [SafetyWarningIssuedWebhookEvent].
 //
 // Use the [UnwrapWebhookEventUnion.AsAny] method to switch on the variant.
 //
@@ -1385,7 +1496,9 @@ type UnwrapWebhookEventUnion struct {
 	// [LiveTransportIncomingWebhookEventData], [RealtimeCallIncomingWebhookEventData],
 	// [ResponseCancelledWebhookEventData], [ResponseCompletedWebhookEventData],
 	// [ResponseFailedWebhookEventData], [ResponseIncompleteWebhookEventData],
-	// [SafetyAlertCreatedWebhookEventData], [SafetyOrgAlertCreatedWebhookEventData]
+	// [SafetyAlertCreatedWebhookEventData],
+	// [SafetyDeactivationIssuedWebhookEventData],
+	// [SafetyOrgAlertCreatedWebhookEventData], [SafetyWarningIssuedWebhookEventData]
 	Data UnwrapWebhookEventUnionData `json:"data"`
 	// Any of "batch.cancelled", "batch.completed", "batch.expired", "batch.failed",
 	// "eval.run.canceled", "eval.run.failed", "eval.run.succeeded",
@@ -1393,7 +1506,8 @@ type UnwrapWebhookEventUnion struct {
 	// "fine_tuning.job.succeeded", "live.call.incoming", "live.transport.incoming",
 	// "realtime.call.incoming", "response.cancelled", "response.completed",
 	// "response.failed", "response.incomplete", "safety.alert.created",
-	// "safety.org_alert.created".
+	// "safety.deactivation_issued", "safety.org_alert.created",
+	// "safety.warning_issued".
 	Type   string `json:"type"`
 	Object string `json:"object"`
 	JSON   struct {
@@ -1413,25 +1527,27 @@ type anyUnwrapWebhookEvent interface {
 	implUnwrapWebhookEventUnion()
 }
 
-func (BatchCancelledWebhookEvent) implUnwrapWebhookEventUnion()         {}
-func (BatchCompletedWebhookEvent) implUnwrapWebhookEventUnion()         {}
-func (BatchExpiredWebhookEvent) implUnwrapWebhookEventUnion()           {}
-func (BatchFailedWebhookEvent) implUnwrapWebhookEventUnion()            {}
-func (EvalRunCanceledWebhookEvent) implUnwrapWebhookEventUnion()        {}
-func (EvalRunFailedWebhookEvent) implUnwrapWebhookEventUnion()          {}
-func (EvalRunSucceededWebhookEvent) implUnwrapWebhookEventUnion()       {}
-func (FineTuningJobCancelledWebhookEvent) implUnwrapWebhookEventUnion() {}
-func (FineTuningJobFailedWebhookEvent) implUnwrapWebhookEventUnion()    {}
-func (FineTuningJobSucceededWebhookEvent) implUnwrapWebhookEventUnion() {}
-func (LiveCallIncomingWebhookEvent) implUnwrapWebhookEventUnion()       {}
-func (LiveTransportIncomingWebhookEvent) implUnwrapWebhookEventUnion()  {}
-func (RealtimeCallIncomingWebhookEvent) implUnwrapWebhookEventUnion()   {}
-func (ResponseCancelledWebhookEvent) implUnwrapWebhookEventUnion()      {}
-func (ResponseCompletedWebhookEvent) implUnwrapWebhookEventUnion()      {}
-func (ResponseFailedWebhookEvent) implUnwrapWebhookEventUnion()         {}
-func (ResponseIncompleteWebhookEvent) implUnwrapWebhookEventUnion()     {}
-func (SafetyAlertCreatedWebhookEvent) implUnwrapWebhookEventUnion()     {}
-func (SafetyOrgAlertCreatedWebhookEvent) implUnwrapWebhookEventUnion()  {}
+func (BatchCancelledWebhookEvent) implUnwrapWebhookEventUnion()           {}
+func (BatchCompletedWebhookEvent) implUnwrapWebhookEventUnion()           {}
+func (BatchExpiredWebhookEvent) implUnwrapWebhookEventUnion()             {}
+func (BatchFailedWebhookEvent) implUnwrapWebhookEventUnion()              {}
+func (EvalRunCanceledWebhookEvent) implUnwrapWebhookEventUnion()          {}
+func (EvalRunFailedWebhookEvent) implUnwrapWebhookEventUnion()            {}
+func (EvalRunSucceededWebhookEvent) implUnwrapWebhookEventUnion()         {}
+func (FineTuningJobCancelledWebhookEvent) implUnwrapWebhookEventUnion()   {}
+func (FineTuningJobFailedWebhookEvent) implUnwrapWebhookEventUnion()      {}
+func (FineTuningJobSucceededWebhookEvent) implUnwrapWebhookEventUnion()   {}
+func (LiveCallIncomingWebhookEvent) implUnwrapWebhookEventUnion()         {}
+func (LiveTransportIncomingWebhookEvent) implUnwrapWebhookEventUnion()    {}
+func (RealtimeCallIncomingWebhookEvent) implUnwrapWebhookEventUnion()     {}
+func (ResponseCancelledWebhookEvent) implUnwrapWebhookEventUnion()        {}
+func (ResponseCompletedWebhookEvent) implUnwrapWebhookEventUnion()        {}
+func (ResponseFailedWebhookEvent) implUnwrapWebhookEventUnion()           {}
+func (ResponseIncompleteWebhookEvent) implUnwrapWebhookEventUnion()       {}
+func (SafetyAlertCreatedWebhookEvent) implUnwrapWebhookEventUnion()       {}
+func (SafetyDeactivationIssuedWebhookEvent) implUnwrapWebhookEventUnion() {}
+func (SafetyOrgAlertCreatedWebhookEvent) implUnwrapWebhookEventUnion()    {}
+func (SafetyWarningIssuedWebhookEvent) implUnwrapWebhookEventUnion()      {}
 
 // Use the following switch statement to find the correct variant
 //
@@ -1454,7 +1570,9 @@ func (SafetyOrgAlertCreatedWebhookEvent) implUnwrapWebhookEventUnion()  {}
 //	case webhooks.ResponseFailedWebhookEvent:
 //	case webhooks.ResponseIncompleteWebhookEvent:
 //	case webhooks.SafetyAlertCreatedWebhookEvent:
+//	case webhooks.SafetyDeactivationIssuedWebhookEvent:
 //	case webhooks.SafetyOrgAlertCreatedWebhookEvent:
+//	case webhooks.SafetyWarningIssuedWebhookEvent:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -1496,8 +1614,12 @@ func (u UnwrapWebhookEventUnion) AsAny() anyUnwrapWebhookEvent {
 		return u.AsResponseIncomplete()
 	case "safety.alert.created":
 		return u.AsSafetyAlertCreated()
+	case "safety.deactivation_issued":
+		return u.AsSafetyDeactivationIssued()
 	case "safety.org_alert.created":
 		return u.AsSafetyOrgAlertCreated()
+	case "safety.warning_issued":
+		return u.AsSafetyWarningIssued()
 	}
 	return nil
 }
@@ -1592,7 +1714,17 @@ func (u UnwrapWebhookEventUnion) AsSafetyAlertCreated() (v SafetyAlertCreatedWeb
 	return
 }
 
+func (u UnwrapWebhookEventUnion) AsSafetyDeactivationIssued() (v SafetyDeactivationIssuedWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
 func (u UnwrapWebhookEventUnion) AsSafetyOrgAlertCreated() (v SafetyOrgAlertCreatedWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsSafetyWarningIssued() (v SafetyWarningIssuedWebhookEvent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -1616,18 +1748,20 @@ type UnwrapWebhookEventUnionData struct {
 	// This field is a union of [[]LiveCallIncomingWebhookEventDataSipHeader],
 	// [[]LiveTransportIncomingWebhookEventDataSipHeader],
 	// [[]RealtimeCallIncomingWebhookEventDataSipHeader]
-	SipHeaders UnwrapWebhookEventUnionDataSipHeaders `json:"sip_headers"`
+	SipHeaders       UnwrapWebhookEventUnionDataSipHeaders `json:"sip_headers"`
+	SipMediaSecurity string                                `json:"sip_media_security"`
 	// This field is from variant [LiveTransportIncomingWebhookEventData].
 	Type constant.Sip `json:"type"`
 	// This field is from variant [RealtimeCallIncomingWebhookEventData].
 	CallID string `json:"call_id"`
 	JSON   struct {
-		ID         respjson.Field
-		SessionID  respjson.Field
-		SipHeaders respjson.Field
-		Type       respjson.Field
-		CallID     respjson.Field
-		raw        string
+		ID               respjson.Field
+		SessionID        respjson.Field
+		SipHeaders       respjson.Field
+		SipMediaSecurity respjson.Field
+		Type             respjson.Field
+		CallID           respjson.Field
+		raw              string
 	} `json:"-"`
 }
 

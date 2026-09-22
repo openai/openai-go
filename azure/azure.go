@@ -74,17 +74,31 @@ func WithEndpoint(endpoint string, apiVersion string) option.RequestOption {
 	withQueryAdd := option.WithQueryAdd("api-version", apiVersion)
 	withEndpoint := option.WithBaseURL(endpoint)
 
-	withModelMiddleware := option.WithMiddleware(func(r *http.Request, mn option.MiddlewareNext) (*http.Response, error) {
-		replacementPath, err := getReplacementPathWithDeployment(r)
-
-		if err != nil {
-			return nil, requestconfig.WithNoRetryError(err)
-		}
-
-		if err := setEscapedPath(r.URL, replacementPath); err != nil {
-			return nil, requestconfig.WithNoRetryError(err)
-		}
-		return mn(r)
+	withModelMiddleware := requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
+		// Keep the middleware in its original position, but capture the effective
+		// base path after client- and request-level endpoint options are applied.
+		var endpointPathPrefix string
+		return rc.Apply(
+			requestconfig.WithRequestFinalizer(func(rc *requestconfig.RequestConfig) error {
+				endpointPathPrefix = strings.TrimSuffix(rc.BaseURL.EscapedPath(), "/")
+				return nil
+			}),
+			option.WithMiddleware(func(r *http.Request, mn option.MiddlewareNext) (*http.Response, error) {
+				escapedPath := r.URL.EscapedPath()
+				prefix := ""
+				if relative, ok := strings.CutPrefix(escapedPath, endpointPathPrefix+"/"); ok {
+					prefix, escapedPath = endpointPathPrefix, "/"+relative
+				}
+				replacementPath, err := getReplacementPathWithDeployment(r, escapedPath)
+				if err != nil {
+					return nil, requestconfig.WithNoRetryError(err)
+				}
+				if err := setEscapedPath(r.URL, prefix+replacementPath); err != nil {
+					return nil, requestconfig.WithNoRetryError(err)
+				}
+				return mn(r)
+			}),
+		)
 	})
 
 	endpointOption := requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
@@ -581,30 +595,34 @@ var multipartRoutes = map[string]bool{
 
 // getReplacementPathWithDeployment parses the request body to extract out the Model parameter (or equivalent)
 // (note, the req.Body is fully read as part of this, and is replaced with a bytes.Reader)
-func getReplacementPathWithDeployment(req *http.Request) (string, error) {
-	if jsonRoutes[req.URL.Path] {
-		return getJSONRoute(req)
+func getReplacementPathWithDeployment(req *http.Request, escapedPath string) (string, error) {
+	path, err := url.PathUnescape(escapedPath)
+	if err != nil {
+		return "", err
+	}
+	if jsonRoutes[path] {
+		return getJSONRoute(req, escapedPath)
 	}
 
-	if multipartRoutes[req.URL.Path] {
-		return getMultipartRoute(req)
+	if multipartRoutes[path] {
+		return getMultipartRoute(req, escapedPath)
 	}
 
 	// If route doesn't require deployment ID substitution, just return path with prefix.
-	return "/openai" + req.URL.EscapedPath(), nil
+	return "/openai" + escapedPath, nil
 }
 
 func setEscapedPath(u *url.URL, escapedPath string) error {
-	parsed, err := url.Parse(escapedPath)
+	path, err := url.PathUnescape(escapedPath)
 	if err != nil {
 		return err
 	}
-	u.Path = parsed.Path
-	u.RawPath = parsed.RawPath
+	u.Path = path
+	u.RawPath = escapedPath
 	return nil
 }
 
-func getJSONRoute(req *http.Request) (string, error) {
+func getJSONRoute(req *http.Request, escapedPath string) (string, error) {
 	if req.Body == nil {
 		return "", errors.New("azure: deployment routing requires a JSON request body")
 	}
@@ -631,10 +649,10 @@ func getJSONRoute(req *http.Request) (string, error) {
 	}
 
 	// Convert path from /chat/completions to /openai/deployments/{deployment-id}/chat/completions
-	return requestconfig.FormatPath("/openai/deployments/%s", v.Model) + req.URL.EscapedPath(), nil
+	return requestconfig.FormatPath("/openai/deployments/%s", v.Model) + escapedPath, nil
 }
 
-func getMultipartRoute(req *http.Request) (string, error) {
+func getMultipartRoute(req *http.Request, escapedPath string) (string, error) {
 	// body is a multipart/mime body type instead.
 	mimeBytes, err := io.ReadAll(req.Body)
 
@@ -676,7 +694,7 @@ func getMultipartRoute(req *http.Request) (string, error) {
 			}
 
 			// Convert path from /audio/transcriptions to /openai/deployments/{deployment-id}/audio/transcriptions
-			return requestconfig.FormatPath("/openai/deployments/%s", string(modelBytes)) + req.URL.EscapedPath(), nil
+			return requestconfig.FormatPath("/openai/deployments/%s", string(modelBytes)) + escapedPath, nil
 		}
 	}
 }

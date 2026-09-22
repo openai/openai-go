@@ -38,6 +38,7 @@ type AgentSessionEnvironmentDisconnected string              // Always "agent.se
 type AgentSessionEnvironmentFailed string                    // Always "agent.session.environment.failed"
 type AgentSessionEnvironmentPending string                   // Always "agent.session.environment.pending"
 type AgentSessionEnvironmentReady string                     // Always "agent.session.environment.ready"
+type AgentSessionEnvironmentReset string                     // Always "agent.session.environment.reset"
 type AgentSessionFailed string                               // Always "agent.session.failed"
 type AgentSessionIdle string                                 // Always "agent.session.idle"
 type AgentSessionInProgress string                           // Always "agent.session.in_progress"
@@ -77,6 +78,8 @@ type AudioPCM string                                         // Always "audio/pc
 type AudioPCMA string                                        // Always "audio/pcma"
 type AudioPCMU string                                        // Always "audio/pcmu"
 type Auto string                                             // Always "auto"
+type Aws string                                              // Always "aws"
+type Azure string                                            // Always "azure"
 type Base64 string                                           // Always "base64"
 type Batch string                                            // Always "batch"
 type BatchCancelled string                                   // Always "batch.cancelled"
@@ -160,6 +163,7 @@ type Email string                                            // Always "email"
 type Embedding string                                        // Always "embedding"
 type EncryptedContent string                                 // Always "encrypted_content"
 type EnvironmentConnection string                            // Always "environment_connection"
+type EnvironmentVariable string                              // Always "environment_variable"
 type Error string                                            // Always "error"
 type EvalRunCanceled string                                  // Always "eval.run.canceled"
 type EvalRunFailed string                                    // Always "eval.run.failed"
@@ -225,6 +229,7 @@ type JSONSchema string                                       // Always "json_sch
 type Keypress string                                         // Always "keypress"
 type LabelModel string                                       // Always "label_model"
 type LastActiveAt string                                     // Always "last_active_at"
+type Limited string                                          // Always "limited"
 type List string                                             // Always "list"
 type Live string                                             // Always "live"
 type LiveCallIncoming string                                 // Always "live.call.incoming"
@@ -266,6 +271,8 @@ type OrganizationCertificateActivation string                // Always "organiza
 type OrganizationCertificateDeactivation string              // Always "organization.certificate.deactivation"
 type OrganizationCostsResult string                          // Always "organization.costs.result"
 type OrganizationDataRetention string                        // Always "organization.data_retention"
+type OrganizationExternalStorage string                      // Always "organization.external_storage"
+type OrganizationExternalStorageDeleted string               // Always "organization.external_storage.deleted"
 type OrganizationInvite string                               // Always "organization.invite"
 type OrganizationInviteDeleted string                        // Always "organization.invite.deleted"
 type OrganizationProject string                              // Always "organization.project"
@@ -411,7 +418,10 @@ type Role string                                             // Always "role"
 type RoleDeleted string                                      // Always "role.deleted"
 type SafetyAlert string                                      // Always "safety.alert"
 type SafetyAlertCreated string                               // Always "safety.alert.created"
+type SafetyCase string                                       // Always "safety.case"
+type SafetyDeactivationIssued string                         // Always "safety.deactivation_issued"
 type SafetyOrgAlertCreated string                            // Always "safety.org_alert.created"
+type SafetyWarningIssued string                              // Always "safety.warning_issued"
 type ScoreModel string                                       // Always "score_model"
 type Screenshot string                                       // Always "screenshot"
 type Scroll string                                           // Always "scroll"
@@ -516,6 +526,7 @@ type TransportFailed string                                  // Always "transpor
 type TransportRinging string                                 // Always "transport.ringing"
 type Type string                                             // Always "type"
 type Unavailable string                                      // Always "unavailable"
+type Unrestricted string                                     // Always "unrestricted"
 type UpdateFile string                                       // Always "update_file"
 type Upload string                                           // Always "upload"
 type UploadPart string                                       // Always "upload.part"
@@ -583,6 +594,9 @@ func (c AgentSessionEnvironmentPending) Default() AgentSessionEnvironmentPending
 }
 func (c AgentSessionEnvironmentReady) Default() AgentSessionEnvironmentReady {
 	return "agent.session.environment.ready"
+}
+func (c AgentSessionEnvironmentReset) Default() AgentSessionEnvironmentReset {
+	return "agent.session.environment.reset"
 }
 func (c AgentSessionFailed) Default() AgentSessionFailed         { return "agent.session.failed" }
 func (c AgentSessionIdle) Default() AgentSessionIdle             { return "agent.session.idle" }
@@ -665,6 +679,8 @@ func (c AudioPCM) Default() AudioPCM                           { return "audio/p
 func (c AudioPCMA) Default() AudioPCMA                         { return "audio/pcma" }
 func (c AudioPCMU) Default() AudioPCMU                         { return "audio/pcmu" }
 func (c Auto) Default() Auto                                   { return "auto" }
+func (c Aws) Default() Aws                                     { return "aws" }
+func (c Azure) Default() Azure                                 { return "azure" }
 func (c Base64) Default() Base64                               { return "base64" }
 func (c Batch) Default() Batch                                 { return "batch" }
 func (c BatchCancelled) Default() BatchCancelled               { return "batch.cancelled" }
@@ -772,6 +788,7 @@ func (c Email) Default() Email                                   { return "email
 func (c Embedding) Default() Embedding                           { return "embedding" }
 func (c EncryptedContent) Default() EncryptedContent             { return "encrypted_content" }
 func (c EnvironmentConnection) Default() EnvironmentConnection   { return "environment_connection" }
+func (c EnvironmentVariable) Default() EnvironmentVariable       { return "environment_variable" }
 func (c Error) Default() Error                                   { return "error" }
 func (c EvalRunCanceled) Default() EvalRunCanceled               { return "eval.run.canceled" }
 func (c EvalRunFailed) Default() EvalRunFailed                   { return "eval.run.failed" }
@@ -855,6 +872,7 @@ func (c JSONSchema) Default() JSONSchema                         { return "json_
 func (c Keypress) Default() Keypress                             { return "keypress" }
 func (c LabelModel) Default() LabelModel                         { return "label_model" }
 func (c LastActiveAt) Default() LastActiveAt                     { return "last_active_at" }
+func (c Limited) Default() Limited                               { return "limited" }
 func (c List) Default() List                                     { return "list" }
 func (c Live) Default() Live                                     { return "live" }
 func (c LiveCallIncoming) Default() LiveCallIncoming             { return "live.call.incoming" }
@@ -907,6 +925,12 @@ func (c OrganizationCostsResult) Default() OrganizationCostsResult {
 }
 func (c OrganizationDataRetention) Default() OrganizationDataRetention {
 	return "organization.data_retention"
+}
+func (c OrganizationExternalStorage) Default() OrganizationExternalStorage {
+	return "organization.external_storage"
+}
+func (c OrganizationExternalStorageDeleted) Default() OrganizationExternalStorageDeleted {
+	return "organization.external_storage.deleted"
 }
 func (c OrganizationInvite) Default() OrganizationInvite { return "organization.invite" }
 func (c OrganizationInviteDeleted) Default() OrganizationInviteDeleted {
@@ -1208,14 +1232,19 @@ func (c ResponseWebSearchCallInProgress) Default() ResponseWebSearchCallInProgre
 func (c ResponseWebSearchCallSearching) Default() ResponseWebSearchCallSearching {
 	return "response.web_search_call.searching"
 }
-func (c Responses) Default() Responses                         { return "responses" }
-func (c ResumeSubagentCall) Default() ResumeSubagentCall       { return "resume_subagent_call" }
-func (c RetentionRatio) Default() RetentionRatio               { return "retention_ratio" }
-func (c Role) Default() Role                                   { return "role" }
-func (c RoleDeleted) Default() RoleDeleted                     { return "role.deleted" }
-func (c SafetyAlert) Default() SafetyAlert                     { return "safety.alert" }
-func (c SafetyAlertCreated) Default() SafetyAlertCreated       { return "safety.alert.created" }
+func (c Responses) Default() Responses                   { return "responses" }
+func (c ResumeSubagentCall) Default() ResumeSubagentCall { return "resume_subagent_call" }
+func (c RetentionRatio) Default() RetentionRatio         { return "retention_ratio" }
+func (c Role) Default() Role                             { return "role" }
+func (c RoleDeleted) Default() RoleDeleted               { return "role.deleted" }
+func (c SafetyAlert) Default() SafetyAlert               { return "safety.alert" }
+func (c SafetyAlertCreated) Default() SafetyAlertCreated { return "safety.alert.created" }
+func (c SafetyCase) Default() SafetyCase                 { return "safety.case" }
+func (c SafetyDeactivationIssued) Default() SafetyDeactivationIssued {
+	return "safety.deactivation_issued"
+}
 func (c SafetyOrgAlertCreated) Default() SafetyOrgAlertCreated { return "safety.org_alert.created" }
+func (c SafetyWarningIssued) Default() SafetyWarningIssued     { return "safety.warning_issued" }
 func (c ScoreModel) Default() ScoreModel                       { return "score_model" }
 func (c Screenshot) Default() Screenshot                       { return "screenshot" }
 func (c Scroll) Default() Scroll                               { return "scroll" }
@@ -1358,6 +1387,7 @@ func (c TransportFailed) Default() TransportFailed               { return "trans
 func (c TransportRinging) Default() TransportRinging             { return "transport.ringing" }
 func (c Type) Default() Type                                     { return "type" }
 func (c Unavailable) Default() Unavailable                       { return "unavailable" }
+func (c Unrestricted) Default() Unrestricted                     { return "unrestricted" }
 func (c UpdateFile) Default() UpdateFile                         { return "update_file" }
 func (c Upload) Default() Upload                                 { return "upload" }
 func (c UploadPart) Default() UploadPart                         { return "upload.part" }
@@ -1414,6 +1444,7 @@ func (c AgentSessionEnvironmentDisconnected) MarshalJSON() ([]byte, error) { ret
 func (c AgentSessionEnvironmentFailed) MarshalJSON() ([]byte, error)       { return marshalString(c) }
 func (c AgentSessionEnvironmentPending) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c AgentSessionEnvironmentReady) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c AgentSessionEnvironmentReset) MarshalJSON() ([]byte, error)        { return marshalString(c) }
 func (c AgentSessionFailed) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c AgentSessionIdle) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c AgentSessionInProgress) MarshalJSON() ([]byte, error)              { return marshalString(c) }
@@ -1461,6 +1492,8 @@ func (c AudioPCM) MarshalJSON() ([]byte, error)                   { return marsh
 func (c AudioPCMA) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c AudioPCMU) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c Auto) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c Aws) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c Azure) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c Base64) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c Batch) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c BatchCancelled) MarshalJSON() ([]byte, error)             { return marshalString(c) }
@@ -1552,6 +1585,7 @@ func (c Email) MarshalJSON() ([]byte, error)                               { ret
 func (c Embedding) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c EncryptedContent) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c EnvironmentConnection) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c EnvironmentVariable) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c Error) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c EvalRunCanceled) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c EvalRunFailed) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
@@ -1617,6 +1651,7 @@ func (c JSONSchema) MarshalJSON() ([]byte, error)                          { ret
 func (c Keypress) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c LabelModel) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c LastActiveAt) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c Limited) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c List) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Live) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c LiveCallIncoming) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
@@ -1658,6 +1693,8 @@ func (c OrganizationCertificateActivation) MarshalJSON() ([]byte, error)   { ret
 func (c OrganizationCertificateDeactivation) MarshalJSON() ([]byte, error) { return marshalString(c) }
 func (c OrganizationCostsResult) MarshalJSON() ([]byte, error)             { return marshalString(c) }
 func (c OrganizationDataRetention) MarshalJSON() ([]byte, error)           { return marshalString(c) }
+func (c OrganizationExternalStorage) MarshalJSON() ([]byte, error)         { return marshalString(c) }
+func (c OrganizationExternalStorageDeleted) MarshalJSON() ([]byte, error)  { return marshalString(c) }
 func (c OrganizationInvite) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c OrganizationInviteDeleted) MarshalJSON() ([]byte, error)           { return marshalString(c) }
 func (c OrganizationProject) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
@@ -1819,7 +1856,10 @@ func (c Role) MarshalJSON() ([]byte, error)                                { ret
 func (c RoleDeleted) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c SafetyAlert) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c SafetyAlertCreated) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c SafetyCase) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
+func (c SafetyDeactivationIssued) MarshalJSON() ([]byte, error)            { return marshalString(c) }
 func (c SafetyOrgAlertCreated) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c SafetyWarningIssued) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c ScoreModel) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c Screenshot) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c Scroll) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
@@ -1924,6 +1964,7 @@ func (c TransportFailed) MarshalJSON() ([]byte, error)                     { ret
 func (c TransportRinging) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c Type) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Unavailable) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
+func (c Unrestricted) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c UpdateFile) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c Upload) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c UploadPart) MarshalJSON() ([]byte, error)                          { return marshalString(c) }

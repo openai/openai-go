@@ -101,7 +101,7 @@ type Turn struct {
 	// Subagent turns use their start time, falling back to completion time or the
 	// subagent opening time when the preceding timestamps are unavailable.
 	CreatedAt int64 `json:"created_at" api:"required"`
-	// A customer-safe error describing why a session request failed.
+	// A customer-safe error. Non-null only for a failed turn.
 	Error SessionTurnError `json:"error" api:"required"`
 	// The object type. Always `agent.session.turn`.
 	//
@@ -117,7 +117,8 @@ type Turn struct {
 	Status TurnStatus `json:"status" api:"required"`
 	// The ID of the subagent that ran the turn, if applicable.
 	SubagentID string `json:"subagent_id" api:"required"`
-	// Recorded token usage for a session or turn. Usage is best effort and may change.
+	// Best-effort token usage for the turn, or null if unknown. Recorded usage may
+	// change.
 	Usage TokenUsage `json:"usage" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {

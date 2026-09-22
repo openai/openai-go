@@ -422,6 +422,16 @@ Methods:
 
 # Safety
 
+## Cases
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SafetyCase">SafetyCase</a>
+
+Methods:
+
+- <code title="get /safety/cases/{id}">client.Safety.Cases.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SafetyCaseService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SafetyCase">SafetyCase</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
 ## Alerts
 
 Response Types:
@@ -497,6 +507,7 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEnvironmentFailedEvent">AgentSessionEnvironmentFailedEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEnvironmentPendingEvent">AgentSessionEnvironmentPendingEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEnvironmentReadyEvent">AgentSessionEnvironmentReadyEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEnvironmentResetEvent">AgentSessionEnvironmentResetEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEnvironmentState">AgentSessionEnvironmentState</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionErrorEvent">AgentSessionErrorEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEventUnion">AgentSessionEventUnion</a>
@@ -618,6 +629,7 @@ Params Types:
 
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#CredentialAuthCreateParamUnion">CredentialAuthCreateParamUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#CredentialAuthRotateParamUnion">CredentialAuthRotateParamUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#CredentialNetworkingParamUnion">CredentialNetworkingParamUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#McpOAuthTokenEndpointAuthCreateParamUnion">McpOAuthTokenEndpointAuthCreateParamUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#McpOAuthTokenEndpointAuthRotateParamUnion">McpOAuthTokenEndpointAuthRotateParamUnion</a>
 
@@ -626,6 +638,7 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Credential">Credential</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#CredentialAuthUnion">CredentialAuthUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#CredentialDeleted">CredentialDeleted</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#CredentialNetworkingUnion">CredentialNetworkingUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#McpOAuthTokenEndpointAuthUnion">McpOAuthTokenEndpointAuthUnion</a>
 
 Methods:
@@ -1375,6 +1388,23 @@ Methods:
 
 - <code title="get /organization/data_retention">client.Admin.Organization.DataRetention.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationDataRetentionService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#OrganizationDataRetention">OrganizationDataRetention</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="post /organization/data_retention">client.Admin.Organization.DataRetention.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationDataRetentionService.Update">Update</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationDataRetentionUpdateParams">AdminOrganizationDataRetentionUpdateParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#OrganizationDataRetention">OrganizationDataRetention</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+### ExternalStorage
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AwsExternalStorageProvider">AwsExternalStorageProvider</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AzureExternalStorageProvider">AzureExternalStorageProvider</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ExternalStorageConfiguration">ExternalStorageConfiguration</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ExternalStorageDeleted">ExternalStorageDeleted</a>
+
+Methods:
+
+- <code title="post /organization/external_storage">client.Admin.Organization.ExternalStorage.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationExternalStorageService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationExternalStorageNewParams">AdminOrganizationExternalStorageNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ExternalStorageConfiguration">ExternalStorageConfiguration</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /organization/external_storage/{external_storage_id}">client.Admin.Organization.ExternalStorage.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationExternalStorageService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, externalStorageID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ExternalStorageConfiguration">ExternalStorageConfiguration</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /organization/external_storage">client.Admin.Organization.ExternalStorage.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationExternalStorageService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationExternalStorageListParams">AdminOrganizationExternalStorageListParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination#CursorPage">CursorPage</a>[<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ExternalStorageConfiguration">ExternalStorageConfiguration</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="delete /organization/external_storage/{external_storage_id}">client.Admin.Organization.ExternalStorage.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationExternalStorageService.Delete">Delete</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, externalStorageID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ExternalStorageDeleted">ExternalStorageDeleted</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="post /organization/external_storage/{external_storage_id}/validate">client.Admin.Organization.ExternalStorage.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationExternalStorageService.Validate">Validate</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, externalStorageID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ExternalStorageConfiguration">ExternalStorageConfiguration</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 ### SpendLimit
 
