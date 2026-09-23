@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.66.0](https://github.com/openai/openai-go/compare/v3.65.0...v3.66.0) (2026-09-23)
+
+
+### Features
+
+* **api:** Add GCP external storage support ([#964](https://github.com/openai/openai-go/issues/964)) ([511d3c2](https://github.com/openai/openai-go/commit/511d3c254eb056d7ab542a1a5a3c674794281bd2))
+* **api:** add GPT-Rosalind research model ([#962](https://github.com/openai/openai-go/issues/962)) ([7666824](https://github.com/openai/openai-go/commit/7666824c551a7c3ea91e9038c865e5f95d9298c1))
+
+
+### Chores
+
+* **api:** clarify Chat Completions seed range ([#965](https://github.com/openai/openai-go/issues/965)) ([67bd2a5](https://github.com/openai/openai-go/commit/67bd2a559610426f5b2f92e62de938e11d5e8c0f))
+
 ## [3.65.0](https://github.com/openai/openai-go/compare/v3.64.3...v3.65.0) (2026-09-22)
 
 
