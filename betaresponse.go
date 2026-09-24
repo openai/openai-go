@@ -4407,7 +4407,8 @@ func (r *BetaNamespaceToolToolFunctionParam) UnmarshalJSON(data []byte) error {
 
 type BetaResponse struct {
 	// Unique identifier for this Response.
-	ID string `json:"id" api:"required"`
+	ID             string                     `json:"id" api:"required"`
+	AccessPrograms BetaResponseAccessPrograms `json:"access_programs" api:"required"`
 	// Unix timestamp (in seconds) of when this Response was created.
 	CreatedAt float64 `json:"created_at" api:"required" format:"unixtime"`
 	// An error object returned when the model fails to generate a Response.
@@ -4620,6 +4621,7 @@ type BetaResponse struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                     respjson.Field
+		AccessPrograms         respjson.Field
 		CreatedAt              respjson.Field
 		Error                  respjson.Field
 		IncompleteDetails      respjson.Field
@@ -4662,6 +4664,25 @@ type BetaResponse struct {
 // Returns the unmodified JSON received from the API
 func (r BetaResponse) RawJSON() string { return r.JSON.raw }
 func (r *BetaResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponseAccessPrograms struct {
+	// The effective Cyber access program used for this response.
+	//
+	// Any of "standard", "daybreak_blue", "daybreak_red".
+	Cyber string `json:"cyber" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Cyber       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseAccessPrograms) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseAccessPrograms) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -33165,9 +33186,7 @@ type BetaWebSearchPreviewTool struct {
 	//
 	// Any of "low", "medium", "high".
 	SearchContextSize BetaWebSearchPreviewToolSearchContextSize `json:"search_context_size"`
-	// The approximate location of the user. If omitted or null, defaults to the United
-	// States. To avoid this fallback, pass `{"type": "approximate"}` without location
-	// fields. To localize results, provide the relevant location fields.
+	// The user's location.
 	UserLocation BetaWebSearchPreviewToolUserLocation `json:"user_location" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -33215,9 +33234,7 @@ const (
 	BetaWebSearchPreviewToolSearchContextSizeHigh   BetaWebSearchPreviewToolSearchContextSize = "high"
 )
 
-// The approximate location of the user. If omitted or null, defaults to the United
-// States. To avoid this fallback, pass `{"type": "approximate"}` without location
-// fields. To localize results, provide the relevant location fields.
+// The user's location.
 type BetaWebSearchPreviewToolUserLocation struct {
 	// The type of location approximation. Always `approximate`.
 	Type constant.Approximate `json:"type" default:"approximate"`
@@ -33260,9 +33277,7 @@ type BetaWebSearchPreviewToolParam struct {
 	//
 	// Any of "web_search_preview", "web_search_preview_2025_03_11".
 	Type BetaWebSearchPreviewToolType `json:"type,omitzero" api:"required"`
-	// The approximate location of the user. If omitted or null, defaults to the United
-	// States. To avoid this fallback, pass `{"type": "approximate"}` without location
-	// fields. To localize results, provide the relevant location fields.
+	// The user's location.
 	UserLocation BetaWebSearchPreviewToolUserLocationParam `json:"user_location,omitzero"`
 	// Any of "text", "image".
 	SearchContentTypes []string `json:"search_content_types,omitzero"`
@@ -33282,9 +33297,7 @@ func (r *BetaWebSearchPreviewToolParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The approximate location of the user. If omitted or null, defaults to the United
-// States. To avoid this fallback, pass `{"type": "approximate"}` without location
-// fields. To localize results, provide the relevant location fields.
+// The user's location.
 //
 // The property Type is required.
 type BetaWebSearchPreviewToolUserLocationParam struct {
@@ -33331,9 +33344,7 @@ type BetaWebSearchTool struct {
 	//
 	// Any of "low", "medium", "high".
 	SearchContextSize BetaWebSearchToolSearchContextSize `json:"search_context_size"`
-	// The approximate location of the user. If omitted or null, defaults to the United
-	// States. To avoid this fallback, pass `{"type": "approximate"}` without location
-	// fields. To localize results, provide the relevant location fields.
+	// The approximate location of the user.
 	UserLocation BetaWebSearchToolUserLocation `json:"user_location" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -33401,9 +33412,7 @@ const (
 	BetaWebSearchToolSearchContextSizeHigh   BetaWebSearchToolSearchContextSize = "high"
 )
 
-// The approximate location of the user. If omitted or null, defaults to the United
-// States. To avoid this fallback, pass `{"type": "approximate"}` without location
-// fields. To localize results, provide the relevant location fields.
+// The approximate location of the user.
 type BetaWebSearchToolUserLocation struct {
 	// Free text input for the city of the user, e.g. `San Francisco`.
 	City string `json:"city" api:"nullable"`
@@ -33452,9 +33461,7 @@ type BetaWebSearchToolParam struct {
 	ExternalWebAccess param.Opt[bool] `json:"external_web_access,omitzero"`
 	// Filters for the search.
 	Filters BetaWebSearchToolFiltersParam `json:"filters,omitzero"`
-	// The approximate location of the user. If omitted or null, defaults to the United
-	// States. To avoid this fallback, pass `{"type": "approximate"}` without location
-	// fields. To localize results, provide the relevant location fields.
+	// The approximate location of the user.
 	UserLocation BetaWebSearchToolUserLocationParam `json:"user_location,omitzero"`
 	// High level guidance for the amount of context window space to use for the
 	// search. One of `low`, `medium`, or `high`. `medium` is the default.
@@ -33490,9 +33497,7 @@ func (r *BetaWebSearchToolFiltersParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The approximate location of the user. If omitted or null, defaults to the United
-// States. To avoid this fallback, pass `{"type": "approximate"}` without location
-// fields. To localize results, provide the relevant location fields.
+// The approximate location of the user.
 type BetaWebSearchToolUserLocationParam struct {
 	// Free text input for the city of the user, e.g. `San Francisco`.
 	City param.Opt[string] `json:"city,omitzero"`
@@ -33692,6 +33697,8 @@ type BetaResponseNewParams struct {
 	//
 	// Any of "auto", "disabled".
 	Truncation BetaResponseNewParamsTruncation `json:"truncation,omitzero"`
+	// Domain-specific access programs to use for this request.
+	AccessPrograms BetaResponseNewParamsAccessPrograms `json:"access_programs,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
 	//
 	// Learn more:
@@ -33760,6 +33767,38 @@ func (r BetaResponseNewParams) MarshalJSON() (data []byte, err error) {
 }
 func (r *BetaResponseNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// Domain-specific access programs to use for this request.
+type BetaResponseNewParamsAccessPrograms struct {
+	// The Cyber access program to use for this request. Supported values are
+	// `standard`, `daybreak_blue`, and `daybreak_red`. If omitted, the API resolves
+	// the program from the model's Cyber tier and your organization and project
+	// access, subject to model-specific eligibility restrictions. By default, models
+	// without a Cyber tier use Standard. Blue-tier models use Daybreak Blue when
+	// authorized; otherwise they fall back to Standard unless the model requires
+	// Daybreak access. Red-tier models use Daybreak Red and require authorization.
+	// Requests that require unavailable Daybreak access return 403. An implicit
+	// Standard fallback is represented by null in the response's access_programs
+	// field, rather than an explicit Standard selection.
+	//
+	// Any of "standard", "daybreak_blue", "daybreak_red".
+	Cyber string `json:"cyber,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseNewParamsAccessPrograms) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseNewParamsAccessPrograms
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseNewParamsAccessPrograms) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseNewParamsAccessPrograms](
+		"cyber", "standard", "daybreak_blue", "daybreak_red",
+	)
 }
 
 // The property Type is required.

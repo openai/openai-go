@@ -27,6 +27,9 @@ func TestBetaResponseNewWithOptionalParams(t *testing.T) {
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Responses.New(context.TODO(), openai.BetaResponseNewParams{
+		AccessPrograms: openai.BetaResponseNewParamsAccessPrograms{
+			Cyber: "standard",
+		},
 		Background: openai.Bool(true),
 		ContextManagement: []openai.BetaResponseNewParamsContextManagement{{
 			Type:             "compaction",

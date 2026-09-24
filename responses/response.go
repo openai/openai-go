@@ -3567,7 +3567,8 @@ func (r *NamespaceToolToolFunctionParam) UnmarshalJSON(data []byte) error {
 
 type Response struct {
 	// Unique identifier for this Response.
-	ID string `json:"id" api:"required"`
+	ID             string                 `json:"id" api:"required"`
+	AccessPrograms ResponseAccessPrograms `json:"access_programs" api:"required"`
 	// Unix timestamp (in seconds) of when this Response was created.
 	CreatedAt float64 `json:"created_at" api:"required" format:"unixtime"`
 	// An error object returned when the model fails to generate a Response.
@@ -3780,6 +3781,7 @@ type Response struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                     respjson.Field
+		AccessPrograms         respjson.Field
 		CreatedAt              respjson.Field
 		Error                  respjson.Field
 		IncompleteDetails      respjson.Field
@@ -3822,6 +3824,25 @@ type Response struct {
 // Returns the unmodified JSON received from the API
 func (r Response) RawJSON() string { return r.JSON.raw }
 func (r *Response) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponseAccessPrograms struct {
+	// The effective Cyber access program used for this response.
+	//
+	// Any of "standard", "daybreak_blue", "daybreak_red".
+	Cyber string `json:"cyber" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Cyber       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseAccessPrograms) RawJSON() string { return r.JSON.raw }
+func (r *ResponseAccessPrograms) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -25819,6 +25840,14 @@ func (u *ResponsesClientEventUnionParam) UnmarshalJSON(data []byte) error {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetAccessPrograms() *ResponsesClientEventResponseCreateAccessProgramsParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.AccessPrograms
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesClientEventUnionParam) GetBackground() *bool {
 	if vt := u.OfResponseCreate; vt != nil && vt.Background.Valid() {
 		return &vt.Background.Value
@@ -26305,6 +26334,8 @@ type ResponsesClientEventResponseCreateParam struct {
 	//
 	// Deprecated: deprecated
 	Truncation string `json:"truncation,omitzero"`
+	// Domain-specific access programs to use for this request.
+	AccessPrograms ResponsesClientEventResponseCreateAccessProgramsParam `json:"access_programs,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
 	//
 	// Learn more:
@@ -26389,6 +26420,38 @@ func init() {
 	)
 	apijson.RegisterFieldValidator[ResponsesClientEventResponseCreateParam](
 		"truncation", "auto", "disabled",
+	)
+}
+
+// Domain-specific access programs to use for this request.
+type ResponsesClientEventResponseCreateAccessProgramsParam struct {
+	// The Cyber access program to use for this request. Supported values are
+	// `standard`, `daybreak_blue`, and `daybreak_red`. If omitted, the API resolves
+	// the program from the model's Cyber tier and your organization and project
+	// access, subject to model-specific eligibility restrictions. By default, models
+	// without a Cyber tier use Standard. Blue-tier models use Daybreak Blue when
+	// authorized; otherwise they fall back to Standard unless the model requires
+	// Daybreak access. Red-tier models use Daybreak Red and require authorization.
+	// Requests that require unavailable Daybreak access return 403. An implicit
+	// Standard fallback is represented by null in the response's access_programs
+	// field, rather than an explicit Standard selection.
+	//
+	// Any of "standard", "daybreak_blue", "daybreak_red".
+	Cyber string `json:"cyber,omitzero"`
+	paramObj
+}
+
+func (r ResponsesClientEventResponseCreateAccessProgramsParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesClientEventResponseCreateAccessProgramsParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesClientEventResponseCreateAccessProgramsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponsesClientEventResponseCreateAccessProgramsParam](
+		"cyber", "standard", "daybreak_blue", "daybreak_red",
 	)
 }
 
@@ -32749,9 +32812,7 @@ type WebSearchPreviewTool struct {
 	//
 	// Any of "low", "medium", "high".
 	SearchContextSize WebSearchPreviewToolSearchContextSize `json:"search_context_size"`
-	// The approximate location of the user. If omitted or null, defaults to the United
-	// States. To avoid this fallback, pass `{"type": "approximate"}` without location
-	// fields. To localize results, provide the relevant location fields.
+	// The user's location.
 	UserLocation WebSearchPreviewToolUserLocation `json:"user_location" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -32798,9 +32859,7 @@ const (
 	WebSearchPreviewToolSearchContextSizeHigh   WebSearchPreviewToolSearchContextSize = "high"
 )
 
-// The approximate location of the user. If omitted or null, defaults to the United
-// States. To avoid this fallback, pass `{"type": "approximate"}` without location
-// fields. To localize results, provide the relevant location fields.
+// The user's location.
 type WebSearchPreviewToolUserLocation struct {
 	// The type of location approximation. Always `approximate`.
 	Type constant.Approximate `json:"type" default:"approximate"`
@@ -32843,9 +32902,7 @@ type WebSearchPreviewToolParam struct {
 	//
 	// Any of "web_search_preview", "web_search_preview_2025_03_11".
 	Type WebSearchPreviewToolType `json:"type,omitzero" api:"required"`
-	// The approximate location of the user. If omitted or null, defaults to the United
-	// States. To avoid this fallback, pass `{"type": "approximate"}` without location
-	// fields. To localize results, provide the relevant location fields.
+	// The user's location.
 	UserLocation WebSearchPreviewToolUserLocationParam `json:"user_location,omitzero"`
 	// Any of "text", "image".
 	SearchContentTypes []string `json:"search_content_types,omitzero"`
@@ -32865,9 +32922,7 @@ func (r *WebSearchPreviewToolParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The approximate location of the user. If omitted or null, defaults to the United
-// States. To avoid this fallback, pass `{"type": "approximate"}` without location
-// fields. To localize results, provide the relevant location fields.
+// The user's location.
 //
 // The property Type is required.
 type WebSearchPreviewToolUserLocationParam struct {
@@ -32914,9 +32969,7 @@ type WebSearchTool struct {
 	//
 	// Any of "low", "medium", "high".
 	SearchContextSize WebSearchToolSearchContextSize `json:"search_context_size"`
-	// The approximate location of the user. If omitted or null, defaults to the United
-	// States. To avoid this fallback, pass `{"type": "approximate"}` without location
-	// fields. To localize results, provide the relevant location fields.
+	// The approximate location of the user.
 	UserLocation WebSearchToolUserLocation `json:"user_location" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -32984,9 +33037,7 @@ const (
 	WebSearchToolSearchContextSizeHigh   WebSearchToolSearchContextSize = "high"
 )
 
-// The approximate location of the user. If omitted or null, defaults to the United
-// States. To avoid this fallback, pass `{"type": "approximate"}` without location
-// fields. To localize results, provide the relevant location fields.
+// The approximate location of the user.
 type WebSearchToolUserLocation struct {
 	// Free text input for the city of the user, e.g. `San Francisco`.
 	City string `json:"city" api:"nullable"`
@@ -33035,9 +33086,7 @@ type WebSearchToolParam struct {
 	ExternalWebAccess param.Opt[bool] `json:"external_web_access,omitzero"`
 	// Filters for the search.
 	Filters WebSearchToolFiltersParam `json:"filters,omitzero"`
-	// The approximate location of the user. If omitted or null, defaults to the United
-	// States. To avoid this fallback, pass `{"type": "approximate"}` without location
-	// fields. To localize results, provide the relevant location fields.
+	// The approximate location of the user.
 	UserLocation WebSearchToolUserLocationParam `json:"user_location,omitzero"`
 	// High level guidance for the amount of context window space to use for the
 	// search. One of `low`, `medium`, or `high`. `medium` is the default.
@@ -33073,9 +33122,7 @@ func (r *WebSearchToolFiltersParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The approximate location of the user. If omitted or null, defaults to the United
-// States. To avoid this fallback, pass `{"type": "approximate"}` without location
-// fields. To localize results, provide the relevant location fields.
+// The approximate location of the user.
 type WebSearchToolUserLocationParam struct {
 	// Free text input for the city of the user, e.g. `San Francisco`.
 	City param.Opt[string] `json:"city,omitzero"`
@@ -33270,6 +33317,8 @@ type ResponseNewParams struct {
 	//
 	// Any of "auto", "disabled".
 	Truncation ResponseNewParamsTruncation `json:"truncation,omitzero"`
+	// Domain-specific access programs to use for this request.
+	AccessPrograms ResponseNewParamsAccessPrograms `json:"access_programs,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
 	//
 	// Learn more:
@@ -33339,6 +33388,38 @@ func (r ResponseNewParams) MarshalJSON() (data []byte, err error) {
 }
 func (r *ResponseNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// Domain-specific access programs to use for this request.
+type ResponseNewParamsAccessPrograms struct {
+	// The Cyber access program to use for this request. Supported values are
+	// `standard`, `daybreak_blue`, and `daybreak_red`. If omitted, the API resolves
+	// the program from the model's Cyber tier and your organization and project
+	// access, subject to model-specific eligibility restrictions. By default, models
+	// without a Cyber tier use Standard. Blue-tier models use Daybreak Blue when
+	// authorized; otherwise they fall back to Standard unless the model requires
+	// Daybreak access. Red-tier models use Daybreak Red and require authorization.
+	// Requests that require unavailable Daybreak access return 403. An implicit
+	// Standard fallback is represented by null in the response's access_programs
+	// field, rather than an explicit Standard selection.
+	//
+	// Any of "standard", "daybreak_blue", "daybreak_red".
+	Cyber string `json:"cyber,omitzero"`
+	paramObj
+}
+
+func (r ResponseNewParamsAccessPrograms) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseNewParamsAccessPrograms
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseNewParamsAccessPrograms) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseNewParamsAccessPrograms](
+		"cyber", "standard", "daybreak_blue", "daybreak_red",
+	)
 }
 
 // The property Type is required.
