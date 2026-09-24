@@ -4407,7 +4407,8 @@ func (r *BetaNamespaceToolToolFunctionParam) UnmarshalJSON(data []byte) error {
 
 type BetaResponse struct {
 	// Unique identifier for this Response.
-	ID string `json:"id" api:"required"`
+	ID             string                     `json:"id" api:"required"`
+	AccessPrograms BetaResponseAccessPrograms `json:"access_programs" api:"required"`
 	// Unix timestamp (in seconds) of when this Response was created.
 	CreatedAt float64 `json:"created_at" api:"required" format:"unixtime"`
 	// An error object returned when the model fails to generate a Response.
@@ -4620,6 +4621,7 @@ type BetaResponse struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                     respjson.Field
+		AccessPrograms         respjson.Field
 		CreatedAt              respjson.Field
 		Error                  respjson.Field
 		IncompleteDetails      respjson.Field
@@ -4662,6 +4664,25 @@ type BetaResponse struct {
 // Returns the unmodified JSON received from the API
 func (r BetaResponse) RawJSON() string { return r.JSON.raw }
 func (r *BetaResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponseAccessPrograms struct {
+	// The effective Cyber access program used for this response.
+	//
+	// Any of "standard", "daybreak_blue", "daybreak_red".
+	Cyber string `json:"cyber" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Cyber       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseAccessPrograms) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseAccessPrograms) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -33702,6 +33723,8 @@ type BetaResponseNewParams struct {
 	//
 	// Any of "auto", "disabled".
 	Truncation BetaResponseNewParamsTruncation `json:"truncation,omitzero"`
+	// Domain-specific access programs to use for this request.
+	AccessPrograms BetaResponseNewParamsAccessPrograms `json:"access_programs,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
 	//
 	// Learn more:
@@ -33770,6 +33793,38 @@ func (r BetaResponseNewParams) MarshalJSON() (data []byte, err error) {
 }
 func (r *BetaResponseNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// Domain-specific access programs to use for this request.
+type BetaResponseNewParamsAccessPrograms struct {
+	// The Cyber access program to use for this request. Supported values are
+	// `standard`, `daybreak_blue`, and `daybreak_red`. If omitted, the API resolves
+	// the program from the model's Cyber tier and your organization and project
+	// access, subject to model-specific eligibility restrictions. By default, models
+	// without a Cyber tier use Standard. Blue-tier models use Daybreak Blue when
+	// authorized; otherwise they fall back to Standard unless the model requires
+	// Daybreak access. Red-tier models use Daybreak Red and require authorization.
+	// Requests that require unavailable Daybreak access return 403. An implicit
+	// Standard fallback is represented by null in the response's access_programs
+	// field, rather than an explicit Standard selection.
+	//
+	// Any of "standard", "daybreak_blue", "daybreak_red".
+	Cyber string `json:"cyber,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseNewParamsAccessPrograms) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseNewParamsAccessPrograms
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseNewParamsAccessPrograms) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseNewParamsAccessPrograms](
+		"cyber", "standard", "daybreak_blue", "daybreak_red",
+	)
 }
 
 // The property Type is required.

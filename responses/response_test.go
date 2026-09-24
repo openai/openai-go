@@ -29,6 +29,9 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Responses.New(context.TODO(), responses.ResponseNewParams{
+		AccessPrograms: responses.ResponseNewParamsAccessPrograms{
+			Cyber: "standard",
+		},
 		Background: openai.Bool(true),
 		ContextManagement: []responses.ResponseNewParamsContextManagement{{
 			Type:             "compaction",

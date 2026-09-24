@@ -3567,7 +3567,8 @@ func (r *NamespaceToolToolFunctionParam) UnmarshalJSON(data []byte) error {
 
 type Response struct {
 	// Unique identifier for this Response.
-	ID string `json:"id" api:"required"`
+	ID             string                 `json:"id" api:"required"`
+	AccessPrograms ResponseAccessPrograms `json:"access_programs" api:"required"`
 	// Unix timestamp (in seconds) of when this Response was created.
 	CreatedAt float64 `json:"created_at" api:"required" format:"unixtime"`
 	// An error object returned when the model fails to generate a Response.
@@ -3780,6 +3781,7 @@ type Response struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                     respjson.Field
+		AccessPrograms         respjson.Field
 		CreatedAt              respjson.Field
 		Error                  respjson.Field
 		IncompleteDetails      respjson.Field
@@ -3826,6 +3828,25 @@ func (r Response) OutputText() string {
 // Returns the unmodified JSON received from the API
 func (r Response) RawJSON() string { return r.JSON.raw }
 func (r *Response) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponseAccessPrograms struct {
+	// The effective Cyber access program used for this response.
+	//
+	// Any of "standard", "daybreak_blue", "daybreak_red".
+	Cyber string `json:"cyber" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Cyber       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseAccessPrograms) RawJSON() string { return r.JSON.raw }
+func (r *ResponseAccessPrograms) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -25803,6 +25824,14 @@ func (u *ResponsesClientEventUnionParam) UnmarshalJSON(data []byte) error {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetAccessPrograms() *ResponsesClientEventResponseCreateAccessProgramsParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.AccessPrograms
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesClientEventUnionParam) GetBackground() *bool {
 	if vt := u.OfResponseCreate; vt != nil && vt.Background.Valid() {
 		return &vt.Background.Value
@@ -26289,6 +26318,8 @@ type ResponsesClientEventResponseCreateParam struct {
 	//
 	// Deprecated: deprecated
 	Truncation string `json:"truncation,omitzero"`
+	// Domain-specific access programs to use for this request.
+	AccessPrograms ResponsesClientEventResponseCreateAccessProgramsParam `json:"access_programs,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
 	//
 	// Learn more:
@@ -26373,6 +26404,38 @@ func init() {
 	)
 	apijson.RegisterFieldValidator[ResponsesClientEventResponseCreateParam](
 		"truncation", "auto", "disabled",
+	)
+}
+
+// Domain-specific access programs to use for this request.
+type ResponsesClientEventResponseCreateAccessProgramsParam struct {
+	// The Cyber access program to use for this request. Supported values are
+	// `standard`, `daybreak_blue`, and `daybreak_red`. If omitted, the API resolves
+	// the program from the model's Cyber tier and your organization and project
+	// access, subject to model-specific eligibility restrictions. By default, models
+	// without a Cyber tier use Standard. Blue-tier models use Daybreak Blue when
+	// authorized; otherwise they fall back to Standard unless the model requires
+	// Daybreak access. Red-tier models use Daybreak Red and require authorization.
+	// Requests that require unavailable Daybreak access return 403. An implicit
+	// Standard fallback is represented by null in the response's access_programs
+	// field, rather than an explicit Standard selection.
+	//
+	// Any of "standard", "daybreak_blue", "daybreak_red".
+	Cyber string `json:"cyber,omitzero"`
+	paramObj
+}
+
+func (r ResponsesClientEventResponseCreateAccessProgramsParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesClientEventResponseCreateAccessProgramsParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesClientEventResponseCreateAccessProgramsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponsesClientEventResponseCreateAccessProgramsParam](
+		"cyber", "standard", "daybreak_blue", "daybreak_red",
 	)
 }
 
@@ -33254,6 +33317,8 @@ type ResponseNewParams struct {
 	//
 	// Any of "auto", "disabled".
 	Truncation ResponseNewParamsTruncation `json:"truncation,omitzero"`
+	// Domain-specific access programs to use for this request.
+	AccessPrograms ResponseNewParamsAccessPrograms `json:"access_programs,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
 	//
 	// Learn more:
@@ -33323,6 +33388,38 @@ func (r ResponseNewParams) MarshalJSON() (data []byte, err error) {
 }
 func (r *ResponseNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// Domain-specific access programs to use for this request.
+type ResponseNewParamsAccessPrograms struct {
+	// The Cyber access program to use for this request. Supported values are
+	// `standard`, `daybreak_blue`, and `daybreak_red`. If omitted, the API resolves
+	// the program from the model's Cyber tier and your organization and project
+	// access, subject to model-specific eligibility restrictions. By default, models
+	// without a Cyber tier use Standard. Blue-tier models use Daybreak Blue when
+	// authorized; otherwise they fall back to Standard unless the model requires
+	// Daybreak access. Red-tier models use Daybreak Red and require authorization.
+	// Requests that require unavailable Daybreak access return 403. An implicit
+	// Standard fallback is represented by null in the response's access_programs
+	// field, rather than an explicit Standard selection.
+	//
+	// Any of "standard", "daybreak_blue", "daybreak_red".
+	Cyber string `json:"cyber,omitzero"`
+	paramObj
+}
+
+func (r ResponseNewParamsAccessPrograms) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseNewParamsAccessPrograms
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseNewParamsAccessPrograms) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseNewParamsAccessPrograms](
+		"cyber", "standard", "daybreak_blue", "daybreak_red",
+	)
 }
 
 // The property Type is required.
