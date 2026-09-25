@@ -116,7 +116,7 @@ region = eu-central-1
 	if err := client.Get(context.Background(), "/models", nil, &response); err != nil {
 		t.Fatal(err)
 	}
-	if got, want := request.URL.String(), "https://bedrock-mantle.eu-central-1.api.aws/openai/v1/models"; got != want {
+	if got, want := request.URL.String(), "https://bedrock-mantle.eu-central-1.api.aws/v1/models"; got != want {
 		t.Fatalf("request URL = %q, want %q", got, want)
 	}
 	authorization := request.Header.Get("Authorization")
