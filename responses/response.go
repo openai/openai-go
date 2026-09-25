@@ -32812,7 +32812,9 @@ type WebSearchPreviewTool struct {
 	//
 	// Any of "low", "medium", "high".
 	SearchContextSize WebSearchPreviewToolSearchContextSize `json:"search_context_size"`
-	// The user's location.
+	// The approximate location of the user. If omitted or null, defaults to the United
+	// States. To avoid this fallback, pass `{"type": "approximate"}` without location
+	// fields. To localize results, provide the relevant location fields.
 	UserLocation WebSearchPreviewToolUserLocation `json:"user_location" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -32859,7 +32861,9 @@ const (
 	WebSearchPreviewToolSearchContextSizeHigh   WebSearchPreviewToolSearchContextSize = "high"
 )
 
-// The user's location.
+// The approximate location of the user. If omitted or null, defaults to the United
+// States. To avoid this fallback, pass `{"type": "approximate"}` without location
+// fields. To localize results, provide the relevant location fields.
 type WebSearchPreviewToolUserLocation struct {
 	// The type of location approximation. Always `approximate`.
 	Type constant.Approximate `json:"type" default:"approximate"`
@@ -32902,7 +32906,9 @@ type WebSearchPreviewToolParam struct {
 	//
 	// Any of "web_search_preview", "web_search_preview_2025_03_11".
 	Type WebSearchPreviewToolType `json:"type,omitzero" api:"required"`
-	// The user's location.
+	// The approximate location of the user. If omitted or null, defaults to the United
+	// States. To avoid this fallback, pass `{"type": "approximate"}` without location
+	// fields. To localize results, provide the relevant location fields.
 	UserLocation WebSearchPreviewToolUserLocationParam `json:"user_location,omitzero"`
 	// Any of "text", "image".
 	SearchContentTypes []string `json:"search_content_types,omitzero"`
@@ -32922,7 +32928,9 @@ func (r *WebSearchPreviewToolParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The user's location.
+// The approximate location of the user. If omitted or null, defaults to the United
+// States. To avoid this fallback, pass `{"type": "approximate"}` without location
+// fields. To localize results, provide the relevant location fields.
 //
 // The property Type is required.
 type WebSearchPreviewToolUserLocationParam struct {
@@ -32969,7 +32977,9 @@ type WebSearchTool struct {
 	//
 	// Any of "low", "medium", "high".
 	SearchContextSize WebSearchToolSearchContextSize `json:"search_context_size"`
-	// The approximate location of the user.
+	// The approximate location of the user. If omitted or null, defaults to the United
+	// States. To avoid this fallback, pass `{"type": "approximate"}` without location
+	// fields. To localize results, provide the relevant location fields.
 	UserLocation WebSearchToolUserLocation `json:"user_location" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -33037,7 +33047,9 @@ const (
 	WebSearchToolSearchContextSizeHigh   WebSearchToolSearchContextSize = "high"
 )
 
-// The approximate location of the user.
+// The approximate location of the user. If omitted or null, defaults to the United
+// States. To avoid this fallback, pass `{"type": "approximate"}` without location
+// fields. To localize results, provide the relevant location fields.
 type WebSearchToolUserLocation struct {
 	// Free text input for the city of the user, e.g. `San Francisco`.
 	City string `json:"city" api:"nullable"`
@@ -33086,7 +33098,9 @@ type WebSearchToolParam struct {
 	ExternalWebAccess param.Opt[bool] `json:"external_web_access,omitzero"`
 	// Filters for the search.
 	Filters WebSearchToolFiltersParam `json:"filters,omitzero"`
-	// The approximate location of the user.
+	// The approximate location of the user. If omitted or null, defaults to the United
+	// States. To avoid this fallback, pass `{"type": "approximate"}` without location
+	// fields. To localize results, provide the relevant location fields.
 	UserLocation WebSearchToolUserLocationParam `json:"user_location,omitzero"`
 	// High level guidance for the amount of context window space to use for the
 	// search. One of `low`, `medium`, or `high`. `medium` is the default.
@@ -33122,7 +33136,9 @@ func (r *WebSearchToolFiltersParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The approximate location of the user.
+// The approximate location of the user. If omitted or null, defaults to the United
+// States. To avoid this fallback, pass `{"type": "approximate"}` without location
+// fields. To localize results, provide the relevant location fields.
 type WebSearchToolUserLocationParam struct {
 	// Free text input for the city of the user, e.g. `San Francisco`.
 	City param.Opt[string] `json:"city,omitzero"`
