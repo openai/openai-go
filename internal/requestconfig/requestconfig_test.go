@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/openai/openai-go/v3/internal/apierror"
 )
 
 type closeTrackingReadCloser struct {
@@ -378,4 +380,66 @@ func TestExecuteClosesAttemptBodyOnHandlerError(t *testing.T) {
 			t.Fatalf("body closes = %d, want 1", body.closes)
 		}
 	})
+}
+
+func TestExecuteNonAPIHTTPError(t *testing.T) {
+	tests := []struct {
+		name        string
+		body        string
+		wantCode    string
+		wantMessage string
+		wantType    string
+	}{
+		{
+			name:        "non API response",
+			body:        `{"message":"route not found"}`,
+			wantCode:    "http_404",
+			wantMessage: "unexpected HTTP 404 Not Found response",
+			wantType:    "http_error",
+		},
+		{
+			name:        "API error envelope",
+			body:        `{"error":{"code":"invalid_request_error","message":"bad request","type":"invalid_request_error"}}`,
+			wantCode:    "invalid_request_error",
+			wantMessage: "bad request",
+			wantType:    "invalid_request_error",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			cfg, err := NewRequestConfig(context.Background(), http.MethodGet, "/models", nil, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			cfg.BaseURL, err = url.Parse("https://example.com/")
+			if err != nil {
+				t.Fatal(err)
+			}
+			cfg.MaxRetries = 0
+			cfg.CustomHTTPDoer = httpDoerFunc(func(*http.Request) (*http.Response, error) {
+				return &http.Response{
+					StatusCode: http.StatusNotFound,
+					Header:     make(http.Header),
+					Body:       io.NopCloser(strings.NewReader(test.body)),
+				}, nil
+			})
+
+			err = cfg.Execute()
+			var got *apierror.Error
+			if !errors.As(err, &got) {
+				t.Fatalf("Execute() error = %T %v, want *apierror.Error", err, err)
+			}
+			if got.Code != test.wantCode || got.Message != test.wantMessage || got.Type != test.wantType {
+				t.Fatalf("error fields = (%q, %q, %q), want (%q, %q, %q)", got.Code, got.Message, got.Type, test.wantCode, test.wantMessage, test.wantType)
+			}
+			contents, readErr := io.ReadAll(got.Response.Body)
+			if readErr != nil {
+				t.Fatal(readErr)
+			}
+			if string(contents) != test.body {
+				t.Fatalf("response body = %q, want %q", contents, test.body)
+			}
+		})
+	}
 }
