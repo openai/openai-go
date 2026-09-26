@@ -48,6 +48,9 @@ func TestBetaAgentVaultCredentialNewWithOptionalParams(t *testing.T) {
 				},
 			},
 			Name: "x",
+			Metadata: map[string]string{
+				"foo": "string",
+			},
 		},
 	)
 	if err != nil {
@@ -118,6 +121,9 @@ func TestBetaAgentVaultCredentialUpdateWithOptionalParams(t *testing.T) {
 						},
 					},
 				},
+			},
+			Metadata: map[string]string{
+				"foo": "string",
 			},
 		},
 	)
