@@ -193,7 +193,7 @@ type BetaAgentSessionNewParamsAgent struct {
 	Model param.Opt[string] `json:"model,omitzero"`
 	// The service tier used for model requests.
 	//
-	// Any of "auto", "default", "flex", "priority", "fast".
+	// Any of "auto", "default", "flex", "priority", "fast", "ultrafast".
 	ServiceTier string `json:"service_tier,omitzero"`
 	// Tools available to the agent. Omit to inherit, or pass null to clear them.
 	Tools []AgentToolParamUnion `json:"tools,omitzero"`
@@ -217,7 +217,7 @@ func (r *BetaAgentSessionNewParamsAgent) UnmarshalJSON(data []byte) error {
 
 func init() {
 	apijson.RegisterFieldValidator[BetaAgentSessionNewParamsAgent](
-		"service_tier", "auto", "default", "flex", "priority", "fast",
+		"service_tier", "auto", "default", "flex", "priority", "fast", "ultrafast",
 	)
 }
 
@@ -261,7 +261,7 @@ type BetaAgentSessionUpdateParamsAgent struct {
 	Model param.Opt[string] `json:"model,omitzero"`
 	// Omit to keep the current tier. Null resets it to auto.
 	//
-	// Any of "auto", "default", "flex", "priority", "fast".
+	// Any of "auto", "default", "flex", "priority", "fast", "ultrafast".
 	ServiceTier param.Opt[string] `json:"service_tier,omitzero"`
 	// Reasoning settings to update. Omit to keep the current effort.
 	Reasoning BetaAgentSessionUpdateParamsAgentReasoning `json:"reasoning,omitzero"`

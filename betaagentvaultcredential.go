@@ -74,8 +74,7 @@ func (r *BetaAgentVaultCredentialService) Get(ctx context.Context, vaultID strin
 	return res, err
 }
 
-// Rotates a vault credential's write-only secret and returns only credential
-// metadata. See
+// Updates credential metadata or rotates its write-only secret. See
 // [vaults](https://developers.openai.com/api/docs/guides/agents-api/tools/vaults).
 func (r *BetaAgentVaultCredentialService) Update(ctx context.Context, vaultID string, credentialID string, body BetaAgentVaultCredentialUpdateParams, opts ...option.RequestOption) (res *Credential, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
@@ -153,6 +152,8 @@ type Credential struct {
 	Auth CredentialAuthUnion `json:"auth" api:"required"`
 	// The Unix timestamp, in seconds, when the credential was created.
 	CreatedAt int64 `json:"created_at" api:"required"`
+	// Application-defined key-value pairs associated with this credential.
+	Metadata map[string]string `json:"metadata" api:"required"`
 	// The human-readable name of the credential.
 	Name string `json:"name" api:"required"`
 	// The object type. Always `vault.credential`.
@@ -166,6 +167,7 @@ type Credential struct {
 		ID          respjson.Field
 		Auth        respjson.Field
 		CreatedAt   respjson.Field
+		Metadata    respjson.Field
 		Name        respjson.Field
 		Object      respjson.Field
 		UpdatedAt   respjson.Field
@@ -1386,6 +1388,9 @@ type BetaAgentVaultCredentialNewParams struct {
 	// The name is trimmed before storage. It must contain 1 to 256 UTF-8 bytes after
 	// trimming.
 	Name string `json:"name" api:"required"`
+	// Up to 16 string key-value pairs, with keys up to 64 and values up to 512
+	// characters. Defaults to an empty map.
+	Metadata map[string]string `json:"metadata,omitzero"`
 	paramObj
 }
 
@@ -1399,7 +1404,10 @@ func (r *BetaAgentVaultCredentialNewParams) UnmarshalJSON(data []byte) error {
 
 type BetaAgentVaultCredentialUpdateParams struct {
 	// Replacement values for the credential's existing authentication method.
-	Auth CredentialAuthRotateParamUnion `json:"auth,omitzero" api:"required"`
+	Auth CredentialAuthRotateParamUnion `json:"auth,omitzero"`
+	// Replaces all metadata. Omit to preserve it, or pass {} to clear it. Up to 16
+	// string key-value pairs, with keys up to 64 and values up to 512 characters.
+	Metadata map[string]string `json:"metadata,omitzero"`
 	paramObj
 }
 
