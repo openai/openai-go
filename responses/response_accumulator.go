@@ -5,8 +5,10 @@ import (
 	"errors"
 	"maps"
 	"slices"
+	"strconv"
 	"strings"
 
+	"github.com/openai/openai-go/v3/packages/respjson"
 	"github.com/tidwall/gjson"
 )
 
@@ -141,8 +143,8 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 	if response != nil && a.responseID != "" && response.ID != "" && response.ID != a.responseID {
 		return errors.New("responses accumulator: event belongs to another response")
 	}
-	a.bound, a.streamID = true, streamID
 	if response != nil {
+		a.bound, a.streamID = true, streamID
 		if response.ID != "" {
 			a.responseID = response.ID
 		}
@@ -160,43 +162,107 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 		}
 		return nil
 	}
+	invalid := errors.New("responses accumulator: invalid selected event fields")
 	switch event.Type {
 	case "response.output_item.added":
 		e := &event.OfResponsesServerEventResponseOutputItemWsAdded
+		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !e.JSON.Item.Valid() {
+			return invalid
+		}
 		a.addItem(e.OutputIndex, e.Item)
 	case "response.output_item.done":
 		e := &event.OfResponsesServerEventResponseOutputItemWsDone
+		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !e.JSON.Item.Valid() {
+			return invalid
+		}
 		a.addItem(e.OutputIndex, e.Item)
 	case "response.content_part.added":
 		e := &event.OfResponsesServerEventResponseContentPartWsAdded
+		if !accumulatorIndicesValid(e.JSON.OutputIndex, e.JSON.ContentIndex) ||
+			!accumulatorStringsValid(e.JSON.ItemID) || !e.JSON.Part.Valid() {
+			return invalid
+		}
 		if e.Part.Type == "output_text" {
+			if !accumulatorStringsValid(e.Part.JSON.Text) {
+				return invalid
+			}
 			replaceAccumulatedText(a.text(e.OutputIndex, e.ItemID, e.ContentIndex), e.Part.Text)
 		}
 	case "response.content_part.done":
 		e := &event.OfResponsesServerEventResponseContentPartWsDone
+		if !accumulatorIndicesValid(e.JSON.OutputIndex, e.JSON.ContentIndex) ||
+			!accumulatorStringsValid(e.JSON.ItemID) || !e.JSON.Part.Valid() {
+			return invalid
+		}
 		if e.Part.Type == "output_text" {
+			if !accumulatorStringsValid(e.Part.JSON.Text) {
+				return invalid
+			}
 			replaceAccumulatedText(a.text(e.OutputIndex, e.ItemID, e.ContentIndex), e.Part.Text)
 		}
 	case "response.output_text.delta":
 		e := &event.OfResponsesServerEventResponseTextWsDelta
+		if !accumulatorIndicesValid(e.JSON.OutputIndex, e.JSON.ContentIndex) ||
+			!accumulatorStringsValid(e.JSON.ItemID, e.JSON.Delta) {
+			return invalid
+		}
 		a.text(e.OutputIndex, e.ItemID, e.ContentIndex).WriteString(e.Delta)
 	case "response.output_text.done":
 		e := &event.OfResponsesServerEventResponseTextWsDone
+		if !accumulatorIndicesValid(e.JSON.OutputIndex, e.JSON.ContentIndex) ||
+			!accumulatorStringsValid(e.JSON.ItemID, e.JSON.Text) {
+			return invalid
+		}
 		replaceAccumulatedText(a.text(e.OutputIndex, e.ItemID, e.ContentIndex), e.Text)
 	case "response.function_call_arguments.delta":
 		e := &event.OfResponsesServerEventResponseFunctionCallArgumentsWsDelta
+		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !accumulatorStringsValid(e.JSON.ItemID, e.JSON.Delta) {
+			return invalid
+		}
 		a.item(e.OutputIndex, e.ItemID).arguments.WriteString(e.Delta)
 	case "response.function_call_arguments.done":
 		e := &event.OfResponsesServerEventResponseFunctionCallArgumentsWsDone
+		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !accumulatorStringsValid(e.JSON.ItemID, e.JSON.Arguments) {
+			return invalid
+		}
 		replaceAccumulatedText(&a.item(e.OutputIndex, e.ItemID).arguments, e.Arguments)
 	case "response.custom_tool_call_input.delta":
 		e := &event.OfResponsesServerEventResponseCustomToolCallInputWsDelta
+		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !accumulatorStringsValid(e.JSON.ItemID, e.JSON.Delta) {
+			return invalid
+		}
 		a.item(e.OutputIndex, e.ItemID).input.WriteString(e.Delta)
 	case "response.custom_tool_call_input.done":
 		e := &event.OfResponsesServerEventResponseCustomToolCallInputWsDone
+		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !accumulatorStringsValid(e.JSON.ItemID, e.JSON.Input) {
+			return invalid
+		}
 		replaceAccumulatedText(&a.item(e.OutputIndex, e.ItemID).input, e.Input)
 	}
+	a.bound, a.streamID = true, streamID
 	return nil
+}
+
+// Field.Valid alone permits loose conversions (numeric strings, booleans or
+// truncated fractions). Require real, nonnegative int64 wire indices; sparse
+// indices remain map keys and carry no allocation limit.
+func accumulatorIndicesValid(fields ...respjson.Field) bool {
+	for _, field := range fields {
+		index, err := strconv.ParseInt(field.Raw(), 10, 64)
+		if !field.Valid() || err != nil || index < 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func accumulatorStringsValid(fields ...respjson.Field) bool {
+	for _, field := range fields {
+		if !field.Valid() || gjson.Parse(field.Raw()).Type != gjson.String {
+			return false
+		}
+	}
+	return true
 }
 
 func (a *ResponseAccumulator) item(index int64, id string) *responseAccumulatedOutput {

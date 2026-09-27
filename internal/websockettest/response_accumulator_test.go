@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -14,6 +15,80 @@ import (
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/responses"
 )
+
+func TestResponsesAccumulatorRejectsMalformedSelectedFields(t *testing.T) {
+	for _, tc := range []struct{ name, frame string }{
+		{"string output index", `{"type":"response.output_text.delta","item_id":"msg","output_index":"bad","content_index":0,"delta":"corrupt"}`},
+		{"missing output index", `{"type":"response.output_text.delta","item_id":"msg","content_index":0,"delta":"corrupt"}`},
+		{"null content index", `{"type":"response.output_text.delta","item_id":"msg","output_index":0,"content_index":null,"delta":"corrupt"}`},
+		{"missing content index", `{"type":"response.output_text.done","item_id":"msg","output_index":0,"text":"corrupt"}`},
+		{"numeric string index", `{"type":"response.output_text.delta","item_id":"msg","output_index":"0","content_index":0,"delta":"corrupt"}`},
+		{"fractional index", `{"type":"response.output_text.delta","item_id":"msg","output_index":0.5,"content_index":0,"delta":"corrupt"}`},
+		{"overflow index", `{"type":"response.output_text.delta","item_id":"msg","output_index":9223372036854775808,"content_index":0,"delta":"corrupt"}`},
+		{"negative index", `{"type":"response.output_text.delta","item_id":"msg","output_index":-1,"content_index":0,"delta":"corrupt"}`},
+		{"numeric delta", `{"type":"response.output_text.delta","item_id":"msg","output_index":0,"content_index":0,"delta":7}`},
+		{"numeric identity", `{"type":"response.output_text.done","item_id":7,"output_index":0,"content_index":0,"text":"corrupt"}`},
+		{"missing done text", `{"type":"response.output_text.done","item_id":"msg","output_index":0,"content_index":0}`},
+		{"item added bad index", `{"type":"response.output_item.added","output_index":false,"item":{"type":"message","id":"new","content":[]}}`},
+		{"item done missing index", `{"type":"response.output_item.done","item":{"type":"message","id":"new","content":[]}}`},
+		{"part added bad content index", `{"type":"response.content_part.added","output_index":0,"content_index":"bad","item_id":"msg","part":{"type":"output_text","text":"corrupt"}}`},
+		{"part done missing text", `{"type":"response.content_part.done","output_index":0,"content_index":0,"item_id":"msg","part":{"type":"output_text"}}`},
+		{"function delta bad index", `{"type":"response.function_call_arguments.delta","output_index":null,"item_id":"msg","delta":"corrupt"}`},
+		{"function done wrong args", `{"type":"response.function_call_arguments.done","output_index":0,"item_id":"msg","arguments":{}}`},
+		{"custom delta wrong input", `{"type":"response.custom_tool_call_input.delta","output_index":0,"item_id":"msg","delta":false}`},
+		{"custom done missing input", `{"type":"response.custom_tool_call_input.done","output_index":0,"item_id":"msg"}`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			conn := laneTestConnection(t, responses.ResponseConnectionOptions{}, func(ctx context.Context, socket *wire.Conn) {
+				for _, frame := range []string{
+					`{"type":"response.output_text.delta","item_id":"msg","output_index":0,"content_index":0,"delta":"keep"}`,
+					tc.frame,
+					`{"type":"response.output_text.delta","item_id":"msg","output_index":0,"content_index":0,"delta":" me"}`,
+				} {
+					if err := socket.Write(ctx, wire.MessageText, []byte(frame)); err != nil {
+						t.Errorf("write event: %v", err)
+						return
+					}
+				}
+				_, _, _ = socket.Read(ctx)
+			})
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			var acc responses.ResponseAccumulator
+			first, err := conn.Recv(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := acc.AddEvent(first); err != nil {
+				t.Fatal(err)
+			}
+			before := acc.Snapshot()
+			event, err := conn.Recv(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := acc.AddEvent(event); err == nil {
+				t.Error("malformed selected field accepted")
+			}
+			if after := acc.Snapshot(); !reflect.DeepEqual(after, before) {
+				t.Errorf("snapshot changed after rejecting malformed event: before=%+v after=%+v", before, after)
+			}
+			if event.RawJSON() != tc.frame {
+				t.Error("original raw event changed")
+			}
+			last, err := conn.Recv(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := acc.AddEvent(last); err != nil {
+				t.Fatal(err)
+			}
+			if got := acc.Snapshot().OutputText(); got != "keep me" {
+				t.Errorf("continued zero-index output: %q", got)
+			}
+		})
+	}
+}
 
 func TestResponsesAccumulatorInterleavedTurns(t *testing.T) {
 	// Deltas precede any terminal output. The peer corrects all three selected
