@@ -143,7 +143,13 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 	if response != nil && a.responseID != "" && response.ID != "" && response.ID != a.responseID {
 		return errors.New("responses accumulator: event belongs to another response")
 	}
+	invalid := errors.New("responses accumulator: invalid selected event fields")
 	if response != nil {
+		for _, item := range response.Output {
+			if !accumulatorItemValid(item) {
+				return invalid
+			}
+		}
 		a.bound, a.streamID = true, streamID
 		if response.ID != "" {
 			a.responseID = response.ID
@@ -162,17 +168,16 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 		}
 		return nil
 	}
-	invalid := errors.New("responses accumulator: invalid selected event fields")
 	switch event.Type {
 	case "response.output_item.added":
 		e := &event.OfResponsesServerEventResponseOutputItemWsAdded
-		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !e.JSON.Item.Valid() {
+		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !e.JSON.Item.Valid() || !accumulatorItemValid(e.Item) {
 			return invalid
 		}
 		a.addItem(e.OutputIndex, e.Item)
 	case "response.output_item.done":
 		e := &event.OfResponsesServerEventResponseOutputItemWsDone
-		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !e.JSON.Item.Valid() {
+		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !e.JSON.Item.Valid() || !accumulatorItemValid(e.Item) {
 			return invalid
 		}
 		a.addItem(e.OutputIndex, e.Item)
@@ -261,6 +266,33 @@ func accumulatorStringsValid(fields ...respjson.Field) bool {
 		if !field.Valid() || gjson.Parse(field.Raw()).Type != gjson.String {
 			return false
 		}
+	}
+	return true
+}
+
+// Only validate the fields this projection consumes. Unknown item and content
+// kinds remain available on the raw event; tool IDs are optional in the wire
+// models, but an ID that was supplied must not be coerced to a string.
+func accumulatorItemValid(item ResponseOutputItemUnion) bool {
+	if !accumulatorStringsValid(item.JSON.Type) ||
+		(item.JSON.ID.Raw() != respjson.Omitted && !accumulatorStringsValid(item.JSON.ID)) {
+		return false
+	}
+	switch item.Type {
+	case "message":
+		if !item.JSON.Content.Valid() {
+			return false
+		}
+		for _, part := range item.Content {
+			if !accumulatorStringsValid(part.JSON.Type) ||
+				(part.Type == "output_text" && !accumulatorStringsValid(part.JSON.Text)) {
+				return false
+			}
+		}
+	case "function_call":
+		return accumulatorStringsValid(item.JSON.CallID, item.JSON.Name, item.JSON.Arguments)
+	case "custom_tool_call":
+		return accumulatorStringsValid(item.JSON.CallID, item.JSON.Name, item.JSON.Input)
 	}
 	return true
 }

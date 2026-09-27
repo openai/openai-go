@@ -37,6 +37,19 @@ func TestResponsesAccumulatorRejectsMalformedSelectedFields(t *testing.T) {
 		{"function done wrong args", `{"type":"response.function_call_arguments.done","output_index":0,"item_id":"msg","arguments":{}}`},
 		{"custom delta wrong input", `{"type":"response.custom_tool_call_input.delta","output_index":0,"item_id":"msg","delta":false}`},
 		{"custom done missing input", `{"type":"response.custom_tool_call_input.done","output_index":0,"item_id":"msg"}`},
+		{"item added non-array content", `{"type":"response.output_item.added","output_index":0,"item":{"type":"message","id":"msg","content":{}}}`},
+		{"item done null content", `{"type":"response.output_item.done","output_index":0,"item":{"type":"message","id":"msg","content":null}}`},
+		{"item done invalid later text", `{"type":"response.output_item.done","output_index":0,"item":{"type":"message","id":"msg","content":[{"type":"output_text","text":"valid"},{"type":"output_text","text":42}]}}`},
+		{"item added missing selected text", `{"type":"response.output_item.added","output_index":0,"item":{"type":"message","id":"msg","content":[{"type":"output_text"}]}}`},
+		{"item done null content part", `{"type":"response.output_item.done","output_index":0,"item":{"type":"message","id":"msg","content":[null]}}`},
+		{"item added invalid type", `{"type":"response.output_item.added","output_index":0,"item":{"type":7,"id":"msg","content":[]}}`},
+		{"item added invalid identity", `{"type":"response.output_item.added","output_index":0,"item":{"type":"message","id":7,"content":[]}}`},
+		{"function item done wrong arguments", `{"type":"response.output_item.done","output_index":0,"item":{"type":"function_call","id":"msg","call_id":"c","name":"f","arguments":{"bad":true}}}`},
+		{"function item added invalid name", `{"type":"response.output_item.added","output_index":0,"item":{"type":"function_call","id":"msg","call_id":"c","name":7,"arguments":""}}`},
+		{"custom item done invalid input", `{"type":"response.output_item.done","output_index":0,"item":{"type":"custom_tool_call","id":"msg","call_id":"c","name":"f","input":false}}`},
+		{"custom item added invalid call ID", `{"type":"response.output_item.added","output_index":0,"item":{"type":"custom_tool_call","id":"msg","call_id":[],"name":"f","input":""}}`},
+		{"completed response has invalid later item", `{"type":"response.completed","response":{"id":"r","status":"completed","output":[{"type":"message","id":"msg","content":[{"type":"output_text","text":"first"}]},{"type":"message","id":"m2","content":{}}]}}`},
+		{"failed response has invalid tool data", `{"type":"response.failed","response":{"id":"r","status":"failed","output":[{"type":"function_call","id":"msg","call_id":"c","name":"f","arguments":{}}]}}`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			conn := laneTestConnection(t, responses.ResponseConnectionOptions{}, func(ctx context.Context, socket *wire.Conn) {
@@ -59,7 +72,7 @@ func TestResponsesAccumulatorRejectsMalformedSelectedFields(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err := acc.AddEvent(first); err != nil {
+			if err = acc.AddEvent(first); err != nil {
 				t.Fatal(err)
 			}
 			before := acc.Snapshot()
@@ -67,7 +80,7 @@ func TestResponsesAccumulatorRejectsMalformedSelectedFields(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err := acc.AddEvent(event); err == nil {
+			if err = acc.AddEvent(event); err == nil {
 				t.Error("malformed selected field accepted")
 			}
 			if after := acc.Snapshot(); !reflect.DeepEqual(after, before) {
