@@ -254,3 +254,124 @@ func TestResponsesAccumulatorNeverInventsCompletion(t *testing.T) {
 		})
 	}
 }
+
+func TestResponsesAccumulatorReplacements(t *testing.T) {
+	// All corrections arrive after a caller has already observed provisional
+	// data, so silently leaving stale text or tool input would be visible.
+	for _, tc := range []struct {
+		name                          string
+		initial, correction           string
+		wantID, wantText, wantArgs    string
+		wantInput, wantType, terminal string
+		wantItems                     int
+	}{
+		{
+			name:       "explicit empty terminal clears provisional output",
+			initial:    `{"type":"response.output_text.delta","item_id":"msg","output_index":0,"content_index":0,"delta":"provisional"}`,
+			correction: `{"type":"response.completed","response":{"id":"resp","status":"completed","output":[]}}`,
+			terminal:   "response.completed",
+		},
+		{
+			name:       "omitted terminal output retains projection",
+			initial:    `{"type":"response.output_text.delta","item_id":"msg","output_index":0,"content_index":0,"delta":"provisional"}`,
+			correction: `{"type":"response.completed","response":{"id":"resp","status":"completed"}}`,
+			wantItems:  1, wantID: "msg", wantText: "provisional", terminal: "response.completed",
+		},
+		{
+			name:       "null terminal output remains nullish",
+			initial:    `{"type":"response.output_text.delta","item_id":"msg","output_index":0,"content_index":0,"delta":"provisional"}`,
+			correction: `{"type":"response.incomplete","response":{"id":"resp","status":"incomplete","output":null}}`,
+			wantItems:  1, wantID: "msg", wantText: "provisional", terminal: "response.incomplete",
+		},
+		{
+			name:       "done message removes excess content",
+			initial:    `{"type":"response.output_item.added","output_index":0,"item":{"type":"message","id":"msg","content":[{"type":"output_text","text":"first"},{"type":"output_text","text":"stale"}]}}`,
+			correction: `{"type":"response.output_item.done","output_index":0,"item":{"type":"message","id":"msg","content":[{"type":"output_text","text":"corrected"}]}}`,
+			wantItems:  1, wantID: "msg", wantText: "corrected", wantType: "message",
+		},
+		{
+			name:       "done message with empty content",
+			initial:    `{"type":"response.output_item.added","output_index":0,"item":{"type":"message","id":"msg","content":[{"type":"output_text","text":"remove"}]}}`,
+			correction: `{"type":"response.output_item.done","output_index":0,"item":{"type":"message","id":"msg","content":[]}}`,
+			wantItems:  1, wantID: "msg", wantType: "message",
+		},
+		{
+			name:       "done item changes from message to function",
+			initial:    `{"type":"response.output_item.added","output_index":0,"item":{"type":"message","id":"item","content":[{"type":"output_text","text":"stale"}]}}`,
+			correction: `{"type":"response.output_item.done","output_index":0,"item":{"type":"function_call","id":"item","call_id":"call","name":"lookup","arguments":"{}"}}`,
+			wantItems:  1, wantID: "item", wantArgs: "{}", wantType: "function_call",
+		},
+		{
+			name:       "done item changes from function to custom input",
+			initial:    `{"type":"response.output_item.added","output_index":0,"item":{"type":"function_call","id":"item","call_id":"call","name":"lookup","arguments":"{\"stale\":true}"}}`,
+			correction: `{"type":"response.output_item.done","output_index":0,"item":{"type":"custom_tool_call","id":"item","call_id":"call","name":"corrected","input":"free form"}}`,
+			wantItems:  1, wantID: "item", wantInput: "free form", wantType: "custom_tool_call",
+		},
+		{
+			name:       "delta for different identity starts a fresh index",
+			initial:    `{"type":"response.output_item.added","output_index":0,"item":{"type":"message","id":"msg_old","content":[{"type":"output_text","text":"stale"}]}}`,
+			correction: `{"type":"response.output_text.delta","item_id":"msg_new","output_index":0,"content_index":0,"delta":"fresh"}`,
+			wantItems:  1, wantID: "msg_new", wantText: "fresh",
+		},
+		{
+			name:       "tool delta with different identity does not concatenate",
+			initial:    `{"type":"response.output_item.added","output_index":0,"item":{"type":"function_call","id":"fc_old","call_id":"old","name":"lookup","arguments":"{\"old\":1}"}}`,
+			correction: `{"type":"response.function_call_arguments.delta","item_id":"fc_new","output_index":0,"delta":"{\"new\":"}`,
+			wantItems:  1, wantID: "fc_new", wantArgs: `{"new":`,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			conn := laneTestConnection(t, responses.ResponseConnectionOptions{}, func(ctx context.Context, socket *wire.Conn) {
+				for _, frame := range []string{
+					`{"type":"response.created","response":{"id":"resp","status":"in_progress"}}`,
+					tc.initial, tc.correction,
+				} {
+					if err := socket.Write(ctx, wire.MessageText, []byte(frame)); err != nil {
+						t.Errorf("write event: %v", err)
+						return
+					}
+				}
+				_, _, _ = socket.Read(ctx)
+			})
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			var acc responses.ResponseAccumulator
+			for range 2 {
+				event, err := conn.Recv(ctx)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := acc.AddEvent(event); err != nil {
+					t.Fatal(err)
+				}
+			}
+			before := acc.Snapshot()
+			beforeText := before.OutputText()
+			if len(before.Output) != 1 {
+				t.Fatalf("initial item not available: %+v", before)
+			}
+			event, err := conn.Recv(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := acc.AddEvent(event); err != nil {
+				t.Fatal(err)
+			}
+			after := acc.Snapshot()
+			if len(after.Output) != tc.wantItems || after.OutputText() != tc.wantText || after.TerminalEvent != tc.terminal {
+				t.Fatalf("after correction: %+v, text %q; want %d items, text %q, terminal %q",
+					after, after.OutputText(), tc.wantItems, tc.wantText, tc.terminal)
+			}
+			if tc.wantItems > 0 {
+				item := after.Output[0]
+				if item.ItemID != tc.wantID || item.Type != tc.wantType || item.Arguments != tc.wantArgs || item.Input != tc.wantInput {
+					t.Fatalf("corrected item: %+v; want ID %s, type %s, args %q, input %q",
+						item, tc.wantID, tc.wantType, tc.wantArgs, tc.wantInput)
+				}
+			}
+			if before.OutputText() != beforeText {
+				t.Fatal("item replacement changed previously published snapshot")
+			}
+		})
+	}
+}

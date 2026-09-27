@@ -409,8 +409,10 @@ acc.Reset() // Ready for another turn; does not close the connection.
 Use a separate accumulator for each lane. Snapshots remain unchanged as more
 events arrive or after `Reset`. Text is grouped by output and content index;
 function arguments and custom input retain their item and call IDs. Finalized
-fields replace earlier deltas. A supplied final output overrides prior items;
-if final output is absent, the opt-in projection retains collected fields.
+fields replace earlier deltas. A supplied final output, even an empty array,
+overrides prior items; if final output is absent or null, the opt-in projection
+retains collected fields. An item with a different nonempty ID starts fresh
+at its output index; it cannot inherit text or tool inputs from an earlier item.
 This projection is not a server `Response`. A missing or invalid terminal
 response, an API error, or EOF never becomes a completed result.
 `FinalResponse` keeps its original behavior and returns the server snapshot.

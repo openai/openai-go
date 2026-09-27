@@ -93,10 +93,12 @@ func (s ResponseAccumulatorSnapshot) OutputText() string {
 
 // AddEvent observes a typed event from Recv without modifying it. The helper
 // ignores unknown/unselected events; callers retain the original event and its
-// RawJSON. Done events and supplied final output override earlier deltas. When
-// the terminal snapshot omits output, only this projection retains prior data;
-// ResponseConnection.FinalResponse and ResponseLane.FinalResponse are unchanged.
-// A different lane or response requires a separate accumulator or Reset.
+// RawJSON. Done events and supplied final output (including an empty array)
+// override earlier deltas. When terminal output is omitted or null, only this
+// projection retains prior data; ResponseConnection.FinalResponse and
+// ResponseLane.FinalResponse are unchanged. A different lane or response
+// requires a separate accumulator or Reset. A new nonempty item ID starts a
+// fresh projection at that output index; it never appends to another item.
 func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 	switch event.Type {
 	case "response.created", "response.in_progress", "response.completed", "response.failed", "response.incomplete",
@@ -144,7 +146,7 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 		if response.ID != "" {
 			a.responseID = response.ID
 		}
-		if len(response.Output) > 0 {
+		if response.JSON.Output.Valid() || len(response.Output) > 0 {
 			// A supplied response output supersedes the entire earlier projection,
 			// including items and content absent from this newer snapshot.
 			a.output = nil
@@ -202,7 +204,7 @@ func (a *ResponseAccumulator) item(index int64, id string) *responseAccumulatedO
 		a.output = make(map[int64]*responseAccumulatedOutput)
 	}
 	item := a.output[index]
-	if item == nil {
+	if item == nil || (id != "" && item.id != "" && id != item.id) {
 		item = &responseAccumulatedOutput{text: make(map[int64]*strings.Builder)}
 		a.output[index] = item
 	}
@@ -223,6 +225,9 @@ func (a *ResponseAccumulator) text(index int64, id string, contentIndex int64) *
 }
 
 func (a *ResponseAccumulator) addItem(index int64, source ResponseOutputItemUnion) {
+	// Full item snapshots replace the entire projection, even when the new
+	// content is empty or the corrected item has a different type.
+	delete(a.output, index)
 	item := a.item(index, source.ID)
 	item.itemType, item.callID, item.name = source.Type, source.CallID, source.Name
 	switch source.Type {
