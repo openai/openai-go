@@ -50,6 +50,11 @@ func TestResponsesAccumulatorRejectsMalformedSelectedFields(t *testing.T) {
 		{"custom item added invalid call ID", `{"type":"response.output_item.added","output_index":0,"item":{"type":"custom_tool_call","id":"msg","call_id":[],"name":"f","input":""}}`},
 		{"completed response has invalid later item", `{"type":"response.completed","response":{"id":"r","status":"completed","output":[{"type":"message","id":"msg","content":[{"type":"output_text","text":"first"}]},{"type":"message","id":"m2","content":{}}]}}`},
 		{"failed response has invalid tool data", `{"type":"response.failed","response":{"id":"r","status":"failed","output":[{"type":"function_call","id":"msg","call_id":"c","name":"f","arguments":{}}]}}`},
+		{"completed response numeric ID", `{"type":"response.completed","response":{"id":7,"status":"completed","output":[]}}`},
+		{"failed response null ID", `{"type":"response.failed","response":{"id":null,"status":"failed","output":[]}}`},
+		{"incomplete response missing ID", `{"type":"response.incomplete","response":{"status":"incomplete","output":[]}}`},
+		{"created response object ID", `{"type":"response.created","response":{"id":{},"status":"in_progress","output":[]}}`},
+		{"progress response invalid ID", `{"type":"response.in_progress","response":{"id":false,"status":"in_progress","output":[]}}`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			conn := laneTestConnection(t, responses.ResponseConnectionOptions{}, func(ctx context.Context, socket *wire.Conn) {

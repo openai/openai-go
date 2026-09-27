@@ -145,6 +145,9 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 	}
 	invalid := errors.New("responses accumulator: invalid selected event fields")
 	if response != nil {
+		if !accumulatorStringsValid(response.JSON.ID) {
+			return invalid
+		}
 		for _, item := range response.Output {
 			if !accumulatorItemValid(item) {
 				return invalid
