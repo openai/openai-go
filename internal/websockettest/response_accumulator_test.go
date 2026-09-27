@@ -55,6 +55,11 @@ func TestResponsesAccumulatorRejectsMalformedSelectedFields(t *testing.T) {
 		{"incomplete response missing ID", `{"type":"response.incomplete","response":{"status":"incomplete","output":[]}}`},
 		{"created response object ID", `{"type":"response.created","response":{"id":{},"status":"in_progress","output":[]}}`},
 		{"progress response invalid ID", `{"type":"response.in_progress","response":{"id":false,"status":"in_progress","output":[]}}`},
+		{"completed response output is an object", `{"type":"response.completed","response":{"id":"r","status":"completed","output":{}}}`},
+		{"created response output is an object", `{"type":"response.created","response":{"id":"r","status":"in_progress","output":{}}}`},
+		{"progress response output is a string", `{"type":"response.in_progress","response":{"id":"r","status":"in_progress","output":"wrong"}}`},
+		{"failed response output is boolean", `{"type":"response.failed","response":{"id":"r","status":"failed","output":false}}`},
+		{"incomplete response output is numeric", `{"type":"response.incomplete","response":{"id":"r","status":"incomplete","output":42}}`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			conn := laneTestConnection(t, responses.ResponseConnectionOptions{}, func(ctx context.Context, socket *wire.Conn) {
@@ -103,6 +108,77 @@ func TestResponsesAccumulatorRejectsMalformedSelectedFields(t *testing.T) {
 			}
 			if got := acc.Snapshot().OutputText(); got != "keep me" {
 				t.Errorf("continued zero-index output: %q", got)
+			}
+		})
+	}
+}
+
+func TestResponsesAccumulatorUsesReceiverRouting(t *testing.T) {
+	for _, tc := range []struct{ name, initial string }{
+		{"first event numeric scope", `{"type":"response.created","stream_id":42,"response":{"id":"resp_default","status":"in_progress"}}`},
+		{"numeric scope after unscoped state", `{"type":"response.created","response":{"id":"resp_default","status":"in_progress"}}`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			frames := []string{
+				tc.initial,
+				`{"type":"response.output_text.delta","stream_id":42,"item_id":"msg","output_index":0,"content_index":0,"delta":"default"}`,
+				`{"type":"response.completed","stream_id":"42","response":{"id":"resp_lane","status":"completed","output":[]}}`,
+				`{"type":"response.output_text.delta","item_id":"msg","output_index":0,"content_index":0,"delta":" text"}`,
+				`{"type":"response.completed","response":{"id":"resp_default","status":"completed"}}`,
+			}
+			conn := laneTestConnection(t, responses.ResponseConnectionOptions{}, func(ctx context.Context, socket *wire.Conn) {
+				// Don't send until the consumer registered the named "42" lane.
+				if _, _, err := socket.Read(ctx); err != nil {
+					t.Errorf("read opening command: %v", err)
+					return
+				}
+				for _, frame := range frames {
+					if err := socket.Write(ctx, wire.MessageText, []byte(frame)); err != nil {
+						t.Errorf("write event: %v", err)
+						return
+					}
+				}
+				_, _, _ = socket.Read(ctx)
+			})
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			lane, laneErr := conn.Lane("42")
+			if laneErr != nil {
+				t.Fatal(laneErr)
+			}
+			defer lane.Close()
+			sendFixture(t, ctx, conn.Create, []byte(`{"type":"response.create","model":"gpt-4o-mini","input":"test"}`))
+			var acc responses.ResponseAccumulator
+			for _, index := range []int{0, 1, 3, 4} {
+				event, recvErr := conn.Recv(ctx)
+				if recvErr != nil {
+					t.Fatal(recvErr)
+				}
+				if event.RawJSON() != frames[index] {
+					t.Fatalf("default receiver got a different raw event at %d", index)
+				}
+				if err := acc.AddEvent(event); err != nil {
+					t.Fatalf("default receiver event %d rejected: %v", index, err)
+				}
+			}
+			got := acc.Snapshot()
+			if got.StreamID != "" || got.ResponseID != "resp_default" ||
+				got.TerminalEvent != "response.completed" || got.OutputText() != "default text" {
+				t.Fatalf("default receiver projection: %+v", got)
+			}
+			named, err := lane.Recv(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if named.RawJSON() != frames[2] {
+				t.Fatal("named receiver got the wrong event")
+			}
+			var namedAcc responses.ResponseAccumulator
+			if err := namedAcc.AddEvent(named); err != nil {
+				t.Fatal(err)
+			}
+			if result := namedAcc.Snapshot(); result.StreamID != "42" || result.ResponseID != "resp_lane" {
+				t.Fatalf("named receiver projection: %+v", result)
 			}
 		})
 	}

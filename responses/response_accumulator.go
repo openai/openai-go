@@ -112,9 +112,13 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 	default:
 		return nil
 	}
-	// Every selected WS event carries the same optional stream_id envelope.
-	// Recv preserves it verbatim even for forward-compatible fields.
-	streamID := gjson.Get(event.RawJSON(), "stream_id").String()
+	// Bind to the same scope Recv used, including its permissive treatment of
+	// missing or invalid stream IDs. Never coerce a numeric ID into a named lane.
+	envelope, err := decodeResponseWebsocketEvent([]byte(event.RawJSON()))
+	if err != nil {
+		return err
+	}
+	streamID := envelope.streamID
 	if a.bound && a.streamID != streamID {
 		return errors.New("responses accumulator: event belongs to another lane")
 	}
@@ -146,6 +150,10 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 	invalid := errors.New("responses accumulator: invalid selected event fields")
 	if response != nil {
 		if !accumulatorStringsValid(response.JSON.ID) {
+			return invalid
+		}
+		output := response.JSON.Output
+		if !output.Valid() && output.Raw() != respjson.Omitted && output.Raw() != respjson.Null {
 			return invalid
 		}
 		for _, item := range response.Output {
