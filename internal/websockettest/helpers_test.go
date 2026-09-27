@@ -237,6 +237,62 @@ func TestResponsesInterleavedLanes(t *testing.T) {
 	}
 }
 
+// A protocol error without stream_id belongs to the default receiver. It must
+// not terminate a registered lane or make the reusable connection unusable.
+func TestResponsesUnscopedErrorPreservesActiveLane(t *testing.T) {
+	connection := laneTestConnection(t, responses.ResponseConnectionOptions{}, func(ctx context.Context, socket *wire.Conn) {
+		for range 2 {
+			if _, _, err := socket.Read(ctx); err != nil {
+				t.Errorf("read initial request: %v", err)
+				return
+			}
+		}
+		for _, frame := range []string{
+			`{"type":"error","status":429,"error":{"type":"rate_limit_error","code":"rate_limit_exceeded","message":"synthetic limit","param":null}}`,
+			`{"type":"response.completed","stream_id":"active","response":{"id":"resp_active","status":"completed","output":[]}}`,
+		} {
+			if err := socket.Write(ctx, wire.MessageText, []byte(frame)); err != nil {
+				t.Errorf("write interleaved event: %v", err)
+				return
+			}
+		}
+		if _, _, err := socket.Read(ctx); err != nil {
+			t.Errorf("read default-lane continuation: %v", err)
+			return
+		}
+		if err := socket.Write(ctx, wire.MessageText, []byte(`{"type":"response.completed","response":{"id":"resp_after_error","status":"completed","output":[]}}`)); err != nil {
+			t.Errorf("write default-lane continuation: %v", err)
+			return
+		}
+		_, _, _ = socket.Read(ctx)
+	})
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	active, err := connection.Lane("active")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer active.Close()
+	sendFixture(t, ctx, connection.Create, json.RawMessage(`{"type":"response.create","stream_id":"active","model":"gpt-4o-mini","input":"active"}`))
+	sendFixture(t, ctx, connection.Create, json.RawMessage(`{"type":"response.create","model":"gpt-4o-mini","input":"default"}`))
+	_, err = connection.FinalResponse(ctx)
+	var protocolError *responses.ResponseProtocolError
+	if !errors.As(err, &protocolError) {
+		t.Fatalf("default FinalResponse = %v, want ResponseProtocolError", err)
+	}
+	event, ok := protocolError.Event.AsAny().(responses.ResponsesServerEventResponseWsError)
+	if !ok || event.Status != 429 || event.StreamID != "" || event.Error.Code != "rate_limit_exceeded" || event.Error.Type != "rate_limit_error" {
+		t.Fatalf("default typed API error = %+v, want the unscoped rate-limit event", protocolError.Event.AsAny())
+	}
+	if response, err := active.FinalResponse(ctx); err != nil || response.ID != "resp_active" {
+		t.Fatalf("active FinalResponse = %v, %v, want resp_active", response, err)
+	}
+	sendFixture(t, ctx, connection.Create, json.RawMessage(`{"type":"response.create","model":"gpt-4o-mini","input":"try again"}`))
+	if response, err := connection.FinalResponse(ctx); err != nil || response.ID != "resp_after_error" {
+		t.Fatalf("default FinalResponse after API error = %v, %v, want resp_after_error", response, err)
+	}
+}
+
 func TestResponsesRecoveryRefreshesCredentialsWithoutReplay(t *testing.T) {
 	turn := fixtureScenario(t, "completed_then_completed").Turns[0]
 	var attempts, credentials, commands atomic.Int32
