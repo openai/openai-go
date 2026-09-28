@@ -241,6 +241,7 @@ type pauseBeforeWriteContext struct {
 }
 
 func (c *pauseBeforeWriteContext) Err() error {
+	err := c.Context.Err()
 	if c.checks.Add(1) == 2 {
 		close(c.reached)
 		select {
@@ -248,7 +249,7 @@ func (c *pauseBeforeWriteContext) Err() error {
 		case <-c.Context.Done():
 		}
 	}
-	return c.Context.Err()
+	return err
 }
 
 func TestPeerCloseAfterWriteAdmissionPreservesStatus(t *testing.T) {
@@ -286,6 +287,64 @@ func TestPeerCloseAfterWriteAdmissionPreservesStatus(t *testing.T) {
 		}
 	case <-ctx.Done():
 		t.Fatal(ctx.Err())
+	}
+}
+
+func TestCallerCancellationAfterWriteAdmissionIsNotReplacedByPeerClose(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		want error
+	}{
+		{"cancel", context.Canceled},
+		{"deadline", context.DeadlineExceeded},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			var caller context.Context
+			var cancelCaller context.CancelFunc
+			if test.want == context.DeadlineExceeded {
+				caller, cancelCaller = context.WithTimeout(ctx, time.Second)
+			} else {
+				caller, cancelCaller = context.WithCancel(ctx)
+			}
+			defer cancelCaller()
+			sendCtx := &pauseBeforeWriteContext{Context: caller, reached: make(chan struct{}), resume: make(chan struct{})}
+			connection := testConnection(t, Options{}, func(ctx context.Context, socket *wire.Conn) {
+				select {
+				case <-sendCtx.reached:
+					_ = socket.Close(wire.StatusPolicyViolation, "synthetic peer detail")
+				case <-ctx.Done():
+					t.Errorf("send did not reach write: %v", ctx.Err())
+				}
+			})
+			finished := make(chan error, 1)
+			go func() { finished <- connection.Send(sendCtx, []byte("possibly attempted")) }()
+			_, recvErr := connection.Recv(ctx)
+			if wire.CloseStatus(recvErr) != wire.StatusPolicyViolation {
+				t.Fatalf("receive = %v, want peer close status", recvErr)
+			}
+			if test.want == context.Canceled {
+				cancelCaller()
+			}
+			<-caller.Done()
+			close(sendCtx.resume)
+			select {
+			case sendErr := <-finished:
+				var delivery *DeliveryError
+				if !errors.As(sendErr, &delivery) || !delivery.MayHaveBeenSent {
+					t.Fatalf("admitted send = %v, want uncertain delivery", sendErr)
+				}
+				if !errors.Is(sendErr, test.want) {
+					t.Fatalf("admitted send = %v, want %v", sendErr, test.want)
+				}
+				if strings.Contains(sendErr.Error(), "synthetic peer detail") {
+					t.Errorf("admitted send retained peer close details: %v", sendErr)
+				}
+			case <-ctx.Done():
+				t.Fatal(ctx.Err())
+			}
+		})
 	}
 }
 

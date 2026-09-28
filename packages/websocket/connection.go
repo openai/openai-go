@@ -306,7 +306,11 @@ func (c *Connection[T]) send(ctx context.Context, encode func() ([]byte, error))
 	if err := c.socket.Write(ctx, wire.MessageText, data); err != nil {
 		err = safeCloseError(err)
 		c.fail(err)
-		if stored := c.failure(); wire.CloseStatus(stored) != -1 {
+		// Native Write can observe either the caller cancellation or the closed
+		// socket first. Keep cancellation recognizable in both cases.
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			err = ctxErr
+		} else if stored := c.failure(); wire.CloseStatus(stored) != -1 {
 			err = stored
 		}
 		return &DeliveryError{Cause: err, MayHaveBeenSent: true}
