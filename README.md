@@ -394,8 +394,8 @@ for {
     if err != nil { return err }
     // The original typed event and event.RawJSON() remain available here.
     if err := acc.AddEvent(event); err != nil { return err }
-    snapshot := acc.Snapshot()
-    if snapshot.TerminalEvent != "" {
+    if event.Type == "response.completed" || event.Type == "response.failed" || event.Type == "response.incomplete" {
+        snapshot := acc.Snapshot()
         // Inspect TerminalEvent: completed, failed and incomplete all end a turn.
         // Function arguments and custom-tool input in snapshot.Output are data;
         // the application decides whether and when to act on them.
@@ -410,15 +410,49 @@ Use a separate accumulator for each lane. Snapshots remain unchanged as more
 events arrive or after `Reset`. Text is grouped by output and content index;
 function arguments and custom input retain their item and call IDs. Finalized
 fields replace earlier deltas. `OutputText()` is the entire current projection,
-not a delta: this example prints it once at the end of the turn. For a live UI,
-replace its displayed text with each snapshot instead of appending it; later
-done events can shorten or correct earlier text. A supplied final output, even an empty array,
+not a delta: read a snapshot at a terminal or on explicit demand. Use the original
+typed events for a live UI; later done events can shorten or correct earlier text.
+A supplied final output, even an empty array,
 overrides prior items; if final output is absent or null, the opt-in projection
 retains collected fields. An item with a different nonempty ID starts fresh
 at its output index; it cannot inherit text or tool inputs from an earlier item.
 This projection is not a server `Response`. A missing or invalid terminal
 response, an API error, or EOF never becomes a completed result.
 `FinalResponse` keeps its original behavior and returns the server snapshot.
+
+Use `acc.DetailedSnapshot()` for a mutable copy of all observed response metadata,
+item, part and annotation fields, beyond the fields selected by `Snapshot()`.
+`Response` is the last observed lifecycle response metadata, without `output`
+(nil until one arrives). Output entries are sorted by `OutputIndex`;
+`Content` and `Annotations` use sparse int64 content and annotation indices.
+Fields are `json.RawMessage`: they preserve exact numbers, omitted versus null,
+and fields from unknown variants, rather than manufacturing a typed complete
+`Response`. Message content and list-valued annotations are extracted to those
+indexed maps; null annotations remain null in the part fields. Unknown item
+fields, including non-message content, remain in `Item`.
+
+```go
+details := acc.DetailedSnapshot() // At a terminal, or when explicitly requested.
+for _, item := range details.Output {
+    for contentIndex, part := range item.Content {
+        text := part["text"]                   // nil if never received
+        logprobs := part["logprobs"]           // provisional streamed form
+        annotations := item.Annotations[contentIndex]
+        _, _, _ = text, logprobs, annotations // Use in application-owned UI/state.
+    }
+}
+```
+
+Streamed logprobs accumulate with deltas. Supplied text-done logprobs replace them
+(including empty or null); whole part/item replacements discard prior fields
+and citations at those positions. Annotations and non-text parts enrich a
+matching known item; an annotation-only event never binds a lane, starts a
+turn or replaces an unrelated item. Standalone unsupported events and parts
+without a known item remain available on the original received event. Tools and
+unknown/partial data are never executed or promoted into final validated models.
+Every returned map and raw JSON byte slice is a separate caller-owned copy.
+Reading either snapshot joins/copies full accumulated output; reading one
+after every delta would repeatedly rebuild growing prefixes.
 
 Continue with `PreviousResponseID: openai.String(previous.ID)` and **only new input**.
 For example, return a function result using its original call ID, then add a new
