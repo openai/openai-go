@@ -208,12 +208,21 @@ func (c *Connection[T]) fail(err error) {
 	_ = c.socket.CloseNow() // Best effort: the initiating error remains authoritative.
 }
 
+// Preserve the transport status without carrying peer-provided close details
+// into the stored failure or a delivery error.
+func safeCloseError(err error) error {
+	if status := wire.CloseStatus(err); status != -1 {
+		return fmt.Errorf("websocket: closed: %w", wire.CloseError{Code: status})
+	}
+	return err
+}
+
 func (c *Connection[T]) read(ctx context.Context, decode func([]byte) (T, error), route func(T) string) {
 	defer close(c.readerDone)
 	for {
 		kind, data, err := c.socket.Read(ctx)
 		if err != nil {
-			c.fail(err)
+			c.fail(safeCloseError(err))
 			return
 		}
 		if kind != wire.MessageText {
@@ -295,7 +304,15 @@ func (c *Connection[T]) send(ctx context.Context, encode func() ([]byte, error))
 		return &DeliveryError{Cause: err}
 	}
 	if err := c.socket.Write(ctx, wire.MessageText, data); err != nil {
+		err = safeCloseError(err)
 		c.fail(err)
+		// Native Write can observe either the caller cancellation or the closed
+		// socket first. Keep cancellation recognizable in both cases.
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			err = ctxErr
+		} else if stored := c.failure(); wire.CloseStatus(stored) != -1 {
+			err = stored
+		}
 		return &DeliveryError{Cause: err, MayHaveBeenSent: true}
 	}
 	return nil
