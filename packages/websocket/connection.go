@@ -306,6 +306,9 @@ func (c *Connection[T]) send(ctx context.Context, encode func() ([]byte, error))
 	if err := c.socket.Write(ctx, wire.MessageText, data); err != nil {
 		err = safeCloseError(err)
 		c.fail(err)
+		if stored := c.failure(); wire.CloseStatus(stored) != -1 {
+			err = stored
+		}
 		return &DeliveryError{Cause: err, MayHaveBeenSent: true}
 	}
 	return nil
