@@ -23,6 +23,7 @@ type ResponseAccumulator struct {
 	streamID      string
 	responseID    string
 	terminalEvent string
+	responseRaw   string
 	output        map[int64]*responseAccumulatedOutput
 }
 
@@ -55,6 +56,10 @@ type responseAccumulatedOutput struct {
 	id, itemType, callID, name string
 	arguments, input           strings.Builder
 	text                       map[int64]*strings.Builder
+	raw                        string
+	parts                      map[int64]*responseAccumulatedPart
+	argumentsPresent           bool
+	inputPresent               bool
 }
 
 // Reset releases only this helper's state, including its lane and turn binding.
@@ -102,6 +107,27 @@ func (s ResponseAccumulatorSnapshot) OutputText() string {
 // requires a separate accumulator or Reset. A new nonempty item ID starts a
 // fresh projection at that output index; it never appends to another item.
 func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
+	// Newly collected annotations only enrich a known item. Historically these
+	// events were ignored: they must not bind a lane or replace a different item,
+	// even if the API decoder accepted malformed optional fields.
+	if event.Type == "response.output_text.annotation.added" {
+		e := &event.OfResponsesServerEventResponseOutputTextAnnotationWsAdded
+		if !a.bound || a.terminalEvent != "" ||
+			!accumulatorIndicesValid(e.JSON.OutputIndex, e.JSON.ContentIndex, e.JSON.AnnotationIndex) ||
+			!accumulatorStringsValid(e.JSON.ItemID) || e.JSON.Annotation.Raw() == respjson.Omitted {
+			return nil
+		}
+		envelope, err := decodeResponseWebsocketEvent([]byte(event.RawJSON()))
+		item := a.output[e.OutputIndex]
+		if err == nil && envelope.streamID == a.streamID && item != nil && item.id == e.ItemID {
+			part := item.part(e.ContentIndex)
+			if part.annotations == nil {
+				part.annotations = make(map[int64]string)
+			}
+			part.annotations[e.AnnotationIndex] = strings.Clone(e.JSON.Annotation.Raw())
+		}
+		return nil
+	}
 	switch event.Type {
 	case "response.created", "response.in_progress", "response.completed", "response.failed", "response.incomplete",
 		"response.output_item.added", "response.output_item.done",
@@ -162,6 +188,7 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 			}
 		}
 		a.bound, a.streamID = true, streamID
+		a.responseRaw = response.RawJSON()
 		if response.ID != "" {
 			a.responseID = response.ID
 		}
@@ -204,6 +231,9 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 			}
 			replaceAccumulatedText(a.text(e.OutputIndex, e.ItemID, e.ContentIndex), e.Part.Text)
 		}
+		if item := a.output[e.OutputIndex]; item != nil && item.id == e.ItemID {
+			item.replacePart(e.ContentIndex, e.Part.RawJSON())
+		}
 	case "response.content_part.done":
 		e := &event.OfResponsesServerEventResponseContentPartWsDone
 		if !accumulatorIndicesValid(e.JSON.OutputIndex, e.JSON.ContentIndex) ||
@@ -216,6 +246,9 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 			}
 			replaceAccumulatedText(a.text(e.OutputIndex, e.ItemID, e.ContentIndex), e.Part.Text)
 		}
+		if item := a.output[e.OutputIndex]; item != nil && item.id == e.ItemID {
+			item.replacePart(e.ContentIndex, e.Part.RawJSON())
+		}
 	case "response.output_text.delta":
 		e := &event.OfResponsesServerEventResponseTextWsDelta
 		if !accumulatorIndicesValid(e.JSON.OutputIndex, e.JSON.ContentIndex) ||
@@ -223,6 +256,7 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 			return invalid
 		}
 		a.text(e.OutputIndex, e.ItemID, e.ContentIndex).WriteString(e.Delta)
+		a.output[e.OutputIndex].part(e.ContentIndex).addLogprobs(e.JSON.Logprobs.Raw(), false)
 	case "response.output_text.done":
 		e := &event.OfResponsesServerEventResponseTextWsDone
 		if !accumulatorIndicesValid(e.JSON.OutputIndex, e.JSON.ContentIndex) ||
@@ -230,30 +264,39 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 			return invalid
 		}
 		replaceAccumulatedText(a.text(e.OutputIndex, e.ItemID, e.ContentIndex), e.Text)
+		a.output[e.OutputIndex].part(e.ContentIndex).addLogprobs(e.JSON.Logprobs.Raw(), true)
 	case "response.function_call_arguments.delta":
 		e := &event.OfResponsesServerEventResponseFunctionCallArgumentsWsDelta
 		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !accumulatorStringsValid(e.JSON.ItemID, e.JSON.Delta) {
 			return invalid
 		}
-		a.item(e.OutputIndex, e.ItemID).arguments.WriteString(e.Delta)
+		item := a.item(e.OutputIndex, e.ItemID)
+		item.arguments.WriteString(e.Delta)
+		item.argumentsPresent = true
 	case "response.function_call_arguments.done":
 		e := &event.OfResponsesServerEventResponseFunctionCallArgumentsWsDone
 		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !accumulatorStringsValid(e.JSON.ItemID, e.JSON.Arguments) {
 			return invalid
 		}
-		replaceAccumulatedText(&a.item(e.OutputIndex, e.ItemID).arguments, e.Arguments)
+		item := a.item(e.OutputIndex, e.ItemID)
+		replaceAccumulatedText(&item.arguments, e.Arguments)
+		item.argumentsPresent = true
 	case "response.custom_tool_call_input.delta":
 		e := &event.OfResponsesServerEventResponseCustomToolCallInputWsDelta
 		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !accumulatorStringsValid(e.JSON.ItemID, e.JSON.Delta) {
 			return invalid
 		}
-		a.item(e.OutputIndex, e.ItemID).input.WriteString(e.Delta)
+		item := a.item(e.OutputIndex, e.ItemID)
+		item.input.WriteString(e.Delta)
+		item.inputPresent = true
 	case "response.custom_tool_call_input.done":
 		e := &event.OfResponsesServerEventResponseCustomToolCallInputWsDone
 		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !accumulatorStringsValid(e.JSON.ItemID, e.JSON.Input) {
 			return invalid
 		}
-		replaceAccumulatedText(&a.item(e.OutputIndex, e.ItemID).input, e.Input)
+		item := a.item(e.OutputIndex, e.ItemID)
+		replaceAccumulatedText(&item.input, e.Input)
+		item.inputPresent = true
 	}
 	a.bound, a.streamID = true, streamID
 	return nil
@@ -339,9 +382,11 @@ func (a *ResponseAccumulator) addItem(index int64, source ResponseOutputItemUnio
 	delete(a.output, index)
 	item := a.item(index, source.ID)
 	item.itemType, item.callID, item.name = source.Type, source.CallID, source.Name
+	item.raw = source.RawJSON()
 	switch source.Type {
 	case "message":
 		for contentIndex, part := range source.Content {
+			item.replacePart(int64(contentIndex), part.RawJSON())
 			if part.Type == "output_text" {
 				replaceAccumulatedText(a.text(index, source.ID, int64(contentIndex)), part.Text)
 			}
