@@ -176,6 +176,59 @@ func TestLanesDetachIndependently(t *testing.T) {
 	}
 }
 
+func TestPeerCloseRetainsStatusAcrossReceiversAndUnsentWrites(t *testing.T) {
+	release := make(chan struct{})
+	connection := testConnection(t, Options{}, func(ctx context.Context, socket *wire.Conn) {
+		<-release
+		for _, event := range []testEvent{{StreamID: "a", Text: "accepted-a"}, {Text: "accepted-default"}} {
+			if err := writeEvent(ctx, socket, event); err != nil {
+				t.Errorf("write: %v", err)
+				return
+			}
+		}
+		_ = socket.Close(wire.StatusPolicyViolation, "synthetic peer detail")
+	})
+	laneA, err := connection.Lane("a")
+	if err != nil {
+		t.Fatal(err)
+	}
+	laneB, err := connection.Lane("b")
+	if err != nil {
+		t.Fatal(err)
+	}
+	close(release)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if event, err := laneA.Recv(ctx); err != nil || event.Text != "accepted-a" {
+		t.Fatalf("accepted lane event = %+v, %v", event, err)
+	}
+	if event, err := connection.Recv(ctx); err != nil || event.Text != "accepted-default" {
+		t.Fatalf("accepted default event = %+v, %v", event, err)
+	}
+	_, defaultErr := connection.Recv(ctx)
+	_, laneErr := laneA.Recv(ctx)
+	_, neighborErr := laneB.Recv(ctx)
+	sendErr := connection.Send(ctx, []byte("not attempted"))
+	var delivery *DeliveryError
+	if !errors.As(sendErr, &delivery) || delivery.MayHaveBeenSent {
+		t.Fatalf("send after closed receive = %v, want certainly unsent", sendErr)
+	}
+	for _, test := range []struct {
+		name string
+		err  error
+	}{{"default", defaultErr}, {"lane", laneErr}, {"neighbor", neighborErr}, {"send", sendErr}} {
+		t.Run(test.name, func(t *testing.T) {
+			var closeErr wire.CloseError
+			if !errors.As(test.err, &closeErr) || wire.CloseStatus(test.err) != wire.StatusPolicyViolation {
+				t.Fatalf("close = %v, want recognizable policy status", test.err)
+			}
+			if closeErr.Reason != "" || strings.Contains(test.err.Error(), "synthetic peer detail") {
+				t.Errorf("close reason is retained: %v", test.err)
+			}
+		})
+	}
+}
+
 func TestLaneCloseReservesKeyAndReleasesBufferedEvents(t *testing.T) {
 	const retiredKey = "retired/key" // Generic keys are not Responses stream IDs.
 	payload := strings.Repeat("x", 256)
