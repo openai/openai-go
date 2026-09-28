@@ -384,6 +384,42 @@ Realtime sessions. Leave `stream` and `background` unset. Use `Create` followed 
 incomplete responses retain their status. `Recv` exposes individual typed events
 and their `RawJSON`. A terminal response ends a turn, not the socket.
 
+For opt-in incremental text and tool-input snapshots, feed the events you read
+to a `responses.ResponseAccumulator`. It consumes no events itself:
+
+```go
+var acc responses.ResponseAccumulator
+for {
+    event, err := connection.Recv(ctx) // Or lane.Recv(ctx) for a named lane.
+    if err != nil { return err }
+    // The original typed event and event.RawJSON() remain available here.
+    if err := acc.AddEvent(event); err != nil { return err }
+    snapshot := acc.Snapshot()
+    if snapshot.TerminalEvent != "" {
+        // Inspect TerminalEvent: completed, failed and incomplete all end a turn.
+        // Function arguments and custom-tool input in snapshot.Output are data;
+        // the application decides whether and when to act on them.
+        fmt.Println(snapshot.OutputText())
+        break
+    }
+}
+acc.Reset() // Ready for another turn; does not close the connection.
+```
+
+Use a separate accumulator for each lane. Snapshots remain unchanged as more
+events arrive or after `Reset`. Text is grouped by output and content index;
+function arguments and custom input retain their item and call IDs. Finalized
+fields replace earlier deltas. `OutputText()` is the entire current projection,
+not a delta: this example prints it once at the end of the turn. For a live UI,
+replace its displayed text with each snapshot instead of appending it; later
+done events can shorten or correct earlier text. A supplied final output, even an empty array,
+overrides prior items; if final output is absent or null, the opt-in projection
+retains collected fields. An item with a different nonempty ID starts fresh
+at its output index; it cannot inherit text or tool inputs from an earlier item.
+This projection is not a server `Response`. A missing or invalid terminal
+response, an API error, or EOF never becomes a completed result.
+`FinalResponse` keeps its original behavior and returns the server snapshot.
+
 Continue with `PreviousResponseID: openai.String(previous.ID)` and **only new input**.
 For example, return a function result using its original call ID, then add a new
 user message. The application executes tools and retains their results:
