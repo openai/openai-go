@@ -303,7 +303,7 @@ func TestCallerCancellationAfterWriteAdmissionIsNotReplacedByPeerClose(t *testin
 			defer cancel()
 			var caller context.Context
 			var cancelCaller context.CancelFunc
-			if test.want == context.DeadlineExceeded {
+			if errors.Is(test.want, context.DeadlineExceeded) {
 				caller, cancelCaller = context.WithTimeout(ctx, time.Second)
 			} else {
 				caller, cancelCaller = context.WithCancel(ctx)
@@ -324,7 +324,7 @@ func TestCallerCancellationAfterWriteAdmissionIsNotReplacedByPeerClose(t *testin
 			if wire.CloseStatus(recvErr) != wire.StatusPolicyViolation {
 				t.Fatalf("receive = %v, want peer close status", recvErr)
 			}
-			if test.want == context.Canceled {
+			if errors.Is(test.want, context.Canceled) {
 				cancelCaller()
 			}
 			<-caller.Done()
