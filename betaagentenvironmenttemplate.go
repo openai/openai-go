@@ -150,6 +150,8 @@ type EnvironmentTemplate struct {
 	Skills []EnvironmentTemplateSkillUnion `json:"skills" api:"required"`
 	// The Unix timestamp, in seconds, when the template was last updated.
 	UpdatedAt int64 `json:"updated_at" api:"required"`
+	// Desktop configuration for each OpenAI-hosted environment.
+	Desktop EnvironmentTemplateDesktop `json:"desktop"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                    respjson.Field
@@ -163,6 +165,7 @@ type EnvironmentTemplate struct {
 		Plugins               respjson.Field
 		Skills                respjson.Field
 		UpdatedAt             respjson.Field
+		Desktop               respjson.Field
 		ExtraFields           map[string]respjson.Field
 		raw                   string
 	} `json:"-"`
@@ -457,6 +460,24 @@ func (r *EnvironmentTemplateSkillInline) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Desktop configuration for each OpenAI-hosted environment.
+type EnvironmentTemplateDesktop struct {
+	// Whether the environment provisions a desktop and browser proxy.
+	Enabled bool `json:"enabled" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Enabled     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r EnvironmentTemplateDesktop) RawJSON() string { return r.JSON.raw }
+func (r *EnvironmentTemplateDesktop) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // A deleted reusable environment template.
 type EnvironmentTemplateDeleted struct {
 	// The ID of the deleted environment template.
@@ -487,6 +508,9 @@ type BetaAgentEnvironmentTemplateNewParams struct {
 	// Directories that contain capabilities exposed to the agent. Defaults to an empty
 	// list.
 	CapabilityDirectories []string `json:"capability_directories,omitzero"`
+	// Desktop provisioning. Omission or null inherits the template setting, or
+	// defaults to disabled.
+	Desktop BetaAgentEnvironmentTemplateNewParamsDesktop `json:"desktop,omitzero"`
 	// Environment variables made available to the agent.
 	Env map[string]string `json:"env,omitzero"`
 	// Files available before the agent starts. Defaults to an empty list.
@@ -514,6 +538,24 @@ func (r *BetaAgentEnvironmentTemplateNewParams) UnmarshalJSON(data []byte) error
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Desktop provisioning. Omission or null inherits the template setting, or
+// defaults to disabled.
+//
+// The property Enabled is required.
+type BetaAgentEnvironmentTemplateNewParamsDesktop struct {
+	// Whether to provision the desktop and its browser proxy.
+	Enabled bool `json:"enabled" api:"required"`
+	paramObj
+}
+
+func (r BetaAgentEnvironmentTemplateNewParamsDesktop) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentEnvironmentTemplateNewParamsDesktop
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentEnvironmentTemplateNewParamsDesktop) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Network access policy for the environment. Defaults to disabled for GA requests
 // and enabled for beta requests.
 //
@@ -525,6 +567,10 @@ type BetaAgentEnvironmentTemplateNewParamsNetwork struct {
 	Access string `json:"access,omitzero" api:"required"`
 	// Domains the environment may access when network access is restricted.
 	AllowedDomains []string `json:"allowed_domains,omitzero"`
+	// Domains blocked for both executor and browser when access is restricted. A
+	// nonempty list requires `access: restricted` and cannot be combined with nonempty
+	// `allowed_domains`. Wildcard domains are not supported.
+	BlockedDomains []string `json:"blocked_domains,omitzero"`
 	paramObj
 }
 
@@ -566,6 +612,8 @@ type BetaAgentEnvironmentTemplateUpdateParams struct {
 	Name param.Opt[string] `json:"name,omitzero"`
 	// Directories that expose capabilities to the agent.
 	CapabilityDirectories []string `json:"capability_directories,omitzero"`
+	// Replacement desktop configuration, or null to disable the desktop.
+	Desktop BetaAgentEnvironmentTemplateUpdateParamsDesktop `json:"desktop,omitzero"`
 	// Replacement confidential environment values.
 	Env map[string]string `json:"env,omitzero"`
 	// Replacement file configuration materialized for each new session.
@@ -593,6 +641,23 @@ func (r *BetaAgentEnvironmentTemplateUpdateParams) UnmarshalJSON(data []byte) er
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Replacement desktop configuration, or null to disable the desktop.
+//
+// The property Enabled is required.
+type BetaAgentEnvironmentTemplateUpdateParamsDesktop struct {
+	// Whether to provision the desktop and its browser proxy.
+	Enabled bool `json:"enabled" api:"required"`
+	paramObj
+}
+
+func (r BetaAgentEnvironmentTemplateUpdateParamsDesktop) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentEnvironmentTemplateUpdateParamsDesktop
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentEnvironmentTemplateUpdateParamsDesktop) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Network access available after setup completes. Omit to preserve the current
 // policy, or pass `null` to reset to disabled for GA requests or enabled for beta
 // requests.
@@ -605,6 +670,10 @@ type BetaAgentEnvironmentTemplateUpdateParamsNetwork struct {
 	Access string `json:"access,omitzero" api:"required"`
 	// Domains the environment may access when network access is restricted.
 	AllowedDomains []string `json:"allowed_domains,omitzero"`
+	// Domains blocked for both executor and browser when access is restricted. A
+	// nonempty list requires `access: restricted` and cannot be combined with nonempty
+	// `allowed_domains`. Wildcard domains are not supported.
+	BlockedDomains []string `json:"blocked_domains,omitzero"`
 	paramObj
 }
 
