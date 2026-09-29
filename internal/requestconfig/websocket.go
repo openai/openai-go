@@ -157,10 +157,14 @@ func (cfg *RequestConfig) PrepareWebSocket() (*http.Request, *http.Client, error
 					RequestRetryScopeFromContext(req.Context()) == nil || retryCount >= cfg.MaxRetries {
 					return response, err
 				}
+				delay, retry := retryDelay(response, retryCount, cfg.MaxRetryDelay)
+				if !retry {
+					return response, err
+				}
 				if response.Body != nil {
 					_ = response.Body.Close() // Release the rejected handshake before opening another.
 				}
-				if err := WaitForDelay(req.Context(), retryDelay(response, retryCount, cfg.MaxRetryDelay)); err != nil {
+				if err := WaitForDelay(req.Context(), delay); err != nil {
 					return nil, err
 				}
 			}
