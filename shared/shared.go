@@ -48,6 +48,7 @@ type ChatModel = string
 
 const (
 	ChatModelGPT6Astra                        ChatModel = "gpt-6-astra"
+	ChatModelGPT6_1Sol                        ChatModel = "gpt-6.1-sol"
 	ChatModelGPT6Sol                          ChatModel = "gpt-6-sol"
 	ChatModelGPT6Luna                         ChatModel = "gpt-6-luna"
 	ChatModelGPT5_6Sol                        ChatModel = "gpt-5.6-sol"
