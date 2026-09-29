@@ -82,6 +82,9 @@ type ChatModel = shared.ChatModel
 // Equals "gpt-6-astra"
 const ChatModelGPT6Astra = shared.ChatModelGPT6Astra
 
+// Equals "gpt-6.1-sol"
+const ChatModelGPT6_1Sol = shared.ChatModelGPT6_1Sol
+
 // Equals "gpt-6-sol"
 const ChatModelGPT6Sol = shared.ChatModelGPT6Sol
 

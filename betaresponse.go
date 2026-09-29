@@ -4754,6 +4754,7 @@ type BetaResponseModel string
 
 const (
 	BetaResponseModelGPT6Astra                        BetaResponseModel = "gpt-6-astra"
+	BetaResponseModelGPT6_1Sol                        BetaResponseModel = "gpt-6.1-sol"
 	BetaResponseModelGPT6Sol                          BetaResponseModel = "gpt-6-sol"
 	BetaResponseModelGPT6Luna                         BetaResponseModel = "gpt-6-luna"
 	BetaResponseModelGPT5_6Sol                        BetaResponseModel = "gpt-5.6-sol"
@@ -33875,6 +33876,7 @@ type BetaResponseNewParamsModel string
 
 const (
 	BetaResponseNewParamsModelGPT6Astra                        BetaResponseNewParamsModel = "gpt-6-astra"
+	BetaResponseNewParamsModelGPT6_1Sol                        BetaResponseNewParamsModel = "gpt-6.1-sol"
 	BetaResponseNewParamsModelGPT6Sol                          BetaResponseNewParamsModel = "gpt-6-sol"
 	BetaResponseNewParamsModelGPT6Luna                         BetaResponseNewParamsModel = "gpt-6-luna"
 	BetaResponseNewParamsModelGPT5_6Sol                        BetaResponseNewParamsModel = "gpt-5.6-sol"
@@ -34534,6 +34536,7 @@ type BetaResponseCompactParamsModel string
 
 const (
 	BetaResponseCompactParamsModelGPT6Astra                        BetaResponseCompactParamsModel = "gpt-6-astra"
+	BetaResponseCompactParamsModelGPT6_1Sol                        BetaResponseCompactParamsModel = "gpt-6.1-sol"
 	BetaResponseCompactParamsModelGPT6Sol                          BetaResponseCompactParamsModel = "gpt-6-sol"
 	BetaResponseCompactParamsModelGPT6Luna                         BetaResponseCompactParamsModel = "gpt-6-luna"
 	BetaResponseCompactParamsModelGPT5_6Sol                        BetaResponseCompactParamsModel = "gpt-5.6-sol"
