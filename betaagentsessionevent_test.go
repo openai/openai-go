@@ -31,15 +31,17 @@ func TestBetaAgentSessionEventNewWithOptionalParams(t *testing.T) {
 		"session_id",
 		openai.BetaAgentSessionEventNewParams{
 			Events: []openai.AgentSessionInputParamUnion{{
-				OfParamAgentSessionInputMessage: &openai.AgentSessionInputParamAgentSessionInputMessage{
-					Input: []openai.AgentSessionInputMessageParam{{
-						Content: []openai.InputContentParamUnion{{
-							OfParamInputText: &openai.InputContentParamInputText{
-								Text: "text",
-							},
-						}},
-						Type: openai.AgentSessionInputMessageParamTypeMessage,
-					}},
+				OfParamAgentSessionInputComputerUseApprovalRequestResult: &openai.AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResult{
+					RequestID: "request_id",
+					Response: openai.AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResultResponseUnion{
+						OfBrowserAuthenticationSubmit: &openai.AgentBrowserAuthenticationSubmitParam{
+							Fields: []openai.AgentBrowserAuthenticationSubmitParamField{{
+								FieldID: "field_id",
+								Value:   "value",
+							}},
+							SelectedOption: openai.String("selected_option"),
+						},
+					},
 				},
 			}},
 			IdempotencyKey: openai.String("x"),
