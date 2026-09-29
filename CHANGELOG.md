@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.68.0](https://github.com/openai/openai-go/compare/v3.67.0...v3.68.0) (2026-09-29)
+
+
+### Features
+
+* **api:** add computer use to beta agents ([#989](https://github.com/openai/openai-go/issues/989)) ([a435999](https://github.com/openai/openai-go/commit/a435999ed592bd694f00120a67d2b1f135f08c31))
+
 ## [3.67.0](https://github.com/openai/openai-go/compare/v3.66.0...v3.67.0) (2026-09-29)
 
 
