@@ -1,5 +1,40 @@
 # Changelog
 
+## [3.67.0](https://github.com/openai/openai-go/compare/v3.66.0...v3.67.0) (2026-09-29)
+
+
+### Features
+
+* **api:** add Agents credential and session options ([#980](https://github.com/openai/openai-go/issues/980)) ([a5955cc](https://github.com/openai/openai-go/commit/a5955cce3c581a21aa2f614219e930e47d89ef41))
+* **api:** add Cyber access programs to Responses ([#973](https://github.com/openai/openai-go/issues/973)) ([399b02e](https://github.com/openai/openai-go/commit/399b02ea58aa106a36184df72c275e60baf3f15e))
+* **api:** add GPT-6.1 Sol model identifier ([#988](https://github.com/openai/openai-go/issues/988)) ([eb3c1db](https://github.com/openai/openai-go/commit/eb3c1db317a9f14170f5e8ab4ad7543a79fb6255))
+* **responses:** add opt-in WebSocket text and tool-input snapshots ([#982](https://github.com/openai/openai-go/issues/982)) ([d7fd0c6](https://github.com/openai/openai-go/commit/d7fd0c65cc247957d5b247ad42283fc8e4061868))
+* **responses:** preserve provisional WebSocket accumulation details ([#986](https://github.com/openai/openai-go/issues/986)) ([e89227a](https://github.com/openai/openai-go/commit/e89227a85fe39214b16825c19fe59549c4b85928))
+
+
+### Bug Fixes
+
+* honor Retry-After delays in line with the Python SDK ([#987](https://github.com/openai/openai-go/issues/987)) ([ba6afb0](https://github.com/openai/openai-go/commit/ba6afb0a45d3334b72ebeca8fbec7b5a1ddcc6ca))
+* **websocket:** preserve safe close status across receivers and delivery errors ([#985](https://github.com/openai/openai-go/issues/985)) ([7c7af27](https://github.com/openai/openai-go/commit/7c7af27aa8e059af1f9dd09639920faf279ba412))
+
+
+### Chores
+
+* **api:** clarify approximate web search location defaults ([#971](https://github.com/openai/openai-go/issues/971)) ([a9b3b22](https://github.com/openai/openai-go/commit/a9b3b22db75831952dc376a64b7b65abef26a2fe))
+* **api:** clarify documented API error responses ([#979](https://github.com/openai/openai-go/issues/979)) ([fefe204](https://github.com/openai/openai-go/commit/fefe2046c9c96b1d6130c5993c1ddd5f88fa665d))
+* **api:** clarify Realtime modality array definitions ([#972](https://github.com/openai/openai-go/issues/972)) ([edc44ef](https://github.com/openai/openai-go/commit/edc44ef10dba95878a0ad4f4d9f2afea13e865ca))
+* **api:** correct fine-tuning bounds and Realtime response reference ([#968](https://github.com/openai/openai-go/issues/968)) ([69a8c4c](https://github.com/openai/openai-go/commit/69a8c4cfdab27294514a0a4103ee4032c1c16dd3))
+* **api:** document batch error responses ([#976](https://github.com/openai/openai-go/issues/976)) ([1ec6bf1](https://github.com/openai/openai-go/commit/1ec6bf177a521f16ae1595b3430130158ff037b8))
+* **api:** document files and uploads error responses ([#975](https://github.com/openai/openai-go/issues/975)) ([f3489bf](https://github.com/openai/openai-go/commit/f3489bf4030cdbfc9356008a139d9476991db798))
+* **api:** document fine-tuning and model errors ([#978](https://github.com/openai/openai-go/issues/978)) ([360fee6](https://github.com/openai/openai-go/commit/360fee616dda2b50801f6e2e5021328b82efe608))
+* **api:** document Responses not-found errors ([#974](https://github.com/openai/openai-go/issues/974)) ([f7a713e](https://github.com/openai/openai-go/commit/f7a713ea1a73380027858dc0340c134ad5aaf99f))
+* **api:** document stored chat completion errors ([#977](https://github.com/openai/openai-go/issues/977)) ([db51851](https://github.com/openai/openai-go/commit/db51851cd7100a134d9f4d9252d71f3887e4200d))
+
+
+### Documentation
+
+* clarify collaborator-only pull request policy ([#966](https://github.com/openai/openai-go/issues/966)) ([36662ee](https://github.com/openai/openai-go/commit/36662ee6cb4f62d8266d2d1b72ece07c08793edd))
+
 ## [3.66.0](https://github.com/openai/openai-go/compare/v3.65.0...v3.66.0) (2026-09-23)
 
 
