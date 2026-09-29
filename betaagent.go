@@ -3,9 +3,11 @@
 package openai
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -194,6 +196,100 @@ const (
 	AgentServiceTierPriority  AgentServiceTier = "priority"
 	AgentServiceTierFast      AgentServiceTier = "fast"
 	AgentServiceTierUltrafast AgentServiceTier = "ultrafast"
+)
+
+func NewAgentBrowserAuthenticationCancelParam() AgentBrowserAuthenticationCancelParam {
+	return AgentBrowserAuthenticationCancelParam{
+		Action: "cancel",
+		Type:   "browser_authentication",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewAgentBrowserAuthenticationCancelParam].
+type AgentBrowserAuthenticationCancelParam struct {
+	Action constant.Cancel                `json:"action" default:"cancel"`
+	Type   constant.BrowserAuthentication `json:"type" default:"browser_authentication"`
+	paramObj
+}
+
+func (r AgentBrowserAuthenticationCancelParam) MarshalJSON() (data []byte, err error) {
+	type shadow AgentBrowserAuthenticationCancelParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AgentBrowserAuthenticationCancelParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Action, Fields, Type are required.
+type AgentBrowserAuthenticationSubmitParam struct {
+	// Values for up to six active fields in the required action. The submitted
+	// field-value mapping and selected option must fit within 120 KiB of JSON.
+	Fields []AgentBrowserAuthenticationSubmitParamField `json:"fields,omitzero" api:"required"`
+	// The chosen method. Required when the required action contains options.
+	SelectedOption param.Opt[string] `json:"selected_option,omitzero"`
+	// This field can be elided, and will marshal its zero value as "submit".
+	Action constant.Submit `json:"action" default:"submit"`
+	// This field can be elided, and will marshal its zero value as
+	// "browser_authentication".
+	Type constant.BrowserAuthentication `json:"type" default:"browser_authentication"`
+	paramObj
+}
+
+func (r AgentBrowserAuthenticationSubmitParam) MarshalJSON() (data []byte, err error) {
+	type shadow AgentBrowserAuthenticationSubmitParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AgentBrowserAuthenticationSubmitParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// One user-entered value, including non-password fields such as an email address.
+//
+// The properties FieldID, Value are required.
+type AgentBrowserAuthenticationSubmitParamField struct {
+	// The field ID from the required action.
+	FieldID string `json:"field_id" api:"required"`
+	// The value to enter into the registered control.
+	Value string `json:"value" api:"required"`
+	paramObj
+}
+
+func (r AgentBrowserAuthenticationSubmitParamField) MarshalJSON() (data []byte, err error) {
+	type shadow AgentBrowserAuthenticationSubmitParamField
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AgentBrowserAuthenticationSubmitParamField) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Decision, Type are required.
+type AgentBrowserOriginAccessParam struct {
+	// Whether to allow, deny, or cancel the requested origin access.
+	//
+	// Any of "approve", "deny", "cancel".
+	Decision AgentBrowserOriginAccessParamDecision `json:"decision,omitzero" api:"required"`
+	// This field can be elided, and will marshal its zero value as
+	// "browser_origin_access".
+	Type constant.BrowserOriginAccess `json:"type" default:"browser_origin_access"`
+	paramObj
+}
+
+func (r AgentBrowserOriginAccessParam) MarshalJSON() (data []byte, err error) {
+	type shadow AgentBrowserOriginAccessParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AgentBrowserOriginAccessParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Whether to allow, deny, or cancel the requested origin access.
+type AgentBrowserOriginAccessParamDecision string
+
+const (
+	AgentBrowserOriginAccessParamDecisionApprove AgentBrowserOriginAccessParamDecision = "approve"
+	AgentBrowserOriginAccessParamDecisionDeny    AgentBrowserOriginAccessParamDecision = "deny"
+	AgentBrowserOriginAccessParamDecisionCancel  AgentBrowserOriginAccessParamDecision = "cancel"
 )
 
 // A request to close a subagent.
@@ -645,10 +741,12 @@ func (r *AgentOutputCommandExecutionOutputDeltaEvent) UnmarshalJSON(data []byte)
 
 // AgentOutputItemUnion contains all possible properties and values from
 // [AgentSessionAssistantMessage], [AgentReasoningItem], [AgentFunctionCallItem],
-// [AgentMcpCallItem], [AgentWebSearchCallItem], [AgentCommandExecutionItem],
-// [AgentCreateSubagentCallItem], [AgentSendSubagentInputCallItem],
-// [AgentResumeSubagentCallItem], [AgentWaitForSubagentsCallItem],
-// [AgentInterruptSubagentCallItem], [AgentCloseSubagentCallItem].
+// [AgentMcpCallItem], [AgentOutputItemComputerUseCall],
+// [AgentOutputItemComputerUseApprovalRequest], [AgentWebSearchCallItem],
+// [AgentCommandExecutionItem], [AgentCreateSubagentCallItem],
+// [AgentSendSubagentInputCallItem], [AgentResumeSubagentCallItem],
+// [AgentWaitForSubagentsCallItem], [AgentInterruptSubagentCallItem],
+// [AgentCloseSubagentCallItem].
 //
 // Use the [AgentOutputItemUnion.AsAny] method to switch on the variant.
 //
@@ -664,10 +762,10 @@ type AgentOutputItemUnion struct {
 	Role   constant.Assistant `json:"role"`
 	Status string             `json:"status"`
 	TurnID string             `json:"turn_id"`
-	// Any of "message", "reasoning", "function_call", "mcp_call", "web_search_call",
-	// "command_execution", "create_subagent_call", "send_subagent_input_call",
-	// "resume_subagent_call", "wait_for_subagents_call", "interrupt_subagent_call",
-	// "close_subagent_call".
+	// Any of "message", "reasoning", "function_call", "mcp_call", "computer_use_call",
+	// "computer_use_approval_request", "web_search_call", "command_execution",
+	// "create_subagent_call", "send_subagent_input_call", "resume_subagent_call",
+	// "wait_for_subagents_call", "interrupt_subagent_call", "close_subagent_call".
 	Type string `json:"type"`
 	// This field is from variant [AgentReasoningItem].
 	Summary   []SummaryText `json:"summary"`
@@ -677,10 +775,16 @@ type AgentOutputItemUnion struct {
 	Name   string `json:"name"`
 	// This field is from variant [AgentMcpCallItem].
 	Error any `json:"error"`
-	// This field is a union of [any], [string]
+	// This field is a union of [any], [AgentOutputItemComputerUseCallOutput], [string]
 	Output AgentOutputItemUnionOutput `json:"output"`
 	// This field is from variant [AgentMcpCallItem].
 	ServerLabel string `json:"server_label"`
+	// This field is from variant [AgentOutputItemComputerUseCall].
+	Title string `json:"title"`
+	// This field is from variant [AgentOutputItemComputerUseApprovalRequest].
+	Request AgentOutputItemComputerUseApprovalRequestRequest `json:"request"`
+	// This field is from variant [AgentOutputItemComputerUseApprovalRequest].
+	RequestID string `json:"request_id"`
 	// This field is from variant [AgentWebSearchCallItem].
 	Action WebSearchActionUnion `json:"action"`
 	// This field is from variant [AgentCommandExecutionItem].
@@ -716,6 +820,9 @@ type AgentOutputItemUnion struct {
 		Error             respjson.Field
 		Output            respjson.Field
 		ServerLabel       respjson.Field
+		Title             respjson.Field
+		Request           respjson.Field
+		RequestID         respjson.Field
 		Action            respjson.Field
 		Command           respjson.Field
 		Cwd               respjson.Field
@@ -737,18 +844,20 @@ type anyAgentOutputItem interface {
 	implAgentOutputItemUnion()
 }
 
-func (AgentSessionAssistantMessage) implAgentOutputItemUnion()   {}
-func (AgentReasoningItem) implAgentOutputItemUnion()             {}
-func (AgentFunctionCallItem) implAgentOutputItemUnion()          {}
-func (AgentMcpCallItem) implAgentOutputItemUnion()               {}
-func (AgentWebSearchCallItem) implAgentOutputItemUnion()         {}
-func (AgentCommandExecutionItem) implAgentOutputItemUnion()      {}
-func (AgentCreateSubagentCallItem) implAgentOutputItemUnion()    {}
-func (AgentSendSubagentInputCallItem) implAgentOutputItemUnion() {}
-func (AgentResumeSubagentCallItem) implAgentOutputItemUnion()    {}
-func (AgentWaitForSubagentsCallItem) implAgentOutputItemUnion()  {}
-func (AgentInterruptSubagentCallItem) implAgentOutputItemUnion() {}
-func (AgentCloseSubagentCallItem) implAgentOutputItemUnion()     {}
+func (AgentSessionAssistantMessage) implAgentOutputItemUnion()              {}
+func (AgentReasoningItem) implAgentOutputItemUnion()                        {}
+func (AgentFunctionCallItem) implAgentOutputItemUnion()                     {}
+func (AgentMcpCallItem) implAgentOutputItemUnion()                          {}
+func (AgentOutputItemComputerUseCall) implAgentOutputItemUnion()            {}
+func (AgentOutputItemComputerUseApprovalRequest) implAgentOutputItemUnion() {}
+func (AgentWebSearchCallItem) implAgentOutputItemUnion()                    {}
+func (AgentCommandExecutionItem) implAgentOutputItemUnion()                 {}
+func (AgentCreateSubagentCallItem) implAgentOutputItemUnion()               {}
+func (AgentSendSubagentInputCallItem) implAgentOutputItemUnion()            {}
+func (AgentResumeSubagentCallItem) implAgentOutputItemUnion()               {}
+func (AgentWaitForSubagentsCallItem) implAgentOutputItemUnion()             {}
+func (AgentInterruptSubagentCallItem) implAgentOutputItemUnion()            {}
+func (AgentCloseSubagentCallItem) implAgentOutputItemUnion()                {}
 
 // Use the following switch statement to find the correct variant
 //
@@ -757,6 +866,8 @@ func (AgentCloseSubagentCallItem) implAgentOutputItemUnion()     {}
 //	case openai.AgentReasoningItem:
 //	case openai.AgentFunctionCallItem:
 //	case openai.AgentMcpCallItem:
+//	case openai.AgentOutputItemComputerUseCall:
+//	case openai.AgentOutputItemComputerUseApprovalRequest:
 //	case openai.AgentWebSearchCallItem:
 //	case openai.AgentCommandExecutionItem:
 //	case openai.AgentCreateSubagentCallItem:
@@ -778,6 +889,10 @@ func (u AgentOutputItemUnion) AsAny() anyAgentOutputItem {
 		return u.AsFunctionCall()
 	case "mcp_call":
 		return u.AsMcpCall()
+	case "computer_use_call":
+		return u.AsComputerUseCall()
+	case "computer_use_approval_request":
+		return u.AsComputerUseApprovalRequest()
 	case "web_search_call":
 		return u.AsWebSearchCall()
 	case "command_execution":
@@ -814,6 +929,16 @@ func (u AgentOutputItemUnion) AsFunctionCall() (v AgentFunctionCallItem) {
 }
 
 func (u AgentOutputItemUnion) AsMcpCall() (v AgentMcpCallItem) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AgentOutputItemUnion) AsComputerUseCall() (v AgentOutputItemComputerUseCall) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AgentOutputItemUnion) AsComputerUseApprovalRequest() (v AgentOutputItemComputerUseApprovalRequest) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -900,20 +1025,192 @@ func (r *AgentOutputItemUnionContent) UnmarshalJSON(data []byte) error {
 // [AgentOutputItemUnion].
 //
 // If the underlying value is not a json object, one of the following properties
-// will be valid: OfAgentMcpCallItemOutput OfString]
+// will be valid: OfAgentMcpCallItemOutput OfAgentOutputItemComputerUseCallOutput
+// OfString]
 type AgentOutputItemUnionOutput struct {
 	// This field will be present if the value is a [any] instead of an object.
 	OfAgentMcpCallItemOutput any `json:",inline"`
+	// This field will be present if the value is a
+	// [AgentOutputItemComputerUseCallOutput] instead of an object.
+	OfAgentOutputItemComputerUseCallOutput AgentOutputItemComputerUseCallOutput `json:",inline"`
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
 	JSON     struct {
-		OfAgentMcpCallItemOutput respjson.Field
-		OfString                 respjson.Field
-		raw                      string
+		OfAgentMcpCallItemOutput               respjson.Field
+		OfAgentOutputItemComputerUseCallOutput respjson.Field
+		OfString                               respjson.Field
+		raw                                    string
 	} `json:"-"`
 }
 
 func (r *AgentOutputItemUnionOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// One execution of the platform-provided computer-use capability.
+type AgentOutputItemComputerUseCall struct {
+	// The ID of the activity item.
+	ID string `json:"id" api:"required"`
+	// The last screenshot emitted by the model. Null when screenshot inclusion is
+	// disabled or the call emitted no screenshot.
+	Output AgentOutputItemComputerUseCallOutput `json:"output" api:"required"`
+	// The execution status of the activity.
+	//
+	// Any of "in_progress", "completed", "failed", "incomplete".
+	Status AgentFunctionCallStatus `json:"status" api:"required"`
+	// A model-generated description of the activity, when available.
+	Title string `json:"title" api:"required"`
+	// The ID of the turn that contains this item.
+	TurnID string `json:"turn_id" api:"required"`
+	// The item type. Always `computer_use_call`.
+	Type constant.ComputerUseCall `json:"type" default:"computer_use_call"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Output      respjson.Field
+		Status      respjson.Field
+		Title       respjson.Field
+		TurnID      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentOutputItemComputerUseCall) RawJSON() string { return r.JSON.raw }
+func (r *AgentOutputItemComputerUseCall) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The last screenshot emitted by the model. Null when screenshot inclusion is
+// disabled or the call emitted no screenshot.
+type AgentOutputItemComputerUseCallOutput struct {
+	// The complete JPEG image as a base64 data URL.
+	ImageURL string `json:"image_url" api:"required"`
+	// The content type. Always `computer_screenshot`.
+	Type constant.ComputerScreenshot `json:"type" default:"computer_screenshot"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ImageURL    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentOutputItemComputerUseCallOutput) RawJSON() string { return r.JSON.raw }
+func (r *AgentOutputItemComputerUseCallOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A credential-free history record of the emitted login request.
+type AgentOutputItemComputerUseApprovalRequest struct {
+	// The stable history item ID.
+	ID string `json:"id" api:"required"`
+	// A registered form awaiting the application's response.
+	Request   AgentOutputItemComputerUseApprovalRequestRequest `json:"request" api:"required"`
+	RequestID string                                           `json:"request_id" api:"required"`
+	TurnID    string                                           `json:"turn_id" api:"required"`
+	// The item type. Always computer_use_approval_request.
+	Type constant.ComputerUseApprovalRequest `json:"type" default:"computer_use_approval_request"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Request     respjson.Field
+		RequestID   respjson.Field
+		TurnID      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentOutputItemComputerUseApprovalRequest) RawJSON() string { return r.JSON.raw }
+func (r *AgentOutputItemComputerUseApprovalRequest) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A registered form awaiting the application's response.
+type AgentOutputItemComputerUseApprovalRequestRequest struct {
+	// The registered form or frame origin where values will be entered.
+	CredentialOrigin string `json:"credential_origin" api:"required"`
+	// Controls to render. All submitted values are sensitive.
+	Fields []AgentOutputItemComputerUseApprovalRequestRequestField `json:"fields" api:"required"`
+	// Sign-in methods. Empty for a plain form.
+	Options []AgentOutputItemComputerUseApprovalRequestRequestOption `json:"options" api:"required"`
+	// Why the agent needs the user to sign in.
+	Reason string `json:"reason" api:"required"`
+	// The type of the object. Always `browser_authentication`.
+	Type constant.BrowserAuthentication `json:"type" default:"browser_authentication"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CredentialOrigin respjson.Field
+		Fields           respjson.Field
+		Options          respjson.Field
+		Reason           respjson.Field
+		Type             respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentOutputItemComputerUseApprovalRequestRequest) RawJSON() string { return r.JSON.raw }
+func (r *AgentOutputItemComputerUseApprovalRequestRequest) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A control in a registered browser-login form.
+type AgentOutputItemComputerUseApprovalRequestRequestField struct {
+	// The field ID to submit as field_id in a fields entry.
+	ID string `json:"id" api:"required"`
+	// The label to display beside the control.
+	Label string `json:"label" api:"required"`
+	// Whether this control requires a nonempty value.
+	Required bool `json:"required" api:"required"`
+	// The rendering type, such as email, password, or text.
+	Type string `json:"type" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Label       respjson.Field
+		Required    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentOutputItemComputerUseApprovalRequestRequestField) RawJSON() string { return r.JSON.raw }
+func (r *AgentOutputItemComputerUseApprovalRequestRequestField) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A sign-in method and the fields that belong to it.
+type AgentOutputItemComputerUseApprovalRequestRequestOption struct {
+	// The option ID to submit as selected_option.
+	ID string `json:"id" api:"required"`
+	// IDs from the registered fields that this method accepts.
+	FieldIDs []string `json:"field_ids" api:"required"`
+	// The method label to display.
+	Label string `json:"label" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		FieldIDs    respjson.Field
+		Label       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentOutputItemComputerUseApprovalRequestRequestOption) RawJSON() string { return r.JSON.raw }
+func (r *AgentOutputItemComputerUseApprovalRequestRequestOption) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -1225,6 +1522,7 @@ func (r *AgentSessionAgent) UnmarshalJSON(data []byte) error {
 }
 
 // AgentSessionRequiredActionUnion contains all possible properties and values from
+// [AgentSessionRequiredActionComputerUseApprovalRequest],
 // [AgentSessionRequiredActionFunctionCall],
 // [AgentSessionRequiredActionEnvironmentConnection].
 //
@@ -1232,24 +1530,32 @@ func (r *AgentSessionAgent) UnmarshalJSON(data []byte) error {
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type AgentSessionRequiredActionUnion struct {
+	// This field is from variant
+	// [AgentSessionRequiredActionComputerUseApprovalRequest].
+	Request AgentSessionRequiredActionComputerUseApprovalRequestRequestUnion `json:"request"`
+	// This field is from variant
+	// [AgentSessionRequiredActionComputerUseApprovalRequest].
+	RequestID string `json:"request_id"`
+	TurnID    string `json:"turn_id"`
+	// Any of "computer_use_approval_request", "function_call",
+	// "environment_connection".
+	Type string `json:"type"`
 	// This field is from variant [AgentSessionRequiredActionFunctionCall].
 	Arguments any `json:"arguments"`
 	// This field is from variant [AgentSessionRequiredActionFunctionCall].
 	CallID string `json:"call_id"`
 	// This field is from variant [AgentSessionRequiredActionFunctionCall].
 	Name string `json:"name"`
-	// This field is from variant [AgentSessionRequiredActionFunctionCall].
-	TurnID string `json:"turn_id"`
-	// Any of "function_call", "environment_connection".
-	Type string `json:"type"`
 	// This field is from variant [AgentSessionRequiredActionEnvironmentConnection].
 	EnvironmentID string `json:"environment_id"`
 	JSON          struct {
+		Request       respjson.Field
+		RequestID     respjson.Field
+		TurnID        respjson.Field
+		Type          respjson.Field
 		Arguments     respjson.Field
 		CallID        respjson.Field
 		Name          respjson.Field
-		TurnID        respjson.Field
-		Type          respjson.Field
 		EnvironmentID respjson.Field
 		raw           string
 	} `json:"-"`
@@ -1262,12 +1568,14 @@ type anyAgentSessionRequiredAction interface {
 	implAgentSessionRequiredActionUnion()
 }
 
-func (AgentSessionRequiredActionFunctionCall) implAgentSessionRequiredActionUnion()          {}
-func (AgentSessionRequiredActionEnvironmentConnection) implAgentSessionRequiredActionUnion() {}
+func (AgentSessionRequiredActionComputerUseApprovalRequest) implAgentSessionRequiredActionUnion() {}
+func (AgentSessionRequiredActionFunctionCall) implAgentSessionRequiredActionUnion()               {}
+func (AgentSessionRequiredActionEnvironmentConnection) implAgentSessionRequiredActionUnion()      {}
 
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := AgentSessionRequiredActionUnion.AsAny().(type) {
+//	case openai.AgentSessionRequiredActionComputerUseApprovalRequest:
 //	case openai.AgentSessionRequiredActionFunctionCall:
 //	case openai.AgentSessionRequiredActionEnvironmentConnection:
 //	default:
@@ -1275,12 +1583,19 @@ func (AgentSessionRequiredActionEnvironmentConnection) implAgentSessionRequiredA
 //	}
 func (u AgentSessionRequiredActionUnion) AsAny() anyAgentSessionRequiredAction {
 	switch u.Type {
+	case "computer_use_approval_request":
+		return u.AsComputerUseApprovalRequest()
 	case "function_call":
 		return u.AsFunctionCall()
 	case "environment_connection":
 		return u.AsEnvironmentConnection()
 	}
 	return nil
+}
+
+func (u AgentSessionRequiredActionUnion) AsComputerUseApprovalRequest() (v AgentSessionRequiredActionComputerUseApprovalRequest) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
 func (u AgentSessionRequiredActionUnion) AsFunctionCall() (v AgentSessionRequiredActionFunctionCall) {
@@ -1297,6 +1612,233 @@ func (u AgentSessionRequiredActionUnion) AsEnvironmentConnection() (v AgentSessi
 func (u AgentSessionRequiredActionUnion) RawJSON() string { return u.JSON.raw }
 
 func (r *AgentSessionRequiredActionUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Respond to a computer-use request.
+type AgentSessionRequiredActionComputerUseApprovalRequest struct {
+	// The information needed to render the request.
+	Request AgentSessionRequiredActionComputerUseApprovalRequestRequestUnion `json:"request" api:"required"`
+	// The registered request ID to echo when responding.
+	RequestID string `json:"request_id" api:"required"`
+	// The turn that requested approval.
+	TurnID string `json:"turn_id" api:"required"`
+	// The type of the object. Always `computer_use_approval_request`.
+	Type constant.ComputerUseApprovalRequest `json:"type" default:"computer_use_approval_request"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Request     respjson.Field
+		RequestID   respjson.Field
+		TurnID      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionRequiredActionComputerUseApprovalRequest) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionRequiredActionComputerUseApprovalRequest) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// AgentSessionRequiredActionComputerUseApprovalRequestRequestUnion contains all
+// possible properties and values from
+// [AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthentication],
+// [AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserOriginAccess].
+//
+// Use the [AgentSessionRequiredActionComputerUseApprovalRequestRequestUnion.AsAny]
+// method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type AgentSessionRequiredActionComputerUseApprovalRequestRequestUnion struct {
+	// This field is from variant
+	// [AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthentication].
+	CredentialOrigin string `json:"credential_origin"`
+	// This field is from variant
+	// [AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthentication].
+	Fields []AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthenticationField `json:"fields"`
+	// This field is from variant
+	// [AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthentication].
+	Options []AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthenticationOption `json:"options"`
+	Reason  string                                                                                   `json:"reason"`
+	// Any of "browser_authentication", "browser_origin_access".
+	Type string `json:"type"`
+	// This field is from variant
+	// [AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserOriginAccess].
+	Origin string `json:"origin"`
+	JSON   struct {
+		CredentialOrigin respjson.Field
+		Fields           respjson.Field
+		Options          respjson.Field
+		Reason           respjson.Field
+		Type             respjson.Field
+		Origin           respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// anyAgentSessionRequiredActionComputerUseApprovalRequestRequest is implemented by
+// each variant of
+// [AgentSessionRequiredActionComputerUseApprovalRequestRequestUnion] to add type
+// safety for the return type of
+// [AgentSessionRequiredActionComputerUseApprovalRequestRequestUnion.AsAny]
+type anyAgentSessionRequiredActionComputerUseApprovalRequestRequest interface {
+	implAgentSessionRequiredActionComputerUseApprovalRequestRequestUnion()
+}
+
+func (AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthentication) implAgentSessionRequiredActionComputerUseApprovalRequestRequestUnion() {
+}
+func (AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserOriginAccess) implAgentSessionRequiredActionComputerUseApprovalRequestRequestUnion() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := AgentSessionRequiredActionComputerUseApprovalRequestRequestUnion.AsAny().(type) {
+//	case openai.AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthentication:
+//	case openai.AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserOriginAccess:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u AgentSessionRequiredActionComputerUseApprovalRequestRequestUnion) AsAny() anyAgentSessionRequiredActionComputerUseApprovalRequestRequest {
+	switch u.Type {
+	case "browser_authentication":
+		return u.AsBrowserAuthentication()
+	case "browser_origin_access":
+		return u.AsBrowserOriginAccess()
+	}
+	return nil
+}
+
+func (u AgentSessionRequiredActionComputerUseApprovalRequestRequestUnion) AsBrowserAuthentication() (v AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthentication) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AgentSessionRequiredActionComputerUseApprovalRequestRequestUnion) AsBrowserOriginAccess() (v AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserOriginAccess) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u AgentSessionRequiredActionComputerUseApprovalRequestRequestUnion) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *AgentSessionRequiredActionComputerUseApprovalRequestRequestUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A registered form awaiting the application's response.
+type AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthentication struct {
+	// The registered form or frame origin where values will be entered.
+	CredentialOrigin string `json:"credential_origin" api:"required"`
+	// Controls to render. All submitted values are sensitive.
+	Fields []AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthenticationField `json:"fields" api:"required"`
+	// Sign-in methods. Empty for a plain form.
+	Options []AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthenticationOption `json:"options" api:"required"`
+	// Why the agent needs the user to sign in.
+	Reason string `json:"reason" api:"required"`
+	// The type of the object. Always `browser_authentication`.
+	Type constant.BrowserAuthentication `json:"type" default:"browser_authentication"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CredentialOrigin respjson.Field
+		Fields           respjson.Field
+		Options          respjson.Field
+		Reason           respjson.Field
+		Type             respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthentication) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthentication) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A control in a registered browser-login form.
+type AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthenticationField struct {
+	// The field ID to submit as field_id in a fields entry.
+	ID string `json:"id" api:"required"`
+	// The label to display beside the control.
+	Label string `json:"label" api:"required"`
+	// Whether this control requires a nonempty value.
+	Required bool `json:"required" api:"required"`
+	// The rendering type, such as email, password, or text.
+	Type string `json:"type" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Label       respjson.Field
+		Required    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthenticationField) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthenticationField) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A sign-in method and the fields that belong to it.
+type AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthenticationOption struct {
+	// The option ID to submit as selected_option.
+	ID string `json:"id" api:"required"`
+	// IDs from the registered fields that this method accepts.
+	FieldIDs []string `json:"field_ids" api:"required"`
+	// The method label to display.
+	Label string `json:"label" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		FieldIDs    respjson.Field
+		Label       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthenticationOption) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserAuthenticationOption) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A browser origin awaiting the application's approval decision.
+type AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserOriginAccess struct {
+	// The origin the browser needs permission to access.
+	Origin string `json:"origin" api:"required"`
+	// The browser's explanation for this request, or null when unavailable.
+	Reason string `json:"reason" api:"required"`
+	// The type of the object. Always `browser_origin_access`.
+	Type constant.BrowserOriginAccess `json:"type" default:"browser_origin_access"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Origin      respjson.Field
+		Reason      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserOriginAccess) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AgentSessionRequiredActionComputerUseApprovalRequestRequestBrowserOriginAccess) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -2164,12 +2706,21 @@ type AgentSessionEventUnionItem struct {
 	Name      string        `json:"name"`
 	// This field is a union of [string], [any]
 	Error AgentSessionEventUnionItemError `json:"error"`
-	// This field is a union of [AgentFunctionCallOutputUnion], [any], [string]
+	// This field is a union of [AgentFunctionCallOutputUnion], [any],
+	// [AgentSessionItemComputerUseCallOutput], [string],
+	// [AgentOutputItemComputerUseCallOutput]
 	Output           AgentSessionEventUnionItemOutput `json:"output"`
 	RecipientAgentID string                           `json:"recipient_agent_id"`
 	SenderAgentID    string                           `json:"sender_agent_id"`
 	// This field is from variant [AgentSessionItemUnion], [AgentOutputItemUnion].
 	ServerLabel string `json:"server_label"`
+	Title       string `json:"title"`
+	// This field is a union of [AgentSessionItemComputerUseApprovalRequestRequest],
+	// [AgentOutputItemComputerUseApprovalRequestRequest]
+	Request   AgentSessionEventUnionItemRequest `json:"request"`
+	RequestID string                            `json:"request_id"`
+	// This field is from variant [AgentSessionItemUnion].
+	Response AgentSessionItemComputerUseApprovalRequestResultResponseUnion `json:"response"`
 	// This field is from variant [AgentSessionItemUnion], [AgentOutputItemUnion].
 	Action WebSearchActionUnion `json:"action"`
 	// This field is from variant [AgentSessionItemUnion], [AgentOutputItemUnion].
@@ -2205,6 +2756,10 @@ type AgentSessionEventUnionItem struct {
 		RecipientAgentID  respjson.Field
 		SenderAgentID     respjson.Field
 		ServerLabel       respjson.Field
+		Title             respjson.Field
+		Request           respjson.Field
+		RequestID         respjson.Field
+		Response          respjson.Field
 		Action            respjson.Field
 		Command           respjson.Field
 		Cwd               respjson.Field
@@ -2295,16 +2850,126 @@ type AgentSessionEventUnionItemOutput struct {
 	// object.
 	OfInputContentArray []InputContentUnion `json:",inline"`
 	// This field will be present if the value is a [any] instead of an object.
-	OfAgentMcpCallItemOutput any `json:",inline"`
-	JSON                     struct {
+	OfAgentMcpCallItemOutput any    `json:",inline"`
+	ImageURL                 string `json:"image_url"`
+	// This field is from variant [AgentSessionItemComputerUseCallOutput].
+	Type constant.ComputerScreenshot `json:"type"`
+	JSON struct {
 		OfString                 respjson.Field
 		OfInputContentArray      respjson.Field
 		OfAgentMcpCallItemOutput respjson.Field
+		ImageURL                 respjson.Field
+		Type                     respjson.Field
 		raw                      string
 	} `json:"-"`
 }
 
 func (r *AgentSessionEventUnionItemOutput) UnmarshalJSON(data []byte) error {
+	var decoded AgentSessionEventUnionItemOutput
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() ||
+			decoded.JSON.OfInputContentArray.Valid() ||
+			decoded.JSON.OfAgentMcpCallItemOutput.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into AgentSessionEventUnionItemOutput: no matching inline variant")
+	}
+	*r = decoded
+	return nil
+}
+
+// AgentSessionEventUnionItemRequest is an implicit subunion of
+// [AgentSessionEventUnion]. AgentSessionEventUnionItemRequest provides convenient
+// access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [AgentSessionEventUnion].
+type AgentSessionEventUnionItemRequest struct {
+	CredentialOrigin string `json:"credential_origin"`
+	// This field is a union of
+	// [[]AgentSessionItemComputerUseApprovalRequestRequestField],
+	// [[]AgentOutputItemComputerUseApprovalRequestRequestField]
+	Fields AgentSessionEventUnionItemRequestFields `json:"fields"`
+	// This field is a union of
+	// [[]AgentSessionItemComputerUseApprovalRequestRequestOption],
+	// [[]AgentOutputItemComputerUseApprovalRequestRequestOption]
+	Options AgentSessionEventUnionItemRequestOptions `json:"options"`
+	Reason  string                                   `json:"reason"`
+	// This field is from variant [AgentSessionItemComputerUseApprovalRequestRequest].
+	Type constant.BrowserAuthentication `json:"type"`
+	JSON struct {
+		CredentialOrigin respjson.Field
+		Fields           respjson.Field
+		Options          respjson.Field
+		Reason           respjson.Field
+		Type             respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+func (r *AgentSessionEventUnionItemRequest) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// AgentSessionEventUnionItemRequestFields is an implicit subunion of
+// [AgentSessionEventUnion]. AgentSessionEventUnionItemRequestFields provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [AgentSessionEventUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfAgentSessionItemComputerUseApprovalRequestRequestFields
+// OfAgentOutputItemComputerUseApprovalRequestRequestFields]
+type AgentSessionEventUnionItemRequestFields struct {
+	// This field will be present if the value is a
+	// [[]AgentSessionItemComputerUseApprovalRequestRequestField] instead of an object.
+	OfAgentSessionItemComputerUseApprovalRequestRequestFields []AgentSessionItemComputerUseApprovalRequestRequestField `json:",inline"`
+	// This field will be present if the value is a
+	// [[]AgentOutputItemComputerUseApprovalRequestRequestField] instead of an object.
+	OfAgentOutputItemComputerUseApprovalRequestRequestFields []AgentOutputItemComputerUseApprovalRequestRequestField `json:",inline"`
+	JSON                                                     struct {
+		OfAgentSessionItemComputerUseApprovalRequestRequestFields respjson.Field
+		OfAgentOutputItemComputerUseApprovalRequestRequestFields  respjson.Field
+		raw                                                       string
+	} `json:"-"`
+}
+
+func (r *AgentSessionEventUnionItemRequestFields) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// AgentSessionEventUnionItemRequestOptions is an implicit subunion of
+// [AgentSessionEventUnion]. AgentSessionEventUnionItemRequestOptions provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [AgentSessionEventUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfAgentSessionItemComputerUseApprovalRequestRequestOptions
+// OfAgentOutputItemComputerUseApprovalRequestRequestOptions]
+type AgentSessionEventUnionItemRequestOptions struct {
+	// This field will be present if the value is a
+	// [[]AgentSessionItemComputerUseApprovalRequestRequestOption] instead of an
+	// object.
+	OfAgentSessionItemComputerUseApprovalRequestRequestOptions []AgentSessionItemComputerUseApprovalRequestRequestOption `json:",inline"`
+	// This field will be present if the value is a
+	// [[]AgentOutputItemComputerUseApprovalRequestRequestOption] instead of an object.
+	OfAgentOutputItemComputerUseApprovalRequestRequestOptions []AgentOutputItemComputerUseApprovalRequestRequestOption `json:",inline"`
+	JSON                                                      struct {
+		OfAgentSessionItemComputerUseApprovalRequestRequestOptions respjson.Field
+		OfAgentOutputItemComputerUseApprovalRequestRequestOptions  respjson.Field
+		raw                                                        string
+	} `json:"-"`
+}
+
+func (r *AgentSessionEventUnionItemRequestOptions) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -2432,6 +3097,22 @@ const (
 	AgentSessionInputMessageParamTypeMessage AgentSessionInputMessageParamType = "message"
 )
 
+func AgentSessionInputParamOfParamAgentSessionInputComputerUseApprovalRequestResult[
+	T AgentBrowserAuthenticationSubmitParam | AgentBrowserAuthenticationCancelParam | AgentBrowserOriginAccessParam,
+](requestID string, response T) AgentSessionInputParamUnion {
+	var paramAgentSessionInputComputerUseApprovalRequestResult AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResult
+	paramAgentSessionInputComputerUseApprovalRequestResult.RequestID = requestID
+	switch v := any(response).(type) {
+	case AgentBrowserAuthenticationSubmitParam:
+		paramAgentSessionInputComputerUseApprovalRequestResult.Response.OfBrowserAuthenticationSubmit = &v
+	case AgentBrowserAuthenticationCancelParam:
+		paramAgentSessionInputComputerUseApprovalRequestResult.Response.OfBrowserAuthenticationCancel = &v
+	case AgentBrowserOriginAccessParam:
+		paramAgentSessionInputComputerUseApprovalRequestResult.Response.OfBrowserOriginAccess = &v
+	}
+	return AgentSessionInputParamUnion{OfParamAgentSessionInputComputerUseApprovalRequestResult: &paramAgentSessionInputComputerUseApprovalRequestResult}
+}
+
 func AgentSessionInputParamOfParamAgentSessionInputMessage(input []AgentSessionInputMessageParam) AgentSessionInputParamUnion {
 	var paramAgentSessionInputMessage AgentSessionInputParamAgentSessionInputMessage
 	paramAgentSessionInputMessage.Input = input
@@ -2450,17 +3131,34 @@ func AgentSessionInputParamOfParamAgentSessionInputToolResult(callID string, suc
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type AgentSessionInputParamUnion struct {
-	OfParamAgentSessionInputMessage    *AgentSessionInputParamAgentSessionInputMessage    `json:",omitzero,inline"`
-	OfParamAgentSessionInputCancel     *AgentSessionInputParamAgentSessionInputCancel     `json:",omitzero,inline"`
-	OfParamAgentSessionInputToolResult *AgentSessionInputParamAgentSessionInputToolResult `json:",omitzero,inline"`
+	OfParamAgentSessionInputComputerUseApprovalRequestResult *AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResult `json:",omitzero,inline"`
+	OfParamAgentSessionInputMessage                          *AgentSessionInputParamAgentSessionInputMessage                          `json:",omitzero,inline"`
+	OfParamAgentSessionInputCancel                           *AgentSessionInputParamAgentSessionInputCancel                           `json:",omitzero,inline"`
+	OfParamAgentSessionInputToolResult                       *AgentSessionInputParamAgentSessionInputToolResult                       `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u AgentSessionInputParamUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfParamAgentSessionInputMessage, u.OfParamAgentSessionInputCancel, u.OfParamAgentSessionInputToolResult)
+	return param.MarshalUnion(u, u.OfParamAgentSessionInputComputerUseApprovalRequestResult, u.OfParamAgentSessionInputMessage, u.OfParamAgentSessionInputCancel, u.OfParamAgentSessionInputToolResult)
 }
 func (u *AgentSessionInputParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u AgentSessionInputParamUnion) GetRequestID() *string {
+	if vt := u.OfParamAgentSessionInputComputerUseApprovalRequestResult; vt != nil {
+		return &vt.RequestID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u AgentSessionInputParamUnion) GetResponse() *AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResultResponseUnion {
+	if vt := u.OfParamAgentSessionInputComputerUseApprovalRequestResult; vt != nil {
+		return &vt.Response
+	}
+	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -2513,7 +3211,9 @@ func (u AgentSessionInputParamUnion) GetOutput() *AgentFunctionCallOutputParamUn
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u AgentSessionInputParamUnion) GetType() *string {
-	if vt := u.OfParamAgentSessionInputMessage; vt != nil {
+	if vt := u.OfParamAgentSessionInputComputerUseApprovalRequestResult; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfParamAgentSessionInputMessage; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfParamAgentSessionInputCancel; vt != nil {
 		return (*string)(&vt.Type)
@@ -2526,9 +3226,107 @@ func (u AgentSessionInputParamUnion) GetType() *string {
 func init() {
 	apijson.RegisterUnion[AgentSessionInputParamUnion](
 		"type",
+		apijson.Discriminator[AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResult]("agent.session.input.computer_use_approval_request_result"),
 		apijson.Discriminator[AgentSessionInputParamAgentSessionInputMessage]("agent.session.input.message"),
 		apijson.Discriminator[AgentSessionInputParamAgentSessionInputCancel]("agent.session.input.cancel"),
 		apijson.Discriminator[AgentSessionInputParamAgentSessionInputToolResult]("agent.session.input.tool_result"),
+	)
+}
+
+// Responds to a pending Computer Use approval request.
+//
+// The properties RequestID, Response, Type are required.
+type AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResult struct {
+	// The registered request ID from the required action.
+	RequestID string `json:"request_id" api:"required"`
+	// The response for this request type.
+	Response AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResultResponseUnion `json:"response,omitzero" api:"required"`
+	// The type of the object. Always
+	// `agent.session.input.computer_use_approval_request_result`.
+	//
+	// This field can be elided, and will marshal its zero value as
+	// "agent.session.input.computer_use_approval_request_result".
+	Type constant.AgentSessionInputComputerUseApprovalRequestResult `json:"type" default:"agent.session.input.computer_use_approval_request_result"`
+	paramObj
+}
+
+func (r AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResult) MarshalJSON() (data []byte, err error) {
+	type shadow AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResult
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResultResponseUnion struct {
+	OfBrowserAuthenticationSubmit *AgentBrowserAuthenticationSubmitParam `json:",omitzero,inline"`
+	OfBrowserAuthenticationCancel *AgentBrowserAuthenticationCancelParam `json:",omitzero,inline"`
+	OfBrowserOriginAccess         *AgentBrowserOriginAccessParam         `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResultResponseUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfBrowserAuthenticationSubmit, u.OfBrowserAuthenticationCancel, u.OfBrowserOriginAccess)
+}
+func (u *AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResultResponseUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResultResponseUnion) GetFields() []AgentBrowserAuthenticationSubmitParamField {
+	if vt := u.OfBrowserAuthenticationSubmit; vt != nil {
+		return vt.Fields
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResultResponseUnion) GetSelectedOption() *string {
+	if vt := u.OfBrowserAuthenticationSubmit; vt != nil && vt.SelectedOption.Valid() {
+		return &vt.SelectedOption.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResultResponseUnion) GetDecision() *string {
+	if vt := u.OfBrowserOriginAccess; vt != nil {
+		return (*string)(&vt.Decision)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResultResponseUnion) GetAction() *string {
+	if vt := u.OfBrowserAuthenticationSubmit; vt != nil {
+		return (*string)(&vt.Action)
+	} else if vt := u.OfBrowserAuthenticationCancel; vt != nil {
+		return (*string)(&vt.Action)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResultResponseUnion) GetType() *string {
+	if vt := u.OfBrowserAuthenticationSubmit; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfBrowserAuthenticationCancel; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfBrowserOriginAccess; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResultResponseUnion](
+		"type",
+		apijson.Discriminator[AgentBrowserAuthenticationSubmitParam]("browser_authentication"),
+		apijson.Discriminator[AgentBrowserAuthenticationCancelParam]("browser_authentication"),
+		apijson.Discriminator[AgentBrowserOriginAccessParam]("browser_origin_access"),
 	)
 }
 
@@ -2611,10 +3409,13 @@ func (r *AgentSessionInputParamAgentSessionInputToolResult) UnmarshalJSON(data [
 // AgentSessionItemUnion contains all possible properties and values from
 // [AgentSessionMessage], [AgentReasoningItem], [AgentFunctionCallItem],
 // [AgentSessionItemFunctionCallOutput], [AgentSessionItemAgentMessage],
-// [AgentMcpCallItem], [AgentWebSearchCallItem], [AgentCommandExecutionItem],
-// [AgentCreateSubagentCallItem], [AgentSendSubagentInputCallItem],
-// [AgentResumeSubagentCallItem], [AgentWaitForSubagentsCallItem],
-// [AgentInterruptSubagentCallItem], [AgentCloseSubagentCallItem].
+// [AgentMcpCallItem], [AgentSessionItemComputerUseCall],
+// [AgentSessionItemComputerUseApprovalRequest],
+// [AgentSessionItemComputerUseApprovalRequestResult], [AgentWebSearchCallItem],
+// [AgentCommandExecutionItem], [AgentCreateSubagentCallItem],
+// [AgentSendSubagentInputCallItem], [AgentResumeSubagentCallItem],
+// [AgentWaitForSubagentsCallItem], [AgentInterruptSubagentCallItem],
+// [AgentCloseSubagentCallItem].
 //
 // Use the [AgentSessionItemUnion.AsAny] method to switch on the variant.
 //
@@ -2631,9 +3432,11 @@ type AgentSessionItemUnion struct {
 	Status string                  `json:"status"`
 	TurnID string                  `json:"turn_id"`
 	// Any of "message", "reasoning", "function_call", "function_call_output",
-	// "agent_message", "mcp_call", "web_search_call", "command_execution",
-	// "create_subagent_call", "send_subagent_input_call", "resume_subagent_call",
-	// "wait_for_subagents_call", "interrupt_subagent_call", "close_subagent_call".
+	// "agent_message", "mcp_call", "computer_use_call",
+	// "computer_use_approval_request", "computer_use_approval_request_result",
+	// "web_search_call", "command_execution", "create_subagent_call",
+	// "send_subagent_input_call", "resume_subagent_call", "wait_for_subagents_call",
+	// "interrupt_subagent_call", "close_subagent_call".
 	Type string `json:"type"`
 	// This field is from variant [AgentReasoningItem].
 	Summary   []SummaryText `json:"summary"`
@@ -2642,12 +3445,20 @@ type AgentSessionItemUnion struct {
 	Name      string        `json:"name"`
 	// This field is a union of [string], [any]
 	Error AgentSessionItemUnionError `json:"error"`
-	// This field is a union of [AgentFunctionCallOutputUnion], [any], [string]
+	// This field is a union of [AgentFunctionCallOutputUnion], [any],
+	// [AgentSessionItemComputerUseCallOutput], [string]
 	Output           AgentSessionItemUnionOutput `json:"output"`
 	RecipientAgentID string                      `json:"recipient_agent_id"`
 	SenderAgentID    string                      `json:"sender_agent_id"`
 	// This field is from variant [AgentMcpCallItem].
 	ServerLabel string `json:"server_label"`
+	// This field is from variant [AgentSessionItemComputerUseCall].
+	Title string `json:"title"`
+	// This field is from variant [AgentSessionItemComputerUseApprovalRequest].
+	Request   AgentSessionItemComputerUseApprovalRequestRequest `json:"request"`
+	RequestID string                                            `json:"request_id"`
+	// This field is from variant [AgentSessionItemComputerUseApprovalRequestResult].
+	Response AgentSessionItemComputerUseApprovalRequestResultResponseUnion `json:"response"`
 	// This field is from variant [AgentWebSearchCallItem].
 	Action WebSearchActionUnion `json:"action"`
 	// This field is from variant [AgentCommandExecutionItem].
@@ -2683,6 +3494,10 @@ type AgentSessionItemUnion struct {
 		RecipientAgentID  respjson.Field
 		SenderAgentID     respjson.Field
 		ServerLabel       respjson.Field
+		Title             respjson.Field
+		Request           respjson.Field
+		RequestID         respjson.Field
+		Response          respjson.Field
 		Action            respjson.Field
 		Command           respjson.Field
 		Cwd               respjson.Field
@@ -2702,20 +3517,23 @@ type anyAgentSessionItem interface {
 	implAgentSessionItemUnion()
 }
 
-func (AgentSessionMessage) implAgentSessionItemUnion()                {}
-func (AgentReasoningItem) implAgentSessionItemUnion()                 {}
-func (AgentFunctionCallItem) implAgentSessionItemUnion()              {}
-func (AgentSessionItemFunctionCallOutput) implAgentSessionItemUnion() {}
-func (AgentSessionItemAgentMessage) implAgentSessionItemUnion()       {}
-func (AgentMcpCallItem) implAgentSessionItemUnion()                   {}
-func (AgentWebSearchCallItem) implAgentSessionItemUnion()             {}
-func (AgentCommandExecutionItem) implAgentSessionItemUnion()          {}
-func (AgentCreateSubagentCallItem) implAgentSessionItemUnion()        {}
-func (AgentSendSubagentInputCallItem) implAgentSessionItemUnion()     {}
-func (AgentResumeSubagentCallItem) implAgentSessionItemUnion()        {}
-func (AgentWaitForSubagentsCallItem) implAgentSessionItemUnion()      {}
-func (AgentInterruptSubagentCallItem) implAgentSessionItemUnion()     {}
-func (AgentCloseSubagentCallItem) implAgentSessionItemUnion()         {}
+func (AgentSessionMessage) implAgentSessionItemUnion()                              {}
+func (AgentReasoningItem) implAgentSessionItemUnion()                               {}
+func (AgentFunctionCallItem) implAgentSessionItemUnion()                            {}
+func (AgentSessionItemFunctionCallOutput) implAgentSessionItemUnion()               {}
+func (AgentSessionItemAgentMessage) implAgentSessionItemUnion()                     {}
+func (AgentMcpCallItem) implAgentSessionItemUnion()                                 {}
+func (AgentSessionItemComputerUseCall) implAgentSessionItemUnion()                  {}
+func (AgentSessionItemComputerUseApprovalRequest) implAgentSessionItemUnion()       {}
+func (AgentSessionItemComputerUseApprovalRequestResult) implAgentSessionItemUnion() {}
+func (AgentWebSearchCallItem) implAgentSessionItemUnion()                           {}
+func (AgentCommandExecutionItem) implAgentSessionItemUnion()                        {}
+func (AgentCreateSubagentCallItem) implAgentSessionItemUnion()                      {}
+func (AgentSendSubagentInputCallItem) implAgentSessionItemUnion()                   {}
+func (AgentResumeSubagentCallItem) implAgentSessionItemUnion()                      {}
+func (AgentWaitForSubagentsCallItem) implAgentSessionItemUnion()                    {}
+func (AgentInterruptSubagentCallItem) implAgentSessionItemUnion()                   {}
+func (AgentCloseSubagentCallItem) implAgentSessionItemUnion()                       {}
 
 // Use the following switch statement to find the correct variant
 //
@@ -2726,6 +3544,9 @@ func (AgentCloseSubagentCallItem) implAgentSessionItemUnion()         {}
 //	case openai.AgentSessionItemFunctionCallOutput:
 //	case openai.AgentSessionItemAgentMessage:
 //	case openai.AgentMcpCallItem:
+//	case openai.AgentSessionItemComputerUseCall:
+//	case openai.AgentSessionItemComputerUseApprovalRequest:
+//	case openai.AgentSessionItemComputerUseApprovalRequestResult:
 //	case openai.AgentWebSearchCallItem:
 //	case openai.AgentCommandExecutionItem:
 //	case openai.AgentCreateSubagentCallItem:
@@ -2751,6 +3572,12 @@ func (u AgentSessionItemUnion) AsAny() anyAgentSessionItem {
 		return u.AsAgentMessage()
 	case "mcp_call":
 		return u.AsMcpCall()
+	case "computer_use_call":
+		return u.AsComputerUseCall()
+	case "computer_use_approval_request":
+		return u.AsComputerUseApprovalRequest()
+	case "computer_use_approval_request_result":
+		return u.AsComputerUseApprovalRequestResult()
 	case "web_search_call":
 		return u.AsWebSearchCall()
 	case "command_execution":
@@ -2797,6 +3624,21 @@ func (u AgentSessionItemUnion) AsAgentMessage() (v AgentSessionItemAgentMessage)
 }
 
 func (u AgentSessionItemUnion) AsMcpCall() (v AgentMcpCallItem) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AgentSessionItemUnion) AsComputerUseCall() (v AgentSessionItemComputerUseCall) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AgentSessionItemUnion) AsComputerUseApprovalRequest() (v AgentSessionItemComputerUseApprovalRequest) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AgentSessionItemUnion) AsComputerUseApprovalRequestResult() (v AgentSessionItemComputerUseApprovalRequestResult) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -2917,16 +3759,37 @@ type AgentSessionItemUnionOutput struct {
 	OfInputContentArray []InputContentUnion `json:",inline"`
 	// This field will be present if the value is a [any] instead of an object.
 	OfAgentMcpCallItemOutput any `json:",inline"`
-	JSON                     struct {
+	// This field is from variant [AgentSessionItemComputerUseCallOutput].
+	ImageURL string `json:"image_url"`
+	// This field is from variant [AgentSessionItemComputerUseCallOutput].
+	Type constant.ComputerScreenshot `json:"type"`
+	JSON struct {
 		OfString                 respjson.Field
 		OfInputContentArray      respjson.Field
 		OfAgentMcpCallItemOutput respjson.Field
+		ImageURL                 respjson.Field
+		Type                     respjson.Field
 		raw                      string
 	} `json:"-"`
 }
 
 func (r *AgentSessionItemUnionOutput) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	var decoded AgentSessionItemUnionOutput
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() ||
+			decoded.JSON.OfInputContentArray.Valid() ||
+			decoded.JSON.OfAgentMcpCallItemOutput.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into AgentSessionItemUnionOutput: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // The result supplied for a function call.
@@ -2997,6 +3860,321 @@ type AgentSessionItemAgentMessage struct {
 // Returns the unmodified JSON received from the API
 func (r AgentSessionItemAgentMessage) RawJSON() string { return r.JSON.raw }
 func (r *AgentSessionItemAgentMessage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// One execution of the platform-provided computer-use capability.
+type AgentSessionItemComputerUseCall struct {
+	// The ID of the activity item.
+	ID string `json:"id" api:"required"`
+	// The last screenshot emitted by the model. Null when screenshot inclusion is
+	// disabled or the call emitted no screenshot.
+	Output AgentSessionItemComputerUseCallOutput `json:"output" api:"required"`
+	// The execution status of the activity.
+	//
+	// Any of "in_progress", "completed", "failed", "incomplete".
+	Status AgentFunctionCallStatus `json:"status" api:"required"`
+	// A model-generated description of the activity, when available.
+	Title string `json:"title" api:"required"`
+	// The ID of the turn that contains this item.
+	TurnID string `json:"turn_id" api:"required"`
+	// The item type. Always `computer_use_call`.
+	Type constant.ComputerUseCall `json:"type" default:"computer_use_call"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Output      respjson.Field
+		Status      respjson.Field
+		Title       respjson.Field
+		TurnID      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionItemComputerUseCall) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionItemComputerUseCall) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The last screenshot emitted by the model. Null when screenshot inclusion is
+// disabled or the call emitted no screenshot.
+type AgentSessionItemComputerUseCallOutput struct {
+	// The complete JPEG image as a base64 data URL.
+	ImageURL string `json:"image_url" api:"required"`
+	// The content type. Always `computer_screenshot`.
+	Type constant.ComputerScreenshot `json:"type" default:"computer_screenshot"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ImageURL    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionItemComputerUseCallOutput) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionItemComputerUseCallOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A credential-free history record of the emitted login request.
+type AgentSessionItemComputerUseApprovalRequest struct {
+	// The stable history item ID.
+	ID string `json:"id" api:"required"`
+	// A registered form awaiting the application's response.
+	Request   AgentSessionItemComputerUseApprovalRequestRequest `json:"request" api:"required"`
+	RequestID string                                            `json:"request_id" api:"required"`
+	TurnID    string                                            `json:"turn_id" api:"required"`
+	// The item type. Always computer_use_approval_request.
+	Type constant.ComputerUseApprovalRequest `json:"type" default:"computer_use_approval_request"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Request     respjson.Field
+		RequestID   respjson.Field
+		TurnID      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionItemComputerUseApprovalRequest) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionItemComputerUseApprovalRequest) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A registered form awaiting the application's response.
+type AgentSessionItemComputerUseApprovalRequestRequest struct {
+	// The registered form or frame origin where values will be entered.
+	CredentialOrigin string `json:"credential_origin" api:"required"`
+	// Controls to render. All submitted values are sensitive.
+	Fields []AgentSessionItemComputerUseApprovalRequestRequestField `json:"fields" api:"required"`
+	// Sign-in methods. Empty for a plain form.
+	Options []AgentSessionItemComputerUseApprovalRequestRequestOption `json:"options" api:"required"`
+	// Why the agent needs the user to sign in.
+	Reason string `json:"reason" api:"required"`
+	// The type of the object. Always `browser_authentication`.
+	Type constant.BrowserAuthentication `json:"type" default:"browser_authentication"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CredentialOrigin respjson.Field
+		Fields           respjson.Field
+		Options          respjson.Field
+		Reason           respjson.Field
+		Type             respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionItemComputerUseApprovalRequestRequest) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionItemComputerUseApprovalRequestRequest) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A control in a registered browser-login form.
+type AgentSessionItemComputerUseApprovalRequestRequestField struct {
+	// The field ID to submit as field_id in a fields entry.
+	ID string `json:"id" api:"required"`
+	// The label to display beside the control.
+	Label string `json:"label" api:"required"`
+	// Whether this control requires a nonempty value.
+	Required bool `json:"required" api:"required"`
+	// The rendering type, such as email, password, or text.
+	Type string `json:"type" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Label       respjson.Field
+		Required    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionItemComputerUseApprovalRequestRequestField) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionItemComputerUseApprovalRequestRequestField) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A sign-in method and the fields that belong to it.
+type AgentSessionItemComputerUseApprovalRequestRequestOption struct {
+	// The option ID to submit as selected_option.
+	ID string `json:"id" api:"required"`
+	// IDs from the registered fields that this method accepts.
+	FieldIDs []string `json:"field_ids" api:"required"`
+	// The method label to display.
+	Label string `json:"label" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		FieldIDs    respjson.Field
+		Label       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionItemComputerUseApprovalRequestRequestOption) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionItemComputerUseApprovalRequestRequestOption) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A credential-free record of an admitted response, not proof of completion.
+type AgentSessionItemComputerUseApprovalRequestResult struct {
+	// The stable history item ID.
+	ID string `json:"id" api:"required"`
+	// The registered request answered by this item.
+	RequestID string `json:"request_id" api:"required"`
+	// The admitted response, without submitted credential values.
+	Response AgentSessionItemComputerUseApprovalRequestResultResponseUnion `json:"response" api:"required"`
+	// The ID of the turn that contains this item.
+	TurnID string                                    `json:"turn_id" api:"required"`
+	Type   constant.ComputerUseApprovalRequestResult `json:"type" default:"computer_use_approval_request_result"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		RequestID   respjson.Field
+		Response    respjson.Field
+		TurnID      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionItemComputerUseApprovalRequestResult) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionItemComputerUseApprovalRequestResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// AgentSessionItemComputerUseApprovalRequestResultResponseUnion contains all
+// possible properties and values from
+// [AgentSessionItemComputerUseApprovalRequestResultResponseSubmit],
+// [AgentSessionItemComputerUseApprovalRequestResultResponseCancel].
+//
+// Use the [AgentSessionItemComputerUseApprovalRequestResultResponseUnion.AsAny]
+// method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type AgentSessionItemComputerUseApprovalRequestResultResponseUnion struct {
+	// Any of "submit", "cancel".
+	Action string `json:"action"`
+	// This field is from variant
+	// [AgentSessionItemComputerUseApprovalRequestResultResponseSubmit].
+	SelectedOption string `json:"selected_option"`
+	// This field is from variant
+	// [AgentSessionItemComputerUseApprovalRequestResultResponseSubmit].
+	Type constant.BrowserAuthentication `json:"type"`
+	JSON struct {
+		Action         respjson.Field
+		SelectedOption respjson.Field
+		Type           respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// anyAgentSessionItemComputerUseApprovalRequestResultResponse is implemented by
+// each variant of [AgentSessionItemComputerUseApprovalRequestResultResponseUnion]
+// to add type safety for the return type of
+// [AgentSessionItemComputerUseApprovalRequestResultResponseUnion.AsAny]
+type anyAgentSessionItemComputerUseApprovalRequestResultResponse interface {
+	implAgentSessionItemComputerUseApprovalRequestResultResponseUnion()
+}
+
+func (AgentSessionItemComputerUseApprovalRequestResultResponseSubmit) implAgentSessionItemComputerUseApprovalRequestResultResponseUnion() {
+}
+func (AgentSessionItemComputerUseApprovalRequestResultResponseCancel) implAgentSessionItemComputerUseApprovalRequestResultResponseUnion() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := AgentSessionItemComputerUseApprovalRequestResultResponseUnion.AsAny().(type) {
+//	case openai.AgentSessionItemComputerUseApprovalRequestResultResponseSubmit:
+//	case openai.AgentSessionItemComputerUseApprovalRequestResultResponseCancel:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u AgentSessionItemComputerUseApprovalRequestResultResponseUnion) AsAny() anyAgentSessionItemComputerUseApprovalRequestResultResponse {
+	switch u.Action {
+	case "submit":
+		return u.AsSubmit()
+	case "cancel":
+		return u.AsCancel()
+	}
+	return nil
+}
+
+func (u AgentSessionItemComputerUseApprovalRequestResultResponseUnion) AsSubmit() (v AgentSessionItemComputerUseApprovalRequestResultResponseSubmit) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AgentSessionItemComputerUseApprovalRequestResultResponseUnion) AsCancel() (v AgentSessionItemComputerUseApprovalRequestResultResponseCancel) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u AgentSessionItemComputerUseApprovalRequestResultResponseUnion) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *AgentSessionItemComputerUseApprovalRequestResultResponseUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type AgentSessionItemComputerUseApprovalRequestResultResponseSubmit struct {
+	Action constant.Submit `json:"action" default:"submit"`
+	// The chosen sign-in method, or null when no options were offered.
+	SelectedOption string                         `json:"selected_option" api:"required"`
+	Type           constant.BrowserAuthentication `json:"type" default:"browser_authentication"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Action         respjson.Field
+		SelectedOption respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionItemComputerUseApprovalRequestResultResponseSubmit) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AgentSessionItemComputerUseApprovalRequestResultResponseSubmit) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type AgentSessionItemComputerUseApprovalRequestResultResponseCancel struct {
+	Action constant.Cancel                `json:"action" default:"cancel"`
+	Type   constant.BrowserAuthentication `json:"type" default:"browser_authentication"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Action      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionItemComputerUseApprovalRequestResultResponseCancel) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AgentSessionItemComputerUseApprovalRequestResultResponseCancel) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -3900,7 +5078,7 @@ const (
 
 // AgentToolUnion contains all possible properties and values from
 // [AgentToolFunction], [AgentToolProgrammaticToolCalling], [AgentToolMcp],
-// [AgentToolWebSearch].
+// [AgentToolWebSearch], [AgentToolComputerUse].
 //
 // Use the [AgentToolUnion.AsAny] method to switch on the variant.
 //
@@ -3914,7 +5092,8 @@ type AgentToolUnion struct {
 	Name string `json:"name"`
 	// This field is from variant [AgentToolFunction].
 	Parameters map[string]any `json:"parameters"`
-	// Any of "function", "programmatic_tool_calling", "mcp", "web_search".
+	// Any of "function", "programmatic_tool_calling", "mcp", "web_search",
+	// "computer_use".
 	Type string `json:"type"`
 	// This field is from variant [AgentToolProgrammaticToolCalling].
 	Enabled bool `json:"enabled"`
@@ -3940,25 +5119,28 @@ type AgentToolUnion struct {
 	Location AgentToolWebSearchLocation `json:"location"`
 	// This field is from variant [AgentToolWebSearch].
 	Mode string `json:"mode"`
-	JSON struct {
-		DeferLoading     respjson.Field
-		Description      respjson.Field
-		Name             respjson.Field
-		Parameters       respjson.Field
-		Type             respjson.Field
-		Enabled          respjson.Field
-		AllowedTools     respjson.Field
-		ConnectionOrigin respjson.Field
-		CredentialID     respjson.Field
-		RequestMetadata  respjson.Field
-		Required         respjson.Field
-		ServerLabel      respjson.Field
-		Transport        respjson.Field
-		AllowedDomains   respjson.Field
-		ContextSize      respjson.Field
-		Location         respjson.Field
-		Mode             respjson.Field
-		raw              string
+	// This field is from variant [AgentToolComputerUse].
+	IncludeScreenshots bool `json:"include_screenshots"`
+	JSON               struct {
+		DeferLoading       respjson.Field
+		Description        respjson.Field
+		Name               respjson.Field
+		Parameters         respjson.Field
+		Type               respjson.Field
+		Enabled            respjson.Field
+		AllowedTools       respjson.Field
+		ConnectionOrigin   respjson.Field
+		CredentialID       respjson.Field
+		RequestMetadata    respjson.Field
+		Required           respjson.Field
+		ServerLabel        respjson.Field
+		Transport          respjson.Field
+		AllowedDomains     respjson.Field
+		ContextSize        respjson.Field
+		Location           respjson.Field
+		Mode               respjson.Field
+		IncludeScreenshots respjson.Field
+		raw                string
 	} `json:"-"`
 }
 
@@ -3972,6 +5154,7 @@ func (AgentToolFunction) implAgentToolUnion()                {}
 func (AgentToolProgrammaticToolCalling) implAgentToolUnion() {}
 func (AgentToolMcp) implAgentToolUnion()                     {}
 func (AgentToolWebSearch) implAgentToolUnion()               {}
+func (AgentToolComputerUse) implAgentToolUnion()             {}
 
 // Use the following switch statement to find the correct variant
 //
@@ -3980,6 +5163,7 @@ func (AgentToolWebSearch) implAgentToolUnion()               {}
 //	case openai.AgentToolProgrammaticToolCalling:
 //	case openai.AgentToolMcp:
 //	case openai.AgentToolWebSearch:
+//	case openai.AgentToolComputerUse:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -3993,6 +5177,8 @@ func (u AgentToolUnion) AsAny() anyAgentTool {
 		return u.AsMcp()
 	case "web_search":
 		return u.AsWebSearch()
+	case "computer_use":
+		return u.AsComputerUse()
 	}
 	return nil
 }
@@ -4013,6 +5199,11 @@ func (u AgentToolUnion) AsMcp() (v AgentToolMcp) {
 }
 
 func (u AgentToolUnion) AsWebSearch() (v AgentToolWebSearch) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AgentToolUnion) AsComputerUse() (v AgentToolComputerUse) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -4178,6 +5369,27 @@ func (r *AgentToolWebSearchLocation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Browser use in an OpenAI-hosted session.
+type AgentToolComputerUse struct {
+	// Whether computer tool outputs include screenshots.
+	IncludeScreenshots bool `json:"include_screenshots" api:"required"`
+	// The type of the object. Always `computer_use`.
+	Type constant.ComputerUse `json:"type" default:"computer_use"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		IncludeScreenshots respjson.Field
+		Type               respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentToolComputerUse) RawJSON() string { return r.JSON.raw }
+func (r *AgentToolComputerUse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 func AgentToolParamOfParamFunction(description string, name string, parameters map[string]any) AgentToolParamUnion {
 	var paramFunction AgentToolParamFunction
 	paramFunction.Description = description
@@ -4209,6 +5421,7 @@ type AgentToolParamUnion struct {
 	OfParamProgrammaticToolCalling *AgentToolParamProgrammaticToolCalling `json:",omitzero,inline"`
 	OfParamMcp                     *AgentToolParamMcp                     `json:",omitzero,inline"`
 	OfParamWebSearch               *AgentToolParamWebSearch               `json:",omitzero,inline"`
+	OfParamComputerUse             *AgentToolParamComputerUse             `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -4217,7 +5430,8 @@ func (u AgentToolParamUnion) MarshalJSON() ([]byte, error) {
 		u.OfParamToolSearch,
 		u.OfParamProgrammaticToolCalling,
 		u.OfParamMcp,
-		u.OfParamWebSearch)
+		u.OfParamWebSearch,
+		u.OfParamComputerUse)
 }
 func (u *AgentToolParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -4352,6 +5566,14 @@ func (u AgentToolParamUnion) GetMode() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u AgentToolParamUnion) GetIncludeScreenshots() *bool {
+	if vt := u.OfParamComputerUse; vt != nil && vt.IncludeScreenshots.Valid() {
+		return &vt.IncludeScreenshots.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u AgentToolParamUnion) GetType() *string {
 	if vt := u.OfParamFunction; vt != nil {
 		return (*string)(&vt.Type)
@@ -4362,6 +5584,8 @@ func (u AgentToolParamUnion) GetType() *string {
 	} else if vt := u.OfParamMcp; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfParamWebSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfParamComputerUse; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -4375,6 +5599,7 @@ func init() {
 		apijson.Discriminator[AgentToolParamProgrammaticToolCalling]("programmatic_tool_calling"),
 		apijson.Discriminator[AgentToolParamMcp]("mcp"),
 		apijson.Discriminator[AgentToolParamWebSearch]("web_search"),
+		apijson.Discriminator[AgentToolParamComputerUse]("computer_use"),
 	)
 }
 
@@ -4558,6 +5783,27 @@ func (r *AgentToolParamWebSearchLocation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Browser use in an OpenAI-hosted session.
+//
+// The property Type is required.
+type AgentToolParamComputerUse struct {
+	// Whether computer tool outputs include screenshots. Defaults to `false`.
+	IncludeScreenshots param.Opt[bool] `json:"include_screenshots,omitzero"`
+	// The type of the object. Always `computer_use`.
+	//
+	// This field can be elided, and will marshal its zero value as "computer_use".
+	Type constant.ComputerUse `json:"type" default:"computer_use"`
+	paramObj
+}
+
+func (r AgentToolParamComputerUse) MarshalJSON() (data []byte, err error) {
+	type shadow AgentToolParamComputerUse
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AgentToolParamComputerUse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // A request to wait for one or more subagents.
 type AgentWaitForSubagentsCallItem struct {
 	// The ID of the tool call item.
@@ -4646,6 +5892,8 @@ type EnvironmentUnion struct {
 	Plugins []HostedPlugin `json:"plugins"`
 	// This field is from variant [EnvironmentOpenAIHosted].
 	Skills []HostedSkillUnion `json:"skills"`
+	// This field is from variant [EnvironmentOpenAIHosted].
+	Desktop EnvironmentOpenAIHostedDesktop `json:"desktop"`
 	// This field is from variant [EnvironmentSelfHosted].
 	RemoteURL string `json:"remote_url"`
 	// This field is from variant [EnvironmentSelfHosted].
@@ -4659,6 +5907,7 @@ type EnvironmentUnion struct {
 		Packages              respjson.Field
 		Plugins               respjson.Field
 		Skills                respjson.Field
+		Desktop               respjson.Field
 		RemoteURL             respjson.Field
 		WorkspaceDirectory    respjson.Field
 		raw                   string
@@ -4755,6 +6004,8 @@ type EnvironmentOpenAIHosted struct {
 	Skills []HostedSkillUnion `json:"skills" api:"required"`
 	// The type of the object. Always `openai_hosted`.
 	Type constant.OpenAIHosted `json:"type" default:"openai_hosted"`
+	// The effective desktop configuration.
+	Desktop EnvironmentOpenAIHostedDesktop `json:"desktop"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                    respjson.Field
@@ -4765,6 +6016,7 @@ type EnvironmentOpenAIHosted struct {
 		Plugins               respjson.Field
 		Skills                respjson.Field
 		Type                  respjson.Field
+		Desktop               respjson.Field
 		ExtraFields           map[string]respjson.Field
 		raw                   string
 	} `json:"-"`
@@ -4823,6 +6075,24 @@ func (r *EnvironmentOpenAIHostedPackages) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The effective desktop configuration.
+type EnvironmentOpenAIHostedDesktop struct {
+	// Whether the environment provisions a desktop and browser proxy.
+	Enabled bool `json:"enabled" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Enabled     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r EnvironmentOpenAIHostedDesktop) RawJSON() string { return r.JSON.raw }
+func (r *EnvironmentOpenAIHostedDesktop) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // An environment hosted by the application.
 type EnvironmentSelfHosted struct {
 	// The public ID of the environment.
@@ -4875,6 +6145,14 @@ func (u EnvironmentParamUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *EnvironmentParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u EnvironmentParamUnion) GetDesktop() *EnvironmentParamOpenAIHostedDesktop {
+	if vt := u.OfParamOpenAIHosted; vt != nil {
+		return &vt.Desktop
+	}
+	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -5024,6 +6302,9 @@ type EnvironmentParamOpenAIHosted struct {
 	// Directories that contain capabilities exposed to the agent. Defaults to an empty
 	// list.
 	CapabilityDirectories []string `json:"capability_directories,omitzero"`
+	// Desktop provisioning. Omission or null inherits the template setting, or
+	// defaults to disabled.
+	Desktop EnvironmentParamOpenAIHostedDesktop `json:"desktop,omitzero"`
 	// Environment variables made available to the agent.
 	Env map[string]string `json:"env,omitzero"`
 	// Network access policy for the environment. Defaults to disabled for GA requests
@@ -5046,6 +6327,24 @@ func (r *EnvironmentParamOpenAIHosted) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Desktop provisioning. Omission or null inherits the template setting, or
+// defaults to disabled.
+//
+// The property Enabled is required.
+type EnvironmentParamOpenAIHostedDesktop struct {
+	// Whether to provision the desktop and its browser proxy.
+	Enabled bool `json:"enabled" api:"required"`
+	paramObj
+}
+
+func (r EnvironmentParamOpenAIHostedDesktop) MarshalJSON() (data []byte, err error) {
+	type shadow EnvironmentParamOpenAIHostedDesktop
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *EnvironmentParamOpenAIHostedDesktop) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Network access policy for the environment. Defaults to disabled for GA requests
 // and enabled for beta requests.
 //
@@ -5057,6 +6356,10 @@ type EnvironmentParamOpenAIHostedNetwork struct {
 	Access string `json:"access,omitzero" api:"required"`
 	// Domains the environment may access when network access is restricted.
 	AllowedDomains []string `json:"allowed_domains,omitzero"`
+	// Domains blocked for both executor and browser when access is restricted. A
+	// nonempty list requires `access: restricted` and cannot be combined with nonempty
+	// `allowed_domains`. Wildcard domains are not supported.
+	BlockedDomains []string `json:"blocked_domains,omitzero"`
 	paramObj
 }
 
@@ -6263,7 +7566,7 @@ func (r *OutputText) UnmarshalJSON(data []byte) error {
 // PersistedAgentToolUnion contains all possible properties and values from
 // [PersistedAgentToolFunction], [PersistedAgentToolToolSearch],
 // [PersistedAgentToolProgrammaticToolCalling], [PersistedAgentToolMcp],
-// [PersistedAgentToolWebSearch].
+// [PersistedAgentToolWebSearch], [PersistedAgentToolComputerUse].
 //
 // Use the [PersistedAgentToolUnion.AsAny] method to switch on the variant.
 //
@@ -6278,7 +7581,7 @@ type PersistedAgentToolUnion struct {
 	// This field is from variant [PersistedAgentToolFunction].
 	Parameters map[string]any `json:"parameters"`
 	// Any of "function", "tool_search", "programmatic_tool_calling", "mcp",
-	// "web_search".
+	// "web_search", "computer_use".
 	Type string `json:"type"`
 	// This field is from variant [PersistedAgentToolProgrammaticToolCalling].
 	Enabled bool `json:"enabled"`
@@ -6304,25 +7607,28 @@ type PersistedAgentToolUnion struct {
 	Location PersistedAgentToolWebSearchLocation `json:"location"`
 	// This field is from variant [PersistedAgentToolWebSearch].
 	Mode string `json:"mode"`
-	JSON struct {
-		DeferLoading     respjson.Field
-		Description      respjson.Field
-		Name             respjson.Field
-		Parameters       respjson.Field
-		Type             respjson.Field
-		Enabled          respjson.Field
-		AllowedTools     respjson.Field
-		ConnectionOrigin respjson.Field
-		CredentialID     respjson.Field
-		RequestMetadata  respjson.Field
-		Required         respjson.Field
-		ServerLabel      respjson.Field
-		Transport        respjson.Field
-		AllowedDomains   respjson.Field
-		ContextSize      respjson.Field
-		Location         respjson.Field
-		Mode             respjson.Field
-		raw              string
+	// This field is from variant [PersistedAgentToolComputerUse].
+	IncludeScreenshots bool `json:"include_screenshots"`
+	JSON               struct {
+		DeferLoading       respjson.Field
+		Description        respjson.Field
+		Name               respjson.Field
+		Parameters         respjson.Field
+		Type               respjson.Field
+		Enabled            respjson.Field
+		AllowedTools       respjson.Field
+		ConnectionOrigin   respjson.Field
+		CredentialID       respjson.Field
+		RequestMetadata    respjson.Field
+		Required           respjson.Field
+		ServerLabel        respjson.Field
+		Transport          respjson.Field
+		AllowedDomains     respjson.Field
+		ContextSize        respjson.Field
+		Location           respjson.Field
+		Mode               respjson.Field
+		IncludeScreenshots respjson.Field
+		raw                string
 	} `json:"-"`
 }
 
@@ -6338,6 +7644,7 @@ func (PersistedAgentToolToolSearch) implPersistedAgentToolUnion()              {
 func (PersistedAgentToolProgrammaticToolCalling) implPersistedAgentToolUnion() {}
 func (PersistedAgentToolMcp) implPersistedAgentToolUnion()                     {}
 func (PersistedAgentToolWebSearch) implPersistedAgentToolUnion()               {}
+func (PersistedAgentToolComputerUse) implPersistedAgentToolUnion()             {}
 
 // Use the following switch statement to find the correct variant
 //
@@ -6347,6 +7654,7 @@ func (PersistedAgentToolWebSearch) implPersistedAgentToolUnion()               {
 //	case openai.PersistedAgentToolProgrammaticToolCalling:
 //	case openai.PersistedAgentToolMcp:
 //	case openai.PersistedAgentToolWebSearch:
+//	case openai.PersistedAgentToolComputerUse:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -6362,6 +7670,8 @@ func (u PersistedAgentToolUnion) AsAny() anyPersistedAgentTool {
 		return u.AsMcp()
 	case "web_search":
 		return u.AsWebSearch()
+	case "computer_use":
+		return u.AsComputerUse()
 	}
 	return nil
 }
@@ -6387,6 +7697,11 @@ func (u PersistedAgentToolUnion) AsMcp() (v PersistedAgentToolMcp) {
 }
 
 func (u PersistedAgentToolUnion) AsWebSearch() (v PersistedAgentToolWebSearch) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u PersistedAgentToolUnion) AsComputerUse() (v PersistedAgentToolComputerUse) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -6569,6 +7884,27 @@ func (r *PersistedAgentToolWebSearchLocation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Browser use in an OpenAI-hosted session.
+type PersistedAgentToolComputerUse struct {
+	// Whether computer tool outputs include screenshots.
+	IncludeScreenshots bool `json:"include_screenshots" api:"required"`
+	// The type of the object. Always `computer_use`.
+	Type constant.ComputerUse `json:"type" default:"computer_use"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		IncludeScreenshots respjson.Field
+		Type               respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r PersistedAgentToolComputerUse) RawJSON() string { return r.JSON.raw }
+func (r *PersistedAgentToolComputerUse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 func PersistedAgentToolParamOfParamFunction(description string, name string, parameters map[string]any) PersistedAgentToolParamUnion {
 	var paramFunction PersistedAgentToolParamFunction
 	paramFunction.Description = description
@@ -6600,6 +7936,7 @@ type PersistedAgentToolParamUnion struct {
 	OfParamProgrammaticToolCalling *PersistedAgentToolParamProgrammaticToolCalling `json:",omitzero,inline"`
 	OfParamMcp                     *PersistedAgentToolParamMcp                     `json:",omitzero,inline"`
 	OfParamWebSearch               *PersistedAgentToolParamWebSearch               `json:",omitzero,inline"`
+	OfParamComputerUse             *PersistedAgentToolParamComputerUse             `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -6608,7 +7945,8 @@ func (u PersistedAgentToolParamUnion) MarshalJSON() ([]byte, error) {
 		u.OfParamToolSearch,
 		u.OfParamProgrammaticToolCalling,
 		u.OfParamMcp,
-		u.OfParamWebSearch)
+		u.OfParamWebSearch,
+		u.OfParamComputerUse)
 }
 func (u *PersistedAgentToolParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -6743,6 +8081,14 @@ func (u PersistedAgentToolParamUnion) GetMode() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u PersistedAgentToolParamUnion) GetIncludeScreenshots() *bool {
+	if vt := u.OfParamComputerUse; vt != nil && vt.IncludeScreenshots.Valid() {
+		return &vt.IncludeScreenshots.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u PersistedAgentToolParamUnion) GetType() *string {
 	if vt := u.OfParamFunction; vt != nil {
 		return (*string)(&vt.Type)
@@ -6753,6 +8099,8 @@ func (u PersistedAgentToolParamUnion) GetType() *string {
 	} else if vt := u.OfParamMcp; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfParamWebSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfParamComputerUse; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -6766,6 +8114,7 @@ func init() {
 		apijson.Discriminator[PersistedAgentToolParamProgrammaticToolCalling]("programmatic_tool_calling"),
 		apijson.Discriminator[PersistedAgentToolParamMcp]("mcp"),
 		apijson.Discriminator[PersistedAgentToolParamWebSearch]("web_search"),
+		apijson.Discriminator[PersistedAgentToolParamComputerUse]("computer_use"),
 	)
 }
 
@@ -6944,6 +8293,27 @@ func (r PersistedAgentToolParamWebSearchLocation) MarshalJSON() (data []byte, er
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *PersistedAgentToolParamWebSearchLocation) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Browser use in an OpenAI-hosted session.
+//
+// The property Type is required.
+type PersistedAgentToolParamComputerUse struct {
+	// Whether computer tool outputs include screenshots. Defaults to `false`.
+	IncludeScreenshots param.Opt[bool] `json:"include_screenshots,omitzero"`
+	// The type of the object. Always `computer_use`.
+	//
+	// This field can be elided, and will marshal its zero value as "computer_use".
+	Type constant.ComputerUse `json:"type" default:"computer_use"`
+	paramObj
+}
+
+func (r PersistedAgentToolParamComputerUse) MarshalJSON() (data []byte, err error) {
+	type shadow PersistedAgentToolParamComputerUse
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *PersistedAgentToolParamComputerUse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
