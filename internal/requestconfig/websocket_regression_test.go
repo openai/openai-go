@@ -3,6 +3,7 @@ package requestconfig_test
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -12,6 +13,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	wire "github.com/coder/websocket"
@@ -19,6 +21,45 @@ import (
 	"github.com/openai/openai-go/v3/option"
 	transport "github.com/openai/openai-go/v3/packages/websocket"
 )
+
+func TestWebSocketRetryAfterExceedingBudgetPreservesResponse(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		attempts := 0
+		cfg, err := requestconfig.NewRequestConfig(context.Background(), http.MethodGet, "responses", nil, nil,
+			option.WithBaseURL("https://example.invalid/v1"),
+			option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+				attempts++
+				return &http.Response{
+					StatusCode: http.StatusUnauthorized,
+					Header:     http.Header{"Retry-After": {"121"}, "X-Should-Retry": {"true"}},
+					Body:       io.NopCloser(strings.NewReader("retry later")),
+					Request:    req,
+				}, nil
+			}),
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		cfg.InstallRequestRetryScope(true)
+		req, client, err := cfg.PrepareWebSocket()
+		if err != nil {
+			t.Fatal(err)
+		}
+		start := time.Now()
+		response, err := client.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = response.Body.Close() }()
+		body, err := io.ReadAll(response.Body)
+		if err != nil || string(body) != "retry later" || response.StatusCode != http.StatusUnauthorized {
+			t.Fatalf("response = %d %q, error = %v; want original handshake rejection", response.StatusCode, body, err)
+		}
+		if attempts != 1 || time.Since(start) != 0 {
+			t.Fatalf("attempts = %d, elapsed = %s; want one attempt without waiting", attempts, time.Since(start))
+		}
+	})
+}
 
 func TestWebSocketQueryOperationsIncludeBaseQuery(t *testing.T) {
 	for _, tc := range []struct {
