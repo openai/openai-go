@@ -40,6 +40,7 @@ type AgentSessionStreamParams struct {
 // It is not safe to iterate concurrently. Close may be called concurrently to
 // unblock iteration; it closes local resources without cancelling the backend turn.
 type AgentSessionStream struct {
+	collector    betaAgentTurnCollector
 	ctx          context.Context
 	cancel       context.CancelFunc
 	sessions     *BetaAgentSessionService
@@ -183,6 +184,7 @@ func (s *AgentSessionStream) Next() (ok bool) {
 		if !s.accept(event) {
 			continue
 		}
+		s.collector.Accumulate(event)
 		s.current = event
 		if event.Type == "agent.session.failed" || (event.Type == "agent.session.idle" && s.turnEnded) {
 			_ = s.Close()
