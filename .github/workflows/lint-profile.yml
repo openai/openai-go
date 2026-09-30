@@ -6,12 +6,11 @@ permissions:
   contents: read
 jobs:
   profile:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 20
     strategy:
       fail-fast: false
-      matrix:
-        variant: [serial-100, serial-200, workspace-200]
+      matrix: ${{ fromJSON(github.repository == 'openai/openai-go-internal' && '{"include":[{"runner":"ubuntu-latest","variant":"source-400"},{"runner":"github-private-network-x86-16core","variant":"source-400"}]}' || '{"include":[{"runner":"ubuntu-latest","variant":"source-400"}]}') }}
     env:
       GOTOOLCHAIN: local
       GOCACHE: ${{ github.workspace }}/.profile/build
@@ -27,13 +26,6 @@ jobs:
         with:
           go-version: '1.26.8'
           cache: false
-      - name: Install verified upstream binary
-        run: |
-          curl --fail --silent --show-error --location --retry 3 \
-            https://github.com/golangci/golangci-lint/releases/download/v2.12.2/golangci-lint-2.12.2-linux-amd64.tar.gz -o "$RUNNER_TEMP/lint.tar.gz"
-          echo '8df580d2670fed8fa984aac0507099af8df275e665215f5c7a2ae3943893a553  '"$RUNNER_TEMP/lint.tar.gz" | sha256sum --check --strict
-          tar -xzf "$RUNNER_TEMP/lint.tar.gz" -C "$RUNNER_TEMP"
-          "$RUNNER_TEMP/golangci-lint-2.12.2-linux-amd64/golangci-lint" version
       - name: Profile cold warm and changed SDK
         shell: bash
         run: |
@@ -46,9 +38,8 @@ jobs:
           from pathlib import Path
           root = Path.cwd()
           config = str(root / '.golangci.yml')
-          runner = str(Path(os.environ['RUNNER_TEMP'])/'golangci-lint-2.12.2-linux-amd64/golangci-lint')
           variant = os.environ['VARIANT']
-          env = dict(os.environ, GOGC=variant.split('-')[1])
+          env = dict(os.environ, GOGC=variant.split('-')[1], GOMEMLIMIT='4GiB')
           def timed(label, cmd, cwd=root, extra=None, capture=False):
               print('START', label, flush=True)
               start = time.monotonic()
@@ -62,6 +53,7 @@ jobs:
           for state in ['cold', 'warm', 'changed']:
               if state == 'changed':
                   (root / 'lint_cache_probe.go').write_text('package openai\n\nconst LintCacheProbe = 1\n')
+              runner = timed(state+'/tool-build',['go','tool','-modfile='+str(root/'tools/go.mod'),'-n','golangci-lint'],capture=True).strip()
               timed(state+'/tools-fmt', [runner,'fmt','--config='+config,'--diff','./tools/...'])
               if variant.startswith('workspace'):
                   timed(state+'/native-workspace',[runner,'run','--config='+config,'--tests=true','--verbose','./...','./examples/...','./internal/testdata/consumer/...'],extra={'GOWORK':str(workspace)})
