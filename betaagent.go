@@ -5893,6 +5893,8 @@ type EnvironmentUnion struct {
 	// This field is from variant [EnvironmentOpenAIHosted].
 	Skills []HostedSkillUnion `json:"skills"`
 	// This field is from variant [EnvironmentOpenAIHosted].
+	ContainerSize string `json:"container_size"`
+	// This field is from variant [EnvironmentOpenAIHosted].
 	Desktop EnvironmentOpenAIHostedDesktop `json:"desktop"`
 	// This field is from variant [EnvironmentSelfHosted].
 	RemoteURL string `json:"remote_url"`
@@ -5907,6 +5909,7 @@ type EnvironmentUnion struct {
 		Packages              respjson.Field
 		Plugins               respjson.Field
 		Skills                respjson.Field
+		ContainerSize         respjson.Field
 		Desktop               respjson.Field
 		RemoteURL             respjson.Field
 		WorkspaceDirectory    respjson.Field
@@ -6004,6 +6007,11 @@ type EnvironmentOpenAIHosted struct {
 	Skills []HostedSkillUnion `json:"skills" api:"required"`
 	// The type of the object. Always `openai_hosted`.
 	Type constant.OpenAIHosted `json:"type" default:"openai_hosted"`
+	// The effective CPU and memory tier, or null when unknown or outside the public
+	// tiers.
+	//
+	// Any of "small", "medium", "large".
+	ContainerSize string `json:"container_size" api:"nullable"`
 	// The effective desktop configuration.
 	Desktop EnvironmentOpenAIHostedDesktop `json:"desktop"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -6016,6 +6024,7 @@ type EnvironmentOpenAIHosted struct {
 		Plugins               respjson.Field
 		Skills                respjson.Field
 		Type                  respjson.Field
+		ContainerSize         respjson.Field
 		Desktop               respjson.Field
 		ExtraFields           map[string]respjson.Field
 		raw                   string
@@ -6145,6 +6154,14 @@ func (u EnvironmentParamUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *EnvironmentParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u EnvironmentParamUnion) GetContainerSize() *string {
+	if vt := u.OfParamOpenAIHosted; vt != nil {
+		return &vt.ContainerSize
+	}
+	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -6312,6 +6329,10 @@ type EnvironmentParamOpenAIHosted struct {
 	Network EnvironmentParamOpenAIHostedNetwork `json:"network,omitzero"`
 	// Packages to install in the environment. Defaults to empty package lists.
 	Packages EnvironmentParamOpenAIHostedPackages `json:"packages,omitzero"`
+	// The hosted container size. Omission selects the medium tier.
+	//
+	// Any of "small", "medium", "large".
+	ContainerSize string `json:"container_size,omitzero"`
 	// The type of the object. Always `openai_hosted`.
 	//
 	// This field can be elided, and will marshal its zero value as "openai_hosted".
@@ -6325,6 +6346,12 @@ func (r EnvironmentParamOpenAIHosted) MarshalJSON() (data []byte, err error) {
 }
 func (r *EnvironmentParamOpenAIHosted) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[EnvironmentParamOpenAIHosted](
+		"container_size", "small", "medium", "large",
+	)
 }
 
 // Desktop provisioning. Omission or null inherits the template setting, or
@@ -8627,10 +8654,11 @@ type SessionTurnError struct {
 	//
 	// Any of "context_length_exceeded", "session_budget_exceeded",
 	// "usage_limit_exceeded", "credit_balance_exhausted", "rate_limit_exceeded",
-	// "server_overloaded", "cyber_policy", "misalignment_policy_violation",
-	// "connection_failed", "server_error", "authentication_error", "invalid_request",
-	// "resource_not_found", "sandbox_error", "executor_version_incompatible",
-	// "active_turn_not_steerable", "request_timeout", "internal_error".
+	// "flex_unavailable", "server_overloaded", "cyber_policy",
+	// "misalignment_policy_violation", "connection_failed", "server_error",
+	// "authentication_error", "invalid_request", "resource_not_found",
+	// "sandbox_error", "executor_version_incompatible", "active_turn_not_steerable",
+	// "request_timeout", "internal_error".
 	Code SessionTurnErrorCode `json:"code" api:"required"`
 	// A customer-safe explanation of the failure.
 	Message string `json:"message" api:"required"`
@@ -8658,6 +8686,7 @@ const (
 	SessionTurnErrorCodeUsageLimitExceeded          SessionTurnErrorCode = "usage_limit_exceeded"
 	SessionTurnErrorCodeCreditBalanceExhausted      SessionTurnErrorCode = "credit_balance_exhausted"
 	SessionTurnErrorCodeRateLimitExceeded           SessionTurnErrorCode = "rate_limit_exceeded"
+	SessionTurnErrorCodeFlexUnavailable             SessionTurnErrorCode = "flex_unavailable"
 	SessionTurnErrorCodeServerOverloaded            SessionTurnErrorCode = "server_overloaded"
 	SessionTurnErrorCodeCyberPolicy                 SessionTurnErrorCode = "cyber_policy"
 	SessionTurnErrorCodeMisalignmentPolicyViolation SessionTurnErrorCode = "misalignment_policy_violation"
