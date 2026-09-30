@@ -30,6 +30,48 @@ func TestRunReportsStreamFailure(t *testing.T) {
 	}
 }
 
+func TestRunReportsFailedEvents(t *testing.T) {
+	for _, tc := range []struct {
+		name, terminal string
+		wantError      bool
+	}{
+		{"session failed", `{"type":"agent.session.failed","event_id":"failed","session":{"status":"failed"}}`, true},
+		{"turn failed", `{"type":"agent.session.turn.failed","event_id":"failed","turn_id":"turn","turn":{"id":"turn","subagent_id":null}}`, true},
+		{"turn cancelled", `{"type":"agent.session.turn.cancelled","event_id":"cancelled","turn_id":"turn","turn":{"id":"turn","subagent_id":null}}`, true},
+		{"child failed", `{"type":"agent.session.turn.failed","event_id":"failed","turn_id":"child","turn":{"id":"child","subagent_id":"subagent"}}`, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				switch r.Method + " " + r.URL.Path {
+				case "GET /agents/sessions/session":
+					w.Header().Set("Content-Type", "application/json")
+					_, _ = fmt.Fprint(w, `{"id":"session","status":"idle"}`)
+				case "GET /agents/sessions/session/events":
+					w.Header().Set("Content-Type", "text/event-stream")
+					for _, event := range []string{
+						`{"type":"agent.session.turn.created","event_id":"created","turn_id":"turn","turn":{"id":"turn","subagent_id":null}}`,
+						tc.terminal,
+						`{"type":"agent.session.turn.completed","event_id":"done","turn_id":"turn"}`,
+						`{"type":"agent.session.idle","event_id":"idle","session":{"status":"idle"}}`,
+					} {
+						_, _ = fmt.Fprintf(w, "data: %s\n\n", event)
+					}
+				case "POST /agents/sessions/session/events":
+					w.WriteHeader(http.StatusNoContent)
+				default:
+					t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+					w.WriteHeader(http.StatusNotFound)
+				}
+			}))
+			defer server.Close()
+			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
+			if err := run(context.Background(), client, "session"); (err != nil) != tc.wantError {
+				t.Fatalf("run error = %v, want error: %t", err, tc.wantError)
+			}
+		})
+	}
+}
+
 func (w *recordingWallet) Balance(_ context.Context, args balanceArguments) (balanceReceipt, error) {
 	w.args = append(w.args, args)
 	return balanceReceipt{Wallet: "bound-wallet", Asset: args.Asset, Balance: "12.50"}, w.cause

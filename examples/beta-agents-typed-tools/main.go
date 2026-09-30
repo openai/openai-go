@@ -110,8 +110,16 @@ func run(ctx context.Context, client openai.Client, sessionID string) error {
 	})
 	defer func() { _ = stream.Close() }()
 	for stream.Next() {
-		if event := stream.Current(); event.Type == "agent.session.turn.output_text.delta" {
+		event := stream.Current()
+		switch event.Type {
+		case "agent.session.turn.output_text.delta":
 			fmt.Print(event.AsAgentSessionTurnOutputTextDelta().Delta)
+		case "agent.session.failed":
+			return errors.New("agent session failed")
+		case "agent.session.turn.failed", "agent.session.turn.cancelled":
+			if event.Turn.SubagentID == "" {
+				return errors.New("agent turn did not complete")
+			}
 		}
 	}
 	return stream.Err()
