@@ -66,6 +66,7 @@ jobs:
         run: |
           echo "mod=$(go env GOMODCACHE)" >> "$GITHUB_OUTPUT"
           echo "build=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
+          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
           echo "GOLANGCI_LINT_CACHE=$RUNNER_TEMP/golangci-lint" >> "$GITHUB_ENV"
 
       - name: Cache lint dependencies, builds, and analysis
@@ -79,9 +80,9 @@ jobs:
           # and lint configuration. A new revision saves updated build and
           # analysis entries instead of repeatedly restoring an immutable,
           # incomplete cache. Go and golangci validate reused entries.
-          key: go-lint-v1-${{ runner.os }}-${{ runner.arch }}-${{ env.ImageOS }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('**/go.mod', '**/go.sum', '.golangci.yml', 'scripts/lint') }}-${{ github.sha }}
+          key: go-lint-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.go-cache.outputs.image }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('**/go.mod', '**/go.sum', '.golangci.yml', 'scripts/lint') }}-${{ github.sha }}
           restore-keys: |
-            go-lint-v1-${{ runner.os }}-${{ runner.arch }}-${{ env.ImageOS }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('**/go.mod', '**/go.sum', '.golangci.yml', 'scripts/lint') }}-
+            go-lint-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.go-cache.outputs.image }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('**/go.mod', '**/go.sum', '.golangci.yml', 'scripts/lint') }}-
 
       - name: Run lints
         run: ./scripts/lint
