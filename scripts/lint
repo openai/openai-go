@@ -19,8 +19,8 @@ fi
 scope="${OPENAI_GO_LINT_SCOPE:-all}"
 case "$scope" in
   all) modules=". examples internal/testdata/consumer" ;;
-  sdk) modules=". internal/testdata/consumer" ;;
-  examples) modules="examples" ;;
+  sdk) modules="." ;;
+  examples) modules="examples internal/testdata/consumer" ;;
   *) echo "Unknown lint scope: $scope" >&2; exit 2 ;;
 esac
 

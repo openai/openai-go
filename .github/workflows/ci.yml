@@ -46,9 +46,9 @@ jobs:
     # increase above the minimum declared in go.mod.
     env:
       GOTOOLCHAIN: local
-      # The memory limit still drives GC; only the proportional heap trigger is disabled.
-      GOGC: 'off'
-      GOMEMLIMIT: 4GiB
+      # Trade spare RAM for fewer GC cycles during analysis.
+      GOGC: '400'
+      GOMEMLIMIT: 6GiB
       OPENAI_GO_LINT_SCOPE: ${{ matrix.scope }}
 
     steps:
@@ -93,14 +93,14 @@ jobs:
             go-lint-v2-${{ matrix.scope }}-${{ runner.os }}-${{ runner.arch }}-${{ steps.go-cache.outputs.image }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('**/go.mod', '**/go.sum', '.golangci.yml', 'scripts/lint') }}-
 
       - name: Run lints
-        run: ./scripts/lint
+        run: /usr/bin/time -v ./scripts/lint
 
       - name: Check go.mod is tidy
         if: matrix.scope != 'sdk'
         run: ./scripts/check-go-mod
   lint:
     name: lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     timeout-minutes: 5
     needs: [lint_run]
     if: >-
