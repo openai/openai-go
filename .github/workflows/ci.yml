@@ -26,7 +26,7 @@ permissions:
 
 jobs:
   lint:
-    timeout-minutes: 10
+    timeout-minutes: 20
     name: lint
     runs-on: ubuntu-latest
     # Run on the PR event even for same-repository branches. The stable
