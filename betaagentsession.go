@@ -75,7 +75,7 @@ func (r *BetaAgentSessionService) NewStreaming(ctx context.Context, body BetaAge
 	opts = append(opts, option.WithJSONSet("stream", true))
 	path := "agents/sessions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
-	return ssestream.NewStream[AgentSessionEventUnion](ssestream.NewDecoder(raw), err)
+	return ssestream.NewStreamWithAccumulator[AgentSessionEventUnion](ssestream.NewDecoder(raw), err, &betaAgentTurnCollector{})
 }
 
 // Retrieves the current state of a managed agent session. See
