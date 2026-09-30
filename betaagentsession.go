@@ -30,6 +30,7 @@ type BetaAgentSessionService struct {
 	Artifacts BetaAgentSessionArtifactService
 	Items     BetaAgentSessionItemService
 	Events    BetaAgentSessionEventService
+	Traces    BetaAgentSessionTraceService
 	Turns     BetaAgentSessionTurnService
 }
 
@@ -43,6 +44,7 @@ func NewBetaAgentSessionService(opts ...option.RequestOption) (r BetaAgentSessio
 	r.Artifacts = NewBetaAgentSessionArtifactService(opts...)
 	r.Items = NewBetaAgentSessionItemService(opts...)
 	r.Events = NewBetaAgentSessionEventService(opts...)
+	r.Traces = NewBetaAgentSessionTraceService(opts...)
 	r.Turns = NewBetaAgentSessionTurnService(opts...)
 	return
 }
