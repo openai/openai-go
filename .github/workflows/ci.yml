@@ -26,7 +26,9 @@ permissions:
 
 jobs:
   lint:
-    timeout-minutes: 10
+    # Allow for compiling the lint tool and checking all three modules on
+    # both native Linux and Windows ARM64 when runner caches are cold.
+    timeout-minutes: 20
     name: lint
     runs-on: ubuntu-latest
     # Run on the PR event even for same-repository branches. The stable
