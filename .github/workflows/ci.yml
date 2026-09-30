@@ -42,7 +42,6 @@ jobs:
     # increase above the minimum declared in go.mod.
     env:
       GOTOOLCHAIN: local
-      GOLANGCI_LINT_CACHE: ${{ runner.temp }}/golangci-lint
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
@@ -67,6 +66,7 @@ jobs:
         run: |
           echo "mod=$(go env GOMODCACHE)" >> "$GITHUB_OUTPUT"
           echo "build=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
+          echo "GOLANGCI_LINT_CACHE=$RUNNER_TEMP/golangci-lint" >> "$GITHUB_ENV"
 
       - name: Cache lint dependencies, builds, and analysis
         uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
