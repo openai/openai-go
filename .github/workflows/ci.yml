@@ -79,7 +79,6 @@ jobs:
           echo "GOMEMLIMIT=${memory_limit_mib}MiB" >> "$GITHUB_ENV"
 
       - name: Cache lint dependencies, builds, and analysis
-        id: lint-cache
         uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
@@ -93,15 +92,6 @@ jobs:
           key: go-lint-v2-${{ matrix.scope }}-${{ runner.os }}-${{ runner.arch }}-${{ steps.go-cache.outputs.image }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('**/go.mod', '**/go.sum', '.golangci.yml', 'scripts/lint') }}-${{ github.sha }}
           restore-keys: |
             go-lint-v2-${{ matrix.scope }}-${{ runner.os }}-${{ runner.arch }}-${{ steps.go-cache.outputs.image }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('**/go.mod', '**/go.sum', '.golangci.yml', 'scripts/lint') }}-
-
-      # Empty means no cache matched; "false" means a compatible prefix hit.
-      # Seed only a cold lint cache with the test jobs' ordinary Go cache.
-      - name: Seed a cold lint cache with shared Go builds
-        if: steps.lint-cache.outputs.cache-hit == ''
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version: ${{ steps.go.outputs.go-version }}
-          cache: true
 
       - name: Run lints
         run: ./scripts/lint
