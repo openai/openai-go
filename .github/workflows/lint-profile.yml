@@ -10,7 +10,12 @@ jobs:
     timeout-minutes: 20
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(github.repository == 'openai/openai-go-internal' && '{"include":[{"runner":"ubuntu-latest","variant":"source-400"},{"runner":"github-private-network-x86-16core","variant":"source-400"}]}' || '{"include":[{"runner":"ubuntu-latest","variant":"source-400"}]}') }}
+      matrix:
+        include:
+          - runner: ubuntu-24.04-arm
+            variant: source-400
+          - runner: macos-latest
+            variant: source-400
     env:
       GOTOOLCHAIN: local
       GOCACHE: ${{ github.workspace }}/.profile/build
@@ -30,8 +35,12 @@ jobs:
         shell: bash
         run: |
           git rev-parse HEAD
-          nproc
-          free -m
+          if [ "$(uname -s)" = Linux ]; then
+            lscpu | head -30
+            free -m
+          else
+            sysctl hw.logicalcpu hw.memsize machdep.cpu.brand_string
+          fi
           go version
           python3 -u - <<'PY'
           import os, subprocess, time, json
@@ -39,6 +48,7 @@ jobs:
           root = Path.cwd()
           config = str(root / '.golangci.yml')
           variant = os.environ['VARIANT']
+          native_goos = subprocess.check_output(['go','env','GOOS'],text=True).strip()
           env = dict(os.environ, GOGC=variant.split('-')[1], GOMEMLIMIT='4GiB')
           def timed(label, cmd, cwd=root, extra=None, capture=False):
               print('START', label, flush=True)
@@ -60,7 +70,8 @@ jobs:
               else:
                   for module in ['.','examples','internal/testdata/consumer']:
                       timed(state+'/'+module+'/native',[runner,'run','--config='+config,'--tests=true','--verbose'],cwd=root/module)
-              timed(state+'/windows-tts',[runner,'run','--config='+config,'--tests=true','--verbose','./audio-text-to-speech'],cwd=root/'examples',extra={'GOOS':'windows','GOARCH':'arm64','CGO_ENABLED':'0'})
+              if native_goos == 'linux':
+                  timed(state+'/windows-tts',[runner,'run','--config='+config,'--tests=true','--verbose','./audio-text-to-speech'],cwd=root/'examples',extra={'GOOS':'windows','GOARCH':'arm64','CGO_ENABLED':'0'})
           (root / 'lint_cache_probe.go').unlink()
           timed('tidy',['./scripts/check-go-mod'])
           PY
