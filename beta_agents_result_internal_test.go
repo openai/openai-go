@@ -23,10 +23,8 @@ func TestBetaAgentCollectorRetainsOnlyFinalPayload(t *testing.T) {
 		observe(fmt.Sprintf(`{"type":"agent.session.turn.item.added","turn_id":"root","item":{"id":%q,"type":"message","role":"assistant","turn_id":"root","status":"in_progress","phase":%q,"content":[{"type":"output_text","text":%q}]}}`, phase, phase, payload))
 	}
 	observe(fmt.Sprintf(`{"type":"agent.session.turn.item.done","turn_id":"root","output_index":1,"item":{"id":"commentary","type":"message","role":"assistant","turn_id":"root","status":"completed","phase":"commentary","content":[{"type":"output_text","text":%q}]}}`, payload))
-	for _, entry := range c.messages {
-		if entry.message != nil {
-			t.Fatal("retained pending or commentary payload")
-		}
+	if len(c.messages) != 0 {
+		t.Fatal("retained pending or commentary payload")
 	}
 	observe(`{"type":"agent.session.turn.item.done","turn_id":"root","output_index":0,"item":{"id":"final_answer","type":"message","role":"assistant","turn_id":"root","status":"completed","phase":"final_answer","content":[{"type":"output_text","text":"answer"}]}}`)
 	observe(`{"type":"agent.session.turn.completed","turn_id":"root","turn":{"id":"root","session_id":"session","subagent_id":null,"status":"completed"}}`)
@@ -35,7 +33,7 @@ func TestBetaAgentCollectorRetainsOnlyFinalPayload(t *testing.T) {
 	if err != nil || result.OutputText() != "answer" {
 		t.Fatalf("result=%v err=%v", result, err)
 	}
-	if c.messages != nil || c.positions != nil || c.turn != nil || c.required != nil {
+	if c.messages != nil || c.turn != nil || c.required != nil {
 		t.Fatal("collector retained transferred result state")
 	}
 }

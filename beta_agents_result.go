@@ -2,8 +2,8 @@ package openai
 
 import (
 	"encoding/json"
-	"errors"
 	"io"
+	"maps"
 	"slices"
 	"strings"
 
@@ -29,14 +29,13 @@ func (r BetaAgentTurnResult) OutputText() string {
 	return text.String()
 }
 
-// BetaAgentTurnResultError distinguishes an incomplete observation from a known
+// BetaAgentTurnResultError distinguishes an interrupted observation from a known
 // hosted outcome. Turn may be nil when no root turn was observed. Messages contains
-// only completed final messages received before collection stopped.
+// completed final messages received before collection stopped.
 // This beta helper is experimental.
 type BetaAgentTurnResultError struct {
 	// Reason is turn_failed, turn_cancelled, session_failed, requires_action,
-	// observation_failed, observation_incomplete, incomplete_output,
-	// unclassified_output, invalid_event, or unsupported_stream.
+	// observation_failed, observation_incomplete, or unsupported_stream.
 	Reason          string
 	SessionID       string
 	Turn            *Turn
@@ -51,10 +50,11 @@ func (e *BetaAgentTurnResultError) Error() string {
 func (e *BetaAgentTurnResultError) Unwrap() error { return e.Cause }
 
 // BetaAgentSessionFinalResult consumes a session creation stream and returns its
-// initial root turn's final answer. Events consumed with Next are included. The
-// result or error is cached, and repeated calls never advance to another turn.
-// Defer stream.Close when iteration might stop early. This beta helper is experimental.
-// The free function preserves NewStreaming's concrete ssestream.Stream return type.
+// initial root turn's final answer. Creation must include initial Input; an idle
+// self-hosted creation without Input has no initial result to collect.
+// Events consumed with Next are included. Repeated calls return the cached result
+// or error. This beta helper is experimental. The free function preserves
+// NewStreaming's concrete ssestream.Stream return type.
 func BetaAgentSessionFinalResult(stream *ssestream.Stream[AgentSessionEventUnion]) (*BetaAgentTurnResult, error) {
 	if stream == nil {
 		return nil, &BetaAgentTurnResultError{Reason: "unsupported_stream"}
@@ -66,7 +66,7 @@ func BetaAgentSessionFinalResult(stream *ssestream.Stream[AgentSessionEventUnion
 	if c.finalized {
 		return c.result, c.err
 	}
-	for c.invalid == nil && !c.blocked(nil) && !c.boundary && !c.sessionFailed && stream.Next() {
+	for !c.stopped(nil) && stream.Next() {
 	}
 	_ = stream.Close()
 	return c.finalResult(stream.Err())
@@ -81,21 +81,10 @@ func (s *AgentSessionStream) FinalResult() (*BetaAgentTurnResult, error) {
 	if c.finalized {
 		return c.result, c.err
 	}
-	for c.invalid == nil && !c.blocked(s.handlers) && s.Next() {
+	for !c.stopped(s.handlers) && s.Next() {
 	}
-	if c.invalid != nil || c.blocked(s.handlers) {
-		_ = s.Close()
-	}
+	_ = s.Close()
 	return c.finalResult(s.Err())
-}
-
-type betaAgentResultMessage struct {
-	index    int64
-	hasIndex bool
-	message  *AgentSessionMessage
-	done     bool
-	phase    string
-	status   string
 }
 
 type betaAgentTurnCollector struct {
@@ -104,17 +93,16 @@ type betaAgentTurnCollector struct {
 	terminal      bool
 	boundary      bool
 	sessionFailed bool
-	messages      []betaAgentResultMessage
-	positions     map[string]int
+	messages      map[int64]AgentSessionMessage
 	required      []AgentSessionRequiredActionUnion
-	invalid       error
+	decodeErr     error
 	finalized     bool
 	result        *BetaAgentTurnResult
 	err           error
 }
 
 func (c *betaAgentTurnCollector) Accumulate(event AgentSessionEventUnion) {
-	if c.finalized || c.boundary || c.invalid != nil {
+	if c.finalized || c.boundary || c.decodeErr != nil {
 		return
 	}
 	if c.sessionID == "" {
@@ -127,8 +115,7 @@ func (c *betaAgentTurnCollector) Accumulate(event AgentSessionEventUnion) {
 		c.required = nil
 		for _, action := range event.Session.RequiredActions {
 			var copy AgentSessionRequiredActionUnion
-			if err := json.Unmarshal([]byte(action.RawJSON()), &copy); err != nil {
-				c.invalid = err
+			if c.decodeErr = json.Unmarshal([]byte(action.RawJSON()), &copy); c.decodeErr != nil {
 				return
 			}
 			c.required = append(c.required, copy)
@@ -148,7 +135,7 @@ func (c *betaAgentTurnCollector) Accumulate(event AgentSessionEventUnion) {
 		}
 	}
 	turnID := event.TurnID
-	if turnID == "" && (event.Type == "agent.session.turn.item.added" || event.Type == "agent.session.turn.item.done") {
+	if event.Type == "agent.session.turn.item.done" {
 		turnID = event.Item.TurnID
 	}
 	if c.turn == nil || turnID != c.turn.ID {
@@ -161,75 +148,41 @@ func (c *betaAgentTurnCollector) Accumulate(event AgentSessionEventUnion) {
 		c.setTurn(event.Turn)
 		c.terminal = true
 		c.required = nil
-	case "agent.session.turn.item.added", "agent.session.turn.item.done":
-		if event.Item.Type != "message" || event.Item.Role != "assistant" {
+	case "agent.session.turn.item.done":
+		if event.Item.Type != "message" || event.Item.Role != "assistant" || event.Item.Status != "completed" || event.Item.Phase == "commentary" {
 			return
 		}
-		entry := c.message(event.Item.ID)
-		if entry == nil {
+		// Completed items are authoritative, including legacy messages with no phase.
+		// Decode once into the history-message shape to retain annotations and isolate
+		// the result from callers mutating the event returned by Current.
+		var message AgentSessionMessage
+		if c.decodeErr = json.Unmarshal([]byte(event.Item.JSON.raw), &message); c.decodeErr != nil {
 			return
 		}
-		if entry.done && event.Type == "agent.session.turn.item.added" {
-			return
+		if c.messages == nil {
+			c.messages = make(map[int64]AgentSessionMessage)
 		}
-		// Pending/commentary items need only selection metadata, not their payloads.
-		entry.phase = strings.Clone(event.Item.Phase)
-		entry.status = strings.Clone(event.Item.Status)
-		entry.message = nil
-		if event.Type == "agent.session.turn.item.done" {
-			entry.done = true
-			entry.index = event.OutputIndex
-			entry.hasIndex = event.JSON.OutputIndex.Valid()
-			if entry.phase == "final_answer" && entry.status == "completed" {
-				var message AgentSessionMessage
-				if err := json.Unmarshal([]byte(event.Item.JSON.raw), &message); err != nil {
-					c.invalid = err
-					return
-				}
-				entry.message = &message
-			}
-		}
-	case "agent.session.turn.output_text.delta", "agent.session.turn.output_text.done":
-		c.message(event.ItemID)
+		c.messages[event.OutputIndex] = message
 	}
 }
 
 func (c *betaAgentTurnCollector) setTurn(turn Turn) {
 	var copy Turn
-	if err := json.Unmarshal([]byte(turn.RawJSON()), &copy); err != nil {
-		c.invalid = err
-		return
+	c.decodeErr = json.Unmarshal([]byte(turn.RawJSON()), &copy)
+	if c.decodeErr == nil {
+		c.turn = &copy
+		c.sessionID = copy.SessionID
 	}
-	if copy.ID == "" || copy.SessionID == "" || (c.turn != nil && copy.ID != c.turn.ID) || (c.sessionID != "" && copy.SessionID != c.sessionID) {
-		c.invalid = errors.New("turn snapshot lacks identity")
-		return
-	}
-	c.turn = &copy
-	c.sessionID = copy.SessionID
 }
 
-func (c *betaAgentTurnCollector) message(id string) *betaAgentResultMessage {
-	if id == "" {
-		c.invalid = errors.New("message lacks identity")
-		return nil
-	}
-	if c.positions == nil {
-		c.positions = map[string]int{}
-	}
-	if position, ok := c.positions[id]; ok {
-		return &c.messages[position]
-	}
-	c.positions[strings.Clone(id)] = len(c.messages)
-	c.messages = append(c.messages, betaAgentResultMessage{})
-	return &c.messages[len(c.messages)-1]
-}
-
-func (c *betaAgentTurnCollector) blocked(handlers map[string]AgentToolHandler) bool {
-	for _, action := range c.required {
-		if action.Type == "function_call" && handlers[action.Name] != nil {
-			continue
-		}
+func (c *betaAgentTurnCollector) stopped(handlers map[string]AgentToolHandler) bool {
+	if c.decodeErr != nil || c.boundary || c.sessionFailed || (c.terminal && c.turn != nil && c.turn.Status != "completed") {
 		return true
+	}
+	for _, action := range c.required {
+		if action.Type != "function_call" || handlers[action.Name] == nil {
+			return true
+		}
 	}
 	return false
 }
@@ -239,50 +192,17 @@ func (c *betaAgentTurnCollector) finalResult(cause error) (*BetaAgentTurnResult,
 		return c.result, c.err
 	}
 	c.finalized = true
-	defer func() {
-		c.messages = nil
-		c.positions = nil
-		c.required = nil
-		c.turn = nil
-		c.invalid = nil
-	}()
-	entries := slices.Clone(c.messages)
-	slices.SortStableFunc(entries, func(a, b betaAgentResultMessage) int {
-		if a.hasIndex != b.hasIndex {
-			if a.hasIndex {
-				return -1
-			}
-			return 1
-		}
-		if a.hasIndex && b.hasIndex {
-			if a.index < b.index {
-				return -1
-			}
-			if a.index > b.index {
-				return 1
-			}
-		}
-		return 0
-	})
-	messages := make([]AgentSessionMessage, 0, len(entries))
-	outputReason := ""
-	for _, entry := range entries {
-		if entry.phase == "commentary" {
-			continue
-		}
-		if !entry.done || entry.status != "completed" {
-			outputReason = "incomplete_output"
-		} else if entry.phase != "final_answer" {
-			outputReason = "unclassified_output"
-		} else if entry.message == nil {
-			outputReason = "incomplete_output"
-		} else {
-			messages = append(messages, *entry.message)
-		}
+	defer func() { c.messages = nil; c.required = nil; c.turn = nil; c.decodeErr = nil }()
+	messages := make([]AgentSessionMessage, 0, len(c.messages))
+	for _, index := range slices.Sorted(maps.Keys(c.messages)) {
+		messages = append(messages, c.messages[index])
 	}
-	// Later stream failures do not invalidate an already observed turn boundary.
+	// A later stream error cannot invalidate an already observed turn boundary.
 	if c.boundary {
 		cause = nil
+	}
+	if c.decodeErr != nil {
+		cause = c.decodeErr
 	}
 	reason := ""
 	switch {
@@ -296,14 +216,9 @@ func (c *betaAgentTurnCollector) finalResult(cause error) (*BetaAgentTurnResult,
 		reason = "requires_action"
 	case cause != nil:
 		reason = "observation_failed"
-	case c.invalid != nil:
-		reason = "invalid_event"
-		cause = c.invalid
 	case c.turn == nil || !c.terminal || c.turn.Status != "completed" || !c.boundary:
 		reason = "observation_incomplete"
 		cause = io.ErrUnexpectedEOF
-	case outputReason != "":
-		reason = outputReason
 	}
 	if reason != "" {
 		c.err = &BetaAgentTurnResultError{Reason: reason, SessionID: c.sessionID, Turn: c.turn, Messages: messages, RequiredActions: c.required, Cause: cause}

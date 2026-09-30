@@ -103,9 +103,7 @@ func TestBetaAgentFinalResultOutcomes(t *testing.T) {
 		{"failed", []string{betaResultTurn("failed", "root", "null"), betaResultIdle()}, "turn_failed"},
 		{"cancelled", []string{betaResultTurn("cancelled", "root", "null"), betaResultIdle()}, "turn_cancelled"},
 		{"missing-idle", []string{betaResultTurn("completed", "root", "null")}, "observation_incomplete"},
-		{"truncated", []string{betaResultMessage("added", "m", "root", `"final_answer"`, "partial", 0), betaResultTurn("completed", "root", "null"), betaResultIdle()}, "incomplete_output"},
-		{"nullable-envelope", []string{strings.Replace(betaResultMessage("added", "m", "root", `"final_answer"`, "partial", 0), `"turn_id":"root"`, `"turn_id":null`, 1), betaResultTurn("completed", "root", "null"), betaResultIdle()}, "incomplete_output"},
-		{"null-phase", []string{betaResultMessage("done", "m", "root", "null", "answer", 0), betaResultTurn("completed", "root", "null"), betaResultIdle()}, "unclassified_output"},
+		{"null-phase", []string{betaResultMessage("done", "m", "root", "null", "answer", 0), betaResultTurn("completed", "root", "null"), betaResultIdle()}, ""},
 		{"session-failed", []string{agentEvent("failed", "failure", `,"session":{"id":"session","status":"failed"}`)}, "session_failed"},
 		{"protocol-error", []string{`{"type":"error","error":{"message":"synthetic delivery error"}}`}, "observation_failed"},
 		{"required-action", []string{agentEvent("requires_action", "pending", `,"session":{"id":"session","required_actions":[{"type":"function_call","turn_id":"root","call_id":"call","name":"lookup","arguments":{}}]}`)}, "requires_action"},
@@ -115,7 +113,11 @@ func TestBetaAgentFinalResultOutcomes(t *testing.T) {
 			stream := betaResultCreateStream(t, append(append([]string{}, base...), test.tail...), test.name == "required-action")
 			result, err := openai.BetaAgentSessionFinalResult(stream)
 			if test.reason == "" {
-				if err != nil || result.OutputText() != "" {
+				expectedText := ""
+				if test.name == "null-phase" {
+					expectedText = "answer"
+				}
+				if err != nil || result.OutputText() != expectedText {
 					t.Fatalf("result=%v err=%v", result, err)
 				}
 				return
@@ -224,39 +226,42 @@ func TestBetaAgentFinalResultIgnoresLaterTurns(t *testing.T) {
 	}
 }
 
-func TestBetaAgentFinalResultInvalidLiveEvent(t *testing.T) {
-	cases := []struct {
-		name   string
-		events []string
-	}{
-		{"missing-turn-identity", []string{agentEvent("turn.created", "bad", `,"turn_id":"root","turn":{"id":"root","subagent_id":null}`)}},
-		{"missing-message-identity", []string{betaResultTurn("created", "root", "null"), betaResultMessage("done", "", "root", `"final_answer"`, "answer", 0)}},
-	}
-	for _, test := range cases {
-		t.Run(test.name, func(t *testing.T) {
-			stream := betaResultCreateStream(t, test.events, true)
-			_, err := openai.BetaAgentSessionFinalResult(stream)
-			var failure *openai.BetaAgentTurnResultError
-			if !errors.As(err, &failure) || failure.Reason != "invalid_event" {
-				t.Fatalf("creation: %v", err)
-			}
-			mock, client := newAgentHelperServer(t, test.events...)
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-			defer cancel()
-			followup := client.Beta.Agents.Sessions.Stream(ctx, "session", openai.AgentSessionStreamParams{Input: "question"})
-			_, err = followup.FinalResult()
-			if !errors.As(err, &failure) || failure.Reason != "invalid_event" || mock.closed.Load() != 1 {
-				t.Fatalf("follow-up: %v, closes %d", err, mock.closed.Load())
-			}
-		})
-	}
-}
-
 func TestBetaAgentFinalResultUnknownAddedThenCommentary(t *testing.T) {
 	events := []string{betaResultTurn("created", "root", "null"), betaResultMessage("added", "m", "root", "null", "", 0), betaResultMessage("done", "m", "root", `"commentary"`, "thinking", 0), betaResultTurn("completed", "root", "null"), betaResultIdle()}
 	stream := betaResultCreateStream(t, events, true)
 	result, err := openai.BetaAgentSessionFinalResult(stream)
 	if err != nil || result.OutputText() != "" || len(result.Messages) != 0 {
+		t.Fatalf("result=%v err=%v", result, err)
+	}
+}
+
+func TestBetaAgentFinalResultKnownFailureDoesNotWaitForIdle(t *testing.T) {
+	for _, status := range []string{"failed", "cancelled"} {
+		t.Run(status, func(t *testing.T) {
+			events := []string{betaResultTurn("created", "root", "null"), betaResultTurn(status, "root", "null")}
+			stream := betaResultCreateStream(t, events, true)
+			_, err := openai.BetaAgentSessionFinalResult(stream)
+			var failure *openai.BetaAgentTurnResultError
+			if !errors.As(err, &failure) || failure.Reason != "turn_"+status || failure.Cause != nil {
+				t.Fatalf("creation waited for a transport failure: %v", err)
+			}
+			mock, client := newAgentHelperServer(t, events...)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			followup := client.Beta.Agents.Sessions.Stream(ctx, "session", openai.AgentSessionStreamParams{Input: "question"})
+			_, err = followup.FinalResult()
+			if !errors.As(err, &failure) || failure.Reason != "turn_"+status || failure.Cause != nil || mock.closed.Load() != 1 {
+				t.Fatalf("follow-up waited for a transport failure: %v", err)
+			}
+		})
+	}
+}
+
+func TestBetaAgentFinalResultUsesCompletedMessageTurn(t *testing.T) {
+	done := strings.Replace(betaResultMessage("done", "m", "root", `"final_answer"`, "answer", 0), `"turn_id":"root"`, `"turn_id":null`, 1)
+	stream := betaResultCreateStream(t, []string{betaResultTurn("created", "root", "null"), done, betaResultTurn("completed", "root", "null"), betaResultIdle()}, true)
+	result, err := openai.BetaAgentSessionFinalResult(stream)
+	if err != nil || result.OutputText() != "answer" {
 		t.Fatalf("result=%v err=%v", result, err)
 	}
 }
