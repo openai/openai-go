@@ -24,6 +24,7 @@ type RealtimeService struct {
 	Options       []option.RequestOption
 	ClientSecrets ClientSecretService
 	Calls         CallService
+	Translations  TranslationService
 }
 
 // NewRealtimeService generates a new service that applies the given options to
@@ -34,6 +35,7 @@ func NewRealtimeService(opts ...option.RequestOption) (r RealtimeService) {
 	r.Options = requestconfig.InheritedOptions(opts...)
 	r.ClientSecrets = NewClientSecretService(opts...)
 	r.Calls = NewCallService(opts...)
+	r.Translations = NewTranslationService(opts...)
 	return
 }
 
@@ -1828,6 +1830,326 @@ func (r RealtimeTranscriptionSessionCreateRequestParam) MarshalJSON() (data []by
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *RealtimeTranscriptionSessionCreateRequestParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Create a translation session and client secret for the Realtime API.
+//
+// The property Session is required.
+type RealtimeTranslationClientSecretCreateRequestParam struct {
+	// Realtime translation session configuration. Translation sessions stream source
+	// audio in and translated audio plus transcript deltas out continuously.
+	Session RealtimeTranslationSessionCreateRequestParam `json:"session,omitzero" api:"required"`
+	// Configuration for the client secret expiration. Expiration refers to the time
+	// after which a client secret will no longer be valid for creating sessions. The
+	// session itself may continue after that time once started. A secret can be used
+	// to create multiple sessions until it expires.
+	ExpiresAfter RealtimeTranslationClientSecretCreateRequestExpiresAfterParam `json:"expires_after,omitzero"`
+	paramObj
+}
+
+func (r RealtimeTranslationClientSecretCreateRequestParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeTranslationClientSecretCreateRequestParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeTranslationClientSecretCreateRequestParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Configuration for the client secret expiration. Expiration refers to the time
+// after which a client secret will no longer be valid for creating sessions. The
+// session itself may continue after that time once started. A secret can be used
+// to create multiple sessions until it expires.
+type RealtimeTranslationClientSecretCreateRequestExpiresAfterParam struct {
+	// The number of seconds from the anchor point to the expiration. Select a value
+	// between `10` and `7200` (2 hours). This default to 600 seconds (10 minutes) if
+	// not specified.
+	Seconds param.Opt[int64] `json:"seconds,omitzero"`
+	// The anchor point for the client secret expiration, meaning that `seconds` will
+	// be added to the `created_at` time of the client secret to produce an expiration
+	// timestamp. Only `created_at` is currently supported.
+	//
+	// Any of "created_at".
+	Anchor string `json:"anchor,omitzero"`
+	paramObj
+}
+
+func (r RealtimeTranslationClientSecretCreateRequestExpiresAfterParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeTranslationClientSecretCreateRequestExpiresAfterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeTranslationClientSecretCreateRequestExpiresAfterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[RealtimeTranslationClientSecretCreateRequestExpiresAfterParam](
+		"anchor", "created_at",
+	)
+}
+
+// Response from creating a translation session and client secret for the Realtime
+// API.
+type RealtimeTranslationClientSecretCreateResponse struct {
+	// Expiration timestamp for the client secret, in seconds since epoch.
+	ExpiresAt int64 `json:"expires_at" api:"required" format:"unixtime"`
+	// A Realtime translation session. Translation sessions continuously translate
+	// input audio into the configured output language.
+	Session RealtimeTranslationSession `json:"session" api:"required"`
+	// The generated client secret value.
+	Value string `json:"value" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ExpiresAt   respjson.Field
+		Session     respjson.Field
+		Value       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r RealtimeTranslationClientSecretCreateResponse) RawJSON() string { return r.JSON.raw }
+func (r *RealtimeTranslationClientSecretCreateResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A Realtime translation session. Translation sessions continuously translate
+// input audio into the configured output language.
+type RealtimeTranslationSession struct {
+	// Unique identifier for the session that looks like `sess_1234567890abcdef`.
+	ID string `json:"id" api:"required"`
+	// Configuration for translation input and output audio.
+	Audio RealtimeTranslationSessionAudio `json:"audio" api:"required"`
+	// Expiration timestamp for the session, in seconds since epoch.
+	ExpiresAt int64 `json:"expires_at" api:"required" format:"unixtime"`
+	// The Realtime translation model used for this session. This field is set at
+	// session creation and cannot be changed with `session.update`.
+	Model string `json:"model" api:"required"`
+	// The session type. Always `translation` for Realtime translation sessions.
+	Type constant.Translation `json:"type" default:"translation"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Audio       respjson.Field
+		ExpiresAt   respjson.Field
+		Model       respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r RealtimeTranslationSession) RawJSON() string { return r.JSON.raw }
+func (r *RealtimeTranslationSession) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Configuration for translation input and output audio.
+type RealtimeTranslationSessionAudio struct {
+	Input  RealtimeTranslationSessionAudioInput  `json:"input"`
+	Output RealtimeTranslationSessionAudioOutput `json:"output"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Input       respjson.Field
+		Output      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r RealtimeTranslationSessionAudio) RawJSON() string { return r.JSON.raw }
+func (r *RealtimeTranslationSessionAudio) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type RealtimeTranslationSessionAudioInput struct {
+	// Optional input noise reduction.
+	NoiseReduction RealtimeTranslationSessionAudioInputNoiseReduction `json:"noise_reduction" api:"nullable"`
+	// Optional source-language transcription. When configured, the server emits
+	// `session.input_transcript.delta` events. Translation itself still runs from the
+	// input audio stream.
+	Transcription RealtimeTranslationSessionAudioInputTranscription `json:"transcription" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NoiseReduction respjson.Field
+		Transcription  respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r RealtimeTranslationSessionAudioInput) RawJSON() string { return r.JSON.raw }
+func (r *RealtimeTranslationSessionAudioInput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Optional input noise reduction.
+type RealtimeTranslationSessionAudioInputNoiseReduction struct {
+	// Type of noise reduction. `near_field` is for close-talking microphones such as
+	// headphones, `far_field` is for far-field microphones such as laptop or
+	// conference room microphones.
+	//
+	// Any of "near_field", "far_field".
+	Type NoiseReductionType `json:"type" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r RealtimeTranslationSessionAudioInputNoiseReduction) RawJSON() string { return r.JSON.raw }
+func (r *RealtimeTranslationSessionAudioInputNoiseReduction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Optional source-language transcription. When configured, the server emits
+// `session.input_transcript.delta` events. Translation itself still runs from the
+// input audio stream.
+type RealtimeTranslationSessionAudioInputTranscription struct {
+	// The transcription model used for source transcript deltas.
+	Model string `json:"model" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Model       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r RealtimeTranslationSessionAudioInputTranscription) RawJSON() string { return r.JSON.raw }
+func (r *RealtimeTranslationSessionAudioInputTranscription) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type RealtimeTranslationSessionAudioOutput struct {
+	// Target language for translated output audio and transcript deltas.
+	Language string `json:"language"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Language    respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r RealtimeTranslationSessionAudioOutput) RawJSON() string { return r.JSON.raw }
+func (r *RealtimeTranslationSessionAudioOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Realtime translation session configuration. Translation sessions stream source
+// audio in and translated audio plus transcript deltas out continuously.
+//
+// The property Model is required.
+type RealtimeTranslationSessionCreateRequestParam struct {
+	// The Realtime translation model used for this session.
+	Model string `json:"model" api:"required"`
+	// Configuration for translation input and output audio.
+	Audio RealtimeTranslationSessionCreateRequestAudioParam `json:"audio,omitzero"`
+	paramObj
+}
+
+func (r RealtimeTranslationSessionCreateRequestParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeTranslationSessionCreateRequestParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeTranslationSessionCreateRequestParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Configuration for translation input and output audio.
+type RealtimeTranslationSessionCreateRequestAudioParam struct {
+	Input  RealtimeTranslationSessionCreateRequestAudioInputParam  `json:"input,omitzero"`
+	Output RealtimeTranslationSessionCreateRequestAudioOutputParam `json:"output,omitzero"`
+	paramObj
+}
+
+func (r RealtimeTranslationSessionCreateRequestAudioParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeTranslationSessionCreateRequestAudioParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeTranslationSessionCreateRequestAudioParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type RealtimeTranslationSessionCreateRequestAudioInputParam struct {
+	// Optional input noise reduction. Set to `null` to disable it.
+	NoiseReduction RealtimeTranslationSessionCreateRequestAudioInputNoiseReductionParam `json:"noise_reduction,omitzero"`
+	// Optional source-language transcription. When configured, the server emits
+	// `session.input_transcript.delta` events. Translation itself still runs from the
+	// input audio stream.
+	Transcription RealtimeTranslationSessionCreateRequestAudioInputTranscriptionParam `json:"transcription,omitzero"`
+	paramObj
+}
+
+func (r RealtimeTranslationSessionCreateRequestAudioInputParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeTranslationSessionCreateRequestAudioInputParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeTranslationSessionCreateRequestAudioInputParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Optional input noise reduction. Set to `null` to disable it.
+//
+// The property Type is required.
+type RealtimeTranslationSessionCreateRequestAudioInputNoiseReductionParam struct {
+	// Type of noise reduction. `near_field` is for close-talking microphones such as
+	// headphones, `far_field` is for far-field microphones such as laptop or
+	// conference room microphones.
+	//
+	// Any of "near_field", "far_field".
+	Type NoiseReductionType `json:"type,omitzero" api:"required"`
+	paramObj
+}
+
+func (r RealtimeTranslationSessionCreateRequestAudioInputNoiseReductionParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeTranslationSessionCreateRequestAudioInputNoiseReductionParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeTranslationSessionCreateRequestAudioInputNoiseReductionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Optional source-language transcription. When configured, the server emits
+// `session.input_transcript.delta` events. Translation itself still runs from the
+// input audio stream.
+//
+// The property Model is required.
+type RealtimeTranslationSessionCreateRequestAudioInputTranscriptionParam struct {
+	// The transcription model to use for source transcript deltas.
+	Model string `json:"model" api:"required"`
+	paramObj
+}
+
+func (r RealtimeTranslationSessionCreateRequestAudioInputTranscriptionParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeTranslationSessionCreateRequestAudioInputTranscriptionParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeTranslationSessionCreateRequestAudioInputTranscriptionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type RealtimeTranslationSessionCreateRequestAudioOutputParam struct {
+	// Target language for translated output audio and transcript deltas.
+	Language param.Opt[string] `json:"language,omitzero"`
+	paramObj
+}
+
+func (r RealtimeTranslationSessionCreateRequestAudioOutputParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeTranslationSessionCreateRequestAudioOutputParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeTranslationSessionCreateRequestAudioOutputParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

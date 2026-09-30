@@ -50,6 +50,7 @@ type AgentSessionRequiresAction string                        // Always "agent.s
 type AgentSessionSubagentActive string                        // Always "agent.session.subagent.active"
 type AgentSessionSubagentClosed string                        // Always "agent.session.subagent.closed"
 type AgentSessionSubagentCreated string                       // Always "agent.session.subagent.created"
+type AgentSessionTrace string                                 // Always "agent.session.trace"
 type AgentSessionTurnCancelled string                         // Always "agent.session.turn.cancelled"
 type AgentSessionTurnCompleted string                         // Always "agent.session.turn.completed"
 type AgentSessionTurnContentPartAdded string                  // Always "agent.session.turn.content_part.added"
@@ -635,6 +636,7 @@ func (c AgentSessionSubagentClosed) Default() AgentSessionSubagentClosed {
 func (c AgentSessionSubagentCreated) Default() AgentSessionSubagentCreated {
 	return "agent.session.subagent.created"
 }
+func (c AgentSessionTrace) Default() AgentSessionTrace { return "agent.session.trace" }
 func (c AgentSessionTurnCancelled) Default() AgentSessionTurnCancelled {
 	return "agent.session.turn.cancelled"
 }
@@ -1484,6 +1486,7 @@ func (c AgentSessionRequiresAction) MarshalJSON() ([]byte, error)       { return
 func (c AgentSessionSubagentActive) MarshalJSON() ([]byte, error)       { return marshalString(c) }
 func (c AgentSessionSubagentClosed) MarshalJSON() ([]byte, error)       { return marshalString(c) }
 func (c AgentSessionSubagentCreated) MarshalJSON() ([]byte, error)      { return marshalString(c) }
+func (c AgentSessionTrace) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c AgentSessionTurnCancelled) MarshalJSON() ([]byte, error)        { return marshalString(c) }
 func (c AgentSessionTurnCompleted) MarshalJSON() ([]byte, error)        { return marshalString(c) }
 func (c AgentSessionTurnContentPartAdded) MarshalJSON() ([]byte, error) { return marshalString(c) }
