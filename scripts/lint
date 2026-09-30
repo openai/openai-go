@@ -28,13 +28,14 @@ case "$scope" in
     # Discover new packages automatically instead of maintaining an allowlist.
     for package in $packages; do
       if [ "$package" != "$root_package" ]; then
-        set -- "$@" "$package"
+        set -- "$@" "./${package#"$root_package"/}"
         found=true
       fi
     done
     if [ "$found" = false ]; then exit 0; fi
     ;;
   examples) modules="examples internal/testdata/consumer" ;;
+  windows) modules="" ;;
   *) echo "Unknown lint scope: $scope" >&2; exit 2 ;;
 esac
 
@@ -48,7 +49,7 @@ done
 # This example is excluded on Linux because its audio dependency needs native
 # system libraries there. Analyze it on a supported target without repeating
 # the full SDK analysis: the SDK and consumer select the same source on both.
-if { [ "$scope" = all ] || [ "$scope" = examples ]; } && [ "$lint_tests" = true ] && [ "$(go env GOOS)" = linux ]; then
+if { [ "$scope" = all ] || [ "$scope" = windows ]; } && [ "$lint_tests" = true ] && [ "$(go env GOOS)" = linux ]; then
   (
     cd examples
     GOOS=windows GOARCH=arm64 CGO_ENABLED=0 \

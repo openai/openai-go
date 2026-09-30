@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        scope: [root, packages, examples]
+        scope: [root, packages, examples, windows]
     # Run on the PR event even for same-repository branches. The stable
     # aggregate check at the bottom cannot safely depend on a separate push
     # workflow run, and every PR should receive the same merge-gating signal.
