@@ -42,7 +42,9 @@ jobs:
               print('TIMING', json.dumps({'label': label, 'seconds': round(time.monotonic()-start,3), 'exit': result.returncode}), flush=True)
               result.check_returncode()
               return result.stdout
-          for state in ['cold', 'warm']:
+          for state in ['cold', 'warm', 'changed']:
+              if state == 'changed':
+                  (root / 'lint_cache_probe.go').write_text('package openai\n\nconst LintCacheProbe = 1\n')
               runner = timed(state+'/tool-build', ['go','tool','-modfile='+str(root/'tools/go.mod'),'-n','golangci-lint'], capture=True).strip()
               timed(state+'/tools-fmt', [runner,'fmt','--config='+config,'--diff','./tools/...'])
               for module in ['.','examples','internal/testdata/consumer']:
@@ -51,5 +53,15 @@ jobs:
                       if target != 'native': env.update(GOOS='windows',GOARCH='arm64',CGO_ENABLED='0')
                       timed(state+'/'+module+'/'+target,[runner,'run','--config='+config,'--tests=true','--verbose'],cwd=root/module,env=env)
               timed(state+'/tidy',['./scripts/check-go-mod'])
+          (root / 'lint_cache_probe.go').unlink()
+          probe = root / 'internal/lintcacheprobe'
+          probe.mkdir()
+          (probe / 'probe_windows_arm64.go').write_text('package lintcacheprobe\n\nimport ("fmt"; "io")\n\nfunc Probe() { fmt.Fprintln(io.Discard, "synthetic") }\n')
+          subprocess.run(['gofmt','-w',str(probe/'probe_windows_arm64.go')],check=True)
+          env = dict(os.environ,GOOS='windows',GOARCH='arm64',CGO_ENABLED='0')
+          result = subprocess.run([runner,'run','--config='+config,'--tests=true'],env=env,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+          print(result.stdout)
+          assert result.returncode == 1 and 'errcheck' in result.stdout, 'Warm cache must detect new Windows/arm64 unchecked error'
+          print('PROBE PASSED: warm cached Windows/arm64 analysis rejects newly introduced unchecked error')
           PY
           du -sh .profile/*
