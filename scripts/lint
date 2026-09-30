@@ -16,7 +16,15 @@ else
   set --
 fi
 
-for module in . examples internal/testdata/consumer; do
+scope="${OPENAI_GO_LINT_SCOPE:-all}"
+case "$scope" in
+  all) modules=". examples internal/testdata/consumer" ;;
+  sdk) modules=". internal/testdata/consumer" ;;
+  examples) modules="examples" ;;
+  *) echo "Unknown lint scope: $scope" >&2; exit 2 ;;
+esac
+
+for module in $modules; do
   (
     cd "$module"
     "$lint_runner" run --config="$repo_root/.golangci.yml" --tests="$lint_tests" "$@"
@@ -26,7 +34,7 @@ done
 # This example is excluded on Linux because its audio dependency needs native
 # system libraries there. Analyze it on a supported target without repeating
 # the full SDK analysis: the SDK and consumer select the same source on both.
-if [ "$lint_tests" = true ] && [ "$(go env GOOS)" = linux ]; then
+if [ "$scope" != sdk ] && [ "$lint_tests" = true ] && [ "$(go env GOOS)" = linux ]; then
   (
     cd examples
     GOOS=windows GOARCH=arm64 CGO_ENABLED=0 \
