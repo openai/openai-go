@@ -60,7 +60,7 @@ func (a balanceAction) handle(ctx context.Context, arguments map[string]any) (an
 		return nil, err
 	}
 	var args balanceArguments
-	if err := json.Unmarshal(data, &args); err != nil {
+	if err = json.Unmarshal(data, &args); err != nil {
 		return nil, err
 	}
 	// Decoding into a struct does not validate JSON schema constraints.
