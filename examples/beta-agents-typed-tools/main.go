@@ -77,28 +77,32 @@ func (a balanceAction) handle(ctx context.Context, arguments map[string]any) (an
 }
 
 func main() {
+	if err := run(context.Background(), openai.NewClient(), os.Getenv("AGENT_SESSION_ID")); err != nil {
+		// Apply your application's error-reporting policy before logging raw errors.
+		fmt.Fprintln(os.Stderr, "The typed-tools example failed.")
+		os.Exit(1)
+	}
+}
+
+func run(ctx context.Context, client openai.Client, sessionID string) error {
 	action := balanceAction{wallet: demoWallet{id: "demo-wallet"}}
 	tool, err := action.tool()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Could not build the tool definition.")
-		os.Exit(1)
+		return err
 	}
-	sessionID := os.Getenv("AGENT_SESSION_ID")
 	if sessionID == "" {
 		// Configure agent.tools with this definition when creating your session.
 		data, err := json.MarshalIndent(tool, "", "  ")
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "Could not encode the tool definition.")
-			os.Exit(1)
+			return err
 		}
 		fmt.Println(string(data))
 		fmt.Fprintln(os.Stderr, "Set AGENT_SESSION_ID to an idle session configured with this tool.")
-		return
+		return nil
 	}
 
-	client := openai.NewClient()
 	// This must be the session's only input writer. Keep iterating to dispatch calls.
-	stream := client.Beta.Agents.Sessions.Stream(context.Background(), sessionID, openai.AgentSessionStreamParams{
+	stream := client.Beta.Agents.Sessions.Stream(ctx, sessionID, openai.AgentSessionStreamParams{
 		Input: "What is my USDC balance?",
 		ToolHandlers: map[string]openai.AgentToolHandler{
 			tool.OfParamFunction.Name: action.handle,
@@ -110,8 +114,5 @@ func main() {
 			fmt.Print(event.AsAgentSessionTurnOutputTextDelta().Delta)
 		}
 	}
-	if stream.Err() != nil {
-		// Apply your application's error-reporting policy before logging raw errors.
-		fmt.Fprintln(os.Stderr, "The agent stream failed.")
-	}
+	return stream.Err()
 }

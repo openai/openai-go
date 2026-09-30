@@ -19,6 +19,17 @@ type recordingWallet struct {
 	cause error
 }
 
+func TestRunReportsStreamFailure(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
+	if err := run(context.Background(), client, "session"); err == nil {
+		t.Fatal("failed stream reported a successful run")
+	}
+}
+
 func (w *recordingWallet) Balance(_ context.Context, args balanceArguments) (balanceReceipt, error) {
 	w.args = append(w.args, args)
 	return balanceReceipt{Wallet: "bound-wallet", Asset: args.Asset, Balance: "12.50"}, w.cause
