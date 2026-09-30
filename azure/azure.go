@@ -57,6 +57,11 @@ const (
 // Azure authentication also requires custom networking to use an [*http.Client]
 // with a custom [http.RoundTripper] so every redirect destination can be checked.
 //
+// When switching an existing OpenAI client or service to Azure, inherited custom
+// headers, including organization and project headers, are removed. Supply any
+// headers needed by Azure in the same option call as Azure authentication or in
+// a later request option call.
+//
 // This function should be paired with a call to authenticate, like [azure.WithAPIKey] or [azure.WithTokenCredential], similar to this:
 //
 //	client := openai.NewClient(
@@ -166,6 +171,7 @@ func WithTokenCredential(tokenCredential azcore.TokenCredential, options ...Toke
 		if isNilTokenCredential(tokenCredential) {
 			return errors.New("azure: token credential must not be nil")
 		}
+		rc.ClearInheritedProviderHeaders(azureProvider)
 		auth := requestconfig.NewProviderAuthOption(azureProvider, azureTokenCredentialAuth)
 		if err := rc.Apply(requestconfig.WithEndpointProvider(azureProvider), auth); err != nil {
 			return err
@@ -245,6 +251,7 @@ func WithAPIKey(apiKey string) option.RequestOption {
 	// Api-Key instead.
 	directTransports := &azureDirectLoopbackTransportCache{}
 	return requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
+		rc.ClearInheritedProviderHeaders(azureProvider)
 		auth := requestconfig.NewProviderAuthOption(azureProvider, azureAPIKeyAuth)
 		if err := rc.Apply(requestconfig.WithEndpointProvider(azureProvider), auth); err != nil {
 			return err
