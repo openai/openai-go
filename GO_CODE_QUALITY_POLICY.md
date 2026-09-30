@@ -77,6 +77,12 @@ The initial rollout order is:
 Existing build, test, module-tidiness, supported-Go, vulnerability, and public
 API checks remain authoritative throughout the rollout.
 
+Lint analyzes the root, examples, and external-consumer modules on the host
+platform. On Linux, it also analyzes the excluded text-to-speech example under
+Windows/arm64 with cgo disabled. It does not repeat full SDK analysis for that
+target. New platform-specific source requires an explicit coverage decision;
+this targeted check is not a general cross-platform compatibility matrix.
+
 ## Error handling
 
 Every discarded error must be an intentional, documented ownership decision.
