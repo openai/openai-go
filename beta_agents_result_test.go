@@ -61,6 +61,9 @@ func TestBetaAgentFinalResultCreation(t *testing.T) {
 	for _, prefix := range []int{0, 5, len(events)} {
 		t.Run(fmt.Sprint(prefix), func(t *testing.T) {
 			stream := betaResultCreateStream(t, events, true)
+			if prefix > 0 {
+				openai.BetaAgentSessionWithResultCollection(stream)
+			}
 			for i := 0; i < prefix; i++ {
 				if !stream.Next() {
 					t.Fatal(stream.Err())
@@ -164,7 +167,7 @@ func TestBetaAgentFinalResultFollowupHandlers(t *testing.T) {
 }
 
 func TestBetaAgentFinalResultEarlyClose(t *testing.T) {
-	stream := betaResultCreateStream(t, []string{betaResultTurn("created", "root", "null")}, true)
+	stream := openai.BetaAgentSessionWithResultCollection(betaResultCreateStream(t, []string{betaResultTurn("created", "root", "null")}, true))
 	if !stream.Next() {
 		t.Fatal(stream.Err())
 	}
@@ -178,7 +181,7 @@ func TestBetaAgentFinalResultEarlyClose(t *testing.T) {
 
 func TestBetaAgentFinalResultAfterIteration(t *testing.T) {
 	events := []string{betaResultTurn("created", "root", "null"), betaResultMessage("done", "m", "root", `"final_answer"`, "answer", 0), betaResultTurn("completed", "root", "null"), betaResultIdle()}
-	stream := betaResultCreateStream(t, events, false)
+	stream := openai.BetaAgentSessionWithResultCollection(betaResultCreateStream(t, events, false))
 	for stream.Next() {
 		item := stream.Current().Item
 		if len(item.Content.OfAgentSessionMessageContentArray) > 0 {
@@ -193,7 +196,7 @@ func TestBetaAgentFinalResultAfterIteration(t *testing.T) {
 		t.Fatalf("result=%v err=%v", result, err)
 	}
 	_, client := newAgentHelperServer(t, events...)
-	followup := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{Input: "question"})
+	followup := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{Input: "question"}).WithResultCollection()
 	for followup.Next() {
 	}
 	result, err = followup.FinalResult()
@@ -214,7 +217,7 @@ func TestBetaAgentFinalResultUnhandledFollowup(t *testing.T) {
 
 func TestBetaAgentFinalResultIgnoresLaterTurns(t *testing.T) {
 	events := []string{betaResultTurn("created", "root", "null"), betaResultMessage("done", "m", "root", `"final_answer"`, "answer", 0), betaResultTurn("completed", "root", "null"), betaResultIdle(), betaResultTurn("created", "later", "null"), agentEvent("failed", "later-failure", `,"session":{"id":"session","status":"failed"}`), `{"type":"error","error":{"message":"later delivery error"}}`}
-	stream := betaResultCreateStream(t, events, false)
+	stream := openai.BetaAgentSessionWithResultCollection(betaResultCreateStream(t, events, false))
 	for stream.Next() {
 	}
 	if stream.Err() == nil {
@@ -263,5 +266,78 @@ func TestBetaAgentFinalResultUsesCompletedMessageTurn(t *testing.T) {
 	result, err := openai.BetaAgentSessionFinalResult(stream)
 	if err != nil || result.OutputText() != "answer" {
 		t.Fatalf("result=%v err=%v", result, err)
+	}
+}
+
+func TestBetaAgentFinalResultLateCollection(t *testing.T) {
+	events := []string{betaResultTurn("created", "root", "null"), betaResultMessage("done", "m", "root", `"final_answer"`, "answer", 0), betaResultTurn("completed", "root", "null"), betaResultIdle()}
+	for _, explicit := range []bool{false, true} {
+		t.Run(fmt.Sprint(explicit), func(t *testing.T) {
+			stream := betaResultCreateStream(t, events, false)
+			if !stream.Next() {
+				t.Fatal(stream.Err())
+			}
+			if explicit && openai.BetaAgentSessionWithResultCollection(stream) != stream {
+				t.Fatal("must return same stream")
+			}
+			_, err := openai.BetaAgentSessionFinalResult(stream)
+			var failure *openai.BetaAgentTurnResultError
+			if !errors.As(err, &failure) || failure.Reason != "collection_not_enabled" {
+				t.Fatal(err)
+			}
+			if stream.Err() != nil {
+				t.Fatal("collection misuse changed raw Err")
+			}
+			for stream.Next() {
+			}
+			_, client := newAgentHelperServer(t, events...)
+			followup := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{Input: "question"})
+			if !followup.Next() {
+				t.Fatal(followup.Err())
+			}
+			if explicit && followup.WithResultCollection() != followup {
+				t.Fatal("must return same stream")
+			}
+			_, err = followup.FinalResult()
+			if !errors.As(err, &failure) || failure.Reason != "collection_not_enabled" {
+				t.Fatal(err)
+			}
+			if followup.Err() != nil {
+				t.Fatal("collection misuse changed raw Err")
+			}
+			for followup.Next() {
+			}
+		})
+	}
+}
+
+func TestBetaAgentFinalResultStaleHandledActionPreservesStreamError(t *testing.T) {
+	events := []string{betaResultTurn("created", "root", "null"), agentCall("call-event", "root", "call", "lookup", `{}`), agentEvent("requires_action", "pending", `,"session":{"id":"session","required_actions":[{"type":"function_call","turn_id":"root","call_id":"call","name":"lookup","arguments":{}}]}`)}
+	mock, client := newAgentHelperServer(t, events...)
+	mock.eof = true
+	calls := 0
+	stream := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{Input: "question", ToolHandlers: map[string]openai.AgentToolHandler{"lookup": func(context.Context, map[string]any) (any, error) { calls++; return "done", nil }}})
+	_, err := stream.FinalResult()
+	var failure *openai.BetaAgentTurnResultError
+	if !errors.As(err, &failure) || failure.Reason != "observation_failed" || !errors.Is(err, io.ErrUnexpectedEOF) || calls != 1 || len(mock.submissions()) != 2 {
+		t.Fatalf("err=%v calls=%d", err, calls)
+	}
+}
+
+func TestBetaAgentFinalResultRejectsConflictingRootIdentity(t *testing.T) {
+	events := []string{strings.Replace(betaResultTurn("created", "root", "null"), `"id":"root"`, `"id":"different"`, 1)}
+	stream := betaResultCreateStream(t, events, true)
+	_, err := openai.BetaAgentSessionFinalResult(stream)
+	var failure *openai.BetaAgentTurnResultError
+	if !errors.As(err, &failure) || failure.Cause == nil || failure.Cause.Error() != "inconsistent root turn identity" {
+		t.Fatal(err)
+	}
+	_, client := newAgentHelperServer(t, events...)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	followup := client.Beta.Agents.Sessions.Stream(ctx, "session", openai.AgentSessionStreamParams{Input: "question"})
+	_, err = followup.FinalResult()
+	if !errors.As(err, &failure) || failure.Cause == nil || failure.Cause.Error() != "inconsistent root turn identity" {
+		t.Fatal(err)
 	}
 }

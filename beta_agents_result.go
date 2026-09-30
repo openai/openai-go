@@ -2,6 +2,7 @@ package openai
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"maps"
 	"slices"
@@ -35,7 +36,7 @@ func (r BetaAgentTurnResult) OutputText() string {
 // This beta helper is experimental.
 type BetaAgentTurnResultError struct {
 	// Reason is turn_failed, turn_cancelled, session_failed, requires_action,
-	// observation_failed, observation_incomplete, or unsupported_stream.
+	// observation_failed, observation_incomplete, collection_not_enabled, or unsupported_stream.
 	Reason          string
 	SessionID       string
 	Turn            *Turn
@@ -52,8 +53,9 @@ func (e *BetaAgentTurnResultError) Unwrap() error { return e.Cause }
 // BetaAgentSessionFinalResult consumes a session creation stream and returns its
 // initial root turn's final answer. Creation must include initial Input; an idle
 // self-hosted creation without Input has no initial result to collect.
-// Events consumed with Next are included. Repeated calls return the cached result
-// or error. This beta helper is experimental. The free function preserves
+// A fresh stream enables collection automatically. To read events first, call
+// BetaAgentSessionWithResultCollection before iteration. Repeated calls return
+// the cached result or error. This beta helper is experimental. The free function preserves
 // NewStreaming's concrete ssestream.Stream return type.
 func BetaAgentSessionFinalResult(stream *ssestream.Stream[AgentSessionEventUnion]) (*BetaAgentTurnResult, error) {
 	if stream == nil {
@@ -63,6 +65,7 @@ func BetaAgentSessionFinalResult(stream *ssestream.Stream[AgentSessionEventUnion
 	if !ok {
 		return nil, &BetaAgentTurnResultError{Reason: "unsupported_stream"}
 	}
+	c.enable()
 	if c.finalized {
 		return c.result, c.err
 	}
@@ -72,12 +75,35 @@ func BetaAgentSessionFinalResult(stream *ssestream.Stream[AgentSessionEventUnion
 	return c.finalResult(stream.Err())
 }
 
+// BetaAgentSessionWithResultCollection enables final-result collection before
+// creation stream iteration and returns the same stream. Raw streams retain no
+// result payload unless collection is enabled. Enabling after iteration starts
+// is reported by BetaAgentSessionFinalResult. This helper is experimental.
+func BetaAgentSessionWithResultCollection(stream *ssestream.Stream[AgentSessionEventUnion]) *ssestream.Stream[AgentSessionEventUnion] {
+	if stream != nil {
+		if c, ok := stream.BetaAccumulator().(*betaAgentTurnCollector); ok {
+			c.enable()
+		}
+	}
+	return stream
+}
+
+// WithResultCollection enables final-result collection before event iteration
+// and returns the same stream. Enabling after iteration starts is reported by
+// FinalResult. This beta helper is experimental.
+func (s *AgentSessionStream) WithResultCollection() *AgentSessionStream {
+	s.collector.enable()
+	return s
+}
+
 // FinalResult consumes the follow-up stream, including registered tool handlers,
-// and returns the selected root turn's final messages. It can be called after
-// iteration and is cached. Unhandled actions return a BetaAgentTurnResultError
+// and returns the selected root turn's final messages. A fresh stream enables
+// collection automatically; call WithResultCollection before reading events first.
+// The result is cached. Unhandled actions return a BetaAgentTurnResultError
 // rather than waiting indefinitely. Closing observation does not cancel the turn.
 func (s *AgentSessionStream) FinalResult() (*BetaAgentTurnResult, error) {
 	c := &s.collector
+	c.enable()
 	if c.finalized {
 		return c.result, c.err
 	}
@@ -88,6 +114,8 @@ func (s *AgentSessionStream) FinalResult() (*BetaAgentTurnResult, error) {
 }
 
 type betaAgentTurnCollector struct {
+	enabled       bool
+	started       bool
 	sessionID     string
 	turn          *Turn
 	terminal      bool
@@ -95,14 +123,30 @@ type betaAgentTurnCollector struct {
 	sessionFailed bool
 	messages      map[int64]AgentSessionMessage
 	required      []AgentSessionRequiredActionUnion
-	decodeErr     error
+	collectionErr error
 	finalized     bool
 	result        *BetaAgentTurnResult
 	err           error
 }
 
+func (c *betaAgentTurnCollector) enable() {
+	if c.enabled || c.finalized {
+		return
+	}
+	if c.started {
+		c.finalized = true
+		c.err = &BetaAgentTurnResultError{Reason: "collection_not_enabled"}
+		return
+	}
+	c.enabled = true
+}
+
 func (c *betaAgentTurnCollector) Accumulate(event AgentSessionEventUnion) {
-	if c.finalized || c.boundary || c.decodeErr != nil {
+	c.started = true
+	if !c.enabled {
+		return
+	}
+	if c.finalized || c.boundary || c.collectionErr != nil {
 		return
 	}
 	if c.sessionID == "" {
@@ -115,7 +159,7 @@ func (c *betaAgentTurnCollector) Accumulate(event AgentSessionEventUnion) {
 		c.required = nil
 		for _, action := range event.Session.RequiredActions {
 			var copy AgentSessionRequiredActionUnion
-			if c.decodeErr = json.Unmarshal([]byte(action.RawJSON()), &copy); c.decodeErr != nil {
+			if c.collectionErr = json.Unmarshal([]byte(action.RawJSON()), &copy); c.collectionErr != nil {
 				return
 			}
 			c.required = append(c.required, copy)
@@ -131,6 +175,10 @@ func (c *betaAgentTurnCollector) Accumulate(event AgentSessionEventUnion) {
 		}
 	case "agent.session.turn.created":
 		if c.turn == nil && event.Turn.SubagentID == "" {
+			if event.TurnID != event.Turn.ID {
+				c.collectionErr = errors.New("inconsistent root turn identity")
+				return
+			}
 			c.setTurn(event.Turn)
 		}
 	}
@@ -156,7 +204,7 @@ func (c *betaAgentTurnCollector) Accumulate(event AgentSessionEventUnion) {
 		// Decode once into the history-message shape to retain annotations and isolate
 		// the result from callers mutating the event returned by Current.
 		var message AgentSessionMessage
-		if c.decodeErr = json.Unmarshal([]byte(event.Item.JSON.raw), &message); c.decodeErr != nil {
+		if c.collectionErr = json.Unmarshal([]byte(event.Item.JSON.raw), &message); c.collectionErr != nil {
 			return
 		}
 		if c.messages == nil {
@@ -168,15 +216,15 @@ func (c *betaAgentTurnCollector) Accumulate(event AgentSessionEventUnion) {
 
 func (c *betaAgentTurnCollector) setTurn(turn Turn) {
 	var copy Turn
-	c.decodeErr = json.Unmarshal([]byte(turn.RawJSON()), &copy)
-	if c.decodeErr == nil {
+	c.collectionErr = json.Unmarshal([]byte(turn.RawJSON()), &copy)
+	if c.collectionErr == nil {
 		c.turn = &copy
 		c.sessionID = copy.SessionID
 	}
 }
 
 func (c *betaAgentTurnCollector) stopped(handlers map[string]AgentToolHandler) bool {
-	if c.decodeErr != nil || c.boundary || c.sessionFailed || (c.terminal && c.turn != nil && c.turn.Status != "completed") {
+	if c.collectionErr != nil || c.boundary || c.sessionFailed || (c.terminal && c.turn != nil && c.turn.Status != "completed") {
 		return true
 	}
 	for _, action := range c.required {
@@ -192,7 +240,7 @@ func (c *betaAgentTurnCollector) finalResult(cause error) (*BetaAgentTurnResult,
 		return c.result, c.err
 	}
 	c.finalized = true
-	defer func() { c.messages = nil; c.required = nil; c.turn = nil; c.decodeErr = nil }()
+	defer func() { c.messages = nil; c.required = nil; c.turn = nil; c.collectionErr = nil }()
 	messages := make([]AgentSessionMessage, 0, len(c.messages))
 	for _, index := range slices.Sorted(maps.Keys(c.messages)) {
 		messages = append(messages, c.messages[index])
@@ -201,8 +249,8 @@ func (c *betaAgentTurnCollector) finalResult(cause error) (*BetaAgentTurnResult,
 	if c.boundary {
 		cause = nil
 	}
-	if c.decodeErr != nil {
-		cause = c.decodeErr
+	if c.collectionErr != nil {
+		cause = c.collectionErr
 	}
 	reason := ""
 	switch {
@@ -212,10 +260,10 @@ func (c *betaAgentTurnCollector) finalResult(cause error) (*BetaAgentTurnResult,
 		reason = "turn_failed"
 	case c.turn != nil && c.turn.Status == "cancelled":
 		reason = "turn_cancelled"
-	case len(c.required) > 0:
-		reason = "requires_action"
 	case cause != nil:
 		reason = "observation_failed"
+	case len(c.required) > 0:
+		reason = "requires_action"
 	case c.turn == nil || !c.terminal || c.turn.Status != "completed" || !c.boundary:
 		reason = "observation_incomplete"
 		cause = io.ErrUnexpectedEOF
