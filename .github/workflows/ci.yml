@@ -26,7 +26,8 @@ permissions:
 
 jobs:
   lint:
-    timeout-minutes: 10
+    # Leave room for a cold tool build, both targets, and saving the warm cache.
+    timeout-minutes: 15
     name: lint
     runs-on: ubuntu-latest
     # Run on the PR event even for same-repository branches. The stable
@@ -41,6 +42,7 @@ jobs:
     # increase above the minimum declared in go.mod.
     env:
       GOTOOLCHAIN: local
+      GOLANGCI_LINT_CACHE: ${{ runner.temp }}/golangci-lint
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
@@ -48,6 +50,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup current stable Go
+        id: go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           # The lint runner must be built by a Go release at least as new as
@@ -55,6 +58,30 @@ jobs:
           # test matrix below.
           go-version: '1.26.x'
           check-latest: true
+          # Lint owns a separate cache: test jobs do not build the lint tools
+          # or populate the cross-target and golangci analysis caches.
+          cache: false
+
+      - name: Locate Go caches
+        id: go-cache
+        run: |
+          echo "mod=$(go env GOMODCACHE)" >> "$GITHUB_OUTPUT"
+          echo "build=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache lint dependencies, builds, and analysis
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: |
+            ${{ steps.go-cache.outputs.mod }}
+            ${{ steps.go-cache.outputs.build }}
+            ${{ env.GOLANGCI_LINT_CACHE }}
+          # Include every module (especially tools), the resolved toolchain,
+          # and lint configuration. A new revision saves updated build and
+          # analysis entries instead of repeatedly restoring an immutable,
+          # incomplete cache. Go and golangci validate reused entries.
+          key: go-lint-v1-${{ runner.os }}-${{ runner.arch }}-${{ env.ImageOS }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('**/go.mod', '**/go.sum', '.golangci.yml', 'scripts/lint') }}-${{ github.sha }}
+          restore-keys: |
+            go-lint-v1-${{ runner.os }}-${{ runner.arch }}-${{ env.ImageOS }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('**/go.mod', '**/go.sum', '.golangci.yml', 'scripts/lint') }}-
 
       - name: Run lints
         run: ./scripts/lint
