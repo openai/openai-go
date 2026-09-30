@@ -1,0 +1,55 @@
+name: Isolated lint profile
+on:
+  push:
+    branches: [codegen/apcha-lint-profile-20260930]
+permissions:
+  contents: read
+jobs:
+  profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GOTOOLCHAIN: local
+      GOCACHE: ${{ github.workspace }}/.profile/build
+      GOMODCACHE: ${{ github.workspace }}/.profile/mod
+      GOLANGCI_LINT_CACHE: ${{ github.workspace }}/.profile/analysis
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          persist-credentials: false
+          ref: 9531a634e55b07de898eb444d4795489bd2688a2
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.26.8'
+          cache: false
+      - name: Profile cold and warm full coverage
+        shell: bash
+        run: |
+          git rev-parse HEAD
+          nproc
+          lscpu | head -30
+          free -m
+          go version
+          python3 -u - <<'PY'
+          import os, subprocess, time, json
+          from pathlib import Path
+          root = Path.cwd()
+          config = str(root / '.golangci.yml')
+          def timed(label, cmd, cwd=root, env=None, capture=False):
+              print('START', label, flush=True)
+              start = time.monotonic()
+              result = subprocess.run(cmd, cwd=cwd, env=env, stdout=subprocess.PIPE if capture else None, text=True)
+              print('TIMING', json.dumps({'label': label, 'seconds': round(time.monotonic()-start,3), 'exit': result.returncode}), flush=True)
+              result.check_returncode()
+              return result.stdout
+          for state in ['cold', 'warm']:
+              runner = timed(state+'/tool-build', ['go','tool','-modfile='+str(root/'tools/go.mod'),'-n','golangci-lint'], capture=True).strip()
+              timed(state+'/tools-fmt', [runner,'fmt','--config='+config,'--diff','./tools/...'])
+              for module in ['.','examples','internal/testdata/consumer']:
+                  for target in ['native','windows-arm64']:
+                      env = dict(os.environ)
+                      if target != 'native': env.update(GOOS='windows',GOARCH='arm64',CGO_ENABLED='0')
+                      timed(state+'/'+module+'/'+target,[runner,'run','--config='+config,'--tests=true','--verbose'],cwd=root/module,env=env)
+              timed(state+'/tidy',['./scripts/check-go-mod'])
+          PY
+          du -sh .profile/*
