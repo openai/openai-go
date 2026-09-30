@@ -77,6 +77,19 @@ The initial rollout order is:
 Existing build, test, module-tidiness, supported-Go, vulnerability, and public
 API checks remain authoritative throughout the rollout.
 
+Lint analyzes the root, examples, and external-consumer modules on the host
+platform. On Linux, it also analyzes the excluded text-to-speech example under
+Windows/arm64 with cgo disabled. It does not repeat full SDK analysis for that
+target. New platform-specific source requires an explicit coverage decision;
+this targeted check is not a general cross-platform compatibility matrix.
+
+CI runs the root package, other root-module packages, examples/consumer, and
+Windows-only example in separate jobs. The required `lint` check succeeds only
+when every group succeeds. New root-module packages are discovered automatically.
+The local script still runs every group by default. Public and internal CI use
+the ordinary Linux/amd64 runner. Tests retain every supported Go version. All
+analyzer settings and test analysis remain the same across groups.
+
 ## Error handling
 
 Every discarded error must be an intentional, documented ownership decision.
