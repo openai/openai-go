@@ -83,6 +83,14 @@ Windows/arm64 with cgo disabled. It does not repeat full SDK analysis for that
 target. New platform-specific source requires an explicit coverage decision;
 this targeted check is not a general cross-platform compatibility matrix.
 
+CI runs the root package, other root-module packages, examples/consumer, and
+Windows-only example in separate jobs. The required `lint` check succeeds only
+when every group succeeds. New root-module packages are discovered automatically.
+The local script still runs every group by default. Public CI uses Linux/arm64
+for lint; tests retain Linux/amd64 and every supported Go version. Internal lint
+uses the ordinary Linux/amd64 runner. All analyzer settings and test analysis
+remain the same across groups.
+
 ## Error handling
 
 Every discarded error must be an intentional, documented ownership decision.
