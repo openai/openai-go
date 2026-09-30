@@ -134,6 +134,8 @@ type EnvironmentTemplate struct {
 	CapabilityDirectories []string `json:"capability_directories" api:"required"`
 	// The Unix timestamp, in seconds, when the template was created.
 	CreatedAt int64 `json:"created_at" api:"required"`
+	// Desktop configuration for each OpenAI-hosted environment.
+	Desktop EnvironmentTemplateDesktop `json:"desktop" api:"required"`
 	// Safe file metadata, excluding contents and session-scoped file IDs.
 	Files []EnvironmentTemplateFileUnion `json:"files" api:"required"`
 	// An optional human-readable display name for the template.
@@ -150,13 +152,12 @@ type EnvironmentTemplate struct {
 	Skills []EnvironmentTemplateSkillUnion `json:"skills" api:"required"`
 	// The Unix timestamp, in seconds, when the template was last updated.
 	UpdatedAt int64 `json:"updated_at" api:"required"`
-	// Desktop configuration for each OpenAI-hosted environment.
-	Desktop EnvironmentTemplateDesktop `json:"desktop"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                    respjson.Field
 		CapabilityDirectories respjson.Field
 		CreatedAt             respjson.Field
+		Desktop               respjson.Field
 		Files                 respjson.Field
 		Name                  respjson.Field
 		Network               respjson.Field
@@ -165,7 +166,6 @@ type EnvironmentTemplate struct {
 		Plugins               respjson.Field
 		Skills                respjson.Field
 		UpdatedAt             respjson.Field
-		Desktop               respjson.Field
 		ExtraFields           map[string]respjson.Field
 		raw                   string
 	} `json:"-"`
@@ -174,6 +174,24 @@ type EnvironmentTemplate struct {
 // Returns the unmodified JSON received from the API
 func (r EnvironmentTemplate) RawJSON() string { return r.JSON.raw }
 func (r *EnvironmentTemplate) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Desktop configuration for each OpenAI-hosted environment.
+type EnvironmentTemplateDesktop struct {
+	// Whether the environment provisions a desktop and browser proxy.
+	Enabled bool `json:"enabled" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Enabled     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r EnvironmentTemplateDesktop) RawJSON() string { return r.JSON.raw }
+func (r *EnvironmentTemplateDesktop) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -457,24 +475,6 @@ type EnvironmentTemplateSkillInline struct {
 // Returns the unmodified JSON received from the API
 func (r EnvironmentTemplateSkillInline) RawJSON() string { return r.JSON.raw }
 func (r *EnvironmentTemplateSkillInline) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Desktop configuration for each OpenAI-hosted environment.
-type EnvironmentTemplateDesktop struct {
-	// Whether the environment provisions a desktop and browser proxy.
-	Enabled bool `json:"enabled" api:"required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Enabled     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r EnvironmentTemplateDesktop) RawJSON() string { return r.JSON.raw }
-func (r *EnvironmentTemplateDesktop) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

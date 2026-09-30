@@ -20975,7 +20975,7 @@ type ResponseOutputTextAnnotationFileCitation struct {
 	FileID string `json:"file_id" api:"required"`
 	// The filename of the file cited.
 	Filename string `json:"filename" api:"required"`
-	// The index of the file in the list of files.
+	// The index in the output text at which to insert the file citation.
 	Index int64 `json:"index" api:"required"`
 	// The type of the file citation. Always `file_citation`.
 	Type constant.FileCitation `json:"type" default:"file_citation"`
@@ -21277,7 +21277,7 @@ type ResponseOutputTextAnnotationFileCitationParam struct {
 	FileID string `json:"file_id" api:"required"`
 	// The filename of the file cited.
 	Filename string `json:"filename" api:"required"`
-	// The index of the file in the list of files.
+	// The index in the output text at which to insert the file citation.
 	Index int64 `json:"index" api:"required"`
 	// The type of the file citation. Always `file_citation`.
 	//
@@ -21564,7 +21564,7 @@ type ResponseOutputTextAnnotationAddedEventAnnotationFileCitation struct {
 	FileID string `json:"file_id" api:"required"`
 	// The filename of the file cited.
 	Filename string `json:"filename" api:"required"`
-	// The index of the file in the list of files.
+	// The index in the output text at which to insert the file citation.
 	Index int64 `json:"index" api:"required"`
 	// The type of the file citation. Always `file_citation`.
 	Type constant.FileCitation `json:"type" default:"file_citation"`

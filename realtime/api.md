@@ -21,6 +21,8 @@ Params Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTranscriptionSessionAudioInputParam">RealtimeTranscriptionSessionAudioInputParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam">RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTranscriptionSessionCreateRequestParam">RealtimeTranscriptionSessionCreateRequestParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTranslationClientSecretCreateRequestParam">RealtimeTranslationClientSecretCreateRequestParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTranslationSessionCreateRequestParam">RealtimeTranslationSessionCreateRequestParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTruncationUnionParam">RealtimeTruncationUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTruncationRetentionRatioParam">RealtimeTruncationRetentionRatioParam</a>
 
@@ -32,6 +34,8 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeFunctionTool">RealtimeFunctionTool</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeReasoning">RealtimeReasoning</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeReasoningEffort">RealtimeReasoningEffort</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTranslationClientSecretCreateResponse">RealtimeTranslationClientSecretCreateResponse</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTranslationSession">RealtimeTranslationSession</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTruncationUnion">RealtimeTruncationUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTruncationRetentionRatio">RealtimeTruncationRetentionRatio</a>
 
@@ -57,3 +61,11 @@ Methods:
 - <code title="post /realtime/calls/{call_id}/hangup">client.Realtime.Calls.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#CallService.Hangup">Hangup</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, callID <a href="https://pkg.go.dev/builtin#string">string</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
 - <code title="post /realtime/calls/{call_id}/refer">client.Realtime.Calls.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#CallService.Refer">Refer</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, callID <a href="https://pkg.go.dev/builtin#string">string</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#CallReferParams">CallReferParams</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
 - <code title="post /realtime/calls/{call_id}/reject">client.Realtime.Calls.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#CallService.Reject">Reject</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, callID <a href="https://pkg.go.dev/builtin#string">string</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#CallRejectParams">CallRejectParams</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
+
+## Translations
+
+### ClientSecrets
+
+Methods:
+
+- <code title="post /realtime/translations/client_secrets">client.Realtime.Translations.ClientSecrets.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#TranslationClientSecretService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#TranslationClientSecretNewParams">TranslationClientSecretNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTranslationClientSecretCreateResponse">RealtimeTranslationClientSecretCreateResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
