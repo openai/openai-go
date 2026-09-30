@@ -1878,7 +1878,7 @@ type ChatCompletionContentPartImageImageURL struct {
 	// Specifies the detail level of the image. Learn more in the
 	// [Vision guide](https://developers.openai.com/api/docs/guides/images-vision#choose-an-image-detail-level).
 	//
-	// Any of "auto", "low", "high".
+	// Any of "auto", "low", "high", "original".
 	Detail string `json:"detail"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -1947,7 +1947,7 @@ type ChatCompletionContentPartImageImageURLParam struct {
 	// Specifies the detail level of the image. Learn more in the
 	// [Vision guide](https://developers.openai.com/api/docs/guides/images-vision#choose-an-image-detail-level).
 	//
-	// Any of "auto", "low", "high".
+	// Any of "auto", "low", "high", "original".
 	Detail string `json:"detail,omitzero"`
 	paramObj
 }
@@ -1962,7 +1962,7 @@ func (r *ChatCompletionContentPartImageImageURLParam) UnmarshalJSON(data []byte)
 
 func init() {
 	apijson.RegisterFieldValidator[ChatCompletionContentPartImageImageURLParam](
-		"detail", "auto", "low", "high",
+		"detail", "auto", "low", "high", "original",
 	)
 }
 
