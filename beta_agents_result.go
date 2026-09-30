@@ -59,14 +59,14 @@ func BetaAgentSessionFinalResult(stream *ssestream.Stream[AgentSessionEventUnion
 	if stream == nil {
 		return nil, &BetaAgentTurnResultError{Reason: "unsupported_stream"}
 	}
-	c, ok := stream.Accumulator().(*betaAgentTurnCollector)
+	c, ok := stream.BetaAccumulator().(*betaAgentTurnCollector)
 	if !ok {
 		return nil, &BetaAgentTurnResultError{Reason: "unsupported_stream"}
 	}
 	if c.finalized {
 		return c.result, c.err
 	}
-	for !c.blocked(nil) && !c.boundary && !c.sessionFailed && stream.Next() {
+	for c.invalid == nil && !c.blocked(nil) && !c.boundary && !c.sessionFailed && stream.Next() {
 	}
 	_ = stream.Close()
 	return c.finalResult(stream.Err())
@@ -81,9 +81,9 @@ func (s *AgentSessionStream) FinalResult() (*BetaAgentTurnResult, error) {
 	if c.finalized {
 		return c.result, c.err
 	}
-	for !c.blocked(s.handlers) && s.Next() {
+	for c.invalid == nil && !c.blocked(s.handlers) && s.Next() {
 	}
-	if c.blocked(s.handlers) {
+	if c.invalid != nil || c.blocked(s.handlers) {
 		_ = s.Close()
 	}
 	return c.finalResult(s.Err())
@@ -94,6 +94,8 @@ type betaAgentResultMessage struct {
 	hasIndex bool
 	message  *AgentSessionMessage
 	done     bool
+	phase    string
+	status   string
 }
 
 type betaAgentTurnCollector struct {
@@ -112,7 +114,7 @@ type betaAgentTurnCollector struct {
 }
 
 func (c *betaAgentTurnCollector) Accumulate(event AgentSessionEventUnion) {
-	if c.finalized || c.boundary {
+	if c.finalized || c.boundary || c.invalid != nil {
 		return
 	}
 	if c.sessionID == "" {
@@ -141,7 +143,7 @@ func (c *betaAgentTurnCollector) Accumulate(event AgentSessionEventUnion) {
 			c.required = nil
 		}
 	case "agent.session.turn.created":
-		if c.turn == nil && event.Turn.SubagentID == "" && event.Turn.ID != "" {
+		if c.turn == nil && event.Turn.SubagentID == "" {
 			c.setTurn(event.Turn)
 		}
 	}
@@ -170,16 +172,22 @@ func (c *betaAgentTurnCollector) Accumulate(event AgentSessionEventUnion) {
 		if entry.done && event.Type == "agent.session.turn.item.added" {
 			return
 		}
-		var message AgentSessionMessage
-		if err := json.Unmarshal([]byte(event.Item.JSON.raw), &message); err != nil {
-			c.invalid = err
-			return
-		}
-		entry.message = &message
+		// Pending/commentary items need only selection metadata, not their payloads.
+		entry.phase = strings.Clone(event.Item.Phase)
+		entry.status = strings.Clone(event.Item.Status)
+		entry.message = nil
 		if event.Type == "agent.session.turn.item.done" {
 			entry.done = true
 			entry.index = event.OutputIndex
 			entry.hasIndex = event.JSON.OutputIndex.Valid()
+			if entry.phase == "final_answer" && entry.status == "completed" {
+				var message AgentSessionMessage
+				if err := json.Unmarshal([]byte(event.Item.JSON.raw), &message); err != nil {
+					c.invalid = err
+					return
+				}
+				entry.message = &message
+			}
 		}
 	case "agent.session.turn.output_text.delta", "agent.session.turn.output_text.done":
 		c.message(event.ItemID)
@@ -211,7 +219,7 @@ func (c *betaAgentTurnCollector) message(id string) *betaAgentResultMessage {
 	if position, ok := c.positions[id]; ok {
 		return &c.messages[position]
 	}
-	c.positions[id] = len(c.messages)
+	c.positions[strings.Clone(id)] = len(c.messages)
 	c.messages = append(c.messages, betaAgentResultMessage{})
 	return &c.messages[len(c.messages)-1]
 }
@@ -231,6 +239,13 @@ func (c *betaAgentTurnCollector) finalResult(cause error) (*BetaAgentTurnResult,
 		return c.result, c.err
 	}
 	c.finalized = true
+	defer func() {
+		c.messages = nil
+		c.positions = nil
+		c.required = nil
+		c.turn = nil
+		c.invalid = nil
+	}()
 	entries := slices.Clone(c.messages)
 	slices.SortStableFunc(entries, func(a, b betaAgentResultMessage) int {
 		if a.hasIndex != b.hasIndex {
@@ -252,13 +267,15 @@ func (c *betaAgentTurnCollector) finalResult(cause error) (*BetaAgentTurnResult,
 	messages := make([]AgentSessionMessage, 0, len(entries))
 	outputReason := ""
 	for _, entry := range entries {
-		if entry.message != nil && entry.message.Phase == "commentary" {
+		if entry.phase == "commentary" {
 			continue
 		}
-		if entry.message == nil || !entry.done || entry.message.Status != "completed" {
+		if !entry.done || entry.status != "completed" {
 			outputReason = "incomplete_output"
-		} else if entry.message.Phase != "final_answer" {
+		} else if entry.phase != "final_answer" {
 			outputReason = "unclassified_output"
+		} else if entry.message == nil {
+			outputReason = "incomplete_output"
 		} else {
 			messages = append(messages, *entry.message)
 		}

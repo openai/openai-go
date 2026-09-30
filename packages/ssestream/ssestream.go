@@ -150,15 +150,15 @@ func (s *eventStreamDecoder) Err() error {
 	return s.err
 }
 
-// Accumulator observes each decoded event before it is exposed through Current.
+// BetaAccumulator observes each decoded event before it is exposed through Current.
 // Accumulate must not retain mutable event data without copying it.
 // Experimental: this extension API is in beta.
-type Accumulator[T any] interface {
+type BetaAccumulator[T any] interface {
 	Accumulate(T)
 }
 
 type Stream[T any] struct {
-	accumulator         Accumulator[T]
+	accumulator         BetaAccumulator[T]
 	decoder             Decoder
 	cur                 T
 	err                 error
@@ -175,18 +175,18 @@ func NewStream[T any](decoder Decoder, err error) *Stream[T] {
 	}
 }
 
-// NewStreamWithAccumulator creates a stream whose accumulator observes all events,
+// NewStreamWithBetaAccumulator creates a stream whose accumulator observes all events,
 // including events consumed before a final-result helper is called.
 // Experimental: this extension API is in beta.
-func NewStreamWithAccumulator[T any](decoder Decoder, err error, accumulator Accumulator[T]) *Stream[T] {
+func NewStreamWithBetaAccumulator[T any](decoder Decoder, err error, accumulator BetaAccumulator[T]) *Stream[T] {
 	s := NewStream[T](decoder, err)
 	s.accumulator = accumulator
 	return s
 }
 
-// Accumulator returns the optional accumulator installed when the stream was created.
+// BetaAccumulator returns the optional accumulator installed when the stream was created.
 // Experimental: this extension API is in beta.
-func (s *Stream[T]) Accumulator() Accumulator[T] { return s.accumulator }
+func (s *Stream[T]) BetaAccumulator() BetaAccumulator[T] { return s.accumulator }
 
 func NewStreamWithSynthesizeEventData[T any](decoder Decoder, err error) *Stream[T] {
 	return &Stream[T]{

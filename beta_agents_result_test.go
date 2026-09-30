@@ -223,3 +223,40 @@ func TestBetaAgentFinalResultIgnoresLaterTurns(t *testing.T) {
 		t.Fatalf("result=%v err=%v", result, err)
 	}
 }
+
+func TestBetaAgentFinalResultInvalidLiveEvent(t *testing.T) {
+	cases := []struct {
+		name   string
+		events []string
+	}{
+		{"missing-turn-identity", []string{agentEvent("turn.created", "bad", `,"turn_id":"root","turn":{"id":"root","subagent_id":null}`)}},
+		{"missing-message-identity", []string{betaResultTurn("created", "root", "null"), betaResultMessage("done", "", "root", `"final_answer"`, "answer", 0)}},
+	}
+	for _, test := range cases {
+		t.Run(test.name, func(t *testing.T) {
+			stream := betaResultCreateStream(t, test.events, true)
+			_, err := openai.BetaAgentSessionFinalResult(stream)
+			var failure *openai.BetaAgentTurnResultError
+			if !errors.As(err, &failure) || failure.Reason != "invalid_event" {
+				t.Fatalf("creation: %v", err)
+			}
+			mock, client := newAgentHelperServer(t, test.events...)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			followup := client.Beta.Agents.Sessions.Stream(ctx, "session", openai.AgentSessionStreamParams{Input: "question"})
+			_, err = followup.FinalResult()
+			if !errors.As(err, &failure) || failure.Reason != "invalid_event" || mock.closed.Load() != 1 {
+				t.Fatalf("follow-up: %v, closes %d", err, mock.closed.Load())
+			}
+		})
+	}
+}
+
+func TestBetaAgentFinalResultUnknownAddedThenCommentary(t *testing.T) {
+	events := []string{betaResultTurn("created", "root", "null"), betaResultMessage("added", "m", "root", "null", "", 0), betaResultMessage("done", "m", "root", `"commentary"`, "thinking", 0), betaResultTurn("completed", "root", "null"), betaResultIdle()}
+	stream := betaResultCreateStream(t, events, true)
+	result, err := openai.BetaAgentSessionFinalResult(stream)
+	if err != nil || result.OutputText() != "" || len(result.Messages) != 0 {
+		t.Fatalf("result=%v err=%v", result, err)
+	}
+}
