@@ -26,8 +26,7 @@ permissions:
 
 jobs:
   lint:
-    # Leave room for a cold tool build and saving the warm cache.
-    timeout-minutes: 15
+    timeout-minutes: 10
     name: lint
     runs-on: ubuntu-latest
     # Run on the PR event even for same-repository branches. The stable
