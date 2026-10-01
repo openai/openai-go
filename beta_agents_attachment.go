@@ -181,6 +181,10 @@ func (s *AgentSessionStream) observeAttachment(event AgentSessionEventUnion) (bo
 			if err != nil {
 				return false, err
 			}
+			if session.Status == "failed" {
+				s.collector.sessionFailed = true
+				return true, nil
+			}
 			latest, err := s.latestAttachmentRoot(s.ctx)
 			if err != nil {
 				return false, err
@@ -342,6 +346,9 @@ func (s *AgentSessionStream) attachmentManualActions(ctx context.Context) error 
 	session, err := s.attachmentSession(ctx)
 	if err != nil {
 		return err
+	}
+	if session.Status == "failed" {
+		s.collector.sessionFailed = true
 	}
 	if session.Status != "requires_action" {
 		s.collector.required = nil

@@ -1287,3 +1287,52 @@ func TestBetaAgentAttachPreservesObservedCompletedMessages(t *testing.T) {
 		})
 	}
 }
+
+func TestBetaAgentAttachSnapshotFailureAfterCloseOrStaleIdle(t *testing.T) {
+	for _, closeFirst := range []bool{false, true} {
+		t.Run(fmt.Sprintf("close=%t", closeFirst), func(t *testing.T) {
+			var failed atomic.Bool
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				switch {
+				case strings.HasSuffix(r.URL.Path, "/events"):
+					w.Header().Set("Content-Type", "text/event-stream")
+					_, _ = fmt.Fprintf(w, "data: %s\n\n", betaResultIdle())
+					w.(http.Flusher).Flush()
+					<-r.Context().Done()
+				case strings.HasSuffix(r.URL.Path, "/turns"):
+					data := `[]`
+					if closeFirst {
+						data = `[{"id":"root","session_id":"session","status":"waiting"}]`
+					}
+					_, _ = fmt.Fprintf(w, `{"data":%s,"has_more":false}`, data)
+				case strings.HasSuffix(r.URL.Path, "/turns/root"):
+					if failed.Load() {
+						t.Error("read a turn after definitive session failure")
+					}
+					_, _ = fmt.Fprint(w, `{"id":"root","session_id":"session","status":"waiting"}`)
+				default:
+					status := "in_progress"
+					if failed.Load() {
+						status = "failed"
+					}
+					_, _ = fmt.Fprintf(w, `{"id":"session","status":%q}`, status)
+				}
+			}))
+			defer server.Close()
+			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+			stream := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{}).WithResultCollection()
+			failed.Store(true)
+			if closeFirst {
+				_ = stream.Close()
+			} else if !stream.Next() {
+				t.Fatal(stream.Err())
+			}
+			_, err := stream.FinalResult()
+			var failure *openai.BetaAgentTurnResultError
+			if !errors.As(err, &failure) || failure.Reason != "session_failed" || failure.SessionID != "session" {
+				t.Fatal("snapshot session failure lost", err)
+			}
+		})
+	}
+}
