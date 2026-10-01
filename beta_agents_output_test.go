@@ -196,8 +196,8 @@ func TestBetaAgentTypedOutputWithTypedToolHandler(t *testing.T) {
 			return nil, err
 		}
 		var args LookupArgs
-		if err := json.Unmarshal(data, &args); err != nil {
-			return nil, err
+		if parseErr := json.Unmarshal(data, &args); parseErr != nil {
+			return nil, parseErr
 		}
 		if args.ID != "A123" {
 			return nil, errors.New("invalid lookup ID")
