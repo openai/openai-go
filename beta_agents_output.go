@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/big"
 	"slices"
 	"strings"
 
@@ -155,8 +156,8 @@ func betaAgentNormalizeSchema(schema, root map[string]any, path string) error {
 			return fail("unresolved $ref")
 		}
 		for key := range schema {
-			if key != "$ref" && key != "description" && key != "title" {
-				return fail("$ref siblings other than title/description are unsupported")
+			if key != "$ref" {
+				return fail("$ref siblings are unsupported")
 			}
 		}
 		return nil
@@ -237,11 +238,46 @@ func betaAgentNormalizeSchema(schema, root map[string]any, path string) error {
 			return fail(key + " does not apply to " + kind)
 		}
 	}
+	nullable := schema["type"] != kind
+	if value, exists := schema["const"]; exists && !betaAgentSchemaLiteral(value, kind, nullable) {
+		return fail("const must match the declared scalar type")
+	}
 	if values, exists := schema["enum"]; exists {
 		list, ok := values.([]any)
 		if !ok || len(list) == 0 {
 			return fail("enum must be a nonempty array")
 		}
+		for _, value := range list {
+			if !betaAgentSchemaLiteral(value, kind, nullable) {
+				return fail("enum values must match the declared scalar type")
+			}
+		}
 	}
 	return nil
+}
+
+func betaAgentSchemaLiteral(value any, kind string, nullable bool) bool {
+	if value == nil {
+		return kind == "null" || nullable
+	}
+	switch kind {
+	case "string":
+		_, ok := value.(string)
+		return ok
+	case "boolean":
+		_, ok := value.(bool)
+		return ok
+	case "number", "integer":
+		number, ok := value.(json.Number)
+		if !ok {
+			return false
+		}
+		if kind == "number" {
+			return true
+		}
+		rational, valid := new(big.Rat).SetString(number.String())
+		return valid && rational.IsInt()
+	default:
+		return false
+	}
 }
