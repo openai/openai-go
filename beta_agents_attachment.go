@@ -114,14 +114,35 @@ func (s *AgentSessionStream) latestAttachmentRoot(ctx context.Context) (*Turn, e
 	service := s.sessions.Turns
 	capture, require := agentStreamResponseGuard[pagination.CursorPage[Turn]]()
 	service.Options = append([]option.RequestOption{capture}, service.Options...)
-	turns := service.ListAutoPaging(ctx, s.sessionID, BetaAgentSessionTurnListParams{Order: "desc"}, append(slices.Clone(s.options), require)...)
-	for turns.Next() {
-		turn := turns.Current()
-		if turn.SubagentID == "" {
-			return &turn, nil
+	page, err := service.List(ctx, s.sessionID, BetaAgentSessionTurnListParams{Order: "desc"}, append(slices.Clone(s.options), require)...)
+	cursors := make(map[string]struct{})
+	for err == nil && page != nil && len(page.Data) != 0 {
+		for _, turn := range page.Data {
+			if turn.SubagentID == "" {
+				return &turn, nil
+			}
 		}
+		page, err = betaAgentNextAttachmentPage(page, page.Data[len(page.Data)-1].ID, cursors)
 	}
-	return nil, s.attachmentReadError(turns.Err())
+	if errors.Is(err, errBetaAgentAttachmentCursor) {
+		return nil, err
+	}
+	return nil, s.attachmentReadError(err)
+}
+
+var errBetaAgentAttachmentCursor = errors.New("attachment pagination cursor did not advance")
+
+// Cursor state is scoped to one traversal. Keep the generated pager's terminal
+// conditions and request configuration, but do not follow a cursor twice.
+func betaAgentNextAttachmentPage[T any](page *pagination.CursorPage[T], cursor string, cursors map[string]struct{}) (*pagination.CursorPage[T], error) {
+	if len(page.Data) == 0 || (page.JSON.HasMore.Valid() && !page.HasMore) {
+		return nil, nil
+	}
+	if _, exists := cursors[cursor]; exists {
+		return nil, errBetaAgentAttachmentCursor
+	}
+	cursors[cursor] = struct{}{}
+	return page.GetNextPage()
 }
 
 func (s *AgentSessionStream) observeAttachment(event AgentSessionEventUnion) (bool, error) {
@@ -419,19 +440,22 @@ func (s *AgentSessionStream) reconcileAttachment(ctx context.Context) error {
 	service := s.sessions.Items
 	capture, require := agentStreamResponseGuard[pagination.CursorPage[AgentSessionItemUnion]]()
 	service.Options = append([]option.RequestOption{capture}, service.Options...)
-	items := service.ListAutoPaging(ctx, s.sessionID, BetaAgentSessionItemListParams{Order: "asc"}, append(slices.Clone(s.options), require)...)
-	for items.Next() {
-		item := items.Current()
-		if item.TurnID != s.turnID || item.Type != "message" || item.Role != "assistant" || item.Status != "completed" || item.Phase == "commentary" {
-			continue
+	page, err := service.List(ctx, s.sessionID, BetaAgentSessionItemListParams{Order: "asc"}, append(slices.Clone(s.options), require)...)
+	cursors := make(map[string]struct{})
+	for err == nil && page != nil && len(page.Data) != 0 {
+		for _, item := range page.Data {
+			if item.TurnID != s.turnID || item.Type != "message" || item.Role != "assistant" || item.Status != "completed" || item.Phase == "commentary" {
+				continue
+			}
+			var message AgentSessionMessage
+			if decodeErr := json.Unmarshal([]byte(item.RawJSON()), &message); decodeErr != nil {
+				return decodeErr
+			}
+			messages[int64(len(messages))] = message
 		}
-		var message AgentSessionMessage
-		if err := json.Unmarshal([]byte(item.RawJSON()), &message); err != nil {
-			return err
-		}
-		messages[int64(len(messages))] = message
+		page, err = betaAgentNextAttachmentPage(page, page.Data[len(page.Data)-1].ID, cursors)
 	}
-	if err := items.Err(); err != nil {
+	if err != nil {
 		return err
 	}
 	c.messages = betaAgentMergeAttachmentMessages(messages, c.messages)

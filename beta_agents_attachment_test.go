@@ -43,7 +43,11 @@ func TestBetaAgentAttachPendingAndDurableOutput(t *testing.T) {
 			}
 		case strings.HasSuffix(r.URL.Path, "/turns"):
 			w.Header().Set("Content-Type", "application/json")
-			_, _ = fmt.Fprint(w, `{"data":[{"id":"root","session_id":"session","status":"waiting","subagent_id":null}],"has_more":false}`)
+			if r.URL.Query().Get("after") == "" {
+				_, _ = fmt.Fprint(w, `{"data":[{"id":"child-turn","subagent_id":"child"}],"has_more":true}`)
+			} else {
+				_, _ = fmt.Fprint(w, `{"data":[{"id":"root","session_id":"session","status":"waiting","subagent_id":null}],"has_more":false}`)
+			}
 		case strings.HasSuffix(r.URL.Path, "/turns/root"):
 			w.Header().Set("Content-Type", "application/json")
 			status := "waiting"
