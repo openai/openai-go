@@ -17,6 +17,7 @@ For progress, call `WithResultCollection()` before iterating `Next()`, then call
 disconnect. Attaching to an idle session with no selected turn drains normally;
 `FinalResult()` reports `no_turn_selected`.
 
-Handlers should tolerate retries of external side effects: a disconnect after a
-local action but before its result is accepted cannot guarantee exactly-once
-execution. Closing the stream stops local observation, not hosted execution.
+Reattachment uses at-least-once tool-call delivery: an unacknowledged call may be
+delivered again after reconnecting. Applications are responsible for idempotency
+when handlers perform mutations. Closing the stream stops local observation, not
+hosted execution.
