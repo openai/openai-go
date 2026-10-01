@@ -68,7 +68,7 @@ func TestBetaAgentCollectionOptInPublicStream(t *testing.T) {
 		emit(`{"type":"agent.session.idle","event_id":"idle"}`)
 	}))
 	defer server.Close()
-	client := NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
+	client := NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
 	for _, entrypoint := range []string{"creation", "followup"} {
 		for _, mode := range []string{"raw", "explicit", "fresh_getter"} {
 			t.Run(entrypoint+"/"+mode, func(t *testing.T) {

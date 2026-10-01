@@ -22,6 +22,7 @@ func TestAdminOrganizationGroupRoleNew(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -51,6 +52,7 @@ func TestAdminOrganizationGroupRoleGet(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -78,6 +80,7 @@ func TestAdminOrganizationGroupRoleListWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -109,6 +112,7 @@ func TestAdminOrganizationGroupRoleDelete(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),

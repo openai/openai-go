@@ -55,7 +55,7 @@ func TestLargeResponsesPayloadContract(t *testing.T) {
 				}
 			}))
 			defer server.Close()
-			client := openai.NewClient(option.WithAPIKey("test-key"), option.WithBaseURL(server.URL), option.WithMaxRetries(0))
+			client := openai.NewClient(option.WithAPIKey("test-key"), option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithMaxRetries(0))
 			params := responses.ResponseNewParams{Model: "gpt-4o-mini", Input: responses.ResponseNewParamsInputUnion{OfString: openai.String("Hello")}}
 			if streaming {
 				stream := client.Responses.NewStreaming(context.Background(), params)
@@ -115,7 +115,7 @@ func TestLargeChatCompletionPayloadContract(t *testing.T) {
 				}
 			}))
 			defer server.Close()
-			client := openai.NewClient(option.WithAPIKey("test-key"), option.WithBaseURL(server.URL), option.WithMaxRetries(0))
+			client := openai.NewClient(option.WithAPIKey("test-key"), option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithMaxRetries(0))
 			params := openai.ChatCompletionNewParams{Model: "gpt-4o-mini", Messages: []openai.ChatCompletionMessageParamUnion{openai.UserMessage("Hello")}}
 			if streaming {
 				stream := client.Chat.Completions.NewStreaming(context.Background(), params)

@@ -25,6 +25,7 @@ func TestAudioSpeechNewWithOptionalParams(t *testing.T) {
 	defer server.Close()
 	baseURL := server.URL
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),

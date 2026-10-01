@@ -142,15 +142,19 @@ func hasCredentialRedirectGuard(transport http.RoundTripper) bool {
 	return ok
 }
 
-// RejectRequestOrigin closes the rejected request body once and returns a
-// nonretryable origin error. Provider middleware uses it before authentication.
-func RejectRequestOrigin(req *http.Request) (*http.Response, error) {
+func closeRequestBody(req *http.Request) {
 	if req != nil && req.Body != nil {
 		if _, ok := req.Body.(*closeOnceReadCloser); !ok {
 			req.Body = &closeOnceReadCloser{ReadCloser: req.Body}
 		}
 		_ = req.Body.Close()
 	}
+}
+
+// RejectRequestOrigin closes the rejected request body once and returns a
+// nonretryable origin error. Provider middleware uses it before authentication.
+func RejectRequestOrigin(req *http.Request) (*http.Response, error) {
+	closeRequestBody(req)
 	return nil, requestOriginError()
 }
 

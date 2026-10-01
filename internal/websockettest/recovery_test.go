@@ -35,7 +35,7 @@ func TestResponsesRecoveryExhaustion(t *testing.T) {
 	defer server.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"), option.WithMaxRetries(9))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"), option.WithMaxRetries(9))
 	connection, err := client.Responses.Connect(ctx, responses.ResponseConnectionOptions{})
 	if err != nil {
 		t.Fatal(err)
@@ -71,7 +71,7 @@ func TestResponsesCloseCancelsRestoration(t *testing.T) {
 	defer server.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"))
 	connection, err := client.Responses.Connect(ctx, responses.ResponseConnectionOptions{})
 	if err != nil {
 		t.Fatal(err)

@@ -17,6 +17,9 @@ func WorkloadIdentityMiddleware(
 	if req == nil || req.Header == nil || next == nil {
 		return nil, errors.New("workload identity requires a non-nil request, header map, and handler")
 	}
+	if err := requestconfig.ValidateOpenAICredentialRequest(req); err != nil {
+		return nil, err
+	}
 	hadBody := req.Body != nil && req.Body != http.NoBody
 	token, err := wia.GetToken(req.Context(), httpClient)
 	if err != nil {

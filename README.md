@@ -1245,6 +1245,31 @@ redirects it performs inside `Do` and must keep credentialed requests on the
 configured origin. Prefer a native `*http.Client` with a custom transport when
 possible.
 
+### Local HTTP development
+
+Authenticated OpenAI requests require HTTPS, including endpoints selected by
+`OPENAI_BASE_URL` or `option.WithBaseURL`. A remote HTTP endpoint returns an error
+before credentials are sent or workload tokens are acquired. Static credentials
+are checked after middleware, so middleware can remove authentication before dispatch.
+Use an HTTPS endpoint for remote servers.
+
+For local development, explicitly allow plaintext connections to `localhost` or
+a literal loopback IP address:
+
+```go
+client := openai.NewClient(
+    option.WithBaseURL("http://127.0.0.1:8080/v1"),
+    option.WithUnsafeAllowHTTP(),
+    option.WithAPIKey("local-test-key"),
+)
+```
+
+The exception never permits remote HTTP. These local requests use a dedicated
+direct transport, bypassing proxies, custom transports, dialers, and HTTP doers.
+Use HTTPS when a test needs a custom transport. HTTPS requests and workload token
+exchanges retain their configured HTTP clients. Azure and Bedrock retain their
+provider-specific transport policies.
+
 ### Mutual TLS with a custom HTTP client
 
 For API-key authenticated HTTP requests that require mutual TLS, configure a

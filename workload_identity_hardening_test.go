@@ -410,7 +410,7 @@ func TestWorkloadIdentityNeverFollowsIssuerRedirects(t *testing.T) {
 				token: "synthetic-private-subject", tokenType: auth.SubjectTokenTypeJWT,
 			}
 			client := openai.NewClient(
-				option.WithBaseURL(issuer.URL+"/v1/"),
+				option.WithUnsafeAllowHTTP(), option.WithBaseURL(issuer.URL+"/v1/"),
 				option.WithHTTPClient(caller),
 				option.WithWorkloadIdentity(testWorkloadIdentity(provider)),
 				option.WithMaxRetries(2),
@@ -471,7 +471,7 @@ func TestWorkloadIdentitySendsExactlyOneTrustedAuthorizationHeader(t *testing.T)
 	}
 	var captured *http.Response
 	client := openai.NewClient(
-		option.WithBaseURL(server.URL+"/v1/"),
+		option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL+"/v1/"),
 		option.WithHTTPClient(httpClient),
 		option.WithMaxRetries(1),
 		option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
@@ -652,7 +652,7 @@ func TestWorkloadIdentityNeverExposesSignedResponseMetadata(t *testing.T) {
 			}
 			var captured *http.Response
 			client := openai.NewClient(
-				option.WithBaseURL(server.URL+"/v1/"),
+				option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL+"/v1/"),
 				option.WithHTTPClient(httpClient),
 				option.WithMaxRetries(1),
 				option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {

@@ -52,7 +52,7 @@ func TestAgentSessionEnvironmentResetEvent(t *testing.T) {
 			}))
 			t.Cleanup(server.Close)
 			client := openai.NewClient(
-				option.WithBaseURL(server.URL),
+				option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL),
 				option.WithAPIKey("synthetic"),
 				option.WithMaxRetries(0),
 			)

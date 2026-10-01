@@ -41,7 +41,7 @@ func TestPaginationRejectsNonReplayableStreamingBodies(t *testing.T) {
 			}))
 			t.Cleanup(server.Close)
 			client := openai.NewClient(
-				option.WithBaseURL(server.URL+"/v1/"),
+				option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL+"/v1/"),
 				option.WithAPIKey("synthetic-ordinary-key"),
 				option.WithAdminAPIKey("synthetic-admin-key"),
 				option.WithMaxRetries(0),

@@ -24,6 +24,7 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -143,6 +144,7 @@ func TestResponseGetWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -174,6 +176,7 @@ func TestResponseDelete(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -197,6 +200,7 @@ func TestResponseCancel(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -220,6 +224,7 @@ func TestResponseCompactWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),

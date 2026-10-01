@@ -22,6 +22,7 @@ func TestAdminOrganizationUsageAudioSpeechesWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -56,6 +57,7 @@ func TestAdminOrganizationUsageAudioTranscriptionsWithOptionalParams(t *testing.
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -90,6 +92,7 @@ func TestAdminOrganizationUsageCodeInterpreterSessionsWithOptionalParams(t *test
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -121,6 +124,7 @@ func TestAdminOrganizationUsageCompletionsWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -156,6 +160,7 @@ func TestAdminOrganizationUsageCostsWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -189,6 +194,7 @@ func TestAdminOrganizationUsageEmbeddingsWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -223,6 +229,7 @@ func TestAdminOrganizationUsageFileSearchCallsWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -257,6 +264,7 @@ func TestAdminOrganizationUsageImagesWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -293,6 +301,7 @@ func TestAdminOrganizationUsageModerationsWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -327,6 +336,7 @@ func TestAdminOrganizationUsageVectorStoresWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -358,6 +368,7 @@ func TestAdminOrganizationUsageWebSearchCallsWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),

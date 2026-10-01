@@ -58,7 +58,7 @@ func TestSafetyCaseRetrievalContract(t *testing.T) {
 			}))
 			t.Cleanup(server.Close)
 			client := openai.NewClient(
-				option.WithBaseURL(server.URL+"/v1"), option.WithHTTPClient(server.Client()),
+				option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL+"/v1"), option.WithHTTPClient(server.Client()),
 				option.WithAPIKey("fake-project-key"), option.WithAdminAPIKey("fake-admin-key"),
 			)
 			result, err := client.Safety.Cases.Get(t.Context(), caseID,
@@ -97,7 +97,7 @@ func TestSafetyCaseNeverUsesAdminKeyAsFallback(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 	client := openai.NewClient(
-		option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()),
+		option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()),
 		option.WithAPIKey(""), option.WithAdminAPIKey("fake-admin-key"), option.WithMaxRetries(0),
 	)
 	if _, err := client.Safety.Cases.Get(t.Context(), "synthetic-case"); err == nil {

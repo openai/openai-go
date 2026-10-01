@@ -120,7 +120,7 @@ func TestBetaAgentVaultCredentialEnvironmentVariable(t *testing.T) {
 			t.Cleanup(server.Close)
 
 			client := openai.NewClient(
-				option.WithBaseURL(server.URL),
+				option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL),
 				option.WithAPIKey("synthetic-api-key"),
 				option.WithAdminAPIKey("synthetic-admin-key"),
 				option.WithMaxRetries(0),
