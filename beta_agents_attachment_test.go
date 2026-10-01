@@ -971,3 +971,64 @@ func TestBetaAgentAttachPrunesAcknowledgedFunctionDiagnostic(t *testing.T) {
 		t.Fatal("resolved function diagnostic retained", err)
 	}
 }
+
+func TestBetaAgentAttachRejectsConflictingEmbeddedTurn(t *testing.T) {
+	var posts atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case r.Method == http.MethodPost:
+			posts.Add(1)
+			w.WriteHeader(204)
+		case strings.HasSuffix(r.URL.Path, "/events"):
+			w.Header().Set("Content-Type", "text/event-stream")
+			event := agentEvent("turn.completed", "bad", `,"turn_id":"root","turn":{"id":"other","session_id":"session","status":"completed"}`)
+			_, _ = fmt.Fprintf(w, "data: %s\n\n", event)
+		case strings.HasSuffix(r.URL.Path, "/turns"):
+			_, _ = fmt.Fprint(w, `{"data":[{"id":"root","session_id":"session","status":"in_progress"}],"has_more":false}`)
+		case strings.HasSuffix(r.URL.Path, "/turns/root"):
+			_, _ = fmt.Fprint(w, `{"id":"root","session_id":"session","status":"in_progress"}`)
+		default:
+			_, _ = fmt.Fprint(w, `{"id":"session","status":"in_progress"}`)
+		}
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	calls := 0
+	_, err := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{ToolHandlers: map[string]openai.AgentToolHandler{"lookup": func(context.Context, map[string]any) (any, error) { calls++; return "wrong", nil }}}).FinalResult()
+	if err == nil || calls != 0 || posts.Load() != 0 {
+		t.Fatalf("conflicting identity dispatched: calls=%d posts=%d err=%v", calls, posts.Load(), err)
+	}
+}
+
+func TestBetaAgentAttachDeduplicatesPendingFunctionDiagnostics(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case strings.HasSuffix(r.URL.Path, "/events"):
+			w.Header().Set("Content-Type", "text/event-stream")
+			for _, id := range []string{"first", "replayed"} {
+				_, _ = fmt.Fprintf(w, "data: %s\n\n", agentCall(id, "root", "answered", "unknown", `{}`))
+			}
+			w.(http.Flusher).Flush()
+			<-r.Context().Done()
+		case strings.HasSuffix(r.URL.Path, "/turns"):
+			_, _ = fmt.Fprint(w, `{"data":[{"id":"root","session_id":"session","status":"waiting"}],"has_more":false}`)
+		case strings.HasSuffix(r.URL.Path, "/turns/root"):
+			_, _ = fmt.Fprint(w, `{"id":"root","session_id":"session","status":"waiting"}`)
+		default:
+			_, _ = fmt.Fprint(w, `{"id":"session","status":"requires_action","required_actions":[{"type":"function_call","turn_id":"root","call_id":"answered","name":"unknown","arguments":{}}]}`)
+		}
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	stream := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{}).WithResultCollection()
+	if !stream.Next() || !stream.Next() {
+		t.Fatal(stream.Err())
+	}
+	_, err := stream.FinalResult()
+	var failure *openai.BetaAgentTurnResultError
+	if !errors.As(err, &failure) || failure.Reason != "requires_action" || len(failure.RequiredActions) != 1 || failure.RequiredActions[0].Type != "function_call" {
+		t.Fatal("replayed function diagnostic duplicated", err)
+	}
+}

@@ -114,8 +114,8 @@ func (s *AgentSessionStream) FinalResult() (*BetaAgentTurnResult, error) {
 	ctx := s.ctx
 	if s.attachment != nil {
 		var cancel context.CancelFunc
-		ctx, cancel = context.WithCancel(s.attachment.ctx)
 		s.recoveryMu.Lock()
+		ctx, cancel = context.WithCancel(s.attachment.ctx)
 		s.recoveryCancel = cancel
 		s.recoveryMu.Unlock()
 		defer func() {

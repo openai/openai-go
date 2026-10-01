@@ -205,6 +205,9 @@ func (s *AgentSessionStream) observeAttachment(event AgentSessionEventUnion) (bo
 	if event.TurnID != "" && event.Item.TurnID != "" && event.TurnID != event.Item.TurnID {
 		return false, errors.New("inconsistent attached item turn identity")
 	}
+	if event.TurnID != "" && event.Turn.ID != "" && event.TurnID != event.Turn.ID {
+		return false, errors.New("inconsistent attached turn identity")
+	}
 	id := event.TurnID
 	if event.Item.TurnID != "" {
 		id = event.Item.TurnID
@@ -315,7 +318,11 @@ func (s *AgentSessionStream) attachmentActions(event AgentSessionEventUnion) {
 			s.collector.collectionErr = err
 			return
 		}
-		s.collector.required = append(s.collector.required, action)
+		if !slices.ContainsFunc(s.collector.required, func(existing AgentSessionRequiredActionUnion) bool {
+			return existing.Type == "function_call" && existing.TurnID == action.TurnID && existing.CallID == action.CallID
+		}) {
+			s.collector.required = append(s.collector.required, action)
+		}
 	}
 }
 
