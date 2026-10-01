@@ -1,5 +1,9 @@
 # Files for beta Agents
 
+These local-path helpers expect application-controlled paths and stable source
+directories. They are not a sandbox for arbitrary user-supplied paths or hostile
+filesystem writers. File contents may still come from users.
+
 Prepare selected local files before creating a hosted session:
 
 ```go

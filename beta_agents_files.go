@@ -47,6 +47,7 @@ type betaAgentLocalFile struct {
 // Prepare uploads selected local files for a future hosted session. files maps
 // absolute /workspace destinations to local paths. All selections are checked
 // before upload, including symlinks, collisions, 50-file and 50 MiB total limits.
+// Local paths must be application-controlled and stable during preparation.
 func (r *BetaAgentEnvironmentFileService) Prepare(ctx context.Context, files map[string]string, opts ...option.RequestOption) (*BetaAgentPreparedFiles, error) {
 	selected, err := betaAgentPrepareSelection(files, true)
 	if err != nil {
@@ -57,7 +58,10 @@ func (r *BetaAgentEnvironmentFileService) Prepare(ctx context.Context, files map
 
 // PrepareDirectory prepares a one-time selection of regular files. include is an
 // explicit list of filepath.Match patterns relative to directory (not a mount or
-// synchronization rule). Symlinks are not followed. The caller owns upload cleanup.
+// synchronization rule). Selected symlink entries are not followed. The directory
+// must be application-controlled and stable during preparation; this helper is
+// not a sandbox for untrusted paths or concurrent filesystem writers.
+// The caller owns upload cleanup.
 func (r *BetaAgentEnvironmentFileService) PrepareDirectory(ctx context.Context, directory, destination string, include []string, opts ...option.RequestOption) (*BetaAgentPreparedFiles, error) {
 	if len(include) == 0 {
 		return nil, errors.New("include patterns must be explicit")
@@ -119,6 +123,7 @@ func (r *BetaAgentEnvironmentFileService) PrepareDirectory(ctx context.Context, 
 // Upload stages one local file into a live environment and returns its owned
 // Files API upload along with the live file metadata. A staging failure retains
 // the uploaded file in BetaAgentFilePreparationError; cleanup remains explicit.
+// The local source path must be application-controlled and stable during upload.
 func (r *BetaAgentEnvironmentFileService) Upload(ctx context.Context, environmentID, source, destination string, opts ...option.RequestOption) (*BetaAgentStagedFile, error) {
 	if environmentID == "" {
 		return nil, errors.New("staging requires an environment ID")
