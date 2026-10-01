@@ -125,6 +125,21 @@ func TestBetaAgentFilesPreflightBeforeNetwork(t *testing.T) {
 	}
 }
 
+func TestBetaAgentFilesDirectoryPatternErrorBeforeNetwork(t *testing.T) {
+	var requests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests.Add(1)
+		t.Error("invalid pattern made a request")
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	source := betaLocalFile(t, "nomatch.txt", "source")
+	_, err := client.Beta.Agents.Environments.Files.PrepareDirectory(context.Background(), filepath.Dir(source), "/workspace/data", []string{"nomatch*["})
+	if !errors.Is(err, filepath.ErrBadPattern) || requests.Load() != 0 {
+		t.Fatalf("err=%v requests=%d", err, requests.Load())
+	}
+}
+
 func TestBetaAgentFilesPartialUploadsAndIdempotency(t *testing.T) {
 	var requests atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

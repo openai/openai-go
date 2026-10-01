@@ -106,7 +106,10 @@ func (r *BetaAgentEnvironmentFileService) PrepareDirectory(ctx context.Context, 
 			return relErr
 		}
 		for _, pattern := range include {
-			matched, _ := filepath.Match(pattern, relative)
+			matched, matchErr := filepath.Match(pattern, relative)
+			if matchErr != nil {
+				return matchErr
+			}
 			if matched {
 				files[destination+"/"+filepath.ToSlash(relative)] = source
 				if len(files) > 50 {
