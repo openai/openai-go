@@ -258,27 +258,67 @@ func TestBetaAgentResultArtifactMissingAndAmbiguous(t *testing.T) {
 	}
 }
 
-func TestBetaAgentFilesKnownLimits(t *testing.T) {
-	client := openai.NewClient(option.WithBaseURL("http://127.0.0.1:1"), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
+// The mock accepts these inputs to exercise forwarding, not backend support.
+func TestBetaAgentFilesLimitsAreServerOwned(t *testing.T) {
+	var uploads atomic.Int32
+	var uploadedBytes atomic.Int64
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		reader, err := r.MultipartReader()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		for {
+			part, err := reader.NextPart()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			n, err := io.Copy(io.Discard, part)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			if part.FormName() == "file" {
+				uploadedBytes.Add(n)
+			}
+		}
+		_, _ = fmt.Fprintf(w, `{"id":"file-%d"}`, uploads.Add(1))
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
 	source := betaLocalFile(t, "empty", "")
 	files := make(map[string]string)
 	for i := 0; i < 51; i++ {
 		files[fmt.Sprintf("/workspace/%d", i)] = source
 	}
-	if _, err := client.Beta.Agents.Environments.Files.Prepare(context.Background(), files); err == nil || !strings.Contains(err.Error(), "50 files") {
-		t.Fatal("missing file-count preflight", err)
+	prepared, err := client.Beta.Agents.Environments.Files.Prepare(context.Background(), files)
+	if err != nil || len(prepared.Files) != 51 || uploads.Load() != 51 {
+		t.Fatalf("prepared=%v err=%v", prepared, err)
 	}
-	if err := os.Truncate(source, 26*1024*1024); err != nil {
-		t.Fatal(err)
+	directory := t.TempDir()
+	for i := 0; i < 51; i++ {
+		if err := os.WriteFile(filepath.Join(directory, fmt.Sprint(i)), nil, 0600); err != nil {
+			t.Fatal(err)
+		}
 	}
-	if _, err := client.Beta.Agents.Environments.Files.Prepare(context.Background(), map[string]string{"/workspace/a": source, "/workspace/b": source}); err == nil || !strings.Contains(err.Error(), "total") {
-		t.Fatal("missing aggregate preflight", err)
+	prepared, err = client.Beta.Agents.Environments.Files.PrepareDirectory(context.Background(), directory, "/workspace", []string{"*"})
+	if err != nil || len(prepared.Files) != 51 || uploads.Load() != 102 {
+		t.Fatalf("directory prepared=%v err=%v", prepared, err)
 	}
-	if err := os.Truncate(source, 51*1024*1024); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := client.Beta.Agents.Environments.Files.Upload(context.Background(), "environment", source, "/workspace/a"); err == nil || !strings.Contains(err.Error(), "50 MiB") {
-		t.Fatal("missing singleton preflight", err)
+	for _, size := range []int64{26 * 1024 * 1024, 51 * 1024 * 1024} {
+		if err := os.Truncate(source, size); err != nil {
+			t.Fatal(err)
+		}
+		before := uploadedBytes.Load()
+		prepared, err := client.Beta.Agents.Environments.Files.Prepare(context.Background(), map[string]string{"/workspace/a": source, "/workspace/b": source})
+		if err != nil || len(prepared.Files) != 2 || uploadedBytes.Load()-before != size*2 {
+			t.Fatalf("size=%d prepared=%v bytes=%d err=%v", size, prepared, uploadedBytes.Load()-before, err)
+		}
 	}
 }
 
@@ -394,28 +434,37 @@ func TestBetaAgentResultArtifactWriterFailureClosesBody(t *testing.T) {
 	}
 }
 
-func TestBetaAgentFilesDestinationCharacterLimit(t *testing.T) {
-	var requests atomic.Int32
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requests.Add(1)
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = fmt.Fprint(w, `{"id":"file"}`)
-	}))
-	defer server.Close()
-	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
-	source := betaLocalFile(t, "input", "source")
+func TestBetaAgentFilesLongDestinationAPIError(t *testing.T) {
 	for _, character := range []string{"a", "🙂"} {
-		destination := "/workspace/" + strings.Repeat(character, 4096-len("/workspace/"))
-		if _, err := client.Beta.Agents.Environments.Files.Prepare(context.Background(), map[string]string{destination: source}); err != nil {
-			t.Fatal("valid code-point boundary rejected", err)
-		}
-		before := requests.Load()
-		if _, err := client.Beta.Agents.Environments.Files.Prepare(context.Background(), map[string]string{destination + character: source}); err == nil {
-			t.Fatal("oversized destination uploaded")
-		}
-		if requests.Load() != before {
-			t.Fatal("invalid destination reached Files API")
-		}
+		t.Run(character, func(t *testing.T) {
+			destination := "/workspace/" + strings.Repeat(character, 4097)
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				if r.URL.Path == "/files" {
+					_, _ = fmt.Fprint(w, `{"id":"owned"}`)
+					return
+				}
+				var body struct {
+					Path string `json:"path"`
+				}
+				if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+					t.Error(err)
+				}
+				if body.Path != destination {
+					t.Error("destination changed before API submission")
+				}
+				w.WriteHeader(http.StatusBadRequest)
+				_, _ = fmt.Fprint(w, `{"error":{"message":"destination exceeds server limit","type":"invalid_request_error"}}`)
+			}))
+			defer server.Close()
+			client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
+			_, err := client.Beta.Agents.Environments.Files.Upload(context.Background(), "env", betaLocalFile(t, "input", "source"), destination)
+			var failure *openai.BetaAgentFilePreparationError
+			var apiError *openai.Error
+			if !errors.As(err, &failure) || len(failure.Prepared.Uploads) != 1 || failure.Prepared.Uploads[0].ID != "owned" || !errors.As(err, &apiError) || apiError.StatusCode != http.StatusBadRequest {
+				t.Fatalf("API rejection lost error or upload ownership: %v", err)
+			}
+		})
 	}
 }
 

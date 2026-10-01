@@ -19,8 +19,6 @@ import (
 	"github.com/openai/openai-go/v3/packages/pagination"
 )
 
-const betaAgentFileLimit int64 = 50 * 1024 * 1024
-
 // BetaAgentPreparedFiles holds ordinary environment inputs and Files API objects
 // created by this helper. The caller owns their lifecycle; cleanup is explicit.
 // This beta helper is experimental.
@@ -46,10 +44,11 @@ type betaAgentLocalFile struct {
 
 // Prepare uploads selected local files for a future hosted session. files maps
 // absolute /workspace destinations to local paths. All selections are checked
-// before upload, including symlinks, collisions, 50-file and 50 MiB total limits.
+// before upload for regular source files and conflicting destinations.
+// File-count, size, and destination-length limits are enforced by the API.
 // Local paths must be application-controlled and stable during preparation.
 func (r *BetaAgentEnvironmentFileService) Prepare(ctx context.Context, files map[string]string, opts ...option.RequestOption) (*BetaAgentPreparedFiles, error) {
-	selected, err := betaAgentPrepareSelection(files, true)
+	selected, err := betaAgentPrepareSelection(files)
 	if err != nil {
 		return nil, err
 	}
@@ -112,9 +111,6 @@ func (r *BetaAgentEnvironmentFileService) PrepareDirectory(ctx context.Context, 
 			}
 			if matched {
 				files[destination+"/"+filepath.ToSlash(relative)] = source
-				if len(files) > 50 {
-					return errors.New("initial hosted files exceed 50 files")
-				}
 				break
 			}
 		}
@@ -134,7 +130,7 @@ func (r *BetaAgentEnvironmentFileService) Upload(ctx context.Context, environmen
 	if environmentID == "" {
 		return nil, errors.New("staging requires an environment ID")
 	}
-	selected, err := betaAgentPrepareSelection(map[string]string{destination: source}, false)
+	selected, err := betaAgentPrepareSelection(map[string]string{destination: source})
 	if err != nil {
 		return nil, err
 	}
@@ -210,12 +206,8 @@ func (r *BetaAgentEnvironmentFileService) prepareFiles(ctx context.Context, sele
 	return prepared, nil
 }
 
-func betaAgentPrepareSelection(files map[string]string, initial bool) ([]betaAgentLocalFile, error) {
-	if initial && len(files) > 50 {
-		return nil, errors.New("initial hosted files exceed 50 files")
-	}
+func betaAgentPrepareSelection(files map[string]string) ([]betaAgentLocalFile, error) {
 	selected := make([]betaAgentLocalFile, 0, len(files))
-	var total int64
 	destinations := slices.Sorted(maps.Keys(files))
 	for _, destination := range destinations {
 		if err := betaAgentFileDestination(destination); err != nil {
@@ -237,13 +229,6 @@ func betaAgentPrepareSelection(files map[string]string, initial bool) ([]betaAge
 		if !info.Mode().IsRegular() {
 			return nil, errors.New("selected source must be a regular file")
 		}
-		if info.Size() > betaAgentFileLimit {
-			return nil, errors.New("hosted file exceeds 50 MiB")
-		}
-		total += info.Size()
-		if initial && total > betaAgentFileLimit {
-			return nil, errors.New("initial hosted files exceed 50 MiB total")
-		}
 		selected = append(selected, betaAgentLocalFile{destination: destination, source: source, info: info})
 	}
 	return selected, nil
@@ -251,9 +236,6 @@ func betaAgentPrepareSelection(files map[string]string, initial bool) ([]betaAge
 func betaAgentFileDestination(destination string) error {
 	if !utf8.ValidString(destination) {
 		return errors.New("destination must be valid UTF-8")
-	}
-	if utf8.RuneCountInString(destination) > 4096 {
-		return errors.New("destination exceeds 4096 characters")
 	}
 	if !strings.HasPrefix(destination, "/workspace/") || strings.ContainsAny(destination, "\x00\\") || path.Clean(destination) != destination || destination == "/workspace/outputs" {
 		return errors.New("destination must name a file inside /workspace using a clean absolute POSIX path")
