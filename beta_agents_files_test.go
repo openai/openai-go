@@ -95,7 +95,7 @@ func TestBetaAgentFilesPreflightBeforeNetwork(t *testing.T) {
 	defer server.Close()
 	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
 	source := betaLocalFile(t, "input.txt", "source")
-	for _, destination := range []string{"/tmp/source", "/workspace/a/../b", "/workspace/a//b", "/workspace/.codex/source", "/workspace/.managed-agents-x/source", "/workspace/outputs", "/workspace/"} {
+	for _, destination := range []string{"/workspace/\xff", "/workspace/\xfe", "/tmp/source", "/workspace/a/../b", "/workspace/a//b", "/workspace/.codex/source", "/workspace/.managed-agents-x/source", "/workspace/outputs", "/workspace/"} {
 		if _, err := client.Beta.Agents.Environments.Files.Prepare(context.Background(), map[string]string{destination: source}); err == nil {
 			t.Errorf("accepted %q", destination)
 		}
@@ -116,6 +116,9 @@ func TestBetaAgentFilesPreflightBeforeNetwork(t *testing.T) {
 	}
 	if _, err := client.Beta.Agents.Environments.Files.PrepareDirectory(context.Background(), filepath.Dir(source), "/workspace", nil); err == nil {
 		t.Error("accepted implicit directory selection")
+	}
+	if _, err := client.Beta.Agents.Environments.Files.PrepareDirectory(context.Background(), "", "/workspace", []string{"*"}); err == nil {
+		t.Error("accepted implicit working directory")
 	}
 	if requests.Load() != 0 {
 		t.Fatal("preflight did not precede requests")
@@ -427,5 +430,64 @@ func TestBetaAgentFilesEmptyResponsePreservesUploads(t *testing.T) {
 				t.Fatal("empty response lost earlier upload", err)
 			}
 		})
+	}
+}
+
+func TestBetaAgentFilesCancellationBetweenUploads(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	first := betaLocalFile(t, "a.txt", "first")
+	second := betaLocalFile(t, "b.txt", "second")
+	var requests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests.Add(1)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprint(w, `{"id":"owned"}`)
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0), option.WithMiddleware(func(r *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+		response, err := next(r)
+		if err == nil {
+			// Cancel only after the response body can be consumed by the generated decoder.
+			response.Body = &betaCancelAfterRead{ReadCloser: response.Body, cancel: func() { cancel(); _ = os.Remove(second) }}
+		}
+		return response, err
+	}))
+	prepared, err := client.Beta.Agents.Environments.Files.Prepare(ctx, map[string]string{"/workspace/a": first, "/workspace/b": second})
+	if !errors.Is(err, context.Canceled) || prepared == nil || len(prepared.Uploads) != 1 || requests.Load() != 1 {
+		t.Fatalf("prepared=%v requests=%d err=%v", prepared, requests.Load(), err)
+	}
+}
+
+type betaCancelAfterRead struct {
+	io.ReadCloser
+	cancel func()
+}
+
+func (r *betaCancelAfterRead) Read(p []byte) (int, error) {
+	n, err := r.ReadCloser.Read(p)
+	if err == io.EOF {
+		r.cancel()
+	}
+	return n, err
+}
+
+func TestBetaAgentResultArtifactContentErrorClosesBody(t *testing.T) {
+	body := &betaArtifactBody{Reader: strings.NewReader("partial")}
+	sentinel := errors.New("content unavailable")
+	client := openai.NewClient(option.WithBaseURL("https://example.invalid"), option.WithAPIKey("synthetic"), option.WithMaxRetries(0), option.WithMiddleware(func(r *http.Request, _ option.MiddlewareNext) (*http.Response, error) {
+		response := &http.Response{StatusCode: 200, Header: http.Header{}, Request: r}
+		if strings.HasSuffix(r.URL.Path, "/content") {
+			response.Body = body
+			return response, sentinel
+		}
+		response.Header.Set("Content-Type", "application/json")
+		response.Body = io.NopCloser(strings.NewReader(`{"data":[{"id":"artifact","turn_id":"root","path":"/workspace/report"}],"has_more":false}`))
+		return response, nil
+	}))
+	var destination bytes.Buffer
+	_, err := client.Beta.Agents.Sessions.Artifacts.ForResult(&openai.BetaAgentTurnResult{Turn: openai.Turn{ID: "root", SessionID: "session"}}).Download(context.Background(), "/workspace/report", &destination)
+	if !errors.Is(err, sentinel) || !body.closed {
+		t.Fatalf("closed=%t err=%v", body.closed, err)
 	}
 }

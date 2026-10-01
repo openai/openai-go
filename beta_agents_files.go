@@ -63,6 +63,9 @@ func (r *BetaAgentEnvironmentFileService) Prepare(ctx context.Context, files map
 // not a sandbox for untrusted paths or concurrent filesystem writers.
 // The caller owns upload cleanup.
 func (r *BetaAgentEnvironmentFileService) PrepareDirectory(ctx context.Context, directory, destination string, include []string, opts ...option.RequestOption) (*BetaAgentPreparedFiles, error) {
+	if directory == "" {
+		return nil, errors.New("directory must be explicit")
+	}
 	if len(include) == 0 {
 		return nil, errors.New("include patterns must be explicit")
 	}
@@ -172,6 +175,9 @@ func (r *BetaAgentEnvironmentFileService) prepareFiles(ctx context.Context, sele
 	capture, require := agentStreamResponseGuard[FileObject]()
 	files.Options = append([]option.RequestOption{capture}, files.Options...)
 	for _, item := range selected {
+		if err := ctx.Err(); err != nil {
+			return prepared, &BetaAgentFilePreparationError{Prepared: prepared, Cause: err}
+		}
 		source, err := os.Open(item.source)
 		if err != nil {
 			return prepared, &BetaAgentFilePreparationError{Prepared: prepared, Cause: err}
@@ -240,6 +246,9 @@ func betaAgentPrepareSelection(files map[string]string, initial bool) ([]betaAge
 	return selected, nil
 }
 func betaAgentFileDestination(destination string) error {
+	if !utf8.ValidString(destination) {
+		return errors.New("destination must be valid UTF-8")
+	}
 	if utf8.RuneCountInString(destination) > 4096 {
 		return errors.New("destination exceeds 4096 characters")
 	}
@@ -316,6 +325,9 @@ func (r *BetaAgentResultArtifacts) Download(ctx context.Context, path string, to
 	service.Options = append([]option.RequestOption{capture}, service.Options...)
 	response, err := service.Content(ctx, r.sessionID, artifact.ID, append(slices.Clone(opts), require)...)
 	if err != nil {
+		if response != nil && response.Body != nil {
+			_ = response.Body.Close()
+		}
 		return nil, err
 	}
 	_, copyErr := io.Copy(to, response.Body)

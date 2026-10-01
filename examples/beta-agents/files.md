@@ -27,7 +27,16 @@ Partial failures expose successful uploads through
 `BetaAgentFilePreparationError.Prepared`. Delete uploads explicitly with the
 ordinary Files API when no longer needed; preparation never deletes them.
 
-Download an artifact from the completed result's exact turn and published path:
+Download an artifact from the completed result's exact turn and published path
+into memory:
+
+```go
+var content bytes.Buffer
+artifact, err := client.Beta.Agents.Sessions.Artifacts.ForResult(result).
+    Download(ctx, "/workspace/outputs/report.md", &content)
+```
+
+Or write to an application-owned, safe destination path:
 
 ```go
 destination, err := os.Create("downloaded-report.md")
