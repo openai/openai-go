@@ -48,7 +48,7 @@ type betaAgentLocalFile struct {
 // File-count, size, and destination-length limits are enforced by the API.
 // Local paths must be application-controlled and stable during preparation.
 func (r *BetaAgentEnvironmentFileService) Prepare(ctx context.Context, files map[string]string, opts ...option.RequestOption) (*BetaAgentPreparedFiles, error) {
-	selected, err := betaAgentPrepareSelection(files)
+	selected, err := betaAgentPrepareSelection(ctx, files)
 	if err != nil {
 		return nil, err
 	}
@@ -62,6 +62,9 @@ func (r *BetaAgentEnvironmentFileService) Prepare(ctx context.Context, files map
 // not a sandbox for untrusted paths or concurrent filesystem writers.
 // The caller owns upload cleanup.
 func (r *BetaAgentEnvironmentFileService) PrepareDirectory(ctx context.Context, directory, destination string, include []string, opts ...option.RequestOption) (*BetaAgentPreparedFiles, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if directory == "" {
 		return nil, errors.New("directory must be explicit")
 	}
@@ -130,7 +133,7 @@ func (r *BetaAgentEnvironmentFileService) Upload(ctx context.Context, environmen
 	if environmentID == "" {
 		return nil, errors.New("staging requires an environment ID")
 	}
-	selected, err := betaAgentPrepareSelection(map[string]string{destination: source})
+	selected, err := betaAgentPrepareSelection(ctx, map[string]string{destination: source})
 	if err != nil {
 		return nil, err
 	}
@@ -206,10 +209,16 @@ func (r *BetaAgentEnvironmentFileService) prepareFiles(ctx context.Context, sele
 	return prepared, nil
 }
 
-func betaAgentPrepareSelection(files map[string]string) ([]betaAgentLocalFile, error) {
+func betaAgentPrepareSelection(ctx context.Context, files map[string]string) ([]betaAgentLocalFile, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	selected := make([]betaAgentLocalFile, 0, len(files))
 	destinations := slices.Sorted(maps.Keys(files))
 	for _, destination := range destinations {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		if err := betaAgentFileDestination(destination); err != nil {
 			return nil, err
 		}

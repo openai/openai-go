@@ -555,3 +555,22 @@ func TestBetaAgentResultArtifactContentErrorClosesBody(t *testing.T) {
 		t.Fatalf("closed=%t err=%v", body.closed, err)
 	}
 }
+
+func TestBetaAgentFilesCanceledBeforePreflight(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	client := openai.NewClient(option.WithAPIKey("synthetic"))
+	missing := filepath.Join(t.TempDir(), "missing")
+	_, err := client.Beta.Agents.Environments.Files.Prepare(ctx, map[string]string{"/workspace/input": missing})
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("prepare should honor cancellation before accessing source: %v", err)
+	}
+	_, err = client.Beta.Agents.Environments.Files.PrepareDirectory(ctx, missing, "/workspace", []string{"*"})
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("directory preparation should honor cancellation before scanning: %v", err)
+	}
+	_, err = client.Beta.Agents.Environments.Files.Upload(ctx, "env", missing, "/workspace/input")
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("upload should honor cancellation before accessing source: %v", err)
+	}
+}
