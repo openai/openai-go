@@ -477,8 +477,12 @@ func TestAzureCredentialTransportSecurity(t *testing.T) {
 					return
 				}
 
-				if err == nil || !strings.Contains(err.Error(), "azure: authenticated requests require HTTPS") {
-					t.Fatalf("expected HTTPS requirement error, got %v", err)
+				wantError := "azure: authenticated requests require HTTPS"
+				if test.rewriteToRemote {
+					wantError = "requestconfig: request URL origin must match the configured base URL"
+				}
+				if err == nil || !strings.Contains(err.Error(), wantError) {
+					t.Fatalf("expected %q, got %v", wantError, err)
 				}
 				if captured.Load() != nil {
 					t.Fatal("insecure credential transport reached the network")
