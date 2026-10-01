@@ -1023,8 +1023,10 @@ func TestBetaAgentAttachDeduplicatesPendingFunctionDiagnostics(t *testing.T) {
 	defer server.Close()
 	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
 	stream := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{}).WithResultCollection()
-	if !stream.Next() || !stream.Next() {
-		t.Fatal(stream.Err())
+	for range 2 {
+		if !stream.Next() {
+			t.Fatal(stream.Err())
+		}
 	}
 	_, err := stream.FinalResult()
 	var failure *openai.BetaAgentTurnResultError
