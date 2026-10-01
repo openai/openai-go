@@ -96,11 +96,12 @@ func (r *BetaAgentEnvironmentFileService) PrepareDirectory(ctx context.Context, 
 		return nil, err
 	}
 	// Keep the application-owned directory literal when composing the glob.
-	rootPattern := directory
+	volume := filepath.VolumeName(directory)
+	rootPattern := directory[len(volume):]
 	if runtime.GOOS != "windows" {
 		rootPattern = strings.ReplaceAll(rootPattern, `\`, `\\`)
 	}
-	rootPattern = strings.NewReplacer("[", "[[]", "*", "[*]", "?", "[?]").Replace(rootPattern)
+	rootPattern = volume + strings.NewReplacer("[", "[[]", "*", "[*]", "?", "[?]").Replace(rootPattern)
 	files := make(map[string]string)
 	for _, pattern := range include {
 		if err := ctx.Err(); err != nil {
@@ -109,7 +110,7 @@ func (r *BetaAgentEnvironmentFileService) PrepareDirectory(ctx context.Context, 
 		if !filepath.IsLocal(pattern) {
 			return nil, errors.New("include patterns must stay inside the selected directory")
 		}
-		selected, selectErr := filepath.Glob(filepath.Join(rootPattern, pattern))
+		selected, selectErr := filepath.Glob(rootPattern + string(filepath.Separator) + pattern)
 		if selectErr != nil {
 			return nil, selectErr
 		}
@@ -124,12 +125,18 @@ func (r *BetaAgentEnvironmentFileService) PrepareDirectory(ctx context.Context, 
 			if !filepath.IsLocal(relative) {
 				return nil, errors.New("selected source is outside the directory")
 			}
-			parent := filepath.Dir(source)
-			realParent, parentErr := filepath.EvalSymlinks(parent)
-			if parentErr != nil {
-				return nil, parentErr
+			symlinkParent := false
+			for parent := filepath.Dir(relative); parent != "."; parent = filepath.Dir(parent) {
+				info, parentErr := os.Lstat(filepath.Join(directory, parent))
+				if parentErr != nil {
+					return nil, parentErr
+				}
+				if info.Mode()&os.ModeSymlink != 0 {
+					symlinkParent = true
+					break
+				}
 			}
-			if realParent != parent {
+			if symlinkParent {
 				continue
 			}
 			info, statErr := os.Lstat(source)

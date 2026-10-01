@@ -666,3 +666,48 @@ func TestBetaAgentFilesDirectoryGlobSelection(t *testing.T) {
 		t.Fatalf("followed symlink directory: prepared=%v err=%v", prepared, err)
 	}
 }
+
+func TestBetaAgentFilesDirectoryPreservesIncludeSyntax(t *testing.T) {
+	var requests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { requests.Add(1) }))
+	defer server.Close()
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	source := betaLocalFile(t, "one.txt", "source")
+	for _, pattern := range []string{"one.txt/", "missing*/../one.txt"} {
+		prepared, err := client.Beta.Agents.Environments.Files.PrepareDirectory(context.Background(), filepath.Dir(source), "/workspace", []string{pattern})
+		if err != nil || len(prepared.Files) != 0 || requests.Load() != 0 {
+			t.Fatalf("pattern was cleaned before selection: %q prepared=%v err=%v", pattern, prepared, err)
+		}
+	}
+}
+
+func TestBetaAgentFilesDirectoryWindowsPaths(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("Windows path semantics")
+	}
+	root := t.TempDir()
+	data := filepath.Join(root, "Data")
+	if err := os.Mkdir(data, 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(data, "one.txt"), []byte("source"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprint(w, `{"id":"file"}`)
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	for _, test := range []struct{ name, directory, pattern string }{
+		{"mixed case", root, "data/*.txt"},
+		{"extended volume", `\\?\` + root, "Data/*.txt"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			prepared, err := client.Beta.Agents.Environments.Files.PrepareDirectory(context.Background(), test.directory, "/workspace", []string{test.pattern})
+			if err != nil || len(prepared.Files) != 1 {
+				t.Fatalf("valid Windows path dropped: prepared=%v err=%v", prepared, err)
+			}
+		})
+	}
+}
