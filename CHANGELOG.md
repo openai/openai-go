@@ -1,5 +1,27 @@
 # Changelog
 
+## [3.69.0](https://github.com/openai/openai-go/compare/v3.68.0...v3.69.0) (2026-10-01)
+
+
+### Features
+
+* **agents:** [1/n] Bind output schemas to typed results ([#1008](https://github.com/openai/openai-go/issues/1008)) ([0c0abaf](https://github.com/openai/openai-go/commit/0c0abaf8954b554ee6ebaf1c219909d49a632e91))
+* **api:** add translation and session trace APIs ([#995](https://github.com/openai/openai-go/issues/995)) ([5312099](https://github.com/openai/openai-go/commit/5312099ee06b17e5e9acbf05a8ef577e85ae02b3))
+* **api:** require secure credential transport ([#1011](https://github.com/openai/openai-go/issues/1011)) ([8f74dea](https://github.com/openai/openai-go/commit/8f74dea358e0a0c71f6f458ac8b5d9f934a751c5))
+
+
+### Bug Fixes
+
+* **api:** allow original image detail in Chat Completions ([#1003](https://github.com/openai/openai-go/issues/1003)) ([e4dc9a0](https://github.com/openai/openai-go/commit/e4dc9a04257d526444b4cd6618af0e9c969761c5))
+* **azure:** isolate inherited headers when switching providers ([#1001](https://github.com/openai/openai-go/issues/1001)) ([98700dd](https://github.com/openai/openai-go/commit/98700dd34381227befaee04978ace1970a961d95))
+* **azure:** validate configured origin before authentication ([#1000](https://github.com/openai/openai-go/issues/1000)) ([656aeb8](https://github.com/openai/openai-go/commit/656aeb853df8cb800cc879af806b5f6f39d22d54))
+
+
+### Chores
+
+* **api:** correct the eval run cancellation endpoint reference ([#999](https://github.com/openai/openai-go/issues/999)) ([431121b](https://github.com/openai/openai-go/commit/431121bdda379a717f5ce07aeeb582759792868b))
+* **api:** retain WebRTC Live session transport types ([#998](https://github.com/openai/openai-go/issues/998)) ([91e28d4](https://github.com/openai/openai-go/commit/91e28d4471dc2e4410620c1841fa1709bf178ac3))
+
 ## [3.68.0](https://github.com/openai/openai-go/compare/v3.67.0...v3.68.0) (2026-09-29)
 
 
