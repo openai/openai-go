@@ -55,6 +55,7 @@ func (s *AgentSessionStream) attachSession(ctx context.Context) *AgentSessionStr
 	events.Options = append([]option.RequestOption{capture}, events.Options...)
 	s.stream = events.StreamStreaming(s.ctx, s.sessionID, append(slices.Clone(s.options), require)...)
 	if err = s.stream.Err(); err != nil {
+		s.attachment.observationFailed = true
 		s.finish(err)
 		return s
 	}

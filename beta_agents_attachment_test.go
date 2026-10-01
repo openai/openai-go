@@ -1054,3 +1054,34 @@ func TestBetaAgentAttachKnownSessionFailureDoesNotRefresh(t *testing.T) {
 		t.Fatalf("requests=%d err=%v", requests.Load(), err)
 	}
 }
+
+func TestBetaAgentAttachRecoversAfterSubscriptionFailure(t *testing.T) {
+	var subscriptions atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case strings.HasSuffix(r.URL.Path, "/events"):
+			subscriptions.Add(1)
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_, _ = fmt.Fprint(w, `{"error":{"message":"synthetic temporary failure"}}`)
+		case strings.HasSuffix(r.URL.Path, "/turns"):
+			_, _ = fmt.Fprint(w, `{"data":[{"id":"root","session_id":"session","status":"in_progress"}],"has_more":false}`)
+		case strings.HasSuffix(r.URL.Path, "/turns/root"):
+			_, _ = fmt.Fprint(w, `{"id":"root","session_id":"session","status":"completed"}`)
+		case strings.HasSuffix(r.URL.Path, "/items"):
+			_, _ = fmt.Fprint(w, `{"data":[{"id":"m","turn_id":"root","type":"message","role":"assistant","status":"completed","content":[{"type":"output_text","text":"finished"}]}],"has_more":false}`)
+		default:
+			_, _ = fmt.Fprint(w, `{"id":"session","status":"in_progress"}`)
+		}
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
+	stream := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{})
+	if stream.Err() == nil {
+		t.Fatal("raw stream lost subscription error")
+	}
+	result, err := stream.FinalResult()
+	if err != nil || result.OutputText() != "finished" || subscriptions.Load() != 1 {
+		t.Fatalf("result=%v subscriptions=%d err=%v", result, subscriptions.Load(), err)
+	}
+}
