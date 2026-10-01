@@ -1395,6 +1395,14 @@ client := openai.NewClient(
 )
 ```
 
+The built-in Azure and GCP providers use their documented link-local IPv4 metadata
+endpoints with dedicated standard-library HTTP clients. They bypass API-client
+proxies, custom HTTP transports, and DNS resolution, and reject redirects.
+Metadata retrieval has a five-second total timeout, including reading the response,
+and honors earlier context deadlines. `option.WithHTTPClient` still controls token
+exchange and API requests. Tests or applications requiring a different metadata
+route can implement a custom subject token provider; they own that route's security.
+
 ### Custom Subject Token Provider
 
 You can implement your own subject token provider:

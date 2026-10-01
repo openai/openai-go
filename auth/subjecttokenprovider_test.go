@@ -128,13 +128,13 @@ func TestAzureProviderGetToken(t *testing.T) {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(strings.NewReader(`{"access_token":"azure-token-123"}`)),
-				Header:     make(http.Header),
+				Header:     http.Header{"Metadata-Flavor": {"Google"}},
 			}, nil
 		}),
 	}
 
 	provider := auth.AzureManagedIdentityTokenProvider(nil)
-	token, err := provider.GetToken(context.Background(), mockClient)
+	token, err := auth.MetadataProviderWithClientForTest(provider, mockClient).GetToken(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("GetToken() error = %v", err)
 	}
@@ -160,7 +160,7 @@ func TestAzureProviderCustomResource(t *testing.T) {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(strings.NewReader(`{"access_token":"azure-custom-token"}`)),
-				Header:     make(http.Header),
+				Header:     http.Header{"Metadata-Flavor": {"Google"}},
 			}, nil
 		}),
 	}
@@ -168,7 +168,7 @@ func TestAzureProviderCustomResource(t *testing.T) {
 	provider := auth.AzureManagedIdentityTokenProvider(&auth.AzureManagedIdentityTokenProviderConfig{
 		Resource: "https://custom.openai.com",
 	})
-	token, err := provider.GetToken(context.Background(), mockClient)
+	token, err := auth.MetadataProviderWithClientForTest(provider, mockClient).GetToken(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("GetToken() error = %v", err)
 	}
@@ -186,7 +186,7 @@ func TestGCPProviderCustomAudience(t *testing.T) {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(strings.NewReader("gcp-custom-token-jwt")),
-				Header:     make(http.Header),
+				Header:     http.Header{"Metadata-Flavor": {"Google"}},
 			}, nil
 		}),
 	}
@@ -194,7 +194,7 @@ func TestGCPProviderCustomAudience(t *testing.T) {
 	provider := auth.GCPIDTokenProvider(&auth.GCPIDTokenProviderConfig{
 		Audience: "https://custom.openai.com",
 	})
-	token, err := provider.GetToken(context.Background(), mockClient)
+	token, err := auth.MetadataProviderWithClientForTest(provider, mockClient).GetToken(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("GetToken() error = %v", err)
 	}
@@ -215,13 +215,13 @@ func TestAzureProviderNilConfigBackwardCompatibility(t *testing.T) {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(strings.NewReader(`{"access_token":"default-token"}`)),
-				Header:     make(http.Header),
+				Header:     http.Header{"Metadata-Flavor": {"Google"}},
 			}, nil
 		}),
 	}
 
 	provider := auth.AzureManagedIdentityTokenProvider(nil)
-	_, err := provider.GetToken(context.Background(), mockClient)
+	_, err := auth.MetadataProviderWithClientForTest(provider, mockClient).GetToken(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("GetToken() error = %v", err)
 	}
@@ -240,13 +240,13 @@ func TestGCPProviderNilConfigBackwardCompatibility(t *testing.T) {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(strings.NewReader("default-gcp-token")),
-				Header:     make(http.Header),
+				Header:     http.Header{"Metadata-Flavor": {"Google"}},
 			}, nil
 		}),
 	}
 
 	provider := auth.GCPIDTokenProvider(nil)
-	_, err := provider.GetToken(context.Background(), mockClient)
+	_, err := auth.MetadataProviderWithClientForTest(provider, mockClient).GetToken(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("GetToken() error = %v", err)
 	}
@@ -261,7 +261,7 @@ func TestAzureProviderResourceURLEncoding(t *testing.T) {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(strings.NewReader(`{"access_token":"encoded-token"}`)),
-				Header:     make(http.Header),
+				Header:     http.Header{"Metadata-Flavor": {"Google"}},
 			}, nil
 		}),
 	}
@@ -269,7 +269,7 @@ func TestAzureProviderResourceURLEncoding(t *testing.T) {
 	provider := auth.AzureManagedIdentityTokenProvider(&auth.AzureManagedIdentityTokenProviderConfig{
 		Resource: "https://api.openai.com/v1/special",
 	})
-	_, err := provider.GetToken(context.Background(), mockClient)
+	_, err := auth.MetadataProviderWithClientForTest(provider, mockClient).GetToken(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("GetToken() error = %v", err)
 	}
