@@ -23,7 +23,8 @@ type BetaAgentOutput[T any] struct {
 // schema may be a schema map or a JSON-marshalable schema from a reflection library.
 // Objects become closed with all properties required. Composition other
 // than nested anyOf, remote references, and unsupported keywords are rejected.
-// parse must decode and validate the output according to the application's type.
+// The API validates remaining schema constraints. parse must decode and validate
+// the output according to the application's type.
 func NewBetaAgentOutput[T any](schema any, parse func([]byte) (T, error)) (*BetaAgentOutput[T], error) {
 	if parse == nil {
 		return nil, errors.New("beta agent output requires a parser")
@@ -188,6 +189,11 @@ func betaAgentNormalizeSchema(schema, root map[string]any, path string) error {
 		return nil
 	}
 	if variants, exists := schema["anyOf"]; exists {
+		for _, key := range []string{"type", "properties", "required", "additionalProperties", "items", "prefixItems", "enum", "const"} {
+			if _, exists := schema[key]; exists {
+				return fail("structural anyOf siblings are unsupported")
+			}
+		}
 		list, ok := variants.([]any)
 		if !ok || len(list) == 0 {
 			return fail("anyOf must contain schemas")

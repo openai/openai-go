@@ -103,6 +103,8 @@ func TestBetaAgentTypedFollowupAndErrors(t *testing.T) {
 }
 func TestBetaAgentOutputSchemaValidation(t *testing.T) {
 	invalid := []string{
+		`{"type":"object","properties":{"x":{"anyOf":[{"type":"object"}],"type":"object","properties":{"name":{"type":"string"}}}}}`,
+		`{"type":"object","properties":{"x":{"anyOf":[{"type":"string"}],"additionalProperties":true}}}`,
 		`{"type":"object","properties":{"x":{"type":"string","format":"uri"}}}`,
 		`{"type":"object","properties":{"x":{"type":"object","patternProperties":{".*":{"type":"string"}}}}}`,
 		`{"type":"object","title":12}`,
