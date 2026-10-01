@@ -145,7 +145,7 @@ func (s *AgentSessionStream) FinalResult() (*BetaAgentTurnResult, error) {
 			c.err = &BetaAgentTurnResultError{Reason: "no_turn_selected", SessionID: s.sessionID}
 			return nil, c.err
 		}
-		if c.collectionErr == nil && (s.Err() == nil || s.attachment.observationFailed) {
+		if !c.sessionFailed && c.collectionErr == nil && (s.Err() == nil || s.attachment.observationFailed) {
 			if err := s.reconcileAttachment(ctx); err != nil {
 				c.collectionErr = err
 				if s.attachment.observationFailed && s.Err() != nil {

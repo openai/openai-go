@@ -1138,3 +1138,33 @@ func TestBetaAgentAttachRecoversAfterSnapshotFailure(t *testing.T) {
 		})
 	}
 }
+
+func TestBetaAgentAttachStreamedSessionFailureDoesNotRefresh(t *testing.T) {
+	var turnReads atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case strings.HasSuffix(r.URL.Path, "/events"):
+			w.Header().Set("Content-Type", "text/event-stream")
+			_, _ = fmt.Fprintf(w, "data: %s\n\n", agentEvent("failed", "failure", `,"session":{"id":"session","status":"failed"}`))
+		case strings.HasSuffix(r.URL.Path, "/turns"):
+			_, _ = fmt.Fprint(w, `{"data":[{"id":"root","session_id":"session","status":"in_progress"}],"has_more":false}`)
+		case strings.HasSuffix(r.URL.Path, "/turns/root"):
+			if turnReads.Add(1) > 1 {
+				t.Error("requested snapshot after streamed session failure")
+				http.Error(w, "unavailable", 503)
+				return
+			}
+			_, _ = fmt.Fprint(w, `{"id":"root","session_id":"session","status":"in_progress"}`)
+		default:
+			_, _ = fmt.Fprint(w, `{"id":"session","status":"in_progress"}`)
+		}
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
+	_, err := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{}).FinalResult()
+	var failure *openai.BetaAgentTurnResultError
+	if !errors.As(err, &failure) || failure.Reason != "session_failed" || turnReads.Load() != 1 {
+		t.Fatalf("turn_reads=%d err=%v", turnReads.Load(), err)
+	}
+}
