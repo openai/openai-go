@@ -25,9 +25,10 @@ import (
 // produce a generic failed tool result without exposing application error text.
 type AgentToolHandler func(context.Context, map[string]any) (any, error)
 
-// AgentSessionStreamParams configures one turn on an existing idle session.
+// AgentSessionStreamParams starts a turn or attaches to existing hosted work.
 type AgentSessionStreamParams struct {
-	// Input must be a nonempty string or []AgentSessionInputMessageParam.
+	// Omit Input to attach without submitting work. Otherwise provide a nonempty
+	// string or []AgentSessionInputMessageParam on an idle session.
 	Input        any
 	ToolHandlers map[string]AgentToolHandler
 	// IdempotencyKey applies only to input. A request header overrides this value.
@@ -40,6 +41,7 @@ type AgentSessionStreamParams struct {
 // It is not safe to iterate concurrently. Close may be called concurrently to
 // unblock iteration; it closes local resources without cancelling the backend turn.
 type AgentSessionStream struct {
+	attachment   *betaAgentAttachment
 	collector    betaAgentTurnCollector
 	ctx          context.Context
 	cancel       context.CancelFunc
@@ -73,9 +75,10 @@ type agentPendingCall struct {
 	argumentErr    error
 }
 
-// Stream subscribes to events before submitting input, then streams through the
+// Stream attaches to existing hosted work when Input is omitted, using the same
+// tool handlers. With Input, it subscribes before submitting input, then streams through the
 // selected coordinator turn's completion/failure/cancellation and subsequent
-// session idle event, or a session failure. The session must be idle, with only
+// session idle event, or a session failure. With Input, the session must be idle, with only
 // one input writer while the helper runs; concurrent inputs cannot be correlated
 // to turns. Initial idle and subagent completion events do not end the stream.
 // Protocol error frames follow the underlying stream's Err path and close the
@@ -85,10 +88,14 @@ type agentPendingCall struct {
 // WithResponseBodyInto is incompatible with the helper's required typed decodes
 // and is rejected through Err; other request options retain their normal behavior.
 func (r *BetaAgentSessionService) Stream(ctx context.Context, sessionID string, params AgentSessionStreamParams, opts ...option.RequestOption) *AgentSessionStream {
+	callerCtx := ctx
 	ctx, cancel := context.WithCancel(ctx)
 	s := &AgentSessionStream{ctx: ctx, cancel: cancel, sessions: r, sessionID: sessionID,
 		options: slices.Clone(opts), handlers: maps.Clone(params.ToolHandlers),
 		eventIDs: make(map[string]struct{}), handledCalls: make(map[agentCallKey]struct{})}
+	if params.Input == nil {
+		return s.attachSession(callerCtx)
+	}
 	input, err := agentStreamInput(params.Input)
 	if err != nil {
 		s.finish(err)
@@ -181,12 +188,21 @@ func (s *AgentSessionStream) Next() (ok bool) {
 			return false
 		}
 		event := s.stream.Current()
+		accepted, observeErr := s.observeAttachment(event)
+		if observeErr != nil {
+			return s.finish(observeErr)
+		}
+		if !accepted {
+			continue
+		}
+		s.seedAttachmentCollector()
 		if !s.accept(event) {
 			continue
 		}
 		s.collector.Accumulate(event)
+		s.attachmentActions(event)
 		s.current = event
-		if event.Type == "agent.session.failed" || (event.Type == "agent.session.idle" && s.turnEnded) {
+		if event.Type == "agent.session.failed" || (s.attachment != nil && s.attachment.terminal) || (event.Type == "agent.session.idle" && (s.turnEnded || s.attachment != nil)) {
 			_ = s.Close()
 		} else if event.Type == "agent.session.turn.item.added" && event.Item.Type == "function_call" {
 			key := agentCallKey{event.Item.TurnID, event.Item.CallID}
@@ -203,6 +219,9 @@ func (s *AgentSessionStream) Next() (ok bool) {
 	}
 	if s.closed.Load() {
 		return false
+	}
+	if s.attachment != nil {
+		s.attachment.observationFailed = true
 	}
 	if err := s.stream.Err(); err != nil {
 		return s.finish(err)

@@ -93,6 +93,7 @@ func BetaAgentSessionWithResultCollection(stream *ssestream.Stream[AgentSessionE
 // FinalResult. This beta helper is experimental.
 func (s *AgentSessionStream) WithResultCollection() *AgentSessionStream {
 	s.collector.enable()
+	s.seedAttachmentCollector()
 	return s
 }
 
@@ -107,9 +108,25 @@ func (s *AgentSessionStream) FinalResult() (*BetaAgentTurnResult, error) {
 	if c.finalized {
 		return c.result, c.err
 	}
+	s.seedAttachmentCollector()
 	for !c.stopped(s.handlers) && s.Next() {
 	}
 	_ = s.Close()
+	if s.attachment != nil {
+		if s.turnID == "" && s.attachment.idle && s.Err() == nil && !c.sessionFailed {
+			c.finalized = true
+			c.err = &BetaAgentTurnResultError{Reason: "no_turn_selected", SessionID: s.sessionID}
+			return nil, c.err
+		}
+		if c.collectionErr == nil && (s.Err() == nil || s.attachment.observationFailed) {
+			if err := s.reconcileAttachment(); err != nil {
+				c.collectionErr = err
+				if s.attachment.observationFailed {
+					c.collectionErr = s.Err()
+				}
+			}
+		}
+	}
 	return c.finalResult(s.Err())
 }
 
