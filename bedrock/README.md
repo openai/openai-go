@@ -54,6 +54,22 @@ bedrock.Config{
 
 ## Authentication
 
+Remote endpoints using SDK-managed Bedrock bearer or AWS SigV4 credentials
+require HTTPS, including custom gateways and `AWS_BEDROCK_BASE_URL`. This also
+applies to explicit `option.WithAPIKey` or `option.WithAdminAPIKey` gateway
+credentials used with `SkipAuth`. Migrate these remote HTTP endpoints to HTTPS.
+
+For a local emulator, set `Config.UnsafeAllowHTTP: true` and use `localhost`
+or a literal loopback IP address. This development-only option connects directly
+to loopback, bypassing proxies and custom dial functions. It accepts a nil
+HTTP transport or an `*http.Transport`, and rejects opaque RoundTrippers and
+custom HTTP doers. Unauthenticated `SkipAuth` requests can still use HTTP.
+
+When `SkipAuth` authentication is supplied only through custom headers or
+middleware, the caller is responsible for securing the transport. This
+caller-managed authentication is outside the SDK's transport checks; use HTTPS
+for remote endpoints.
+
 Credential precedence is unchanged:
 
 1. Explicit `APIKey` or `BedrockTokenProvider`.
