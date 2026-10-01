@@ -821,16 +821,19 @@ func ExecuteNewRequest(ctx context.Context, method string, u string, body any, d
 }
 
 func (cfg *RequestConfig) SetHeader(key, value string) {
+	cfg.recordOptionHeader(key, value, headerSet)
 	cfg.Request.Header.Set(key, value)
 	cfg.authentication.recordHeader(key)
 }
 
 func (cfg *RequestConfig) AddHeader(key, value string) {
+	cfg.recordOptionHeader(key, value, headerAdd)
 	cfg.Request.Header.Add(key, value)
 	cfg.authentication.recordHeader(key)
 }
 
 func (cfg *RequestConfig) DelHeader(key string) {
+	cfg.recordOptionHeader(key, "", headerDelete)
 	cfg.Request.Header.Del(key)
 	cfg.authentication.recordHeader(key)
 }
