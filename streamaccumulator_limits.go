@@ -5,6 +5,15 @@ import "slices"
 func (acc *ChatCompletionAccumulator) validChatCompletionChunkIndices(chunk ChatCompletionChunk) bool {
 	var toolCallCounts [maxStreamAccumulatorChoiceIndex + 1]int
 	var initializedToolCallCounts [maxStreamAccumulatorChoiceIndex + 1]bool
+	// Allow one position per received entry plus the existing sparse slack,
+	// shared by all choices and repeated choice entries in this chunk.
+	remainingGrowth := maxStreamAccumulatorToolCallGrowth - 1
+	for _, choice := range chunk.Choices {
+		if len(choice.Delta.ToolCalls) > maxChatCompletionAccumulatorInt-remainingGrowth {
+			return false
+		}
+		remainingGrowth += len(choice.Delta.ToolCalls)
+	}
 
 	for _, choice := range chunk.Choices {
 		choiceIndex, ok := checkedStreamAccumulatorChoiceIndex(choice.Index)
@@ -23,6 +32,11 @@ func (acc *ChatCompletionAccumulator) validChatCompletionChunkIndices(chunk Chat
 				return false
 			}
 			if toolIndex >= toolCallCounts[choiceIndex] {
+				growth := toolIndex + 1 - toolCallCounts[choiceIndex]
+				if growth > remainingGrowth {
+					return false
+				}
+				remainingGrowth -= growth
 				toolCallCounts[choiceIndex] = toolIndex + 1
 			}
 		}
