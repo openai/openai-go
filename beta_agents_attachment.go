@@ -179,6 +179,36 @@ func (s *AgentSessionStream) attachmentActions(event AgentSessionEventUnion) {
 	}
 }
 
+// Only manual actions use the snapshot as a diagnostic. Function execution and
+// unhandled-function errors come exclusively from delivered SSE calls.
+func (s *AgentSessionStream) attachmentManualActions() error {
+	a := s.attachment
+	if a == nil || a.turn == nil || a.turn.Status != "waiting" || a.terminal || a.idle {
+		return nil
+	}
+	session, err := s.attachmentSession(a.ctx)
+	if err != nil {
+		return err
+	}
+	if session.Status != "requires_action" {
+		return nil
+	}
+	for _, action := range session.RequiredActions {
+		manual := action.Type == "computer_use_approval_request" && action.TurnID == s.turnID
+		if action.Type == "environment_connection" && (action.TurnID == "" || action.TurnID == s.turnID) {
+			latest, listErr := s.latestAttachmentRoot()
+			if listErr != nil {
+				return listErr
+			}
+			manual = latest != nil && latest.ID == s.turnID && latest.Status == "waiting"
+		}
+		if manual {
+			s.collector.required = append(s.collector.required, action)
+		}
+	}
+	return nil
+}
+
 func (s *AgentSessionStream) reconcileAttachment() error {
 	a := s.attachment
 	if a == nil || s.turnID == "" {

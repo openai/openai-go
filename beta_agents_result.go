@@ -109,6 +109,11 @@ func (s *AgentSessionStream) FinalResult() (*BetaAgentTurnResult, error) {
 		return c.result, c.err
 	}
 	s.seedAttachmentCollector()
+	if s.Err() == nil {
+		if err := s.attachmentManualActions(); err != nil {
+			c.collectionErr = err
+		}
+	}
 	for !c.stopped(s.handlers) && s.Next() {
 	}
 	_ = s.Close()

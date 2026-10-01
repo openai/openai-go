@@ -346,3 +346,62 @@ func TestBetaAgentAttachRawIterationDoesNotReadOutputHistory(t *testing.T) {
 		t.Fatal("late collection retained output", err)
 	}
 }
+
+func TestBetaAgentAttachManualSnapshotIsSelectedRootOnly(t *testing.T) {
+	for _, tc := range []struct {
+		name, action      string
+		manual, successor bool
+	}{
+		{name: "current approval", action: `{"type":"computer_use_approval_request","turn_id":"root","request_id":"approval"}`, manual: true},
+		{name: "old approval", action: `{"type":"computer_use_approval_request","turn_id":"older","request_id":"approval"}`},
+		{name: "current environment", action: `{"type":"environment_connection","environment_id":"env"}`, manual: true},
+		{name: "successor environment", action: `{"type":"environment_connection","environment_id":"env"}`, successor: true},
+		{name: "stale function", action: `{"type":"function_call","turn_id":"root","name":"unknown","call_id":"answered","arguments":{}}`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var reads, lists atomic.Int32
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				switch {
+				case strings.HasSuffix(r.URL.Path, "/events"):
+					w.Header().Set("Content-Type", "text/event-stream")
+					if !tc.manual {
+						_, _ = fmt.Fprintf(w, "data: %s\n\n", betaResultTurn("completed", "root", "null"))
+					}
+					w.WriteHeader(200)
+					w.(http.Flusher).Flush()
+					<-r.Context().Done()
+				case strings.HasSuffix(r.URL.Path, "/turns"):
+					id := "root"
+					if lists.Add(1) > 1 && tc.successor {
+						id = "successor"
+					}
+					_, _ = fmt.Fprintf(w, `{"data":[{"id":%q,"session_id":"session","status":"waiting"}],"has_more":false}`, id)
+				case strings.HasSuffix(r.URL.Path, "/turns/root"):
+					status := "waiting"
+					if reads.Add(1) > 1 && !tc.manual {
+						status = "completed"
+					}
+					_, _ = fmt.Fprintf(w, `{"id":"root","session_id":"session","status":%q}`, status)
+				case strings.HasSuffix(r.URL.Path, "/items"):
+					_, _ = fmt.Fprint(w, `{"data":[],"has_more":false}`)
+				default:
+					_, _ = fmt.Fprintf(w, `{"id":"session","status":"requires_action","required_actions":[%s]}`, tc.action)
+				}
+			}))
+			defer server.Close()
+			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			result, err := client.Beta.Agents.Sessions.Stream(ctx, "session", openai.AgentSessionStreamParams{}).FinalResult()
+			if tc.manual {
+				var failure *openai.BetaAgentTurnResultError
+				if !errors.As(err, &failure) || failure.Reason != "requires_action" || len(failure.RequiredActions) != 1 {
+					t.Fatal("missing current manual action", err)
+				}
+			} else if err != nil || result.TurnID() != "root" {
+				t.Fatalf("unrelated snapshot blocked selected root: result=%v err=%v", result, err)
+			}
+		})
+	}
+}
