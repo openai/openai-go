@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -126,17 +127,69 @@ func TestBetaAgentFilesPreflightBeforeNetwork(t *testing.T) {
 }
 
 func TestBetaAgentFilesDirectoryPatternErrorBeforeNetwork(t *testing.T) {
-	var requests atomic.Int32
+	for _, populated := range []bool{false, true} {
+		t.Run(fmt.Sprintf("populated=%t", populated), func(t *testing.T) {
+			var requests atomic.Int32
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				requests.Add(1)
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = fmt.Fprint(w, `{"id":"unexpected"}`)
+			}))
+			defer server.Close()
+			client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+			directory := t.TempDir()
+			if populated {
+				if err := os.WriteFile(filepath.Join(directory, "nomatch.txt"), []byte("source"), 0600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			for _, malformed := range []string{"nomatch*[", "nomatch*[a-", "nomatch*[]"} {
+				for _, include := range [][]string{{malformed}, {"*.txt", malformed}} {
+					_, err := client.Beta.Agents.Environments.Files.PrepareDirectory(context.Background(), directory, "/workspace/data", include)
+					if !errors.Is(err, filepath.ErrBadPattern) || requests.Load() != 0 {
+						t.Fatalf("include=%v err=%v requests=%d", include, err, requests.Load())
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestBetaAgentFilesDirectoryPatternSyntaxMatchesFilepath(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requests.Add(1)
-		t.Error("invalid pattern made a request")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprint(w, `{"id":"file"}`)
 	}))
 	defer server.Close()
 	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
-	source := betaLocalFile(t, "nomatch.txt", "source")
-	_, err := client.Beta.Agents.Environments.Files.PrepareDirectory(context.Background(), filepath.Dir(source), "/workspace/data", []string{"nomatch*["})
-	if !errors.Is(err, filepath.ErrBadPattern) || requests.Load() != 0 {
-		t.Fatalf("err=%v requests=%d", err, requests.Load())
+	source := betaLocalFile(t, "a.txt", "source")
+	for _, pattern := range []string{`*.txt`, `[*a].txt`, `[a-*].txt`, `[*-a].txt`, `[?-*].txt`, `[\*a].txt`, `\*.txt`, `a\*.txt`, `a\\*.txt`, `nested\*.txt`} {
+		t.Run(pattern, func(t *testing.T) {
+			matches, matchErr := filepath.Match(pattern, "a.txt")
+			if matchErr != nil {
+				t.Fatal("fixture must be valid on this platform", matchErr)
+			}
+			prepared, err := client.Beta.Agents.Environments.Files.PrepareDirectory(context.Background(), filepath.Dir(source), "/workspace/data", []string{pattern})
+			if err != nil {
+				t.Fatal("valid pattern rejected", err)
+			}
+			expected := 0
+			if matches {
+				expected = 1
+			}
+			if len(prepared.Files) != expected {
+				t.Fatalf("original matching changed: got %d files, want %d", len(prepared.Files), expected)
+			}
+		})
+	}
+	// Backslash is an escape on Unix, but a separator on Windows.
+	_, err := client.Beta.Agents.Environments.Files.PrepareDirectory(context.Background(), filepath.Dir(source), "/workspace/data", []string{`nomatch*\`})
+	if runtime.GOOS == "windows" {
+		if err != nil {
+			t.Fatal("Windows separator rejected", err)
+		}
+	} else if !errors.Is(err, filepath.ErrBadPattern) {
+		t.Fatal("trailing escape accepted", err)
 	}
 }
 

@@ -72,7 +72,9 @@ func (r *BetaAgentEnvironmentFileService) PrepareDirectory(ctx context.Context, 
 		return nil, errors.New("include patterns must be explicit")
 	}
 	for _, pattern := range include {
-		if _, err := filepath.Match(pattern, ""); err != nil {
+		// Match can stop validating after an unmatched star-delimited chunk.
+		// For this syntax-only probe, ? preserves validity and forces a full scan.
+		if _, err := filepath.Match(strings.ReplaceAll(pattern, "*", "?"), ""); err != nil {
 			return nil, err
 		}
 	}
