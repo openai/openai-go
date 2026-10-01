@@ -162,7 +162,18 @@ func TestBetaAgentFilesDirectoryPatternSyntaxMatchesFilepath(t *testing.T) {
 	}))
 	defer server.Close()
 	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
-	source := betaLocalFile(t, "a.txt", "source")
+	rootName := "literal[root]"
+	if runtime.GOOS != "windows" {
+		rootName += `*?\`
+	}
+	directory := filepath.Join(t.TempDir(), rootName)
+	if err := os.Mkdir(directory, 0700); err != nil {
+		t.Fatal(err)
+	}
+	source := filepath.Join(directory, "a.txt")
+	if err := os.WriteFile(source, []byte("source"), 0600); err != nil {
+		t.Fatal(err)
+	}
 	for _, pattern := range []string{`*.txt`, `[*a].txt`, `[a-*].txt`, `[*-a].txt`, `[?-*].txt`, `[\*a].txt`, `\*.txt`, `a\*.txt`, `a\\*.txt`, `nested\*.txt`} {
 		t.Run(pattern, func(t *testing.T) {
 			matches, matchErr := filepath.Match(pattern, "a.txt")
@@ -625,5 +636,80 @@ func TestBetaAgentFilesCanceledBeforePreflight(t *testing.T) {
 	_, err = client.Beta.Agents.Environments.Files.Upload(ctx, "env", missing, "/workspace/input")
 	if !errors.Is(err, context.Canceled) {
 		t.Fatalf("upload should honor cancellation before accessing source: %v", err)
+	}
+}
+
+func TestBetaAgentFilesDirectoryOnlyVisitsIncludedPaths(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "literal[root]")
+	if err := os.Mkdir(root, 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "one.txt"), []byte("source"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	private := filepath.Join(root, "private")
+	if err := os.Mkdir(private, 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(private, 0); err != nil {
+		t.Skip("directory permissions unavailable", err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(private, 0700) })
+	if _, err := os.ReadDir(private); !os.IsPermission(err) {
+		t.Skip("platform does not enforce directory permissions")
+	}
+	var uploads atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		uploads.Add(1)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprint(w, `{"id":"file"}`)
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	for _, pattern := range []string{"one.txt", "*.txt"} {
+		prepared, err := client.Beta.Agents.Environments.Files.PrepareDirectory(context.Background(), root, "/workspace", []string{pattern})
+		if err != nil || len(prepared.Files) != 1 {
+			t.Fatalf("pattern=%q prepared=%v err=%v", pattern, prepared, err)
+		}
+	}
+	for _, pattern := range []string{"private/*.txt", "private/one.txt"} {
+		before := uploads.Load()
+		prepared, err := client.Beta.Agents.Environments.Files.PrepareDirectory(context.Background(), root, "/workspace", []string{"one.txt", pattern})
+		if err != nil || len(prepared.Files) != 1 || uploads.Load() != before+1 {
+			t.Fatalf("glob should skip unreadable entries: pattern=%q prepared=%v err=%v", pattern, prepared, err)
+		}
+	}
+}
+
+func TestBetaAgentFilesDirectoryExpansionIsNotRecursive(t *testing.T) {
+	root := t.TempDir()
+	for _, relative := range []string{"one.txt", "data/two.txt", "data/deeper/three.txt"} {
+		source := filepath.Join(root, filepath.FromSlash(relative))
+		if err := os.MkdirAll(filepath.Dir(source), 0700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(source, []byte("source"), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprint(w, `{"id":"file"}`)
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	for _, pattern := range []string{"data/*.txt", "**/*.txt"} {
+		prepared, err := client.Beta.Agents.Environments.Files.PrepareDirectory(context.Background(), root, "/workspace", []string{pattern})
+		if err != nil || len(prepared.Files) != 1 {
+			t.Fatalf("pattern=%q prepared=%v err=%v", pattern, prepared, err)
+		}
+	}
+	outside := filepath.Dir(betaLocalFile(t, "outside.txt", "outside"))
+	if err := os.Symlink(outside, filepath.Join(root, "linked")); err != nil {
+		t.Skip("symlinks unavailable", err)
+	}
+	prepared, err := client.Beta.Agents.Environments.Files.PrepareDirectory(context.Background(), root, "/workspace", []string{"linked/*.txt"})
+	if err != nil || len(prepared.Files) != 0 {
+		t.Fatalf("followed symlink directory: prepared=%v err=%v", prepared, err)
 	}
 }

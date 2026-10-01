@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"io"
-	"io/fs"
 	"maps"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"unicode/utf8"
@@ -56,10 +56,11 @@ func (r *BetaAgentEnvironmentFileService) Prepare(ctx context.Context, files map
 }
 
 // PrepareDirectory prepares a one-time selection of regular files. include is an
-// explicit list of filepath.Match patterns relative to directory (not a mount or
-// synchronization rule). Selected symlink entries are not followed. The directory
-// must be application-controlled and stable during preparation; this helper is
-// not a sandbox for untrusted paths or concurrent filesystem writers.
+// explicit list of filepath.Glob patterns relative to directory (not a mount or
+// synchronization rule). Glob skips missing or unreadable entries. Selected
+// symlink entries are not followed. The directory must be application-controlled
+// and stable during preparation; this helper is not a sandbox for untrusted paths
+// or concurrent filesystem writers.
 // The caller owns upload cleanup.
 func (r *BetaAgentEnvironmentFileService) PrepareDirectory(ctx context.Context, directory, destination string, include []string, opts ...option.RequestOption) (*BetaAgentPreparedFiles, error) {
 	if err := ctx.Err(); err != nil {
@@ -94,35 +95,51 @@ func (r *BetaAgentEnvironmentFileService) PrepareDirectory(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
+	// Keep the application-owned directory literal when composing the glob.
+	rootPattern := directory
+	if runtime.GOOS != "windows" {
+		rootPattern = strings.ReplaceAll(rootPattern, `\`, `\\`)
+	}
+	rootPattern = strings.NewReplacer("[", "[[]", "*", "[*]", "?", "[?]").Replace(rootPattern)
 	files := make(map[string]string)
-	err = filepath.WalkDir(directory, func(source string, entry fs.DirEntry, walkErr error) error {
-		if contextErr := ctx.Err(); contextErr != nil {
-			return contextErr
+	for _, pattern := range include {
+		if err := ctx.Err(); err != nil {
+			return nil, err
 		}
-		if walkErr != nil {
-			return walkErr
+		if !filepath.IsLocal(pattern) {
+			return nil, errors.New("include patterns must stay inside the selected directory")
 		}
-		if entry.IsDir() {
-			return nil
+		selected, selectErr := filepath.Glob(filepath.Join(rootPattern, pattern))
+		if selectErr != nil {
+			return nil, selectErr
 		}
-		relative, relErr := filepath.Rel(directory, source)
-		if relErr != nil {
-			return relErr
-		}
-		for _, pattern := range include {
-			matched, matchErr := filepath.Match(pattern, relative)
-			if matchErr != nil {
-				return matchErr
+		for _, source := range selected {
+			if err := ctx.Err(); err != nil {
+				return nil, err
 			}
-			if matched {
+			relative, relErr := filepath.Rel(directory, source)
+			if relErr != nil {
+				return nil, relErr
+			}
+			if !filepath.IsLocal(relative) {
+				return nil, errors.New("selected source is outside the directory")
+			}
+			parent := filepath.Dir(source)
+			realParent, parentErr := filepath.EvalSymlinks(parent)
+			if parentErr != nil {
+				return nil, parentErr
+			}
+			if realParent != parent {
+				continue
+			}
+			info, statErr := os.Lstat(source)
+			if statErr != nil {
+				return nil, statErr
+			}
+			if !info.IsDir() {
 				files[destination+"/"+filepath.ToSlash(relative)] = source
-				break
 			}
 		}
-		return nil
-	})
-	if err != nil {
-		return nil, err
 	}
 	return r.Prepare(ctx, files, opts...)
 }
