@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.70.0](https://github.com/openai/openai-go/compare/v3.69.0...v3.70.0) (2026-10-01)
+
+
+### Features
+
+* **agents:** Prepare files and download turn artifacts ([#1010](https://github.com/openai/openai-go/issues/1010)) ([f7a562d](https://github.com/openai/openai-go/commit/f7a562d546b88b11f6ece214a21e144bffb5db66))
+
+
+### Bug Fixes
+
+* **auth:** isolate cloud metadata token requests ([#1006](https://github.com/openai/openai-go/issues/1006)) ([f4cb102](https://github.com/openai/openai-go/commit/f4cb1021b8e3d08a6044ef72a80e9e4fd98c8efc))
+
 ## [3.69.0](https://github.com/openai/openai-go/compare/v3.68.0...v3.69.0) (2026-10-01)
 
 
