@@ -907,3 +907,67 @@ func TestBetaAgentAttachActionFrameAndProgressSnapshot(t *testing.T) {
 		})
 	}
 }
+
+func TestBetaAgentAttachRefreshesWaitingActionsAfterClose(t *testing.T) {
+	var waiting atomic.Bool
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case strings.HasSuffix(r.URL.Path, "/events"):
+			w.Header().Set("Content-Type", "text/event-stream")
+			w.WriteHeader(200)
+			w.(http.Flusher).Flush()
+			<-r.Context().Done()
+		case strings.HasSuffix(r.URL.Path, "/turns"):
+			_, _ = fmt.Fprint(w, `{"data":[{"id":"root","session_id":"session","status":"in_progress"}],"has_more":false}`)
+		case strings.HasSuffix(r.URL.Path, "/turns/root"):
+			status := "in_progress"
+			if waiting.Load() {
+				status = "waiting"
+			}
+			_, _ = fmt.Fprintf(w, `{"id":"root","session_id":"session","status":%q}`, status)
+		default:
+			_, _ = fmt.Fprint(w, `{"id":"session","status":"requires_action","required_actions":[{"type":"computer_use_approval_request","turn_id":"root","request_id":"approval"}]}`)
+		}
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	stream := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{})
+	_ = stream.Close()
+	waiting.Store(true)
+	_, err := stream.FinalResult()
+	var failure *openai.BetaAgentTurnResultError
+	if !errors.As(err, &failure) || failure.Reason != "requires_action" || len(failure.RequiredActions) != 1 {
+		t.Fatal("closed recovery lost new approval", err)
+	}
+}
+
+func TestBetaAgentAttachPrunesAcknowledgedFunctionDiagnostic(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case strings.HasSuffix(r.URL.Path, "/events"):
+			w.Header().Set("Content-Type", "text/event-stream")
+			_, _ = fmt.Fprintf(w, "data: %s\n\n", agentCall("call-event", "root", "answered", "unknown", `{}`))
+			w.(http.Flusher).Flush()
+			<-r.Context().Done()
+		case strings.HasSuffix(r.URL.Path, "/turns"):
+			_, _ = fmt.Fprint(w, `{"data":[{"id":"root","session_id":"session","status":"waiting"}],"has_more":false}`)
+		case strings.HasSuffix(r.URL.Path, "/turns/root"):
+			_, _ = fmt.Fprint(w, `{"id":"root","session_id":"session","status":"waiting"}`)
+		default:
+			_, _ = fmt.Fprint(w, `{"id":"session","status":"requires_action","required_actions":[{"type":"computer_use_approval_request","turn_id":"root","request_id":"approval"}]}`)
+		}
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	stream := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{}).WithResultCollection()
+	if !stream.Next() {
+		t.Fatal(stream.Err())
+	}
+	_, err := stream.FinalResult()
+	var failure *openai.BetaAgentTurnResultError
+	if !errors.As(err, &failure) || failure.Reason != "requires_action" || len(failure.RequiredActions) != 1 || failure.RequiredActions[0].Type != "computer_use_approval_request" {
+		t.Fatal("resolved function diagnostic retained", err)
+	}
+}

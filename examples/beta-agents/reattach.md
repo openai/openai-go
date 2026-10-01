@@ -17,7 +17,8 @@ For progress, call `WithResultCollection()` before iterating `Next()`, then call
 disconnect. Attaching to an idle session with no selected turn drains normally;
 `FinalResult()` reports `no_turn_selected`.
 
-Reattachment uses at-least-once tool-call delivery: an unacknowledged call may be
-delivered again after reconnecting. Applications are responsible for idempotency
-when handlers perform mutations. Closing the stream stops local observation, not
-hosted execution.
+Reattachment provides at-least-once tool-call delivery with application-owned
+recovery. If a worker exits, the application restarts it, recovers the saved
+session ID, and reattaches handlers. An unacknowledged call may be delivered again;
+applications own idempotency when handlers perform mutations. Closing observation
+leaves hosted execution running.

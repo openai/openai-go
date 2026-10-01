@@ -341,7 +341,9 @@ func (s *AgentSessionStream) attachmentManualActions(ctx context.Context) error 
 	// during progress iteration. Function diagnostics remain SSE-owned.
 	required := s.collector.required[:0]
 	for _, action := range s.collector.required {
-		if action.Type == "function_call" {
+		if action.Type == "function_call" && slices.ContainsFunc(session.RequiredActions, func(current AgentSessionRequiredActionUnion) bool {
+			return current.Type == "function_call" && current.TurnID == action.TurnID && current.CallID == action.CallID
+		}) {
 			required = append(required, action)
 		}
 	}
@@ -384,6 +386,10 @@ func (s *AgentSessionStream) reconcileAttachment(ctx context.Context) error {
 		c.required = nil
 	}
 	if !c.terminal {
+		a.turn = turn
+		if len(c.required) == 0 {
+			return s.attachmentManualActions(ctx)
+		}
 		return nil
 	}
 	messages := make(map[int64]AgentSessionMessage)
