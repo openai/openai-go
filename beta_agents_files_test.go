@@ -271,7 +271,7 @@ func TestBetaAgentFilesLimitsAreServerOwned(t *testing.T) {
 		}
 		for {
 			part, err := reader.NextPart()
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				break
 			}
 			if err != nil {
@@ -302,8 +302,8 @@ func TestBetaAgentFilesLimitsAreServerOwned(t *testing.T) {
 	}
 	directory := t.TempDir()
 	for i := 0; i < 51; i++ {
-		if err := os.WriteFile(filepath.Join(directory, fmt.Sprint(i)), nil, 0600); err != nil {
-			t.Fatal(err)
+		if writeErr := os.WriteFile(filepath.Join(directory, fmt.Sprint(i)), nil, 0600); writeErr != nil {
+			t.Fatal(writeErr)
 		}
 	}
 	prepared, err = client.Beta.Agents.Environments.Files.PrepareDirectory(context.Background(), directory, "/workspace", []string{"*"})
@@ -530,7 +530,7 @@ type betaCancelAfterRead struct {
 
 func (r *betaCancelAfterRead) Read(p []byte) (int, error) {
 	n, err := r.ReadCloser.Read(p)
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		r.cancel()
 	}
 	return n, err
