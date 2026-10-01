@@ -312,6 +312,7 @@ func (s *AgentSessionStream) attachmentActions(event AgentSessionEventUnion) {
 			required = append(required, action)
 		}
 		s.collector.required = required
+		s.collector.requiredCalls = nil
 	}
 	if event.Type == "agent.session.turn.item.added" && event.Item.Type == "function_call" && s.handlers[event.Item.Name] == nil {
 		var action AgentSessionRequiredActionUnion
@@ -319,10 +320,13 @@ func (s *AgentSessionStream) attachmentActions(event AgentSessionEventUnion) {
 			s.collector.collectionErr = err
 			return
 		}
-		if !slices.ContainsFunc(s.collector.required, func(existing AgentSessionRequiredActionUnion) bool {
-			return existing.Type == "function_call" && existing.TurnID == action.TurnID && existing.CallID == action.CallID
-		}) {
+		if s.collector.requiredCalls == nil {
+			s.collector.requiredCalls = betaAgentFunctionCallKeys(s.collector.required)
+		}
+		key := agentCallKey{action.TurnID, action.CallID}
+		if _, exists := s.collector.requiredCalls[key]; !exists {
 			s.collector.required = append(s.collector.required, action)
+			s.collector.requiredCalls[key] = struct{}{}
 		}
 	}
 }
@@ -340,6 +344,7 @@ func (s *AgentSessionStream) attachmentManualActions(ctx context.Context) error 
 	}
 	if session.Status != "requires_action" {
 		s.collector.required = nil
+		s.collector.requiredCalls = nil
 		return nil
 	}
 	if a.turn != nil && a.turn.Status != "waiting" {
@@ -347,15 +352,16 @@ func (s *AgentSessionStream) attachmentManualActions(ctx context.Context) error 
 	}
 	// Refresh manual diagnostics instead of duplicating actions already observed
 	// during progress iteration. Function diagnostics remain SSE-owned.
+	pendingCalls := betaAgentFunctionCallKeys(session.RequiredActions)
 	required := s.collector.required[:0]
 	for _, action := range s.collector.required {
-		if action.Type == "function_call" && slices.ContainsFunc(session.RequiredActions, func(current AgentSessionRequiredActionUnion) bool {
-			return current.Type == "function_call" && current.TurnID == action.TurnID && current.CallID == action.CallID
-		}) {
+		_, pending := pendingCalls[agentCallKey{action.TurnID, action.CallID}]
+		if action.Type == "function_call" && pending {
 			required = append(required, action)
 		}
 	}
 	s.collector.required = required
+	s.collector.requiredCalls = nil
 	for _, action := range session.RequiredActions {
 		manual := s.turnID != "" && action.Type == "computer_use_approval_request" && action.TurnID == s.turnID
 		if action.Type == "environment_connection" && (action.TurnID == "" || action.TurnID == s.turnID) {
@@ -392,6 +398,7 @@ func (s *AgentSessionStream) reconcileAttachment(ctx context.Context) error {
 	if c.terminal {
 		c.boundary = true
 		c.required = nil
+		c.requiredCalls = nil
 	}
 	if !c.terminal {
 		a.turn = turn
@@ -451,4 +458,14 @@ func (s *AgentSessionStream) attachmentReadError(err error) error {
 		s.attachment.observationFailed = true
 	}
 	return err
+}
+
+func betaAgentFunctionCallKeys(actions []AgentSessionRequiredActionUnion) map[agentCallKey]struct{} {
+	keys := make(map[agentCallKey]struct{})
+	for _, action := range actions {
+		if action.Type == "function_call" {
+			keys[agentCallKey{action.TurnID, action.CallID}] = struct{}{}
+		}
+	}
+	return keys
 }

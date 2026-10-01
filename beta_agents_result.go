@@ -167,6 +167,7 @@ type betaAgentTurnCollector struct {
 	sessionFailed bool
 	messages      map[int64]AgentSessionMessage
 	required      []AgentSessionRequiredActionUnion
+	requiredCalls map[agentCallKey]struct{}
 	collectionErr error
 	finalized     bool
 	result        *BetaAgentTurnResult
@@ -201,6 +202,7 @@ func (c *betaAgentTurnCollector) Accumulate(event AgentSessionEventUnion) {
 		c.sessionID = event.Session.ID
 	case "agent.session.requires_action":
 		c.required = nil
+		c.requiredCalls = nil
 		for _, action := range event.Session.RequiredActions {
 			var copy AgentSessionRequiredActionUnion
 			if c.collectionErr = json.Unmarshal([]byte(action.RawJSON()), &copy); c.collectionErr != nil {
@@ -210,12 +212,14 @@ func (c *betaAgentTurnCollector) Accumulate(event AgentSessionEventUnion) {
 		}
 	case "agent.session.in_progress":
 		c.required = nil
+		c.requiredCalls = nil
 	case "agent.session.failed":
 		c.sessionFailed = true
 	case "agent.session.idle":
 		if c.terminal {
 			c.boundary = true
 			c.required = nil
+			c.requiredCalls = nil
 		}
 	case "agent.session.turn.created":
 		if c.turn == nil && event.Turn.SubagentID == "" {
@@ -240,6 +244,7 @@ func (c *betaAgentTurnCollector) Accumulate(event AgentSessionEventUnion) {
 		c.setTurn(event.Turn)
 		c.terminal = true
 		c.required = nil
+		c.requiredCalls = nil
 	case "agent.session.turn.item.done":
 		if event.Item.Type != "message" || event.Item.Role != "assistant" || event.Item.Status != "completed" || event.Item.Phase == "commentary" {
 			return
@@ -284,7 +289,7 @@ func (c *betaAgentTurnCollector) finalResult(cause error) (*BetaAgentTurnResult,
 		return c.result, c.err
 	}
 	c.finalized = true
-	defer func() { c.messages = nil; c.required = nil; c.turn = nil; c.collectionErr = nil }()
+	defer func() { c.messages = nil; c.required = nil; c.requiredCalls = nil; c.turn = nil; c.collectionErr = nil }()
 	messages := make([]AgentSessionMessage, 0, len(c.messages))
 	for _, index := range slices.Sorted(maps.Keys(c.messages)) {
 		messages = append(messages, c.messages[index])

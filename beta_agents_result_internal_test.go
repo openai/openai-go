@@ -40,7 +40,7 @@ func TestBetaAgentCollectorRetainsOnlyFinalPayload(t *testing.T) {
 	if err != nil || result.OutputText() != "answer" {
 		t.Fatalf("result=%v err=%v", result, err)
 	}
-	if c.messages != nil || c.turn != nil || c.required != nil {
+	if c.messages != nil || c.turn != nil || c.required != nil || c.requiredCalls != nil {
 		t.Fatal("collector retained transferred result state")
 	}
 }
@@ -113,5 +113,26 @@ func TestBetaAgentCollectionOptInPublicStream(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func TestBetaAgentAttachActionIndexIsOptInAndReleased(t *testing.T) {
+	var event AgentSessionEventUnion
+	if err := json.Unmarshal([]byte(`{"type":"agent.session.turn.item.added","turn_id":"root","item":{"type":"function_call","turn_id":"root","call_id":"call","name":"unknown","arguments":{}}}`), &event); err != nil {
+		t.Fatal(err)
+	}
+	stream := &AgentSessionStream{attachment: &betaAgentAttachment{}}
+	stream.attachmentActions(event)
+	if stream.collector.requiredCalls != nil {
+		t.Fatal("raw iteration allocated a diagnostic index")
+	}
+	stream.collector.enable()
+	stream.attachmentActions(event)
+	if len(stream.collector.requiredCalls) != 1 {
+		t.Fatal("missing collected diagnostic index")
+	}
+	_, _ = stream.collector.finalResult(nil)
+	if stream.collector.requiredCalls != nil || stream.collector.required != nil {
+		t.Fatal("finalization retained diagnostic state")
 	}
 }
