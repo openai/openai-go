@@ -37,7 +37,8 @@ func (r BetaAgentTurnResult) OutputText() string {
 // This beta helper is experimental.
 type BetaAgentTurnResultError struct {
 	// Reason is turn_failed, turn_cancelled, session_failed, requires_action,
-	// observation_failed, observation_incomplete, collection_not_enabled, or unsupported_stream.
+	// observation_failed, observation_incomplete, collection_not_enabled,
+	// no_turn_selected, or unsupported_stream.
 	Reason          string
 	SessionID       string
 	Turn            *Turn
