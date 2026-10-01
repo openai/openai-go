@@ -298,7 +298,7 @@ func agentStreamResponseGuard[T any]() (option.RequestOption, option.RequestOpti
 	require := requestconfig.RequestOptionFunc(func(cfg *requestconfig.RequestConfig) error {
 		actual, ok := cfg.ResponseBodyInto.(**T)
 		if !ok || actual != destination {
-			return errors.New("sessions.Stream does not support WithResponseBodyInto; typed session and event decoding is required")
+			return errors.New("beta Agents helpers do not support WithResponseBodyInto; typed decoding is required")
 		}
 		return nil
 	})
