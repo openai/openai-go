@@ -126,7 +126,7 @@ func (s *AgentSessionStream) FinalResult() (*BetaAgentTurnResult, error) {
 		}()
 	}
 	s.seedAttachmentCollector()
-	if s.Err() == nil {
+	if s.Err() == nil && !c.sessionFailed {
 		if err := s.attachmentManualActions(ctx); err != nil {
 			c.collectionErr = err
 		}

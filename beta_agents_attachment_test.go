@@ -1034,3 +1034,23 @@ func TestBetaAgentAttachDeduplicatesPendingFunctionDiagnostics(t *testing.T) {
 		t.Fatal("replayed function diagnostic duplicated", err)
 	}
 }
+
+func TestBetaAgentAttachKnownSessionFailureDoesNotRefresh(t *testing.T) {
+	var requests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if requests.Add(1) > 1 {
+			t.Error("requested snapshot after known session failure")
+			http.Error(w, "unavailable", 503)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprint(w, `{"id":"session","status":"failed"}`)
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
+	_, err := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{}).FinalResult()
+	var failure *openai.BetaAgentTurnResultError
+	if !errors.As(err, &failure) || failure.Reason != "session_failed" || requests.Load() != 1 {
+		t.Fatalf("requests=%d err=%v", requests.Load(), err)
+	}
+}
