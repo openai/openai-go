@@ -70,7 +70,7 @@ func TestBetaAgentFilesPrepareAndStage(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithHeader("X-File-Test", "kept"))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithHeader("X-File-Test", "kept"))
 	source := betaLocalFile(t, "input.txt", "source")
 	prepared, err := client.Beta.Agents.Environments.Files.Prepare(context.Background(), map[string]string{"/workspace/input.txt": source})
 	if err != nil || len(prepared.Uploads) != 1 || len(prepared.Files) != 1 {
@@ -93,7 +93,7 @@ func TestBetaAgentFilesPreflightBeforeNetwork(t *testing.T) {
 		t.Error("invalid selection made a request")
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
 	source := betaLocalFile(t, "input.txt", "source")
 	for _, destination := range []string{"/workspace/\xff", "/workspace/\xfe", "/tmp/source", "/workspace/a/../b", "/workspace/a//b", "/workspace/.codex/source", "/workspace/.managed-agents-x/source", "/workspace/outputs", "/workspace/"} {
 		if _, err := client.Beta.Agents.Environments.Files.Prepare(context.Background(), map[string]string{destination: source}); err == nil {
@@ -132,7 +132,7 @@ func TestBetaAgentFilesDirectoryPatternErrorBeforeNetwork(t *testing.T) {
 		t.Error("invalid pattern made a request")
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
 	source := betaLocalFile(t, "nomatch.txt", "source")
 	_, err := client.Beta.Agents.Environments.Files.PrepareDirectory(context.Background(), filepath.Dir(source), "/workspace/data", []string{"nomatch*["})
 	if !errors.Is(err, filepath.ErrBadPattern) || requests.Load() != 0 {
@@ -153,7 +153,7 @@ func TestBetaAgentFilesPartialUploadsAndIdempotency(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
 	source := betaLocalFile(t, "input.txt", "source")
 	files := map[string]string{"/workspace/a": source, "/workspace/b": source}
 	prepared, err := client.Beta.Agents.Environments.Files.Prepare(context.Background(), files)
@@ -163,7 +163,7 @@ func TestBetaAgentFilesPartialUploadsAndIdempotency(t *testing.T) {
 	}
 	before := requests.Load()
 	for _, opts := range [][]option.RequestOption{{option.WithHeader("Idempotency-Key", "call-key")}, nil} {
-		keyed := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithHeader("Idempotency-Key", "default-key"))
+		keyed := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithHeader("Idempotency-Key", "default-key"))
 		if _, err := keyed.Beta.Agents.Environments.Files.Prepare(context.Background(), files, opts...); err == nil {
 			t.Error("reused batch idempotency key")
 		}
@@ -187,7 +187,7 @@ func TestBetaAgentFilesDirectorySelection(t *testing.T) {
 		_, _ = fmt.Fprint(w, `{"id":"selected"}`)
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
 	prepared, err := client.Beta.Agents.Environments.Files.PrepareDirectory(context.Background(), directory, "/workspace/data", []string{"*.txt"})
 	if err != nil || len(prepared.Files) != 1 || requests.Load() != 1 {
 		t.Fatalf("selection=%v err=%v", prepared, err)
@@ -224,7 +224,7 @@ func TestBetaAgentResultArtifactDownload(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
 	result := &openai.BetaAgentTurnResult{Turn: openai.Turn{ID: "root", SessionID: "session"}}
 	artifacts := client.Beta.Agents.Sessions.Artifacts.ForResult(result)
 	if pages.Load() != 0 {
@@ -249,7 +249,7 @@ func TestBetaAgentResultArtifactMissingAndAmbiguous(t *testing.T) {
 				_, _ = fmt.Fprint(w, body)
 			}))
 			defer server.Close()
-			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+			client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
 			_, err := client.Beta.Agents.Sessions.Artifacts.ForResult(&openai.BetaAgentTurnResult{Turn: openai.Turn{ID: "root", SessionID: "session"}}).Download(context.Background(), "same", io.Discard)
 			if err == nil {
 				t.Fatal("expected lookup error")
@@ -293,7 +293,7 @@ func TestBetaAgentFilesStageFailureRetainsUpload(t *testing.T) {
 		_, _ = fmt.Fprint(w, `{"error":{"message":"staging failed"}}`)
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
 	_, err := client.Beta.Agents.Environments.Files.Upload(context.Background(), "env", betaLocalFile(t, "input", "source"), "/workspace/source")
 	var failure *openai.BetaAgentFilePreparationError
 	if !errors.As(err, &failure) || len(failure.Prepared.Uploads) != 1 || failure.Prepared.Uploads[0].ID != "owned" {
@@ -312,7 +312,7 @@ func TestBetaAgentFilesIdempotencyHeaderOverride(t *testing.T) {
 		_, _ = fmt.Fprintf(w, `{"id":"file-%d"}`, id)
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithHeader("Idempotency-Key", "default-key"))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithHeader("Idempotency-Key", "default-key"))
 	source := betaLocalFile(t, "source", "synthetic")
 	prepared, err := client.Beta.Agents.Environments.Files.Prepare(context.Background(), map[string]string{"/workspace/a": source, "/workspace/b": source}, option.WithHeaderDel("Idempotency-Key"))
 	if err != nil || len(prepared.Uploads) != 2 || requests.Load() != 2 {
@@ -341,7 +341,7 @@ func TestBetaAgentFilesTrustedParentAlias(t *testing.T) {
 		_, _ = fmt.Fprint(w, `{"id":"file","object":"file"}`)
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
 	selected := filepath.Join(alias, "selected")
 	if _, err := client.Beta.Agents.Environments.Files.Prepare(context.Background(), map[string]string{"/workspace/input.txt": filepath.Join(selected, "input.txt")}); err != nil {
 		t.Fatal("trusted file parent alias rejected", err)
@@ -402,7 +402,7 @@ func TestBetaAgentFilesDestinationCharacterLimit(t *testing.T) {
 		_, _ = fmt.Fprint(w, `{"id":"file"}`)
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
 	source := betaLocalFile(t, "input", "source")
 	for _, character := range []string{"a", "🙂"} {
 		destination := "/workspace/" + strings.Repeat(character, 4096-len("/workspace/"))
@@ -432,7 +432,7 @@ func TestBetaAgentFilesEmptyResponsePreservesUploads(t *testing.T) {
 				}
 			}))
 			defer server.Close()
-			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+			client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
 			source := betaLocalFile(t, "input", "source")
 			var err error
 			if stage {
@@ -460,7 +460,7 @@ func TestBetaAgentFilesCancellationBetweenUploads(t *testing.T) {
 		_, _ = fmt.Fprint(w, `{"id":"owned"}`)
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0), option.WithMiddleware(func(r *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0), option.WithMiddleware(func(r *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 		response, err := next(r)
 		if err == nil {
 			// Cancel only after the response body can be consumed by the generated decoder.
