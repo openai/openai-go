@@ -1,6 +1,7 @@
 package openai
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -102,21 +103,37 @@ func (s *AgentSessionStream) WithResultCollection() *AgentSessionStream {
 // collection automatically; call WithResultCollection before reading events first.
 // The result is cached. Unhandled actions return a BetaAgentTurnResultError
 // rather than waiting indefinitely. Closing observation does not cancel the turn.
+// An attachment can explicitly recover a result after Close; Close during this
+// getter cancels its local reads.
 func (s *AgentSessionStream) FinalResult() (*BetaAgentTurnResult, error) {
 	c := &s.collector
 	c.enable()
 	if c.finalized {
 		return c.result, c.err
 	}
+	ctx := s.ctx
+	if s.attachment != nil {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithCancel(s.attachment.ctx)
+		s.recoveryMu.Lock()
+		s.recoveryCancel = cancel
+		s.recoveryMu.Unlock()
+		defer func() {
+			cancel()
+			s.recoveryMu.Lock()
+			s.recoveryCancel = nil
+			s.recoveryMu.Unlock()
+		}()
+	}
 	s.seedAttachmentCollector()
 	if s.Err() == nil {
-		if err := s.attachmentManualActions(); err != nil {
+		if err := s.attachmentManualActions(ctx); err != nil {
 			c.collectionErr = err
 		}
 	}
 	for !c.stopped(s.handlers) && s.Next() {
 	}
-	_ = s.Close()
+	_ = s.closeObservation()
 	if s.attachment != nil {
 		if s.turnID == "" && s.attachment.idle && s.Err() == nil && !c.sessionFailed {
 			c.finalized = true
@@ -124,9 +141,9 @@ func (s *AgentSessionStream) FinalResult() (*BetaAgentTurnResult, error) {
 			return nil, c.err
 		}
 		if c.collectionErr == nil && (s.Err() == nil || s.attachment.observationFailed) {
-			if err := s.reconcileAttachment(); err != nil {
+			if err := s.reconcileAttachment(ctx); err != nil {
 				c.collectionErr = err
-				if s.attachment.observationFailed {
+				if s.attachment.observationFailed && s.Err() != nil {
 					c.collectionErr = s.Err()
 				}
 			}

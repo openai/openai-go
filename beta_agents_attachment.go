@@ -36,7 +36,7 @@ func (s *AgentSessionStream) attachSession(ctx context.Context) *AgentSessionStr
 	}
 	if session.Status == "failed" {
 		s.collector.sessionFailed = true
-		_ = s.Close()
+		_ = s.closeObservation()
 		return s
 	}
 	baseline, err := s.latestAttachmentRoot(s.ctx)
@@ -67,7 +67,7 @@ func (s *AgentSessionStream) attachSession(ctx context.Context) *AgentSessionStr
 		}
 		s.selectAttachmentTurn(turn)
 		if s.attachment.terminal {
-			_ = s.Close()
+			_ = s.closeObservation()
 			return s
 		}
 	}
@@ -78,7 +78,7 @@ func (s *AgentSessionStream) attachSession(ctx context.Context) *AgentSessionStr
 	}
 	if session.Status == "failed" {
 		s.collector.sessionFailed = true
-		_ = s.Close()
+		_ = s.closeObservation()
 		return s
 	}
 	if s.turnID == "" {
@@ -95,7 +95,7 @@ func (s *AgentSessionStream) attachSession(ctx context.Context) *AgentSessionStr
 	}
 	if s.attachment.terminal || (session.Status == "idle" && s.turnID == "") {
 		s.attachment.idle = session.Status == "idle"
-		_ = s.Close()
+		_ = s.closeObservation()
 	}
 	// A non-idle session with no new visible root may still be starting work.
 	// Keep observing; an unchanged historical terminal root is not a no-work signal.
@@ -127,6 +127,22 @@ func (s *AgentSessionStream) observeAttachment(event AgentSessionEventUnion) (bo
 		return true, nil
 	}
 	if event.Type == "agent.session.idle" {
+		if s.turnID == "" {
+			session, err := s.attachmentSession(s.ctx)
+			if err != nil {
+				return false, err
+			}
+			latest, err := s.latestAttachmentRoot(s.ctx)
+			if err != nil {
+				return false, err
+			}
+			if latest != nil && latest.ID != s.attachment.baselineID {
+				s.selectAttachmentTurn(latest)
+			}
+			if s.turnID == "" && session.Status != "idle" {
+				return false, nil
+			}
+		}
 		if s.turnID != "" && !s.attachment.terminal {
 			turn, err := s.attachmentTurn(s.ctx, s.turnID)
 			if err != nil {
@@ -166,11 +182,19 @@ func (s *AgentSessionStream) observeAttachment(event AgentSessionEventUnion) (bo
 				}
 			}
 			s.selectAttachmentTurn(turn)
+			if s.collector.enabled {
+				if err := s.attachmentManualActions(s.ctx); err != nil {
+					return false, err
+				}
+			}
 		}
 	}
 	// The root session stream contains root items; successor work belongs to a
 	// separate attachment. Never dispatch a call from a different root.
 	if id != "" && id != s.turnID {
+		if s.turnID != "" && ((event.Type == "agent.session.turn.created" && event.Turn.SubagentID == "") || (event.Type == "agent.session.turn.item.added" && event.Item.Type == "function_call")) {
+			return false, s.refreshAttachmentTurn()
+		}
 		return false, nil
 	}
 	if id == s.turnID && id != "" && (event.Type == "agent.session.turn.completed" || event.Type == "agent.session.turn.failed" || event.Type == "agent.session.turn.cancelled") {
@@ -179,13 +203,21 @@ func (s *AgentSessionStream) observeAttachment(event AgentSessionEventUnion) (bo
 	return true, nil
 }
 
+func (s *AgentSessionStream) refreshAttachmentTurn() error {
+	turn, err := s.attachmentTurn(s.ctx, s.turnID)
+	if err == nil {
+		s.selectAttachmentTurn(turn)
+	}
+	return err
+}
+
 func (s *AgentSessionStream) seedAttachmentCollector() {
 	a := s.attachment
 	c := &s.collector
 	if a == nil || !c.enabled {
 		return
 	}
-	if c.turn == nil && a.turn != nil {
+	if a.turn != nil && (c.turn == nil || betaAgentTurnTerminal(a.turn)) {
 		c.setTurn(*a.turn)
 	}
 	if betaAgentTurnTerminal(c.turn) {
@@ -210,6 +242,9 @@ func (s *AgentSessionStream) attachmentActions(event AgentSessionEventUnion) {
 					return
 				}
 				if latest == nil || latest.ID != s.turnID || latest.Status != "waiting" {
+					if s.turnID != "" {
+						s.collector.collectionErr = s.refreshAttachmentTurn()
+					}
 					continue
 				}
 			}
@@ -229,26 +264,30 @@ func (s *AgentSessionStream) attachmentActions(event AgentSessionEventUnion) {
 
 // Only manual actions use the snapshot as a diagnostic. Function execution and
 // unhandled-function errors come exclusively from delivered SSE calls.
-func (s *AgentSessionStream) attachmentManualActions() error {
+func (s *AgentSessionStream) attachmentManualActions(ctx context.Context) error {
 	a := s.attachment
-	if a == nil || a.turn == nil || a.turn.Status != "waiting" || a.terminal || a.idle {
+	if a == nil || (a.turn != nil && a.turn.Status != "waiting" && len(s.collector.required) == 0) || a.terminal || a.idle {
 		return nil
 	}
-	session, err := s.attachmentSession(a.ctx)
+	session, err := s.attachmentSession(ctx)
 	if err != nil {
 		return err
 	}
 	if session.Status != "requires_action" {
+		s.collector.required = nil
+		return nil
+	}
+	if a.turn != nil && a.turn.Status != "waiting" {
 		return nil
 	}
 	for _, action := range session.RequiredActions {
-		manual := action.Type == "computer_use_approval_request" && action.TurnID == s.turnID
+		manual := s.turnID != "" && action.Type == "computer_use_approval_request" && action.TurnID == s.turnID
 		if action.Type == "environment_connection" && (action.TurnID == "" || action.TurnID == s.turnID) {
-			latest, listErr := s.latestAttachmentRoot(a.ctx)
+			latest, listErr := s.latestAttachmentRoot(ctx)
 			if listErr != nil {
 				return listErr
 			}
-			manual = latest != nil && latest.ID == s.turnID && latest.Status == "waiting"
+			manual = (s.turnID == "" && latest == nil) || (latest != nil && latest.ID == s.turnID && latest.Status == "waiting")
 		}
 		if manual {
 			s.collector.required = append(s.collector.required, action)
@@ -257,12 +296,12 @@ func (s *AgentSessionStream) attachmentManualActions() error {
 	return nil
 }
 
-func (s *AgentSessionStream) reconcileAttachment() error {
+func (s *AgentSessionStream) reconcileAttachment(ctx context.Context) error {
 	a := s.attachment
 	if a == nil || s.turnID == "" {
 		return nil
 	}
-	turn, err := s.attachmentTurn(a.ctx, s.turnID)
+	turn, err := s.attachmentTurn(ctx, s.turnID)
 	if err != nil {
 		return err
 	}
@@ -285,7 +324,7 @@ func (s *AgentSessionStream) reconcileAttachment() error {
 	service := s.sessions.Items
 	capture, require := agentStreamResponseGuard[pagination.CursorPage[AgentSessionItemUnion]]()
 	service.Options = append([]option.RequestOption{capture}, service.Options...)
-	items := service.ListAutoPaging(a.ctx, s.sessionID, BetaAgentSessionItemListParams{Order: "asc"}, append(slices.Clone(s.options), require)...)
+	items := service.ListAutoPaging(ctx, s.sessionID, BetaAgentSessionItemListParams{Order: "asc"}, append(slices.Clone(s.options), require)...)
 	for items.Next() {
 		item := items.Current()
 		if item.TurnID != s.turnID || item.Type != "message" || item.Role != "assistant" || item.Status != "completed" || item.Phase == "commentary" {

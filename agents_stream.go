@@ -41,28 +41,30 @@ type AgentSessionStreamParams struct {
 // It is not safe to iterate concurrently. Close may be called concurrently to
 // unblock iteration; it closes local resources without cancelling the backend turn.
 type AgentSessionStream struct {
-	attachment   *betaAgentAttachment
-	collector    betaAgentTurnCollector
-	ctx          context.Context
-	cancel       context.CancelFunc
-	sessions     *BetaAgentSessionService
-	sessionID    string
-	options      []option.RequestOption
-	handlers     map[string]AgentToolHandler
-	stream       *ssestream.Stream[AgentSessionEventUnion]
-	current      AgentSessionEventUnion
-	err          error
-	closed       atomic.Bool
-	closeOnce    sync.Once
-	closeErr     error
-	turnID       string
-	turnEnded    bool
-	recent       [1024]string
-	recentCount  int
-	recentNext   int
-	eventIDs     map[string]struct{}
-	handledCalls map[agentCallKey]struct{}
-	pending      *agentPendingCall
+	recoveryMu     sync.Mutex
+	recoveryCancel context.CancelFunc
+	attachment     *betaAgentAttachment
+	collector      betaAgentTurnCollector
+	ctx            context.Context
+	cancel         context.CancelFunc
+	sessions       *BetaAgentSessionService
+	sessionID      string
+	options        []option.RequestOption
+	handlers       map[string]AgentToolHandler
+	stream         *ssestream.Stream[AgentSessionEventUnion]
+	current        AgentSessionEventUnion
+	err            error
+	closed         atomic.Bool
+	closeOnce      sync.Once
+	closeErr       error
+	turnID         string
+	turnEnded      bool
+	recent         [1024]string
+	recentCount    int
+	recentNext     int
+	eventIDs       map[string]struct{}
+	handledCalls   map[agentCallKey]struct{}
+	pending        *agentPendingCall
 }
 
 type agentCallKey struct{ turnID, callID string }
@@ -170,7 +172,7 @@ func (s *AgentSessionStream) Next() (ok bool) {
 	// Also release the connection when application handler code panics.
 	defer func() {
 		if !ok {
-			_ = s.Close()
+			_ = s.closeObservation()
 		}
 	}()
 	if err := s.ctx.Err(); err != nil {
@@ -193,6 +195,11 @@ func (s *AgentSessionStream) Next() (ok bool) {
 			return s.finish(observeErr)
 		}
 		if !accepted {
+			if s.attachment != nil && s.attachment.terminal {
+				s.seedAttachmentCollector()
+				_ = s.closeObservation()
+				return false
+			}
 			continue
 		}
 		s.seedAttachmentCollector()
@@ -200,13 +207,14 @@ func (s *AgentSessionStream) Next() (ok bool) {
 			continue
 		}
 		s.collector.Accumulate(event)
+		s.attachmentActions(event)
+		s.seedAttachmentCollector()
 		if s.attachment != nil && s.attachment.terminal && s.collector.enabled {
 			s.collector.boundary = true
 		}
-		s.attachmentActions(event)
 		s.current = event
 		if event.Type == "agent.session.failed" || (s.attachment != nil && s.attachment.terminal) || (event.Type == "agent.session.idle" && (s.turnEnded || s.attachment != nil)) {
-			_ = s.Close()
+			_ = s.closeObservation()
 		} else if event.Type == "agent.session.turn.item.added" && event.Item.Type == "function_call" {
 			key := agentCallKey{event.Item.TurnID, event.Item.CallID}
 			if _, exists := s.handledCalls[key]; !exists {
@@ -262,10 +270,23 @@ func (s *AgentSessionStream) Current() AgentSessionEventUnion { return s.current
 // Err returns the first request, stream, or tool-result submission error.
 func (s *AgentSessionStream) Err() error { return s.err }
 
-func (s *AgentSessionStream) finish(err error) bool { s.err = err; _ = s.Close(); return false }
+func (s *AgentSessionStream) finish(err error) bool {
+	s.err = err
+	_ = s.closeObservation()
+	return false
+}
 
 // Close releases local resources without sending backend cancellation.
 func (s *AgentSessionStream) Close() error {
+	s.recoveryMu.Lock()
+	if s.recoveryCancel != nil {
+		s.recoveryCancel()
+	}
+	s.recoveryMu.Unlock()
+	return s.closeObservation()
+}
+
+func (s *AgentSessionStream) closeObservation() error {
 	s.closeOnce.Do(func() {
 		s.closed.Store(true)
 		s.cancel()
