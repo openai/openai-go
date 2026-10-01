@@ -36,7 +36,7 @@ func TestResponsesWebSocketResponseInto(t *testing.T) {
 				_, _, _ = socket.Read(r.Context())
 			}))
 			defer server.Close()
-			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic-key"))
+			client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic-key"))
 			ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
 			defer cancel()
 			var response *http.Response
@@ -84,7 +84,7 @@ func TestResponsesWebSocketRefreshesRejectedWorkloadToken(t *testing.T) {
 				}
 				return transport.RoundTrip(r)
 			})}
-			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithHTTPClient(httpClient), option.WithMaxRetries(retries), option.WithWorkloadIdentity(auth.WorkloadIdentity{IdentityProviderID: "synthetic-idp", ServiceAccountID: "synthetic-account", Provider: &websocketSubjectTokenProvider{}}))
+			client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithHTTPClient(httpClient), option.WithMaxRetries(retries), option.WithWorkloadIdentity(auth.WorkloadIdentity{IdentityProviderID: "synthetic-idp", ServiceAccountID: "synthetic-account", Provider: &websocketSubjectTokenProvider{}}))
 			ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
 			defer cancel()
 			connection, err := client.Responses.Connect(ctx, responses.ResponseConnectionOptions{})

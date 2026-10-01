@@ -123,7 +123,7 @@ func TestResponsesWebSocketSharedContract(t *testing.T) {
 				serverResult <- nil
 			}))
 			defer server.Close()
-			client := openai.NewClient(option.WithBaseURL(server.URL+"/v1"), option.WithAPIKey("fixture-key"))
+			client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL+"/v1"), option.WithAPIKey("fixture-key"))
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 			connection, err := client.Responses.Connect(ctx, responses.ResponseConnectionOptions{})

@@ -61,7 +61,7 @@ func TestBetaAgentTypedCreationWireAndResult(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
 	stream := client.Beta.Agents.Sessions.NewStreaming(context.Background(), openai.BetaAgentSessionNewParams{Agent: openai.BetaAgentSessionNewParamsAgent{Text: openai.AgentTextParam{Format: output.Format()}}})
 	defer func() { _ = stream.Close() }()
 	result, err := output.FinalResult(stream)

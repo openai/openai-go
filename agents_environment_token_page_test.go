@@ -52,7 +52,7 @@ func TestEnvironmentFilesTokenPagination(t *testing.T) {
 		})
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithAPIKey("synthetic"), option.WithBaseURL(server.URL+"/v1"), option.WithMaxRetries(0))
+	client := openai.NewClient(option.WithAPIKey("synthetic"), option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL+"/v1"), option.WithMaxRetries(0))
 	pager := client.Beta.Agents.Environments.Files.ListAutoPaging(context.Background(), "env_test", openai.BetaAgentEnvironmentFileListParams{
 		Path: openai.String("/workspace/test"), Order: "asc", Limit: openai.Int(1),
 	}, option.WithHeader("X-Pagination-Test", "preserved"))

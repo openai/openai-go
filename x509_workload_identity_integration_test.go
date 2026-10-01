@@ -106,7 +106,7 @@ func TestX509WorkloadIdentityRejectsUnsafeConfiguredOriginsBeforeExchange(t *tes
 		{name: "environment Azure", env: "https://resource.openai.azure.com/v1/"},
 		{name: "environment EU", env: "https://eu.api.openai.com/v1/"},
 		{name: "explicit attacker", opts: []option.RequestOption{option.WithBaseURL("https://attacker.example.test/v1/")}},
-		{name: "explicit plaintext", opts: []option.RequestOption{option.WithBaseURL("http://mtls.api.openai.com/v1/")}},
+		{name: "explicit plaintext", opts: []option.RequestOption{option.WithUnsafeAllowHTTP(), option.WithBaseURL("http://mtls.api.openai.com/v1/")}},
 		{name: "data residency EU", opts: []option.RequestOption{option.WithDataResidency(option.DataResidencyEU)}},
 		{name: "data residency global", opts: []option.RequestOption{option.WithDataResidency(option.DataResidencyGlobal)}},
 	} {
@@ -625,7 +625,7 @@ func TestX509WorkloadIdentityOnlySelectedAuthenticationControlsEndpoint(t *testi
 				option.WithHTTPClient(ordinaryClient),
 			}
 			if test.methodURL != "" {
-				opts = append(opts, option.WithBaseURL(test.methodURL))
+				opts = append(opts, option.WithUnsafeAllowHTTP(), option.WithBaseURL(test.methodURL))
 			}
 			if _, err := client.Models.List(t.Context(), opts...); err != nil {
 				t.Fatalf("ordinary method workload did not replace X.509 authentication: %v", err)

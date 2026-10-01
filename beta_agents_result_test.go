@@ -40,7 +40,7 @@ func betaResultCreateStream(t *testing.T, events []string, stayOpen bool) *ssest
 	t.Cleanup(server.Close)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
 	// Keep a concrete assignment: changing NewStreaming's return type is a source break.
 	var stream *ssestream.Stream[openai.AgentSessionEventUnion] = client.Beta.Agents.Sessions.NewStreaming(ctx, openai.BetaAgentSessionNewParams{})
 	t.Cleanup(func() { _ = stream.Close() })

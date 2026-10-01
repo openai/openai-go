@@ -68,7 +68,7 @@ func (tr agentHelperTransport) RoundTrip(r *http.Request) (*http.Response, error
 func newAgentHelperServer(t *testing.T, events ...string) (*agentHelperServer, openai.Client) {
 	t.Helper()
 	m := &agentHelperServer{status: "idle", events: events}
-	m.server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	m.server = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet && !strings.HasSuffix(r.URL.Path, "/events") {
 			m.mu.Lock()
 			m.reads++
@@ -483,7 +483,7 @@ func TestAgentsHelperListedMessageOutputText(t *testing.T) {
 		_, _ = io.WriteString(w, `{"data":[{"id":"message","type":"message","role":"assistant","phase":"commentary","content":[{"type":"output_text","text":"hello"},{"type":"input_image","image_url":"synthetic"},{"type":"output_text","text":" world"}]}],"has_more":false}`)
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithAPIKey("synthetic"), option.WithBaseURL(server.URL), option.WithMaxRetries(0))
+	client := openai.NewClient(option.WithAPIKey("synthetic"), option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithMaxRetries(0))
 	page, err := client.Beta.Agents.Sessions.Items.List(context.Background(), "session", openai.BetaAgentSessionItemListParams{})
 	if err != nil {
 		t.Fatal(err)
