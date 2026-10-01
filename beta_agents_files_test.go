@@ -375,3 +375,57 @@ func TestBetaAgentResultArtifactWriterFailureClosesBody(t *testing.T) {
 		t.Fatalf("writer failure lost metadata or left body open: %v %v", artifact, err)
 	}
 }
+
+func TestBetaAgentFilesDestinationCharacterLimit(t *testing.T) {
+	var requests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests.Add(1)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprint(w, `{"id":"file"}`)
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	source := betaLocalFile(t, "input", "source")
+	for _, character := range []string{"a", "🙂"} {
+		destination := "/workspace/" + strings.Repeat(character, 4096-len("/workspace/"))
+		if _, err := client.Beta.Agents.Environments.Files.Prepare(context.Background(), map[string]string{destination: source}); err != nil {
+			t.Fatal("valid code-point boundary rejected", err)
+		}
+		before := requests.Load()
+		if _, err := client.Beta.Agents.Environments.Files.Prepare(context.Background(), map[string]string{destination + character: source}); err == nil {
+			t.Fatal("oversized destination uploaded")
+		}
+		if requests.Load() != before {
+			t.Fatal("invalid destination reached Files API")
+		}
+	}
+}
+
+func TestBetaAgentFilesEmptyResponsePreservesUploads(t *testing.T) {
+	for _, stage := range []bool{false, true} {
+		t.Run(fmt.Sprint(stage), func(t *testing.T) {
+			var uploads atomic.Int32
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				if r.URL.Path == "/files" && uploads.Add(1) == 1 {
+					_, _ = fmt.Fprint(w, `{"id":"owned"}`)
+				} else {
+					_, _ = fmt.Fprint(w, `null`)
+				}
+			}))
+			defer server.Close()
+			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+			source := betaLocalFile(t, "input", "source")
+			var err error
+			if stage {
+				_, err = client.Beta.Agents.Environments.Files.Upload(context.Background(), "env", source, "/workspace/a")
+			} else {
+				_, err = client.Beta.Agents.Environments.Files.Prepare(context.Background(), map[string]string{"/workspace/a": source, "/workspace/b": source})
+			}
+			var failure *openai.BetaAgentFilePreparationError
+			if !errors.As(err, &failure) || len(failure.Prepared.Uploads) != 1 || failure.Prepared.Uploads[0].ID != "owned" {
+				t.Fatal("empty response lost earlier upload", err)
+			}
+		})
+	}
+}

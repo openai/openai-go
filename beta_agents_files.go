@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
@@ -134,6 +135,9 @@ func (r *BetaAgentEnvironmentFileService) Upload(ctx context.Context, environmen
 	capture, require := agentStreamResponseGuard[EnvironmentFile]()
 	service.Options = append([]option.RequestOption{capture}, service.Options...)
 	file, err := service.New(ctx, environmentID, BetaAgentEnvironmentFileNewParams{HostedEnvironmentFileParam: prepared.Files[0]}, append(slices.Clone(opts), require)...)
+	if err == nil && file == nil {
+		err = errors.New("staging received an empty file response")
+	}
 	if err != nil {
 		return nil, &BetaAgentFilePreparationError{Prepared: prepared, Cause: err}
 	}
@@ -177,6 +181,9 @@ func (r *BetaAgentEnvironmentFileService) prepareFiles(ctx context.Context, sele
 		}
 		upload, uploadErr := files.New(ctx, FileNewParams{File: File(io.NewSectionReader(source, 0, info.Size()), filepath.Base(item.source), "application/octet-stream"), Purpose: FilePurposeUserData}, append(slices.Clone(opts), require)...)
 		closeErr := source.Close()
+		if uploadErr == nil && upload == nil {
+			uploadErr = errors.New("upload received an empty file response")
+		}
 		if uploadErr != nil {
 			return prepared, &BetaAgentFilePreparationError{Prepared: prepared, Cause: uploadErr}
 		}
@@ -228,6 +235,9 @@ func betaAgentPrepareSelection(files map[string]string, initial bool) ([]betaAge
 	return selected, nil
 }
 func betaAgentFileDestination(destination string) error {
+	if utf8.RuneCountInString(destination) > 4096 {
+		return errors.New("destination exceeds 4096 characters")
+	}
 	if !strings.HasPrefix(destination, "/workspace/") || strings.ContainsAny(destination, "\x00\\") || path.Clean(destination) != destination || destination == "/workspace/outputs" {
 		return errors.New("destination must name a file inside /workspace using a clean absolute POSIX path")
 	}
