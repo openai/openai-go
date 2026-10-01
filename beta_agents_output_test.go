@@ -105,7 +105,7 @@ func TestBetaAgentOutputSchemaValidation(t *testing.T) {
 	invalid := []string{
 		`{"type":"array","items":{"type":"string"}}`,
 		`{"type":"object","properties":{},"anyOf":[]}`,
-		`{"type":"object","properties":{"x":{"type":"string","default":"x"}}}`,
+		`{"type":"object","properties":{"x":{"type":"string","allOf":[]}}}`,
 		`{"type":"object","properties":{},"additionalProperties":true}`,
 		`{"type":"object","properties":{"x":{"$ref":"https://example.com/schema"}}}`,
 		`{"type":"object","properties":{"x":{"$ref":"#/$defs/missing"}}}`,
@@ -121,7 +121,7 @@ func TestBetaAgentOutputSchemaValidation(t *testing.T) {
 			}
 		})
 	}
-	supported := json.RawMessage(`{"type":"object","$defs":{"name":{"type":["string","null"]}},"properties":{"nested":{"type":"object","properties":{"names":{"type":"array","items":{"$ref":"#/$defs/name"}}}},"choice":{"anyOf":[{"type":"integer","enum":[1,2]},{"type":"null"}]}}}`)
+	supported := json.RawMessage(`{"type":"object","default":{},"$defs":{"name":{"type":["string","null"]}},"properties":{"nested":{"type":"object","properties":{"names":{"type":"array","items":{"$ref":"#/$defs/name"}}}},"choice":{"anyOf":[{"type":"integer","enum":[1,2]},{"type":"null"}]}}}`)
 	output, err := openai.NewBetaAgentOutput(supported, betaReportParser)
 	if err != nil {
 		t.Fatal(err)

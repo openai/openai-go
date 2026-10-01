@@ -20,7 +20,7 @@ type BetaAgentOutput[T any] struct {
 
 // NewBetaAgentOutput normalizes a JSON schema for an object-root Agents output.
 // schema may be a schema map or a JSON-marshalable schema from a reflection library.
-// Objects become closed with all properties required. Defaults, composition other
+// Objects become closed with all properties required. Composition other
 // than nested anyOf, remote references, and unsupported keywords are rejected.
 // parse must decode and validate the output according to the application's type.
 func NewBetaAgentOutput[T any](schema any, parse func([]byte) (T, error)) (*BetaAgentOutput[T], error) {
@@ -123,7 +123,7 @@ func betaAgentNormalizeSchema(schema, root map[string]any, path string) error {
 	fail := func(reason string) error { return fmt.Errorf("beta agent output %s: %s", path, reason) }
 	for key := range schema {
 		switch key {
-		case "type", "properties", "required", "additionalProperties", "items", "enum", "const", "anyOf", "$defs", "$ref", "$schema", "title", "description":
+		case "type", "properties", "required", "additionalProperties", "items", "enum", "const", "anyOf", "$defs", "$ref", "$schema", "title", "description", "default", "examples":
 		default:
 			return fail("unsupported keyword " + key)
 		}

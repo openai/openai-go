@@ -1,7 +1,7 @@
 # Typed beta Agents output
 
 Use one adapter for the schema and parser. `schema` can come from the same JSON
-schema library used with Responses; use an object root without defaults.
+schema library used with Responses; use an object root.
 
 ```go
 type Report struct {
