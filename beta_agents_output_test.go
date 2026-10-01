@@ -103,6 +103,14 @@ func TestBetaAgentTypedFollowupAndErrors(t *testing.T) {
 }
 func TestBetaAgentOutputSchemaValidation(t *testing.T) {
 	invalid := []string{
+		`{"type":"object","title":12}`,
+		`{"type":"object","description":null}`,
+		`{"type":"object","examples":{}}`,
+		`{"type":"object","properties":{"a\"b":{"type":"string"}}}`,
+		`{"type":"object","properties":{"x":{"type":"string","enum":["a\nb"]}}}`,
+		`{"type":"object","$defs":{"a/b":{"type":"string"}},"properties":{"x":{"$ref":"#/$defs/a~1b"}}}`,
+		`{"type":"object","$defs":{"a/b":{"type":"string"}},"properties":{"x":{"$ref":"#/$defs/a/b"}}}`,
+		`{"type":"object","properties":{"x":{"oneOf":[{"type":"string"}]}}}`,
 		`{"type":"object","$defs":{"name":{"type":"string"}},"properties":{"x":{"$ref":"#/$defs/name","description":"name"}}}`,
 		`{"type":"object","properties":{"x":{"type":"string","enum":[1]}}}`,
 		`{"type":"object","properties":{"x":{"type":"integer","const":1.0000000000000001}}}`,
@@ -114,7 +122,6 @@ func TestBetaAgentOutputSchemaValidation(t *testing.T) {
 		`{"type":"object","properties":{"x":{"$ref":"https://example.com/schema"}}}`,
 		`{"type":"object","properties":{"x":{"$ref":"#/$defs/missing"}}}`,
 		`{"type":"object","properties":{"x":{"type":"array","items":[]}}}`,
-		`{"type":"object","properties":{"x":{"type":"string","pattern":"x"}}}`,
 		`{"type":"object","properties":{"x":{"type":["string","integer"]}}}`,
 	}
 	for _, schema := range invalid {
@@ -138,5 +145,37 @@ func TestBetaAgentOutputSchemaValidation(t *testing.T) {
 	}
 	if _, err := openai.NewBetaAgentOutput[betaReport](supported, nil); err == nil {
 		t.Fatal("nil parser accepted")
+	}
+}
+
+func TestBetaAgentOutputPreservesSupportedSchema(t *testing.T) {
+	schema := json.RawMessage(`{"type":"object","$id":"https://example.com/report","$defs":{"a~1b":{"type":"string","pattern":"^[a-z]+$","minLength":1,"maxLength":20}},"properties":{"name":{"$ref":"#/$defs/a~1b"},"empty":{"type":"object"},"choice":{"anyOf":[{"type":"string"},{"type":"null"}],"default":null,"examples":["yes"]},"count":{"type":"integer","minimum":0,"maximum":18446744073709551615,"multipleOf":1},"tuple":{"type":"array","items":{"type":"string"},"prefixItems":[{"type":"object"}],"minItems":1,"maxItems":3},"recursive":{"$ref":"#"}}}`)
+	output, err := openai.NewBetaAgentOutput(schema, betaReportParser)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wire, err := json.Marshal(output.Format())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, expected := range []string{`"$id":"https://example.com/report"`, `"default":null`, `"examples":["yes"]`, `"maximum":18446744073709551615`, `"pattern":"^[a-z]+$"`, `"properties":{}`, `"required":[]`} {
+		if !strings.Contains(string(wire), expected) {
+			t.Errorf("missing %s in %s", expected, wire)
+		}
+	}
+}
+
+func TestBetaAgentOutputParseErrorDoesNotExposeOutput(t *testing.T) {
+	const secret = "private-output-canary"
+	output, err := openai.NewBetaAgentOutput(map[string]any{"type": "object"}, func([]byte) (betaReport, error) { return betaReport{}, errors.New(secret) })
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = output.FinalResult(betaResultCreateStream(t, betaOutputEvents(secret), false))
+	if err == nil || strings.Contains(fmt.Sprint(err), secret) {
+		t.Fatalf("unsafe parse error: %v", err)
+	}
+	if errors.Unwrap(err).Error() != secret {
+		t.Fatal("parser cause unavailable")
 	}
 }

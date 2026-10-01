@@ -59,10 +59,12 @@ func NewBetaAgentOutput[T any](schema any, parse func([]byte) (T, error)) (*Beta
 // Format returns an independent Agents text.format value for creation params.
 // Reuse this adapter's FinalResult or ParseResult to parse the completed answer.
 func (o *BetaAgentOutput[T]) Format() TextFormatParamUnion {
-	var schema map[string]any
-	decoder := json.NewDecoder(bytes.NewReader(o.schema))
-	decoder.UseNumber()
-	_ = decoder.Decode(&schema) // The constructor has already validated this JSON.
+	var raw map[string]json.RawMessage
+	_ = json.Unmarshal(o.schema, &raw) // The constructor has already validated this JSON.
+	schema := make(map[string]any, len(raw))
+	for key, value := range raw {
+		schema[key] = value
+	}
 	return TextFormatParamOfParamJSONSchema(schema)
 }
 
@@ -124,36 +126,59 @@ func betaAgentNormalizeSchema(schema, root map[string]any, path string) error {
 	fail := func(reason string) error { return fmt.Errorf("beta agent output %s: %s", path, reason) }
 	for key := range schema {
 		switch key {
-		case "type", "properties", "required", "additionalProperties", "items", "enum", "const", "anyOf", "$defs", "$ref", "$schema", "title", "description", "default", "examples":
-		default:
+		case "unevaluatedProperties", "propertyNames", "minProperties", "maxProperties", "unevaluatedItems", "contains", "minContains", "maxContains", "uniqueItems", "allOf", "oneOf", "not", "dependentRequired", "dependentSchemas", "if", "then", "else", "x-guidance":
 			return fail("unsupported keyword " + key)
 		}
 	}
-	if definitions, exists := schema["$defs"]; exists {
-		defs, ok := definitions.(map[string]any)
-		if !ok {
-			return fail("$defs must be an object")
-		}
-		for name, definition := range defs {
-			child, ok := definition.(map[string]any)
-			if !ok {
-				return fail("$defs entries must be schemas")
+	for _, key := range []string{"title", "description"} {
+		if value, exists := schema[key]; exists {
+			if _, ok := value.(string); !ok {
+				return fail(key + " must be a string")
 			}
-			if err := betaAgentNormalizeSchema(child, root, path+".$defs."+name); err != nil {
-				return err
+		}
+	}
+	if value, exists := schema["examples"]; exists {
+		if _, ok := value.([]any); !ok {
+			return fail("examples must be an array")
+		}
+	}
+	for _, definitionsKey := range []string{"$defs", "definitions"} {
+		if definitions, exists := schema[definitionsKey]; exists {
+			defs, ok := definitions.(map[string]any)
+			if !ok {
+				return fail("$defs must be an object")
+			}
+			for name, definition := range defs {
+				child, ok := definition.(map[string]any)
+				if !ok {
+					return fail("$defs entries must be schemas")
+				}
+				if err := betaAgentNormalizeSchema(child, root, path+".$defs."+name); err != nil {
+					return err
+				}
 			}
 		}
 	}
 	if ref, exists := schema["$ref"]; exists {
 		name, ok := ref.(string)
-		if !ok || !strings.HasPrefix(name, "#/$defs/") {
-			return fail("only local $defs references are supported")
+		if !ok {
+			return fail("$ref must be a string")
 		}
-		target := strings.TrimPrefix(name, "#/$defs/")
-		target = strings.ReplaceAll(strings.ReplaceAll(target, "~1", "/"), "~0", "~")
-		defs, _ := root["$defs"].(map[string]any)
-		if _, ok := defs[target].(map[string]any); !ok {
-			return fail("unresolved $ref")
+		if name != "#" {
+			target, local := strings.CutPrefix(name, "#/$defs/")
+			if !local {
+				target, local = strings.CutPrefix(name, "#/definitions/")
+			}
+			if !local || target == "" || strings.Contains(target, "/") {
+				return fail("only local definition references are supported")
+			}
+			defs, ok := root["$defs"].(map[string]any)
+			if !ok {
+				defs, _ = root["definitions"].(map[string]any)
+			}
+			if _, ok := defs[target].(map[string]any); !ok {
+				return fail("unresolved $ref")
+			}
 		}
 		for key := range schema {
 			if key != "$ref" {
@@ -174,11 +199,6 @@ func betaAgentNormalizeSchema(schema, root map[string]any, path string) error {
 			}
 			if err := betaAgentNormalizeSchema(child, root, fmt.Sprintf("%s.anyOf[%d]", path, i)); err != nil {
 				return err
-			}
-		}
-		for key := range schema {
-			if key != "anyOf" && key != "description" && key != "title" {
-				return fail("anyOf siblings other than title/description are unsupported")
 			}
 		}
 		return nil
@@ -203,12 +223,18 @@ func betaAgentNormalizeSchema(schema, root map[string]any, path string) error {
 		if additional, exists := schema["additionalProperties"]; exists && additional != false {
 			return fail("additionalProperties must be false")
 		}
+		if _, exists := schema["properties"]; !exists {
+			schema["properties"] = map[string]any{}
+		}
 		properties, ok := schema["properties"].(map[string]any)
 		if !ok {
 			return fail("object properties must be an object")
 		}
 		names := make([]string, 0, len(properties))
 		for name, property := range properties {
+			if strings.ContainsAny(name, "\"\n") {
+				return fail("property names cannot contain quotes or newlines")
+			}
 			child, ok := property.(map[string]any)
 			if !ok {
 				return fail("property must be a schema")
@@ -228,6 +254,21 @@ func betaAgentNormalizeSchema(schema, root map[string]any, path string) error {
 		}
 		if err := betaAgentNormalizeSchema(items, root, path+".items"); err != nil {
 			return err
+		}
+		if value, exists := schema["prefixItems"]; exists {
+			items, ok := value.([]any)
+			if !ok {
+				return fail("prefixItems must be an array")
+			}
+			for i, item := range items {
+				child, ok := item.(map[string]any)
+				if !ok {
+					return fail("prefixItems entries must be schemas")
+				}
+				if err := betaAgentNormalizeSchema(child, root, fmt.Sprintf("%s.prefixItems[%d]", path, i)); err != nil {
+					return err
+				}
+			}
 		}
 	case "string", "number", "integer", "boolean", "null":
 	default:
@@ -262,8 +303,8 @@ func betaAgentSchemaLiteral(value any, kind string, nullable bool) bool {
 	}
 	switch kind {
 	case "string":
-		_, ok := value.(string)
-		return ok
+		text, ok := value.(string)
+		return ok && !strings.ContainsAny(text, "\"\n")
 	case "boolean":
 		_, ok := value.(bool)
 		return ok
