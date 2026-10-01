@@ -523,6 +523,7 @@ func TestSigV4DisablesRedirects(t *testing.T) {
 		AWSAccessKeyID:     "access-key",
 		AWSSecretAccessKey: "secret-key",
 		BaseURL:            source.URL,
+		UnsafeAllowHTTP:    true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -558,8 +559,9 @@ func TestBearerDisablesOriginChangingRedirects(t *testing.T) {
 	defer source.Close()
 
 	client, err := NewClient(context.Background(), Config{
-		APIKey:  "secret-bearer",
-		BaseURL: source.URL,
+		APIKey:          "secret-bearer",
+		BaseURL:         source.URL,
+		UnsafeAllowHTTP: true,
 	})
 	if err != nil {
 		t.Fatal(err)

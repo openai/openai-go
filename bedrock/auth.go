@@ -84,12 +84,58 @@ func newClientOptions(
 		option.WithBaseURL(resolved.baseURL.String()),
 	}
 	opts = append(opts, userOpts...)
-	opts = append(opts, requestconfig.WithRequestFinalizer(func(rc *requestconfig.RequestConfig) error {
+	directTransports := &loopbackTransportCache{}
+	opts = append(opts, requestconfig.WithRequestFinalizer(func(rc *requestconfig.RequestConfig) (err error) {
+		defer func() {
+			if err != nil {
+				if body, ok := rc.Body.(io.Closer); ok {
+					_ = body.Close()
+				}
+			}
+		}()
+
 		if resolved.mode != authModeSkip && (rc.APIKey != "" || rc.AdminAPIKey != "") {
 			return errors.New("bedrock: provider authentication cannot be combined with an OpenAI API key; configure authentication in `bedrock.Config`")
 		}
 		if !sameBaseURL(rc.BaseURL, resolved.baseURL) {
 			return errors.New("bedrock: provider routing cannot be overridden with `option.WithBaseURL`; configure `BaseURL` in `bedrock.Config`")
+		}
+		authenticated := resolved.mode != authModeSkip
+		if !authenticated && (rc.APIKey != "" || rc.AdminAPIKey != "") {
+			// Inspect the credential selected by the endpoint and option order
+			// without applying security to the real request before other finalizers.
+			projected := *rc
+			request := *rc.Request
+			// Only a header emitted by the SDK credential selector counts here.
+			request.Header = make(http.Header)
+			projected.Request = &request
+			requestconfig.ApplySecurity(projected)
+			for _, value := range request.Header.Values("Authorization") {
+				if value != "" {
+					authenticated = true
+					break
+				}
+			}
+		}
+		if authenticated {
+			if err := validateEndpointTransport(resolved.baseURL, cfg.UnsafeAllowHTTP); err != nil {
+				return err
+			}
+			if resolved.baseURL.Scheme == "http" {
+				if rc.CustomHTTPDoer != nil || rc.HTTPClient == nil {
+					return errors.New("bedrock: authenticated loopback HTTP requires an *http.Client")
+				}
+				transport, err := directTransports.get(rc.HTTPClient.Transport)
+				if err != nil {
+					return err
+				}
+				client := *rc.HTTPClient
+				client.Transport = transport
+				client.CheckRedirect = func(*http.Request, []*http.Request) error {
+					return requestconfig.WithNoRetryError(errors.New("bedrock: authenticated loopback redirects are not allowed"))
+				}
+				rc.HTTPClient = &client
+			}
 		}
 
 		if resolved.mode == authModeBearer || resolved.mode == authModeSigV4 {
@@ -139,6 +185,11 @@ func resolveConfig(ctx context.Context, cfg Config, now func() time.Time) (resol
 	endpoint, err := resolveEndpoint(cfg.Endpoint, baseURL)
 	if err != nil {
 		return resolvedConfig{}, err
+	}
+	if mode != authModeSkip && baseURL != nil {
+		if transportErr := validateEndpointTransport(baseURL, cfg.UnsafeAllowHTTP); transportErr != nil {
+			return resolvedConfig{}, transportErr
+		}
 	}
 	if baseURL != nil {
 		region, err = reconcileEndpointRegion(baseURL, region)

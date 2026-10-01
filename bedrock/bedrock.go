@@ -82,7 +82,15 @@ type Config struct {
 	// Mantle defaults to https://bedrock-mantle.{region}.api.aws/openai/v1;
 	// Runtime defaults to https://bedrock-runtime.{region}.amazonaws.com/openai/v1
 	// in the standard AWS partition. Use BaseURL if a deployment requires /v1.
+	// Endpoints using SDK-managed credentials require HTTPS, including custom
+	// and proxy hosts.
 	BaseURL string
+
+	// UnsafeAllowHTTP permits authenticated HTTP only on localhost or literal
+	// loopback IP addresses, exclusively for local development and testing.
+	// Connections bypass proxies and custom dialing. HTTP clients must use a
+	// nil Transport or an *http.Transport; opaque RoundTrippers are rejected.
+	UnsafeAllowHTTP bool
 
 	// SkipAuth disables Bedrock bearer and SigV4 authentication. Use this only
 	// when a trusted gateway or custom transport authenticates requests. In this
