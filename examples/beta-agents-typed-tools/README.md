@@ -6,7 +6,7 @@ This example uses the schema library already used by the structured-output examp
 You can supply the schema directly or use another library.
 
 ```go
-action := balanceAction{wallet: demoWallet{id: "demo-wallet"}}
+action := lookupAction{catalog: demoCatalog{id: "demo-catalog"}}
 tool, err := action.tool()
 if err != nil {
     return err
@@ -22,10 +22,10 @@ handlers := map[string]openai.AgentToolHandler{
 }
 ```
 
-The bound wallet is a local, read-only fixture illustrating a Coinbase-style action,
-not a Coinbase AgentKit integration. Replace it with your application's service.
+The bound catalog is a local, read-only fixture. Replace it with your application's
+service.
 The handler decodes and validates arguments before calling the service and returns
-the typed receipt as JSON text. Wallet credentials remain local.
+the typed record as JSON text. Catalog credentials remain local.
 
 From `examples/`, print the tool definition:
 
