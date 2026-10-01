@@ -70,7 +70,7 @@ func TestResponsesWebSocketWorkloadIdentity(t *testing.T) {
 		return nil, errors.New("unexpected non-test destination")
 	})}
 	provider := &websocketSubjectTokenProvider{}
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithHTTPClient(httpClient), option.WithWorkloadIdentity(auth.WorkloadIdentity{
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithHTTPClient(httpClient), option.WithWorkloadIdentity(auth.WorkloadIdentity{
 		IdentityProviderID: "synthetic-idp", ServiceAccountID: "synthetic-account", Provider: provider,
 	}))
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -122,7 +122,7 @@ func TestResponsesWebSocketLargeFinalResponse(t *testing.T) {
 		_, _, _ = socket.Read(ctx)
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic-key"))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic-key"))
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	connection, err := client.Responses.Connect(ctx, responses.ResponseConnectionOptions{})
@@ -167,7 +167,7 @@ func TestResponsesWebSocketMalformedEventFailsAllLanes(t *testing.T) {
 	t.Cleanup(server.Close)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic-key"))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("synthetic-key"))
 	connection, err := client.Responses.Connect(ctx, responses.ResponseConnectionOptions{})
 	if err != nil {
 		t.Fatal(err)

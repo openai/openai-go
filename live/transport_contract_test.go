@@ -50,7 +50,7 @@ func TestLiveUnifiedSDPContract(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithAPIKey("test-key"), option.WithBaseURL(server.URL))
+	client := openai.NewClient(option.WithAPIKey("test-key"), option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL))
 	result, err := client.Live.New(context.Background(), live.LiveNewParams{
 		Session:   live.MediaSessionConfigParam{Model: "gpt-live-1"},
 		Transport: live.LiveNewParamsTransport{Sdp: offer},

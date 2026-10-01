@@ -82,7 +82,7 @@ type originTransport struct {
 
 func (t originTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if !RequestHasOrigin(req, t.origin) {
-		return rejectRequestOrigin(req)
+		return RejectRequestOrigin(req)
 	}
 	return t.next.RoundTrip(req)
 }
@@ -105,7 +105,7 @@ type credentialRedirectGuardTransport struct {
 
 func (t credentialRedirectGuardTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if !requestHasCanonicalTarget(req) {
-		return rejectRequestOrigin(req)
+		return RejectRequestOrigin(req)
 	}
 	return t.next.RoundTrip(req)
 }
@@ -142,13 +142,19 @@ func hasCredentialRedirectGuard(transport http.RoundTripper) bool {
 	return ok
 }
 
-func rejectRequestOrigin(req *http.Request) (*http.Response, error) {
+func closeRequestBody(req *http.Request) {
 	if req != nil && req.Body != nil {
 		if _, ok := req.Body.(*closeOnceReadCloser); !ok {
 			req.Body = &closeOnceReadCloser{ReadCloser: req.Body}
 		}
 		_ = req.Body.Close()
 	}
+}
+
+// RejectRequestOrigin closes the rejected request body once and returns a
+// nonretryable origin error. Provider middleware uses it before authentication.
+func RejectRequestOrigin(req *http.Request) (*http.Response, error) {
+	closeRequestBody(req)
 	return nil, requestOriginError()
 }
 
@@ -159,7 +165,7 @@ func requestOriginError() error {
 func enforceRequestOrigin(origin *url.URL, next middlewareNext) middlewareNext {
 	return func(req *http.Request) (*http.Response, error) {
 		if !RequestHasOrigin(req, origin) {
-			return rejectRequestOrigin(req)
+			return RejectRequestOrigin(req)
 		}
 		return next(req)
 	}

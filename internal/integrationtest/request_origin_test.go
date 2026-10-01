@@ -161,7 +161,7 @@ func originTestClientFactories() []originTestClientCase {
 			credentialHeader: "Authorization",
 			newClient: func(baseURL string, httpClient *http.Client) (openai.Client, error) {
 				return openai.NewClient(
-					option.WithBaseURL(baseURL+"/v1"),
+					option.WithUnsafeAllowHTTP(), option.WithBaseURL(baseURL+"/v1"),
 					option.WithAPIKey("api-key"),
 					option.WithHTTPClient(httpClient),
 					option.WithMaxRetries(0),
@@ -173,7 +173,7 @@ func originTestClientFactories() []originTestClientCase {
 			credentialHeader: "Authorization",
 			newClient: func(baseURL string, httpClient *http.Client) (openai.Client, error) {
 				return openai.NewClient(
-					option.WithBaseURL(baseURL+"/v1"),
+					option.WithUnsafeAllowHTTP(), option.WithBaseURL(baseURL+"/v1"),
 					option.WithAdminAPIKey("admin-key"),
 					option.WithHTTPClient(httpClient),
 					option.WithMaxRetries(0),
@@ -185,7 +185,7 @@ func originTestClientFactories() []originTestClientCase {
 			credentialHeader: "Authorization",
 			newClient: func(baseURL string, httpClient *http.Client) (openai.Client, error) {
 				return openai.NewClient(
-					option.WithBaseURL(baseURL+"/v1"),
+					option.WithUnsafeAllowHTTP(), option.WithBaseURL(baseURL+"/v1"),
 					option.WithWorkloadIdentity(auth.WorkloadIdentity{
 						IdentityProviderID: "provider",
 						ServiceAccountID:   "service-account",
@@ -257,7 +257,7 @@ func TestClientRejectsNonRelativeRequestReferences(t *testing.T) {
 	defer server.Close()
 
 	client := openai.NewClient(
-		option.WithBaseURL(server.URL+"/v1"),
+		option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL+"/v1"),
 		option.WithAPIKey("api-key"),
 		option.WithHTTPClient(originTestHTTPClient(server.Client().Transport)),
 		option.WithMaxRetries(0),
@@ -674,7 +674,7 @@ func TestClientPreservesRelativeAndGeneratedPaths(t *testing.T) {
 	defer server.Close()
 
 	client := openai.NewClient(
-		option.WithBaseURL(server.URL+"/v1"),
+		option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL+"/v1"),
 		option.WithAPIKey("api-key"),
 		option.WithHTTPClient(server.Client()),
 		option.WithMaxRetries(0),

@@ -251,7 +251,7 @@ func TestResponsesAccumulatorInterleavedTurns(t *testing.T) {
 	defer server.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"))
 	conn, err := client.Responses.Connect(ctx, responses.ResponseConnectionOptions{})
 	if err != nil {
 		t.Fatal(err)
@@ -382,7 +382,7 @@ func TestResponsesAccumulatorNeverInventsCompletion(t *testing.T) {
 			defer server.Close()
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
-			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"))
+			client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"))
 			conn, err := client.Responses.Connect(ctx, responses.ResponseConnectionOptions{})
 			if err != nil {
 				t.Fatal(err)

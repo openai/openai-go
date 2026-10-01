@@ -57,7 +57,7 @@ func TestResponsesFinalSnapshots(t *testing.T) {
 				_, _, _ = socket.Read(ctx)
 			}))
 			defer server.Close()
-			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"))
+			client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"))
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 			connection, err := client.Responses.Connect(ctx, responses.ResponseConnectionOptions{})
@@ -124,7 +124,7 @@ func TestResponsesFinalSnapshotRetainsToolsAndMultipartOutput(t *testing.T) {
 	defer server.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"))
 	connection, err := client.Responses.Connect(ctx, responses.ResponseConnectionOptions{})
 	if err != nil {
 		t.Fatal(err)
@@ -199,7 +199,7 @@ func TestResponsesInterleavedLanes(t *testing.T) {
 				_, _, _ = socket.Read(ctx)
 			}))
 			defer server.Close()
-			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"))
+			client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"))
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 			connection, err := client.Responses.Connect(ctx, responses.ResponseConnectionOptions{})
@@ -333,7 +333,7 @@ func TestResponsesRecoveryRefreshesCredentialsWithoutReplay(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"), option.WithMaxRetries(9), option.WithMiddleware(func(r *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"), option.WithMaxRetries(9), option.WithMiddleware(func(r *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 		r.Header.Set("Authorization", fmt.Sprintf("Bearer fixture-%d", credentials.Add(1)))
 		return next(r)
 	}))
@@ -387,7 +387,7 @@ func TestResponsesCustomHeaderPrecedenceAndReconnect(t *testing.T) {
 	}))
 	defer server.Close()
 	var refresh atomic.Int32
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"), option.WithHeader("X-Application", "client-value"), option.WithHeader("X-Remove", "remove-me"), option.WithMiddleware(func(r *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"), option.WithHeader("X-Application", "client-value"), option.WithHeader("X-Remove", "remove-me"), option.WithMiddleware(func(r *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 		r.Header.Set("X-Refresh", fmt.Sprint(refresh.Add(1)))
 		return next(r)
 	}))
@@ -448,7 +448,7 @@ func TestResponsesTypedCommandsPreserveWireShape(t *testing.T) {
 		_, _, _ = socket.Read(ctx)
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"))
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	connection, err := client.Responses.Connect(ctx, responses.ResponseConnectionOptions{})

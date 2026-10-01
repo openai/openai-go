@@ -30,6 +30,7 @@ func clearOpenAIEnvironment(t *testing.T) {
 	} {
 		t.Setenv(key, "")
 	}
+	t.Setenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
 }
 
 func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
@@ -49,7 +50,7 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 		err                error
 	}
 	received := make(chan receivedRequest, 1)
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, readErr := io.ReadAll(r.Body)
 		received <- receivedRequest{
 			body:               string(body),
@@ -70,15 +71,16 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse server URL: %v", err)
 	}
+	tlsName := baseURL.Hostname()
 	const credentialBearingHostname = "customer-credential-host-secret.example.test"
 	baseURL.Host = net.JoinHostPort(credentialBearingHostname, baseURL.Port())
 	baseURL.User = url.UserPassword("url-user", "url-password")
 
 	dialer := &net.Dialer{}
-	transport := &http.Transport{
-		DialContext: func(ctx context.Context, network string, _ string) (net.Conn, error) {
-			return dialer.DialContext(ctx, network, server.Listener.Addr().String())
-		},
+	transport := server.Client().Transport.(*http.Transport).Clone()
+	transport.TLSClientConfig.ServerName = tlsName
+	transport.DialContext = func(ctx context.Context, network string, _ string) (net.Conn, error) {
+		return dialer.DialContext(ctx, network, server.Listener.Addr().String())
 	}
 	t.Cleanup(transport.CloseIdleConnections)
 
@@ -236,7 +238,7 @@ func TestWithDebugLogRedactsUnrecognizedMethod(t *testing.T) {
 
 	var output bytes.Buffer
 	client := openai.NewClient(
-		option.WithBaseURL(server.URL),
+		option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL),
 		option.WithAPIKey("api-key-secret"),
 		option.WithDebugLog(log.New(&output, "", 0)),
 	)
