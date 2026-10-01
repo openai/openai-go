@@ -84,8 +84,8 @@ func (r *BetaAgentEnvironmentFileService) PrepareDirectory(ctx context.Context, 
 	}
 	files := make(map[string]string)
 	err = filepath.WalkDir(directory, func(source string, entry fs.DirEntry, walkErr error) error {
-		if err := ctx.Err(); err != nil {
-			return err
+		if contextErr := ctx.Err(); contextErr != nil {
+			return contextErr
 		}
 		if walkErr != nil {
 			return walkErr

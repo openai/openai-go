@@ -174,7 +174,10 @@ func TestBetaAgentFilesDirectorySelection(t *testing.T) {
 	if err != nil || len(prepared.Files) != 1 || requests.Load() != 1 {
 		t.Fatalf("selection=%v err=%v", prepared, err)
 	}
-	wire, _ := json.Marshal(prepared.Files)
+	wire, err := json.Marshal(prepared.Files)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if !strings.Contains(string(wire), `"path":"/workspace/data/include.txt"`) {
 		t.Fatal("wrong destination", string(wire))
 	}
