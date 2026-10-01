@@ -478,7 +478,11 @@ func TestBetaAgentAttachTerminalErrorFidelity(t *testing.T) {
 				client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
 				_, err := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{}).FinalResult()
 				var failure *openai.BetaAgentTurnResultError
-				if !errors.As(err, &failure) || failure.Reason != "turn_"+status || failure.Turn.Status != openai.TurnStatus(status) || len(failure.Messages) != 1 {
+				wantMessages := 2
+				if getFails {
+					wantMessages = 1
+				}
+				if !errors.As(err, &failure) || failure.Reason != "turn_"+status || failure.Turn.Status != openai.TurnStatus(status) || len(failure.Messages) != wantMessages {
 					t.Fatal("terminal status/messages lost", err)
 				}
 				text := failure.Messages[0].Content[0].Text
@@ -1224,5 +1228,62 @@ func TestBetaAgentAttachLargeFunctionDiagnostics(t *testing.T) {
 		if action.CallID != fmt.Sprint(i*2) || action.Name != "observed" {
 			t.Fatalf("diagnostic order or SSE payload changed: index=%d call=%s name=%s", i, action.CallID, action.Name)
 		}
+	}
+}
+
+func TestBetaAgentAttachPreservesObservedCompletedMessages(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		history  []string
+		observed []string
+		want     string
+	}{
+		{"empty history", nil, []string{"b", "c"}, "bc"},
+		{"missing tail", []string{"a", "b"}, []string{"b", "c"}, "abc"},
+		{"shared anchors", []string{"a", "c", "e"}, []string{"b", "c", "d", "e", "f"}, "abcdef"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var reads atomic.Int32
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				switch {
+				case strings.HasSuffix(r.URL.Path, "/events"):
+					w.Header().Set("Content-Type", "text/event-stream")
+					for i, id := range tc.observed {
+						_, _ = fmt.Fprintf(w, "data: %s\n\n", betaResultMessage("done", id, "root", `"final_answer"`, id, i*3))
+					}
+					_, _ = fmt.Fprintf(w, "data: %s\n\n", betaResultTurn("completed", "root", "null"))
+				case strings.HasSuffix(r.URL.Path, "/turns"):
+					_, _ = fmt.Fprint(w, `{"data":[{"id":"root","session_id":"session","status":"in_progress"}],"has_more":false}`)
+				case strings.HasSuffix(r.URL.Path, "/turns/root"):
+					status := "in_progress"
+					if reads.Add(1) > 1 {
+						status = "completed"
+					}
+					_, _ = fmt.Fprintf(w, `{"id":"root","session_id":"session","status":%q}`, status)
+				case strings.HasSuffix(r.URL.Path, "/items"):
+					items := make([]map[string]any, 0, len(tc.history))
+					for _, id := range tc.history {
+						text := id
+						for _, live := range tc.observed {
+							if live == id {
+								text = "stale"
+							}
+						}
+						items = append(items, map[string]any{"id": id, "type": "message", "turn_id": "root", "role": "assistant", "status": "completed", "phase": "final_answer", "content": []map[string]string{{"type": "output_text", "text": text}}})
+					}
+					_ = json.NewEncoder(w).Encode(map[string]any{"data": items, "has_more": false})
+				default:
+					_, _ = fmt.Fprint(w, `{"id":"session","status":"in_progress"}`)
+				}
+			}))
+			defer server.Close()
+			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+			stream := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{})
+			result, err := stream.FinalResult()
+			if err != nil || result.OutputText() != tc.want {
+				t.Fatalf("result=%v err=%v want=%s", result, err, tc.want)
+			}
+		})
 	}
 }

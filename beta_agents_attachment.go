@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"maps"
 	"net/http"
 	"slices"
 
@@ -426,7 +427,7 @@ func (s *AgentSessionStream) reconcileAttachment(ctx context.Context) error {
 	if err := items.Err(); err != nil {
 		return err
 	}
-	c.messages = messages
+	c.messages = betaAgentMergeAttachmentMessages(messages, c.messages)
 	return nil
 }
 
@@ -468,4 +469,40 @@ func betaAgentFunctionCallKeys(actions []AgentSessionRequiredActionUnion) map[ag
 		}
 	}
 	return keys
+}
+
+// History and SSE have different indexes. Shared item IDs anchor their order;
+// completed SSE payloads remain authoritative when history is less complete.
+func betaAgentMergeAttachmentMessages(history, observed map[int64]AgentSessionMessage) map[int64]AgentSessionMessage {
+	live := make([]AgentSessionMessage, 0, len(observed))
+	positions := make(map[string]int, len(observed))
+	for _, index := range slices.Sorted(maps.Keys(observed)) {
+		message := observed[index]
+		positions[message.ID] = len(live)
+		live = append(live, message)
+	}
+	merged := make(map[int64]AgentSessionMessage)
+	seen := make(map[string]struct{})
+	emit := func(message AgentSessionMessage) {
+		if _, exists := seen[message.ID]; !exists {
+			merged[int64(len(merged))] = message
+			seen[message.ID] = struct{}{}
+		}
+	}
+	next := 0
+	for _, index := range slices.Sorted(maps.Keys(history)) {
+		message := history[index]
+		if anchor, exists := positions[message.ID]; exists {
+			for next <= anchor {
+				emit(live[next])
+				next++
+			}
+		} else {
+			emit(message)
+		}
+	}
+	for ; next < len(live); next++ {
+		emit(live[next])
+	}
+	return merged
 }
