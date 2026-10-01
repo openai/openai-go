@@ -126,7 +126,7 @@ func betaAgentNormalizeSchema(schema, root map[string]any, path string) error {
 	fail := func(reason string) error { return fmt.Errorf("beta agent output %s: %s", path, reason) }
 	for key := range schema {
 		switch key {
-		case "unevaluatedProperties", "propertyNames", "minProperties", "maxProperties", "unevaluatedItems", "contains", "minContains", "maxContains", "uniqueItems", "allOf", "oneOf", "not", "dependentRequired", "dependentSchemas", "if", "then", "else", "x-guidance":
+		case "patternProperties", "unevaluatedProperties", "propertyNames", "minProperties", "maxProperties", "unevaluatedItems", "contains", "minContains", "maxContains", "uniqueItems", "allOf", "oneOf", "not", "dependentRequired", "dependentSchemas", "if", "then", "else", "x-guidance":
 			return fail("unsupported keyword " + key)
 		}
 	}
@@ -270,7 +270,14 @@ func betaAgentNormalizeSchema(schema, root map[string]any, path string) error {
 				}
 			}
 		}
-	case "string", "number", "integer", "boolean", "null":
+	case "string":
+		if format, exists := schema["format"]; exists {
+			text, valid := format.(string)
+			if !valid || !slices.Contains([]string{"", "date-time", "time", "date", "duration", "email", "hostname", "ipv4", "ipv6", "uuid"}, text) {
+				return fail("unsupported string format")
+			}
+		}
+	case "number", "integer", "boolean", "null":
 	default:
 		return fail("unsupported type " + kind)
 	}

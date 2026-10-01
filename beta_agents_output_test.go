@@ -103,6 +103,8 @@ func TestBetaAgentTypedFollowupAndErrors(t *testing.T) {
 }
 func TestBetaAgentOutputSchemaValidation(t *testing.T) {
 	invalid := []string{
+		`{"type":"object","properties":{"x":{"type":"string","format":"uri"}}}`,
+		`{"type":"object","properties":{"x":{"type":"object","patternProperties":{".*":{"type":"string"}}}}}`,
 		`{"type":"object","title":12}`,
 		`{"type":"object","description":null}`,
 		`{"type":"object","examples":{}}`,
@@ -177,5 +179,46 @@ func TestBetaAgentOutputParseErrorDoesNotExposeOutput(t *testing.T) {
 	}
 	if errors.Unwrap(err).Error() != secret {
 		t.Fatal("parser cause unavailable")
+	}
+}
+
+func TestBetaAgentTypedOutputWithTypedToolHandler(t *testing.T) {
+	type LookupArgs struct {
+		ID string `json:"id"`
+	}
+	type Receipt struct {
+		Summary string `json:"summary"`
+	}
+	calls := 0
+	handler := func(_ context.Context, arguments map[string]any) (any, error) {
+		data, err := json.Marshal(arguments)
+		if err != nil {
+			return nil, err
+		}
+		var args LookupArgs
+		if err := json.Unmarshal(data, &args); err != nil {
+			return nil, err
+		}
+		if args.ID != "A123" {
+			return nil, errors.New("invalid lookup ID")
+		}
+		calls++
+		data, err = json.Marshal(Receipt{Summary: "found"})
+		return string(data), err
+	}
+	events := []string{betaResultTurn("created", "root", "null"), agentCall("call-event", "root", "call", "lookup", `{"id":"A123"}`), betaResultMessage("done", "answer", "root", `"final_answer"`, `{"summary":"found"}`, 0), betaResultTurn("completed", "root", "null"), betaResultIdle()}
+	mock, client := newAgentHelperServer(t, events...)
+	stream := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{Input: "lookup", ToolHandlers: map[string]openai.AgentToolHandler{"lookup": handler}})
+	result, err := betaOutputAdapter(t).FinalResult(stream)
+	if err != nil || result.OutputParsed.Summary != "found" || calls != 1 {
+		t.Fatalf("result=%v calls=%d err=%v", result, calls, err)
+	}
+	posts := mock.submissions()
+	if len(posts) != 2 {
+		t.Fatalf("expected input and result posts, got %d", len(posts))
+	}
+	wire, err := json.Marshal(posts[1].body)
+	if err != nil || len(posts) != 2 || !strings.Contains(string(wire), `tool_result`) || !strings.Contains(string(wire), `found`) {
+		t.Fatalf("typed receipt not submitted: %s err=%v", wire, err)
 	}
 }

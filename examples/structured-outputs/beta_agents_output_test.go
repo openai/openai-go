@@ -15,8 +15,8 @@ func TestBetaAgentOutputUsesExistingGeneratedSchema(t *testing.T) {
 	}
 	output, err := openai.NewBetaAgentOutput(schema, func(data []byte) (HistoricalComputer, error) {
 		var result HistoricalComputer
-		err := json.Unmarshal(data, &result)
-		return result, err
+		parseErr := json.Unmarshal(data, &result)
+		return result, parseErr
 	})
 	if err != nil {
 		t.Fatal(err)
