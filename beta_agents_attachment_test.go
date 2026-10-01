@@ -234,7 +234,7 @@ func TestBetaAgentAttachUnhandledFirstFrame(t *testing.T) {
 }
 
 func TestBetaAgentAttachSelectsNewRootDuringHandshake(t *testing.T) {
-	var lists atomic.Int32
+	var lists, snapshots atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
@@ -254,8 +254,11 @@ func TestBetaAgentAttachSelectsNewRootDuringHandshake(t *testing.T) {
 		case strings.HasSuffix(r.URL.Path, "/items"):
 			_, _ = fmt.Fprint(w, `{"data":[],"has_more":false}`)
 		default:
-			// A successor can keep the session active after the selected turn finishes.
-			_, _ = fmt.Fprint(w, `{"id":"session","status":"in_progress"}`)
+			status := "in_progress"
+			if snapshots.Add(1) > 1 {
+				status = "idle"
+			}
+			_, _ = fmt.Fprintf(w, `{"id":"session","status":%q}`, status)
 		}
 	}))
 	defer server.Close()
@@ -349,9 +352,10 @@ func TestBetaAgentAttachRawIterationDoesNotReadOutputHistory(t *testing.T) {
 
 func TestBetaAgentAttachManualSnapshotIsSelectedRootOnly(t *testing.T) {
 	for _, tc := range []struct {
-		name, action      string
-		manual, successor bool
+		name, action              string
+		manual, successor, closed bool
 	}{
+		{name: "closed environment", action: `{"type":"environment_connection","environment_id":"env"}`, manual: true, closed: true},
 		{name: "current approval", action: `{"type":"computer_use_approval_request","turn_id":"root","request_id":"approval"}`, manual: true},
 		{name: "old approval", action: `{"type":"computer_use_approval_request","turn_id":"older","request_id":"approval"}`},
 		{name: "current environment", action: `{"type":"environment_connection","environment_id":"env"}`, manual: true},
@@ -365,10 +369,10 @@ func TestBetaAgentAttachManualSnapshotIsSelectedRootOnly(t *testing.T) {
 				switch {
 				case strings.HasSuffix(r.URL.Path, "/events"):
 					w.Header().Set("Content-Type", "text/event-stream")
+					w.WriteHeader(200)
 					if !tc.manual {
 						_, _ = fmt.Fprintf(w, "data: %s\n\n", betaResultTurn("completed", "root", "null"))
 					}
-					w.WriteHeader(200)
 					w.(http.Flusher).Flush()
 					<-r.Context().Done()
 				case strings.HasSuffix(r.URL.Path, "/turns"):
@@ -393,7 +397,11 @@ func TestBetaAgentAttachManualSnapshotIsSelectedRootOnly(t *testing.T) {
 			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
-			result, err := client.Beta.Agents.Sessions.Stream(ctx, "session", openai.AgentSessionStreamParams{}).FinalResult()
+			stream := client.Beta.Agents.Sessions.Stream(ctx, "session", openai.AgentSessionStreamParams{})
+			if tc.closed {
+				_ = stream.Close()
+			}
+			result, err := stream.FinalResult()
 			if tc.manual {
 				var failure *openai.BetaAgentTurnResultError
 				if !errors.As(err, &failure) || failure.Reason != "requires_action" || len(failure.RequiredActions) != 1 {
@@ -403,5 +411,206 @@ func TestBetaAgentAttachManualSnapshotIsSelectedRootOnly(t *testing.T) {
 				t.Fatalf("unrelated snapshot blocked selected root: result=%v err=%v", result, err)
 			}
 		})
+	}
+}
+
+func TestBetaAgentAttachIgnoresStaleIdle(t *testing.T) {
+	var reads atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case strings.HasSuffix(r.URL.Path, "/events"):
+			w.Header().Set("Content-Type", "text/event-stream")
+			_, _ = fmt.Fprintf(w, "data: %s\n\ndata: %s\n\n", betaResultIdle(), betaResultTurn("completed", "root", "null"))
+		case strings.HasSuffix(r.URL.Path, "/turns"):
+			_, _ = fmt.Fprint(w, `{"data":[{"id":"root","session_id":"session","status":"in_progress"}],"has_more":false}`)
+		case strings.HasSuffix(r.URL.Path, "/turns/root"):
+			status := "in_progress"
+			if reads.Add(1) > 2 {
+				status = "completed"
+			}
+			_, _ = fmt.Fprintf(w, `{"id":"root","session_id":"session","status":%q}`, status)
+		case strings.HasSuffix(r.URL.Path, "/items"):
+			_, _ = fmt.Fprint(w, `{"data":[],"has_more":false}`)
+		default:
+			_, _ = fmt.Fprint(w, `{"id":"session","status":"idle"}`)
+		}
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	result, err := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{}).FinalResult()
+	if err != nil || result.TurnID() != "root" || reads.Load() != 3 {
+		t.Fatalf("stale idle stopped active root: result=%v reads=%d err=%v", result, reads.Load(), err)
+	}
+}
+
+func TestBetaAgentAttachTerminalErrorFidelity(t *testing.T) {
+	for _, status := range []string{"failed", "cancelled"} {
+		for _, getFails := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/getFails=%t", status, getFails), func(t *testing.T) {
+				var reads atomic.Int32
+				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+					switch {
+					case strings.HasSuffix(r.URL.Path, "/events"):
+						w.Header().Set("Content-Type", "text/event-stream")
+						_, _ = fmt.Fprintf(w, "data: %s\n\ndata: %s\n\n", betaResultMessage("done", "answer", "root", `"final_answer"`, "observed", 0), betaResultTurn(status, "root", "null"))
+					case strings.HasSuffix(r.URL.Path, "/turns"):
+						_, _ = fmt.Fprint(w, `{"data":[{"id":"root","session_id":"session","status":"in_progress"}],"has_more":false}`)
+					case strings.HasSuffix(r.URL.Path, "/turns/root"):
+						current := "in_progress"
+						if reads.Add(1) > 1 {
+							current = status
+							if getFails {
+								w.WriteHeader(500)
+								_, _ = fmt.Fprint(w, `{"error":{"message":"synthetic"}}`)
+								return
+							}
+						}
+						_, _ = fmt.Fprintf(w, `{"id":"root","session_id":"session","status":%q}`, current)
+					case strings.HasSuffix(r.URL.Path, "/items"):
+						_, _ = fmt.Fprint(w, `{"data":[{"id":"earlier","turn_id":"root","type":"message","role":"assistant","status":"completed","content":[{"type":"output_text","text":"durable earlier"}]}],"has_more":false}`)
+					default:
+						_, _ = fmt.Fprint(w, `{"id":"session","status":"in_progress"}`)
+					}
+				}))
+				defer server.Close()
+				client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
+				_, err := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{}).FinalResult()
+				var failure *openai.BetaAgentTurnResultError
+				if !errors.As(err, &failure) || failure.Reason != "turn_"+status || failure.Turn.Status != openai.TurnStatus(status) || len(failure.Messages) != 1 {
+					t.Fatal("terminal status/messages lost", err)
+				}
+				text := failure.Messages[0].Content[0].Text
+				expected := "durable earlier"
+				if getFails {
+					expected = "observed"
+				}
+				if text != expected {
+					t.Fatalf("wrong partial output: %q", text)
+				}
+			})
+		}
+	}
+}
+
+func TestBetaAgentAttachHistoricalRootDoesNotSelectWork(t *testing.T) {
+	for _, historical := range []string{"baseline", "older"} {
+		t.Run(historical, func(t *testing.T) {
+			var posts atomic.Int32
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				switch {
+				case strings.HasSuffix(r.URL.Path, "/events") && r.Method == http.MethodPost:
+					posts.Add(1)
+					w.WriteHeader(204)
+				case strings.HasSuffix(r.URL.Path, "/events"):
+					w.Header().Set("Content-Type", "text/event-stream")
+					old := agentEvent("turn.item.added", "historical", fmt.Sprintf(`,"turn_id":%q,"item":{"type":"tool_call","turn_id":%q}`, historical, historical))
+					for _, event := range []string{old, agentCall("pending", "new", "call", "lookup", `{}`), betaResultTurn("completed", "new", "null")} {
+						_, _ = fmt.Fprintf(w, "data: %s\n\n", event)
+					}
+				case strings.HasSuffix(r.URL.Path, "/turns"):
+					_, _ = fmt.Fprint(w, `{"data":[{"id":"baseline","session_id":"session","status":"completed"}],"has_more":false}`)
+				case strings.HasSuffix(r.URL.Path, "/turns/new"):
+					status := "in_progress"
+					if posts.Load() > 0 {
+						status = "completed"
+					}
+					_, _ = fmt.Fprintf(w, `{"id":"new","session_id":"session","status":%q}`, status)
+				case strings.HasSuffix(r.URL.Path, "/turns/"+historical):
+					_, _ = fmt.Fprintf(w, `{"id":%q,"session_id":"session","status":"completed"}`, historical)
+				case strings.HasSuffix(r.URL.Path, "/items"):
+					_, _ = fmt.Fprint(w, `{"data":[],"has_more":false}`)
+				default:
+					_, _ = fmt.Fprint(w, `{"id":"session","status":"in_progress"}`)
+				}
+			}))
+			defer server.Close()
+			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+			calls := 0
+			result, err := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{ToolHandlers: map[string]openai.AgentToolHandler{"lookup": func(context.Context, map[string]any) (any, error) { calls++; return "receipt", nil }}}).FinalResult()
+			if err != nil || result.TurnID() != "new" || calls != 1 {
+				t.Fatalf("historical root selected: result=%v calls=%d err=%v", result, calls, err)
+			}
+		})
+	}
+}
+
+func TestBetaAgentAttachEarlyFailureKeepsSessionID(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprint(w, `{"id":"session","status":"failed"}`)
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	_, err := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{}).FinalResult()
+	var failure *openai.BetaAgentTurnResultError
+	if !errors.As(err, &failure) || failure.Reason != "session_failed" || failure.SessionID != "session" {
+		t.Fatal("lost known session ID", err)
+	}
+}
+
+func TestBetaAgentAttachSuccessorEnvironmentEvent(t *testing.T) {
+	var lists, reads atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case strings.HasSuffix(r.URL.Path, "/events"):
+			w.Header().Set("Content-Type", "text/event-stream")
+			action := agentEvent("requires_action", "successor-action", `,"session":{"id":"session","required_actions":[{"type":"environment_connection","environment_id":"env"}]}`)
+			_, _ = fmt.Fprintf(w, "data: %s\n\ndata: %s\n\n", action, betaResultTurn("completed", "root", "null"))
+		case strings.HasSuffix(r.URL.Path, "/turns"):
+			id, status := "root", "in_progress"
+			if lists.Add(1) > 1 {
+				id, status = "successor", "waiting"
+			}
+			_, _ = fmt.Fprintf(w, `{"data":[{"id":%q,"session_id":"session","status":%q}],"has_more":false}`, id, status)
+		case strings.HasSuffix(r.URL.Path, "/turns/root"):
+			status := "in_progress"
+			if reads.Add(1) > 1 {
+				status = "completed"
+			}
+			_, _ = fmt.Fprintf(w, `{"id":"root","session_id":"session","status":%q}`, status)
+		case strings.HasSuffix(r.URL.Path, "/items"):
+			_, _ = fmt.Fprint(w, `{"data":[],"has_more":false}`)
+		default:
+			_, _ = fmt.Fprint(w, `{"id":"session","status":"in_progress"}`)
+		}
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	result, err := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{}).FinalResult()
+	if err != nil || result.TurnID() != "root" {
+		t.Fatalf("successor action stopped selected root: result=%v err=%v", result, err)
+	}
+}
+
+func TestBetaAgentAttachRejectsConflictingItemTurn(t *testing.T) {
+	var posts atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case r.Method == http.MethodPost:
+			posts.Add(1)
+			w.WriteHeader(204)
+		case strings.HasSuffix(r.URL.Path, "/events"):
+			w.Header().Set("Content-Type", "text/event-stream")
+			event := agentEvent("turn.item.added", "bad", `,"turn_id":"root","item":{"type":"function_call","turn_id":"other","call_id":"call","name":"lookup","arguments":{}}`)
+			_, _ = fmt.Fprintf(w, "data: %s\n\n", event)
+		case strings.HasSuffix(r.URL.Path, "/turns"):
+			_, _ = fmt.Fprint(w, `{"data":[{"id":"root","session_id":"session","status":"in_progress"}],"has_more":false}`)
+		case strings.HasSuffix(r.URL.Path, "/turns/root"):
+			_, _ = fmt.Fprint(w, `{"id":"root","session_id":"session","status":"in_progress"}`)
+		default:
+			_, _ = fmt.Fprint(w, `{"id":"session","status":"in_progress"}`)
+		}
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"))
+	calls := 0
+	_, err := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{ToolHandlers: map[string]openai.AgentToolHandler{"lookup": func(context.Context, map[string]any) (any, error) { calls++; return "wrong", nil }}}).FinalResult()
+	if err == nil || calls != 0 || posts.Load() != 0 {
+		t.Fatalf("conflicting identity dispatched: calls=%d posts=%d err=%v", calls, posts.Load(), err)
 	}
 }

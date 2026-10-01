@@ -15,6 +15,7 @@ import (
 // remains the sole source of calls, including pending calls replayed on attach.
 type betaAgentAttachment struct {
 	ctx               context.Context
+	baselineID        string
 	turn              *Turn
 	idle              bool
 	terminal          bool
@@ -27,6 +28,7 @@ func betaAgentTurnTerminal(turn *Turn) bool {
 
 func (s *AgentSessionStream) attachSession(ctx context.Context) *AgentSessionStream {
 	s.attachment = &betaAgentAttachment{ctx: ctx}
+	s.collector.sessionID = s.sessionID
 	session, err := s.attachmentSession(s.ctx)
 	if err != nil {
 		s.finish(err)
@@ -37,10 +39,13 @@ func (s *AgentSessionStream) attachSession(ctx context.Context) *AgentSessionStr
 		_ = s.Close()
 		return s
 	}
-	baseline, err := s.latestAttachmentRoot()
+	baseline, err := s.latestAttachmentRoot(s.ctx)
 	if err != nil {
 		s.finish(err)
 		return s
+	}
+	if baseline != nil {
+		s.attachment.baselineID = baseline.ID
 	}
 	if baseline != nil && !betaAgentTurnTerminal(baseline) {
 		s.selectAttachmentTurn(baseline)
@@ -54,7 +59,6 @@ func (s *AgentSessionStream) attachSession(ctx context.Context) *AgentSessionStr
 		return s
 	}
 	// An exact selected turn can finish while a successor makes the session active.
-	// If there was no selection, only a new root since the baseline can be adopted.
 	if s.turnID != "" {
 		turn, getErr := s.attachmentTurn(s.ctx, s.turnID)
 		if getErr != nil {
@@ -62,19 +66,10 @@ func (s *AgentSessionStream) attachSession(ctx context.Context) *AgentSessionStr
 			return s
 		}
 		s.selectAttachmentTurn(turn)
-	} else {
-		latest, listErr := s.latestAttachmentRoot()
-		if listErr != nil {
-			s.finish(listErr)
+		if s.attachment.terminal {
+			_ = s.Close()
 			return s
 		}
-		if latest != nil && (baseline == nil || latest.ID != baseline.ID) {
-			s.selectAttachmentTurn(latest)
-		}
-	}
-	if s.attachment.terminal {
-		_ = s.Close()
-		return s
 	}
 	session, err = s.attachmentSession(s.ctx)
 	if err != nil {
@@ -84,11 +79,26 @@ func (s *AgentSessionStream) attachSession(ctx context.Context) *AgentSessionStr
 	if session.Status == "failed" {
 		s.collector.sessionFailed = true
 		_ = s.Close()
+		return s
 	}
-	if session.Status == "idle" {
-		s.attachment.idle = true
+	if s.turnID == "" {
+		// Read the latest root after the session snapshot. This is the bounded
+		// attachment snapshot; work starting later belongs to a future attachment.
+		latest, listErr := s.latestAttachmentRoot(s.ctx)
+		if listErr != nil {
+			s.finish(listErr)
+			return s
+		}
+		if latest != nil && latest.ID != s.attachment.baselineID {
+			s.selectAttachmentTurn(latest)
+		}
+	}
+	if s.attachment.terminal || (session.Status == "idle" && s.turnID == "") {
+		s.attachment.idle = session.Status == "idle"
 		_ = s.Close()
 	}
+	// A non-idle session with no new visible root may still be starting work.
+	// Keep observing; an unchanged historical terminal root is not a no-work signal.
 	return s
 }
 
@@ -98,11 +108,11 @@ func (s *AgentSessionStream) selectAttachmentTurn(turn *Turn) {
 	s.attachment.terminal = betaAgentTurnTerminal(turn)
 }
 
-func (s *AgentSessionStream) latestAttachmentRoot() (*Turn, error) {
+func (s *AgentSessionStream) latestAttachmentRoot(ctx context.Context) (*Turn, error) {
 	service := s.sessions.Turns
 	capture, require := agentStreamResponseGuard[pagination.CursorPage[Turn]]()
 	service.Options = append([]option.RequestOption{capture}, service.Options...)
-	turns := service.ListAutoPaging(s.ctx, s.sessionID, BetaAgentSessionTurnListParams{Order: "desc"}, append(slices.Clone(s.options), require)...)
+	turns := service.ListAutoPaging(ctx, s.sessionID, BetaAgentSessionTurnListParams{Order: "desc"}, append(slices.Clone(s.options), require)...)
 	for turns.Next() {
 		turn := turns.Current()
 		if turn.SubagentID == "" {
@@ -117,10 +127,23 @@ func (s *AgentSessionStream) observeAttachment(event AgentSessionEventUnion) (bo
 		return true, nil
 	}
 	if event.Type == "agent.session.idle" {
+		if s.turnID != "" && !s.attachment.terminal {
+			turn, err := s.attachmentTurn(s.ctx, s.turnID)
+			if err != nil {
+				return false, err
+			}
+			if !betaAgentTurnTerminal(turn) {
+				return false, nil
+			}
+			s.selectAttachmentTurn(turn)
+		}
 		s.attachment.idle = true
 	}
+	if event.TurnID != "" && event.Item.TurnID != "" && event.TurnID != event.Item.TurnID {
+		return false, errors.New("inconsistent attached item turn identity")
+	}
 	id := event.TurnID
-	if id == "" {
+	if event.Item.TurnID != "" {
 		id = event.Item.TurnID
 	}
 	if s.turnID == "" && id != "" {
@@ -130,6 +153,18 @@ func (s *AgentSessionStream) observeAttachment(event AgentSessionEventUnion) (bo
 			return false, err
 		}
 		if turn.SubagentID == "" {
+			if betaAgentTurnTerminal(turn) {
+				if turn.ID == s.attachment.baselineID {
+					return false, nil
+				}
+				latest, listErr := s.latestAttachmentRoot(s.ctx)
+				if listErr != nil {
+					return false, listErr
+				}
+				if latest == nil || latest.ID != turn.ID {
+					return false, nil
+				}
+			}
 			s.selectAttachmentTurn(turn)
 		}
 	}
@@ -153,10 +188,8 @@ func (s *AgentSessionStream) seedAttachmentCollector() {
 	if c.turn == nil && a.turn != nil {
 		c.setTurn(*a.turn)
 	}
-	if a.terminal {
+	if betaAgentTurnTerminal(c.turn) {
 		c.terminal = true
-		c.boundary = true
-		c.required = nil
 	}
 }
 
@@ -165,9 +198,24 @@ func (s *AgentSessionStream) attachmentActions(event AgentSessionEventUnion) {
 		return
 	}
 	if event.Type == "agent.session.requires_action" {
-		s.collector.required = slices.DeleteFunc(s.collector.required, func(action AgentSessionRequiredActionUnion) bool {
-			return action.TurnID != "" && action.TurnID != s.turnID
-		})
+		required := s.collector.required[:0]
+		for _, action := range s.collector.required {
+			if action.TurnID != "" && action.TurnID != s.turnID {
+				continue
+			}
+			if action.Type == "environment_connection" {
+				latest, err := s.latestAttachmentRoot(s.ctx)
+				if err != nil {
+					s.collector.collectionErr = err
+					return
+				}
+				if latest == nil || latest.ID != s.turnID || latest.Status != "waiting" {
+					continue
+				}
+			}
+			required = append(required, action)
+		}
+		s.collector.required = required
 	}
 	if event.Type == "agent.session.turn.item.added" && event.Item.Type == "function_call" && s.handlers[event.Item.Name] == nil {
 		var action AgentSessionRequiredActionUnion
@@ -196,7 +244,7 @@ func (s *AgentSessionStream) attachmentManualActions() error {
 	for _, action := range session.RequiredActions {
 		manual := action.Type == "computer_use_approval_request" && action.TurnID == s.turnID
 		if action.Type == "environment_connection" && (action.TurnID == "" || action.TurnID == s.turnID) {
-			latest, listErr := s.latestAttachmentRoot()
+			latest, listErr := s.latestAttachmentRoot(a.ctx)
 			if listErr != nil {
 				return listErr
 			}
@@ -222,13 +270,15 @@ func (s *AgentSessionStream) reconcileAttachment() error {
 		return errors.New("attachment returned a different root turn")
 	}
 	c := &s.collector
-	c.setTurn(*turn)
-	c.terminal = betaAgentTurnTerminal(turn)
+	if !betaAgentTurnTerminal(c.turn) || betaAgentTurnTerminal(turn) {
+		c.setTurn(*turn)
+	}
+	c.terminal = betaAgentTurnTerminal(c.turn)
 	if c.terminal {
 		c.boundary = true
 		c.required = nil
 	}
-	if turn.Status != "completed" {
+	if !c.terminal {
 		return nil
 	}
 	messages := make(map[int64]AgentSessionMessage)

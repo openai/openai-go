@@ -200,6 +200,9 @@ func (s *AgentSessionStream) Next() (ok bool) {
 			continue
 		}
 		s.collector.Accumulate(event)
+		if s.attachment != nil && s.attachment.terminal && s.collector.enabled {
+			s.collector.boundary = true
+		}
 		s.attachmentActions(event)
 		s.current = event
 		if event.Type == "agent.session.failed" || (s.attachment != nil && s.attachment.terminal) || (event.Type == "agent.session.idle" && (s.turnEnded || s.attachment != nil)) {
