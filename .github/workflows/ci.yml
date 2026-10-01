@@ -26,7 +26,7 @@ permissions:
 
 jobs:
   lint_run:
-    timeout-minutes: 15
+    timeout-minutes: 20
     name: lint (${{ matrix.scope }})
     runs-on: ubuntu-latest
     strategy:
