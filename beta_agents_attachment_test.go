@@ -1085,3 +1085,56 @@ func TestBetaAgentAttachRecoversAfterSubscriptionFailure(t *testing.T) {
 		t.Fatalf("result=%v subscriptions=%d err=%v", result, subscriptions.Load(), err)
 	}
 }
+
+func TestBetaAgentAttachRecoversAfterSnapshotFailure(t *testing.T) {
+	for _, failedRead := range []string{"turn", "session", "idle", "manual"} {
+		t.Run(failedRead, func(t *testing.T) {
+			var turnReads, sessionReads atomic.Int32
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				fail := func() {
+					w.WriteHeader(http.StatusServiceUnavailable)
+					_, _ = fmt.Fprint(w, `{"error":{"message":"synthetic temporary failure"}}`)
+				}
+				switch {
+				case strings.HasSuffix(r.URL.Path, "/events"):
+					w.Header().Set("Content-Type", "text/event-stream")
+					_, _ = fmt.Fprintf(w, "data: %s\n\n", betaResultIdle())
+					w.(http.Flusher).Flush()
+					<-r.Context().Done()
+				case strings.HasSuffix(r.URL.Path, "/turns"):
+					_, _ = fmt.Fprint(w, `{"data":[{"id":"root","session_id":"session","status":"in_progress"}],"has_more":false}`)
+				case strings.HasSuffix(r.URL.Path, "/turns/root"):
+					count := turnReads.Add(1)
+					if (failedRead == "turn" && count == 1) || (failedRead == "idle" && count == 2) {
+						fail()
+						return
+					}
+					status := "in_progress"
+					if failedRead == "manual" {
+						status = "waiting"
+					}
+					if (failedRead != "idle" && count >= 2) || (failedRead == "idle" && count >= 3) {
+						status = "completed"
+					}
+					_, _ = fmt.Fprintf(w, `{"id":"root","session_id":"session","status":%q}`, status)
+				case strings.HasSuffix(r.URL.Path, "/items"):
+					_, _ = fmt.Fprint(w, `{"data":[{"id":"m","turn_id":"root","type":"message","role":"assistant","status":"completed","content":[{"type":"output_text","text":"finished"}]}],"has_more":false}`)
+				default:
+					count := sessionReads.Add(1)
+					if (count == 2 && failedRead == "session") || (count == 3 && failedRead == "manual") {
+						fail()
+						return
+					}
+					_, _ = fmt.Fprint(w, `{"id":"session","status":"in_progress"}`)
+				}
+			}))
+			defer server.Close()
+			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
+			result, err := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{}).FinalResult()
+			if err != nil || result.OutputText() != "finished" {
+				t.Fatalf("result=%v err=%v", result, err)
+			}
+		})
+	}
+}

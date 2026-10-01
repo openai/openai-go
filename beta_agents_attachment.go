@@ -120,7 +120,7 @@ func (s *AgentSessionStream) latestAttachmentRoot(ctx context.Context) (*Turn, e
 			return &turn, nil
 		}
 	}
-	return nil, turns.Err()
+	return nil, s.attachmentReadError(turns.Err())
 }
 
 func (s *AgentSessionStream) observeAttachment(event AgentSessionEventUnion) (bool, error) {
@@ -431,7 +431,7 @@ func (s *AgentSessionStream) attachmentSession(ctx context.Context) (*AgentSessi
 	if err == nil && session == nil {
 		return nil, errors.New("attachment received an empty session")
 	}
-	return session, err
+	return session, s.attachmentReadError(err)
 }
 func (s *AgentSessionStream) attachmentTurn(ctx context.Context, id string) (*Turn, error) {
 	service := s.sessions.Turns
@@ -441,5 +441,14 @@ func (s *AgentSessionStream) attachmentTurn(ctx context.Context, id string) (*Tu
 	if err == nil && (turn == nil || turn.ID != id || turn.SessionID != s.sessionID) {
 		return nil, errors.New("attachment received an inconsistent turn")
 	}
-	return turn, err
+	return turn, s.attachmentReadError(err)
+}
+
+// A failed observation request can still be followed by one exact-turn recovery.
+// Locally detected identity errors and tool-result mutations do not use this path.
+func (s *AgentSessionStream) attachmentReadError(err error) error {
+	if err != nil && s.attachment != nil && s.turnID != "" {
+		s.attachment.observationFailed = true
+	}
+	return err
 }
