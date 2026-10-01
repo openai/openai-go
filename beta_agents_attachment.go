@@ -126,6 +126,53 @@ func (s *AgentSessionStream) observeAttachment(event AgentSessionEventUnion) (bo
 	if s.attachment == nil {
 		return true, nil
 	}
+	if event.Type == "agent.session.requires_action" && s.turnID == "" {
+		for _, action := range event.Session.RequiredActions {
+			if action.TurnID != "" {
+				if err := s.selectAttachmentCandidate(action.TurnID); err != nil {
+					return false, err
+				}
+				if s.turnID != "" {
+					break
+				}
+			}
+		}
+	}
+	if event.Type == "agent.session.requires_action" && s.turnID == "" {
+		latest, err := s.latestAttachmentRoot(s.ctx)
+		if err != nil {
+			return false, err
+		}
+		if latest != nil && (!betaAgentTurnTerminal(latest) || latest.ID != s.attachment.baselineID) {
+			s.selectAttachmentTurn(latest)
+		}
+	}
+	if event.Type == "agent.session.requires_action" && s.turnID != "" && len(event.Session.RequiredActions) != 0 {
+		onlyOther := true
+		for _, action := range event.Session.RequiredActions {
+			if action.TurnID == s.turnID {
+				onlyOther = false
+				break
+			}
+			if action.TurnID == "" {
+				if action.Type != "environment_connection" {
+					onlyOther = false
+					break
+				}
+				latest, err := s.latestAttachmentRoot(s.ctx)
+				if err != nil {
+					return false, err
+				}
+				if latest == nil || latest.ID == s.turnID {
+					onlyOther = false
+					break
+				}
+			}
+		}
+		if onlyOther {
+			return false, s.refreshAttachmentTurn()
+		}
+	}
 	if event.Type == "agent.session.idle" {
 		if s.turnID == "" {
 			session, err := s.attachmentSession(s.ctx)
@@ -163,36 +210,15 @@ func (s *AgentSessionStream) observeAttachment(event AgentSessionEventUnion) (bo
 		id = event.Item.TurnID
 	}
 	if s.turnID == "" && id != "" {
-		// Pending function items may be the first frame, without turn.created.
-		turn, err := s.attachmentTurn(s.ctx, id)
-		if err != nil {
+		// Pending function items may be first, without turn.created.
+		if err := s.selectAttachmentCandidate(id); err != nil {
 			return false, err
-		}
-		if turn.SubagentID == "" {
-			if betaAgentTurnTerminal(turn) {
-				if turn.ID == s.attachment.baselineID {
-					return false, nil
-				}
-				latest, listErr := s.latestAttachmentRoot(s.ctx)
-				if listErr != nil {
-					return false, listErr
-				}
-				if latest == nil || latest.ID != turn.ID {
-					return false, nil
-				}
-			}
-			s.selectAttachmentTurn(turn)
-			if s.collector.enabled {
-				if err := s.attachmentManualActions(s.ctx); err != nil {
-					return false, err
-				}
-			}
 		}
 	}
 	// The root session stream contains root items; successor work belongs to a
 	// separate attachment. Never dispatch a call from a different root.
 	if id != "" && id != s.turnID {
-		if s.turnID != "" && ((event.Type == "agent.session.turn.created" && event.Turn.SubagentID == "") || (event.Type == "agent.session.turn.item.added" && event.Item.Type == "function_call")) {
+		if s.turnID != "" && (event.Type == "agent.session.turn.item.added" || (event.Turn.ID != "" && event.Turn.SubagentID == "")) {
 			return false, s.refreshAttachmentTurn()
 		}
 		return false, nil
@@ -201,6 +227,33 @@ func (s *AgentSessionStream) observeAttachment(event AgentSessionEventUnion) (bo
 		s.attachment.terminal = true
 	}
 	return true, nil
+}
+
+func (s *AgentSessionStream) selectAttachmentCandidate(id string) error {
+	turn, err := s.attachmentTurn(s.ctx, id)
+	if err != nil {
+		return err
+	}
+	if turn.SubagentID != "" {
+		return nil
+	}
+	if betaAgentTurnTerminal(turn) {
+		if turn.ID == s.attachment.baselineID {
+			return nil
+		}
+		latest, err := s.latestAttachmentRoot(s.ctx)
+		if err != nil {
+			return err
+		}
+		if latest == nil || latest.ID != turn.ID {
+			return nil
+		}
+	}
+	s.selectAttachmentTurn(turn)
+	if s.collector.enabled {
+		return s.attachmentManualActions(s.ctx)
+	}
+	return nil
 }
 
 func (s *AgentSessionStream) refreshAttachmentTurn() error {
@@ -241,6 +294,10 @@ func (s *AgentSessionStream) attachmentActions(event AgentSessionEventUnion) {
 					s.collector.collectionErr = err
 					return
 				}
+				if s.turnID == "" && (latest == nil || betaAgentTurnTerminal(latest)) {
+					required = append(required, action)
+					continue
+				}
 				if latest == nil || latest.ID != s.turnID || latest.Status != "waiting" {
 					if s.turnID != "" {
 						s.collector.collectionErr = s.refreshAttachmentTurn()
@@ -280,6 +337,15 @@ func (s *AgentSessionStream) attachmentManualActions(ctx context.Context) error 
 	if a.turn != nil && a.turn.Status != "waiting" {
 		return nil
 	}
+	// Refresh manual diagnostics instead of duplicating actions already observed
+	// during progress iteration. Function diagnostics remain SSE-owned.
+	required := s.collector.required[:0]
+	for _, action := range s.collector.required {
+		if action.Type == "function_call" {
+			required = append(required, action)
+		}
+	}
+	s.collector.required = required
 	for _, action := range session.RequiredActions {
 		manual := s.turnID != "" && action.Type == "computer_use_approval_request" && action.TurnID == s.turnID
 		if action.Type == "environment_connection" && (action.TurnID == "" || action.TurnID == s.turnID) {
@@ -287,7 +353,7 @@ func (s *AgentSessionStream) attachmentManualActions(ctx context.Context) error 
 			if listErr != nil {
 				return listErr
 			}
-			manual = (s.turnID == "" && latest == nil) || (latest != nil && latest.ID == s.turnID && latest.Status == "waiting")
+			manual = (s.turnID == "" && (latest == nil || betaAgentTurnTerminal(latest))) || (latest != nil && latest.ID == s.turnID && latest.Status == "waiting")
 		}
 		if manual {
 			s.collector.required = append(s.collector.required, action)
