@@ -13,6 +13,8 @@ import (
 )
 
 // Existing consumer code must retain access through every exported alias package.
+//
+//nolint:staticcheck // SA1019: This fixture specifically checks that the deprecated alias remains source-compatible.
 const (
 	_ openai.ChatModel        = openai.ChatModelGPT5_1Mini
 	_ conversations.ChatModel = conversations.ChatModelGPT5_1Mini

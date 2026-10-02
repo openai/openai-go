@@ -237,6 +237,9 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
@@ -315,43 +318,44 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultUnion struct {
 	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResult].
 	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		Images                 respjson.Field
-		Size                   respjson.Field
-		Source                 respjson.Field
-		Characters             respjson.Field
-		Seconds                respjson.Field
-		UsageBytes             respjson.Field
-		NumSessions            respjson.Field
-		NumRequests            respjson.Field
-		VectorStoreID          respjson.Field
-		ContextLevel           respjson.Field
-		Amount                 respjson.Field
-		LineItem               respjson.Field
-		Quantity               respjson.Field
-		QuantityUnit           respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		Images                   respjson.Field
+		Size                     respjson.Field
+		Source                   respjson.Field
+		Characters               respjson.Field
+		Seconds                  respjson.Field
+		UsageBytes               respjson.Field
+		NumSessions              respjson.Field
+		NumRequests              respjson.Field
+		VectorStoreID            respjson.Field
+		ContextLevel             respjson.Field
+		Amount                   respjson.Field
+		LineItem                 respjson.Field
+		Quantity                 respjson.Field
+		QuantityUnit             respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -516,7 +520,11 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompl
 	Batch bool `json:"batch" api:"nullable"`
 	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of input tokens written to the cache.
+	// The aggregated number of input tokens written to the cache with a 12-hour
+	// retention period.
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -555,30 +563,31 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompl
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		ExtraFields            map[string]respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -1090,6 +1099,9 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
@@ -1168,43 +1180,44 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion struct {
 	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCostsResult].
 	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		Images                 respjson.Field
-		Size                   respjson.Field
-		Source                 respjson.Field
-		Characters             respjson.Field
-		Seconds                respjson.Field
-		UsageBytes             respjson.Field
-		NumSessions            respjson.Field
-		NumRequests            respjson.Field
-		VectorStoreID          respjson.Field
-		ContextLevel           respjson.Field
-		Amount                 respjson.Field
-		LineItem               respjson.Field
-		Quantity               respjson.Field
-		QuantityUnit           respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		Images                   respjson.Field
+		Size                     respjson.Field
+		Source                   respjson.Field
+		Characters               respjson.Field
+		Seconds                  respjson.Field
+		UsageBytes               respjson.Field
+		NumSessions              respjson.Field
+		NumRequests              respjson.Field
+		VectorStoreID            respjson.Field
+		ContextLevel             respjson.Field
+		Amount                   respjson.Field
+		LineItem                 respjson.Field
+		Quantity                 respjson.Field
+		QuantityUnit             respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -1370,7 +1383,11 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsag
 	Batch bool `json:"batch" api:"nullable"`
 	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of input tokens written to the cache.
+	// The aggregated number of input tokens written to the cache with a 12-hour
+	// retention period.
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -1409,30 +1426,31 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsag
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		ExtraFields            map[string]respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -1947,6 +1965,9 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion struct
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
@@ -2025,43 +2046,44 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion struct
 	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationCostsResult].
 	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		Images                 respjson.Field
-		Size                   respjson.Field
-		Source                 respjson.Field
-		Characters             respjson.Field
-		Seconds                respjson.Field
-		UsageBytes             respjson.Field
-		NumSessions            respjson.Field
-		NumRequests            respjson.Field
-		VectorStoreID          respjson.Field
-		ContextLevel           respjson.Field
-		Amount                 respjson.Field
-		LineItem               respjson.Field
-		Quantity               respjson.Field
-		QuantityUnit           respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		Images                   respjson.Field
+		Size                     respjson.Field
+		Source                   respjson.Field
+		Characters               respjson.Field
+		Seconds                  respjson.Field
+		UsageBytes               respjson.Field
+		NumSessions              respjson.Field
+		NumRequests              respjson.Field
+		VectorStoreID            respjson.Field
+		ContextLevel             respjson.Field
+		Amount                   respjson.Field
+		LineItem                 respjson.Field
+		Quantity                 respjson.Field
+		QuantityUnit             respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -2227,7 +2249,11 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganization
 	Batch bool `json:"batch" api:"nullable"`
 	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of input tokens written to the cache.
+	// The aggregated number of input tokens written to the cache with a 12-hour
+	// retention period.
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -2266,30 +2292,31 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganization
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		ExtraFields            map[string]respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -2801,6 +2828,9 @@ type AdminOrganizationUsageCompletionsResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
@@ -2879,43 +2909,44 @@ type AdminOrganizationUsageCompletionsResponseDataResultUnion struct {
 	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult].
 	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		Images                 respjson.Field
-		Size                   respjson.Field
-		Source                 respjson.Field
-		Characters             respjson.Field
-		Seconds                respjson.Field
-		UsageBytes             respjson.Field
-		NumSessions            respjson.Field
-		NumRequests            respjson.Field
-		VectorStoreID          respjson.Field
-		ContextLevel           respjson.Field
-		Amount                 respjson.Field
-		LineItem               respjson.Field
-		Quantity               respjson.Field
-		QuantityUnit           respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		Images                   respjson.Field
+		Size                     respjson.Field
+		Source                   respjson.Field
+		Characters               respjson.Field
+		Seconds                  respjson.Field
+		UsageBytes               respjson.Field
+		NumSessions              respjson.Field
+		NumRequests              respjson.Field
+		VectorStoreID            respjson.Field
+		ContextLevel             respjson.Field
+		Amount                   respjson.Field
+		LineItem                 respjson.Field
+		Quantity                 respjson.Field
+		QuantityUnit             respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -3078,7 +3109,11 @@ type AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageComplet
 	Batch bool `json:"batch" api:"nullable"`
 	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of input tokens written to the cache.
+	// The aggregated number of input tokens written to the cache with a 12-hour
+	// retention period.
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -3117,30 +3152,31 @@ type AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageComplet
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		ExtraFields            map[string]respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -3652,6 +3688,9 @@ type AdminOrganizationUsageCostsResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
@@ -3730,43 +3769,44 @@ type AdminOrganizationUsageCostsResponseDataResultUnion struct {
 	// [AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult].
 	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		Images                 respjson.Field
-		Size                   respjson.Field
-		Source                 respjson.Field
-		Characters             respjson.Field
-		Seconds                respjson.Field
-		UsageBytes             respjson.Field
-		NumSessions            respjson.Field
-		NumRequests            respjson.Field
-		VectorStoreID          respjson.Field
-		ContextLevel           respjson.Field
-		Amount                 respjson.Field
-		LineItem               respjson.Field
-		Quantity               respjson.Field
-		QuantityUnit           respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		Images                   respjson.Field
+		Size                     respjson.Field
+		Source                   respjson.Field
+		Characters               respjson.Field
+		Seconds                  respjson.Field
+		UsageBytes               respjson.Field
+		NumSessions              respjson.Field
+		NumRequests              respjson.Field
+		VectorStoreID            respjson.Field
+		ContextLevel             respjson.Field
+		Amount                   respjson.Field
+		LineItem                 respjson.Field
+		Quantity                 respjson.Field
+		QuantityUnit             respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -3928,7 +3968,11 @@ type AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsRe
 	Batch bool `json:"batch" api:"nullable"`
 	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of input tokens written to the cache.
+	// The aggregated number of input tokens written to the cache with a 12-hour
+	// retention period.
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -3967,30 +4011,31 @@ type AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsRe
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		ExtraFields            map[string]respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -4502,6 +4547,9 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
@@ -4580,43 +4628,44 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultUnion struct {
 	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult].
 	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		Images                 respjson.Field
-		Size                   respjson.Field
-		Source                 respjson.Field
-		Characters             respjson.Field
-		Seconds                respjson.Field
-		UsageBytes             respjson.Field
-		NumSessions            respjson.Field
-		NumRequests            respjson.Field
-		VectorStoreID          respjson.Field
-		ContextLevel           respjson.Field
-		Amount                 respjson.Field
-		LineItem               respjson.Field
-		Quantity               respjson.Field
-		QuantityUnit           respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		Images                   respjson.Field
+		Size                     respjson.Field
+		Source                   respjson.Field
+		Characters               respjson.Field
+		Seconds                  respjson.Field
+		UsageBytes               respjson.Field
+		NumSessions              respjson.Field
+		NumRequests              respjson.Field
+		VectorStoreID            respjson.Field
+		ContextLevel             respjson.Field
+		Amount                   respjson.Field
+		LineItem                 respjson.Field
+		Quantity                 respjson.Field
+		QuantityUnit             respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -4779,7 +4828,11 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompleti
 	Batch bool `json:"batch" api:"nullable"`
 	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of input tokens written to the cache.
+	// The aggregated number of input tokens written to the cache with a 12-hour
+	// retention period.
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -4818,30 +4871,31 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompleti
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		ExtraFields            map[string]respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -5353,6 +5407,9 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
@@ -5431,43 +5488,44 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultUnion struct {
 	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResult].
 	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		Images                 respjson.Field
-		Size                   respjson.Field
-		Source                 respjson.Field
-		Characters             respjson.Field
-		Seconds                respjson.Field
-		UsageBytes             respjson.Field
-		NumSessions            respjson.Field
-		NumRequests            respjson.Field
-		VectorStoreID          respjson.Field
-		ContextLevel           respjson.Field
-		Amount                 respjson.Field
-		LineItem               respjson.Field
-		Quantity               respjson.Field
-		QuantityUnit           respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		Images                   respjson.Field
+		Size                     respjson.Field
+		Source                   respjson.Field
+		Characters               respjson.Field
+		Seconds                  respjson.Field
+		UsageBytes               respjson.Field
+		NumSessions              respjson.Field
+		NumRequests              respjson.Field
+		VectorStoreID            respjson.Field
+		ContextLevel             respjson.Field
+		Amount                   respjson.Field
+		LineItem                 respjson.Field
+		Quantity                 respjson.Field
+		QuantityUnit             respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -5632,7 +5690,11 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCom
 	Batch bool `json:"batch" api:"nullable"`
 	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of input tokens written to the cache.
+	// The aggregated number of input tokens written to the cache with a 12-hour
+	// retention period.
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -5671,30 +5733,31 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCom
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		ExtraFields            map[string]respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -6206,6 +6269,9 @@ type AdminOrganizationUsageImagesResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
@@ -6284,43 +6350,44 @@ type AdminOrganizationUsageImagesResponseDataResultUnion struct {
 	// [AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult].
 	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		Images                 respjson.Field
-		Size                   respjson.Field
-		Source                 respjson.Field
-		Characters             respjson.Field
-		Seconds                respjson.Field
-		UsageBytes             respjson.Field
-		NumSessions            respjson.Field
-		NumRequests            respjson.Field
-		VectorStoreID          respjson.Field
-		ContextLevel           respjson.Field
-		Amount                 respjson.Field
-		LineItem               respjson.Field
-		Quantity               respjson.Field
-		QuantityUnit           respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		Images                   respjson.Field
+		Size                     respjson.Field
+		Source                   respjson.Field
+		Characters               respjson.Field
+		Seconds                  respjson.Field
+		UsageBytes               respjson.Field
+		NumSessions              respjson.Field
+		NumRequests              respjson.Field
+		VectorStoreID            respjson.Field
+		ContextLevel             respjson.Field
+		Amount                   respjson.Field
+		LineItem                 respjson.Field
+		Quantity                 respjson.Field
+		QuantityUnit             respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -6482,7 +6549,11 @@ type AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsR
 	Batch bool `json:"batch" api:"nullable"`
 	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of input tokens written to the cache.
+	// The aggregated number of input tokens written to the cache with a 12-hour
+	// retention period.
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -6521,30 +6592,31 @@ type AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsR
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		ExtraFields            map[string]respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -7056,6 +7128,9 @@ type AdminOrganizationUsageModerationsResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
@@ -7134,43 +7209,44 @@ type AdminOrganizationUsageModerationsResponseDataResultUnion struct {
 	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult].
 	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		Images                 respjson.Field
-		Size                   respjson.Field
-		Source                 respjson.Field
-		Characters             respjson.Field
-		Seconds                respjson.Field
-		UsageBytes             respjson.Field
-		NumSessions            respjson.Field
-		NumRequests            respjson.Field
-		VectorStoreID          respjson.Field
-		ContextLevel           respjson.Field
-		Amount                 respjson.Field
-		LineItem               respjson.Field
-		Quantity               respjson.Field
-		QuantityUnit           respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		Images                   respjson.Field
+		Size                     respjson.Field
+		Source                   respjson.Field
+		Characters               respjson.Field
+		Seconds                  respjson.Field
+		UsageBytes               respjson.Field
+		NumSessions              respjson.Field
+		NumRequests              respjson.Field
+		VectorStoreID            respjson.Field
+		ContextLevel             respjson.Field
+		Amount                   respjson.Field
+		LineItem                 respjson.Field
+		Quantity                 respjson.Field
+		QuantityUnit             respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -7333,7 +7409,11 @@ type AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageComplet
 	Batch bool `json:"batch" api:"nullable"`
 	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of input tokens written to the cache.
+	// The aggregated number of input tokens written to the cache with a 12-hour
+	// retention period.
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -7372,30 +7452,31 @@ type AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageComplet
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		ExtraFields            map[string]respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -7907,6 +7988,9 @@ type AdminOrganizationUsageVectorStoresResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
@@ -7985,43 +8069,44 @@ type AdminOrganizationUsageVectorStoresResponseDataResultUnion struct {
 	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult].
 	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		Images                 respjson.Field
-		Size                   respjson.Field
-		Source                 respjson.Field
-		Characters             respjson.Field
-		Seconds                respjson.Field
-		UsageBytes             respjson.Field
-		NumSessions            respjson.Field
-		NumRequests            respjson.Field
-		VectorStoreID          respjson.Field
-		ContextLevel           respjson.Field
-		Amount                 respjson.Field
-		LineItem               respjson.Field
-		Quantity               respjson.Field
-		QuantityUnit           respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		Images                   respjson.Field
+		Size                     respjson.Field
+		Source                   respjson.Field
+		Characters               respjson.Field
+		Seconds                  respjson.Field
+		UsageBytes               respjson.Field
+		NumSessions              respjson.Field
+		NumRequests              respjson.Field
+		VectorStoreID            respjson.Field
+		ContextLevel             respjson.Field
+		Amount                   respjson.Field
+		LineItem                 respjson.Field
+		Quantity                 respjson.Field
+		QuantityUnit             respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -8186,7 +8271,11 @@ type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageComple
 	Batch bool `json:"batch" api:"nullable"`
 	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of input tokens written to the cache.
+	// The aggregated number of input tokens written to the cache with a 12-hour
+	// retention period.
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -8225,30 +8314,31 @@ type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageComple
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		ExtraFields            map[string]respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -8760,6 +8850,9 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultUnion struct {
 	InputAudioTokens int64 `json:"input_audio_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
@@ -8838,43 +8931,44 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultUnion struct {
 	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResult].
 	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		Images                 respjson.Field
-		Size                   respjson.Field
-		Source                 respjson.Field
-		Characters             respjson.Field
-		Seconds                respjson.Field
-		UsageBytes             respjson.Field
-		NumSessions            respjson.Field
-		NumRequests            respjson.Field
-		VectorStoreID          respjson.Field
-		ContextLevel           respjson.Field
-		Amount                 respjson.Field
-		LineItem               respjson.Field
-		Quantity               respjson.Field
-		QuantityUnit           respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		Images                   respjson.Field
+		Size                     respjson.Field
+		Source                   respjson.Field
+		Characters               respjson.Field
+		Seconds                  respjson.Field
+		UsageBytes               respjson.Field
+		NumSessions              respjson.Field
+		NumRequests              respjson.Field
+		VectorStoreID            respjson.Field
+		ContextLevel             respjson.Field
+		Amount                   respjson.Field
+		LineItem                 respjson.Field
+		Quantity                 respjson.Field
+		QuantityUnit             respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
@@ -9039,7 +9133,11 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageComp
 	Batch bool `json:"batch" api:"nullable"`
 	// The aggregated number of uncached audio input tokens used.
 	InputAudioTokens int64 `json:"input_audio_tokens"`
-	// The aggregated number of input tokens written to the cache.
+	// The aggregated number of input tokens written to the cache with a 12-hour
+	// retention period.
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -9078,30 +9176,31 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageComp
 	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens            respjson.Field
-		NumModelRequests       respjson.Field
-		Object                 respjson.Field
-		OutputTokens           respjson.Field
-		APIKeyID               respjson.Field
-		Batch                  respjson.Field
-		InputAudioTokens       respjson.Field
-		InputCacheWriteTokens  respjson.Field
-		InputCachedAudioTokens respjson.Field
-		InputCachedImageTokens respjson.Field
-		InputCachedTextTokens  respjson.Field
-		InputCachedTokens      respjson.Field
-		InputImageTokens       respjson.Field
-		InputTextTokens        respjson.Field
-		InputUncachedTokens    respjson.Field
-		Model                  respjson.Field
-		OutputAudioTokens      respjson.Field
-		OutputImageTokens      respjson.Field
-		OutputTextTokens       respjson.Field
-		ProjectID              respjson.Field
-		ServiceTier            respjson.Field
-		UserID                 respjson.Field
-		ExtraFields            map[string]respjson.Field
-		raw                    string
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
 	} `json:"-"`
 }
 
