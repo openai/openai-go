@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/responses"
@@ -22,18 +23,28 @@ func main() {
 	var completeText string
 
 	for stream.Next() {
-		data := stream.Current()
-		print(data.Delta)
-		if data.JSON.Text.Valid() {
-			println()
-			println("Finished Content")
-			completeText = data.Text
-			break
+		switch event := stream.Current().AsAny().(type) {
+		case responses.ResponseTextDeltaEvent:
+			fmt.Print(event.Delta)
+		case responses.ResponseCompletedEvent:
+			completeText = event.Response.OutputText()
+			fmt.Println("\nResponse completed")
+		case responses.ResponseFailedEvent:
+			fmt.Printf("\nResponse failed: %s\n", event.Response.ID)
+		case responses.ResponseErrorEvent:
+			fmt.Printf(
+				"\nStream error event: %s param=%s code=%s\n",
+				event.Message,
+				event.Param,
+				event.Code,
+			)
 		}
 	}
 
-	if stream.Err() != nil {
-		panic(stream.Err())
+	if err := stream.Err(); err != nil {
+		// Transport/API-level streaming errors can surface here instead of as typed
+		// ResponseErrorEvent / ResponseFailedEvent values.
+		panic(err)
 	}
 
 	_ = completeText
