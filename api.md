@@ -224,6 +224,16 @@ Methods:
 
 - <code title="post /audio/speech">client.Audio.Speech.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AudioSpeechService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AudioSpeechNewParams">AudioSpeechNewParams</a>) (\*http.Response, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
+## Voices
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Voice">Voice</a>
+
+Methods:
+
+- <code title="post /audio/voices">client.Audio.Voices.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AudioVoiceService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AudioVoiceNewParams">AudioVoiceNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Voice">Voice</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
 # Moderations
 
 Params Types:

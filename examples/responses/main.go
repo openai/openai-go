@@ -15,7 +15,7 @@ func main() {
 
 	resp, err := client.Responses.New(ctx, responses.ResponseNewParams{
 		Input: responses.ResponseNewParamsInputUnion{OfString: openai.String(question)},
-		Model: openai.ChatModelGPT4,
+		Model: openai.ChatModelGPT4_1,
 	})
 
 	if err != nil {

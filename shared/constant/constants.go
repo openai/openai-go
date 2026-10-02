@@ -29,6 +29,7 @@ type AgentEnvironmentTemplate string                          // Always "agent.e
 type AgentEnvironmentTemplateDeleted string                   // Always "agent.environment.template.deleted"
 type AgentOutputCommandExecutionOutputDelta string            // Always "agent.output.command_execution_output.delta"
 type AgentSession string                                      // Always "agent.session"
+type AgentSessionActionRequired string                        // Always "agent.session.action_required"
 type AgentSessionArtifact string                              // Always "agent.session.artifact"
 type AgentSessionArtifactDeleted string                       // Always "agent.session.artifact.deleted"
 type AgentSessionCreated string                               // Always "agent.session.created"
@@ -76,6 +77,8 @@ type ApplyPatchCallOutput string                              // Always "apply_p
 type Approximate string                                       // Always "approximate"
 type Assistant string                                         // Always "assistant"
 type AssistantDeleted string                                  // Always "assistant.deleted"
+type AudioSample string                                       // Always "audio_sample"
+type AudioVoice string                                        // Always "audio.voice"
 type AudioPCM string                                          // Always "audio/pcm"
 type AudioPCMA string                                         // Always "audio/pcma"
 type AudioPCMU string                                         // Always "audio/pcmu"
@@ -584,7 +587,10 @@ func (c AgentEnvironmentTemplateDeleted) Default() AgentEnvironmentTemplateDelet
 func (c AgentOutputCommandExecutionOutputDelta) Default() AgentOutputCommandExecutionOutputDelta {
 	return "agent.output.command_execution_output.delta"
 }
-func (c AgentSession) Default() AgentSession                 { return "agent.session" }
+func (c AgentSession) Default() AgentSession { return "agent.session" }
+func (c AgentSessionActionRequired) Default() AgentSessionActionRequired {
+	return "agent.session.action_required"
+}
 func (c AgentSessionArtifact) Default() AgentSessionArtifact { return "agent.session.artifact" }
 func (c AgentSessionArtifactDeleted) Default() AgentSessionArtifactDeleted {
 	return "agent.session.artifact.deleted"
@@ -690,6 +696,8 @@ func (c ApplyPatchCallOutput) Default() ApplyPatchCallOutput   { return "apply_p
 func (c Approximate) Default() Approximate                     { return "approximate" }
 func (c Assistant) Default() Assistant                         { return "assistant" }
 func (c AssistantDeleted) Default() AssistantDeleted           { return "assistant.deleted" }
+func (c AudioSample) Default() AudioSample                     { return "audio_sample" }
+func (c AudioVoice) Default() AudioVoice                       { return "audio.voice" }
 func (c AudioPCM) Default() AudioPCM                           { return "audio/pcm" }
 func (c AudioPCMA) Default() AudioPCMA                         { return "audio/pcma" }
 func (c AudioPCMU) Default() AudioPCMU                         { return "audio/pcmu" }
@@ -1463,6 +1471,7 @@ func (c AgentOutputCommandExecutionOutputDelta) MarshalJSON() ([]byte, error) {
 	return marshalString(c)
 }
 func (c AgentSession) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c AgentSessionActionRequired) MarshalJSON() ([]byte, error)          { return marshalString(c) }
 func (c AgentSessionArtifact) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c AgentSessionArtifactDeleted) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c AgentSessionCreated) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
@@ -1520,6 +1529,8 @@ func (c ApplyPatchCallOutput) MarshalJSON() ([]byte, error)             { return
 func (c Approximate) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c Assistant) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c AssistantDeleted) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c AudioSample) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c AudioVoice) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
 func (c AudioPCM) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c AudioPCMA) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c AudioPCMU) MarshalJSON() ([]byte, error)                        { return marshalString(c) }

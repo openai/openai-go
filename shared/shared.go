@@ -21,121 +21,341 @@ type paramObj = param.APIObject
 type AllModels = string
 
 const (
-	AllModelsO1Pro                        AllModels = "o1-pro"
-	AllModelsO1Pro2025_03_19              AllModels = "o1-pro-2025-03-19"
-	AllModelsO3Pro                        AllModels = "o3-pro"
-	AllModelsO3Pro2025_06_10              AllModels = "o3-pro-2025-06-10"
-	AllModelsO3DeepResearch               AllModels = "o3-deep-research"
-	AllModelsO3DeepResearch2025_06_26     AllModels = "o3-deep-research-2025-06-26"
-	AllModelsO4MiniDeepResearch           AllModels = "o4-mini-deep-research"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AllModelsO1Pro AllModels = "o1-pro"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AllModelsO1Pro2025_03_19 AllModels = "o1-pro-2025-03-19"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AllModelsO3Pro AllModels = "o3-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AllModelsO3Pro2025_06_10 AllModels = "o3-pro-2025-06-10"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AllModelsO3DeepResearch AllModels = "o3-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AllModelsO3DeepResearch2025_06_26 AllModels = "o3-deep-research-2025-06-26"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AllModelsO4MiniDeepResearch AllModels = "o4-mini-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	AllModelsO4MiniDeepResearch2025_06_26 AllModels = "o4-mini-deep-research-2025-06-26"
-	AllModelsComputerUsePreview           AllModels = "computer-use-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AllModelsComputerUsePreview AllModels = "computer-use-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	AllModelsComputerUsePreview2025_03_11 AllModels = "computer-use-preview-2025-03-11"
 	AllModelsGPT5_5Pro                    AllModels = "gpt-5.5-pro"
 	AllModelsGPT5_5Pro2026_04_23          AllModels = "gpt-5.5-pro-2026-04-23"
-	AllModelsGPT5Codex                    AllModels = "gpt-5-codex"
-	AllModelsGPT5Pro                      AllModels = "gpt-5-pro"
-	AllModelsGPT5Pro2025_10_06            AllModels = "gpt-5-pro-2025-10-06"
-	AllModelsGPT5_1CodexMax               AllModels = "gpt-5.1-codex-max"
-	AllModelsGPTDaybreakBlueLatest        AllModels = "gpt-daybreak-blue-latest"
-	AllModelsGPTDaybreakRedLatest         AllModels = "gpt-daybreak-red-latest"
-	AllModelsGPT5_6Cyber                  AllModels = "gpt-5.6-cyber"
-	AllModelsGPTRosalindResearch          AllModels = "gpt-rosalind-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AllModelsGPT5Codex AllModels = "gpt-5-codex"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AllModelsGPT5Pro AllModels = "gpt-5-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AllModelsGPT5Pro2025_10_06 AllModels = "gpt-5-pro-2025-10-06"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AllModelsGPT5_1CodexMax        AllModels = "gpt-5.1-codex-max"
+	AllModelsGPTDaybreakBlueLatest AllModels = "gpt-daybreak-blue-latest"
+	AllModelsGPTDaybreakRedLatest  AllModels = "gpt-daybreak-red-latest"
+	AllModelsGPT5_6Cyber           AllModels = "gpt-5.6-cyber"
+	AllModelsGPTRosalindResearch   AllModels = "gpt-rosalind-research"
 	// Or some ...[ChatModel]
 )
 
 type ChatModel = string
 
 const (
-	ChatModelGPT6Astra                        ChatModel = "gpt-6-astra"
-	ChatModelGPT6_1Sol                        ChatModel = "gpt-6.1-sol"
-	ChatModelGPT6Sol                          ChatModel = "gpt-6-sol"
-	ChatModelGPT6Luna                         ChatModel = "gpt-6-luna"
-	ChatModelGPT5_6Sol                        ChatModel = "gpt-5.6-sol"
-	ChatModelGPT5_6Terra                      ChatModel = "gpt-5.6-terra"
-	ChatModelGPT5_6Luna                       ChatModel = "gpt-5.6-luna"
-	ChatModelGPT5_5                           ChatModel = "gpt-5.5"
-	ChatModelGPT5_5_2026_04_23                ChatModel = "gpt-5.5-2026-04-23"
-	ChatModelGPT5_4                           ChatModel = "gpt-5.4"
-	ChatModelGPT5_4Mini                       ChatModel = "gpt-5.4-mini"
-	ChatModelGPT5_4Nano                       ChatModel = "gpt-5.4-nano"
-	ChatModelGPT5_4Mini2026_03_17             ChatModel = "gpt-5.4-mini-2026-03-17"
-	ChatModelGPT5_4Nano2026_03_17             ChatModel = "gpt-5.4-nano-2026-03-17"
-	ChatModelGPT5_3ChatLatest                 ChatModel = "gpt-5.3-chat-latest"
-	ChatModelGPT5_2                           ChatModel = "gpt-5.2"
-	ChatModelGPT5_2_2025_12_11                ChatModel = "gpt-5.2-2025-12-11"
-	ChatModelGPT5_2ChatLatest                 ChatModel = "gpt-5.2-chat-latest"
-	ChatModelGPT5_2Pro                        ChatModel = "gpt-5.2-pro"
-	ChatModelGPT5_2Pro2025_12_11              ChatModel = "gpt-5.2-pro-2025-12-11"
-	ChatModelGPT5_1                           ChatModel = "gpt-5.1"
-	ChatModelGPT5_1_2025_11_13                ChatModel = "gpt-5.1-2025-11-13"
-	ChatModelGPT5_1Codex                      ChatModel = "gpt-5.1-codex"
-	ChatModelGPT5_1Mini                       ChatModel = "gpt-5.1-mini"
-	ChatModelGPT5_1ChatLatest                 ChatModel = "gpt-5.1-chat-latest"
-	ChatModelGPT5                             ChatModel = "gpt-5"
-	ChatModelGPT5Mini                         ChatModel = "gpt-5-mini"
-	ChatModelGPT5Nano                         ChatModel = "gpt-5-nano"
-	ChatModelGPT5_2025_08_07                  ChatModel = "gpt-5-2025-08-07"
-	ChatModelGPT5Mini2025_08_07               ChatModel = "gpt-5-mini-2025-08-07"
-	ChatModelGPT5Nano2025_08_07               ChatModel = "gpt-5-nano-2025-08-07"
-	ChatModelGPT5ChatLatest                   ChatModel = "gpt-5-chat-latest"
-	ChatModelGPT4_1                           ChatModel = "gpt-4.1"
-	ChatModelGPT4_1Mini                       ChatModel = "gpt-4.1-mini"
-	ChatModelGPT4_1Nano                       ChatModel = "gpt-4.1-nano"
-	ChatModelGPT4_1_2025_04_14                ChatModel = "gpt-4.1-2025-04-14"
-	ChatModelGPT4_1Mini2025_04_14             ChatModel = "gpt-4.1-mini-2025-04-14"
-	ChatModelGPT4_1Nano2025_04_14             ChatModel = "gpt-4.1-nano-2025-04-14"
-	ChatModelO4Mini                           ChatModel = "o4-mini"
-	ChatModelO4Mini2025_04_16                 ChatModel = "o4-mini-2025-04-16"
-	ChatModelO3                               ChatModel = "o3"
-	ChatModelO3_2025_04_16                    ChatModel = "o3-2025-04-16"
-	ChatModelO3Mini                           ChatModel = "o3-mini"
-	ChatModelO3Mini2025_01_31                 ChatModel = "o3-mini-2025-01-31"
-	ChatModelO1                               ChatModel = "o1"
-	ChatModelO1_2024_12_17                    ChatModel = "o1-2024-12-17"
-	ChatModelO1Preview                        ChatModel = "o1-preview"
-	ChatModelO1Preview2024_09_12              ChatModel = "o1-preview-2024-09-12"
-	ChatModelO1Mini                           ChatModel = "o1-mini"
-	ChatModelO1Mini2024_09_12                 ChatModel = "o1-mini-2024-09-12"
-	ChatModelGPT4o                            ChatModel = "gpt-4o"
-	ChatModelGPT4o2024_11_20                  ChatModel = "gpt-4o-2024-11-20"
-	ChatModelGPT4o2024_08_06                  ChatModel = "gpt-4o-2024-08-06"
-	ChatModelGPT4o2024_05_13                  ChatModel = "gpt-4o-2024-05-13"
-	ChatModelGPTAudioMini                     ChatModel = "gpt-audio-mini"
-	ChatModelGPTAudioMini2025_12_15           ChatModel = "gpt-audio-mini-2025-12-15"
-	ChatModelGPT4oAudioPreview                ChatModel = "gpt-4o-audio-preview"
-	ChatModelGPT4oAudioPreview2024_10_01      ChatModel = "gpt-4o-audio-preview-2024-10-01"
-	ChatModelGPT4oAudioPreview2024_12_17      ChatModel = "gpt-4o-audio-preview-2024-12-17"
-	ChatModelGPT4oAudioPreview2025_06_03      ChatModel = "gpt-4o-audio-preview-2025-06-03"
-	ChatModelGPT4oMiniAudioPreview            ChatModel = "gpt-4o-mini-audio-preview"
-	ChatModelGPT4oMiniAudioPreview2024_12_17  ChatModel = "gpt-4o-mini-audio-preview-2024-12-17"
-	ChatModelGPT4oSearchPreview               ChatModel = "gpt-4o-search-preview"
-	ChatModelGPT4oMiniSearchPreview           ChatModel = "gpt-4o-mini-search-preview"
-	ChatModelGPT4oSearchPreview2025_03_11     ChatModel = "gpt-4o-search-preview-2025-03-11"
+	ChatModelGPT6Astra            ChatModel = "gpt-6-astra"
+	ChatModelGPT6_1Sol            ChatModel = "gpt-6.1-sol"
+	ChatModelGPT6Sol              ChatModel = "gpt-6-sol"
+	ChatModelGPT6Luna             ChatModel = "gpt-6-luna"
+	ChatModelGPT5_6Sol            ChatModel = "gpt-5.6-sol"
+	ChatModelGPT5_6Terra          ChatModel = "gpt-5.6-terra"
+	ChatModelGPT5_6Luna           ChatModel = "gpt-5.6-luna"
+	ChatModelGPT5_5               ChatModel = "gpt-5.5"
+	ChatModelGPT5_5_2026_04_23    ChatModel = "gpt-5.5-2026-04-23"
+	ChatModelGPT5_4               ChatModel = "gpt-5.4"
+	ChatModelGPT5_4Mini           ChatModel = "gpt-5.4-mini"
+	ChatModelGPT5_4Nano           ChatModel = "gpt-5.4-nano"
+	ChatModelGPT5_4Mini2026_03_17 ChatModel = "gpt-5.4-mini-2026-03-17"
+	ChatModelGPT5_4Nano2026_03_17 ChatModel = "gpt-5.4-nano-2026-03-17"
+	// Deprecated: Announced shutdown date: 2026-08-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT5_3ChatLatest  ChatModel = "gpt-5.3-chat-latest"
+	ChatModelGPT5_2            ChatModel = "gpt-5.2"
+	ChatModelGPT5_2_2025_12_11 ChatModel = "gpt-5.2-2025-12-11"
+	// Deprecated: Announced shutdown date: 2026-08-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT5_2ChatLatest    ChatModel = "gpt-5.2-chat-latest"
+	ChatModelGPT5_2Pro           ChatModel = "gpt-5.2-pro"
+	ChatModelGPT5_2Pro2025_12_11 ChatModel = "gpt-5.2-pro-2025-12-11"
+	ChatModelGPT5_1              ChatModel = "gpt-5.1"
+	ChatModelGPT5_1_2025_11_13   ChatModel = "gpt-5.1-2025-11-13"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT5_1Codex ChatModel = "gpt-5.1-codex"
+	// Deprecated: Not a supported model ID. Retained for SDK compatibility.
+	ChatModelGPT5_1Mini ChatModel = "gpt-5.1-mini"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT5_1ChatLatest ChatModel = "gpt-5.1-chat-latest"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT5 ChatModel = "gpt-5"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT5Mini ChatModel = "gpt-5-mini"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT5Nano ChatModel = "gpt-5-nano"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT5_2025_08_07 ChatModel = "gpt-5-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT5Mini2025_08_07 ChatModel = "gpt-5-mini-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT5Nano2025_08_07 ChatModel = "gpt-5-nano-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT5ChatLatest ChatModel = "gpt-5-chat-latest"
+	ChatModelGPT4_1         ChatModel = "gpt-4.1"
+	ChatModelGPT4_1Mini     ChatModel = "gpt-4.1-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4_1Nano           ChatModel = "gpt-4.1-nano"
+	ChatModelGPT4_1_2025_04_14    ChatModel = "gpt-4.1-2025-04-14"
+	ChatModelGPT4_1Mini2025_04_14 ChatModel = "gpt-4.1-mini-2025-04-14"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4_1Nano2025_04_14 ChatModel = "gpt-4.1-nano-2025-04-14"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelO4Mini ChatModel = "o4-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelO4Mini2025_04_16 ChatModel = "o4-mini-2025-04-16"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelO3 ChatModel = "o3"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelO3_2025_04_16 ChatModel = "o3-2025-04-16"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelO3Mini ChatModel = "o3-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelO3Mini2025_01_31 ChatModel = "o3-mini-2025-01-31"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelO1 ChatModel = "o1"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelO1_2024_12_17 ChatModel = "o1-2024-12-17"
+	// Deprecated: Announced shutdown date: 2025-07-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelO1Preview ChatModel = "o1-preview"
+	// Deprecated: Announced shutdown date: 2025-07-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelO1Preview2024_09_12 ChatModel = "o1-preview-2024-09-12"
+	// Deprecated: Announced shutdown date: 2025-10-27. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelO1Mini ChatModel = "o1-mini"
+	// Deprecated: Announced shutdown date: 2025-10-27. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelO1Mini2024_09_12 ChatModel = "o1-mini-2024-09-12"
+	ChatModelGPT4o            ChatModel = "gpt-4o"
+	ChatModelGPT4o2024_11_20  ChatModel = "gpt-4o-2024-11-20"
+	ChatModelGPT4o2024_08_06  ChatModel = "gpt-4o-2024-08-06"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4o2024_05_13 ChatModel = "gpt-4o-2024-05-13"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPTAudioMini ChatModel = "gpt-audio-mini"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPTAudioMini2025_12_15 ChatModel = "gpt-audio-mini-2025-12-15"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4oAudioPreview ChatModel = "gpt-4o-audio-preview"
+	// Deprecated: Announced shutdown date: 2025-10-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4oAudioPreview2024_10_01 ChatModel = "gpt-4o-audio-preview-2024-10-01"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4oAudioPreview2024_12_17 ChatModel = "gpt-4o-audio-preview-2024-12-17"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4oAudioPreview2025_06_03 ChatModel = "gpt-4o-audio-preview-2025-06-03"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4oMiniAudioPreview ChatModel = "gpt-4o-mini-audio-preview"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4oMiniAudioPreview2024_12_17 ChatModel = "gpt-4o-mini-audio-preview-2024-12-17"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4oSearchPreview ChatModel = "gpt-4o-search-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4oMiniSearchPreview ChatModel = "gpt-4o-mini-search-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4oSearchPreview2025_03_11 ChatModel = "gpt-4o-search-preview-2025-03-11"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	ChatModelGPT4oMiniSearchPreview2025_03_11 ChatModel = "gpt-4o-mini-search-preview-2025-03-11"
-	ChatModelChatgpt4oLatest                  ChatModel = "chatgpt-4o-latest"
-	ChatModelCodexMiniLatest                  ChatModel = "codex-mini-latest"
-	ChatModelGPT4oMini                        ChatModel = "gpt-4o-mini"
-	ChatModelGPT4oMini2024_07_18              ChatModel = "gpt-4o-mini-2024-07-18"
-	ChatModelGPT4Turbo                        ChatModel = "gpt-4-turbo"
-	ChatModelGPT4Turbo2024_04_09              ChatModel = "gpt-4-turbo-2024-04-09"
-	ChatModelGPT4_0125Preview                 ChatModel = "gpt-4-0125-preview"
-	ChatModelGPT4TurboPreview                 ChatModel = "gpt-4-turbo-preview"
-	ChatModelGPT4_1106Preview                 ChatModel = "gpt-4-1106-preview"
-	ChatModelGPT4VisionPreview                ChatModel = "gpt-4-vision-preview"
-	ChatModelGPT4                             ChatModel = "gpt-4"
-	ChatModelGPT4_0314                        ChatModel = "gpt-4-0314"
-	ChatModelGPT4_0613                        ChatModel = "gpt-4-0613"
-	ChatModelGPT4_32k                         ChatModel = "gpt-4-32k"
-	ChatModelGPT4_32k0314                     ChatModel = "gpt-4-32k-0314"
-	ChatModelGPT4_32k0613                     ChatModel = "gpt-4-32k-0613"
-	ChatModelGPT3_5Turbo                      ChatModel = "gpt-3.5-turbo"
-	ChatModelGPT3_5Turbo16k                   ChatModel = "gpt-3.5-turbo-16k"
-	ChatModelGPT3_5Turbo0301                  ChatModel = "gpt-3.5-turbo-0301"
-	ChatModelGPT3_5Turbo0613                  ChatModel = "gpt-3.5-turbo-0613"
-	ChatModelGPT3_5Turbo1106                  ChatModel = "gpt-3.5-turbo-1106"
-	ChatModelGPT3_5Turbo0125                  ChatModel = "gpt-3.5-turbo-0125"
-	ChatModelGPT3_5Turbo16k0613               ChatModel = "gpt-3.5-turbo-16k-0613"
+	// Deprecated: Announced shutdown date: 2026-02-17. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelChatgpt4oLatest ChatModel = "chatgpt-4o-latest"
+	// Deprecated: Announced shutdown date: 2026-02-12. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelCodexMiniLatest     ChatModel = "codex-mini-latest"
+	ChatModelGPT4oMini           ChatModel = "gpt-4o-mini"
+	ChatModelGPT4oMini2024_07_18 ChatModel = "gpt-4o-mini-2024-07-18"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4Turbo ChatModel = "gpt-4-turbo"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4Turbo2024_04_09 ChatModel = "gpt-4-turbo-2024-04-09"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4_0125Preview ChatModel = "gpt-4-0125-preview"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4TurboPreview ChatModel = "gpt-4-turbo-preview"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4_1106Preview ChatModel = "gpt-4-1106-preview"
+	// Deprecated: Announced shutdown date: 2024-12-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4VisionPreview ChatModel = "gpt-4-vision-preview"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4 ChatModel = "gpt-4"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4_0314 ChatModel = "gpt-4-0314"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4_0613 ChatModel = "gpt-4-0613"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4_32k ChatModel = "gpt-4-32k"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4_32k0314 ChatModel = "gpt-4-32k-0314"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4_32k0613 ChatModel = "gpt-4-32k-0613"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT3_5Turbo ChatModel = "gpt-3.5-turbo"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT3_5Turbo16k ChatModel = "gpt-3.5-turbo-16k"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT3_5Turbo0301 ChatModel = "gpt-3.5-turbo-0301"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT3_5Turbo0613 ChatModel = "gpt-3.5-turbo-0613"
+	// Deprecated: Announced shutdown date: 2026-09-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT3_5Turbo1106 ChatModel = "gpt-3.5-turbo-1106"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT3_5Turbo0125 ChatModel = "gpt-3.5-turbo-0125"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT3_5Turbo16k0613 ChatModel = "gpt-3.5-turbo-16k-0613"
 )
 
 // A filter used to compare a specified attribute key to a given value using a
@@ -1353,25 +1573,67 @@ func (r *ResponseFormatTextParam) UnmarshalJSON(data []byte) error {
 type ResponsesModel = string
 
 const (
-	ResponsesModelO1Pro                        ResponsesModel = "o1-pro"
-	ResponsesModelO1Pro2025_03_19              ResponsesModel = "o1-pro-2025-03-19"
-	ResponsesModelO3Pro                        ResponsesModel = "o3-pro"
-	ResponsesModelO3Pro2025_06_10              ResponsesModel = "o3-pro-2025-06-10"
-	ResponsesModelO3DeepResearch               ResponsesModel = "o3-deep-research"
-	ResponsesModelO3DeepResearch2025_06_26     ResponsesModel = "o3-deep-research-2025-06-26"
-	ResponsesModelO4MiniDeepResearch           ResponsesModel = "o4-mini-deep-research"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponsesModelO1Pro ResponsesModel = "o1-pro"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponsesModelO1Pro2025_03_19 ResponsesModel = "o1-pro-2025-03-19"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponsesModelO3Pro ResponsesModel = "o3-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponsesModelO3Pro2025_06_10 ResponsesModel = "o3-pro-2025-06-10"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponsesModelO3DeepResearch ResponsesModel = "o3-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponsesModelO3DeepResearch2025_06_26 ResponsesModel = "o3-deep-research-2025-06-26"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponsesModelO4MiniDeepResearch ResponsesModel = "o4-mini-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	ResponsesModelO4MiniDeepResearch2025_06_26 ResponsesModel = "o4-mini-deep-research-2025-06-26"
-	ResponsesModelComputerUsePreview           ResponsesModel = "computer-use-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponsesModelComputerUsePreview ResponsesModel = "computer-use-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	ResponsesModelComputerUsePreview2025_03_11 ResponsesModel = "computer-use-preview-2025-03-11"
 	ResponsesModelGPT5_5Pro                    ResponsesModel = "gpt-5.5-pro"
 	ResponsesModelGPT5_5Pro2026_04_23          ResponsesModel = "gpt-5.5-pro-2026-04-23"
-	ResponsesModelGPT5Codex                    ResponsesModel = "gpt-5-codex"
-	ResponsesModelGPT5Pro                      ResponsesModel = "gpt-5-pro"
-	ResponsesModelGPT5Pro2025_10_06            ResponsesModel = "gpt-5-pro-2025-10-06"
-	ResponsesModelGPT5_1CodexMax               ResponsesModel = "gpt-5.1-codex-max"
-	ResponsesModelGPTDaybreakBlueLatest        ResponsesModel = "gpt-daybreak-blue-latest"
-	ResponsesModelGPTDaybreakRedLatest         ResponsesModel = "gpt-daybreak-red-latest"
-	ResponsesModelGPT5_6Cyber                  ResponsesModel = "gpt-5.6-cyber"
-	ResponsesModelGPTRosalindResearch          ResponsesModel = "gpt-rosalind-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponsesModelGPT5Codex ResponsesModel = "gpt-5-codex"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponsesModelGPT5Pro ResponsesModel = "gpt-5-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponsesModelGPT5Pro2025_10_06 ResponsesModel = "gpt-5-pro-2025-10-06"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponsesModelGPT5_1CodexMax        ResponsesModel = "gpt-5.1-codex-max"
+	ResponsesModelGPTDaybreakBlueLatest ResponsesModel = "gpt-daybreak-blue-latest"
+	ResponsesModelGPTDaybreakRedLatest  ResponsesModel = "gpt-daybreak-red-latest"
+	ResponsesModelGPT5_6Cyber           ResponsesModel = "gpt-5.6-cyber"
+	ResponsesModelGPTRosalindResearch   ResponsesModel = "gpt-rosalind-research"
 	// Or some ...[ChatModel]
 )

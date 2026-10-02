@@ -4753,115 +4753,335 @@ func (r *BetaResponseInstructionsUnion) UnmarshalJSON(data []byte) error {
 type BetaResponseModel string
 
 const (
-	BetaResponseModelGPT6Astra                        BetaResponseModel = "gpt-6-astra"
-	BetaResponseModelGPT6_1Sol                        BetaResponseModel = "gpt-6.1-sol"
-	BetaResponseModelGPT6Sol                          BetaResponseModel = "gpt-6-sol"
-	BetaResponseModelGPT6Luna                         BetaResponseModel = "gpt-6-luna"
-	BetaResponseModelGPT5_6Sol                        BetaResponseModel = "gpt-5.6-sol"
-	BetaResponseModelGPT5_6Terra                      BetaResponseModel = "gpt-5.6-terra"
-	BetaResponseModelGPT5_6Luna                       BetaResponseModel = "gpt-5.6-luna"
-	BetaResponseModelGPT5_5                           BetaResponseModel = "gpt-5.5"
-	BetaResponseModelGPT5_5_2026_04_23                BetaResponseModel = "gpt-5.5-2026-04-23"
-	BetaResponseModelGPT5_4                           BetaResponseModel = "gpt-5.4"
-	BetaResponseModelGPT5_4Mini                       BetaResponseModel = "gpt-5.4-mini"
-	BetaResponseModelGPT5_4Nano                       BetaResponseModel = "gpt-5.4-nano"
-	BetaResponseModelGPT5_4Mini2026_03_17             BetaResponseModel = "gpt-5.4-mini-2026-03-17"
-	BetaResponseModelGPT5_4Nano2026_03_17             BetaResponseModel = "gpt-5.4-nano-2026-03-17"
-	BetaResponseModelGPT5_3ChatLatest                 BetaResponseModel = "gpt-5.3-chat-latest"
-	BetaResponseModelGPT5_2                           BetaResponseModel = "gpt-5.2"
-	BetaResponseModelGPT5_2_2025_12_11                BetaResponseModel = "gpt-5.2-2025-12-11"
-	BetaResponseModelGPT5_2ChatLatest                 BetaResponseModel = "gpt-5.2-chat-latest"
-	BetaResponseModelGPT5_2Pro                        BetaResponseModel = "gpt-5.2-pro"
-	BetaResponseModelGPT5_2Pro2025_12_11              BetaResponseModel = "gpt-5.2-pro-2025-12-11"
-	BetaResponseModelGPT5_1                           BetaResponseModel = "gpt-5.1"
-	BetaResponseModelGPT5_1_2025_11_13                BetaResponseModel = "gpt-5.1-2025-11-13"
-	BetaResponseModelGPT5_1Codex                      BetaResponseModel = "gpt-5.1-codex"
-	BetaResponseModelGPT5_1Mini                       BetaResponseModel = "gpt-5.1-mini"
-	BetaResponseModelGPT5_1ChatLatest                 BetaResponseModel = "gpt-5.1-chat-latest"
-	BetaResponseModelGPT5                             BetaResponseModel = "gpt-5"
-	BetaResponseModelGPT5Mini                         BetaResponseModel = "gpt-5-mini"
-	BetaResponseModelGPT5Nano                         BetaResponseModel = "gpt-5-nano"
-	BetaResponseModelGPT5_2025_08_07                  BetaResponseModel = "gpt-5-2025-08-07"
-	BetaResponseModelGPT5Mini2025_08_07               BetaResponseModel = "gpt-5-mini-2025-08-07"
-	BetaResponseModelGPT5Nano2025_08_07               BetaResponseModel = "gpt-5-nano-2025-08-07"
-	BetaResponseModelGPT5ChatLatest                   BetaResponseModel = "gpt-5-chat-latest"
-	BetaResponseModelGPT4_1                           BetaResponseModel = "gpt-4.1"
-	BetaResponseModelGPT4_1Mini                       BetaResponseModel = "gpt-4.1-mini"
-	BetaResponseModelGPT4_1Nano                       BetaResponseModel = "gpt-4.1-nano"
-	BetaResponseModelGPT4_1_2025_04_14                BetaResponseModel = "gpt-4.1-2025-04-14"
-	BetaResponseModelGPT4_1Mini2025_04_14             BetaResponseModel = "gpt-4.1-mini-2025-04-14"
-	BetaResponseModelGPT4_1Nano2025_04_14             BetaResponseModel = "gpt-4.1-nano-2025-04-14"
-	BetaResponseModelO4Mini                           BetaResponseModel = "o4-mini"
-	BetaResponseModelO4Mini2025_04_16                 BetaResponseModel = "o4-mini-2025-04-16"
-	BetaResponseModelO3                               BetaResponseModel = "o3"
-	BetaResponseModelO3_2025_04_16                    BetaResponseModel = "o3-2025-04-16"
-	BetaResponseModelO3Mini                           BetaResponseModel = "o3-mini"
-	BetaResponseModelO3Mini2025_01_31                 BetaResponseModel = "o3-mini-2025-01-31"
-	BetaResponseModelO1                               BetaResponseModel = "o1"
-	BetaResponseModelO1_2024_12_17                    BetaResponseModel = "o1-2024-12-17"
-	BetaResponseModelO1Preview                        BetaResponseModel = "o1-preview"
-	BetaResponseModelO1Preview2024_09_12              BetaResponseModel = "o1-preview-2024-09-12"
-	BetaResponseModelO1Mini                           BetaResponseModel = "o1-mini"
-	BetaResponseModelO1Mini2024_09_12                 BetaResponseModel = "o1-mini-2024-09-12"
-	BetaResponseModelGPT4o                            BetaResponseModel = "gpt-4o"
-	BetaResponseModelGPT4o2024_11_20                  BetaResponseModel = "gpt-4o-2024-11-20"
-	BetaResponseModelGPT4o2024_08_06                  BetaResponseModel = "gpt-4o-2024-08-06"
-	BetaResponseModelGPT4o2024_05_13                  BetaResponseModel = "gpt-4o-2024-05-13"
-	BetaResponseModelGPTAudioMini                     BetaResponseModel = "gpt-audio-mini"
-	BetaResponseModelGPTAudioMini2025_12_15           BetaResponseModel = "gpt-audio-mini-2025-12-15"
-	BetaResponseModelGPT4oAudioPreview                BetaResponseModel = "gpt-4o-audio-preview"
-	BetaResponseModelGPT4oAudioPreview2024_10_01      BetaResponseModel = "gpt-4o-audio-preview-2024-10-01"
-	BetaResponseModelGPT4oAudioPreview2024_12_17      BetaResponseModel = "gpt-4o-audio-preview-2024-12-17"
-	BetaResponseModelGPT4oAudioPreview2025_06_03      BetaResponseModel = "gpt-4o-audio-preview-2025-06-03"
-	BetaResponseModelGPT4oMiniAudioPreview            BetaResponseModel = "gpt-4o-mini-audio-preview"
-	BetaResponseModelGPT4oMiniAudioPreview2024_12_17  BetaResponseModel = "gpt-4o-mini-audio-preview-2024-12-17"
-	BetaResponseModelGPT4oSearchPreview               BetaResponseModel = "gpt-4o-search-preview"
-	BetaResponseModelGPT4oMiniSearchPreview           BetaResponseModel = "gpt-4o-mini-search-preview"
-	BetaResponseModelGPT4oSearchPreview2025_03_11     BetaResponseModel = "gpt-4o-search-preview-2025-03-11"
+	BetaResponseModelGPT6Astra            BetaResponseModel = "gpt-6-astra"
+	BetaResponseModelGPT6_1Sol            BetaResponseModel = "gpt-6.1-sol"
+	BetaResponseModelGPT6Sol              BetaResponseModel = "gpt-6-sol"
+	BetaResponseModelGPT6Luna             BetaResponseModel = "gpt-6-luna"
+	BetaResponseModelGPT5_6Sol            BetaResponseModel = "gpt-5.6-sol"
+	BetaResponseModelGPT5_6Terra          BetaResponseModel = "gpt-5.6-terra"
+	BetaResponseModelGPT5_6Luna           BetaResponseModel = "gpt-5.6-luna"
+	BetaResponseModelGPT5_5               BetaResponseModel = "gpt-5.5"
+	BetaResponseModelGPT5_5_2026_04_23    BetaResponseModel = "gpt-5.5-2026-04-23"
+	BetaResponseModelGPT5_4               BetaResponseModel = "gpt-5.4"
+	BetaResponseModelGPT5_4Mini           BetaResponseModel = "gpt-5.4-mini"
+	BetaResponseModelGPT5_4Nano           BetaResponseModel = "gpt-5.4-nano"
+	BetaResponseModelGPT5_4Mini2026_03_17 BetaResponseModel = "gpt-5.4-mini-2026-03-17"
+	BetaResponseModelGPT5_4Nano2026_03_17 BetaResponseModel = "gpt-5.4-nano-2026-03-17"
+	// Deprecated: Announced shutdown date: 2026-08-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5_3ChatLatest  BetaResponseModel = "gpt-5.3-chat-latest"
+	BetaResponseModelGPT5_2            BetaResponseModel = "gpt-5.2"
+	BetaResponseModelGPT5_2_2025_12_11 BetaResponseModel = "gpt-5.2-2025-12-11"
+	// Deprecated: Announced shutdown date: 2026-08-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5_2ChatLatest    BetaResponseModel = "gpt-5.2-chat-latest"
+	BetaResponseModelGPT5_2Pro           BetaResponseModel = "gpt-5.2-pro"
+	BetaResponseModelGPT5_2Pro2025_12_11 BetaResponseModel = "gpt-5.2-pro-2025-12-11"
+	BetaResponseModelGPT5_1              BetaResponseModel = "gpt-5.1"
+	BetaResponseModelGPT5_1_2025_11_13   BetaResponseModel = "gpt-5.1-2025-11-13"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5_1Codex BetaResponseModel = "gpt-5.1-codex"
+	// Deprecated: Not a supported model ID. Retained for SDK compatibility.
+	BetaResponseModelGPT5_1Mini BetaResponseModel = "gpt-5.1-mini"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5_1ChatLatest BetaResponseModel = "gpt-5.1-chat-latest"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5 BetaResponseModel = "gpt-5"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5Mini BetaResponseModel = "gpt-5-mini"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5Nano BetaResponseModel = "gpt-5-nano"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5_2025_08_07 BetaResponseModel = "gpt-5-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5Mini2025_08_07 BetaResponseModel = "gpt-5-mini-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5Nano2025_08_07 BetaResponseModel = "gpt-5-nano-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5ChatLatest BetaResponseModel = "gpt-5-chat-latest"
+	BetaResponseModelGPT4_1         BetaResponseModel = "gpt-4.1"
+	BetaResponseModelGPT4_1Mini     BetaResponseModel = "gpt-4.1-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_1Nano           BetaResponseModel = "gpt-4.1-nano"
+	BetaResponseModelGPT4_1_2025_04_14    BetaResponseModel = "gpt-4.1-2025-04-14"
+	BetaResponseModelGPT4_1Mini2025_04_14 BetaResponseModel = "gpt-4.1-mini-2025-04-14"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_1Nano2025_04_14 BetaResponseModel = "gpt-4.1-nano-2025-04-14"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO4Mini BetaResponseModel = "o4-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO4Mini2025_04_16 BetaResponseModel = "o4-mini-2025-04-16"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO3 BetaResponseModel = "o3"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO3_2025_04_16 BetaResponseModel = "o3-2025-04-16"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO3Mini BetaResponseModel = "o3-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO3Mini2025_01_31 BetaResponseModel = "o3-mini-2025-01-31"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO1 BetaResponseModel = "o1"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO1_2024_12_17 BetaResponseModel = "o1-2024-12-17"
+	// Deprecated: Announced shutdown date: 2025-07-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO1Preview BetaResponseModel = "o1-preview"
+	// Deprecated: Announced shutdown date: 2025-07-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO1Preview2024_09_12 BetaResponseModel = "o1-preview-2024-09-12"
+	// Deprecated: Announced shutdown date: 2025-10-27. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO1Mini BetaResponseModel = "o1-mini"
+	// Deprecated: Announced shutdown date: 2025-10-27. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO1Mini2024_09_12 BetaResponseModel = "o1-mini-2024-09-12"
+	BetaResponseModelGPT4o            BetaResponseModel = "gpt-4o"
+	BetaResponseModelGPT4o2024_11_20  BetaResponseModel = "gpt-4o-2024-11-20"
+	BetaResponseModelGPT4o2024_08_06  BetaResponseModel = "gpt-4o-2024-08-06"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4o2024_05_13 BetaResponseModel = "gpt-4o-2024-05-13"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPTAudioMini BetaResponseModel = "gpt-audio-mini"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPTAudioMini2025_12_15 BetaResponseModel = "gpt-audio-mini-2025-12-15"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oAudioPreview BetaResponseModel = "gpt-4o-audio-preview"
+	// Deprecated: Announced shutdown date: 2025-10-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oAudioPreview2024_10_01 BetaResponseModel = "gpt-4o-audio-preview-2024-10-01"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oAudioPreview2024_12_17 BetaResponseModel = "gpt-4o-audio-preview-2024-12-17"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oAudioPreview2025_06_03 BetaResponseModel = "gpt-4o-audio-preview-2025-06-03"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oMiniAudioPreview BetaResponseModel = "gpt-4o-mini-audio-preview"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oMiniAudioPreview2024_12_17 BetaResponseModel = "gpt-4o-mini-audio-preview-2024-12-17"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oSearchPreview BetaResponseModel = "gpt-4o-search-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oMiniSearchPreview BetaResponseModel = "gpt-4o-mini-search-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oSearchPreview2025_03_11 BetaResponseModel = "gpt-4o-search-preview-2025-03-11"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponseModelGPT4oMiniSearchPreview2025_03_11 BetaResponseModel = "gpt-4o-mini-search-preview-2025-03-11"
-	BetaResponseModelChatgpt4oLatest                  BetaResponseModel = "chatgpt-4o-latest"
-	BetaResponseModelCodexMiniLatest                  BetaResponseModel = "codex-mini-latest"
-	BetaResponseModelGPT4oMini                        BetaResponseModel = "gpt-4o-mini"
-	BetaResponseModelGPT4oMini2024_07_18              BetaResponseModel = "gpt-4o-mini-2024-07-18"
-	BetaResponseModelGPT4Turbo                        BetaResponseModel = "gpt-4-turbo"
-	BetaResponseModelGPT4Turbo2024_04_09              BetaResponseModel = "gpt-4-turbo-2024-04-09"
-	BetaResponseModelGPT4_0125Preview                 BetaResponseModel = "gpt-4-0125-preview"
-	BetaResponseModelGPT4TurboPreview                 BetaResponseModel = "gpt-4-turbo-preview"
-	BetaResponseModelGPT4_1106Preview                 BetaResponseModel = "gpt-4-1106-preview"
-	BetaResponseModelGPT4VisionPreview                BetaResponseModel = "gpt-4-vision-preview"
-	BetaResponseModelGPT4                             BetaResponseModel = "gpt-4"
-	BetaResponseModelGPT4_0314                        BetaResponseModel = "gpt-4-0314"
-	BetaResponseModelGPT4_0613                        BetaResponseModel = "gpt-4-0613"
-	BetaResponseModelGPT4_32k                         BetaResponseModel = "gpt-4-32k"
-	BetaResponseModelGPT4_32k0314                     BetaResponseModel = "gpt-4-32k-0314"
-	BetaResponseModelGPT4_32k0613                     BetaResponseModel = "gpt-4-32k-0613"
-	BetaResponseModelGPT3_5Turbo                      BetaResponseModel = "gpt-3.5-turbo"
-	BetaResponseModelGPT3_5Turbo16k                   BetaResponseModel = "gpt-3.5-turbo-16k"
-	BetaResponseModelGPT3_5Turbo0301                  BetaResponseModel = "gpt-3.5-turbo-0301"
-	BetaResponseModelGPT3_5Turbo0613                  BetaResponseModel = "gpt-3.5-turbo-0613"
-	BetaResponseModelGPT3_5Turbo1106                  BetaResponseModel = "gpt-3.5-turbo-1106"
-	BetaResponseModelGPT3_5Turbo0125                  BetaResponseModel = "gpt-3.5-turbo-0125"
-	BetaResponseModelGPT3_5Turbo16k0613               BetaResponseModel = "gpt-3.5-turbo-16k-0613"
-	BetaResponseModelO1Pro                            BetaResponseModel = "o1-pro"
-	BetaResponseModelO1Pro2025_03_19                  BetaResponseModel = "o1-pro-2025-03-19"
-	BetaResponseModelO3Pro                            BetaResponseModel = "o3-pro"
-	BetaResponseModelO3Pro2025_06_10                  BetaResponseModel = "o3-pro-2025-06-10"
-	BetaResponseModelO3DeepResearch                   BetaResponseModel = "o3-deep-research"
-	BetaResponseModelO3DeepResearch2025_06_26         BetaResponseModel = "o3-deep-research-2025-06-26"
-	BetaResponseModelO4MiniDeepResearch               BetaResponseModel = "o4-mini-deep-research"
-	BetaResponseModelO4MiniDeepResearch2025_06_26     BetaResponseModel = "o4-mini-deep-research-2025-06-26"
-	BetaResponseModelComputerUsePreview               BetaResponseModel = "computer-use-preview"
-	BetaResponseModelComputerUsePreview2025_03_11     BetaResponseModel = "computer-use-preview-2025-03-11"
-	BetaResponseModelGPT5_5Pro                        BetaResponseModel = "gpt-5.5-pro"
-	BetaResponseModelGPT5_5Pro2026_04_23              BetaResponseModel = "gpt-5.5-pro-2026-04-23"
-	BetaResponseModelGPT5Codex                        BetaResponseModel = "gpt-5-codex"
-	BetaResponseModelGPT5Pro                          BetaResponseModel = "gpt-5-pro"
-	BetaResponseModelGPT5Pro2025_10_06                BetaResponseModel = "gpt-5-pro-2025-10-06"
-	BetaResponseModelGPT5_1CodexMax                   BetaResponseModel = "gpt-5.1-codex-max"
-	BetaResponseModelGPTDaybreakBlueLatest            BetaResponseModel = "gpt-daybreak-blue-latest"
-	BetaResponseModelGPTDaybreakRedLatest             BetaResponseModel = "gpt-daybreak-red-latest"
-	BetaResponseModelGPT5_6Cyber                      BetaResponseModel = "gpt-5.6-cyber"
-	BetaResponseModelGPTRosalindResearch              BetaResponseModel = "gpt-rosalind-research"
+	// Deprecated: Announced shutdown date: 2026-02-17. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelChatgpt4oLatest BetaResponseModel = "chatgpt-4o-latest"
+	// Deprecated: Announced shutdown date: 2026-02-12. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelCodexMiniLatest     BetaResponseModel = "codex-mini-latest"
+	BetaResponseModelGPT4oMini           BetaResponseModel = "gpt-4o-mini"
+	BetaResponseModelGPT4oMini2024_07_18 BetaResponseModel = "gpt-4o-mini-2024-07-18"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4Turbo BetaResponseModel = "gpt-4-turbo"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4Turbo2024_04_09 BetaResponseModel = "gpt-4-turbo-2024-04-09"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_0125Preview BetaResponseModel = "gpt-4-0125-preview"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4TurboPreview BetaResponseModel = "gpt-4-turbo-preview"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_1106Preview BetaResponseModel = "gpt-4-1106-preview"
+	// Deprecated: Announced shutdown date: 2024-12-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4VisionPreview BetaResponseModel = "gpt-4-vision-preview"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4 BetaResponseModel = "gpt-4"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_0314 BetaResponseModel = "gpt-4-0314"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_0613 BetaResponseModel = "gpt-4-0613"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_32k BetaResponseModel = "gpt-4-32k"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_32k0314 BetaResponseModel = "gpt-4-32k-0314"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_32k0613 BetaResponseModel = "gpt-4-32k-0613"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT3_5Turbo BetaResponseModel = "gpt-3.5-turbo"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT3_5Turbo16k BetaResponseModel = "gpt-3.5-turbo-16k"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT3_5Turbo0301 BetaResponseModel = "gpt-3.5-turbo-0301"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT3_5Turbo0613 BetaResponseModel = "gpt-3.5-turbo-0613"
+	// Deprecated: Announced shutdown date: 2026-09-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT3_5Turbo1106 BetaResponseModel = "gpt-3.5-turbo-1106"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT3_5Turbo0125 BetaResponseModel = "gpt-3.5-turbo-0125"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT3_5Turbo16k0613 BetaResponseModel = "gpt-3.5-turbo-16k-0613"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO1Pro BetaResponseModel = "o1-pro"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO1Pro2025_03_19 BetaResponseModel = "o1-pro-2025-03-19"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO3Pro BetaResponseModel = "o3-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO3Pro2025_06_10 BetaResponseModel = "o3-pro-2025-06-10"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO3DeepResearch BetaResponseModel = "o3-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO3DeepResearch2025_06_26 BetaResponseModel = "o3-deep-research-2025-06-26"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO4MiniDeepResearch BetaResponseModel = "o4-mini-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO4MiniDeepResearch2025_06_26 BetaResponseModel = "o4-mini-deep-research-2025-06-26"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelComputerUsePreview BetaResponseModel = "computer-use-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelComputerUsePreview2025_03_11 BetaResponseModel = "computer-use-preview-2025-03-11"
+	BetaResponseModelGPT5_5Pro                    BetaResponseModel = "gpt-5.5-pro"
+	BetaResponseModelGPT5_5Pro2026_04_23          BetaResponseModel = "gpt-5.5-pro-2026-04-23"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5Codex BetaResponseModel = "gpt-5-codex"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5Pro BetaResponseModel = "gpt-5-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5Pro2025_10_06 BetaResponseModel = "gpt-5-pro-2025-10-06"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5_1CodexMax        BetaResponseModel = "gpt-5.1-codex-max"
+	BetaResponseModelGPTDaybreakBlueLatest BetaResponseModel = "gpt-daybreak-blue-latest"
+	BetaResponseModelGPTDaybreakRedLatest  BetaResponseModel = "gpt-daybreak-red-latest"
+	BetaResponseModelGPT5_6Cyber           BetaResponseModel = "gpt-5.6-cyber"
+	BetaResponseModelGPTRosalindResearch   BetaResponseModel = "gpt-rosalind-research"
 )
 
 // BetaResponseToolChoiceUnion contains all possible properties and values from
@@ -31272,9 +31492,7 @@ type BetaToolImageGeneration struct {
 	// the maximum supported resolution is `3840x2160`. The requested size must also
 	// satisfy the model's current pixel and edge limits. The standard sizes
 	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
-	// `auto` is supported for models that allow automatic sizing. For `dall-e-2`, use
-	// one of `256x256`, `512x512`, or `1024x1024`. For `dall-e-3`, use one of
-	// `1024x1024`, `1792x1024`, or `1024x1792`.
+	// `auto` is supported for models that allow automatic sizing.
 	Size string `json:"size"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -32539,9 +32757,7 @@ type BetaToolImageGenerationParam struct {
 	// the maximum supported resolution is `3840x2160`. The requested size must also
 	// satisfy the model's current pixel and edge limits. The standard sizes
 	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
-	// `auto` is supported for models that allow automatic sizing. For `dall-e-2`, use
-	// one of `256x256`, `512x512`, or `1024x1024`. For `dall-e-3`, use one of
-	// `1024x1024`, `1792x1024`, or `1024x1792`.
+	// `auto` is supported for models that allow automatic sizing.
 	Size string `json:"size,omitzero"`
 	// The type of the image generation tool. Always `image_generation`.
 	//
@@ -33885,115 +34101,335 @@ func (u *BetaResponseNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 type BetaResponseNewParamsModel string
 
 const (
-	BetaResponseNewParamsModelGPT6Astra                        BetaResponseNewParamsModel = "gpt-6-astra"
-	BetaResponseNewParamsModelGPT6_1Sol                        BetaResponseNewParamsModel = "gpt-6.1-sol"
-	BetaResponseNewParamsModelGPT6Sol                          BetaResponseNewParamsModel = "gpt-6-sol"
-	BetaResponseNewParamsModelGPT6Luna                         BetaResponseNewParamsModel = "gpt-6-luna"
-	BetaResponseNewParamsModelGPT5_6Sol                        BetaResponseNewParamsModel = "gpt-5.6-sol"
-	BetaResponseNewParamsModelGPT5_6Terra                      BetaResponseNewParamsModel = "gpt-5.6-terra"
-	BetaResponseNewParamsModelGPT5_6Luna                       BetaResponseNewParamsModel = "gpt-5.6-luna"
-	BetaResponseNewParamsModelGPT5_5                           BetaResponseNewParamsModel = "gpt-5.5"
-	BetaResponseNewParamsModelGPT5_5_2026_04_23                BetaResponseNewParamsModel = "gpt-5.5-2026-04-23"
-	BetaResponseNewParamsModelGPT5_4                           BetaResponseNewParamsModel = "gpt-5.4"
-	BetaResponseNewParamsModelGPT5_4Mini                       BetaResponseNewParamsModel = "gpt-5.4-mini"
-	BetaResponseNewParamsModelGPT5_4Nano                       BetaResponseNewParamsModel = "gpt-5.4-nano"
-	BetaResponseNewParamsModelGPT5_4Mini2026_03_17             BetaResponseNewParamsModel = "gpt-5.4-mini-2026-03-17"
-	BetaResponseNewParamsModelGPT5_4Nano2026_03_17             BetaResponseNewParamsModel = "gpt-5.4-nano-2026-03-17"
-	BetaResponseNewParamsModelGPT5_3ChatLatest                 BetaResponseNewParamsModel = "gpt-5.3-chat-latest"
-	BetaResponseNewParamsModelGPT5_2                           BetaResponseNewParamsModel = "gpt-5.2"
-	BetaResponseNewParamsModelGPT5_2_2025_12_11                BetaResponseNewParamsModel = "gpt-5.2-2025-12-11"
-	BetaResponseNewParamsModelGPT5_2ChatLatest                 BetaResponseNewParamsModel = "gpt-5.2-chat-latest"
-	BetaResponseNewParamsModelGPT5_2Pro                        BetaResponseNewParamsModel = "gpt-5.2-pro"
-	BetaResponseNewParamsModelGPT5_2Pro2025_12_11              BetaResponseNewParamsModel = "gpt-5.2-pro-2025-12-11"
-	BetaResponseNewParamsModelGPT5_1                           BetaResponseNewParamsModel = "gpt-5.1"
-	BetaResponseNewParamsModelGPT5_1_2025_11_13                BetaResponseNewParamsModel = "gpt-5.1-2025-11-13"
-	BetaResponseNewParamsModelGPT5_1Codex                      BetaResponseNewParamsModel = "gpt-5.1-codex"
-	BetaResponseNewParamsModelGPT5_1Mini                       BetaResponseNewParamsModel = "gpt-5.1-mini"
-	BetaResponseNewParamsModelGPT5_1ChatLatest                 BetaResponseNewParamsModel = "gpt-5.1-chat-latest"
-	BetaResponseNewParamsModelGPT5                             BetaResponseNewParamsModel = "gpt-5"
-	BetaResponseNewParamsModelGPT5Mini                         BetaResponseNewParamsModel = "gpt-5-mini"
-	BetaResponseNewParamsModelGPT5Nano                         BetaResponseNewParamsModel = "gpt-5-nano"
-	BetaResponseNewParamsModelGPT5_2025_08_07                  BetaResponseNewParamsModel = "gpt-5-2025-08-07"
-	BetaResponseNewParamsModelGPT5Mini2025_08_07               BetaResponseNewParamsModel = "gpt-5-mini-2025-08-07"
-	BetaResponseNewParamsModelGPT5Nano2025_08_07               BetaResponseNewParamsModel = "gpt-5-nano-2025-08-07"
-	BetaResponseNewParamsModelGPT5ChatLatest                   BetaResponseNewParamsModel = "gpt-5-chat-latest"
-	BetaResponseNewParamsModelGPT4_1                           BetaResponseNewParamsModel = "gpt-4.1"
-	BetaResponseNewParamsModelGPT4_1Mini                       BetaResponseNewParamsModel = "gpt-4.1-mini"
-	BetaResponseNewParamsModelGPT4_1Nano                       BetaResponseNewParamsModel = "gpt-4.1-nano"
-	BetaResponseNewParamsModelGPT4_1_2025_04_14                BetaResponseNewParamsModel = "gpt-4.1-2025-04-14"
-	BetaResponseNewParamsModelGPT4_1Mini2025_04_14             BetaResponseNewParamsModel = "gpt-4.1-mini-2025-04-14"
-	BetaResponseNewParamsModelGPT4_1Nano2025_04_14             BetaResponseNewParamsModel = "gpt-4.1-nano-2025-04-14"
-	BetaResponseNewParamsModelO4Mini                           BetaResponseNewParamsModel = "o4-mini"
-	BetaResponseNewParamsModelO4Mini2025_04_16                 BetaResponseNewParamsModel = "o4-mini-2025-04-16"
-	BetaResponseNewParamsModelO3                               BetaResponseNewParamsModel = "o3"
-	BetaResponseNewParamsModelO3_2025_04_16                    BetaResponseNewParamsModel = "o3-2025-04-16"
-	BetaResponseNewParamsModelO3Mini                           BetaResponseNewParamsModel = "o3-mini"
-	BetaResponseNewParamsModelO3Mini2025_01_31                 BetaResponseNewParamsModel = "o3-mini-2025-01-31"
-	BetaResponseNewParamsModelO1                               BetaResponseNewParamsModel = "o1"
-	BetaResponseNewParamsModelO1_2024_12_17                    BetaResponseNewParamsModel = "o1-2024-12-17"
-	BetaResponseNewParamsModelO1Preview                        BetaResponseNewParamsModel = "o1-preview"
-	BetaResponseNewParamsModelO1Preview2024_09_12              BetaResponseNewParamsModel = "o1-preview-2024-09-12"
-	BetaResponseNewParamsModelO1Mini                           BetaResponseNewParamsModel = "o1-mini"
-	BetaResponseNewParamsModelO1Mini2024_09_12                 BetaResponseNewParamsModel = "o1-mini-2024-09-12"
-	BetaResponseNewParamsModelGPT4o                            BetaResponseNewParamsModel = "gpt-4o"
-	BetaResponseNewParamsModelGPT4o2024_11_20                  BetaResponseNewParamsModel = "gpt-4o-2024-11-20"
-	BetaResponseNewParamsModelGPT4o2024_08_06                  BetaResponseNewParamsModel = "gpt-4o-2024-08-06"
-	BetaResponseNewParamsModelGPT4o2024_05_13                  BetaResponseNewParamsModel = "gpt-4o-2024-05-13"
-	BetaResponseNewParamsModelGPTAudioMini                     BetaResponseNewParamsModel = "gpt-audio-mini"
-	BetaResponseNewParamsModelGPTAudioMini2025_12_15           BetaResponseNewParamsModel = "gpt-audio-mini-2025-12-15"
-	BetaResponseNewParamsModelGPT4oAudioPreview                BetaResponseNewParamsModel = "gpt-4o-audio-preview"
-	BetaResponseNewParamsModelGPT4oAudioPreview2024_10_01      BetaResponseNewParamsModel = "gpt-4o-audio-preview-2024-10-01"
-	BetaResponseNewParamsModelGPT4oAudioPreview2024_12_17      BetaResponseNewParamsModel = "gpt-4o-audio-preview-2024-12-17"
-	BetaResponseNewParamsModelGPT4oAudioPreview2025_06_03      BetaResponseNewParamsModel = "gpt-4o-audio-preview-2025-06-03"
-	BetaResponseNewParamsModelGPT4oMiniAudioPreview            BetaResponseNewParamsModel = "gpt-4o-mini-audio-preview"
-	BetaResponseNewParamsModelGPT4oMiniAudioPreview2024_12_17  BetaResponseNewParamsModel = "gpt-4o-mini-audio-preview-2024-12-17"
-	BetaResponseNewParamsModelGPT4oSearchPreview               BetaResponseNewParamsModel = "gpt-4o-search-preview"
-	BetaResponseNewParamsModelGPT4oMiniSearchPreview           BetaResponseNewParamsModel = "gpt-4o-mini-search-preview"
-	BetaResponseNewParamsModelGPT4oSearchPreview2025_03_11     BetaResponseNewParamsModel = "gpt-4o-search-preview-2025-03-11"
+	BetaResponseNewParamsModelGPT6Astra            BetaResponseNewParamsModel = "gpt-6-astra"
+	BetaResponseNewParamsModelGPT6_1Sol            BetaResponseNewParamsModel = "gpt-6.1-sol"
+	BetaResponseNewParamsModelGPT6Sol              BetaResponseNewParamsModel = "gpt-6-sol"
+	BetaResponseNewParamsModelGPT6Luna             BetaResponseNewParamsModel = "gpt-6-luna"
+	BetaResponseNewParamsModelGPT5_6Sol            BetaResponseNewParamsModel = "gpt-5.6-sol"
+	BetaResponseNewParamsModelGPT5_6Terra          BetaResponseNewParamsModel = "gpt-5.6-terra"
+	BetaResponseNewParamsModelGPT5_6Luna           BetaResponseNewParamsModel = "gpt-5.6-luna"
+	BetaResponseNewParamsModelGPT5_5               BetaResponseNewParamsModel = "gpt-5.5"
+	BetaResponseNewParamsModelGPT5_5_2026_04_23    BetaResponseNewParamsModel = "gpt-5.5-2026-04-23"
+	BetaResponseNewParamsModelGPT5_4               BetaResponseNewParamsModel = "gpt-5.4"
+	BetaResponseNewParamsModelGPT5_4Mini           BetaResponseNewParamsModel = "gpt-5.4-mini"
+	BetaResponseNewParamsModelGPT5_4Nano           BetaResponseNewParamsModel = "gpt-5.4-nano"
+	BetaResponseNewParamsModelGPT5_4Mini2026_03_17 BetaResponseNewParamsModel = "gpt-5.4-mini-2026-03-17"
+	BetaResponseNewParamsModelGPT5_4Nano2026_03_17 BetaResponseNewParamsModel = "gpt-5.4-nano-2026-03-17"
+	// Deprecated: Announced shutdown date: 2026-08-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5_3ChatLatest  BetaResponseNewParamsModel = "gpt-5.3-chat-latest"
+	BetaResponseNewParamsModelGPT5_2            BetaResponseNewParamsModel = "gpt-5.2"
+	BetaResponseNewParamsModelGPT5_2_2025_12_11 BetaResponseNewParamsModel = "gpt-5.2-2025-12-11"
+	// Deprecated: Announced shutdown date: 2026-08-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5_2ChatLatest    BetaResponseNewParamsModel = "gpt-5.2-chat-latest"
+	BetaResponseNewParamsModelGPT5_2Pro           BetaResponseNewParamsModel = "gpt-5.2-pro"
+	BetaResponseNewParamsModelGPT5_2Pro2025_12_11 BetaResponseNewParamsModel = "gpt-5.2-pro-2025-12-11"
+	BetaResponseNewParamsModelGPT5_1              BetaResponseNewParamsModel = "gpt-5.1"
+	BetaResponseNewParamsModelGPT5_1_2025_11_13   BetaResponseNewParamsModel = "gpt-5.1-2025-11-13"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5_1Codex BetaResponseNewParamsModel = "gpt-5.1-codex"
+	// Deprecated: Not a supported model ID. Retained for SDK compatibility.
+	BetaResponseNewParamsModelGPT5_1Mini BetaResponseNewParamsModel = "gpt-5.1-mini"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5_1ChatLatest BetaResponseNewParamsModel = "gpt-5.1-chat-latest"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5 BetaResponseNewParamsModel = "gpt-5"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5Mini BetaResponseNewParamsModel = "gpt-5-mini"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5Nano BetaResponseNewParamsModel = "gpt-5-nano"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5_2025_08_07 BetaResponseNewParamsModel = "gpt-5-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5Mini2025_08_07 BetaResponseNewParamsModel = "gpt-5-mini-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5Nano2025_08_07 BetaResponseNewParamsModel = "gpt-5-nano-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5ChatLatest BetaResponseNewParamsModel = "gpt-5-chat-latest"
+	BetaResponseNewParamsModelGPT4_1         BetaResponseNewParamsModel = "gpt-4.1"
+	BetaResponseNewParamsModelGPT4_1Mini     BetaResponseNewParamsModel = "gpt-4.1-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_1Nano           BetaResponseNewParamsModel = "gpt-4.1-nano"
+	BetaResponseNewParamsModelGPT4_1_2025_04_14    BetaResponseNewParamsModel = "gpt-4.1-2025-04-14"
+	BetaResponseNewParamsModelGPT4_1Mini2025_04_14 BetaResponseNewParamsModel = "gpt-4.1-mini-2025-04-14"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_1Nano2025_04_14 BetaResponseNewParamsModel = "gpt-4.1-nano-2025-04-14"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO4Mini BetaResponseNewParamsModel = "o4-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO4Mini2025_04_16 BetaResponseNewParamsModel = "o4-mini-2025-04-16"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO3 BetaResponseNewParamsModel = "o3"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO3_2025_04_16 BetaResponseNewParamsModel = "o3-2025-04-16"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO3Mini BetaResponseNewParamsModel = "o3-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO3Mini2025_01_31 BetaResponseNewParamsModel = "o3-mini-2025-01-31"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO1 BetaResponseNewParamsModel = "o1"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO1_2024_12_17 BetaResponseNewParamsModel = "o1-2024-12-17"
+	// Deprecated: Announced shutdown date: 2025-07-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO1Preview BetaResponseNewParamsModel = "o1-preview"
+	// Deprecated: Announced shutdown date: 2025-07-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO1Preview2024_09_12 BetaResponseNewParamsModel = "o1-preview-2024-09-12"
+	// Deprecated: Announced shutdown date: 2025-10-27. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO1Mini BetaResponseNewParamsModel = "o1-mini"
+	// Deprecated: Announced shutdown date: 2025-10-27. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO1Mini2024_09_12 BetaResponseNewParamsModel = "o1-mini-2024-09-12"
+	BetaResponseNewParamsModelGPT4o            BetaResponseNewParamsModel = "gpt-4o"
+	BetaResponseNewParamsModelGPT4o2024_11_20  BetaResponseNewParamsModel = "gpt-4o-2024-11-20"
+	BetaResponseNewParamsModelGPT4o2024_08_06  BetaResponseNewParamsModel = "gpt-4o-2024-08-06"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4o2024_05_13 BetaResponseNewParamsModel = "gpt-4o-2024-05-13"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPTAudioMini BetaResponseNewParamsModel = "gpt-audio-mini"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPTAudioMini2025_12_15 BetaResponseNewParamsModel = "gpt-audio-mini-2025-12-15"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oAudioPreview BetaResponseNewParamsModel = "gpt-4o-audio-preview"
+	// Deprecated: Announced shutdown date: 2025-10-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oAudioPreview2024_10_01 BetaResponseNewParamsModel = "gpt-4o-audio-preview-2024-10-01"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oAudioPreview2024_12_17 BetaResponseNewParamsModel = "gpt-4o-audio-preview-2024-12-17"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oAudioPreview2025_06_03 BetaResponseNewParamsModel = "gpt-4o-audio-preview-2025-06-03"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oMiniAudioPreview BetaResponseNewParamsModel = "gpt-4o-mini-audio-preview"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oMiniAudioPreview2024_12_17 BetaResponseNewParamsModel = "gpt-4o-mini-audio-preview-2024-12-17"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oSearchPreview BetaResponseNewParamsModel = "gpt-4o-search-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oMiniSearchPreview BetaResponseNewParamsModel = "gpt-4o-mini-search-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oSearchPreview2025_03_11 BetaResponseNewParamsModel = "gpt-4o-search-preview-2025-03-11"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponseNewParamsModelGPT4oMiniSearchPreview2025_03_11 BetaResponseNewParamsModel = "gpt-4o-mini-search-preview-2025-03-11"
-	BetaResponseNewParamsModelChatgpt4oLatest                  BetaResponseNewParamsModel = "chatgpt-4o-latest"
-	BetaResponseNewParamsModelCodexMiniLatest                  BetaResponseNewParamsModel = "codex-mini-latest"
-	BetaResponseNewParamsModelGPT4oMini                        BetaResponseNewParamsModel = "gpt-4o-mini"
-	BetaResponseNewParamsModelGPT4oMini2024_07_18              BetaResponseNewParamsModel = "gpt-4o-mini-2024-07-18"
-	BetaResponseNewParamsModelGPT4Turbo                        BetaResponseNewParamsModel = "gpt-4-turbo"
-	BetaResponseNewParamsModelGPT4Turbo2024_04_09              BetaResponseNewParamsModel = "gpt-4-turbo-2024-04-09"
-	BetaResponseNewParamsModelGPT4_0125Preview                 BetaResponseNewParamsModel = "gpt-4-0125-preview"
-	BetaResponseNewParamsModelGPT4TurboPreview                 BetaResponseNewParamsModel = "gpt-4-turbo-preview"
-	BetaResponseNewParamsModelGPT4_1106Preview                 BetaResponseNewParamsModel = "gpt-4-1106-preview"
-	BetaResponseNewParamsModelGPT4VisionPreview                BetaResponseNewParamsModel = "gpt-4-vision-preview"
-	BetaResponseNewParamsModelGPT4                             BetaResponseNewParamsModel = "gpt-4"
-	BetaResponseNewParamsModelGPT4_0314                        BetaResponseNewParamsModel = "gpt-4-0314"
-	BetaResponseNewParamsModelGPT4_0613                        BetaResponseNewParamsModel = "gpt-4-0613"
-	BetaResponseNewParamsModelGPT4_32k                         BetaResponseNewParamsModel = "gpt-4-32k"
-	BetaResponseNewParamsModelGPT4_32k0314                     BetaResponseNewParamsModel = "gpt-4-32k-0314"
-	BetaResponseNewParamsModelGPT4_32k0613                     BetaResponseNewParamsModel = "gpt-4-32k-0613"
-	BetaResponseNewParamsModelGPT3_5Turbo                      BetaResponseNewParamsModel = "gpt-3.5-turbo"
-	BetaResponseNewParamsModelGPT3_5Turbo16k                   BetaResponseNewParamsModel = "gpt-3.5-turbo-16k"
-	BetaResponseNewParamsModelGPT3_5Turbo0301                  BetaResponseNewParamsModel = "gpt-3.5-turbo-0301"
-	BetaResponseNewParamsModelGPT3_5Turbo0613                  BetaResponseNewParamsModel = "gpt-3.5-turbo-0613"
-	BetaResponseNewParamsModelGPT3_5Turbo1106                  BetaResponseNewParamsModel = "gpt-3.5-turbo-1106"
-	BetaResponseNewParamsModelGPT3_5Turbo0125                  BetaResponseNewParamsModel = "gpt-3.5-turbo-0125"
-	BetaResponseNewParamsModelGPT3_5Turbo16k0613               BetaResponseNewParamsModel = "gpt-3.5-turbo-16k-0613"
-	BetaResponseNewParamsModelO1Pro                            BetaResponseNewParamsModel = "o1-pro"
-	BetaResponseNewParamsModelO1Pro2025_03_19                  BetaResponseNewParamsModel = "o1-pro-2025-03-19"
-	BetaResponseNewParamsModelO3Pro                            BetaResponseNewParamsModel = "o3-pro"
-	BetaResponseNewParamsModelO3Pro2025_06_10                  BetaResponseNewParamsModel = "o3-pro-2025-06-10"
-	BetaResponseNewParamsModelO3DeepResearch                   BetaResponseNewParamsModel = "o3-deep-research"
-	BetaResponseNewParamsModelO3DeepResearch2025_06_26         BetaResponseNewParamsModel = "o3-deep-research-2025-06-26"
-	BetaResponseNewParamsModelO4MiniDeepResearch               BetaResponseNewParamsModel = "o4-mini-deep-research"
-	BetaResponseNewParamsModelO4MiniDeepResearch2025_06_26     BetaResponseNewParamsModel = "o4-mini-deep-research-2025-06-26"
-	BetaResponseNewParamsModelComputerUsePreview               BetaResponseNewParamsModel = "computer-use-preview"
-	BetaResponseNewParamsModelComputerUsePreview2025_03_11     BetaResponseNewParamsModel = "computer-use-preview-2025-03-11"
-	BetaResponseNewParamsModelGPT5_5Pro                        BetaResponseNewParamsModel = "gpt-5.5-pro"
-	BetaResponseNewParamsModelGPT5_5Pro2026_04_23              BetaResponseNewParamsModel = "gpt-5.5-pro-2026-04-23"
-	BetaResponseNewParamsModelGPT5Codex                        BetaResponseNewParamsModel = "gpt-5-codex"
-	BetaResponseNewParamsModelGPT5Pro                          BetaResponseNewParamsModel = "gpt-5-pro"
-	BetaResponseNewParamsModelGPT5Pro2025_10_06                BetaResponseNewParamsModel = "gpt-5-pro-2025-10-06"
-	BetaResponseNewParamsModelGPT5_1CodexMax                   BetaResponseNewParamsModel = "gpt-5.1-codex-max"
-	BetaResponseNewParamsModelGPTDaybreakBlueLatest            BetaResponseNewParamsModel = "gpt-daybreak-blue-latest"
-	BetaResponseNewParamsModelGPTDaybreakRedLatest             BetaResponseNewParamsModel = "gpt-daybreak-red-latest"
-	BetaResponseNewParamsModelGPT5_6Cyber                      BetaResponseNewParamsModel = "gpt-5.6-cyber"
-	BetaResponseNewParamsModelGPTRosalindResearch              BetaResponseNewParamsModel = "gpt-rosalind-research"
+	// Deprecated: Announced shutdown date: 2026-02-17. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelChatgpt4oLatest BetaResponseNewParamsModel = "chatgpt-4o-latest"
+	// Deprecated: Announced shutdown date: 2026-02-12. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelCodexMiniLatest     BetaResponseNewParamsModel = "codex-mini-latest"
+	BetaResponseNewParamsModelGPT4oMini           BetaResponseNewParamsModel = "gpt-4o-mini"
+	BetaResponseNewParamsModelGPT4oMini2024_07_18 BetaResponseNewParamsModel = "gpt-4o-mini-2024-07-18"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4Turbo BetaResponseNewParamsModel = "gpt-4-turbo"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4Turbo2024_04_09 BetaResponseNewParamsModel = "gpt-4-turbo-2024-04-09"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_0125Preview BetaResponseNewParamsModel = "gpt-4-0125-preview"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4TurboPreview BetaResponseNewParamsModel = "gpt-4-turbo-preview"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_1106Preview BetaResponseNewParamsModel = "gpt-4-1106-preview"
+	// Deprecated: Announced shutdown date: 2024-12-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4VisionPreview BetaResponseNewParamsModel = "gpt-4-vision-preview"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4 BetaResponseNewParamsModel = "gpt-4"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_0314 BetaResponseNewParamsModel = "gpt-4-0314"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_0613 BetaResponseNewParamsModel = "gpt-4-0613"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_32k BetaResponseNewParamsModel = "gpt-4-32k"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_32k0314 BetaResponseNewParamsModel = "gpt-4-32k-0314"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_32k0613 BetaResponseNewParamsModel = "gpt-4-32k-0613"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT3_5Turbo BetaResponseNewParamsModel = "gpt-3.5-turbo"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT3_5Turbo16k BetaResponseNewParamsModel = "gpt-3.5-turbo-16k"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT3_5Turbo0301 BetaResponseNewParamsModel = "gpt-3.5-turbo-0301"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT3_5Turbo0613 BetaResponseNewParamsModel = "gpt-3.5-turbo-0613"
+	// Deprecated: Announced shutdown date: 2026-09-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT3_5Turbo1106 BetaResponseNewParamsModel = "gpt-3.5-turbo-1106"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT3_5Turbo0125 BetaResponseNewParamsModel = "gpt-3.5-turbo-0125"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT3_5Turbo16k0613 BetaResponseNewParamsModel = "gpt-3.5-turbo-16k-0613"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO1Pro BetaResponseNewParamsModel = "o1-pro"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO1Pro2025_03_19 BetaResponseNewParamsModel = "o1-pro-2025-03-19"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO3Pro BetaResponseNewParamsModel = "o3-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO3Pro2025_06_10 BetaResponseNewParamsModel = "o3-pro-2025-06-10"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO3DeepResearch BetaResponseNewParamsModel = "o3-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO3DeepResearch2025_06_26 BetaResponseNewParamsModel = "o3-deep-research-2025-06-26"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO4MiniDeepResearch BetaResponseNewParamsModel = "o4-mini-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO4MiniDeepResearch2025_06_26 BetaResponseNewParamsModel = "o4-mini-deep-research-2025-06-26"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelComputerUsePreview BetaResponseNewParamsModel = "computer-use-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelComputerUsePreview2025_03_11 BetaResponseNewParamsModel = "computer-use-preview-2025-03-11"
+	BetaResponseNewParamsModelGPT5_5Pro                    BetaResponseNewParamsModel = "gpt-5.5-pro"
+	BetaResponseNewParamsModelGPT5_5Pro2026_04_23          BetaResponseNewParamsModel = "gpt-5.5-pro-2026-04-23"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5Codex BetaResponseNewParamsModel = "gpt-5-codex"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5Pro BetaResponseNewParamsModel = "gpt-5-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5Pro2025_10_06 BetaResponseNewParamsModel = "gpt-5-pro-2025-10-06"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5_1CodexMax        BetaResponseNewParamsModel = "gpt-5.1-codex-max"
+	BetaResponseNewParamsModelGPTDaybreakBlueLatest BetaResponseNewParamsModel = "gpt-daybreak-blue-latest"
+	BetaResponseNewParamsModelGPTDaybreakRedLatest  BetaResponseNewParamsModel = "gpt-daybreak-red-latest"
+	BetaResponseNewParamsModelGPT5_6Cyber           BetaResponseNewParamsModel = "gpt-5.6-cyber"
+	BetaResponseNewParamsModelGPTRosalindResearch   BetaResponseNewParamsModel = "gpt-rosalind-research"
 )
 
 // Configuration for running moderation on the input and output of this response.
@@ -34545,115 +34981,335 @@ func (r *BetaResponseCompactParams) UnmarshalJSON(data []byte) error {
 type BetaResponseCompactParamsModel string
 
 const (
-	BetaResponseCompactParamsModelGPT6Astra                        BetaResponseCompactParamsModel = "gpt-6-astra"
-	BetaResponseCompactParamsModelGPT6_1Sol                        BetaResponseCompactParamsModel = "gpt-6.1-sol"
-	BetaResponseCompactParamsModelGPT6Sol                          BetaResponseCompactParamsModel = "gpt-6-sol"
-	BetaResponseCompactParamsModelGPT6Luna                         BetaResponseCompactParamsModel = "gpt-6-luna"
-	BetaResponseCompactParamsModelGPT5_6Sol                        BetaResponseCompactParamsModel = "gpt-5.6-sol"
-	BetaResponseCompactParamsModelGPT5_6Terra                      BetaResponseCompactParamsModel = "gpt-5.6-terra"
-	BetaResponseCompactParamsModelGPT5_6Luna                       BetaResponseCompactParamsModel = "gpt-5.6-luna"
-	BetaResponseCompactParamsModelGPT5_5                           BetaResponseCompactParamsModel = "gpt-5.5"
-	BetaResponseCompactParamsModelGPT5_5_2026_04_23                BetaResponseCompactParamsModel = "gpt-5.5-2026-04-23"
-	BetaResponseCompactParamsModelGPT5_4                           BetaResponseCompactParamsModel = "gpt-5.4"
-	BetaResponseCompactParamsModelGPT5_4Mini                       BetaResponseCompactParamsModel = "gpt-5.4-mini"
-	BetaResponseCompactParamsModelGPT5_4Nano                       BetaResponseCompactParamsModel = "gpt-5.4-nano"
-	BetaResponseCompactParamsModelGPT5_4Mini2026_03_17             BetaResponseCompactParamsModel = "gpt-5.4-mini-2026-03-17"
-	BetaResponseCompactParamsModelGPT5_4Nano2026_03_17             BetaResponseCompactParamsModel = "gpt-5.4-nano-2026-03-17"
-	BetaResponseCompactParamsModelGPT5_3ChatLatest                 BetaResponseCompactParamsModel = "gpt-5.3-chat-latest"
-	BetaResponseCompactParamsModelGPT5_2                           BetaResponseCompactParamsModel = "gpt-5.2"
-	BetaResponseCompactParamsModelGPT5_2_2025_12_11                BetaResponseCompactParamsModel = "gpt-5.2-2025-12-11"
-	BetaResponseCompactParamsModelGPT5_2ChatLatest                 BetaResponseCompactParamsModel = "gpt-5.2-chat-latest"
-	BetaResponseCompactParamsModelGPT5_2Pro                        BetaResponseCompactParamsModel = "gpt-5.2-pro"
-	BetaResponseCompactParamsModelGPT5_2Pro2025_12_11              BetaResponseCompactParamsModel = "gpt-5.2-pro-2025-12-11"
-	BetaResponseCompactParamsModelGPT5_1                           BetaResponseCompactParamsModel = "gpt-5.1"
-	BetaResponseCompactParamsModelGPT5_1_2025_11_13                BetaResponseCompactParamsModel = "gpt-5.1-2025-11-13"
-	BetaResponseCompactParamsModelGPT5_1Codex                      BetaResponseCompactParamsModel = "gpt-5.1-codex"
-	BetaResponseCompactParamsModelGPT5_1Mini                       BetaResponseCompactParamsModel = "gpt-5.1-mini"
-	BetaResponseCompactParamsModelGPT5_1ChatLatest                 BetaResponseCompactParamsModel = "gpt-5.1-chat-latest"
-	BetaResponseCompactParamsModelGPT5                             BetaResponseCompactParamsModel = "gpt-5"
-	BetaResponseCompactParamsModelGPT5Mini                         BetaResponseCompactParamsModel = "gpt-5-mini"
-	BetaResponseCompactParamsModelGPT5Nano                         BetaResponseCompactParamsModel = "gpt-5-nano"
-	BetaResponseCompactParamsModelGPT5_2025_08_07                  BetaResponseCompactParamsModel = "gpt-5-2025-08-07"
-	BetaResponseCompactParamsModelGPT5Mini2025_08_07               BetaResponseCompactParamsModel = "gpt-5-mini-2025-08-07"
-	BetaResponseCompactParamsModelGPT5Nano2025_08_07               BetaResponseCompactParamsModel = "gpt-5-nano-2025-08-07"
-	BetaResponseCompactParamsModelGPT5ChatLatest                   BetaResponseCompactParamsModel = "gpt-5-chat-latest"
-	BetaResponseCompactParamsModelGPT4_1                           BetaResponseCompactParamsModel = "gpt-4.1"
-	BetaResponseCompactParamsModelGPT4_1Mini                       BetaResponseCompactParamsModel = "gpt-4.1-mini"
-	BetaResponseCompactParamsModelGPT4_1Nano                       BetaResponseCompactParamsModel = "gpt-4.1-nano"
-	BetaResponseCompactParamsModelGPT4_1_2025_04_14                BetaResponseCompactParamsModel = "gpt-4.1-2025-04-14"
-	BetaResponseCompactParamsModelGPT4_1Mini2025_04_14             BetaResponseCompactParamsModel = "gpt-4.1-mini-2025-04-14"
-	BetaResponseCompactParamsModelGPT4_1Nano2025_04_14             BetaResponseCompactParamsModel = "gpt-4.1-nano-2025-04-14"
-	BetaResponseCompactParamsModelO4Mini                           BetaResponseCompactParamsModel = "o4-mini"
-	BetaResponseCompactParamsModelO4Mini2025_04_16                 BetaResponseCompactParamsModel = "o4-mini-2025-04-16"
-	BetaResponseCompactParamsModelO3                               BetaResponseCompactParamsModel = "o3"
-	BetaResponseCompactParamsModelO3_2025_04_16                    BetaResponseCompactParamsModel = "o3-2025-04-16"
-	BetaResponseCompactParamsModelO3Mini                           BetaResponseCompactParamsModel = "o3-mini"
-	BetaResponseCompactParamsModelO3Mini2025_01_31                 BetaResponseCompactParamsModel = "o3-mini-2025-01-31"
-	BetaResponseCompactParamsModelO1                               BetaResponseCompactParamsModel = "o1"
-	BetaResponseCompactParamsModelO1_2024_12_17                    BetaResponseCompactParamsModel = "o1-2024-12-17"
-	BetaResponseCompactParamsModelO1Preview                        BetaResponseCompactParamsModel = "o1-preview"
-	BetaResponseCompactParamsModelO1Preview2024_09_12              BetaResponseCompactParamsModel = "o1-preview-2024-09-12"
-	BetaResponseCompactParamsModelO1Mini                           BetaResponseCompactParamsModel = "o1-mini"
-	BetaResponseCompactParamsModelO1Mini2024_09_12                 BetaResponseCompactParamsModel = "o1-mini-2024-09-12"
-	BetaResponseCompactParamsModelGPT4o                            BetaResponseCompactParamsModel = "gpt-4o"
-	BetaResponseCompactParamsModelGPT4o2024_11_20                  BetaResponseCompactParamsModel = "gpt-4o-2024-11-20"
-	BetaResponseCompactParamsModelGPT4o2024_08_06                  BetaResponseCompactParamsModel = "gpt-4o-2024-08-06"
-	BetaResponseCompactParamsModelGPT4o2024_05_13                  BetaResponseCompactParamsModel = "gpt-4o-2024-05-13"
-	BetaResponseCompactParamsModelGPTAudioMini                     BetaResponseCompactParamsModel = "gpt-audio-mini"
-	BetaResponseCompactParamsModelGPTAudioMini2025_12_15           BetaResponseCompactParamsModel = "gpt-audio-mini-2025-12-15"
-	BetaResponseCompactParamsModelGPT4oAudioPreview                BetaResponseCompactParamsModel = "gpt-4o-audio-preview"
-	BetaResponseCompactParamsModelGPT4oAudioPreview2024_10_01      BetaResponseCompactParamsModel = "gpt-4o-audio-preview-2024-10-01"
-	BetaResponseCompactParamsModelGPT4oAudioPreview2024_12_17      BetaResponseCompactParamsModel = "gpt-4o-audio-preview-2024-12-17"
-	BetaResponseCompactParamsModelGPT4oAudioPreview2025_06_03      BetaResponseCompactParamsModel = "gpt-4o-audio-preview-2025-06-03"
-	BetaResponseCompactParamsModelGPT4oMiniAudioPreview            BetaResponseCompactParamsModel = "gpt-4o-mini-audio-preview"
-	BetaResponseCompactParamsModelGPT4oMiniAudioPreview2024_12_17  BetaResponseCompactParamsModel = "gpt-4o-mini-audio-preview-2024-12-17"
-	BetaResponseCompactParamsModelGPT4oSearchPreview               BetaResponseCompactParamsModel = "gpt-4o-search-preview"
-	BetaResponseCompactParamsModelGPT4oMiniSearchPreview           BetaResponseCompactParamsModel = "gpt-4o-mini-search-preview"
-	BetaResponseCompactParamsModelGPT4oSearchPreview2025_03_11     BetaResponseCompactParamsModel = "gpt-4o-search-preview-2025-03-11"
+	BetaResponseCompactParamsModelGPT6Astra            BetaResponseCompactParamsModel = "gpt-6-astra"
+	BetaResponseCompactParamsModelGPT6_1Sol            BetaResponseCompactParamsModel = "gpt-6.1-sol"
+	BetaResponseCompactParamsModelGPT6Sol              BetaResponseCompactParamsModel = "gpt-6-sol"
+	BetaResponseCompactParamsModelGPT6Luna             BetaResponseCompactParamsModel = "gpt-6-luna"
+	BetaResponseCompactParamsModelGPT5_6Sol            BetaResponseCompactParamsModel = "gpt-5.6-sol"
+	BetaResponseCompactParamsModelGPT5_6Terra          BetaResponseCompactParamsModel = "gpt-5.6-terra"
+	BetaResponseCompactParamsModelGPT5_6Luna           BetaResponseCompactParamsModel = "gpt-5.6-luna"
+	BetaResponseCompactParamsModelGPT5_5               BetaResponseCompactParamsModel = "gpt-5.5"
+	BetaResponseCompactParamsModelGPT5_5_2026_04_23    BetaResponseCompactParamsModel = "gpt-5.5-2026-04-23"
+	BetaResponseCompactParamsModelGPT5_4               BetaResponseCompactParamsModel = "gpt-5.4"
+	BetaResponseCompactParamsModelGPT5_4Mini           BetaResponseCompactParamsModel = "gpt-5.4-mini"
+	BetaResponseCompactParamsModelGPT5_4Nano           BetaResponseCompactParamsModel = "gpt-5.4-nano"
+	BetaResponseCompactParamsModelGPT5_4Mini2026_03_17 BetaResponseCompactParamsModel = "gpt-5.4-mini-2026-03-17"
+	BetaResponseCompactParamsModelGPT5_4Nano2026_03_17 BetaResponseCompactParamsModel = "gpt-5.4-nano-2026-03-17"
+	// Deprecated: Announced shutdown date: 2026-08-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5_3ChatLatest  BetaResponseCompactParamsModel = "gpt-5.3-chat-latest"
+	BetaResponseCompactParamsModelGPT5_2            BetaResponseCompactParamsModel = "gpt-5.2"
+	BetaResponseCompactParamsModelGPT5_2_2025_12_11 BetaResponseCompactParamsModel = "gpt-5.2-2025-12-11"
+	// Deprecated: Announced shutdown date: 2026-08-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5_2ChatLatest    BetaResponseCompactParamsModel = "gpt-5.2-chat-latest"
+	BetaResponseCompactParamsModelGPT5_2Pro           BetaResponseCompactParamsModel = "gpt-5.2-pro"
+	BetaResponseCompactParamsModelGPT5_2Pro2025_12_11 BetaResponseCompactParamsModel = "gpt-5.2-pro-2025-12-11"
+	BetaResponseCompactParamsModelGPT5_1              BetaResponseCompactParamsModel = "gpt-5.1"
+	BetaResponseCompactParamsModelGPT5_1_2025_11_13   BetaResponseCompactParamsModel = "gpt-5.1-2025-11-13"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5_1Codex BetaResponseCompactParamsModel = "gpt-5.1-codex"
+	// Deprecated: Not a supported model ID. Retained for SDK compatibility.
+	BetaResponseCompactParamsModelGPT5_1Mini BetaResponseCompactParamsModel = "gpt-5.1-mini"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5_1ChatLatest BetaResponseCompactParamsModel = "gpt-5.1-chat-latest"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5 BetaResponseCompactParamsModel = "gpt-5"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5Mini BetaResponseCompactParamsModel = "gpt-5-mini"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5Nano BetaResponseCompactParamsModel = "gpt-5-nano"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5_2025_08_07 BetaResponseCompactParamsModel = "gpt-5-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5Mini2025_08_07 BetaResponseCompactParamsModel = "gpt-5-mini-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5Nano2025_08_07 BetaResponseCompactParamsModel = "gpt-5-nano-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5ChatLatest BetaResponseCompactParamsModel = "gpt-5-chat-latest"
+	BetaResponseCompactParamsModelGPT4_1         BetaResponseCompactParamsModel = "gpt-4.1"
+	BetaResponseCompactParamsModelGPT4_1Mini     BetaResponseCompactParamsModel = "gpt-4.1-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_1Nano           BetaResponseCompactParamsModel = "gpt-4.1-nano"
+	BetaResponseCompactParamsModelGPT4_1_2025_04_14    BetaResponseCompactParamsModel = "gpt-4.1-2025-04-14"
+	BetaResponseCompactParamsModelGPT4_1Mini2025_04_14 BetaResponseCompactParamsModel = "gpt-4.1-mini-2025-04-14"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_1Nano2025_04_14 BetaResponseCompactParamsModel = "gpt-4.1-nano-2025-04-14"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO4Mini BetaResponseCompactParamsModel = "o4-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO4Mini2025_04_16 BetaResponseCompactParamsModel = "o4-mini-2025-04-16"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO3 BetaResponseCompactParamsModel = "o3"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO3_2025_04_16 BetaResponseCompactParamsModel = "o3-2025-04-16"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO3Mini BetaResponseCompactParamsModel = "o3-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO3Mini2025_01_31 BetaResponseCompactParamsModel = "o3-mini-2025-01-31"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO1 BetaResponseCompactParamsModel = "o1"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO1_2024_12_17 BetaResponseCompactParamsModel = "o1-2024-12-17"
+	// Deprecated: Announced shutdown date: 2025-07-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO1Preview BetaResponseCompactParamsModel = "o1-preview"
+	// Deprecated: Announced shutdown date: 2025-07-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO1Preview2024_09_12 BetaResponseCompactParamsModel = "o1-preview-2024-09-12"
+	// Deprecated: Announced shutdown date: 2025-10-27. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO1Mini BetaResponseCompactParamsModel = "o1-mini"
+	// Deprecated: Announced shutdown date: 2025-10-27. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO1Mini2024_09_12 BetaResponseCompactParamsModel = "o1-mini-2024-09-12"
+	BetaResponseCompactParamsModelGPT4o            BetaResponseCompactParamsModel = "gpt-4o"
+	BetaResponseCompactParamsModelGPT4o2024_11_20  BetaResponseCompactParamsModel = "gpt-4o-2024-11-20"
+	BetaResponseCompactParamsModelGPT4o2024_08_06  BetaResponseCompactParamsModel = "gpt-4o-2024-08-06"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4o2024_05_13 BetaResponseCompactParamsModel = "gpt-4o-2024-05-13"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPTAudioMini BetaResponseCompactParamsModel = "gpt-audio-mini"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPTAudioMini2025_12_15 BetaResponseCompactParamsModel = "gpt-audio-mini-2025-12-15"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oAudioPreview BetaResponseCompactParamsModel = "gpt-4o-audio-preview"
+	// Deprecated: Announced shutdown date: 2025-10-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oAudioPreview2024_10_01 BetaResponseCompactParamsModel = "gpt-4o-audio-preview-2024-10-01"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oAudioPreview2024_12_17 BetaResponseCompactParamsModel = "gpt-4o-audio-preview-2024-12-17"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oAudioPreview2025_06_03 BetaResponseCompactParamsModel = "gpt-4o-audio-preview-2025-06-03"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oMiniAudioPreview BetaResponseCompactParamsModel = "gpt-4o-mini-audio-preview"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oMiniAudioPreview2024_12_17 BetaResponseCompactParamsModel = "gpt-4o-mini-audio-preview-2024-12-17"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oSearchPreview BetaResponseCompactParamsModel = "gpt-4o-search-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oMiniSearchPreview BetaResponseCompactParamsModel = "gpt-4o-mini-search-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oSearchPreview2025_03_11 BetaResponseCompactParamsModel = "gpt-4o-search-preview-2025-03-11"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponseCompactParamsModelGPT4oMiniSearchPreview2025_03_11 BetaResponseCompactParamsModel = "gpt-4o-mini-search-preview-2025-03-11"
-	BetaResponseCompactParamsModelChatgpt4oLatest                  BetaResponseCompactParamsModel = "chatgpt-4o-latest"
-	BetaResponseCompactParamsModelCodexMiniLatest                  BetaResponseCompactParamsModel = "codex-mini-latest"
-	BetaResponseCompactParamsModelGPT4oMini                        BetaResponseCompactParamsModel = "gpt-4o-mini"
-	BetaResponseCompactParamsModelGPT4oMini2024_07_18              BetaResponseCompactParamsModel = "gpt-4o-mini-2024-07-18"
-	BetaResponseCompactParamsModelGPT4Turbo                        BetaResponseCompactParamsModel = "gpt-4-turbo"
-	BetaResponseCompactParamsModelGPT4Turbo2024_04_09              BetaResponseCompactParamsModel = "gpt-4-turbo-2024-04-09"
-	BetaResponseCompactParamsModelGPT4_0125Preview                 BetaResponseCompactParamsModel = "gpt-4-0125-preview"
-	BetaResponseCompactParamsModelGPT4TurboPreview                 BetaResponseCompactParamsModel = "gpt-4-turbo-preview"
-	BetaResponseCompactParamsModelGPT4_1106Preview                 BetaResponseCompactParamsModel = "gpt-4-1106-preview"
-	BetaResponseCompactParamsModelGPT4VisionPreview                BetaResponseCompactParamsModel = "gpt-4-vision-preview"
-	BetaResponseCompactParamsModelGPT4                             BetaResponseCompactParamsModel = "gpt-4"
-	BetaResponseCompactParamsModelGPT4_0314                        BetaResponseCompactParamsModel = "gpt-4-0314"
-	BetaResponseCompactParamsModelGPT4_0613                        BetaResponseCompactParamsModel = "gpt-4-0613"
-	BetaResponseCompactParamsModelGPT4_32k                         BetaResponseCompactParamsModel = "gpt-4-32k"
-	BetaResponseCompactParamsModelGPT4_32k0314                     BetaResponseCompactParamsModel = "gpt-4-32k-0314"
-	BetaResponseCompactParamsModelGPT4_32k0613                     BetaResponseCompactParamsModel = "gpt-4-32k-0613"
-	BetaResponseCompactParamsModelGPT3_5Turbo                      BetaResponseCompactParamsModel = "gpt-3.5-turbo"
-	BetaResponseCompactParamsModelGPT3_5Turbo16k                   BetaResponseCompactParamsModel = "gpt-3.5-turbo-16k"
-	BetaResponseCompactParamsModelGPT3_5Turbo0301                  BetaResponseCompactParamsModel = "gpt-3.5-turbo-0301"
-	BetaResponseCompactParamsModelGPT3_5Turbo0613                  BetaResponseCompactParamsModel = "gpt-3.5-turbo-0613"
-	BetaResponseCompactParamsModelGPT3_5Turbo1106                  BetaResponseCompactParamsModel = "gpt-3.5-turbo-1106"
-	BetaResponseCompactParamsModelGPT3_5Turbo0125                  BetaResponseCompactParamsModel = "gpt-3.5-turbo-0125"
-	BetaResponseCompactParamsModelGPT3_5Turbo16k0613               BetaResponseCompactParamsModel = "gpt-3.5-turbo-16k-0613"
-	BetaResponseCompactParamsModelO1Pro                            BetaResponseCompactParamsModel = "o1-pro"
-	BetaResponseCompactParamsModelO1Pro2025_03_19                  BetaResponseCompactParamsModel = "o1-pro-2025-03-19"
-	BetaResponseCompactParamsModelO3Pro                            BetaResponseCompactParamsModel = "o3-pro"
-	BetaResponseCompactParamsModelO3Pro2025_06_10                  BetaResponseCompactParamsModel = "o3-pro-2025-06-10"
-	BetaResponseCompactParamsModelO3DeepResearch                   BetaResponseCompactParamsModel = "o3-deep-research"
-	BetaResponseCompactParamsModelO3DeepResearch2025_06_26         BetaResponseCompactParamsModel = "o3-deep-research-2025-06-26"
-	BetaResponseCompactParamsModelO4MiniDeepResearch               BetaResponseCompactParamsModel = "o4-mini-deep-research"
-	BetaResponseCompactParamsModelO4MiniDeepResearch2025_06_26     BetaResponseCompactParamsModel = "o4-mini-deep-research-2025-06-26"
-	BetaResponseCompactParamsModelComputerUsePreview               BetaResponseCompactParamsModel = "computer-use-preview"
-	BetaResponseCompactParamsModelComputerUsePreview2025_03_11     BetaResponseCompactParamsModel = "computer-use-preview-2025-03-11"
-	BetaResponseCompactParamsModelGPT5_5Pro                        BetaResponseCompactParamsModel = "gpt-5.5-pro"
-	BetaResponseCompactParamsModelGPT5_5Pro2026_04_23              BetaResponseCompactParamsModel = "gpt-5.5-pro-2026-04-23"
-	BetaResponseCompactParamsModelGPT5Codex                        BetaResponseCompactParamsModel = "gpt-5-codex"
-	BetaResponseCompactParamsModelGPT5Pro                          BetaResponseCompactParamsModel = "gpt-5-pro"
-	BetaResponseCompactParamsModelGPT5Pro2025_10_06                BetaResponseCompactParamsModel = "gpt-5-pro-2025-10-06"
-	BetaResponseCompactParamsModelGPT5_1CodexMax                   BetaResponseCompactParamsModel = "gpt-5.1-codex-max"
-	BetaResponseCompactParamsModelGPTDaybreakBlueLatest            BetaResponseCompactParamsModel = "gpt-daybreak-blue-latest"
-	BetaResponseCompactParamsModelGPTDaybreakRedLatest             BetaResponseCompactParamsModel = "gpt-daybreak-red-latest"
-	BetaResponseCompactParamsModelGPT5_6Cyber                      BetaResponseCompactParamsModel = "gpt-5.6-cyber"
-	BetaResponseCompactParamsModelGPTRosalindResearch              BetaResponseCompactParamsModel = "gpt-rosalind-research"
+	// Deprecated: Announced shutdown date: 2026-02-17. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelChatgpt4oLatest BetaResponseCompactParamsModel = "chatgpt-4o-latest"
+	// Deprecated: Announced shutdown date: 2026-02-12. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelCodexMiniLatest     BetaResponseCompactParamsModel = "codex-mini-latest"
+	BetaResponseCompactParamsModelGPT4oMini           BetaResponseCompactParamsModel = "gpt-4o-mini"
+	BetaResponseCompactParamsModelGPT4oMini2024_07_18 BetaResponseCompactParamsModel = "gpt-4o-mini-2024-07-18"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4Turbo BetaResponseCompactParamsModel = "gpt-4-turbo"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4Turbo2024_04_09 BetaResponseCompactParamsModel = "gpt-4-turbo-2024-04-09"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_0125Preview BetaResponseCompactParamsModel = "gpt-4-0125-preview"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4TurboPreview BetaResponseCompactParamsModel = "gpt-4-turbo-preview"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_1106Preview BetaResponseCompactParamsModel = "gpt-4-1106-preview"
+	// Deprecated: Announced shutdown date: 2024-12-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4VisionPreview BetaResponseCompactParamsModel = "gpt-4-vision-preview"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4 BetaResponseCompactParamsModel = "gpt-4"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_0314 BetaResponseCompactParamsModel = "gpt-4-0314"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_0613 BetaResponseCompactParamsModel = "gpt-4-0613"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_32k BetaResponseCompactParamsModel = "gpt-4-32k"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_32k0314 BetaResponseCompactParamsModel = "gpt-4-32k-0314"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_32k0613 BetaResponseCompactParamsModel = "gpt-4-32k-0613"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT3_5Turbo BetaResponseCompactParamsModel = "gpt-3.5-turbo"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT3_5Turbo16k BetaResponseCompactParamsModel = "gpt-3.5-turbo-16k"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT3_5Turbo0301 BetaResponseCompactParamsModel = "gpt-3.5-turbo-0301"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT3_5Turbo0613 BetaResponseCompactParamsModel = "gpt-3.5-turbo-0613"
+	// Deprecated: Announced shutdown date: 2026-09-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT3_5Turbo1106 BetaResponseCompactParamsModel = "gpt-3.5-turbo-1106"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT3_5Turbo0125 BetaResponseCompactParamsModel = "gpt-3.5-turbo-0125"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT3_5Turbo16k0613 BetaResponseCompactParamsModel = "gpt-3.5-turbo-16k-0613"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO1Pro BetaResponseCompactParamsModel = "o1-pro"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO1Pro2025_03_19 BetaResponseCompactParamsModel = "o1-pro-2025-03-19"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO3Pro BetaResponseCompactParamsModel = "o3-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO3Pro2025_06_10 BetaResponseCompactParamsModel = "o3-pro-2025-06-10"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO3DeepResearch BetaResponseCompactParamsModel = "o3-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO3DeepResearch2025_06_26 BetaResponseCompactParamsModel = "o3-deep-research-2025-06-26"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO4MiniDeepResearch BetaResponseCompactParamsModel = "o4-mini-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO4MiniDeepResearch2025_06_26 BetaResponseCompactParamsModel = "o4-mini-deep-research-2025-06-26"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelComputerUsePreview BetaResponseCompactParamsModel = "computer-use-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelComputerUsePreview2025_03_11 BetaResponseCompactParamsModel = "computer-use-preview-2025-03-11"
+	BetaResponseCompactParamsModelGPT5_5Pro                    BetaResponseCompactParamsModel = "gpt-5.5-pro"
+	BetaResponseCompactParamsModelGPT5_5Pro2026_04_23          BetaResponseCompactParamsModel = "gpt-5.5-pro-2026-04-23"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5Codex BetaResponseCompactParamsModel = "gpt-5-codex"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5Pro BetaResponseCompactParamsModel = "gpt-5-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5Pro2025_10_06 BetaResponseCompactParamsModel = "gpt-5-pro-2025-10-06"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5_1CodexMax        BetaResponseCompactParamsModel = "gpt-5.1-codex-max"
+	BetaResponseCompactParamsModelGPTDaybreakBlueLatest BetaResponseCompactParamsModel = "gpt-daybreak-blue-latest"
+	BetaResponseCompactParamsModelGPTDaybreakRedLatest  BetaResponseCompactParamsModel = "gpt-daybreak-red-latest"
+	BetaResponseCompactParamsModelGPT5_6Cyber           BetaResponseCompactParamsModel = "gpt-5.6-cyber"
+	BetaResponseCompactParamsModelGPTRosalindResearch   BetaResponseCompactParamsModel = "gpt-rosalind-research"
 )
 
 // Only one field can be non-zero.

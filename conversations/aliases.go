@@ -17,33 +17,93 @@ type Error = apierror.Error
 type AllModels = shared.AllModels
 
 // Equals "o1-pro"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const AllModelsO1Pro = shared.AllModelsO1Pro
 
 // Equals "o1-pro-2025-03-19"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const AllModelsO1Pro2025_03_19 = shared.AllModelsO1Pro2025_03_19
 
 // Equals "o3-pro"
+//
+// Deprecated: Announced shutdown date: 2026-12-11. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const AllModelsO3Pro = shared.AllModelsO3Pro
 
 // Equals "o3-pro-2025-06-10"
+//
+// Deprecated: Announced shutdown date: 2026-12-11. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const AllModelsO3Pro2025_06_10 = shared.AllModelsO3Pro2025_06_10
 
 // Equals "o3-deep-research"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const AllModelsO3DeepResearch = shared.AllModelsO3DeepResearch
 
 // Equals "o3-deep-research-2025-06-26"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const AllModelsO3DeepResearch2025_06_26 = shared.AllModelsO3DeepResearch2025_06_26
 
 // Equals "o4-mini-deep-research"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const AllModelsO4MiniDeepResearch = shared.AllModelsO4MiniDeepResearch
 
 // Equals "o4-mini-deep-research-2025-06-26"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const AllModelsO4MiniDeepResearch2025_06_26 = shared.AllModelsO4MiniDeepResearch2025_06_26
 
 // Equals "computer-use-preview"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const AllModelsComputerUsePreview = shared.AllModelsComputerUsePreview
 
 // Equals "computer-use-preview-2025-03-11"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const AllModelsComputerUsePreview2025_03_11 = shared.AllModelsComputerUsePreview2025_03_11
 
 // Equals "gpt-5.5-pro"
@@ -53,15 +113,39 @@ const AllModelsGPT5_5Pro = shared.AllModelsGPT5_5Pro
 const AllModelsGPT5_5Pro2026_04_23 = shared.AllModelsGPT5_5Pro2026_04_23
 
 // Equals "gpt-5-codex"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const AllModelsGPT5Codex = shared.AllModelsGPT5Codex
 
 // Equals "gpt-5-pro"
+//
+// Deprecated: Announced shutdown date: 2026-12-11. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const AllModelsGPT5Pro = shared.AllModelsGPT5Pro
 
 // Equals "gpt-5-pro-2025-10-06"
+//
+// Deprecated: Announced shutdown date: 2026-12-11. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const AllModelsGPT5Pro2025_10_06 = shared.AllModelsGPT5Pro2025_10_06
 
 // Equals "gpt-5.1-codex-max"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const AllModelsGPT5_1CodexMax = shared.AllModelsGPT5_1CodexMax
 
 // Equals "gpt-daybreak-blue-latest"
@@ -122,6 +206,12 @@ const ChatModelGPT5_4Mini2026_03_17 = shared.ChatModelGPT5_4Mini2026_03_17
 const ChatModelGPT5_4Nano2026_03_17 = shared.ChatModelGPT5_4Nano2026_03_17
 
 // Equals "gpt-5.3-chat-latest"
+//
+// Deprecated: Announced shutdown date: 2026-08-10. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT5_3ChatLatest = shared.ChatModelGPT5_3ChatLatest
 
 // Equals "gpt-5.2"
@@ -131,6 +221,12 @@ const ChatModelGPT5_2 = shared.ChatModelGPT5_2
 const ChatModelGPT5_2_2025_12_11 = shared.ChatModelGPT5_2_2025_12_11
 
 // Equals "gpt-5.2-chat-latest"
+//
+// Deprecated: Announced shutdown date: 2026-08-10. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT5_2ChatLatest = shared.ChatModelGPT5_2ChatLatest
 
 // Equals "gpt-5.2-pro"
@@ -146,33 +242,91 @@ const ChatModelGPT5_1 = shared.ChatModelGPT5_1
 const ChatModelGPT5_1_2025_11_13 = shared.ChatModelGPT5_1_2025_11_13
 
 // Equals "gpt-5.1-codex"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT5_1Codex = shared.ChatModelGPT5_1Codex
 
 // Equals "gpt-5.1-mini"
+//
+// Deprecated: Not a supported model ID. Retained for SDK compatibility.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT5_1Mini = shared.ChatModelGPT5_1Mini
 
 // Equals "gpt-5.1-chat-latest"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT5_1ChatLatest = shared.ChatModelGPT5_1ChatLatest
 
 // Equals "gpt-5"
+//
+// Deprecated: Announced shutdown date: 2026-12-11. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT5 = shared.ChatModelGPT5
 
 // Equals "gpt-5-mini"
+//
+// Deprecated: Announced shutdown date: 2026-12-11. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT5Mini = shared.ChatModelGPT5Mini
 
 // Equals "gpt-5-nano"
+//
+// Deprecated: Announced shutdown date: 2026-12-11. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT5Nano = shared.ChatModelGPT5Nano
 
 // Equals "gpt-5-2025-08-07"
+//
+// Deprecated: Announced shutdown date: 2026-12-11. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT5_2025_08_07 = shared.ChatModelGPT5_2025_08_07
 
 // Equals "gpt-5-mini-2025-08-07"
+//
+// Deprecated: Announced shutdown date: 2026-12-11. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT5Mini2025_08_07 = shared.ChatModelGPT5Mini2025_08_07
 
 // Equals "gpt-5-nano-2025-08-07"
+//
+// Deprecated: Announced shutdown date: 2026-12-11. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT5Nano2025_08_07 = shared.ChatModelGPT5Nano2025_08_07
 
 // Equals "gpt-5-chat-latest"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT5ChatLatest = shared.ChatModelGPT5ChatLatest
 
 // Equals "gpt-4.1"
@@ -182,6 +336,12 @@ const ChatModelGPT4_1 = shared.ChatModelGPT4_1
 const ChatModelGPT4_1Mini = shared.ChatModelGPT4_1Mini
 
 // Equals "gpt-4.1-nano"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4_1Nano = shared.ChatModelGPT4_1Nano
 
 // Equals "gpt-4.1-2025-04-14"
@@ -191,42 +351,120 @@ const ChatModelGPT4_1_2025_04_14 = shared.ChatModelGPT4_1_2025_04_14
 const ChatModelGPT4_1Mini2025_04_14 = shared.ChatModelGPT4_1Mini2025_04_14
 
 // Equals "gpt-4.1-nano-2025-04-14"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4_1Nano2025_04_14 = shared.ChatModelGPT4_1Nano2025_04_14
 
 // Equals "o4-mini"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelO4Mini = shared.ChatModelO4Mini
 
 // Equals "o4-mini-2025-04-16"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelO4Mini2025_04_16 = shared.ChatModelO4Mini2025_04_16
 
 // Equals "o3"
+//
+// Deprecated: Announced shutdown date: 2026-12-11. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelO3 = shared.ChatModelO3
 
 // Equals "o3-2025-04-16"
+//
+// Deprecated: Announced shutdown date: 2026-12-11. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelO3_2025_04_16 = shared.ChatModelO3_2025_04_16
 
 // Equals "o3-mini"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelO3Mini = shared.ChatModelO3Mini
 
 // Equals "o3-mini-2025-01-31"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelO3Mini2025_01_31 = shared.ChatModelO3Mini2025_01_31
 
 // Equals "o1"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelO1 = shared.ChatModelO1
 
 // Equals "o1-2024-12-17"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelO1_2024_12_17 = shared.ChatModelO1_2024_12_17
 
 // Equals "o1-preview"
+//
+// Deprecated: Announced shutdown date: 2025-07-28. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelO1Preview = shared.ChatModelO1Preview
 
 // Equals "o1-preview-2024-09-12"
+//
+// Deprecated: Announced shutdown date: 2025-07-28. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelO1Preview2024_09_12 = shared.ChatModelO1Preview2024_09_12
 
 // Equals "o1-mini"
+//
+// Deprecated: Announced shutdown date: 2025-10-27. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelO1Mini = shared.ChatModelO1Mini
 
 // Equals "o1-mini-2024-09-12"
+//
+// Deprecated: Announced shutdown date: 2025-10-27. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelO1Mini2024_09_12 = shared.ChatModelO1Mini2024_09_12
 
 // Equals "gpt-4o"
@@ -239,48 +477,138 @@ const ChatModelGPT4o2024_11_20 = shared.ChatModelGPT4o2024_11_20
 const ChatModelGPT4o2024_08_06 = shared.ChatModelGPT4o2024_08_06
 
 // Equals "gpt-4o-2024-05-13"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4o2024_05_13 = shared.ChatModelGPT4o2024_05_13
 
 // Equals "gpt-audio-mini"
+//
+// Deprecated: Announced shutdown date: 2027-01-20. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPTAudioMini = shared.ChatModelGPTAudioMini
 
 // Equals "gpt-audio-mini-2025-12-15"
+//
+// Deprecated: Announced shutdown date: 2027-01-20. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPTAudioMini2025_12_15 = shared.ChatModelGPTAudioMini2025_12_15
 
 // Equals "gpt-4o-audio-preview"
+//
+// Deprecated: Announced shutdown date: 2026-05-07. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4oAudioPreview = shared.ChatModelGPT4oAudioPreview
 
 // Equals "gpt-4o-audio-preview-2024-10-01"
+//
+// Deprecated: Announced shutdown date: 2025-10-10. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4oAudioPreview2024_10_01 = shared.ChatModelGPT4oAudioPreview2024_10_01
 
 // Equals "gpt-4o-audio-preview-2024-12-17"
+//
+// Deprecated: Announced shutdown date: 2026-05-07. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4oAudioPreview2024_12_17 = shared.ChatModelGPT4oAudioPreview2024_12_17
 
 // Equals "gpt-4o-audio-preview-2025-06-03"
+//
+// Deprecated: Announced shutdown date: 2026-05-07. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4oAudioPreview2025_06_03 = shared.ChatModelGPT4oAudioPreview2025_06_03
 
 // Equals "gpt-4o-mini-audio-preview"
+//
+// Deprecated: Announced shutdown date: 2026-05-07. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4oMiniAudioPreview = shared.ChatModelGPT4oMiniAudioPreview
 
 // Equals "gpt-4o-mini-audio-preview-2024-12-17"
+//
+// Deprecated: Announced shutdown date: 2026-05-07. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4oMiniAudioPreview2024_12_17 = shared.ChatModelGPT4oMiniAudioPreview2024_12_17
 
 // Equals "gpt-4o-search-preview"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4oSearchPreview = shared.ChatModelGPT4oSearchPreview
 
 // Equals "gpt-4o-mini-search-preview"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4oMiniSearchPreview = shared.ChatModelGPT4oMiniSearchPreview
 
 // Equals "gpt-4o-search-preview-2025-03-11"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4oSearchPreview2025_03_11 = shared.ChatModelGPT4oSearchPreview2025_03_11
 
 // Equals "gpt-4o-mini-search-preview-2025-03-11"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4oMiniSearchPreview2025_03_11 = shared.ChatModelGPT4oMiniSearchPreview2025_03_11
 
 // Equals "chatgpt-4o-latest"
+//
+// Deprecated: Announced shutdown date: 2026-02-17. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelChatgpt4oLatest = shared.ChatModelChatgpt4oLatest
 
 // Equals "codex-mini-latest"
+//
+// Deprecated: Announced shutdown date: 2026-02-12. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelCodexMiniLatest = shared.ChatModelCodexMiniLatest
 
 // Equals "gpt-4o-mini"
@@ -290,60 +618,174 @@ const ChatModelGPT4oMini = shared.ChatModelGPT4oMini
 const ChatModelGPT4oMini2024_07_18 = shared.ChatModelGPT4oMini2024_07_18
 
 // Equals "gpt-4-turbo"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4Turbo = shared.ChatModelGPT4Turbo
 
 // Equals "gpt-4-turbo-2024-04-09"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4Turbo2024_04_09 = shared.ChatModelGPT4Turbo2024_04_09
 
 // Equals "gpt-4-0125-preview"
+//
+// Deprecated: Announced shutdown date: 2026-03-26. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4_0125Preview = shared.ChatModelGPT4_0125Preview
 
 // Equals "gpt-4-turbo-preview"
+//
+// Deprecated: Announced shutdown date: 2026-03-26. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4TurboPreview = shared.ChatModelGPT4TurboPreview
 
 // Equals "gpt-4-1106-preview"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4_1106Preview = shared.ChatModelGPT4_1106Preview
 
 // Equals "gpt-4-vision-preview"
+//
+// Deprecated: Announced shutdown date: 2024-12-06. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4VisionPreview = shared.ChatModelGPT4VisionPreview
 
 // Equals "gpt-4"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4 = shared.ChatModelGPT4
 
 // Equals "gpt-4-0314"
+//
+// Deprecated: Announced shutdown date: 2026-03-26. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4_0314 = shared.ChatModelGPT4_0314
 
 // Equals "gpt-4-0613"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4_0613 = shared.ChatModelGPT4_0613
 
 // Equals "gpt-4-32k"
+//
+// Deprecated: Announced shutdown date: 2025-06-06. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4_32k = shared.ChatModelGPT4_32k
 
 // Equals "gpt-4-32k-0314"
+//
+// Deprecated: Announced shutdown date: 2025-06-06. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4_32k0314 = shared.ChatModelGPT4_32k0314
 
 // Equals "gpt-4-32k-0613"
+//
+// Deprecated: Announced shutdown date: 2025-06-06. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4_32k0613 = shared.ChatModelGPT4_32k0613
 
 // Equals "gpt-3.5-turbo"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT3_5Turbo = shared.ChatModelGPT3_5Turbo
 
 // Equals "gpt-3.5-turbo-16k"
+//
+// Deprecated: Announced shutdown date: 2024-09-13. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT3_5Turbo16k = shared.ChatModelGPT3_5Turbo16k
 
 // Equals "gpt-3.5-turbo-0301"
+//
+// Deprecated: Announced shutdown date: 2024-09-13. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT3_5Turbo0301 = shared.ChatModelGPT3_5Turbo0301
 
 // Equals "gpt-3.5-turbo-0613"
+//
+// Deprecated: Announced shutdown date: 2024-09-13. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT3_5Turbo0613 = shared.ChatModelGPT3_5Turbo0613
 
 // Equals "gpt-3.5-turbo-1106"
+//
+// Deprecated: Announced shutdown date: 2026-09-28. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT3_5Turbo1106 = shared.ChatModelGPT3_5Turbo1106
 
 // Equals "gpt-3.5-turbo-0125"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT3_5Turbo0125 = shared.ChatModelGPT3_5Turbo0125
 
 // Equals "gpt-3.5-turbo-16k-0613"
+//
+// Deprecated: Announced shutdown date: 2024-09-13. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT3_5Turbo16k0613 = shared.ChatModelGPT3_5Turbo16k0613
 
 // A filter used to compare a specified attribute key to a given value using a
@@ -689,33 +1131,93 @@ type ResponseFormatTextParam = shared.ResponseFormatTextParam
 type ResponsesModel = shared.ResponsesModel
 
 // Equals "o1-pro"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ResponsesModelO1Pro = shared.ResponsesModelO1Pro
 
 // Equals "o1-pro-2025-03-19"
+//
+// Deprecated: Announced shutdown date: 2026-10-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ResponsesModelO1Pro2025_03_19 = shared.ResponsesModelO1Pro2025_03_19
 
 // Equals "o3-pro"
+//
+// Deprecated: Announced shutdown date: 2026-12-11. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ResponsesModelO3Pro = shared.ResponsesModelO3Pro
 
 // Equals "o3-pro-2025-06-10"
+//
+// Deprecated: Announced shutdown date: 2026-12-11. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ResponsesModelO3Pro2025_06_10 = shared.ResponsesModelO3Pro2025_06_10
 
 // Equals "o3-deep-research"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ResponsesModelO3DeepResearch = shared.ResponsesModelO3DeepResearch
 
 // Equals "o3-deep-research-2025-06-26"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ResponsesModelO3DeepResearch2025_06_26 = shared.ResponsesModelO3DeepResearch2025_06_26
 
 // Equals "o4-mini-deep-research"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ResponsesModelO4MiniDeepResearch = shared.ResponsesModelO4MiniDeepResearch
 
 // Equals "o4-mini-deep-research-2025-06-26"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ResponsesModelO4MiniDeepResearch2025_06_26 = shared.ResponsesModelO4MiniDeepResearch2025_06_26
 
 // Equals "computer-use-preview"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ResponsesModelComputerUsePreview = shared.ResponsesModelComputerUsePreview
 
 // Equals "computer-use-preview-2025-03-11"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ResponsesModelComputerUsePreview2025_03_11 = shared.ResponsesModelComputerUsePreview2025_03_11
 
 // Equals "gpt-5.5-pro"
@@ -725,15 +1227,39 @@ const ResponsesModelGPT5_5Pro = shared.ResponsesModelGPT5_5Pro
 const ResponsesModelGPT5_5Pro2026_04_23 = shared.ResponsesModelGPT5_5Pro2026_04_23
 
 // Equals "gpt-5-codex"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ResponsesModelGPT5Codex = shared.ResponsesModelGPT5Codex
 
 // Equals "gpt-5-pro"
+//
+// Deprecated: Announced shutdown date: 2026-12-11. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ResponsesModelGPT5Pro = shared.ResponsesModelGPT5Pro
 
 // Equals "gpt-5-pro-2025-10-06"
+//
+// Deprecated: Announced shutdown date: 2026-12-11. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ResponsesModelGPT5Pro2025_10_06 = shared.ResponsesModelGPT5Pro2025_10_06
 
 // Equals "gpt-5.1-codex-max"
+//
+// Deprecated: Announced shutdown date: 2026-07-23. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ResponsesModelGPT5_1CodexMax = shared.ResponsesModelGPT5_1CodexMax
 
 // Equals "gpt-daybreak-blue-latest"

@@ -30875,9 +30875,7 @@ type ToolImageGeneration struct {
 	// the maximum supported resolution is `3840x2160`. The requested size must also
 	// satisfy the model's current pixel and edge limits. The standard sizes
 	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
-	// `auto` is supported for models that allow automatic sizing. For `dall-e-2`, use
-	// one of `256x256`, `512x512`, or `1024x1024`. For `dall-e-3`, use one of
-	// `1024x1024`, `1792x1024`, or `1024x1792`.
+	// `auto` is supported for models that allow automatic sizing.
 	Size string `json:"size"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -32141,9 +32139,7 @@ type ToolImageGenerationParam struct {
 	// the maximum supported resolution is `3840x2160`. The requested size must also
 	// satisfy the model's current pixel and edge limits. The standard sizes
 	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
-	// `auto` is supported for models that allow automatic sizing. For `dall-e-2`, use
-	// one of `256x256`, `512x512`, or `1024x1024`. For `dall-e-3`, use one of
-	// `1024x1024`, `1792x1024`, or `1024x1792`.
+	// `auto` is supported for models that allow automatic sizing.
 	Size string `json:"size,omitzero"`
 	// The type of the image generation tool. Always `image_generation`.
 	//
@@ -33910,115 +33906,335 @@ func (r *ResponseCompactParams) UnmarshalJSON(data []byte) error {
 type ResponseCompactParamsModel string
 
 const (
-	ResponseCompactParamsModelGPT6Astra                        ResponseCompactParamsModel = "gpt-6-astra"
-	ResponseCompactParamsModelGPT6_1Sol                        ResponseCompactParamsModel = "gpt-6.1-sol"
-	ResponseCompactParamsModelGPT6Sol                          ResponseCompactParamsModel = "gpt-6-sol"
-	ResponseCompactParamsModelGPT6Luna                         ResponseCompactParamsModel = "gpt-6-luna"
-	ResponseCompactParamsModelGPT5_6Sol                        ResponseCompactParamsModel = "gpt-5.6-sol"
-	ResponseCompactParamsModelGPT5_6Terra                      ResponseCompactParamsModel = "gpt-5.6-terra"
-	ResponseCompactParamsModelGPT5_6Luna                       ResponseCompactParamsModel = "gpt-5.6-luna"
-	ResponseCompactParamsModelGPT5_5                           ResponseCompactParamsModel = "gpt-5.5"
-	ResponseCompactParamsModelGPT5_5_2026_04_23                ResponseCompactParamsModel = "gpt-5.5-2026-04-23"
-	ResponseCompactParamsModelGPT5_4                           ResponseCompactParamsModel = "gpt-5.4"
-	ResponseCompactParamsModelGPT5_4Mini                       ResponseCompactParamsModel = "gpt-5.4-mini"
-	ResponseCompactParamsModelGPT5_4Nano                       ResponseCompactParamsModel = "gpt-5.4-nano"
-	ResponseCompactParamsModelGPT5_4Mini2026_03_17             ResponseCompactParamsModel = "gpt-5.4-mini-2026-03-17"
-	ResponseCompactParamsModelGPT5_4Nano2026_03_17             ResponseCompactParamsModel = "gpt-5.4-nano-2026-03-17"
-	ResponseCompactParamsModelGPT5_3ChatLatest                 ResponseCompactParamsModel = "gpt-5.3-chat-latest"
-	ResponseCompactParamsModelGPT5_2                           ResponseCompactParamsModel = "gpt-5.2"
-	ResponseCompactParamsModelGPT5_2_2025_12_11                ResponseCompactParamsModel = "gpt-5.2-2025-12-11"
-	ResponseCompactParamsModelGPT5_2ChatLatest                 ResponseCompactParamsModel = "gpt-5.2-chat-latest"
-	ResponseCompactParamsModelGPT5_2Pro                        ResponseCompactParamsModel = "gpt-5.2-pro"
-	ResponseCompactParamsModelGPT5_2Pro2025_12_11              ResponseCompactParamsModel = "gpt-5.2-pro-2025-12-11"
-	ResponseCompactParamsModelGPT5_1                           ResponseCompactParamsModel = "gpt-5.1"
-	ResponseCompactParamsModelGPT5_1_2025_11_13                ResponseCompactParamsModel = "gpt-5.1-2025-11-13"
-	ResponseCompactParamsModelGPT5_1Codex                      ResponseCompactParamsModel = "gpt-5.1-codex"
-	ResponseCompactParamsModelGPT5_1Mini                       ResponseCompactParamsModel = "gpt-5.1-mini"
-	ResponseCompactParamsModelGPT5_1ChatLatest                 ResponseCompactParamsModel = "gpt-5.1-chat-latest"
-	ResponseCompactParamsModelGPT5                             ResponseCompactParamsModel = "gpt-5"
-	ResponseCompactParamsModelGPT5Mini                         ResponseCompactParamsModel = "gpt-5-mini"
-	ResponseCompactParamsModelGPT5Nano                         ResponseCompactParamsModel = "gpt-5-nano"
-	ResponseCompactParamsModelGPT5_2025_08_07                  ResponseCompactParamsModel = "gpt-5-2025-08-07"
-	ResponseCompactParamsModelGPT5Mini2025_08_07               ResponseCompactParamsModel = "gpt-5-mini-2025-08-07"
-	ResponseCompactParamsModelGPT5Nano2025_08_07               ResponseCompactParamsModel = "gpt-5-nano-2025-08-07"
-	ResponseCompactParamsModelGPT5ChatLatest                   ResponseCompactParamsModel = "gpt-5-chat-latest"
-	ResponseCompactParamsModelGPT4_1                           ResponseCompactParamsModel = "gpt-4.1"
-	ResponseCompactParamsModelGPT4_1Mini                       ResponseCompactParamsModel = "gpt-4.1-mini"
-	ResponseCompactParamsModelGPT4_1Nano                       ResponseCompactParamsModel = "gpt-4.1-nano"
-	ResponseCompactParamsModelGPT4_1_2025_04_14                ResponseCompactParamsModel = "gpt-4.1-2025-04-14"
-	ResponseCompactParamsModelGPT4_1Mini2025_04_14             ResponseCompactParamsModel = "gpt-4.1-mini-2025-04-14"
-	ResponseCompactParamsModelGPT4_1Nano2025_04_14             ResponseCompactParamsModel = "gpt-4.1-nano-2025-04-14"
-	ResponseCompactParamsModelO4Mini                           ResponseCompactParamsModel = "o4-mini"
-	ResponseCompactParamsModelO4Mini2025_04_16                 ResponseCompactParamsModel = "o4-mini-2025-04-16"
-	ResponseCompactParamsModelO3                               ResponseCompactParamsModel = "o3"
-	ResponseCompactParamsModelO3_2025_04_16                    ResponseCompactParamsModel = "o3-2025-04-16"
-	ResponseCompactParamsModelO3Mini                           ResponseCompactParamsModel = "o3-mini"
-	ResponseCompactParamsModelO3Mini2025_01_31                 ResponseCompactParamsModel = "o3-mini-2025-01-31"
-	ResponseCompactParamsModelO1                               ResponseCompactParamsModel = "o1"
-	ResponseCompactParamsModelO1_2024_12_17                    ResponseCompactParamsModel = "o1-2024-12-17"
-	ResponseCompactParamsModelO1Preview                        ResponseCompactParamsModel = "o1-preview"
-	ResponseCompactParamsModelO1Preview2024_09_12              ResponseCompactParamsModel = "o1-preview-2024-09-12"
-	ResponseCompactParamsModelO1Mini                           ResponseCompactParamsModel = "o1-mini"
-	ResponseCompactParamsModelO1Mini2024_09_12                 ResponseCompactParamsModel = "o1-mini-2024-09-12"
-	ResponseCompactParamsModelGPT4o                            ResponseCompactParamsModel = "gpt-4o"
-	ResponseCompactParamsModelGPT4o2024_11_20                  ResponseCompactParamsModel = "gpt-4o-2024-11-20"
-	ResponseCompactParamsModelGPT4o2024_08_06                  ResponseCompactParamsModel = "gpt-4o-2024-08-06"
-	ResponseCompactParamsModelGPT4o2024_05_13                  ResponseCompactParamsModel = "gpt-4o-2024-05-13"
-	ResponseCompactParamsModelGPTAudioMini                     ResponseCompactParamsModel = "gpt-audio-mini"
-	ResponseCompactParamsModelGPTAudioMini2025_12_15           ResponseCompactParamsModel = "gpt-audio-mini-2025-12-15"
-	ResponseCompactParamsModelGPT4oAudioPreview                ResponseCompactParamsModel = "gpt-4o-audio-preview"
-	ResponseCompactParamsModelGPT4oAudioPreview2024_10_01      ResponseCompactParamsModel = "gpt-4o-audio-preview-2024-10-01"
-	ResponseCompactParamsModelGPT4oAudioPreview2024_12_17      ResponseCompactParamsModel = "gpt-4o-audio-preview-2024-12-17"
-	ResponseCompactParamsModelGPT4oAudioPreview2025_06_03      ResponseCompactParamsModel = "gpt-4o-audio-preview-2025-06-03"
-	ResponseCompactParamsModelGPT4oMiniAudioPreview            ResponseCompactParamsModel = "gpt-4o-mini-audio-preview"
-	ResponseCompactParamsModelGPT4oMiniAudioPreview2024_12_17  ResponseCompactParamsModel = "gpt-4o-mini-audio-preview-2024-12-17"
-	ResponseCompactParamsModelGPT4oSearchPreview               ResponseCompactParamsModel = "gpt-4o-search-preview"
-	ResponseCompactParamsModelGPT4oMiniSearchPreview           ResponseCompactParamsModel = "gpt-4o-mini-search-preview"
-	ResponseCompactParamsModelGPT4oSearchPreview2025_03_11     ResponseCompactParamsModel = "gpt-4o-search-preview-2025-03-11"
+	ResponseCompactParamsModelGPT6Astra            ResponseCompactParamsModel = "gpt-6-astra"
+	ResponseCompactParamsModelGPT6_1Sol            ResponseCompactParamsModel = "gpt-6.1-sol"
+	ResponseCompactParamsModelGPT6Sol              ResponseCompactParamsModel = "gpt-6-sol"
+	ResponseCompactParamsModelGPT6Luna             ResponseCompactParamsModel = "gpt-6-luna"
+	ResponseCompactParamsModelGPT5_6Sol            ResponseCompactParamsModel = "gpt-5.6-sol"
+	ResponseCompactParamsModelGPT5_6Terra          ResponseCompactParamsModel = "gpt-5.6-terra"
+	ResponseCompactParamsModelGPT5_6Luna           ResponseCompactParamsModel = "gpt-5.6-luna"
+	ResponseCompactParamsModelGPT5_5               ResponseCompactParamsModel = "gpt-5.5"
+	ResponseCompactParamsModelGPT5_5_2026_04_23    ResponseCompactParamsModel = "gpt-5.5-2026-04-23"
+	ResponseCompactParamsModelGPT5_4               ResponseCompactParamsModel = "gpt-5.4"
+	ResponseCompactParamsModelGPT5_4Mini           ResponseCompactParamsModel = "gpt-5.4-mini"
+	ResponseCompactParamsModelGPT5_4Nano           ResponseCompactParamsModel = "gpt-5.4-nano"
+	ResponseCompactParamsModelGPT5_4Mini2026_03_17 ResponseCompactParamsModel = "gpt-5.4-mini-2026-03-17"
+	ResponseCompactParamsModelGPT5_4Nano2026_03_17 ResponseCompactParamsModel = "gpt-5.4-nano-2026-03-17"
+	// Deprecated: Announced shutdown date: 2026-08-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT5_3ChatLatest  ResponseCompactParamsModel = "gpt-5.3-chat-latest"
+	ResponseCompactParamsModelGPT5_2            ResponseCompactParamsModel = "gpt-5.2"
+	ResponseCompactParamsModelGPT5_2_2025_12_11 ResponseCompactParamsModel = "gpt-5.2-2025-12-11"
+	// Deprecated: Announced shutdown date: 2026-08-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT5_2ChatLatest    ResponseCompactParamsModel = "gpt-5.2-chat-latest"
+	ResponseCompactParamsModelGPT5_2Pro           ResponseCompactParamsModel = "gpt-5.2-pro"
+	ResponseCompactParamsModelGPT5_2Pro2025_12_11 ResponseCompactParamsModel = "gpt-5.2-pro-2025-12-11"
+	ResponseCompactParamsModelGPT5_1              ResponseCompactParamsModel = "gpt-5.1"
+	ResponseCompactParamsModelGPT5_1_2025_11_13   ResponseCompactParamsModel = "gpt-5.1-2025-11-13"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT5_1Codex ResponseCompactParamsModel = "gpt-5.1-codex"
+	// Deprecated: Not a supported model ID. Retained for SDK compatibility.
+	ResponseCompactParamsModelGPT5_1Mini ResponseCompactParamsModel = "gpt-5.1-mini"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT5_1ChatLatest ResponseCompactParamsModel = "gpt-5.1-chat-latest"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT5 ResponseCompactParamsModel = "gpt-5"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT5Mini ResponseCompactParamsModel = "gpt-5-mini"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT5Nano ResponseCompactParamsModel = "gpt-5-nano"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT5_2025_08_07 ResponseCompactParamsModel = "gpt-5-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT5Mini2025_08_07 ResponseCompactParamsModel = "gpt-5-mini-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT5Nano2025_08_07 ResponseCompactParamsModel = "gpt-5-nano-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT5ChatLatest ResponseCompactParamsModel = "gpt-5-chat-latest"
+	ResponseCompactParamsModelGPT4_1         ResponseCompactParamsModel = "gpt-4.1"
+	ResponseCompactParamsModelGPT4_1Mini     ResponseCompactParamsModel = "gpt-4.1-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4_1Nano           ResponseCompactParamsModel = "gpt-4.1-nano"
+	ResponseCompactParamsModelGPT4_1_2025_04_14    ResponseCompactParamsModel = "gpt-4.1-2025-04-14"
+	ResponseCompactParamsModelGPT4_1Mini2025_04_14 ResponseCompactParamsModel = "gpt-4.1-mini-2025-04-14"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4_1Nano2025_04_14 ResponseCompactParamsModel = "gpt-4.1-nano-2025-04-14"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO4Mini ResponseCompactParamsModel = "o4-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO4Mini2025_04_16 ResponseCompactParamsModel = "o4-mini-2025-04-16"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO3 ResponseCompactParamsModel = "o3"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO3_2025_04_16 ResponseCompactParamsModel = "o3-2025-04-16"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO3Mini ResponseCompactParamsModel = "o3-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO3Mini2025_01_31 ResponseCompactParamsModel = "o3-mini-2025-01-31"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO1 ResponseCompactParamsModel = "o1"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO1_2024_12_17 ResponseCompactParamsModel = "o1-2024-12-17"
+	// Deprecated: Announced shutdown date: 2025-07-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO1Preview ResponseCompactParamsModel = "o1-preview"
+	// Deprecated: Announced shutdown date: 2025-07-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO1Preview2024_09_12 ResponseCompactParamsModel = "o1-preview-2024-09-12"
+	// Deprecated: Announced shutdown date: 2025-10-27. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO1Mini ResponseCompactParamsModel = "o1-mini"
+	// Deprecated: Announced shutdown date: 2025-10-27. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO1Mini2024_09_12 ResponseCompactParamsModel = "o1-mini-2024-09-12"
+	ResponseCompactParamsModelGPT4o            ResponseCompactParamsModel = "gpt-4o"
+	ResponseCompactParamsModelGPT4o2024_11_20  ResponseCompactParamsModel = "gpt-4o-2024-11-20"
+	ResponseCompactParamsModelGPT4o2024_08_06  ResponseCompactParamsModel = "gpt-4o-2024-08-06"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4o2024_05_13 ResponseCompactParamsModel = "gpt-4o-2024-05-13"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPTAudioMini ResponseCompactParamsModel = "gpt-audio-mini"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPTAudioMini2025_12_15 ResponseCompactParamsModel = "gpt-audio-mini-2025-12-15"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4oAudioPreview ResponseCompactParamsModel = "gpt-4o-audio-preview"
+	// Deprecated: Announced shutdown date: 2025-10-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4oAudioPreview2024_10_01 ResponseCompactParamsModel = "gpt-4o-audio-preview-2024-10-01"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4oAudioPreview2024_12_17 ResponseCompactParamsModel = "gpt-4o-audio-preview-2024-12-17"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4oAudioPreview2025_06_03 ResponseCompactParamsModel = "gpt-4o-audio-preview-2025-06-03"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4oMiniAudioPreview ResponseCompactParamsModel = "gpt-4o-mini-audio-preview"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4oMiniAudioPreview2024_12_17 ResponseCompactParamsModel = "gpt-4o-mini-audio-preview-2024-12-17"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4oSearchPreview ResponseCompactParamsModel = "gpt-4o-search-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4oMiniSearchPreview ResponseCompactParamsModel = "gpt-4o-mini-search-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4oSearchPreview2025_03_11 ResponseCompactParamsModel = "gpt-4o-search-preview-2025-03-11"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	ResponseCompactParamsModelGPT4oMiniSearchPreview2025_03_11 ResponseCompactParamsModel = "gpt-4o-mini-search-preview-2025-03-11"
-	ResponseCompactParamsModelChatgpt4oLatest                  ResponseCompactParamsModel = "chatgpt-4o-latest"
-	ResponseCompactParamsModelCodexMiniLatest                  ResponseCompactParamsModel = "codex-mini-latest"
-	ResponseCompactParamsModelGPT4oMini                        ResponseCompactParamsModel = "gpt-4o-mini"
-	ResponseCompactParamsModelGPT4oMini2024_07_18              ResponseCompactParamsModel = "gpt-4o-mini-2024-07-18"
-	ResponseCompactParamsModelGPT4Turbo                        ResponseCompactParamsModel = "gpt-4-turbo"
-	ResponseCompactParamsModelGPT4Turbo2024_04_09              ResponseCompactParamsModel = "gpt-4-turbo-2024-04-09"
-	ResponseCompactParamsModelGPT4_0125Preview                 ResponseCompactParamsModel = "gpt-4-0125-preview"
-	ResponseCompactParamsModelGPT4TurboPreview                 ResponseCompactParamsModel = "gpt-4-turbo-preview"
-	ResponseCompactParamsModelGPT4_1106Preview                 ResponseCompactParamsModel = "gpt-4-1106-preview"
-	ResponseCompactParamsModelGPT4VisionPreview                ResponseCompactParamsModel = "gpt-4-vision-preview"
-	ResponseCompactParamsModelGPT4                             ResponseCompactParamsModel = "gpt-4"
-	ResponseCompactParamsModelGPT4_0314                        ResponseCompactParamsModel = "gpt-4-0314"
-	ResponseCompactParamsModelGPT4_0613                        ResponseCompactParamsModel = "gpt-4-0613"
-	ResponseCompactParamsModelGPT4_32k                         ResponseCompactParamsModel = "gpt-4-32k"
-	ResponseCompactParamsModelGPT4_32k0314                     ResponseCompactParamsModel = "gpt-4-32k-0314"
-	ResponseCompactParamsModelGPT4_32k0613                     ResponseCompactParamsModel = "gpt-4-32k-0613"
-	ResponseCompactParamsModelGPT3_5Turbo                      ResponseCompactParamsModel = "gpt-3.5-turbo"
-	ResponseCompactParamsModelGPT3_5Turbo16k                   ResponseCompactParamsModel = "gpt-3.5-turbo-16k"
-	ResponseCompactParamsModelGPT3_5Turbo0301                  ResponseCompactParamsModel = "gpt-3.5-turbo-0301"
-	ResponseCompactParamsModelGPT3_5Turbo0613                  ResponseCompactParamsModel = "gpt-3.5-turbo-0613"
-	ResponseCompactParamsModelGPT3_5Turbo1106                  ResponseCompactParamsModel = "gpt-3.5-turbo-1106"
-	ResponseCompactParamsModelGPT3_5Turbo0125                  ResponseCompactParamsModel = "gpt-3.5-turbo-0125"
-	ResponseCompactParamsModelGPT3_5Turbo16k0613               ResponseCompactParamsModel = "gpt-3.5-turbo-16k-0613"
-	ResponseCompactParamsModelO1Pro                            ResponseCompactParamsModel = "o1-pro"
-	ResponseCompactParamsModelO1Pro2025_03_19                  ResponseCompactParamsModel = "o1-pro-2025-03-19"
-	ResponseCompactParamsModelO3Pro                            ResponseCompactParamsModel = "o3-pro"
-	ResponseCompactParamsModelO3Pro2025_06_10                  ResponseCompactParamsModel = "o3-pro-2025-06-10"
-	ResponseCompactParamsModelO3DeepResearch                   ResponseCompactParamsModel = "o3-deep-research"
-	ResponseCompactParamsModelO3DeepResearch2025_06_26         ResponseCompactParamsModel = "o3-deep-research-2025-06-26"
-	ResponseCompactParamsModelO4MiniDeepResearch               ResponseCompactParamsModel = "o4-mini-deep-research"
-	ResponseCompactParamsModelO4MiniDeepResearch2025_06_26     ResponseCompactParamsModel = "o4-mini-deep-research-2025-06-26"
-	ResponseCompactParamsModelComputerUsePreview               ResponseCompactParamsModel = "computer-use-preview"
-	ResponseCompactParamsModelComputerUsePreview2025_03_11     ResponseCompactParamsModel = "computer-use-preview-2025-03-11"
-	ResponseCompactParamsModelGPT5_5Pro                        ResponseCompactParamsModel = "gpt-5.5-pro"
-	ResponseCompactParamsModelGPT5_5Pro2026_04_23              ResponseCompactParamsModel = "gpt-5.5-pro-2026-04-23"
-	ResponseCompactParamsModelGPT5Codex                        ResponseCompactParamsModel = "gpt-5-codex"
-	ResponseCompactParamsModelGPT5Pro                          ResponseCompactParamsModel = "gpt-5-pro"
-	ResponseCompactParamsModelGPT5Pro2025_10_06                ResponseCompactParamsModel = "gpt-5-pro-2025-10-06"
-	ResponseCompactParamsModelGPT5_1CodexMax                   ResponseCompactParamsModel = "gpt-5.1-codex-max"
-	ResponseCompactParamsModelGPTDaybreakBlueLatest            ResponseCompactParamsModel = "gpt-daybreak-blue-latest"
-	ResponseCompactParamsModelGPTDaybreakRedLatest             ResponseCompactParamsModel = "gpt-daybreak-red-latest"
-	ResponseCompactParamsModelGPT5_6Cyber                      ResponseCompactParamsModel = "gpt-5.6-cyber"
-	ResponseCompactParamsModelGPTRosalindResearch              ResponseCompactParamsModel = "gpt-rosalind-research"
+	// Deprecated: Announced shutdown date: 2026-02-17. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelChatgpt4oLatest ResponseCompactParamsModel = "chatgpt-4o-latest"
+	// Deprecated: Announced shutdown date: 2026-02-12. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelCodexMiniLatest     ResponseCompactParamsModel = "codex-mini-latest"
+	ResponseCompactParamsModelGPT4oMini           ResponseCompactParamsModel = "gpt-4o-mini"
+	ResponseCompactParamsModelGPT4oMini2024_07_18 ResponseCompactParamsModel = "gpt-4o-mini-2024-07-18"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4Turbo ResponseCompactParamsModel = "gpt-4-turbo"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4Turbo2024_04_09 ResponseCompactParamsModel = "gpt-4-turbo-2024-04-09"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4_0125Preview ResponseCompactParamsModel = "gpt-4-0125-preview"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4TurboPreview ResponseCompactParamsModel = "gpt-4-turbo-preview"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4_1106Preview ResponseCompactParamsModel = "gpt-4-1106-preview"
+	// Deprecated: Announced shutdown date: 2024-12-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4VisionPreview ResponseCompactParamsModel = "gpt-4-vision-preview"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4 ResponseCompactParamsModel = "gpt-4"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4_0314 ResponseCompactParamsModel = "gpt-4-0314"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4_0613 ResponseCompactParamsModel = "gpt-4-0613"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4_32k ResponseCompactParamsModel = "gpt-4-32k"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4_32k0314 ResponseCompactParamsModel = "gpt-4-32k-0314"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4_32k0613 ResponseCompactParamsModel = "gpt-4-32k-0613"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT3_5Turbo ResponseCompactParamsModel = "gpt-3.5-turbo"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT3_5Turbo16k ResponseCompactParamsModel = "gpt-3.5-turbo-16k"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT3_5Turbo0301 ResponseCompactParamsModel = "gpt-3.5-turbo-0301"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT3_5Turbo0613 ResponseCompactParamsModel = "gpt-3.5-turbo-0613"
+	// Deprecated: Announced shutdown date: 2026-09-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT3_5Turbo1106 ResponseCompactParamsModel = "gpt-3.5-turbo-1106"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT3_5Turbo0125 ResponseCompactParamsModel = "gpt-3.5-turbo-0125"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT3_5Turbo16k0613 ResponseCompactParamsModel = "gpt-3.5-turbo-16k-0613"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO1Pro ResponseCompactParamsModel = "o1-pro"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO1Pro2025_03_19 ResponseCompactParamsModel = "o1-pro-2025-03-19"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO3Pro ResponseCompactParamsModel = "o3-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO3Pro2025_06_10 ResponseCompactParamsModel = "o3-pro-2025-06-10"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO3DeepResearch ResponseCompactParamsModel = "o3-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO3DeepResearch2025_06_26 ResponseCompactParamsModel = "o3-deep-research-2025-06-26"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO4MiniDeepResearch ResponseCompactParamsModel = "o4-mini-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelO4MiniDeepResearch2025_06_26 ResponseCompactParamsModel = "o4-mini-deep-research-2025-06-26"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelComputerUsePreview ResponseCompactParamsModel = "computer-use-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelComputerUsePreview2025_03_11 ResponseCompactParamsModel = "computer-use-preview-2025-03-11"
+	ResponseCompactParamsModelGPT5_5Pro                    ResponseCompactParamsModel = "gpt-5.5-pro"
+	ResponseCompactParamsModelGPT5_5Pro2026_04_23          ResponseCompactParamsModel = "gpt-5.5-pro-2026-04-23"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT5Codex ResponseCompactParamsModel = "gpt-5-codex"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT5Pro ResponseCompactParamsModel = "gpt-5-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT5Pro2025_10_06 ResponseCompactParamsModel = "gpt-5-pro-2025-10-06"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT5_1CodexMax        ResponseCompactParamsModel = "gpt-5.1-codex-max"
+	ResponseCompactParamsModelGPTDaybreakBlueLatest ResponseCompactParamsModel = "gpt-daybreak-blue-latest"
+	ResponseCompactParamsModelGPTDaybreakRedLatest  ResponseCompactParamsModel = "gpt-daybreak-red-latest"
+	ResponseCompactParamsModelGPT5_6Cyber           ResponseCompactParamsModel = "gpt-5.6-cyber"
+	ResponseCompactParamsModelGPTRosalindResearch   ResponseCompactParamsModel = "gpt-rosalind-research"
 )
 
 // Only one field can be non-zero.
