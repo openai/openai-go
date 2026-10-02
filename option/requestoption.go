@@ -27,8 +27,6 @@ type RequestOption = requestconfig.RequestOption
 //
 // It cannot be combined with WithDataResidency in the same configuration call.
 // For security reasons, ensure that the base URL is trusted.
-// Authenticated OpenAI endpoints require HTTPS. Local HTTP development requires
-// [WithUnsafeAllowHTTP], which only permits direct loopback connections.
 func WithBaseURL(base string) RequestOption {
 	u, err := url.Parse(base)
 	if err == nil && u.Path != "" && !strings.HasSuffix(u.Path, "/") {
