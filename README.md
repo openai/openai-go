@@ -268,7 +268,11 @@ import (
 	// ...
 )
 
-// A struct that will be converted to a Structured Outputs response schema
+// A struct that will be converted to a Structured Outputs response schema.
+//
+// Avoid `omitempty` in JSON tags here: jsonschema treats those fields as optional
+// and leaves them out of the schema's required array. With Strict enabled, the API
+// can reject that schema; otherwise, the model may omit the fields.
 type HistoricalComputer struct {
 	Origin       Origin   `json:"origin" jsonschema_description:"The origin of the computer"`
 	Name         string   `json:"full_name" jsonschema_description:"The name of the device model"`
