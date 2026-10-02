@@ -51,7 +51,7 @@ func (r *AudioTranscriptionService) New(ctx context.Context, body AudioTranscrip
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "audio/transcriptions"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
 
@@ -71,7 +71,7 @@ func (r *AudioTranscriptionService) NewStreaming(ctx context.Context, body Audio
 		"stream": "true",
 	})
 	path := "audio/transcriptions"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &raw, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
 	return ssestream.NewStream[TranscriptionStreamEventUnion](ssestream.NewDecoder(raw), err)
 }
 

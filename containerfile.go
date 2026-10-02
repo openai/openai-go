@@ -56,7 +56,7 @@ func (r *ContainerFileService) New(ctx context.Context, containerID string, body
 		return nil, err
 	}
 	path := requestconfig.FormatPath("containers/%s/files", containerID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
 

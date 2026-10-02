@@ -51,7 +51,7 @@ func (r *ImageService) NewVariation(ctx context.Context, body ImageNewVariationP
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "images/variations"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
 
@@ -61,7 +61,7 @@ func (r *ImageService) Edit(ctx context.Context, body ImageEditParams, opts ...o
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "images/edits"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
 
@@ -78,7 +78,7 @@ func (r *ImageService) EditStreaming(ctx context.Context, body ImageEditParams, 
 		"stream": "true",
 	})
 	path := "images/edits"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &raw, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
 	return ssestream.NewStream[ImageEditStreamEventUnion](ssestream.NewDecoder(raw), err)
 }
 

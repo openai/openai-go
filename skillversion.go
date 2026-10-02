@@ -53,7 +53,7 @@ func (r *SkillVersionService) New(ctx context.Context, skillID string, body Skil
 		return nil, err
 	}
 	path := requestconfig.FormatPath("skills/%s/versions", skillID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
 

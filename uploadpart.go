@@ -60,7 +60,7 @@ func (r *UploadPartService) New(ctx context.Context, uploadID string, body Uploa
 		return nil, err
 	}
 	path := requestconfig.FormatPath("uploads/%s/parts", uploadID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
 
