@@ -93,23 +93,13 @@ func (cfg *RequestConfig) PrepareWebSocket() (*http.Request, *http.Client, error
 	target.RawQuery = query.Encode()
 	request := cfg.Request.Clone(cfg.Request.Context())
 	request.URL = target
-	allowLoopback := cfg.endpointProvider == "" && cfg.unsafeLoopbackTransport != nil && credentialLoopbackURL(target)
-	if allowLoopback {
-		request = request.WithContext(context.WithValue(request.Context(), unsafeLoopbackContextKey{}, true))
-	}
 	selected := cfg.HTTPClient
-	var clientErr error
 	if cfg.CustomHTTPDoer != nil {
 		capable, ok := cfg.CustomHTTPDoer.(WebSocketHTTPClient)
 		if !ok {
-			clientErr = errors.New("websocket: custom HTTP client must implement WebSocketHTTPClient")
-		} else {
-			selected = capable.WebSocketHTTPClient()
-			if selected == nil {
-				clientErr = errors.New("websocket: nil HTTP client")
-				selected = cfg.HTTPClient
-			}
+			return nil, nil, errors.New("websocket: custom HTTP client must implement WebSocketHTTPClient")
 		}
+		selected = capable.WebSocketHTTPClient()
 	}
 	if selected == nil {
 		return nil, nil, errors.New("websocket: nil HTTP client")
@@ -146,23 +136,7 @@ func (cfg *RequestConfig) PrepareWebSocket() (*http.Request, *http.Client, error
 	// Only the outer client's timeout bounds opening; neither client may keep
 	// a body timer running after the response becomes an established socket.
 	client.Timeout = 0
-	handler := enforceRequestOrigin(&origin, func(req *http.Request) (*http.Response, error) {
-		direct, transportErr := cfg.credentialTransport(req)
-		if transportErr != nil {
-			return nil, transportErr
-		}
-		if direct != nil {
-			local := client
-			local.Transport = websocketRoundTripper(enforceRequestOrigin(&origin, func(req *http.Request) (*http.Response, error) {
-				return websockettransport.RoundTrip(direct, req)
-			}))
-			return local.Do(req)
-		}
-		if clientErr != nil {
-			return nil, clientErr
-		}
-		return client.Do(req)
-	})
+	handler := enforceRequestOrigin(&origin, client.Do)
 	for i := len(cfg.Middlewares) - 1; i >= 0; i-- {
 		handler = applyMiddleware(cfg.Middlewares[i], handler)
 	}
