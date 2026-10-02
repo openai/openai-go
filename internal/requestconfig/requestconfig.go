@@ -793,6 +793,16 @@ func (cfg *RequestConfig) Execute() (err error) {
 		return &aerr
 	}
 
+	if cfg.ResponseBodyInto == nil && cfg.ResponseInto == nil {
+		// No caller owns this body. Close without reading so an unexpected body
+		// cannot delay a successful no-result operation. The deferred cancel
+		// releases the request timeout in this scope.
+		if res.Body != nil {
+			_ = res.Body.Close()
+		}
+		return nil
+	}
+
 	_, intoCustomResponseBody := cfg.ResponseBodyInto.(**http.Response)
 	if cfg.ResponseBodyInto == nil || intoCustomResponseBody {
 		// We aren't reading the response body in this scope, but whoever is will need the
