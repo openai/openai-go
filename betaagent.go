@@ -8651,7 +8651,15 @@ func (r *SessionError) UnmarshalJSON(data []byte) error {
 // A customer-safe error describing why a session request failed.
 type SessionTurnError struct {
 	// A stable, machine-readable failure category.
-	Code SessionTurnErrorCodeString `json:"code" api:"required"`
+	//
+	// Any of "context_length_exceeded", "session_budget_exceeded",
+	// "usage_limit_exceeded", "credit_balance_exhausted", "rate_limit_exceeded",
+	// "flex_unavailable", "server_overloaded", "cyber_policy",
+	// "misalignment_policy_violation", "connection_failed", "server_error",
+	// "authentication_error", "invalid_request", "resource_not_found",
+	// "sandbox_error", "executor_version_incompatible", "active_turn_not_steerable",
+	// "request_timeout", "internal_error".
+	Code SessionTurnErrorCode `json:"code" api:"required"`
 	// A customer-safe explanation of the failure.
 	Message string `json:"message" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -8670,7 +8678,29 @@ func (r *SessionTurnError) UnmarshalJSON(data []byte) error {
 }
 
 // A stable, machine-readable failure category.
-type SessionTurnErrorCodeString string
+type SessionTurnErrorCode string
+
+const (
+	SessionTurnErrorCodeContextLengthExceeded       SessionTurnErrorCode = "context_length_exceeded"
+	SessionTurnErrorCodeSessionBudgetExceeded       SessionTurnErrorCode = "session_budget_exceeded"
+	SessionTurnErrorCodeUsageLimitExceeded          SessionTurnErrorCode = "usage_limit_exceeded"
+	SessionTurnErrorCodeCreditBalanceExhausted      SessionTurnErrorCode = "credit_balance_exhausted"
+	SessionTurnErrorCodeRateLimitExceeded           SessionTurnErrorCode = "rate_limit_exceeded"
+	SessionTurnErrorCodeFlexUnavailable             SessionTurnErrorCode = "flex_unavailable"
+	SessionTurnErrorCodeServerOverloaded            SessionTurnErrorCode = "server_overloaded"
+	SessionTurnErrorCodeCyberPolicy                 SessionTurnErrorCode = "cyber_policy"
+	SessionTurnErrorCodeMisalignmentPolicyViolation SessionTurnErrorCode = "misalignment_policy_violation"
+	SessionTurnErrorCodeConnectionFailed            SessionTurnErrorCode = "connection_failed"
+	SessionTurnErrorCodeServerError                 SessionTurnErrorCode = "server_error"
+	SessionTurnErrorCodeAuthenticationError         SessionTurnErrorCode = "authentication_error"
+	SessionTurnErrorCodeInvalidRequest              SessionTurnErrorCode = "invalid_request"
+	SessionTurnErrorCodeResourceNotFound            SessionTurnErrorCode = "resource_not_found"
+	SessionTurnErrorCodeSandboxError                SessionTurnErrorCode = "sandbox_error"
+	SessionTurnErrorCodeExecutorVersionIncompatible SessionTurnErrorCode = "executor_version_incompatible"
+	SessionTurnErrorCodeActiveTurnNotSteerable      SessionTurnErrorCode = "active_turn_not_steerable"
+	SessionTurnErrorCodeRequestTimeout              SessionTurnErrorCode = "request_timeout"
+	SessionTurnErrorCodeInternalError               SessionTurnErrorCode = "internal_error"
+)
 
 // A confidential setup command executed before the hosted agent starts.
 //
@@ -9224,7 +9254,7 @@ type BetaAgentNewParams struct {
 	Metadata map[string]string `json:"metadata,omitzero"`
 	// The service tier used for model requests. Defaults to `auto`.
 	//
-	// Any of "auto", "default", "flex", "priority", "fast", "ultrafast".
+	// Any of "auto", "default", "flex", "priority", "fast".
 	ServiceTier BetaAgentNewParamsServiceTier `json:"service_tier,omitzero"`
 	// Tools available to the agent. Defaults to an empty list.
 	Tools []PersistedAgentToolParamUnion `json:"tools,omitzero"`
@@ -9251,12 +9281,11 @@ func (r *BetaAgentNewParams) UnmarshalJSON(data []byte) error {
 type BetaAgentNewParamsServiceTier string
 
 const (
-	BetaAgentNewParamsServiceTierAuto      BetaAgentNewParamsServiceTier = "auto"
-	BetaAgentNewParamsServiceTierDefault   BetaAgentNewParamsServiceTier = "default"
-	BetaAgentNewParamsServiceTierFlex      BetaAgentNewParamsServiceTier = "flex"
-	BetaAgentNewParamsServiceTierPriority  BetaAgentNewParamsServiceTier = "priority"
-	BetaAgentNewParamsServiceTierFast      BetaAgentNewParamsServiceTier = "fast"
-	BetaAgentNewParamsServiceTierUltrafast BetaAgentNewParamsServiceTier = "ultrafast"
+	BetaAgentNewParamsServiceTierAuto     BetaAgentNewParamsServiceTier = "auto"
+	BetaAgentNewParamsServiceTierDefault  BetaAgentNewParamsServiceTier = "default"
+	BetaAgentNewParamsServiceTierFlex     BetaAgentNewParamsServiceTier = "flex"
+	BetaAgentNewParamsServiceTierPriority BetaAgentNewParamsServiceTier = "priority"
+	BetaAgentNewParamsServiceTierFast     BetaAgentNewParamsServiceTier = "fast"
 )
 
 type BetaAgentUpdateParams struct {
@@ -9273,7 +9302,7 @@ type BetaAgentUpdateParams struct {
 	Metadata map[string]string `json:"metadata,omitzero"`
 	// The service tier used for model requests.
 	//
-	// Any of "auto", "default", "flex", "priority", "fast", "ultrafast".
+	// Any of "auto", "default", "flex", "priority", "fast".
 	ServiceTier BetaAgentUpdateParamsServiceTier `json:"service_tier,omitzero"`
 	// Tools available to the agent.
 	Tools []PersistedAgentToolParamUnion `json:"tools,omitzero"`
@@ -9299,12 +9328,11 @@ func (r *BetaAgentUpdateParams) UnmarshalJSON(data []byte) error {
 type BetaAgentUpdateParamsServiceTier string
 
 const (
-	BetaAgentUpdateParamsServiceTierAuto      BetaAgentUpdateParamsServiceTier = "auto"
-	BetaAgentUpdateParamsServiceTierDefault   BetaAgentUpdateParamsServiceTier = "default"
-	BetaAgentUpdateParamsServiceTierFlex      BetaAgentUpdateParamsServiceTier = "flex"
-	BetaAgentUpdateParamsServiceTierPriority  BetaAgentUpdateParamsServiceTier = "priority"
-	BetaAgentUpdateParamsServiceTierFast      BetaAgentUpdateParamsServiceTier = "fast"
-	BetaAgentUpdateParamsServiceTierUltrafast BetaAgentUpdateParamsServiceTier = "ultrafast"
+	BetaAgentUpdateParamsServiceTierAuto     BetaAgentUpdateParamsServiceTier = "auto"
+	BetaAgentUpdateParamsServiceTierDefault  BetaAgentUpdateParamsServiceTier = "default"
+	BetaAgentUpdateParamsServiceTierFlex     BetaAgentUpdateParamsServiceTier = "flex"
+	BetaAgentUpdateParamsServiceTierPriority BetaAgentUpdateParamsServiceTier = "priority"
+	BetaAgentUpdateParamsServiceTierFast     BetaAgentUpdateParamsServiceTier = "fast"
 )
 
 type BetaAgentListParams struct {
