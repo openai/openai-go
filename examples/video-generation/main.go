@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 )
 
@@ -18,7 +19,7 @@ func main() {
 		Prompt: "A video of the words 'Thank you' in sparkling letters",
 	}, 1000)
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	if video.Status == openai.VideoStatusCompleted {

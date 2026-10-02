@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 )
 
@@ -13,7 +14,7 @@ func main() {
 
 	file, err := os.Open("speech.mp3")
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	transcription, err := client.Audio.Transcriptions.New(ctx, openai.AudioTranscriptionNewParams{
@@ -21,7 +22,7 @@ func main() {
 		File:  file,
 	})
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	println(transcription.Text)

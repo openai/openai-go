@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 )
 
@@ -20,7 +21,7 @@ func main() {
 		println("File to upload:", arg)
 		rdr, err := os.Open(arg)
 		if err != nil {
-			panic("file open failed:" + err.Error())
+			panic(errutil.Message(err))
 		}
 		defer func() { _ = rdr.Close() }()
 
@@ -46,7 +47,7 @@ func main() {
 	)
 
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	// 0 uses default polling interval
@@ -54,7 +55,7 @@ func main() {
 		[]string{}, 0)
 
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	println("Listing the files from the vector store")
@@ -69,7 +70,7 @@ func main() {
 	filesCursor, err := client.VectorStores.FileBatches.ListFiles(ctx, vectorStore.ID, batch.ID, vector)
 
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	for filesCursor != nil {
@@ -78,7 +79,7 @@ func main() {
 		}
 		filesCursor, err = filesCursor.GetNextPage()
 		if err != nil {
-			panic(err)
+			panic(errutil.Message(err))
 		}
 	}
 }

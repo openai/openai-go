@@ -2,6 +2,7 @@ package apierror
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/http/httputil"
 
@@ -37,10 +38,38 @@ func (r *Error) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Error returns an HTTP status summary suitable for routine error logging.
+// Request URLs and provider fields may contain secrets. Inspect the fields,
+// RawJSON, DumpRequest, or DumpResponse explicitly for unsanitized diagnostics.
 func (r *Error) Error() string {
-	// Attempt to re-populate the response body
-	return fmt.Sprintf("%s %q: %d %s %s", r.Request.Method, r.Request.URL, r.Response.StatusCode, http.StatusText(r.Response.StatusCode), r.JSON.raw)
+	if r == nil {
+		return "OpenAI API error"
+	}
+	if text := http.StatusText(r.StatusCode); text != "" {
+		return fmt.Sprintf("OpenAI API error: %d %s", r.StatusCode, text)
+	}
+	return fmt.Sprintf("OpenAI API error: %d", r.StatusCode)
 }
+
+// String keeps formatting of copied Error values from exposing raw diagnostics.
+func (r Error) String() string { return r.Error() }
+
+// GoString keeps Go-syntax formatting of both values and pointers safe.
+func (r Error) GoString() string { return r.Error() }
+
+// Format uses the safe summary whenever fmt invokes the Formatter interface.
+// String verbs retain their quoting, encoding, width, and precision behavior.
+func (r Error) Format(state fmt.State, verb rune) {
+	switch verb {
+	case 's', 'q', 'x', 'X':
+	default:
+		verb = 's'
+	}
+	_, _ = fmt.Fprintf(state, fmt.FormatString(state, verb), r.Error())
+}
+
+// LogValue keeps structured logging of values and pointers on the safe summary.
+func (r Error) LogValue() slog.Value { return slog.StringValue(r.Error()) }
 
 func (r *Error) DumpRequest(body bool) []byte {
 	if r.Request.GetBody != nil {

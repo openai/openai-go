@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/bedrock"
 	"github.com/openai/openai-go/v3/responses"
@@ -16,7 +17,7 @@ func main() {
 		AWSRegion: os.Getenv("AWS_REGION"),
 	})
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	model := os.Getenv("BEDROCK_MODEL")
@@ -30,7 +31,7 @@ func main() {
 		},
 	})
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 	fmt.Println(response.OutputText())
 }

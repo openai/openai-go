@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 )
 
@@ -44,7 +45,7 @@ func main() {
 	// Make initial chat completion request
 	completion, err := client.Chat.Completions.New(ctx, params)
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	toolCalls := completion.Choices[0].Message.ToolCalls
@@ -63,7 +64,7 @@ func main() {
 			var args map[string]interface{}
 			unmarshalErr := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
 			if unmarshalErr != nil {
-				panic(unmarshalErr)
+				panic(errutil.Message(unmarshalErr))
 			}
 			location := args["location"].(string)
 
@@ -79,7 +80,7 @@ func main() {
 
 	completion, err = client.Chat.Completions.New(ctx, params)
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	println(completion.Choices[0].Message.Content)
