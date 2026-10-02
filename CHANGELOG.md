@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.71.1](https://github.com/openai/openai-go/compare/v3.71.0...v3.71.1) (2026-10-02)
+
+
+### Bug Fixes
+
+* **client:** close unowned successful response bodies ([#1019](https://github.com/openai/openai-go/issues/1019)) ([122396e](https://github.com/openai/openai-go/commit/122396e1bce50b7b737c5a54fba3cdd37408def6))
+* **client:** restore configured HTTP endpoint compatibility ([#1022](https://github.com/openai/openai-go/issues/1022)) ([facbcce](https://github.com/openai/openai-go/commit/facbcce685ae7a3cf26ecba33d61458fb613c0c5))
+
 ## [3.71.0](https://github.com/openai/openai-go/compare/v3.70.0...v3.71.0) (2026-10-02)
 
 
