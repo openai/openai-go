@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 )
 
@@ -35,6 +36,6 @@ func main() {
 	println()
 
 	if err := stream.Err(); err != nil {
-		panic(err.Error())
+		panic(errutil.Message(err))
 	}
 }

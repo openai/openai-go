@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 )
 
@@ -68,7 +69,7 @@ func main() {
 	}
 
 	if err := stream.Err(); err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	if acc.Usage.TotalTokens > 0 {

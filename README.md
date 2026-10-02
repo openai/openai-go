@@ -855,12 +855,23 @@ When the API returns a non-success status code, we return an error with type
 `*http.Response` values of the request, as well as the JSON of the error body
 (much like other response objects in the SDK).
 
+`Error.Error()` returns only the HTTP status code and its standard description.
+Routine formatting, wrapping, and logging of `*openai.Error` omit request URLs
+and provider response data. Use `StatusCode` and `errors.As` for programmatic
+handling instead of parsing the error string. Other error types, such as network
+errors, may still contain sensitive details.
+
+Use valid format directives. Go bypasses custom formatting for some invalid
+directives, including `%w` outside `fmt.Errorf` and `%p` on a copied `openai.Error`
+value, and its resulting diagnostics can expose raw fields. Explicit JSON
+serialization and reflection also retain raw diagnostic data.
+
 To handle errors, we recommend that you use the `errors.As` pattern:
 
 > [!WARNING]
-> `Error.DumpRequest`, `Error.DumpResponse`, and `Error.Error` expose raw
-> diagnostics that may include authorization headers, credentials in URLs, and
-> sensitive request or response bodies. The dump `body` option does not redact
+> `Error.RawJSON`, `Error.DumpRequest`, `Error.DumpResponse`, and the error
+> fields expose raw diagnostics that may include authorization headers,
+> credentials in URLs, and sensitive request or response bodies. The dump `body` option does not redact
 > headers. Sanitize this output before logging, sharing, or storing it.
 
 ```go

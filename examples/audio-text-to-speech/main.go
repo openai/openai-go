@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ebitengine/oto/v3"
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 )
 
@@ -23,7 +24,7 @@ func main() {
 		},
 	})
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 	defer func() { _ = res.Body.Close() }()
 
@@ -34,7 +35,7 @@ func main() {
 
 	otoCtx, readyChan, err := oto.NewContext(op)
 	if err != nil {
-		panic("oto.NewContext failed: " + err.Error())
+		panic(errutil.Message(err))
 	}
 
 	<-readyChan

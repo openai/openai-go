@@ -73,11 +73,14 @@ local checks, trusted CI, and activation instructions.
   metadata, including `Authorization`, `Cookie`, `Set-Cookie`, `Api-Key`,
   `X-Api-Key`, and `X-Amz-Security-Token`; credentials in URLs or query
   parameters; webhook secrets; and sensitive request or response bodies before
-  logging, recording, forwarding, or disclosure. `Error.DumpRequest`,
-  `Error.DumpResponse`, and `Error.Error` are intentionally raw, opt-in
-  diagnostics and may include credentials, URLs, headers, or bodies; sanitize
-  them before sharing or sending them to an untrusted sink. Preserve safe
-  synthetic payloads and intentional public API error or debug diagnostics.
+  logging, recording, forwarding, or disclosure. SDK error formatting methods
+  return a status-only summary. Go's invalid-format diagnostics may bypass those
+  methods and expose raw fields; use valid directives as documented in README.md.
+  `Error.DumpRequest`,
+  `Error.DumpResponse`, `Error.RawJSON`, and exported error fields still expose
+  raw diagnostics that may include credentials, URLs, headers, or bodies;
+  sanitize them before sharing or sending them to an untrusted sink. Preserve
+  safe synthetic payloads and intentional public API error or debug diagnostics.
 - Review direct and transitive dependency changes in `go.mod` and `go.sum`
   across the root, `examples`, `api_reference`, `internal/testdata/consumer`,
   and `tools` modules. Review new `replace` directives, dependency origins,

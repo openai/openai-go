@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 )
 
@@ -27,7 +28,7 @@ func main() {
 	completion, err := client.Chat.Completions.New(ctx, params)
 
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	println(completion.Choices[0].Message.Content)

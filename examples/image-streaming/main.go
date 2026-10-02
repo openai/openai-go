@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 )
 
@@ -36,7 +37,7 @@ func main() {
 			// Save partial image to file
 			filename := fmt.Sprintf("partial_%d.png", variant.PartialImageIndex+1)
 			if err := saveBase64Image(variant.B64JSON, filename); err != nil {
-				panic(fmt.Errorf("failed to save partial image: %w", err))
+				panic(errutil.Message(err))
 			}
 			absPath, _ := filepath.Abs(filename)
 			fmt.Printf("   💾 Saved to: %s\n", absPath)
@@ -47,18 +48,18 @@ func main() {
 			// Save final image to file
 			filename := "final_image.png"
 			if err := saveBase64Image(variant.B64JSON, filename); err != nil {
-				panic(fmt.Errorf("failed to save final image: %w", err))
+				panic(errutil.Message(err))
 			}
 			absPath, _ := filepath.Abs(filename)
 			fmt.Printf("   💾 Saved to: %s\n", absPath)
 
 		default:
-			fmt.Printf("Received unknown event type: %+v\n", event)
+			fmt.Println("Received unknown event type")
 		}
 	}
 
 	if err := stream.Err(); err != nil {
-		panic(fmt.Errorf("error during streaming: %w", err))
+		panic(errutil.Message(err))
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/responses"
@@ -12,7 +13,7 @@ import (
 
 func main() {
 	if err := run(); err != nil {
-		log.Fatal(err)
+		log.Fatal(errutil.Message(err))
 	}
 }
 
@@ -53,6 +54,6 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Continuation finished with status %s", response.Status)
+	log.Printf("Continuation finished with status %s", errutil.Status(string(response.Status)))
 	return nil
 }
