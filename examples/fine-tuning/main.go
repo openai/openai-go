@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 )
 
@@ -18,14 +19,14 @@ func main() {
 
 	data, err := os.Open("./fine-tuning-data.jsonl")
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 	file, err := client.Files.New(ctx, openai.FileNewParams{
 		File:    data,
 		Purpose: openai.FilePurposeFineTune,
 	})
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 	fmt.Printf("Uploaded file with ID: %s\n", file.ID)
 
@@ -33,19 +34,19 @@ func main() {
 	for {
 		file, err = client.Files.Get(ctx, file.ID)
 		if err != nil {
-			panic(err)
+			panic(errutil.Message(err))
 		}
 
 		status, statusErr := strconv.Unquote(file.JSON.Status.Raw())
 		if statusErr != nil {
-			panic(fmt.Errorf("decode file processing status: %w", statusErr))
+			panic(errutil.Message(statusErr))
 		}
-		fmt.Printf("File status: %s\n", status)
+		fmt.Printf("File status: %s\n", errutil.Status(status))
 		if status == string(openai.FileObjectStatusProcessed) {
 			break
 		}
 		if status == string(openai.FileObjectStatusError) {
-			panic(fmt.Errorf("training file %s failed processing", file.ID))
+			panic("training file failed processing")
 		}
 		time.Sleep(time.Second)
 	}
@@ -57,7 +58,7 @@ func main() {
 		TrainingFile: file.ID,
 	})
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 	fmt.Printf("Fine-tuning ID: %s\n", fineTune.ID)
 
@@ -69,15 +70,15 @@ func main() {
 	for fineTune.Status == "running" || fineTune.Status == "queued" || fineTune.Status == "validating_files" {
 		fineTune, err = client.FineTuning.Jobs.Get(ctx, fineTune.ID)
 		if err != nil {
-			panic(err)
+			panic(errutil.Message(err))
 		}
-		fmt.Println(fineTune.Status)
+		fmt.Println(errutil.Status(string(fineTune.Status)))
 
 		page, err := client.FineTuning.Jobs.ListEvents(ctx, fineTune.ID, openai.FineTuningJobListEventsParams{
 			Limit: openai.Int(100),
 		})
 		if err != nil {
-			panic(err)
+			panic(errutil.Message(err))
 		}
 
 		for i := len(page.Data) - 1; i >= 0; i-- {
@@ -87,7 +88,7 @@ func main() {
 			}
 			events[event.ID] = event
 			timestamp := time.Unix(int64(event.CreatedAt), 0)
-			fmt.Printf("- %s: %s\n", timestamp.Format(time.Kitchen), event.Message)
+			fmt.Printf("- %s: fine-tuning event received\n", timestamp.Format(time.Kitchen))
 		}
 
 		time.Sleep(5 * time.Second)

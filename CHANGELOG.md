@@ -1,10 +1,39 @@
 # Changelog
 
+## [3.71.1](https://github.com/openai/openai-go/compare/v3.71.0...v3.71.1) (2026-10-02)
+
+
+### Bug Fixes
+
+* **client:** close unowned successful response bodies ([#1019](https://github.com/openai/openai-go/issues/1019)) ([122396e](https://github.com/openai/openai-go/commit/122396e1bce50b7b737c5a54fba3cdd37408def6))
+* **client:** restore configured HTTP endpoint compatibility ([#1022](https://github.com/openai/openai-go/issues/1022)) ([facbcce](https://github.com/openai/openai-go/commit/facbcce685ae7a3cf26ecba33d61458fb613c0c5))
+
+## [3.71.0](https://github.com/openai/openai-go/compare/v3.70.0...v3.71.0) (2026-10-02)
+
+
+### Features
+
+* **api:** add custom voices and agent session webhook events ([#1016](https://github.com/openai/openai-go/issues/1016)) ([0d0331b](https://github.com/openai/openai-go/commit/0d0331b0f49318db9a7c93ffac886d256f33d290))
+* **api:** use safe API error diagnostics by default ([#1013](https://github.com/openai/openai-go/issues/1013)) ([ef62324](https://github.com/openai/openai-go/commit/ef6232449f21ebe99229c5a3c39564b9af9c71ab))
+
+## [3.70.0](https://github.com/openai/openai-go/compare/v3.69.0...v3.70.0) (2026-10-01)
+
+
+### Features
+
+* **agents:** Prepare files and download turn artifacts ([#1010](https://github.com/openai/openai-go/issues/1010)) ([f7a562d](https://github.com/openai/openai-go/commit/f7a562d546b88b11f6ece214a21e144bffb5db66))
+
+
+### Bug Fixes
+
+* **auth:** isolate cloud metadata token requests ([#1006](https://github.com/openai/openai-go/issues/1006)) ([f4cb102](https://github.com/openai/openai-go/commit/f4cb1021b8e3d08a6044ef72a80e9e4fd98c8efc))
+
 ## [3.69.0](https://github.com/openai/openai-go/compare/v3.68.0...v3.69.0) (2026-10-01)
 
 
 ### Features
 
+* collect final output from beta Agents streams ([#1002](https://github.com/openai/openai-go/issues/1002)) ([a29869f](https://github.com/openai/openai-go/commit/a29869f5128192c1215cfa7485e817966e84db49))
 * **agents:** [1/n] Bind output schemas to typed results ([#1008](https://github.com/openai/openai-go/issues/1008)) ([0c0abaf](https://github.com/openai/openai-go/commit/0c0abaf8954b554ee6ebaf1c219909d49a632e91))
 * **api:** add translation and session trace APIs ([#995](https://github.com/openai/openai-go/issues/995)) ([5312099](https://github.com/openai/openai-go/commit/5312099ee06b17e5e9acbf05a8ef577e85ae02b3))
 * **api:** require secure credential transport ([#1011](https://github.com/openai/openai-go/issues/1011)) ([8f74dea](https://github.com/openai/openai-go/commit/8f74dea358e0a0c71f6f458ac8b5d9f934a751c5))

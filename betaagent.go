@@ -9254,7 +9254,7 @@ type BetaAgentNewParams struct {
 	Metadata map[string]string `json:"metadata,omitzero"`
 	// The service tier used for model requests. Defaults to `auto`.
 	//
-	// Any of "auto", "default", "flex", "priority", "fast", "ultrafast".
+	// Any of "auto", "default", "flex", "priority", "fast".
 	ServiceTier BetaAgentNewParamsServiceTier `json:"service_tier,omitzero"`
 	// Tools available to the agent. Defaults to an empty list.
 	Tools []PersistedAgentToolParamUnion `json:"tools,omitzero"`
@@ -9281,12 +9281,11 @@ func (r *BetaAgentNewParams) UnmarshalJSON(data []byte) error {
 type BetaAgentNewParamsServiceTier string
 
 const (
-	BetaAgentNewParamsServiceTierAuto      BetaAgentNewParamsServiceTier = "auto"
-	BetaAgentNewParamsServiceTierDefault   BetaAgentNewParamsServiceTier = "default"
-	BetaAgentNewParamsServiceTierFlex      BetaAgentNewParamsServiceTier = "flex"
-	BetaAgentNewParamsServiceTierPriority  BetaAgentNewParamsServiceTier = "priority"
-	BetaAgentNewParamsServiceTierFast      BetaAgentNewParamsServiceTier = "fast"
-	BetaAgentNewParamsServiceTierUltrafast BetaAgentNewParamsServiceTier = "ultrafast"
+	BetaAgentNewParamsServiceTierAuto     BetaAgentNewParamsServiceTier = "auto"
+	BetaAgentNewParamsServiceTierDefault  BetaAgentNewParamsServiceTier = "default"
+	BetaAgentNewParamsServiceTierFlex     BetaAgentNewParamsServiceTier = "flex"
+	BetaAgentNewParamsServiceTierPriority BetaAgentNewParamsServiceTier = "priority"
+	BetaAgentNewParamsServiceTierFast     BetaAgentNewParamsServiceTier = "fast"
 )
 
 type BetaAgentUpdateParams struct {
@@ -9303,7 +9302,7 @@ type BetaAgentUpdateParams struct {
 	Metadata map[string]string `json:"metadata,omitzero"`
 	// The service tier used for model requests.
 	//
-	// Any of "auto", "default", "flex", "priority", "fast", "ultrafast".
+	// Any of "auto", "default", "flex", "priority", "fast".
 	ServiceTier BetaAgentUpdateParamsServiceTier `json:"service_tier,omitzero"`
 	// Tools available to the agent.
 	Tools []PersistedAgentToolParamUnion `json:"tools,omitzero"`
@@ -9329,12 +9328,11 @@ func (r *BetaAgentUpdateParams) UnmarshalJSON(data []byte) error {
 type BetaAgentUpdateParamsServiceTier string
 
 const (
-	BetaAgentUpdateParamsServiceTierAuto      BetaAgentUpdateParamsServiceTier = "auto"
-	BetaAgentUpdateParamsServiceTierDefault   BetaAgentUpdateParamsServiceTier = "default"
-	BetaAgentUpdateParamsServiceTierFlex      BetaAgentUpdateParamsServiceTier = "flex"
-	BetaAgentUpdateParamsServiceTierPriority  BetaAgentUpdateParamsServiceTier = "priority"
-	BetaAgentUpdateParamsServiceTierFast      BetaAgentUpdateParamsServiceTier = "fast"
-	BetaAgentUpdateParamsServiceTierUltrafast BetaAgentUpdateParamsServiceTier = "ultrafast"
+	BetaAgentUpdateParamsServiceTierAuto     BetaAgentUpdateParamsServiceTier = "auto"
+	BetaAgentUpdateParamsServiceTierDefault  BetaAgentUpdateParamsServiceTier = "default"
+	BetaAgentUpdateParamsServiceTierFlex     BetaAgentUpdateParamsServiceTier = "flex"
+	BetaAgentUpdateParamsServiceTierPriority BetaAgentUpdateParamsServiceTier = "priority"
+	BetaAgentUpdateParamsServiceTierFast     BetaAgentUpdateParamsServiceTier = "fast"
 )
 
 type BetaAgentListParams struct {

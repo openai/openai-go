@@ -2,11 +2,10 @@ package option
 
 import "github.com/openai/openai-go/v3/internal/requestconfig"
 
-// WithUnsafeAllowHTTP permits OpenAI credentials over plaintext HTTP only to
-// localhost or a literal loopback IP address. Use it only for local development.
-// These requests use a dedicated direct connection, bypassing proxies, custom
-// transports, dialers, and HTTP doers. HTTPS keeps the configured HTTP client.
-// Azure and Bedrock transport policies are unaffected.
+// WithUnsafeAllowHTTP was introduced in v3.69.0 with authenticated HTTP restrictions.
+// This was reverted as it broke existing tests and integrations. The restrictions will
+// return in the next major release. This option is currently a no-op retained for source
+// compatibility. Azure and Bedrock retain their provider-specific policies
 func WithUnsafeAllowHTTP() RequestOption {
-	return requestconfig.WithUnsafeAllowHTTP()
+	return requestconfig.RequestOptionFunc(func(*requestconfig.RequestConfig) error { return nil })
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/azure"
 	"github.com/openai/openai-go/v3/responses"
@@ -30,7 +31,7 @@ func main() {
 	})
 
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	println(resp.OutputText())

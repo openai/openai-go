@@ -7,6 +7,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 )
 
@@ -67,7 +68,7 @@ func main() {
 	fmt.Println()
 
 	if err := stream.Err(); err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	if len(acc.Choices) == 0 || len(acc.Choices[0].Message.ToolCalls) == 0 {
@@ -80,7 +81,7 @@ func main() {
 	params.Messages = append(params.Messages, message.ToParam())
 	for _, toolCall := range toolCalls {
 		if toolCall.Function.Name != "get_weather" {
-			panic(fmt.Sprintf("unsupported tool call: %q", toolCall.Function.Name))
+			panic("unsupported tool call")
 		}
 
 		var args struct {
@@ -89,7 +90,7 @@ func main() {
 		decoder := json.NewDecoder(strings.NewReader(toolCall.Function.Arguments))
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&args); err != nil {
-			panic(fmt.Sprintf("failed to decode tool arguments: %v", err))
+			panic(errutil.Message(err))
 		}
 		if err := decoder.Decode(&struct{}{}); err != io.EOF {
 			panic("failed to decode tool arguments: expected a single JSON object")
@@ -129,7 +130,7 @@ func main() {
 	fmt.Println()
 
 	if err := responseStream.Err(); err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 }
 

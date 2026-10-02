@@ -28,10 +28,13 @@ The checker and effective budget come from main, not the PR. Keep default CODEOW
   metadata, including `Authorization`, `Cookie`, `Set-Cookie`, `Api-Key`,
   `X-Api-Key`, and `X-Amz-Security-Token`; credentials in URLs or query
   parameters; webhook material; and sensitive request or response bodies before
-  logging, recording, forwarding, or disclosure. `Error.DumpRequest`,
-  `Error.DumpResponse`, and `Error.Error` intentionally expose raw, opt-in
-  diagnostics that may include these values; sanitize their output before it
-  reaches logs, test recordings, CI output, or any other untrusted sink.
+  logging, recording, forwarding, or disclosure. SDK error formatting methods
+  return a status-only summary. Go's invalid-format diagnostics may bypass those
+  methods and expose raw fields; use valid directives as documented in README.md.
+  `Error.DumpRequest`,
+  `Error.DumpResponse`, `Error.RawJSON`, and exported error fields still expose
+  raw diagnostics that may include sensitive values; sanitize them before they
+  reach logs, test recordings, CI output, or any other untrusted sink.
 - Require SDK CODEOWNER review for changes to authentication, Azure or AWS
   credentials, webhook verification, custom endpoints, redirects, proxies, TLS,
   file handling, uploads, JSON or event-stream decoding, code generation, CI,

@@ -30,7 +30,7 @@ Or to pin an SDK version (see the Go compatibility note below):
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/openai/openai-go/v3@v3.69.0'
+go get -u 'github.com/openai/openai-go/v3@v3.71.1'
 ```
 
 <!-- x-release-please-end -->
@@ -855,12 +855,23 @@ When the API returns a non-success status code, we return an error with type
 `*http.Response` values of the request, as well as the JSON of the error body
 (much like other response objects in the SDK).
 
+`Error.Error()` returns only the HTTP status code and its standard description.
+Routine formatting, wrapping, and logging of `*openai.Error` omit request URLs
+and provider response data. Use `StatusCode` and `errors.As` for programmatic
+handling instead of parsing the error string. Other error types, such as network
+errors, may still contain sensitive details.
+
+Use valid format directives. Go bypasses custom formatting for some invalid
+directives, including `%w` outside `fmt.Errorf` and `%p` on a copied `openai.Error`
+value, and its resulting diagnostics can expose raw fields. Explicit JSON
+serialization and reflection also retain raw diagnostic data.
+
 To handle errors, we recommend that you use the `errors.As` pattern:
 
 > [!WARNING]
-> `Error.DumpRequest`, `Error.DumpResponse`, and `Error.Error` expose raw
-> diagnostics that may include authorization headers, credentials in URLs, and
-> sensitive request or response bodies. The dump `body` option does not redact
+> `Error.RawJSON`, `Error.DumpRequest`, `Error.DumpResponse`, and the error
+> fields expose raw diagnostics that may include authorization headers,
+> credentials in URLs, and sensitive request or response bodies. The dump `body` option does not redact
 > headers. Sanitize this output before logging, sharing, or storing it.
 
 ```go
@@ -1245,31 +1256,6 @@ redirects it performs inside `Do` and must keep credentialed requests on the
 configured origin. Prefer a native `*http.Client` with a custom transport when
 possible.
 
-### Local HTTP development
-
-Authenticated OpenAI requests require HTTPS, including endpoints selected by
-`OPENAI_BASE_URL` or `option.WithBaseURL`. A remote HTTP endpoint returns an error
-before credentials are sent or workload tokens are acquired. Static credentials
-are checked after middleware, so middleware can remove authentication before dispatch.
-Use an HTTPS endpoint for remote servers.
-
-For local development, explicitly allow plaintext connections to `localhost` or
-a literal loopback IP address:
-
-```go
-client := openai.NewClient(
-    option.WithBaseURL("http://127.0.0.1:8080/v1"),
-    option.WithUnsafeAllowHTTP(),
-    option.WithAPIKey("local-test-key"),
-)
-```
-
-The exception never permits remote HTTP. These local requests use a dedicated
-direct transport, bypassing proxies, custom transports, dialers, and HTTP doers.
-Use HTTPS when a test needs a custom transport. HTTPS requests and workload token
-exchanges retain their configured HTTP clients. Azure and Bedrock retain their
-provider-specific transport policies.
-
 ### Mutual TLS with a custom HTTP client
 
 For API-key authenticated HTTP requests that require mutual TLS, configure a
@@ -1394,6 +1380,14 @@ client := openai.NewClient(
 	}),
 )
 ```
+
+The built-in Azure and GCP providers use their documented link-local IPv4 metadata
+endpoints with dedicated standard-library HTTP clients. They bypass API-client
+proxies, custom HTTP transports, and DNS resolution, and reject redirects.
+Metadata retrieval has a five-second total timeout, including reading the response,
+and honors earlier context deadlines. `option.WithHTTPClient` still controls token
+exchange and API requests. Tests or applications requiring a different metadata
+route can implement a custom subject token provider; they own that route's security.
 
 ### Custom Subject Token Provider
 

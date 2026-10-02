@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/responses"
 )
@@ -15,11 +16,11 @@ func main() {
 
 	resp, err := client.Responses.New(ctx, responses.ResponseNewParams{
 		Input: responses.ResponseNewParamsInputUnion{OfString: openai.String(question)},
-		Model: openai.ChatModelGPT4,
+		Model: openai.ChatModelGPT4_1,
 	})
 
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	println(resp.OutputText())

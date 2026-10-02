@@ -307,12 +307,6 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 	}
 
 	// This must run after `cfg.Apply(...)` above so we know which specific security scheme to add
-	if err := cfg.configureCredentialTransport(); err != nil {
-		if body, ok := cfg.Body.(io.Closer); ok {
-			_ = body.Close()
-		}
-		return nil, err
-	}
 	ApplySecurity(cfg)
 
 	// This must run after `cfg.Apply(...)` above in case the request timeout gets modified. We also only
@@ -353,8 +347,6 @@ type RequestConfig struct {
 	authentication             authenticationState
 	cloneError                 error
 	queryChanges               map[string]bool
-	requireSecureTransport     bool
-	unsafeLoopbackTransport    *http.Transport
 	// DefaultBaseURL will be used if BaseURL is not explicitly overridden using
 	// WithBaseURL.
 	DefaultBaseURL *url.URL
@@ -644,7 +636,6 @@ func (cfg *RequestConfig) Execute() (err error) {
 
 	client := *cfg.HTTPClient
 	transport := client.Transport
-	allowLoopback := cfg.endpointProvider == "" && cfg.unsafeLoopbackTransport != nil && credentialLoopbackURL(cfg.Request.URL)
 	if transport == nil {
 		transport = http.DefaultTransport
 	}
@@ -656,32 +647,12 @@ func (cfg *RequestConfig) Execute() (err error) {
 	// Provider transports may implement a narrower, explicitly configured
 	// redirect policy. Every initial request must still retain the configured
 	// origin after all SDK and caller middleware has run.
-	handler := enforceRequestOrigin(cfg.BaseURL, func(req *http.Request) (*http.Response, error) {
-		direct, transportErr := cfg.credentialTransport(req)
-		if transportErr != nil {
-			return nil, transportErr
-		}
-		if direct != nil {
-			local := client
-			local.Transport = originTransport{origin: cfg.BaseURL, next: direct}
-			return local.Do(req)
-		}
-		if cfg.CustomHTTPDoer != nil {
-			return cfg.CustomHTTPDoer.Do(req)
-		}
-		return client.Do(req)
-	})
+	handler := enforceRequestOrigin(cfg.BaseURL, client.Do)
+	if cfg.CustomHTTPDoer != nil {
+		handler = enforceRequestOrigin(cfg.BaseURL, cfg.CustomHTTPDoer.Do)
+	}
 	for i := len(cfg.Middlewares) - 1; i >= 0; i -= 1 {
 		handler = applyMiddleware(cfg.Middlewares[i], handler)
-	}
-	if cfg.requireSecureTransport {
-		next := handler
-		handler = func(req *http.Request) (*http.Response, error) {
-			if transportErr := ValidateOpenAICredentialRequest(req); transportErr != nil {
-				return nil, transportErr
-			}
-			return next(req)
-		}
 	}
 
 	// Don't send the current retry count in the headers if the caller modified the header defaults.
@@ -691,9 +662,6 @@ func (cfg *RequestConfig) Execute() (err error) {
 	var cancel context.CancelFunc
 	for retryCount := 0; retryCount <= cfg.MaxRetries; retryCount += 1 {
 		ctx := cfg.Request.Context()
-		if cfg.requireSecureTransport || allowLoopback {
-			ctx = context.WithValue(ctx, unsafeLoopbackContextKey{}, allowLoopback)
-		}
 		if cfg.RequestTimeout != time.Duration(0) && isBeforeContextDeadline(time.Now().Add(cfg.RequestTimeout), ctx) {
 			ctx, cancel = context.WithTimeout(ctx, cfg.RequestTimeout)
 			defer func() {
@@ -791,6 +759,16 @@ func (cfg *RequestConfig) Execute() (err error) {
 			return err
 		}
 		return &aerr
+	}
+
+	if cfg.ResponseBodyInto == nil && cfg.ResponseInto == nil {
+		// No caller owns this body. Close without reading so an unexpected body
+		// cannot delay a successful no-result operation. The deferred cancel
+		// releases the request timeout in this scope.
+		if res.Body != nil {
+			_ = res.Body.Close()
+		}
+		return nil
 	}
 
 	_, intoCustomResponseBody := cfg.ResponseBodyInto.(**http.Response)
