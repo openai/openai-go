@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.71.0](https://github.com/openai/openai-go/compare/v3.70.0...v3.71.0) (2026-10-02)
+
+
+### Features
+
+* **api:** add custom voices and agent session webhook events ([#1016](https://github.com/openai/openai-go/issues/1016)) ([0d0331b](https://github.com/openai/openai-go/commit/0d0331b0f49318db9a7c93ffac886d256f33d290))
+* **api:** use safe API error diagnostics by default ([#1013](https://github.com/openai/openai-go/issues/1013)) ([ef62324](https://github.com/openai/openai-go/commit/ef6232449f21ebe99229c5a3c39564b9af9c71ab))
+
 ## [3.70.0](https://github.com/openai/openai-go/compare/v3.69.0...v3.70.0) (2026-10-01)
 
 
