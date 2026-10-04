@@ -345,6 +345,11 @@ func WithWebhookSecret(value string) requestconfig.PreRequestOptionFunc {
 // WithWorkloadIdentity returns a RequestOption that configures workload identity authentication.
 // This enables the client to authenticate using short-lived tokens from cloud providers
 // (Kubernetes, Azure, GCP) instead of long-lived API keys.
+// Reusing this option keeps separate, bounded token caches for each effective
+// HTTP client and transport, including request-level overrides. Non-comparable
+// custom HTTP doers acquire tokens independently. Providers and custom doers must
+// keep their identity stable; use a new option or doer for opaque identity changes,
+// and a new transport when rotating client certificates.
 func WithWorkloadIdentity(config auth.WorkloadIdentity) RequestOption {
 	var wia *auth.WorkloadIdentityAuth
 	var initOnce sync.Once
