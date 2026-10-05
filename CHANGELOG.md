@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.71.2](https://github.com/openai/openai-go/compare/v3.71.1...v3.71.2) (2026-10-05)
+
+
+### Bug Fixes
+
+* bound aggregate sparse tool-call growth per chunk ([#1014](https://github.com/openai/openai-go/issues/1014)) ([8b04b3c](https://github.com/openai/openai-go/commit/8b04b3cb2c861370f549df55cf9499ccdb108a4d))
+* escape multipart scalar field names consistently ([#1029](https://github.com/openai/openai-go/issues/1029)) ([a3d6415](https://github.com/openai/openai-go/commit/a3d641518728a7e09a0fdb2559035662f7b9476a))
+
 ## [3.71.1](https://github.com/openai/openai-go/compare/v3.71.0...v3.71.1) (2026-10-02)
 
 
