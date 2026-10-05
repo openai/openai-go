@@ -38,7 +38,7 @@ func NewBetaAgentSessionTurnItemService(opts ...option.RequestOption) (r BetaAge
 // Lists items belonging to one root-agent turn, including its interactions with
 // subagents. See
 // [inspecting agent output](https://developers.openai.com/api/docs/guides/agents-api/observability).
-func (r *BetaAgentSessionTurnItemService) List(ctx context.Context, sessionID string, turnID string, query BetaAgentSessionTurnItemListParams, opts ...option.RequestOption) (res *pagination.CursorPage[AgentSessionItemUnion], err error) {
+func (r *BetaAgentSessionTurnItemService) List(ctx context.Context, sessionID string, turnID string, query BetaAgentSessionTurnItemListParams, opts ...option.RequestOption) (res *pagination.ConversationCursorPage[AgentSessionItemUnion], err error) {
 	var raw *http.Response
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -67,8 +67,8 @@ func (r *BetaAgentSessionTurnItemService) List(ctx context.Context, sessionID st
 // Lists items belonging to one root-agent turn, including its interactions with
 // subagents. See
 // [inspecting agent output](https://developers.openai.com/api/docs/guides/agents-api/observability).
-func (r *BetaAgentSessionTurnItemService) ListAutoPaging(ctx context.Context, sessionID string, turnID string, query BetaAgentSessionTurnItemListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[AgentSessionItemUnion] {
-	return pagination.NewCursorPageAutoPager(r.List(ctx, sessionID, turnID, query, opts...))
+func (r *BetaAgentSessionTurnItemService) ListAutoPaging(ctx context.Context, sessionID string, turnID string, query BetaAgentSessionTurnItemListParams, opts ...option.RequestOption) *pagination.ConversationCursorPageAutoPager[AgentSessionItemUnion] {
+	return pagination.NewConversationCursorPageAutoPager(r.List(ctx, sessionID, turnID, query, opts...))
 }
 
 type BetaAgentSessionTurnItemListParams struct {
