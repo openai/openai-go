@@ -159,3 +159,33 @@ func TestBetaAgentCreationToolHandlersAreLocal(t *testing.T) {
 		t.Fatal("non-streaming creation must not silently ignore handlers")
 	}
 }
+
+func TestBetaAgentCreationToolsRejectResponseBodyOverrides(t *testing.T) {
+	for _, inherited := range []bool{false, true} {
+		for _, destination := range []any{new([]byte), new(*http.Response)} {
+			t.Run(fmt.Sprintf("inherited=%v/%T", inherited, destination), func(t *testing.T) {
+				server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					t.Error("response override must be rejected before transport")
+					w.WriteHeader(500)
+				}))
+				defer server.Close()
+				client := openai.NewClient(option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("synthetic"))
+				opts := []option.RequestOption{option.WithResponseBodyInto(destination)}
+				if inherited {
+					client.Beta.Agents.Sessions.Options = append(client.Beta.Agents.Sessions.Options, opts...)
+					opts = nil
+				}
+				stream := client.Beta.Agents.Sessions.NewStreaming(context.Background(), openai.BetaAgentSessionNewParams{
+					ToolHandlers: map[string]openai.AgentToolHandler{"lookup": func(context.Context, map[string]any) (any, error) {
+						t.Error("handler must not execute")
+						return nil, nil
+					}},
+				}, opts...)
+				defer func() { _ = stream.Close() }()
+				if stream.Err() == nil || !strings.Contains(stream.Err().Error(), "WithResponseBodyInto") || stream.Next() {
+					t.Fatalf("expected response override error, got %v", stream.Err())
+				}
+			})
+		}
+	}
+}

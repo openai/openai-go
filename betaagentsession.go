@@ -78,6 +78,11 @@ func (r *BetaAgentSessionService) NewStreaming(ctx context.Context, body BetaAge
 		err error
 	)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	if cancel != nil {
+		capture, require := agentStreamResponseGuard[http.Response]()
+		preClientOpts = append(preClientOpts, capture)
+		opts = append(slices.Clone(opts), require)
+	}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "agents=v1")}, opts...)
 	opts = append(opts, option.WithJSONSet("stream", true))
