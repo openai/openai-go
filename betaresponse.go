@@ -31442,9 +31442,10 @@ type BetaToolImageGeneration struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background"`
-	// Controls fidelity to the original input image(s). This parameter is supported
-	// for GPT image models that support input fidelity. `gpt-image-2` and
-	// `gpt-image-2-2026-04-21` ignore this parameter.
+	// Control how much effort the model will exert to match the style and features,
+	// especially facial features, of input images. Supports `high` and `low` on
+	// `gpt-image-1` and `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For
+	// `gpt-image-2`, omit this parameter. Defaults to `low` on supported models.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity" api:"nullable"`
@@ -32696,9 +32697,10 @@ type BetaToolImageGenerationParam struct {
 	// Number of partial images to generate in streaming mode, from 0 (default value)
 	// to 3.
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
-	// Controls fidelity to the original input image(s). This parameter is supported
-	// for GPT image models that support input fidelity. `gpt-image-2` and
-	// `gpt-image-2-2026-04-21` ignore this parameter.
+	// Control how much effort the model will exert to match the style and features,
+	// especially facial features, of input images. Supports `high` and `low` on
+	// `gpt-image-1` and `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For
+	// `gpt-image-2`, omit this parameter. Defaults to `low` on supported models.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,omitzero"`

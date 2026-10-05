@@ -56,21 +56,31 @@ type BuiltInVoice string
 const (
 	BuiltInVoiceAlloy    BuiltInVoice = "alloy"
 	BuiltInVoiceAsh      BuiltInVoice = "ash"
+	BuiltInVoiceAube     BuiltInVoice = "aube"
 	BuiltInVoiceBallad   BuiltInVoice = "ballad"
 	BuiltInVoiceBeacon   BuiltInVoice = "beacon"
 	BuiltInVoiceBossa    BuiltInVoice = "bossa"
+	BuiltInVoiceBrise    BuiltInVoice = "brise"
 	BuiltInVoiceCedar    BuiltInVoice = "cedar"
 	BuiltInVoiceCinder   BuiltInVoice = "cinder"
 	BuiltInVoiceCoral    BuiltInVoice = "coral"
 	BuiltInVoiceDelta    BuiltInVoice = "delta"
 	BuiltInVoiceEcho     BuiltInVoice = "echo"
+	BuiltInVoiceFlitz    BuiltInVoice = "flitz"
 	BuiltInVoiceGleam    BuiltInVoice = "gleam"
+	BuiltInVoiceHarema   BuiltInVoice = "harema"
+	BuiltInVoiceJuni     BuiltInVoice = "juni"
 	BuiltInVoiceMarin    BuiltInVoice = "marin"
 	BuiltInVoiceMeridian BuiltInVoice = "meridian"
+	BuiltInVoiceNira     BuiltInVoice = "nira"
+	BuiltInVoiceNoeul    BuiltInVoice = "noeul"
+	BuiltInVoiceNuri     BuiltInVoice = "nuri"
 	BuiltInVoiceQuartz   BuiltInVoice = "quartz"
 	BuiltInVoiceRipple   BuiltInVoice = "ripple"
 	BuiltInVoiceSage     BuiltInVoice = "sage"
 	BuiltInVoiceShimmer  BuiltInVoice = "shimmer"
+	BuiltInVoiceShitan   BuiltInVoice = "shitan"
+	BuiltInVoiceSillage  BuiltInVoice = "sillage"
 	BuiltInVoiceStone    BuiltInVoice = "stone"
 	BuiltInVoiceTempo    BuiltInVoice = "tempo"
 	BuiltInVoiceVerse    BuiltInVoice = "verse"
@@ -1036,13 +1046,22 @@ func (r *ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam) UnmarshalJSO
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ResponsesDelegationConfigToolUnionParam struct {
-	OfFunction  *FunctionToolParam                           `json:",omitzero,inline"`
-	OfWebSearch *ResponsesDelegationConfigToolWebSearchParam `json:",omitzero,inline"`
+	OfFunction        *FunctionToolParam                                 `json:",omitzero,inline"`
+	OfWebSearch       *ResponsesDelegationConfigToolWebSearchParam       `json:",omitzero,inline"`
+	OfFileSearch      *ResponsesDelegationConfigToolFileSearchParam      `json:",omitzero,inline"`
+	OfCodeInterpreter *ResponsesDelegationConfigToolCodeInterpreterParam `json:",omitzero,inline"`
+	OfShell           *ResponsesDelegationConfigToolShellParam           `json:",omitzero,inline"`
+	OfImageGeneration *ResponsesDelegationConfigToolImageGenerationParam `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ResponsesDelegationConfigToolUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfFunction, u.OfWebSearch)
+	return param.MarshalUnion(u, u.OfFunction,
+		u.OfWebSearch,
+		u.OfFileSearch,
+		u.OfCodeInterpreter,
+		u.OfShell,
+		u.OfImageGeneration)
 }
 func (u *ResponsesDelegationConfigToolUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1081,10 +1100,26 @@ func (u ResponsesDelegationConfigToolUnionParam) GetStrict() *bool {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolUnionParam) GetEnvironment() map[string]any {
+	if vt := u.OfShell; vt != nil {
+		return vt.Environment
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationConfigToolUnionParam) GetType() *string {
 	if vt := u.OfFunction; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfWebSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFileSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCodeInterpreter; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfShell; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfImageGeneration; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -1095,6 +1130,10 @@ func init() {
 		"type",
 		apijson.Discriminator[FunctionToolParam]("function"),
 		apijson.Discriminator[ResponsesDelegationConfigToolWebSearchParam]("web_search"),
+		apijson.Discriminator[ResponsesDelegationConfigToolFileSearchParam]("file_search"),
+		apijson.Discriminator[ResponsesDelegationConfigToolCodeInterpreterParam]("code_interpreter"),
+		apijson.Discriminator[ResponsesDelegationConfigToolShellParam]("shell"),
+		apijson.Discriminator[ResponsesDelegationConfigToolImageGenerationParam]("image_generation"),
 	)
 }
 
@@ -1119,6 +1158,88 @@ func (r ResponsesDelegationConfigToolWebSearchParam) MarshalJSON() (data []byte,
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *ResponsesDelegationConfigToolWebSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolFileSearchParam() ResponsesDelegationConfigToolFileSearchParam {
+	return ResponsesDelegationConfigToolFileSearchParam{
+		Type: "file_search",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolFileSearchParam].
+type ResponsesDelegationConfigToolFileSearchParam struct {
+	Type constant.FileSearch `json:"type" default:"file_search"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolFileSearchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolFileSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolFileSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolCodeInterpreterParam() ResponsesDelegationConfigToolCodeInterpreterParam {
+	return ResponsesDelegationConfigToolCodeInterpreterParam{
+		Type: "code_interpreter",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolCodeInterpreterParam].
+type ResponsesDelegationConfigToolCodeInterpreterParam struct {
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolCodeInterpreterParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolCodeInterpreterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolCodeInterpreterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A Responses shell tool with a container_auto or container_reference environment.
+// Local execution and domain secrets are not supported.
+//
+// The properties Environment, Type are required.
+type ResponsesDelegationConfigToolShellParam struct {
+	Environment map[string]any `json:"environment,omitzero" api:"required"`
+	// This field can be elided, and will marshal its zero value as "shell".
+	Type constant.Shell `json:"type" default:"shell"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolShellParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolShellParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolShellParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolImageGenerationParam() ResponsesDelegationConfigToolImageGenerationParam {
+	return ResponsesDelegationConfigToolImageGenerationParam{
+		Type: "image_generation",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolImageGenerationParam].
+type ResponsesDelegationConfigToolImageGenerationParam struct {
+	Type constant.ImageGeneration `json:"type" default:"image_generation"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolImageGenerationParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolImageGenerationParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolImageGenerationParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -1322,13 +1443,22 @@ func (r *ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam) Unmars
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ResponsesDelegationUpdateConfigToolUnionParam struct {
-	OfFunction  *FunctionToolParam                                 `json:",omitzero,inline"`
-	OfWebSearch *ResponsesDelegationUpdateConfigToolWebSearchParam `json:",omitzero,inline"`
+	OfFunction        *FunctionToolParam                                       `json:",omitzero,inline"`
+	OfWebSearch       *ResponsesDelegationUpdateConfigToolWebSearchParam       `json:",omitzero,inline"`
+	OfFileSearch      *ResponsesDelegationUpdateConfigToolFileSearchParam      `json:",omitzero,inline"`
+	OfCodeInterpreter *ResponsesDelegationUpdateConfigToolCodeInterpreterParam `json:",omitzero,inline"`
+	OfShell           *ResponsesDelegationUpdateConfigToolShellParam           `json:",omitzero,inline"`
+	OfImageGeneration *ResponsesDelegationUpdateConfigToolImageGenerationParam `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ResponsesDelegationUpdateConfigToolUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfFunction, u.OfWebSearch)
+	return param.MarshalUnion(u, u.OfFunction,
+		u.OfWebSearch,
+		u.OfFileSearch,
+		u.OfCodeInterpreter,
+		u.OfShell,
+		u.OfImageGeneration)
 }
 func (u *ResponsesDelegationUpdateConfigToolUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1367,10 +1497,26 @@ func (u ResponsesDelegationUpdateConfigToolUnionParam) GetStrict() *bool {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolUnionParam) GetEnvironment() map[string]any {
+	if vt := u.OfShell; vt != nil {
+		return vt.Environment
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationUpdateConfigToolUnionParam) GetType() *string {
 	if vt := u.OfFunction; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfWebSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFileSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCodeInterpreter; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfShell; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfImageGeneration; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -1381,6 +1527,10 @@ func init() {
 		"type",
 		apijson.Discriminator[FunctionToolParam]("function"),
 		apijson.Discriminator[ResponsesDelegationUpdateConfigToolWebSearchParam]("web_search"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolFileSearchParam]("file_search"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolCodeInterpreterParam]("code_interpreter"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolShellParam]("shell"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolImageGenerationParam]("image_generation"),
 	)
 }
 
@@ -1405,6 +1555,88 @@ func (r ResponsesDelegationUpdateConfigToolWebSearchParam) MarshalJSON() (data [
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *ResponsesDelegationUpdateConfigToolWebSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolFileSearchParam() ResponsesDelegationUpdateConfigToolFileSearchParam {
+	return ResponsesDelegationUpdateConfigToolFileSearchParam{
+		Type: "file_search",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolFileSearchParam].
+type ResponsesDelegationUpdateConfigToolFileSearchParam struct {
+	Type constant.FileSearch `json:"type" default:"file_search"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolFileSearchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolFileSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolFileSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolCodeInterpreterParam() ResponsesDelegationUpdateConfigToolCodeInterpreterParam {
+	return ResponsesDelegationUpdateConfigToolCodeInterpreterParam{
+		Type: "code_interpreter",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolCodeInterpreterParam].
+type ResponsesDelegationUpdateConfigToolCodeInterpreterParam struct {
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolCodeInterpreterParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolCodeInterpreterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolCodeInterpreterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A Responses shell tool with a container_auto or container_reference environment.
+// Local execution and domain secrets are not supported.
+//
+// The properties Environment, Type are required.
+type ResponsesDelegationUpdateConfigToolShellParam struct {
+	Environment map[string]any `json:"environment,omitzero" api:"required"`
+	// This field can be elided, and will marshal its zero value as "shell".
+	Type constant.Shell `json:"type" default:"shell"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolShellParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolShellParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolShellParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolImageGenerationParam() ResponsesDelegationUpdateConfigToolImageGenerationParam {
+	return ResponsesDelegationUpdateConfigToolImageGenerationParam{
+		Type: "image_generation",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolImageGenerationParam].
+type ResponsesDelegationUpdateConfigToolImageGenerationParam struct {
+	Type constant.ImageGeneration `json:"type" default:"image_generation"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolImageGenerationParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolImageGenerationParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolImageGenerationParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
