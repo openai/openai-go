@@ -30,9 +30,10 @@ func betaAgentCreationStream(ctx context.Context, cancel context.CancelFunc, ses
 		return nil
 	})
 	inherited, eventOptions := requestconfig.SplitInheritedOptions(sessions.Events.Options)
+	_, sessionOptions := requestconfig.SplitInheritedOptions(sessions.Options)
 	toolSessions.Events.Options = append([]option.RequestOption{capture}, inherited...)
 	s := &AgentSessionStream{ctx: ctx, cancel: cancel, sessions: &toolSessions, stream: stream,
-		options: slices.Concat(opts, []option.RequestOption{restore}, eventOptions), handlers: maps.Clone(handlers),
+		options: slices.Concat(sessionOptions, opts, []option.RequestOption{restore}, eventOptions), handlers: maps.Clone(handlers),
 		allowEOF: true,
 		eventIDs: make(map[string]struct{}), handledCalls: make(map[agentCallKey]struct{})}
 	s.collector.handlers = s.handlers
