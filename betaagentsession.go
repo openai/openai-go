@@ -25,8 +25,9 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewBetaAgentSessionService] method instead.
 type BetaAgentSessionService struct {
-	// Original Events options identify defaults shared with session creation.
-	eventDefaults []option.RequestOption
+	// Original service options identify defaults shared with session creation.
+	sessionDefaults []option.RequestOption
+	eventDefaults   []option.RequestOption
 
 	Options   []option.RequestOption
 	Subagents BetaAgentSessionSubagentService
@@ -43,6 +44,7 @@ type BetaAgentSessionService struct {
 func NewBetaAgentSessionService(opts ...option.RequestOption) (r BetaAgentSessionService) {
 	r = BetaAgentSessionService{}
 	r.Options = requestconfig.InheritedOptions(opts...)
+	r.sessionDefaults = slices.Clone(r.Options)
 	r.Subagents = NewBetaAgentSessionSubagentService(opts...)
 	r.Artifacts = NewBetaAgentSessionArtifactService(opts...)
 	r.Items = NewBetaAgentSessionItemService(opts...)

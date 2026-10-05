@@ -18,7 +18,7 @@ import (
 )
 
 func TestBetaAgentCreationTools(t *testing.T) {
-	for _, mode := range []string{"result", "iteration", "handler-error", "close", "submit-error", "json-options", "body-options", "inherited-options", "events-options", "events-constructor-options", "events-wrapped-options", "session-options"} {
+	for _, mode := range []string{"result", "iteration", "handler-error", "close", "submit-error", "json-options", "body-options", "inherited-options", "events-options", "events-constructor-options", "events-wrapped-options", "session-options", "session-constructor-options"} {
 		t.Run(mode, func(t *testing.T) {
 			var calls, posts atomic.Int32
 			posted := make(chan struct{})
@@ -26,7 +26,7 @@ func TestBetaAgentCreationTools(t *testing.T) {
 				if r.Header.Get("X-Application") != "test" || r.Header.Get("Authorization") != "Bearer synthetic" {
 					t.Error("lost request header/auth options")
 				}
-				if mode == "session-options" && r.Header.Get("X-Session") != "kept" {
+				if strings.HasPrefix(mode, "session-") && r.Header.Get("X-Session") != "kept" {
 					t.Error("lost session-scoped header")
 				}
 				switch r.URL.Path {
@@ -124,11 +124,13 @@ func TestBetaAgentCreationTools(t *testing.T) {
 				}
 				if mode == "inherited-options" || mode == "events-wrapped-options" {
 					client = openai.NewClient(append([]option.RequestOption{option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("synthetic"), option.WithMaxRetries(0)}, creationOpts...)...)
-				} else if mode == "session-options" {
+				} else if strings.HasPrefix(mode, "session-") {
 					client = openai.NewClient(option.WithBaseURL(server.URL+"/unused"), option.WithAPIKey("original-key"))
-					client.Beta.Agents.Sessions.Options = append(client.Beta.Agents.Sessions.Options,
-						option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("synthetic"), option.WithHeader("X-Session", "kept"))
-					client.Beta.Agents.Sessions.Options = append(client.Beta.Agents.Sessions.Options, creationOpts...)
+					sessionOpts := append([]option.RequestOption{option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("synthetic"), option.WithHeader("X-Session", "kept")}, creationOpts...)
+					if mode == "session-constructor-options" {
+						sessionOpts = openai.NewBetaAgentSessionService(sessionOpts...).Options
+					}
+					client.Beta.Agents.Sessions.Options = append(client.Beta.Agents.Sessions.Options, sessionOpts...)
 				} else {
 					opts = append(opts, creationOpts...)
 				}
