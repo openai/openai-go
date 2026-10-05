@@ -25,6 +25,9 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewBetaAgentSessionService] method instead.
 type BetaAgentSessionService struct {
+	// Original Events options identify defaults shared with session creation.
+	eventDefaults []option.RequestOption
+
 	Options   []option.RequestOption
 	Subagents BetaAgentSessionSubagentService
 	Artifacts BetaAgentSessionArtifactService
@@ -44,6 +47,7 @@ func NewBetaAgentSessionService(opts ...option.RequestOption) (r BetaAgentSessio
 	r.Artifacts = NewBetaAgentSessionArtifactService(opts...)
 	r.Items = NewBetaAgentSessionItemService(opts...)
 	r.Events = NewBetaAgentSessionEventService(opts...)
+	r.eventDefaults = slices.Clone(r.Events.Options)
 	r.Traces = NewBetaAgentSessionTraceService(opts...)
 	r.Turns = NewBetaAgentSessionTurnService(opts...)
 	return

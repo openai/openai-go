@@ -63,14 +63,28 @@ func InheritedOptions(opts ...RequestOption) []RequestOption {
 	return []RequestOption{optionLayer(slices.Clone(opts))}
 }
 
-// SplitInheritedOptions separates constructor defaults from options appended
-// directly to a service. Both groups retain their original order and option types.
-func SplitInheritedOptions(opts []RequestOption) (inherited, direct []RequestOption) {
+// SplitInheritedOptions separates the captured inherited layers from service-owned
+// options, preserving layer boundaries without evaluating request options.
+func SplitInheritedOptions(opts, inherited []RequestOption) (shared, owned []RequestOption) {
 	for _, opt := range opts {
-		if _, ok := opt.(optionLayer); ok {
-			inherited = append(inherited, opt)
-		} else {
-			direct = append(direct, opt)
+		layer, ok := opt.(optionLayer)
+		if !ok {
+			owned = append(owned, opt)
+			continue
+		}
+		if slices.ContainsFunc(inherited, func(candidate RequestOption) bool {
+			original, ok := candidate.(optionLayer)
+			return ok && len(layer) > 0 && len(original) > 0 && &layer[0] == &original[0]
+		}) {
+			shared = append(shared, opt)
+			continue
+		}
+		sharedLayer, ownedLayer := SplitInheritedOptions(layer, inherited)
+		if len(sharedLayer) > 0 {
+			shared = append(shared, optionLayer(sharedLayer))
+		}
+		if len(ownedLayer) > 0 {
+			owned = append(owned, optionLayer(ownedLayer))
 		}
 	}
 	return

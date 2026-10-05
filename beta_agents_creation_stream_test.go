@@ -18,7 +18,7 @@ import (
 )
 
 func TestBetaAgentCreationTools(t *testing.T) {
-	for _, mode := range []string{"result", "iteration", "handler-error", "close", "submit-error", "json-options", "body-options", "inherited-options", "events-options", "session-options"} {
+	for _, mode := range []string{"result", "iteration", "handler-error", "close", "submit-error", "json-options", "body-options", "inherited-options", "events-options", "events-constructor-options", "events-wrapped-options", "session-options"} {
 		t.Run(mode, func(t *testing.T) {
 			var calls, posts atomic.Int32
 			posted := make(chan struct{})
@@ -75,7 +75,7 @@ func TestBetaAgentCreationTools(t *testing.T) {
 					if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 						t.Error(err)
 					}
-					if (body["event_marker"] == "yes") != (mode == "events-options") {
+					if (body["event_marker"] == "yes") != (strings.HasPrefix(mode, "events-")) {
 						t.Error("lost Events-scoped body option")
 					}
 					if body["stream"] != nil || body["input"] != nil {
@@ -122,7 +122,7 @@ func TestBetaAgentCreationTools(t *testing.T) {
 				if mode == "body-options" {
 					creationOpts = []option.RequestOption{option.WithResponseInto(&creationResponse), option.WithRequestBody("application/vnd.test+json", []byte(`{"environment":{"type":"none"},"input":"Look up A123"}`))}
 				}
-				if mode == "inherited-options" {
+				if mode == "inherited-options" || mode == "events-wrapped-options" {
 					client = openai.NewClient(append([]option.RequestOption{option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("synthetic"), option.WithMaxRetries(0)}, creationOpts...)...)
 				} else if mode == "session-options" {
 					client = openai.NewClient(option.WithBaseURL(server.URL+"/unused"), option.WithAPIKey("original-key"))
@@ -133,9 +133,17 @@ func TestBetaAgentCreationTools(t *testing.T) {
 					opts = append(opts, creationOpts...)
 				}
 			}
-			if mode == "events-options" {
-				client.Beta.Agents.Sessions.Events.Options = append(client.Beta.Agents.Sessions.Events.Options,
-					option.WithResponseInto(&eventResponse), option.WithJSONSet("event_marker", "yes"), option.WithHeader("Idempotency-Key", "event-key"))
+			if strings.HasPrefix(mode, "events-") {
+				eventOpts := []option.RequestOption{option.WithResponseInto(&eventResponse), option.WithJSONSet("event_marker", "yes"), option.WithHeader("Idempotency-Key", "event-key")}
+				switch mode {
+				case "events-constructor-options":
+					defaults := []option.RequestOption{option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("synthetic"), option.WithMaxRetries(0)}
+					client.Beta.Agents.Sessions.Events = openai.NewBetaAgentSessionEventService(append(defaults, eventOpts...)...)
+				case "events-wrapped-options":
+					client.Beta.Agents.Sessions.Events = openai.NewBetaAgentSessionEventService(append(client.Beta.Agents.Sessions.Events.Options, eventOpts...)...)
+				default:
+					client.Beta.Agents.Sessions.Events.Options = append(client.Beta.Agents.Sessions.Events.Options, eventOpts...)
+				}
 			}
 			// The concrete stream and existing result helpers remain source compatible.
 			var stream *ssestream.Stream[openai.AgentSessionEventUnion] = client.Beta.Agents.Sessions.NewStreaming(ctx, openai.BetaAgentSessionNewParams{
@@ -177,7 +185,7 @@ func TestBetaAgentCreationTools(t *testing.T) {
 			if strings.HasSuffix(mode, "-options") && (creationResponse == nil || creationResponse.Request.URL.Path != "/agents/sessions") {
 				t.Fatal("tool result overwrote creation response capture")
 			}
-			if mode == "events-options" && (eventResponse == nil || eventResponse.Request.URL.Path != "/agents/sessions/session/events") {
+			if strings.HasPrefix(mode, "events-") && (eventResponse == nil || eventResponse.Request.URL.Path != "/agents/sessions/session/events") {
 				t.Fatal("lost Events-scoped response capture")
 			}
 			cached, err := openai.BetaAgentSessionFinalResult(stream)
