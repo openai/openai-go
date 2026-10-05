@@ -157,7 +157,23 @@ type BetaAccumulator[T any] interface {
 	Accumulate(T)
 }
 
+// BetaIterator is a typed stream adapter. Experimental: this extension API is in beta.
+type BetaIterator[T any] interface {
+	Next() bool
+	Current() T
+	Err() error
+	Close() error
+}
+
+// NewStreamWithBetaIterator adapts an SDK helper without decoding its events again.
+// The iterator owns event accumulation and resource cleanup.
+// Experimental: this extension API is in beta.
+func NewStreamWithBetaIterator[T any](iterator BetaIterator[T], accumulator BetaAccumulator[T]) *Stream[T] {
+	return &Stream[T]{iterator: iterator, accumulator: accumulator, err: iterator.Err()}
+}
+
 type Stream[T any] struct {
+	iterator            BetaIterator[T]
 	accumulator         BetaAccumulator[T]
 	decoder             Decoder
 	cur                 T
@@ -213,8 +229,18 @@ func (s *Stream[T]) Next() bool {
 	if s.err != nil {
 		return s.finish(s.err)
 	}
+	if s.done.Load() {
+		return false
+	}
+	if s.iterator != nil {
+		if !s.iterator.Next() {
+			return s.finish(s.iterator.Err())
+		}
+		s.cur = s.iterator.Current()
+		return true
+	}
 	decoder := s.decoder
-	if s.done.Load() || decoder == nil {
+	if decoder == nil {
 		return false
 	}
 
@@ -277,6 +303,9 @@ func (s *Stream[T]) Err() error {
 func (s *Stream[T]) Close() error {
 	s.closeOnce.Do(func() {
 		s.done.Store(true)
+		if s.iterator != nil {
+			s.closeErr = s.iterator.Close()
+		}
 		if s.decoder != nil {
 			s.closeErr = s.decoder.Close()
 		}

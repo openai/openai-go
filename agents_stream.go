@@ -211,6 +211,9 @@ func (s *AgentSessionStream) Next() (ok bool) {
 }
 
 func (s *AgentSessionStream) accept(event AgentSessionEventUnion) bool {
+	if s.sessionID == "" && event.Type == "agent.session.created" {
+		s.sessionID = event.Session.ID
+	}
 	if _, exists := s.eventIDs[event.EventID]; exists {
 		return false
 	}
@@ -261,6 +264,9 @@ func agentStreamKey() string {
 }
 
 func (s *AgentSessionStream) handle(call agentPendingCall) error {
+	if s.sessionID == "" {
+		return errors.New("missing session identity for tool result")
+	}
 	result := agentToolResult(s.ctx, call)
 	if err := s.ctx.Err(); err != nil {
 		return err

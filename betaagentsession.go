@@ -53,6 +53,9 @@ func NewBetaAgentSessionService(opts ...option.RequestOption) (r BetaAgentSessio
 // the session or streams its events when stream is true. See
 // [running sessions](https://developers.openai.com/api/docs/guides/agents-api/sessions).
 func (r *BetaAgentSessionService) New(ctx context.Context, body BetaAgentSessionNewParams, opts ...option.RequestOption) (res *AgentSession, err error) {
+	if len(body.ToolHandlers) != 0 {
+		return nil, errors.New("ToolHandlers requires NewStreaming")
+	}
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "agents=v1")}, opts...)
@@ -65,6 +68,11 @@ func (r *BetaAgentSessionService) New(ctx context.Context, body BetaAgentSession
 // the session or streams its events when stream is true. See
 // [running sessions](https://developers.openai.com/api/docs/guides/agents-api/sessions).
 func (r *BetaAgentSessionService) NewStreaming(ctx context.Context, body BetaAgentSessionNewParams, opts ...option.RequestOption) (stream *ssestream.Stream[AgentSessionEventUnion]) {
+	toolOpts := opts
+	var cancel context.CancelFunc
+	if len(body.ToolHandlers) != 0 {
+		ctx, cancel = context.WithCancel(ctx)
+	}
 	var (
 		raw *http.Response
 		err error
@@ -75,7 +83,11 @@ func (r *BetaAgentSessionService) NewStreaming(ctx context.Context, body BetaAge
 	opts = append(opts, option.WithJSONSet("stream", true))
 	path := "agents/sessions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
-	return ssestream.NewStreamWithBetaAccumulator[AgentSessionEventUnion](ssestream.NewDecoder(raw), err, &betaAgentTurnCollector{})
+	stream = ssestream.NewStreamWithBetaAccumulator[AgentSessionEventUnion](ssestream.NewDecoder(raw), err, &betaAgentTurnCollector{})
+	if cancel != nil {
+		return betaAgentCreationStream(ctx, cancel, r, stream, body.ToolHandlers, toolOpts)
+	}
+	return stream
 }
 
 // Retrieves the current state of a managed agent session. See
@@ -156,6 +168,10 @@ func (r *BetaAgentSessionService) Delete(ctx context.Context, sessionID string, 
 }
 
 type BetaAgentSessionNewParams struct {
+	// ToolHandlers runs local functions during NewStreaming iteration. This beta
+	// helper option is never sent to the API. Use NewStreaming, not New, with handlers.
+	ToolHandlers map[string]AgentToolHandler `json:"-"`
+
 	// An inline execution environment or a reference to an environment template.
 	Environment EnvironmentParamUnion `json:"environment,omitzero" api:"required"`
 	// The ID of a saved reusable agent. Omit `agent` to use its configuration

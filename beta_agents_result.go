@@ -69,7 +69,7 @@ func BetaAgentSessionFinalResult(stream *ssestream.Stream[AgentSessionEventUnion
 	if c.finalized {
 		return c.result, c.err
 	}
-	for !c.stopped(nil) && stream.Next() {
+	for !c.stopped(c.handlers) && stream.Next() {
 	}
 	_ = stream.Close()
 	return c.finalResult(stream.Err())
@@ -114,6 +114,7 @@ func (s *AgentSessionStream) FinalResult() (*BetaAgentTurnResult, error) {
 }
 
 type betaAgentTurnCollector struct {
+	handlers      map[string]AgentToolHandler
 	enabled       bool
 	started       bool
 	sessionID     string
