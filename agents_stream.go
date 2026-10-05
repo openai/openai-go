@@ -30,9 +30,12 @@ type AgentSessionStreamParams struct {
 	// Input must be a nonempty string or []AgentSessionInputMessageParam.
 	Input        any
 	ToolHandlers map[string]AgentToolHandler
-	// OnToolError observes local argument, handler, and output failures before the
-	// generic failed result is submitted. It runs sequentially during iteration.
-	// No logging is performed automatically. Panics propagate as usual.
+	// OnToolError reports local tool failures to application logging or monitoring.
+	// Use alongside ToolHandlers to observe argument decoding, handler execution,
+	// and output serialization failures before the generic failed result is sent.
+	// Request and stream errors continue through Err, not this callback.
+	// It runs sequentially during iteration; no logging is performed automatically.
+	// Panics propagate as usual.
 	OnToolError func(context.Context, BetaAgentToolError)
 	// IdempotencyKey applies only to input. A request header overrides this value.
 	// When absent, the helper generates a unique key. Each tool result gets its own key.

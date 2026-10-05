@@ -1,6 +1,8 @@
 package openai
 
-// BetaAgentToolError describes a local tool failure observed by OnToolError.
+// BetaAgentToolError describes a local ToolHandlers failure for application
+// logging or monitoring through OnToolError. It does not describe request or
+// stream errors.
 // Err is the original error and may contain sensitive application information.
 // It is never included in the generic failed tool result sent to the API.
 // This diagnostic helper is beta.
