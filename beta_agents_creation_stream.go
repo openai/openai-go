@@ -11,6 +11,14 @@ import (
 	"github.com/openai/openai-go/v3/packages/ssestream"
 )
 
+func betaAgentValidateCreationOptions(sessions *BetaAgentSessionService) error {
+	if _, _, err := requestconfig.SplitInheritedOptions(sessions.Options, sessions.sessionDefaults); err != nil {
+		return err
+	}
+	_, _, err := requestconfig.SplitInheritedOptions(sessions.Events.Options, sessions.eventDefaults)
+	return err
+}
+
 func betaAgentCreationStream(ctx context.Context, cancel context.CancelFunc, sessions *BetaAgentSessionService, stream *ssestream.Stream[AgentSessionEventUnion], handlers map[string]AgentToolHandler, opts []option.RequestOption) *ssestream.Stream[AgentSessionEventUnion] {
 	// Keep transport options, but creation body overrides and response capture
 	// must not replace the generated tool-result request or its response destination.
@@ -29,8 +37,8 @@ func betaAgentCreationStream(ctx context.Context, cancel context.CancelFunc, ses
 		cfg.ResponseInto = nil
 		return nil
 	})
-	inherited, eventOptions := requestconfig.SplitInheritedOptions(sessions.Events.Options, sessions.eventDefaults)
-	_, sessionOptions := requestconfig.SplitInheritedOptions(sessions.Options, sessions.sessionDefaults)
+	inherited, eventOptions, _ := requestconfig.SplitInheritedOptions(sessions.Events.Options, sessions.eventDefaults)
+	_, sessionOptions, _ := requestconfig.SplitInheritedOptions(sessions.Options, sessions.sessionDefaults)
 	toolSessions.Events.Options = append([]option.RequestOption{capture}, inherited...)
 	s := &AgentSessionStream{ctx: ctx, cancel: cancel, sessions: &toolSessions, stream: stream,
 		options: slices.Concat(sessionOptions, opts, []option.RequestOption{restore}, eventOptions), handlers: maps.Clone(handlers),

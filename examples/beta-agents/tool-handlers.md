@@ -42,3 +42,7 @@ accepts this stream through `output.FinalResult(stream)`.
 
 Use `Sessions.Stream` with `AgentSessionStreamParams.ToolHandlers` for a new turn
 on an existing idle session. Neither helper restarts work after a disconnect.
+
+When customizing `Sessions.Options` or `Events.Options` for creation with handlers,
+append service-specific options after inherited defaults. Prepending options before
+those defaults is rejected before creating the session to preserve request routing.

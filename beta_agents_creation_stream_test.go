@@ -242,6 +242,38 @@ func TestBetaAgentCreationToolsRejectResponseBodyOverrides(t *testing.T) {
 	}
 }
 
+func TestBetaAgentCreationToolsRejectReorderedOptions(t *testing.T) {
+	for _, service := range []string{"sessions", "events", "wrapped-events"} {
+		t.Run(service, func(t *testing.T) {
+			server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				t.Error("invalid option order must be rejected before transport")
+				w.WriteHeader(500)
+			}))
+			defer server.Close()
+			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("synthetic"))
+			prefix := []option.RequestOption{option.WithBaseURL(server.URL + "/other")}
+			switch service {
+			case "sessions":
+				client.Beta.Agents.Sessions.Options = append(prefix, client.Beta.Agents.Sessions.Options...)
+			case "events":
+				client.Beta.Agents.Sessions.Events.Options = append(prefix, client.Beta.Agents.Sessions.Events.Options...)
+			case "wrapped-events":
+				client.Beta.Agents.Sessions.Events = openai.NewBetaAgentSessionEventService(append(prefix, client.Beta.Agents.Sessions.Events.Options...)...)
+			}
+			stream := client.Beta.Agents.Sessions.NewStreaming(context.Background(), openai.BetaAgentSessionNewParams{
+				ToolHandlers: map[string]openai.AgentToolHandler{"lookup": func(context.Context, map[string]any) (any, error) {
+					t.Error("handler must not execute")
+					return nil, nil
+				}},
+			})
+			defer func() { _ = stream.Close() }()
+			if stream.Err() == nil || !strings.Contains(stream.Err().Error(), "append options") || stream.Next() {
+				t.Fatalf("expected option-order error, got %v", stream.Err())
+			}
+		})
+	}
+}
+
 func TestBetaAgentCreationToolsWithoutInput(t *testing.T) {
 	for _, done := range []bool{false, true} {
 		t.Run(fmt.Sprintf("done-frame=%v", done), func(t *testing.T) {

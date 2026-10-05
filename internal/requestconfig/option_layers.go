@@ -65,27 +65,36 @@ func InheritedOptions(opts ...RequestOption) []RequestOption {
 
 // SplitInheritedOptions separates the captured inherited layers from service-owned
 // options, preserving layer boundaries without evaluating request options.
-func SplitInheritedOptions(opts, inherited []RequestOption) (shared, owned []RequestOption) {
+func SplitInheritedOptions(opts, inherited []RequestOption) (shared, owned []RequestOption, err error) {
 	for _, opt := range opts {
 		layer, ok := opt.(optionLayer)
 		if !ok {
 			owned = append(owned, opt)
 			continue
 		}
+		var sharedLayer, ownedLayer []RequestOption
 		if slices.ContainsFunc(inherited, func(candidate RequestOption) bool {
 			original, ok := candidate.(optionLayer)
 			return ok && len(layer) > 0 && len(original) > 0 && &layer[0] == &original[0]
 		}) {
-			shared = append(shared, opt)
-			continue
+			sharedLayer = []RequestOption{opt}
+		} else {
+			sharedLayer, ownedLayer, err = SplitInheritedOptions(layer, inherited)
+			if err != nil {
+				return nil, nil, err
+			}
+			if len(sharedLayer) > 0 {
+				sharedLayer = []RequestOption{optionLayer(sharedLayer)}
+			}
+			if len(ownedLayer) > 0 {
+				ownedLayer = []RequestOption{optionLayer(ownedLayer)}
+			}
 		}
-		sharedLayer, ownedLayer := SplitInheritedOptions(layer, inherited)
-		if len(sharedLayer) > 0 {
-			shared = append(shared, optionLayer(sharedLayer))
+		if len(owned) > 0 && len(sharedLayer) > 0 {
+			return nil, nil, fmt.Errorf("tool handlers require service-specific options after inherited defaults; append options instead of prepending them")
 		}
-		if len(ownedLayer) > 0 {
-			owned = append(owned, optionLayer(ownedLayer))
-		}
+		shared = append(shared, sharedLayer...)
+		owned = append(owned, ownedLayer...)
 	}
 	return
 }

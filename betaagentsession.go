@@ -77,6 +77,9 @@ func (r *BetaAgentSessionService) NewStreaming(ctx context.Context, body BetaAge
 	toolOpts := opts
 	var cancel context.CancelFunc
 	if len(body.ToolHandlers) != 0 {
+		if err := betaAgentValidateCreationOptions(r); err != nil {
+			return ssestream.NewStreamWithBetaAccumulator[AgentSessionEventUnion](nil, err, &betaAgentTurnCollector{})
+		}
 		ctx, cancel = context.WithCancel(ctx)
 	}
 	var (
