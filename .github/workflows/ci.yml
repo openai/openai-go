@@ -1,12 +1,13 @@
 name: CI
 on:
   push:
+    # PRs (including drafts) validate feature branches. Do not also run CI
+    # for their pushes: that duplicates every lint scope and Go test version.
+    # Keep post-merge and release-bot validation even when there is no open PR.
     branches:
-      - '**'
-      - '!gh-readonly-queue/**'
-      - '!integrated/**'
-      - '!generated'
-      - '!codegen/**'
+      - main
+      - next
+      - 'release-please--**'
   pull_request:
   merge_group:
     types:
@@ -16,8 +17,9 @@ on:
   # that workflow explicitly dispatches this validation on its generated branch.
   workflow_dispatch:
   # The vulnerability database changes even when this repository does not.
-  # This schedule runs only the govulncheck job below; lint and tests remain
-  # push-triggered. 10:23 UTC avoids GitHub's busy top-of-hour window.
+  # This schedule runs only govulncheck. Lint and tests run for the push
+  # branches above, PRs, merge groups, and manual dispatches.
+  # 10:23 UTC avoids GitHub's busy top-of-hour window.
   schedule:
     - cron: '23 10 * * *'
 
