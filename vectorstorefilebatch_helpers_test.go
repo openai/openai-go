@@ -441,3 +441,146 @@ func TestVectorStoreFileBatchHelperCancellation(t *testing.T) {
 		}
 	})
 }
+
+type vectorBatchReadFunc func([]byte) (int, error)
+
+func (f vectorBatchReadFunc) Read(p []byte) (int, error) { return f(p) }
+
+func TestVectorStoreFileBatchHelperBoundsWork(t *testing.T) {
+	for _, tc := range []struct {
+		name              string
+		concurrency, want int
+	}{
+		{"default", 0, 16},
+		{"serial", 1, 1},
+		{"lower", 8, 8},
+		{"higher", 18, 18},
+		{"clamped", 100, 20},
+	} {
+		for _, fail := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/failure=%t", tc.name, fail), func(t *testing.T) {
+				synctest.Test(t, func(t *testing.T) {
+					const count = 20
+					want := tc.want
+					var mu sync.Mutex
+					reads, requests := 0, 0
+					release := make(chan struct{})
+					done := make(chan vectorBatchResult, 1)
+					failure := errors.New("synthetic failure")
+					files := make([]openai.FileNewParams, count)
+					for i := range files {
+						files[i] = openai.FileNewParams{File: vectorBatchReadFunc(func([]byte) (int, error) {
+							mu.Lock()
+							reads++
+							mu.Unlock()
+							return 0, io.EOF
+						}), Purpose: openai.FilePurposeAssistants}
+					}
+					service := vectorBatchService(func(req *http.Request) (*http.Response, error) {
+						stage, err := vectorBatchStage(req)
+						if err != nil {
+							return nil, err
+						}
+						if stage == "upload" {
+							mu.Lock()
+							requests++
+							mu.Unlock()
+							<-release
+							if fail {
+								return nil, failure
+							}
+						} else if fail {
+							t.Errorf("unexpected %s after failure", stage)
+						}
+						return vectorBatchResponse(req, vectorBatchResponseBody(stage)), nil
+					})
+					client := openai.NewClient(service.Options...)
+					batches := client.VectorStores.FileBatches
+					batches.MaxUploadConcurrency = tc.concurrency
+					go func() {
+						batch, err := batches.UploadAndPoll(context.Background(), "vs_test", files, nil, 7, vectorBatchCallOptions()...)
+						done <- vectorBatchResult{batch, err}
+					}()
+					synctest.Wait()
+					if reads != want || requests != want {
+						t.Errorf("before release: reads=%d requests=%d, want %d each", reads, requests, want)
+					}
+					close(release)
+					result := <-done
+					if fail {
+						if !errors.Is(result.err, failure) || result.batch != nil || reads != count || requests != count {
+							t.Fatalf("failure result=%v reads=%d requests=%d", result, reads, requests)
+						}
+					} else if result.err != nil || result.batch == nil || reads != count || requests != count {
+						t.Fatalf("success result=%v reads=%d requests=%d", result, reads, requests)
+					}
+				})
+			})
+		}
+	}
+}
+
+func TestVectorStoreFileBatchHelperRejectsInvalidConcurrency(t *testing.T) {
+	for _, concurrency := range []int{-1, -100} {
+		read := false
+		service := vectorBatchService(func(*http.Request) (*http.Response, error) {
+			t.Error("unexpected request for invalid concurrency")
+			return nil, errors.New("unexpected request")
+		})
+		files := []openai.FileNewParams{{File: vectorBatchReadFunc(func([]byte) (int, error) {
+			read = true
+			return 0, io.EOF
+		}), Purpose: openai.FilePurposeAssistants}}
+		service.MaxUploadConcurrency = concurrency
+		batch, err := service.UploadAndPoll(context.Background(), "vs_test", files, nil, 7)
+		if batch != nil || err == nil || read {
+			t.Fatalf("concurrency=%d batch=%v err=%v read=%t", concurrency, batch, err, read)
+		}
+	}
+}
+
+func TestVectorStoreFileBatchHelperCanceledQueue(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	service := vectorBatchService(func(req *http.Request) (*http.Response, error) {
+		cancel()
+		return nil, ctx.Err()
+	})
+	service.MaxUploadConcurrency = 1
+	files := []openai.FileNewParams{
+		vectorBatchUpload("active"),
+		{File: vectorBatchReadFunc(func([]byte) (int, error) {
+			t.Error("read queued file after caller cancellation")
+			return 0, io.EOF
+		}), Purpose: openai.FilePurposeAssistants},
+	}
+	batch, err := service.UploadAndPoll(ctx, "vs_test", files, nil, 7)
+	if batch != nil || !errors.Is(err, context.Canceled) {
+		t.Fatalf("batch=%v error=%v, want cancellation", batch, err)
+	}
+}
+
+func TestVectorStoreFileBatchServiceConcurrencyIsScoped(t *testing.T) {
+	service := vectorBatchService(func(req *http.Request) (*http.Response, error) {
+		stage, err := vectorBatchStage(req)
+		if err != nil {
+			return nil, err
+		}
+		return vectorBatchResponse(req, vectorBatchResponseBody(stage)), nil
+	})
+	client := openai.NewClient(service.Options...)
+	if service.MaxUploadConcurrency != 16 || client.VectorStores.FileBatches.MaxUploadConcurrency != 16 {
+		t.Fatalf("constructor default: service=%d client=%d, want 16", service.MaxUploadConcurrency, client.VectorStores.FileBatches.MaxUploadConcurrency)
+	}
+	batches := client.VectorStores.FileBatches
+	batches.MaxUploadConcurrency = -1
+	if _, err := batches.UploadAndPoll(context.Background(), "vs_test", []openai.FileNewParams{vectorBatchUpload("alpha")}, nil, 7); err == nil {
+		t.Fatal("copied batch service accepted negative concurrency")
+	}
+	if _, err := client.VectorStores.FileBatches.UploadAndPoll(context.Background(), "vs_test", []openai.FileNewParams{vectorBatchUpload("beta")}, nil, 7); err != nil {
+		t.Fatalf("copy changed parent batch service: %v", err)
+	}
+	if _, err := batches.NewAndPoll(context.Background(), "vs_test", openai.VectorStoreFileBatchNewParams{FileIDs: []string{"file_existing"}}, 7); err != nil {
+		t.Fatalf("NewAndPoll rejected irrelevant upload concurrency: %v", err)
+	}
+}

@@ -8,6 +8,8 @@ import (
 	"github.com/openai/openai-go/v3/option"
 )
 
+const defaultVectorStoreFileBatchUploadConcurrency = 16
+
 func newVectorStoreFileBatchAndPoll(r *VectorStoreFileBatchService, ctx context.Context, vectorStoreId string, body VectorStoreFileBatchNewParams, pollIntervalMs int, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
 	batch, err := r.New(ctx, vectorStoreId, body, opts...)
 	if err != nil {
@@ -17,6 +19,13 @@ func newVectorStoreFileBatchAndPoll(r *VectorStoreFileBatchService, ctx context.
 }
 
 func uploadVectorStoreFileBatchAndPoll(r *VectorStoreFileBatchService, ctx context.Context, vectorStoreID string, files []FileNewParams, fileIDs []string, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFileBatch, error) {
+	maxConcurrency := r.MaxUploadConcurrency
+	if maxConcurrency < 0 {
+		return nil, errors.New("vector store file batch: MaxUploadConcurrency must not be negative")
+	}
+	if maxConcurrency == 0 {
+		maxConcurrency = defaultVectorStoreFileBatchUploadConcurrency
+	}
 	if len(files) <= 0 {
 		return nil, errors.New("No `files` provided to process. If you've already uploaded files you should use `.NewAndPoll()` instead")
 	}
@@ -27,17 +36,34 @@ func uploadVectorStoreFileBatchAndPoll(r *VectorStoreFileBatchService, ctx conte
 	fileUploadErrors := make(chan error, len(files))
 	wg := sync.WaitGroup{}
 
-	for _, file := range files {
+	// Bound active uploads, including multipart bodies buffered for retries.
+	var next int
+	var mu sync.Mutex
+	for range min(maxConcurrency, len(files)) {
 		wg.Add(1)
-		go func(file FileNewParams) {
+		go func() {
 			defer wg.Done()
-			fileObj, err := filesService.New(ctx, file, opts...)
-			if err != nil {
-				fileUploadErrors <- err
-				return
+			for {
+				mu.Lock()
+				if next == len(files) {
+					mu.Unlock()
+					return
+				}
+				file := files[next]
+				next++
+				mu.Unlock()
+				if err := ctx.Err(); err != nil {
+					fileUploadErrors <- err
+					return
+				}
+				fileObj, err := filesService.New(ctx, file, opts...)
+				if err != nil {
+					fileUploadErrors <- err
+					continue
+				}
+				uploadedFileIDs <- fileObj.ID
 			}
-			uploadedFileIDs <- fileObj.ID
-		}(file)
+		}()
 	}
 
 	wg.Wait()
