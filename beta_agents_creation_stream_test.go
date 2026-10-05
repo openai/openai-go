@@ -18,7 +18,7 @@ import (
 )
 
 func TestBetaAgentCreationTools(t *testing.T) {
-	for _, mode := range []string{"result", "iteration", "handler-error", "close", "submit-error", "json-options", "body-options", "inherited-options", "events-options", "events-constructor-options", "events-wrapped-options", "session-options", "session-constructor-options"} {
+	for _, mode := range []string{"result", "iteration", "handler-error", "close", "submit-error", "options", "client-options", "session-options", "events-options"} {
 		t.Run(mode, func(t *testing.T) {
 			var calls, posts atomic.Int32
 			posted := make(chan struct{})
@@ -26,16 +26,13 @@ func TestBetaAgentCreationTools(t *testing.T) {
 				if r.Header.Get("X-Application") != "test" || r.Header.Get("Authorization") != "Bearer synthetic" {
 					t.Error("lost request header/auth options")
 				}
-				if strings.HasPrefix(mode, "session-") && r.Header.Get("X-Session") != "kept" {
-					t.Error("lost session-scoped header")
-				}
 				switch r.URL.Path {
 				case "/agents/sessions":
 					var body map[string]any
 					if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 						t.Error(err)
 					}
-					if r.Method != "POST" || body["event_marker"] != nil || body["stream"] != true || body["input"] != "Look up A123" || strings.Contains(fmt.Sprint(body), "ToolHandlers") {
+					if r.Method != "POST" || body["stream"] != true || body["input"] != "Look up A123" || strings.Contains(fmt.Sprint(body), "ToolHandlers") {
 						t.Errorf("unexpected creation: %s %#v", r.Method, body)
 					}
 					if r.Header.Get("Idempotency-Key") != "creation-key" {
@@ -75,8 +72,8 @@ func TestBetaAgentCreationTools(t *testing.T) {
 					if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 						t.Error(err)
 					}
-					if (body["event_marker"] == "yes") != (strings.HasPrefix(mode, "events-")) {
-						t.Error("lost Events-scoped body option")
+					if strings.Contains(mode, "options") && (body["request_marker"] != "call" || r.Header.Get("X-Precedence") != "call") {
+						t.Error("tool submission must retain request options after service defaults")
 					}
 					if body["stream"] != nil || body["input"] != nil {
 						t.Error("creation params leaked into result request")
@@ -113,39 +110,26 @@ func TestBetaAgentCreationTools(t *testing.T) {
 				}
 				return "ready", nil
 			}}
-			var creationResponse, eventResponse *http.Response
+			var response, serviceResponse *http.Response
 			input := "Look up A123"
 			opts := []option.RequestOption{option.WithHeader("Idempotency-Key", "creation-key"), option.WithHeader("X-Application", "test")}
-			if strings.HasSuffix(mode, "-options") {
-				input = "This should be replaced by the creation body option"
-				creationOpts := []option.RequestOption{option.WithResponseInto(&creationResponse), option.WithJSONSet("input", "Look up A123"), option.WithJSONDel("events")}
-				if mode == "body-options" {
-					creationOpts = []option.RequestOption{option.WithResponseInto(&creationResponse), option.WithRequestBody("application/vnd.test+json", []byte(`{"environment":{"type":"none"},"input":"Look up A123"}`))}
-				}
-				if mode == "inherited-options" || mode == "events-wrapped-options" {
-					client = openai.NewClient(append([]option.RequestOption{option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("synthetic"), option.WithMaxRetries(0)}, creationOpts...)...)
-				} else if strings.HasPrefix(mode, "session-") {
-					client = openai.NewClient(option.WithBaseURL(server.URL+"/unused"), option.WithAPIKey("original-key"))
-					sessionOpts := append([]option.RequestOption{option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("synthetic"), option.WithHeader("X-Session", "kept")}, creationOpts...)
-					if mode == "session-constructor-options" {
-						sessionOpts = openai.NewBetaAgentSessionService(sessionOpts...).Options
-					}
-					client.Beta.Agents.Sessions.Options = append(client.Beta.Agents.Sessions.Options, sessionOpts...)
-				} else {
-					opts = append(opts, creationOpts...)
-				}
-			}
-			if strings.HasPrefix(mode, "events-") {
-				eventOpts := []option.RequestOption{option.WithResponseInto(&eventResponse), option.WithJSONSet("event_marker", "yes"), option.WithHeader("Idempotency-Key", "event-key")}
+			if strings.Contains(mode, "options") {
+				sessions := &client.Beta.Agents.Sessions
 				switch mode {
-				case "events-constructor-options":
-					defaults := []option.RequestOption{option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("synthetic"), option.WithMaxRetries(0)}
-					client.Beta.Agents.Sessions.Events = openai.NewBetaAgentSessionEventService(append(defaults, eventOpts...)...)
-				case "events-wrapped-options":
-					client.Beta.Agents.Sessions.Events = openai.NewBetaAgentSessionEventService(append(client.Beta.Agents.Sessions.Events.Options, eventOpts...)...)
-				default:
-					client.Beta.Agents.Sessions.Events.Options = append(client.Beta.Agents.Sessions.Events.Options, eventOpts...)
+				case "client-options":
+					sessions.Events = openai.NewBetaAgentSessionEventService(client.Options...)
+				case "session-options":
+					sessions.Events = openai.NewBetaAgentSessionEventService(sessions.Options...)
+				case "events-options":
+					// An earlier option is overridden by the inherited defaults, as on any request.
+					sessions.Events = openai.NewBetaAgentSessionEventService(append([]option.RequestOption{option.WithBaseURL(server.URL + "/unused")}, sessions.Events.Options...)...)
 				}
+				if mode != "events-options" {
+					sessions.Events.Options = append(sessions.Events.Options, option.WithBaseURL(server.URL+"/unused"))
+					opts = append(opts, option.WithBaseURL(server.URL))
+				}
+				sessions.Events.Options = append(sessions.Events.Options, option.WithHeader("X-Precedence", "service"), option.WithJSONSet("request_marker", "service"), option.WithResponseInto(&serviceResponse))
+				opts = append(opts, option.WithHeader("X-Precedence", "call"), option.WithJSONSet("request_marker", "call"), option.WithResponseInto(&response))
 			}
 			// The concrete stream and existing result helpers remain source compatible.
 			var stream *ssestream.Stream[openai.AgentSessionEventUnion] = client.Beta.Agents.Sessions.NewStreaming(ctx, openai.BetaAgentSessionNewParams{
@@ -184,11 +168,8 @@ func TestBetaAgentCreationTools(t *testing.T) {
 			if err != nil || result.OutputText() != "ready" {
 				t.Fatalf("result=%v error=%v", result, err)
 			}
-			if strings.HasSuffix(mode, "-options") && (creationResponse == nil || creationResponse.Request.URL.Path != "/agents/sessions") {
-				t.Fatal("tool result overwrote creation response capture")
-			}
-			if strings.HasPrefix(mode, "events-") && (eventResponse == nil || eventResponse.Request.URL.Path != "/agents/sessions/session/events") {
-				t.Fatal("lost Events-scoped response capture")
+			if strings.Contains(mode, "options") && (response == nil || response.Request.URL.Path != "/agents/sessions/session/events" || serviceResponse != nil) {
+				t.Fatal("request response capture must override the service capture and observe the tool submission")
 			}
 			cached, err := openai.BetaAgentSessionFinalResult(stream)
 			if err != nil || cached != result || calls.Load() != 1 || posts.Load() != 1 {
@@ -239,38 +220,6 @@ func TestBetaAgentCreationToolsRejectResponseBodyOverrides(t *testing.T) {
 				}
 			})
 		}
-	}
-}
-
-func TestBetaAgentCreationToolsRejectReorderedOptions(t *testing.T) {
-	for _, service := range []string{"sessions", "events", "wrapped-events"} {
-		t.Run(service, func(t *testing.T) {
-			server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				t.Error("invalid option order must be rejected before transport")
-				w.WriteHeader(500)
-			}))
-			defer server.Close()
-			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("synthetic"))
-			prefix := []option.RequestOption{option.WithBaseURL(server.URL + "/other")}
-			switch service {
-			case "sessions":
-				client.Beta.Agents.Sessions.Options = append(prefix, client.Beta.Agents.Sessions.Options...)
-			case "events":
-				client.Beta.Agents.Sessions.Events.Options = append(prefix, client.Beta.Agents.Sessions.Events.Options...)
-			case "wrapped-events":
-				client.Beta.Agents.Sessions.Events = openai.NewBetaAgentSessionEventService(append(prefix, client.Beta.Agents.Sessions.Events.Options...)...)
-			}
-			stream := client.Beta.Agents.Sessions.NewStreaming(context.Background(), openai.BetaAgentSessionNewParams{
-				ToolHandlers: map[string]openai.AgentToolHandler{"lookup": func(context.Context, map[string]any) (any, error) {
-					t.Error("handler must not execute")
-					return nil, nil
-				}},
-			})
-			defer func() { _ = stream.Close() }()
-			if stream.Err() == nil || !strings.Contains(stream.Err().Error(), "append options") || stream.Next() {
-				t.Fatalf("expected option-order error, got %v", stream.Err())
-			}
-		})
 	}
 }
 

@@ -25,10 +25,6 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewBetaAgentSessionService] method instead.
 type BetaAgentSessionService struct {
-	// Original service options identify defaults shared with session creation.
-	sessionDefaults []option.RequestOption
-	eventDefaults   []option.RequestOption
-
 	Options   []option.RequestOption
 	Subagents BetaAgentSessionSubagentService
 	Artifacts BetaAgentSessionArtifactService
@@ -44,12 +40,10 @@ type BetaAgentSessionService struct {
 func NewBetaAgentSessionService(opts ...option.RequestOption) (r BetaAgentSessionService) {
 	r = BetaAgentSessionService{}
 	r.Options = requestconfig.InheritedOptions(opts...)
-	r.sessionDefaults = slices.Clone(r.Options)
 	r.Subagents = NewBetaAgentSessionSubagentService(opts...)
 	r.Artifacts = NewBetaAgentSessionArtifactService(opts...)
 	r.Items = NewBetaAgentSessionItemService(opts...)
 	r.Events = NewBetaAgentSessionEventService(opts...)
-	r.eventDefaults = slices.Clone(r.Events.Options)
 	r.Traces = NewBetaAgentSessionTraceService(opts...)
 	r.Turns = NewBetaAgentSessionTurnService(opts...)
 	return
@@ -77,9 +71,6 @@ func (r *BetaAgentSessionService) NewStreaming(ctx context.Context, body BetaAge
 	toolOpts := opts
 	var cancel context.CancelFunc
 	if len(body.ToolHandlers) != 0 {
-		if err := betaAgentValidateCreationOptions(r); err != nil {
-			return ssestream.NewStreamWithBetaAccumulator[AgentSessionEventUnion](nil, err, &betaAgentTurnCollector{})
-		}
 		ctx, cancel = context.WithCancel(ctx)
 	}
 	var (

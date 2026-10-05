@@ -63,42 +63,6 @@ func InheritedOptions(opts ...RequestOption) []RequestOption {
 	return []RequestOption{optionLayer(slices.Clone(opts))}
 }
 
-// SplitInheritedOptions separates the captured inherited layers from service-owned
-// options, preserving layer boundaries without evaluating request options.
-func SplitInheritedOptions(opts, inherited []RequestOption) (shared, owned []RequestOption, err error) {
-	for _, opt := range opts {
-		layer, ok := opt.(optionLayer)
-		if !ok {
-			owned = append(owned, opt)
-			continue
-		}
-		var sharedLayer, ownedLayer []RequestOption
-		if slices.ContainsFunc(inherited, func(candidate RequestOption) bool {
-			original, ok := candidate.(optionLayer)
-			return ok && len(layer) > 0 && len(original) > 0 && &layer[0] == &original[0]
-		}) {
-			sharedLayer = []RequestOption{opt}
-		} else {
-			sharedLayer, ownedLayer, err = SplitInheritedOptions(layer, inherited)
-			if err != nil {
-				return nil, nil, err
-			}
-			if len(sharedLayer) > 0 {
-				sharedLayer = []RequestOption{optionLayer(sharedLayer)}
-			}
-			if len(ownedLayer) > 0 {
-				ownedLayer = []RequestOption{optionLayer(ownedLayer)}
-			}
-		}
-		if len(owned) > 0 && len(sharedLayer) > 0 {
-			return nil, nil, fmt.Errorf("tool handlers require service-specific options after inherited defaults; append options instead of prepending them")
-		}
-		shared = append(shared, sharedLayer...)
-		owned = append(owned, ownedLayer...)
-	}
-	return
-}
-
 // endpointOption carries inspectable endpoint configuration without evaluating
 // arbitrary request-option callbacks during provider construction.
 type endpointOption struct {
