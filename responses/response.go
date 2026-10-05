@@ -18180,7 +18180,12 @@ func (ResponseCustomToolCallOutputItem) implResponseItemUnion()    {}
 func (u ResponseItemUnion) AsAny() anyResponseItem {
 	switch u.Type {
 	case "message":
-		return u.AsOutputMessage()
+		switch u.Role {
+		case "developer", "system", "user":
+			return u.AsMessage()
+		case "assistant":
+			return u.AsOutputMessage()
+		}
 	case "file_search_call":
 		return u.AsFileSearchCall()
 	case "computer_call":
