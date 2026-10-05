@@ -256,6 +256,7 @@ func TestAgentsHelperTools(t *testing.T) {
 		name, args string
 		output     any
 		handlerErr error
+		stage      openai.BetaAgentToolErrorStage
 		success    bool
 		want       any
 	}{
@@ -265,26 +266,56 @@ func TestAgentsHelperTools(t *testing.T) {
 		{name: "empty text", args: `{}`, output: "", success: true, want: ""},
 		{name: "content", args: `{}`, output: []openai.InputContentParamUnion{openai.InputContentParamOfParamInputText("answer")}, success: true, want: []any{map[string]any{"type": "input_text", "text": "answer"}}},
 		{name: "empty content", args: `{}`, output: []openai.InputContentParamUnion{}, success: true, want: []any{}},
-		{name: "handler error", args: `{}`, handlerErr: errors.New("secret-token")},
-		{name: "invalid JSON", args: `"{"`},
-		{name: "array args", args: `[]`},
-		{name: "null args", args: `null`},
-		{name: "scalar args", args: `42`},
-		{name: "unserializable", args: `{}`, output: map[string]any{"secret-token": make(chan int)}},
-		{name: "invalid output", args: `{}`, output: 42},
+		{name: "handler error", args: `{}`, handlerErr: errors.New("secret-token"), stage: openai.BetaAgentToolErrorStageExecution},
+		{name: "invalid JSON", args: `"{"`, stage: openai.BetaAgentToolErrorStageArguments},
+		{name: "array args", args: `[]`, stage: openai.BetaAgentToolErrorStageArguments},
+		{name: "null args", args: `null`, stage: openai.BetaAgentToolErrorStageArguments},
+		{name: "scalar args", args: `42`, stage: openai.BetaAgentToolErrorStageArguments},
+		{name: "unserializable", args: `{}`, output: map[string]any{"secret-token": make(chan int)}, stage: openai.BetaAgentToolErrorStageOutput},
+		{name: "invalid output", args: `{}`, output: 42, stage: openai.BetaAgentToolErrorStageOutput},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			events := append([]string{agentCreated("created", "turn", "null"), agentCall("call", "turn", "call", "tool", tc.args)}, agentEnd("turn")...)
 			m, c := newAgentHelperServer(t, events...)
 			calls := 0
+			var failures []openai.BetaAgentToolError
 			s := c.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{Input: "hi", ToolHandlers: map[string]openai.AgentToolHandler{"tool": func(_ context.Context, args map[string]any) (any, error) {
 				calls++
 				if nested, ok := args["nested"].(map[string]any); ok {
 					nested["value"] = "mutated"
 				}
 				return tc.output, tc.handlerErr
-			}}})
+			}}, OnToolError: func(ctx context.Context, failure openai.BetaAgentToolError) {
+				if ctx.Err() != nil {
+					t.Fatal("observer received a cancelled context")
+				}
+				failures = append(failures, failure)
+			}})
 			got := consumeAgentStream(t, s)
+			if tc.success {
+				if len(failures) != 0 {
+					t.Fatal("successful tool reported a failure")
+				}
+			} else {
+				if len(failures) != 1 {
+					t.Fatalf("notifications=%d", len(failures))
+				}
+				failure := failures[0]
+				if failure.Err == nil || failure.ToolName != "tool" || failure.SessionID != "session" || failure.TurnID != "turn" || failure.CallID != "call" || failure.Stage != tc.stage {
+					t.Fatalf("unexpected diagnostic: %#v", failure)
+				}
+				if tc.handlerErr != nil && !errors.Is(failure.Err, tc.handlerErr) {
+					t.Fatal("original handler error was lost")
+				}
+				var syntax *json.SyntaxError
+				if tc.name == "invalid JSON" && !errors.As(failure.Err, &syntax) {
+					t.Fatal("original JSON syntax error was lost")
+				}
+				var unsupported *json.UnsupportedTypeError
+				if tc.name == "unserializable" && !errors.As(failure.Err, &unsupported) {
+					t.Fatal("original serialization error was lost")
+				}
+			}
 			if len(got) != 4 {
 				t.Fatalf("events=%d", len(got))
 			}
@@ -425,10 +456,14 @@ func TestAgentsHelperInputFailureClosesSubscription(t *testing.T) {
 
 func TestAgentsHelperToolResponseLost(t *testing.T) {
 	m, c := newAgentHelperServer(t, append([]string{agentCreated("created", "turn", "null"), agentCall("call", "turn", "call", "tool", `{}`)}, agentEnd("turn")...)...)
-	calls := 0
-	consumeAgentStream(t, c.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{Input: "hi", ToolHandlers: map[string]openai.AgentToolHandler{"tool": func(context.Context, map[string]any) (any, error) { calls++; m.drop.Store(true); return "answer", nil }}}, option.WithMaxRetries(1)))
+	calls, notifications := 0, 0
+	consumeAgentStream(t, c.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{Input: "hi", ToolHandlers: map[string]openai.AgentToolHandler{"tool": func(context.Context, map[string]any) (any, error) {
+		calls++
+		m.drop.Store(true)
+		return nil, errors.New("synthetic handler failure")
+	}}, OnToolError: func(context.Context, openai.BetaAgentToolError) { notifications++ }}, option.WithMaxRetries(1)))
 	posts := m.submissions()
-	if calls != 1 || len(posts) != 3 || posts[0].header.Get("Idempotency-Key") == posts[1].header.Get("Idempotency-Key") || posts[1].header.Get("Idempotency-Key") != posts[2].header.Get("Idempotency-Key") || !reflect.DeepEqual(posts[1].body, posts[2].body) {
+	if calls != 1 || notifications != 1 || len(posts) != 3 || posts[0].header.Get("Idempotency-Key") == posts[1].header.Get("Idempotency-Key") || posts[1].header.Get("Idempotency-Key") != posts[2].header.Get("Idempotency-Key") || !reflect.DeepEqual(posts[1].body, posts[2].body) {
 		t.Fatal("tool result transport retry was not idempotent")
 	}
 }
@@ -446,7 +481,9 @@ func TestAgentsHelperCancelledHandlerAndPanicCleanup(t *testing.T) {
 				cancel()
 				<-handlerCtx.Done()
 				return nil, handlerCtx.Err()
-			}}})
+			}}, OnToolError: func(context.Context, openai.BetaAgentToolError) {
+				t.Error("cancellation or panic was reported as a tool failure")
+			}})
 			defer func() { _ = s.Close() }()
 			if !s.Next() {
 				t.Fatal("missing turn event")

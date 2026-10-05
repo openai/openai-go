@@ -30,23 +30,26 @@ func agentToolArguments(value any) (map[string]any, error) {
 	return args, nil
 }
 
-func agentToolResult(ctx context.Context, call agentPendingCall) AgentSessionInputParamAgentSessionInputToolResult {
+func agentToolResult(ctx context.Context, call agentPendingCall) (AgentSessionInputParamAgentSessionInputToolResult, *BetaAgentToolError) {
 	result := AgentSessionInputParamAgentSessionInputToolResult{TurnID: call.turnID, CallID: call.callID}
+	stage := BetaAgentToolErrorStageArguments
 	err := call.argumentErr
 	if err == nil {
+		stage = BetaAgentToolErrorStageExecution
 		var output any
 		output, err = call.handler(ctx, call.arguments)
 		if err == nil {
+			stage = BetaAgentToolErrorStageOutput
 			result.Output, err = agentToolOutput(output)
 		}
 	}
 	if err != nil {
 		result.Output = AgentFunctionCallOutputParamUnion{}
 		result.Error = param.NewOpt("Tool handler failed.")
-	} else {
-		result.Success = true
+		return result, &BetaAgentToolError{Err: err, ToolName: call.toolName, TurnID: call.turnID, CallID: call.callID, Stage: stage}
 	}
-	return result
+	result.Success = true
+	return result, nil
 }
 
 func agentToolOutput(output any) (AgentFunctionCallOutputParamUnion, error) {
