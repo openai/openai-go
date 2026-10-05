@@ -117,7 +117,9 @@ interpret release policy or pull request prose.
 ## Automation map
 
 - `.github/workflows/ci.yml`
-  - On branch pushes: lint, tidy, and tests on each supported Go line.
+  - On pushes to `main`, `next`, and `release-please--**`: lint, tidy, and
+    tests on each supported Go line. Feature branches run CI when a PR is
+    opened (including a draft), or via manual workflow dispatch before a PR.
   - On pull requests: the same lint and test coverage, plus reachable
     vulnerability checks.
   - Nightly: reachable-vulnerability checks only, so newly published

@@ -151,30 +151,30 @@ func (e *encoder) newPrimitiveTypeEncoder(t reflect.Type) encoderFunc {
 	// code more and this current code shouldn't cause any issues
 	case reflect.String:
 		return func(key string, v reflect.Value, writer *multipart.Writer) error {
-			return writer.WriteField(key, v.String())
+			return writeMultipartField(writer, key, v.String())
 		}
 	case reflect.Bool:
 		return func(key string, v reflect.Value, writer *multipart.Writer) error {
 			if v.Bool() {
-				return writer.WriteField(key, "true")
+				return writeMultipartField(writer, key, "true")
 			}
-			return writer.WriteField(key, "false")
+			return writeMultipartField(writer, key, "false")
 		}
 	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64:
 		return func(key string, v reflect.Value, writer *multipart.Writer) error {
-			return writer.WriteField(key, strconv.FormatInt(v.Int(), 10))
+			return writeMultipartField(writer, key, strconv.FormatInt(v.Int(), 10))
 		}
 	case reflect.Uint, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		return func(key string, v reflect.Value, writer *multipart.Writer) error {
-			return writer.WriteField(key, strconv.FormatUint(v.Uint(), 10))
+			return writeMultipartField(writer, key, strconv.FormatUint(v.Uint(), 10))
 		}
 	case reflect.Float32:
 		return func(key string, v reflect.Value, writer *multipart.Writer) error {
-			return writer.WriteField(key, strconv.FormatFloat(v.Float(), 'f', -1, 32))
+			return writeMultipartField(writer, key, strconv.FormatFloat(v.Float(), 'f', -1, 32))
 		}
 	case reflect.Float64:
 		return func(key string, v reflect.Value, writer *multipart.Writer) error {
-			return writer.WriteField(key, strconv.FormatFloat(v.Float(), 'f', -1, 64))
+			return writeMultipartField(writer, key, strconv.FormatFloat(v.Float(), 'f', -1, 64))
 		}
 	default:
 		return func(key string, v reflect.Value, writer *multipart.Writer) error {
@@ -195,7 +195,7 @@ func (e *encoder) newArrayTypeEncoder(t reflect.Type) encoderFunc {
 			for i := 0; i < v.Len(); i++ {
 				elements[i] = fmt.Sprint(v.Index(i).Interface())
 			}
-			return writer.WriteField(key, strings.Join(elements, ","))
+			return writeMultipartField(writer, key, strings.Join(elements, ","))
 		}
 	}
 	return func(key string, v reflect.Value, writer *multipart.Writer) error {
@@ -352,7 +352,7 @@ func (e *encoder) newStructUnionTypeEncoder(t reflect.Type) encoderFunc {
 func (e *encoder) newTimeTypeEncoder() encoderFunc {
 	format := e.dateFormat
 	return func(key string, value reflect.Value, writer *multipart.Writer) error {
-		return writer.WriteField(key, value.Convert(reflect.TypeOf(time.Time{})).Interface().(time.Time).Format(format))
+		return writeMultipartField(writer, key, value.Convert(reflect.TypeOf(time.Time{})).Interface().(time.Time).Format(format))
 	}
 }
 
@@ -369,7 +369,7 @@ func (e encoder) newInterfaceEncoder() encoderFunc {
 func validateMultipartDispositionValue(kind, value string) error {
 	if strings.IndexFunc(value, func(r rune) bool {
 		// Quoted MIME parameters permit horizontal tab, and
-		// multipartFileContentDisposition safely percent-encodes CR and LF.
+		// multipartDispositionEscaper safely percent-encodes CR and LF.
 		return unicode.IsControl(r) && r != '\t' && r != '\r' && r != '\n'
 	}) >= 0 {
 		return fmt.Errorf("apiform: invalid multipart %s: contains control character", kind)
@@ -383,6 +383,21 @@ var multipartDispositionEscaper = strings.NewReplacer(
 	"\r", "%0D",
 	"\n", "%0A",
 )
+
+func writeMultipartField(writer *multipart.Writer, name, value string) error {
+	if err := validateMultipartDispositionValue("field name", name); err != nil {
+		return err
+	}
+	// WriteField does not escape CR/LF on every supported Go toolchain.
+	header := make(textproto.MIMEHeader)
+	header.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"`, multipartDispositionEscaper.Replace(name)))
+	part, err := writer.CreatePart(header)
+	if err != nil {
+		return err
+	}
+	_, err = io.WriteString(part, value)
+	return err
+}
 
 func multipartFileContentDisposition(fieldName, filename string) string {
 	// Mirror multipart.FileContentDisposition's hardened escaping consistently
@@ -544,7 +559,7 @@ func WriteExtras(writer *multipart.Writer, extras map[string]any) (err error) {
 		if !ok {
 			break
 		}
-		err = writer.WriteField(k, str)
+		err = writeMultipartField(writer, k, str)
 		if err != nil {
 			break
 		}
