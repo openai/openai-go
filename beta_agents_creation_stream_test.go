@@ -18,7 +18,7 @@ import (
 )
 
 func TestBetaAgentCreationTools(t *testing.T) {
-	for _, mode := range []string{"result", "iteration", "handler-error", "close", "submit-error", "json-options", "body-options", "inherited-options"} {
+	for _, mode := range []string{"result", "iteration", "handler-error", "close", "submit-error", "json-options", "body-options", "inherited-options", "events-options"} {
 		t.Run(mode, func(t *testing.T) {
 			var calls, posts atomic.Int32
 			posted := make(chan struct{})
@@ -32,7 +32,7 @@ func TestBetaAgentCreationTools(t *testing.T) {
 					if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 						t.Error(err)
 					}
-					if r.Method != "POST" || body["stream"] != true || body["input"] != "Look up A123" || strings.Contains(fmt.Sprint(body), "ToolHandlers") {
+					if r.Method != "POST" || body["event_marker"] != nil || body["stream"] != true || body["input"] != "Look up A123" || strings.Contains(fmt.Sprint(body), "ToolHandlers") {
 						t.Errorf("unexpected creation: %s %#v", r.Method, body)
 					}
 					if r.Header.Get("Idempotency-Key") != "creation-key" {
@@ -65,12 +65,15 @@ func TestBetaAgentCreationTools(t *testing.T) {
 					if r.Header.Get("Content-Type") != "application/json" {
 						t.Error("creation content type leaked into tool result")
 					}
-					if r.Header.Get("Idempotency-Key") == "" || r.Header.Get("Idempotency-Key") == "creation-key" {
+					if r.Header.Get("Idempotency-Key") == "" || r.Header.Get("Idempotency-Key") == "creation-key" || r.Header.Get("Idempotency-Key") == "event-key" {
 						t.Error("tool result requires distinct key")
 					}
 					var body map[string]any
 					if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 						t.Error(err)
+					}
+					if (body["event_marker"] == "yes") != (mode == "events-options") {
+						t.Error("lost Events-scoped body option")
 					}
 					if body["stream"] != nil || body["input"] != nil {
 						t.Error("creation params leaked into result request")
@@ -107,7 +110,7 @@ func TestBetaAgentCreationTools(t *testing.T) {
 				}
 				return "ready", nil
 			}}
-			var creationResponse *http.Response
+			var creationResponse, eventResponse *http.Response
 			input := "Look up A123"
 			opts := []option.RequestOption{option.WithHeader("Idempotency-Key", "creation-key"), option.WithHeader("X-Application", "test")}
 			if strings.HasSuffix(mode, "-options") {
@@ -121,6 +124,10 @@ func TestBetaAgentCreationTools(t *testing.T) {
 				} else {
 					opts = append(opts, creationOpts...)
 				}
+			}
+			if mode == "events-options" {
+				client.Beta.Agents.Sessions.Events.Options = append(client.Beta.Agents.Sessions.Events.Options,
+					option.WithResponseInto(&eventResponse), option.WithJSONSet("event_marker", "yes"), option.WithHeader("Idempotency-Key", "event-key"))
 			}
 			// The concrete stream and existing result helpers remain source compatible.
 			var stream *ssestream.Stream[openai.AgentSessionEventUnion] = client.Beta.Agents.Sessions.NewStreaming(ctx, openai.BetaAgentSessionNewParams{
@@ -161,6 +168,9 @@ func TestBetaAgentCreationTools(t *testing.T) {
 			}
 			if strings.HasSuffix(mode, "-options") && (creationResponse == nil || creationResponse.Request.URL.Path != "/agents/sessions") {
 				t.Fatal("tool result overwrote creation response capture")
+			}
+			if mode == "events-options" && (eventResponse == nil || eventResponse.Request.URL.Path != "/agents/sessions/session/events") {
+				t.Fatal("lost Events-scoped response capture")
 			}
 			cached, err := openai.BetaAgentSessionFinalResult(stream)
 			if err != nil || cached != result || calls.Load() != 1 || posts.Load() != 1 {
@@ -211,5 +221,44 @@ func TestBetaAgentCreationToolsRejectResponseBodyOverrides(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func TestBetaAgentCreationToolsWithoutInput(t *testing.T) {
+	for _, done := range []bool{false, true} {
+		t.Run(fmt.Sprintf("done-frame=%v", done), func(t *testing.T) {
+			server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "text/event-stream")
+				for _, event := range []string{agentEvent("created", "created", `,"session":{"id":"session","status":"idle"}`), betaResultIdle()} {
+					_, _ = fmt.Fprintf(w, "data: %s\n\n", event)
+				}
+				if done {
+					_, _ = fmt.Fprint(w, "data: [DONE]\n\n")
+				}
+			}))
+			defer server.Close()
+			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("synthetic"))
+			stream := client.Beta.Agents.Sessions.NewStreaming(context.Background(), openai.BetaAgentSessionNewParams{
+				Environment: openai.EnvironmentParamOfParamSelfHosted("/workspace"),
+				ToolHandlers: map[string]openai.AgentToolHandler{"lookup": func(context.Context, map[string]any) (any, error) {
+					t.Error("no-input creation must not call tools")
+					return nil, nil
+				}},
+			})
+			defer func() { _ = stream.Close() }()
+			openai.BetaAgentSessionWithResultCollection(stream)
+			events := 0
+			for stream.Next() {
+				events++
+			}
+			if stream.Err() != nil || events != 2 {
+				t.Fatalf("raw completion: events=%d err=%v", events, stream.Err())
+			}
+			result, err := openai.BetaAgentSessionFinalResult(stream)
+			var incomplete *openai.BetaAgentTurnResultError
+			if result != nil || !errors.As(err, &incomplete) || incomplete.Reason != "observation_incomplete" {
+				t.Fatalf("no turn must not produce a final result: result=%v err=%v", result, err)
+			}
+		})
 	}
 }

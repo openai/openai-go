@@ -19,7 +19,11 @@ stream := client.Beta.Agents.Sessions.NewStreaming(ctx, openai.BetaAgentSessionN
     Input: openai.BetaAgentSessionNewParamsInputUnion{OfString: openai.String("Look up item A123.")},
     ToolHandlers: map[string]openai.AgentToolHandler{
         "lookup": func(ctx context.Context, args map[string]any) (any, error) {
-            return inventory.Lookup(ctx, args["id"].(string))
+            id, ok := args["id"].(string)
+            if !ok || id == "" {
+                return nil, fmt.Errorf("id must be a nonempty string")
+            }
+            return inventory.Lookup(ctx, id)
         },
     },
 })

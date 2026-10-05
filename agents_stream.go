@@ -63,6 +63,7 @@ type AgentSessionStream struct {
 	closeErr     error
 	turnID       string
 	turnEnded    bool
+	allowEOF     bool
 	recent       [1024]string
 	recentCount  int
 	recentNext   int
@@ -214,6 +215,9 @@ func (s *AgentSessionStream) Next() (ok bool) {
 	}
 	if err := s.stream.Err(); err != nil {
 		return s.finish(err)
+	}
+	if s.allowEOF {
+		return s.finish(nil)
 	}
 	return s.finish(io.ErrUnexpectedEOF)
 }

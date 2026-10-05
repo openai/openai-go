@@ -63,6 +63,19 @@ func InheritedOptions(opts ...RequestOption) []RequestOption {
 	return []RequestOption{optionLayer(slices.Clone(opts))}
 }
 
+// SplitInheritedOptions separates constructor defaults from options appended
+// directly to a service. Both groups retain their original order and option types.
+func SplitInheritedOptions(opts []RequestOption) (inherited, direct []RequestOption) {
+	for _, opt := range opts {
+		if _, ok := opt.(optionLayer); ok {
+			inherited = append(inherited, opt)
+		} else {
+			direct = append(direct, opt)
+		}
+	}
+	return
+}
+
 // endpointOption carries inspectable endpoint configuration without evaluating
 // arbitrary request-option callbacks during provider construction.
 type endpointOption struct {
