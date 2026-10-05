@@ -13,7 +13,7 @@ func (e *encoder) newRichFieldTypeEncoder(t reflect.Type) encoderFunc {
 		if opt, ok := value.Interface().(param.Optional); ok && opt.Valid() {
 			return enc(key, value.FieldByIndex(f.Index), writer)
 		} else if ok && param.IsNull(opt) {
-			return writer.WriteField(key, "null")
+			return writeMultipartField(writer, key, "null")
 		}
 		return nil
 	}
