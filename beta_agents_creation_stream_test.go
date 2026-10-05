@@ -18,11 +18,14 @@ import (
 )
 
 func TestBetaAgentCreationTools(t *testing.T) {
-	for _, mode := range []string{"result", "iteration", "handler-error", "close", "submit-error"} {
+	for _, mode := range []string{"result", "iteration", "handler-error", "close", "submit-error", "json-options", "body-options", "inherited-options"} {
 		t.Run(mode, func(t *testing.T) {
 			var calls, posts atomic.Int32
 			posted := make(chan struct{})
 			server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Header.Get("X-Application") != "test" || r.Header.Get("Authorization") != "Bearer synthetic" {
+					t.Error("lost request header/auth options")
+				}
 				switch r.URL.Path {
 				case "/agents/sessions":
 					var body map[string]any
@@ -59,6 +62,9 @@ func TestBetaAgentCreationTools(t *testing.T) {
 					<-r.Context().Done()
 				case "/agents/sessions/session/events":
 					posts.Add(1)
+					if r.Header.Get("Content-Type") != "application/json" {
+						t.Error("creation content type leaked into tool result")
+					}
 					if r.Header.Get("Idempotency-Key") == "" || r.Header.Get("Idempotency-Key") == "creation-key" {
 						t.Error("tool result requires distinct key")
 					}
@@ -101,11 +107,26 @@ func TestBetaAgentCreationTools(t *testing.T) {
 				}
 				return "ready", nil
 			}}
+			var creationResponse *http.Response
+			input := "Look up A123"
+			opts := []option.RequestOption{option.WithHeader("Idempotency-Key", "creation-key"), option.WithHeader("X-Application", "test")}
+			if strings.HasSuffix(mode, "-options") {
+				input = "This should be replaced by the creation body option"
+				creationOpts := []option.RequestOption{option.WithResponseInto(&creationResponse), option.WithJSONSet("input", "Look up A123"), option.WithJSONDel("events")}
+				if mode == "body-options" {
+					creationOpts = []option.RequestOption{option.WithResponseInto(&creationResponse), option.WithRequestBody("application/vnd.test+json", []byte(`{"environment":{"type":"none"},"input":"Look up A123"}`))}
+				}
+				if mode == "inherited-options" {
+					client = openai.NewClient(append([]option.RequestOption{option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("synthetic"), option.WithMaxRetries(0)}, creationOpts...)...)
+				} else {
+					opts = append(opts, creationOpts...)
+				}
+			}
 			// The concrete stream and existing result helpers remain source compatible.
 			var stream *ssestream.Stream[openai.AgentSessionEventUnion] = client.Beta.Agents.Sessions.NewStreaming(ctx, openai.BetaAgentSessionNewParams{
 				Environment: openai.EnvironmentParamUnion{OfParamNone: &openai.EnvironmentParamNone{}},
-				Input:       openai.BetaAgentSessionNewParamsInputUnion{OfString: openai.String("Look up A123")}, ToolHandlers: handlers,
-			}, option.WithHeader("Idempotency-Key", "creation-key"))
+				Input:       openai.BetaAgentSessionNewParamsInputUnion{OfString: openai.String(input)}, ToolHandlers: handlers,
+			}, opts...)
 			defer func() { _ = stream.Close() }()
 			delete(handlers, "lookup")
 			if mode == "iteration" || mode == "close" {
@@ -137,6 +158,9 @@ func TestBetaAgentCreationTools(t *testing.T) {
 			}
 			if err != nil || result.OutputText() != "ready" {
 				t.Fatalf("result=%v error=%v", result, err)
+			}
+			if strings.HasSuffix(mode, "-options") && (creationResponse == nil || creationResponse.Request.URL.Path != "/agents/sessions") {
+				t.Fatal("tool result overwrote creation response capture")
 			}
 			cached, err := openai.BetaAgentSessionFinalResult(stream)
 			if err != nil || cached != result || calls.Load() != 1 || posts.Load() != 1 {
