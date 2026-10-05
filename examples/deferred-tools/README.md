@@ -55,7 +55,11 @@ stream := client.Beta.Agents.Sessions.Stream(ctx, session.ID, openai.AgentSessio
     Input: "Look up item A123.",
     ToolHandlers: map[string]openai.AgentToolHandler{
         tool.Name: func(ctx context.Context, args map[string]any) (any, error) {
-            return catalog.Lookup(ctx, args["item_id"].(string))
+            itemID, ok := args["item_id"].(string)
+            if !ok {
+                return nil, errors.New("item_id must be a string")
+            }
+            return catalog.Lookup(ctx, itemID)
         },
     },
 })
