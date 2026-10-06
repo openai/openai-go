@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.72.0](https://github.com/openai/openai-go/compare/v3.71.2...v3.72.0) (2026-10-06)
+
+
+### Features
+
+* **agents:** observe local tool failures ([#1028](https://github.com/openai/openai-go/issues/1028)) ([25cd67f](https://github.com/openai/openai-go/commit/25cd67f54499e37bd303ee2b8144fe322f2e5374))
+* **api:** add agent turn items and usage source grouping ([#1035](https://github.com/openai/openai-go/issues/1035)) ([473e093](https://github.com/openai/openai-go/commit/473e09306cbee3c7268f06dfff99dd1ceeb09b68))
+
 ## [3.71.2](https://github.com/openai/openai-go/compare/v3.71.1...v3.71.2) (2026-10-05)
 
 
