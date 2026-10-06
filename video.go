@@ -341,12 +341,16 @@ type VideoCreateErrorMisalignment struct {
 	DetailedExplanation string `json:"detailed_explanation"`
 	// An optional classification; clients must accept additional values.
 	ErrorType string `json:"error_type"`
+	// An opaque target for explicitly continuing this review, or null when
+	// unavailable.
+	ReviewTarget string `json:"review_target" api:"nullable"`
 	// An optional public continuation instruction.
 	Steer VideoCreateErrorMisalignmentSteer `json:"steer"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		DetailedExplanation respjson.Field
 		ErrorType           respjson.Field
+		ReviewTarget        respjson.Field
 		Steer               respjson.Field
 		ExtraFields         map[string]respjson.Field
 		raw                 string

@@ -112,7 +112,7 @@ func TestImageGenerateWithOptionalParams(t *testing.T) {
 		PartialImages:     openai.Int(1),
 		Quality:           openai.ImageGenerateParamsQualityMedium,
 		ResponseFormat:    openai.ImageGenerateParamsResponseFormatURL,
-		Size:              openai.ImageGenerateParamsSizeAuto,
+		Size:              openai.ImageGenerateParamsSize1024x1024,
 		Style:             openai.ImageGenerateParamsStyleVivid,
 		User:              openai.String("user-1234"),
 	})

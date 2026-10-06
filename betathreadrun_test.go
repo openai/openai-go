@@ -57,7 +57,7 @@ func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
 			Metadata: shared.Metadata{
 				"foo": "string",
 			},
-			Model:             shared.ChatModelGPT6Astra,
+			Model:             shared.ChatModelGPT4_1,
 			ParallelToolCalls: openai.Bool(true),
 			ReasoningEffort:   shared.ReasoningEffortNone,
 			ResponseFormat: openai.AssistantResponseFormatOptionUnionParam{

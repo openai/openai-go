@@ -1083,7 +1083,7 @@ type ScoreModelGrader struct {
 	Name string `json:"name" api:"required"`
 	// The object type, which is always `score_model`.
 	Type constant.ScoreModel `json:"type" default:"score_model"`
-	// The range of the score. Defaults to `[0, 1]`.
+	// The service requires two numbers for the score range. Defaults to `[0, 1]`.
 	Range []float64 `json:"range"`
 	// The sampling parameters for the model.
 	SamplingParams ScoreModelGraderSamplingParams `json:"sampling_params"`
@@ -1319,7 +1319,7 @@ type ScoreModelGraderParam struct {
 	Model string `json:"model" api:"required"`
 	// The name of the grader.
 	Name string `json:"name" api:"required"`
-	// The range of the score. Defaults to `[0, 1]`.
+	// The service requires two numbers for the score range. Defaults to `[0, 1]`.
 	Range []float64 `json:"range,omitzero"`
 	// The sampling parameters for the model.
 	SamplingParams ScoreModelGraderSamplingParamsParam `json:"sampling_params,omitzero"`

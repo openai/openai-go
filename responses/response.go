@@ -6742,7 +6742,7 @@ func (r *ResponseComputerToolCallActionWaitParam) UnmarshalJSON(data []byte) err
 }
 
 type ResponseComputerToolCallOutputItem struct {
-	// The unique ID of the computer call tool output.
+	// The ID of the computer tool call output.
 	ID string `json:"id" api:"required"`
 	// The ID of the computer tool call that produced the output.
 	CallID string `json:"call_id" api:"required"`
@@ -8404,12 +8404,16 @@ type ResponseErrorMisalignment struct {
 	DetailedExplanation string `json:"detailed_explanation"`
 	// An optional classification; clients must accept additional values.
 	ErrorType string `json:"error_type"`
+	// An opaque target for explicitly continuing this review, or null when
+	// unavailable.
+	ReviewTarget string `json:"review_target" api:"nullable"`
 	// An optional public continuation instruction.
 	Steer ResponseErrorMisalignmentSteer `json:"steer"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		DetailedExplanation respjson.Field
 		ErrorType           respjson.Field
+		ReviewTarget        respjson.Field
 		Steer               respjson.Field
 		ExtraFields         map[string]respjson.Field
 		raw                 string
@@ -29895,12 +29899,16 @@ type ResponsesServerEventResponseWsErrorErrorMisalignment struct {
 	DetailedExplanation string `json:"detailed_explanation"`
 	// An optional classification; clients must accept additional values.
 	ErrorType string `json:"error_type"`
+	// An opaque target for explicitly continuing this review, or null when
+	// unavailable.
+	ReviewTarget string `json:"review_target" api:"nullable"`
 	// An optional public continuation instruction.
 	Steer ResponsesServerEventResponseWsErrorErrorMisalignmentSteer `json:"steer"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		DetailedExplanation respjson.Field
 		ErrorType           respjson.Field
+		ReviewTarget        respjson.Field
 		Steer               respjson.Field
 		ExtraFields         map[string]respjson.Field
 		raw                 string
@@ -30830,9 +30838,10 @@ type ToolImageGeneration struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background"`
-	// Controls fidelity to the original input image(s). This parameter is supported
-	// for GPT image models that support input fidelity. `gpt-image-2` and
-	// `gpt-image-2-2026-04-21` ignore this parameter.
+	// Control how much effort the model will exert to match the style and features,
+	// especially facial features, of input images. Supports `high` and `low` on
+	// `gpt-image-1` and `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For
+	// `gpt-image-2`, omit this parameter. Defaults to `low` on supported models.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity" api:"nullable"`
@@ -32083,9 +32092,10 @@ type ToolImageGenerationParam struct {
 	// Number of partial images to generate in streaming mode, from 0 (default value)
 	// to 3.
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
-	// Controls fidelity to the original input image(s). This parameter is supported
-	// for GPT image models that support input fidelity. `gpt-image-2` and
-	// `gpt-image-2-2026-04-21` ignore this parameter.
+	// Control how much effort the model will exert to match the style and features,
+	// especially facial features, of input images. Supports `high` and `low` on
+	// `gpt-image-1` and `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For
+	// `gpt-image-2`, omit this parameter. Defaults to `low` on supported models.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,omitzero"`

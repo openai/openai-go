@@ -6324,8 +6324,8 @@ type EnvironmentParamOpenAIHosted struct {
 	Desktop EnvironmentParamOpenAIHostedDesktop `json:"desktop,omitzero"`
 	// Environment variables made available to the agent.
 	Env map[string]string `json:"env,omitzero"`
-	// Network access policy for the environment. Defaults to disabled for GA requests
-	// and enabled for beta requests.
+	// Network access policy for the environment. If omitted, the API version
+	// determines whether network access is enabled or disabled.
 	Network EnvironmentParamOpenAIHostedNetwork `json:"network,omitzero"`
 	// Packages to install in the environment. Defaults to empty package lists.
 	Packages EnvironmentParamOpenAIHostedPackages `json:"packages,omitzero"`
@@ -6372,8 +6372,8 @@ func (r *EnvironmentParamOpenAIHostedDesktop) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Network access policy for the environment. Defaults to disabled for GA requests
-// and enabled for beta requests.
+// Network access policy for the environment. If omitted, the API version
+// determines whether network access is enabled or disabled.
 //
 // The property Access is required.
 type EnvironmentParamOpenAIHostedNetwork struct {
@@ -8653,12 +8653,13 @@ type SessionTurnError struct {
 	// A stable, machine-readable failure category.
 	//
 	// Any of "context_length_exceeded", "session_budget_exceeded",
-	// "usage_limit_exceeded", "credit_balance_exhausted", "rate_limit_exceeded",
-	// "flex_unavailable", "server_overloaded", "cyber_policy",
-	// "misalignment_policy_violation", "connection_failed", "server_error",
-	// "authentication_error", "invalid_request", "resource_not_found",
-	// "sandbox_error", "executor_version_incompatible", "active_turn_not_steerable",
-	// "request_timeout", "internal_error".
+	// "usage_limit_exceeded", "project_spend_limit_exceeded",
+	// "organization_spend_limit_exceeded", "organization_usage_limit_exceeded",
+	// "credit_balance_exhausted", "rate_limit_exceeded", "flex_unavailable",
+	// "server_overloaded", "cyber_policy", "misalignment_policy_violation",
+	// "connection_failed", "server_error", "authentication_error", "invalid_request",
+	// "resource_not_found", "sandbox_error", "executor_version_incompatible",
+	// "active_turn_not_steerable", "request_timeout", "internal_error".
 	Code SessionTurnErrorCode `json:"code" api:"required"`
 	// A customer-safe explanation of the failure.
 	Message string `json:"message" api:"required"`
@@ -8681,25 +8682,28 @@ func (r *SessionTurnError) UnmarshalJSON(data []byte) error {
 type SessionTurnErrorCode string
 
 const (
-	SessionTurnErrorCodeContextLengthExceeded       SessionTurnErrorCode = "context_length_exceeded"
-	SessionTurnErrorCodeSessionBudgetExceeded       SessionTurnErrorCode = "session_budget_exceeded"
-	SessionTurnErrorCodeUsageLimitExceeded          SessionTurnErrorCode = "usage_limit_exceeded"
-	SessionTurnErrorCodeCreditBalanceExhausted      SessionTurnErrorCode = "credit_balance_exhausted"
-	SessionTurnErrorCodeRateLimitExceeded           SessionTurnErrorCode = "rate_limit_exceeded"
-	SessionTurnErrorCodeFlexUnavailable             SessionTurnErrorCode = "flex_unavailable"
-	SessionTurnErrorCodeServerOverloaded            SessionTurnErrorCode = "server_overloaded"
-	SessionTurnErrorCodeCyberPolicy                 SessionTurnErrorCode = "cyber_policy"
-	SessionTurnErrorCodeMisalignmentPolicyViolation SessionTurnErrorCode = "misalignment_policy_violation"
-	SessionTurnErrorCodeConnectionFailed            SessionTurnErrorCode = "connection_failed"
-	SessionTurnErrorCodeServerError                 SessionTurnErrorCode = "server_error"
-	SessionTurnErrorCodeAuthenticationError         SessionTurnErrorCode = "authentication_error"
-	SessionTurnErrorCodeInvalidRequest              SessionTurnErrorCode = "invalid_request"
-	SessionTurnErrorCodeResourceNotFound            SessionTurnErrorCode = "resource_not_found"
-	SessionTurnErrorCodeSandboxError                SessionTurnErrorCode = "sandbox_error"
-	SessionTurnErrorCodeExecutorVersionIncompatible SessionTurnErrorCode = "executor_version_incompatible"
-	SessionTurnErrorCodeActiveTurnNotSteerable      SessionTurnErrorCode = "active_turn_not_steerable"
-	SessionTurnErrorCodeRequestTimeout              SessionTurnErrorCode = "request_timeout"
-	SessionTurnErrorCodeInternalError               SessionTurnErrorCode = "internal_error"
+	SessionTurnErrorCodeContextLengthExceeded          SessionTurnErrorCode = "context_length_exceeded"
+	SessionTurnErrorCodeSessionBudgetExceeded          SessionTurnErrorCode = "session_budget_exceeded"
+	SessionTurnErrorCodeUsageLimitExceeded             SessionTurnErrorCode = "usage_limit_exceeded"
+	SessionTurnErrorCodeProjectSpendLimitExceeded      SessionTurnErrorCode = "project_spend_limit_exceeded"
+	SessionTurnErrorCodeOrganizationSpendLimitExceeded SessionTurnErrorCode = "organization_spend_limit_exceeded"
+	SessionTurnErrorCodeOrganizationUsageLimitExceeded SessionTurnErrorCode = "organization_usage_limit_exceeded"
+	SessionTurnErrorCodeCreditBalanceExhausted         SessionTurnErrorCode = "credit_balance_exhausted"
+	SessionTurnErrorCodeRateLimitExceeded              SessionTurnErrorCode = "rate_limit_exceeded"
+	SessionTurnErrorCodeFlexUnavailable                SessionTurnErrorCode = "flex_unavailable"
+	SessionTurnErrorCodeServerOverloaded               SessionTurnErrorCode = "server_overloaded"
+	SessionTurnErrorCodeCyberPolicy                    SessionTurnErrorCode = "cyber_policy"
+	SessionTurnErrorCodeMisalignmentPolicyViolation    SessionTurnErrorCode = "misalignment_policy_violation"
+	SessionTurnErrorCodeConnectionFailed               SessionTurnErrorCode = "connection_failed"
+	SessionTurnErrorCodeServerError                    SessionTurnErrorCode = "server_error"
+	SessionTurnErrorCodeAuthenticationError            SessionTurnErrorCode = "authentication_error"
+	SessionTurnErrorCodeInvalidRequest                 SessionTurnErrorCode = "invalid_request"
+	SessionTurnErrorCodeResourceNotFound               SessionTurnErrorCode = "resource_not_found"
+	SessionTurnErrorCodeSandboxError                   SessionTurnErrorCode = "sandbox_error"
+	SessionTurnErrorCodeExecutorVersionIncompatible    SessionTurnErrorCode = "executor_version_incompatible"
+	SessionTurnErrorCodeActiveTurnNotSteerable         SessionTurnErrorCode = "active_turn_not_steerable"
+	SessionTurnErrorCodeRequestTimeout                 SessionTurnErrorCode = "request_timeout"
+	SessionTurnErrorCodeInternalError                  SessionTurnErrorCode = "internal_error"
 )
 
 // A confidential setup command executed before the hosted agent starts.
