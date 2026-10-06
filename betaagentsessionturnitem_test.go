@@ -13,7 +13,7 @@ import (
 	"github.com/openai/openai-go/v3/option"
 )
 
-func TestModerationNewWithOptionalParams(t *testing.T) {
+func TestBetaAgentSessionTurnItemListWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -27,12 +27,16 @@ func TestModerationNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
-	_, err := client.Moderations.New(context.TODO(), openai.ModerationNewParams{
-		Input: openai.ModerationNewParamsInputUnion{
-			OfString: openai.String("I want to kill them."),
+	_, err := client.Beta.Agents.Sessions.Turns.Items.List(
+		context.TODO(),
+		"session_id",
+		"turn_id",
+		openai.BetaAgentSessionTurnItemListParams{
+			After: openai.String("after"),
+			Limit: openai.Int(1),
+			Order: openai.BetaAgentSessionTurnItemListParamsOrderAsc,
 		},
-		Model: openai.ModerationModelOmniModeration2024_09_26,
-	})
+	)
 	if err != nil {
 		var apierr *openai.Error
 		if errors.As(err, &apierr) {

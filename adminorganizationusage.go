@@ -229,6 +229,7 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultUnion struct {
 	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
 	OutputTokens int64  `json:"output_tokens"`
 	APIKeyID     string `json:"api_key_id"`
+	APISource    string `json:"api_source"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
 	Batch bool `json:"batch"`
@@ -323,6 +324,7 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultUnion struct {
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -515,6 +517,13 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompl
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
@@ -568,6 +577,7 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompl
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -913,6 +923,13 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageWebSe
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=context_level`, this field provides the search context size of
 	// the grouped usage result.
 	ContextLevel string `json:"context_level" api:"nullable"`
@@ -931,6 +948,7 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageWebSe
 		NumRequests      respjson.Field
 		Object           respjson.Field
 		APIKeyID         respjson.Field
+		APISource        respjson.Field
 		ContextLevel     respjson.Field
 		Model            respjson.Field
 		ProjectID        respjson.Field
@@ -956,6 +974,13 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResul
 	// When `group_by=api_key_id`, this field provides the API Key ID of the grouped
 	// costs result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=line_item`, this field provides the line item of the grouped
 	// costs result.
 	LineItem string `json:"line_item" api:"nullable"`
@@ -968,15 +993,20 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResul
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
 	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped costs
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
 		Amount       respjson.Field
 		APIKeyID     respjson.Field
+		APISource    respjson.Field
 		LineItem     respjson.Field
 		ProjectID    respjson.Field
 		Quantity     respjson.Field
 		QuantityUnit respjson.Field
+		UserID       respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -1091,6 +1121,7 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion struct {
 	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
 	OutputTokens int64  `json:"output_tokens"`
 	APIKeyID     string `json:"api_key_id"`
+	APISource    string `json:"api_source"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
 	Batch bool `json:"batch"`
@@ -1185,6 +1216,7 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion struct {
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -1378,6 +1410,13 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsag
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
@@ -1431,6 +1470,7 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsag
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -1776,6 +1816,13 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsag
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=context_level`, this field provides the search context size of
 	// the grouped usage result.
 	ContextLevel string `json:"context_level" api:"nullable"`
@@ -1794,6 +1841,7 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsag
 		NumRequests      respjson.Field
 		Object           respjson.Field
 		APIKeyID         respjson.Field
+		APISource        respjson.Field
 		ContextLevel     respjson.Field
 		Model            respjson.Field
 		ProjectID        respjson.Field
@@ -1819,6 +1867,13 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCost
 	// When `group_by=api_key_id`, this field provides the API Key ID of the grouped
 	// costs result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=line_item`, this field provides the line item of the grouped
 	// costs result.
 	LineItem string `json:"line_item" api:"nullable"`
@@ -1831,15 +1886,20 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCost
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
 	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped costs
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
 		Amount       respjson.Field
 		APIKeyID     respjson.Field
+		APISource    respjson.Field
 		LineItem     respjson.Field
 		ProjectID    respjson.Field
 		Quantity     respjson.Field
 		QuantityUnit respjson.Field
+		UserID       respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -1957,6 +2017,7 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion struct
 	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
 	OutputTokens int64  `json:"output_tokens"`
 	APIKeyID     string `json:"api_key_id"`
+	APISource    string `json:"api_source"`
 	// This field is from variant
 	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
 	Batch bool `json:"batch"`
@@ -2051,6 +2112,7 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion struct
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -2244,6 +2306,13 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganization
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
@@ -2297,6 +2366,7 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganization
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -2642,6 +2712,13 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganization
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=context_level`, this field provides the search context size of
 	// the grouped usage result.
 	ContextLevel string `json:"context_level" api:"nullable"`
@@ -2660,6 +2737,7 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganization
 		NumRequests      respjson.Field
 		Object           respjson.Field
 		APIKeyID         respjson.Field
+		APISource        respjson.Field
 		ContextLevel     respjson.Field
 		Model            respjson.Field
 		ProjectID        respjson.Field
@@ -2685,6 +2763,13 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganization
 	// When `group_by=api_key_id`, this field provides the API Key ID of the grouped
 	// costs result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=line_item`, this field provides the line item of the grouped
 	// costs result.
 	LineItem string `json:"line_item" api:"nullable"`
@@ -2697,15 +2782,20 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganization
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
 	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped costs
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
 		Amount       respjson.Field
 		APIKeyID     respjson.Field
+		APISource    respjson.Field
 		LineItem     respjson.Field
 		ProjectID    respjson.Field
 		Quantity     respjson.Field
 		QuantityUnit respjson.Field
+		UserID       respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -2820,6 +2910,7 @@ type AdminOrganizationUsageCompletionsResponseDataResultUnion struct {
 	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
 	OutputTokens int64  `json:"output_tokens"`
 	APIKeyID     string `json:"api_key_id"`
+	APISource    string `json:"api_source"`
 	// This field is from variant
 	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
 	Batch bool `json:"batch"`
@@ -2914,6 +3005,7 @@ type AdminOrganizationUsageCompletionsResponseDataResultUnion struct {
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -3104,6 +3196,13 @@ type AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageComplet
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
@@ -3157,6 +3256,7 @@ type AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageComplet
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -3502,6 +3602,13 @@ type AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageWebSear
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=context_level`, this field provides the search context size of
 	// the grouped usage result.
 	ContextLevel string `json:"context_level" api:"nullable"`
@@ -3520,6 +3627,7 @@ type AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageWebSear
 		NumRequests      respjson.Field
 		Object           respjson.Field
 		APIKeyID         respjson.Field
+		APISource        respjson.Field
 		ContextLevel     respjson.Field
 		Model            respjson.Field
 		ProjectID        respjson.Field
@@ -3545,6 +3653,13 @@ type AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult 
 	// When `group_by=api_key_id`, this field provides the API Key ID of the grouped
 	// costs result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=line_item`, this field provides the line item of the grouped
 	// costs result.
 	LineItem string `json:"line_item" api:"nullable"`
@@ -3557,15 +3672,20 @@ type AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult 
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
 	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped costs
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
 		Amount       respjson.Field
 		APIKeyID     respjson.Field
+		APISource    respjson.Field
 		LineItem     respjson.Field
 		ProjectID    respjson.Field
 		Quantity     respjson.Field
 		QuantityUnit respjson.Field
+		UserID       respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -3680,6 +3800,7 @@ type AdminOrganizationUsageCostsResponseDataResultUnion struct {
 	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
 	OutputTokens int64  `json:"output_tokens"`
 	APIKeyID     string `json:"api_key_id"`
+	APISource    string `json:"api_source"`
 	// This field is from variant
 	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
 	Batch bool `json:"batch"`
@@ -3774,6 +3895,7 @@ type AdminOrganizationUsageCostsResponseDataResultUnion struct {
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -3963,6 +4085,13 @@ type AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsRe
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
@@ -4016,6 +4145,7 @@ type AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsRe
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -4361,6 +4491,13 @@ type AdminOrganizationUsageCostsResponseDataResultOrganizationUsageWebSearchesRe
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=context_level`, this field provides the search context size of
 	// the grouped usage result.
 	ContextLevel string `json:"context_level" api:"nullable"`
@@ -4379,6 +4516,7 @@ type AdminOrganizationUsageCostsResponseDataResultOrganizationUsageWebSearchesRe
 		NumRequests      respjson.Field
 		Object           respjson.Field
 		APIKeyID         respjson.Field
+		APISource        respjson.Field
 		ContextLevel     respjson.Field
 		Model            respjson.Field
 		ProjectID        respjson.Field
@@ -4404,6 +4542,13 @@ type AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult struct
 	// When `group_by=api_key_id`, this field provides the API Key ID of the grouped
 	// costs result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=line_item`, this field provides the line item of the grouped
 	// costs result.
 	LineItem string `json:"line_item" api:"nullable"`
@@ -4416,15 +4561,20 @@ type AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult struct
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
 	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped costs
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
 		Amount       respjson.Field
 		APIKeyID     respjson.Field
+		APISource    respjson.Field
 		LineItem     respjson.Field
 		ProjectID    respjson.Field
 		Quantity     respjson.Field
 		QuantityUnit respjson.Field
+		UserID       respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -4539,6 +4689,7 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultUnion struct {
 	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
 	OutputTokens int64  `json:"output_tokens"`
 	APIKeyID     string `json:"api_key_id"`
+	APISource    string `json:"api_source"`
 	// This field is from variant
 	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
 	Batch bool `json:"batch"`
@@ -4633,6 +4784,7 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultUnion struct {
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -4823,6 +4975,13 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompleti
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
@@ -4876,6 +5035,7 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompleti
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -5221,6 +5381,13 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageWebSearc
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=context_level`, this field provides the search context size of
 	// the grouped usage result.
 	ContextLevel string `json:"context_level" api:"nullable"`
@@ -5239,6 +5406,7 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageWebSearc
 		NumRequests      respjson.Field
 		Object           respjson.Field
 		APIKeyID         respjson.Field
+		APISource        respjson.Field
 		ContextLevel     respjson.Field
 		Model            respjson.Field
 		ProjectID        respjson.Field
@@ -5264,6 +5432,13 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult s
 	// When `group_by=api_key_id`, this field provides the API Key ID of the grouped
 	// costs result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=line_item`, this field provides the line item of the grouped
 	// costs result.
 	LineItem string `json:"line_item" api:"nullable"`
@@ -5276,15 +5451,20 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult s
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
 	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped costs
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
 		Amount       respjson.Field
 		APIKeyID     respjson.Field
+		APISource    respjson.Field
 		LineItem     respjson.Field
 		ProjectID    respjson.Field
 		Quantity     respjson.Field
 		QuantityUnit respjson.Field
+		UserID       respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -5399,6 +5579,7 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultUnion struct {
 	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
 	OutputTokens int64  `json:"output_tokens"`
 	APIKeyID     string `json:"api_key_id"`
+	APISource    string `json:"api_source"`
 	// This field is from variant
 	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
 	Batch bool `json:"batch"`
@@ -5493,6 +5674,7 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultUnion struct {
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -5685,6 +5867,13 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCom
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
@@ -5738,6 +5927,7 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCom
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -6083,6 +6273,13 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageWeb
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=context_level`, this field provides the search context size of
 	// the grouped usage result.
 	ContextLevel string `json:"context_level" api:"nullable"`
@@ -6101,6 +6298,7 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageWeb
 		NumRequests      respjson.Field
 		Object           respjson.Field
 		APIKeyID         respjson.Field
+		APISource        respjson.Field
 		ContextLevel     respjson.Field
 		Model            respjson.Field
 		ProjectID        respjson.Field
@@ -6126,6 +6324,13 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsRes
 	// When `group_by=api_key_id`, this field provides the API Key ID of the grouped
 	// costs result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=line_item`, this field provides the line item of the grouped
 	// costs result.
 	LineItem string `json:"line_item" api:"nullable"`
@@ -6138,15 +6343,20 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsRes
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
 	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped costs
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
 		Amount       respjson.Field
 		APIKeyID     respjson.Field
+		APISource    respjson.Field
 		LineItem     respjson.Field
 		ProjectID    respjson.Field
 		Quantity     respjson.Field
 		QuantityUnit respjson.Field
+		UserID       respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -6261,6 +6471,7 @@ type AdminOrganizationUsageImagesResponseDataResultUnion struct {
 	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
 	OutputTokens int64  `json:"output_tokens"`
 	APIKeyID     string `json:"api_key_id"`
+	APISource    string `json:"api_source"`
 	// This field is from variant
 	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
 	Batch bool `json:"batch"`
@@ -6355,6 +6566,7 @@ type AdminOrganizationUsageImagesResponseDataResultUnion struct {
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -6544,6 +6756,13 @@ type AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsR
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
@@ -6597,6 +6816,7 @@ type AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsR
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -6942,6 +7162,13 @@ type AdminOrganizationUsageImagesResponseDataResultOrganizationUsageWebSearchesR
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=context_level`, this field provides the search context size of
 	// the grouped usage result.
 	ContextLevel string `json:"context_level" api:"nullable"`
@@ -6960,6 +7187,7 @@ type AdminOrganizationUsageImagesResponseDataResultOrganizationUsageWebSearchesR
 		NumRequests      respjson.Field
 		Object           respjson.Field
 		APIKeyID         respjson.Field
+		APISource        respjson.Field
 		ContextLevel     respjson.Field
 		Model            respjson.Field
 		ProjectID        respjson.Field
@@ -6985,6 +7213,13 @@ type AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult struc
 	// When `group_by=api_key_id`, this field provides the API Key ID of the grouped
 	// costs result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=line_item`, this field provides the line item of the grouped
 	// costs result.
 	LineItem string `json:"line_item" api:"nullable"`
@@ -6997,15 +7232,20 @@ type AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult struc
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
 	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped costs
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
 		Amount       respjson.Field
 		APIKeyID     respjson.Field
+		APISource    respjson.Field
 		LineItem     respjson.Field
 		ProjectID    respjson.Field
 		Quantity     respjson.Field
 		QuantityUnit respjson.Field
+		UserID       respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -7120,6 +7360,7 @@ type AdminOrganizationUsageModerationsResponseDataResultUnion struct {
 	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
 	OutputTokens int64  `json:"output_tokens"`
 	APIKeyID     string `json:"api_key_id"`
+	APISource    string `json:"api_source"`
 	// This field is from variant
 	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
 	Batch bool `json:"batch"`
@@ -7214,6 +7455,7 @@ type AdminOrganizationUsageModerationsResponseDataResultUnion struct {
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -7404,6 +7646,13 @@ type AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageComplet
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
@@ -7457,6 +7706,7 @@ type AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageComplet
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -7802,6 +8052,13 @@ type AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageWebSear
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=context_level`, this field provides the search context size of
 	// the grouped usage result.
 	ContextLevel string `json:"context_level" api:"nullable"`
@@ -7820,6 +8077,7 @@ type AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageWebSear
 		NumRequests      respjson.Field
 		Object           respjson.Field
 		APIKeyID         respjson.Field
+		APISource        respjson.Field
 		ContextLevel     respjson.Field
 		Model            respjson.Field
 		ProjectID        respjson.Field
@@ -7845,6 +8103,13 @@ type AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult 
 	// When `group_by=api_key_id`, this field provides the API Key ID of the grouped
 	// costs result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=line_item`, this field provides the line item of the grouped
 	// costs result.
 	LineItem string `json:"line_item" api:"nullable"`
@@ -7857,15 +8122,20 @@ type AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult 
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
 	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped costs
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
 		Amount       respjson.Field
 		APIKeyID     respjson.Field
+		APISource    respjson.Field
 		LineItem     respjson.Field
 		ProjectID    respjson.Field
 		Quantity     respjson.Field
 		QuantityUnit respjson.Field
+		UserID       respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -7980,6 +8250,7 @@ type AdminOrganizationUsageVectorStoresResponseDataResultUnion struct {
 	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
 	OutputTokens int64  `json:"output_tokens"`
 	APIKeyID     string `json:"api_key_id"`
+	APISource    string `json:"api_source"`
 	// This field is from variant
 	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
 	Batch bool `json:"batch"`
@@ -8074,6 +8345,7 @@ type AdminOrganizationUsageVectorStoresResponseDataResultUnion struct {
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -8266,6 +8538,13 @@ type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageComple
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
@@ -8319,6 +8598,7 @@ type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageComple
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -8664,6 +8944,13 @@ type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageWebSea
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=context_level`, this field provides the search context size of
 	// the grouped usage result.
 	ContextLevel string `json:"context_level" api:"nullable"`
@@ -8682,6 +8969,7 @@ type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageWebSea
 		NumRequests      respjson.Field
 		Object           respjson.Field
 		APIKeyID         respjson.Field
+		APISource        respjson.Field
 		ContextLevel     respjson.Field
 		Model            respjson.Field
 		ProjectID        respjson.Field
@@ -8707,6 +8995,13 @@ type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult
 	// When `group_by=api_key_id`, this field provides the API Key ID of the grouped
 	// costs result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=line_item`, this field provides the line item of the grouped
 	// costs result.
 	LineItem string `json:"line_item" api:"nullable"`
@@ -8719,15 +9014,20 @@ type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
 	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped costs
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
 		Amount       respjson.Field
 		APIKeyID     respjson.Field
+		APISource    respjson.Field
 		LineItem     respjson.Field
 		ProjectID    respjson.Field
 		Quantity     respjson.Field
 		QuantityUnit respjson.Field
+		UserID       respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -8842,6 +9142,7 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultUnion struct {
 	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
 	OutputTokens int64  `json:"output_tokens"`
 	APIKeyID     string `json:"api_key_id"`
+	APISource    string `json:"api_source"`
 	// This field is from variant
 	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
 	Batch bool `json:"batch"`
@@ -8936,6 +9237,7 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultUnion struct {
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -9128,6 +9430,13 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageComp
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=batch`, this field tells whether the grouped usage result is
 	// batch or not.
 	Batch bool `json:"batch" api:"nullable"`
@@ -9181,6 +9490,7 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageComp
 		Object                   respjson.Field
 		OutputTokens             respjson.Field
 		APIKeyID                 respjson.Field
+		APISource                respjson.Field
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
@@ -9526,6 +9836,13 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageWebS
 	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
 	// usage result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=context_level`, this field provides the search context size of
 	// the grouped usage result.
 	ContextLevel string `json:"context_level" api:"nullable"`
@@ -9544,6 +9861,7 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageWebS
 		NumRequests      respjson.Field
 		Object           respjson.Field
 		APIKeyID         respjson.Field
+		APISource        respjson.Field
 		ContextLevel     respjson.Field
 		Model            respjson.Field
 		ProjectID        respjson.Field
@@ -9569,6 +9887,13 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResu
 	// When `group_by=api_key_id`, this field provides the API Key ID of the grouped
 	// costs result.
 	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
 	// When `group_by=line_item`, this field provides the line item of the grouped
 	// costs result.
 	LineItem string `json:"line_item" api:"nullable"`
@@ -9581,15 +9906,20 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResu
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
 	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped costs
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
 		Amount       respjson.Field
 		APIKeyID     respjson.Field
+		APISource    respjson.Field
 		LineItem     respjson.Field
 		ProjectID    respjson.Field
 		Quantity     respjson.Field
 		QuantityUnit respjson.Field
+		UserID       respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -9807,10 +10137,13 @@ type AdminOrganizationUsageCompletionsParams struct {
 	// Any of "1m", "1h", "1d".
 	BucketWidth AdminOrganizationUsageCompletionsParamsBucketWidth `query:"bucket_width,omitzero" json:"-"`
 	// Group the usage data by the specified fields. Support fields include
-	// `project_id`, `user_id`, `api_key_id`, `model`, `batch`, `service_tier` or any
-	// combination of them.
+	// `project_id`, `user_id`, `api_key_id`, `model`, `batch`, `service_tier`,
+	// `api_source` or any combination of them. When grouped by `api_source`, results
+	// use `agents_api` for attributed Agents API activity and `unlabeled` for all
+	// other activity. Without source grouping, `api_source` is null.
 	//
-	// Any of "project_id", "user_id", "api_key_id", "model", "batch", "service_tier".
+	// Any of "project_id", "user_id", "api_key_id", "model", "batch", "service_tier",
+	// "api_source".
 	GroupBy []string `query:"group_by,omitzero" json:"-"`
 	// Return only usage for these models.
 	Models []string `query:"models,omitzero" json:"-"`
@@ -9858,10 +10191,15 @@ type AdminOrganizationUsageCostsParams struct {
 	//
 	// Any of "1d".
 	BucketWidth AdminOrganizationUsageCostsParamsBucketWidth `query:"bucket_width,omitzero" json:"-"`
-	// Group the costs by the specified fields. Support fields include `project_id`,
-	// `line_item`, `api_key_id` and any combination of them.
+	// Group the costs by the specified fields. Supported fields include `project_id`,
+	// `user_id`, `line_item`, `api_key_id`, and `api_source`. Support for combining
+	// `user_id` with `project_id` grouping or the `project_ids` filter depends on the
+	// organization and requested time range. Unsupported combinations return HTTP 400.
+	// When grouped by `api_source`, results use `agents_api` for attributed Agents API
+	// activity and `unlabeled` for all other activity. Without source grouping,
+	// `api_source` is null.
 	//
-	// Any of "project_id", "line_item", "api_key_id".
+	// Any of "project_id", "user_id", "line_item", "api_key_id", "api_source".
 	GroupBy []string `query:"group_by,omitzero" json:"-"`
 	// Return only costs for these exact line item names. Each value must match the
 	// complete `line_item` value, for example `gpt-6-astra, input_tokens`.
@@ -10190,10 +10528,13 @@ type AdminOrganizationUsageWebSearchCallsParams struct {
 	// Any of "low", "medium", "high".
 	ContextLevels []string `query:"context_levels,omitzero" json:"-"`
 	// Group the usage data by the specified fields. Support fields include
-	// `project_id`, `user_id`, `api_key_id`, `model`, `context_level` or any
-	// combination of them.
+	// `project_id`, `user_id`, `api_key_id`, `model`, `context_level`, `api_source` or
+	// any combination of them. When grouped by `api_source`, results use `agents_api`
+	// for attributed Agents API activity and `unlabeled` for all other activity.
+	// Without source grouping, `api_source` is null.
 	//
-	// Any of "project_id", "user_id", "api_key_id", "model", "context_level".
+	// Any of "project_id", "user_id", "api_key_id", "model", "context_level",
+	// "api_source".
 	GroupBy []string `query:"group_by,omitzero" json:"-"`
 	// Return only usage for these models.
 	Models []string `query:"models,omitzero" json:"-"`
