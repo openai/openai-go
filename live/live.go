@@ -59,27 +59,18 @@ const (
 	BuiltInVoiceBallad   BuiltInVoice = "ballad"
 	BuiltInVoiceBeacon   BuiltInVoice = "beacon"
 	BuiltInVoiceBossa    BuiltInVoice = "bossa"
-	BuiltInVoiceBrise    BuiltInVoice = "brise"
 	BuiltInVoiceCedar    BuiltInVoice = "cedar"
 	BuiltInVoiceCinder   BuiltInVoice = "cinder"
 	BuiltInVoiceCoral    BuiltInVoice = "coral"
 	BuiltInVoiceDelta    BuiltInVoice = "delta"
 	BuiltInVoiceEcho     BuiltInVoice = "echo"
-	BuiltInVoiceFlitz    BuiltInVoice = "flitz"
 	BuiltInVoiceGleam    BuiltInVoice = "gleam"
-	BuiltInVoiceHarema   BuiltInVoice = "harema"
-	BuiltInVoiceJuni     BuiltInVoice = "juni"
 	BuiltInVoiceMarin    BuiltInVoice = "marin"
 	BuiltInVoiceMeridian BuiltInVoice = "meridian"
-	BuiltInVoiceNira     BuiltInVoice = "nira"
-	BuiltInVoiceNoeul    BuiltInVoice = "noeul"
-	BuiltInVoiceNuri     BuiltInVoice = "nuri"
 	BuiltInVoiceQuartz   BuiltInVoice = "quartz"
 	BuiltInVoiceRipple   BuiltInVoice = "ripple"
 	BuiltInVoiceSage     BuiltInVoice = "sage"
 	BuiltInVoiceShimmer  BuiltInVoice = "shimmer"
-	BuiltInVoiceShitan   BuiltInVoice = "shitan"
-	BuiltInVoiceSillage  BuiltInVoice = "sillage"
 	BuiltInVoiceStone    BuiltInVoice = "stone"
 	BuiltInVoiceTempo    BuiltInVoice = "tempo"
 	BuiltInVoiceVerse    BuiltInVoice = "verse"
@@ -959,16 +950,45 @@ func init() {
 // Use [param.IsOmitted] to confirm if a field is set.
 type ResponsesDelegationConfigToolChoiceUnionParam struct {
 	// Check if union is this variant with !param.IsOmitted(union.OfLiveToolChoiceEnum)
-	OfLiveToolChoiceEnum param.Opt[string] `json:",omitzero,inline"`
-	OfAnyMap             map[string]any    `json:",omitzero,inline"`
+	OfLiveToolChoiceEnum                                             param.Opt[string]                                               `json:",omitzero,inline"`
+	OfResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam *ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam `json:",omitzero,inline"`
+	OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam      *ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam      `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ResponsesDelegationConfigToolChoiceUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfLiveToolChoiceEnum, u.OfAnyMap)
+	return param.MarshalUnion(u, u.OfLiveToolChoiceEnum, u.OfResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam, u.OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam)
 }
 func (u *ResponsesDelegationConfigToolChoiceUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolChoiceUnionParam) GetServerLabel() *string {
+	if vt := u.OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam; vt != nil {
+		return &vt.ServerLabel
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolChoiceUnionParam) GetName() *string {
+	if vt := u.OfResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam; vt != nil {
+		return (*string)(&vt.Name)
+	} else if vt := u.OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam; vt != nil {
+		return (*string)(&vt.Name)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolChoiceUnionParam) GetType() *string {
+	if vt := u.OfResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
 }
 
 type ResponsesDelegationConfigToolChoiceLiveToolChoiceEnum string
@@ -979,40 +999,50 @@ const (
 	ResponsesDelegationConfigToolChoiceLiveToolChoiceEnumRequired ResponsesDelegationConfigToolChoiceLiveToolChoiceEnum = "required"
 )
 
+// The properties Name, Type are required.
+type ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam struct {
+	Name string `json:"name" api:"required"`
+	// This field can be elided, and will marshal its zero value as "function".
+	Type constant.Function `json:"type" default:"function"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Name, ServerLabel, Type are required.
+type ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam struct {
+	Name        string `json:"name" api:"required"`
+	ServerLabel string `json:"server_label" api:"required"`
+	// This field can be elided, and will marshal its zero value as "mcp".
+	Type constant.Mcp `json:"type" default:"mcp"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ResponsesDelegationConfigToolUnionParam struct {
-	OfFunction                *FunctionToolParam                                         `json:",omitzero,inline"`
-	OfWebSearch               *ResponsesDelegationConfigToolWebSearchParam               `json:",omitzero,inline"`
-	OfFileSearch              *ResponsesDelegationConfigToolFileSearchParam              `json:",omitzero,inline"`
-	OfCodeInterpreter         *ResponsesDelegationConfigToolCodeInterpreterParam         `json:",omitzero,inline"`
-	OfShell                   *ResponsesDelegationConfigToolShellParam                   `json:",omitzero,inline"`
-	OfImageGeneration         *ResponsesDelegationConfigToolImageGenerationParam         `json:",omitzero,inline"`
-	OfMcp                     *ResponsesDelegationConfigToolMcpParam                     `json:",omitzero,inline"`
-	OfCustom                  *ResponsesDelegationConfigToolCustomParam                  `json:",omitzero,inline"`
-	OfNamespace               *ResponsesDelegationConfigToolNamespaceParam               `json:",omitzero,inline"`
-	OfToolSearch              *ResponsesDelegationConfigToolToolSearchParam              `json:",omitzero,inline"`
-	OfProgrammaticToolCalling *ResponsesDelegationConfigToolProgrammaticToolCallingParam `json:",omitzero,inline"`
-	OfComputer                *ResponsesDelegationConfigToolComputerParam                `json:",omitzero,inline"`
-	OfApplyPatch              *ResponsesDelegationConfigToolApplyPatchParam              `json:",omitzero,inline"`
+	OfFunction  *FunctionToolParam                           `json:",omitzero,inline"`
+	OfWebSearch *ResponsesDelegationConfigToolWebSearchParam `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ResponsesDelegationConfigToolUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfFunction,
-		u.OfWebSearch,
-		u.OfFileSearch,
-		u.OfCodeInterpreter,
-		u.OfShell,
-		u.OfImageGeneration,
-		u.OfMcp,
-		u.OfCustom,
-		u.OfNamespace,
-		u.OfToolSearch,
-		u.OfProgrammaticToolCalling,
-		u.OfComputer,
-		u.OfApplyPatch)
+	return param.MarshalUnion(u, u.OfFunction, u.OfWebSearch)
 }
 func (u *ResponsesDelegationConfigToolUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1051,40 +1081,10 @@ func (u ResponsesDelegationConfigToolUnionParam) GetStrict() *bool {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationConfigToolUnionParam) GetEnvironment() *ResponsesDelegationConfigToolShellEnvironmentUnionParam {
-	if vt := u.OfShell; vt != nil {
-		return &vt.Environment
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationConfigToolUnionParam) GetType() *string {
 	if vt := u.OfFunction; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfWebSearch; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfFileSearch; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfCodeInterpreter; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfShell; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfImageGeneration; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfMcp; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfCustom; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfNamespace; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfToolSearch; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfProgrammaticToolCalling; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfComputer; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfApplyPatch; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -1095,17 +1095,6 @@ func init() {
 		"type",
 		apijson.Discriminator[FunctionToolParam]("function"),
 		apijson.Discriminator[ResponsesDelegationConfigToolWebSearchParam]("web_search"),
-		apijson.Discriminator[ResponsesDelegationConfigToolFileSearchParam]("file_search"),
-		apijson.Discriminator[ResponsesDelegationConfigToolCodeInterpreterParam]("code_interpreter"),
-		apijson.Discriminator[ResponsesDelegationConfigToolShellParam]("shell"),
-		apijson.Discriminator[ResponsesDelegationConfigToolImageGenerationParam]("image_generation"),
-		apijson.Discriminator[ResponsesDelegationConfigToolMcpParam]("mcp"),
-		apijson.Discriminator[ResponsesDelegationConfigToolCustomParam]("custom"),
-		apijson.Discriminator[ResponsesDelegationConfigToolNamespaceParam]("namespace"),
-		apijson.Discriminator[ResponsesDelegationConfigToolToolSearchParam]("tool_search"),
-		apijson.Discriminator[ResponsesDelegationConfigToolProgrammaticToolCallingParam]("programmatic_tool_calling"),
-		apijson.Discriminator[ResponsesDelegationConfigToolComputerParam]("computer"),
-		apijson.Discriminator[ResponsesDelegationConfigToolApplyPatchParam]("apply_patch"),
 	)
 }
 
@@ -1130,649 +1119,6 @@ func (r ResponsesDelegationConfigToolWebSearchParam) MarshalJSON() (data []byte,
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *ResponsesDelegationConfigToolWebSearchParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationConfigToolFileSearchParam() ResponsesDelegationConfigToolFileSearchParam {
-	return ResponsesDelegationConfigToolFileSearchParam{
-		Type: "file_search",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationConfigToolFileSearchParam].
-type ResponsesDelegationConfigToolFileSearchParam struct {
-	Type constant.FileSearch `json:"type" default:"file_search"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolFileSearchParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolFileSearchParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolFileSearchParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationConfigToolCodeInterpreterParam() ResponsesDelegationConfigToolCodeInterpreterParam {
-	return ResponsesDelegationConfigToolCodeInterpreterParam{
-		Type: "code_interpreter",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationConfigToolCodeInterpreterParam].
-type ResponsesDelegationConfigToolCodeInterpreterParam struct {
-	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolCodeInterpreterParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolCodeInterpreterParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolCodeInterpreterParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// A Responses shell tool. Use a hosted container or return local shell results
-// with response.item.create. Domain secrets are not supported.
-//
-// The property Type is required.
-type ResponsesDelegationConfigToolShellParam struct {
-	Environment ResponsesDelegationConfigToolShellEnvironmentUnionParam `json:"environment,omitzero"`
-	// This field can be elided, and will marshal its zero value as "shell".
-	Type constant.Shell `json:"type" default:"shell"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolShellParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolShellParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolShellParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type ResponsesDelegationConfigToolShellEnvironmentUnionParam struct {
-	OfContainerAuto      *ResponsesDelegationConfigToolShellEnvironmentContainerAutoParam      `json:",omitzero,inline"`
-	OfContainerReference *ResponsesDelegationConfigToolShellEnvironmentContainerReferenceParam `json:",omitzero,inline"`
-	OfLocal              *ResponsesDelegationConfigToolShellEnvironmentLocalParam              `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u ResponsesDelegationConfigToolShellEnvironmentUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfContainerAuto, u.OfContainerReference, u.OfLocal)
-}
-func (u *ResponsesDelegationConfigToolShellEnvironmentUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationConfigToolShellEnvironmentUnionParam) GetFileIDs() []string {
-	if vt := u.OfContainerAuto; vt != nil {
-		return vt.FileIDs
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationConfigToolShellEnvironmentUnionParam) GetMemoryLimit() *string {
-	if vt := u.OfContainerAuto; vt != nil {
-		return &vt.MemoryLimit
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationConfigToolShellEnvironmentUnionParam) GetNetworkPolicy() *ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam {
-	if vt := u.OfContainerAuto; vt != nil {
-		return &vt.NetworkPolicy
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationConfigToolShellEnvironmentUnionParam) GetContainerID() *string {
-	if vt := u.OfContainerReference; vt != nil {
-		return &vt.ContainerID
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationConfigToolShellEnvironmentUnionParam) GetType() *string {
-	if vt := u.OfContainerAuto; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfContainerReference; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfLocal; vt != nil {
-		return (*string)(&vt.Type)
-	}
-	return nil
-}
-
-// Returns a subunion which exports methods to access subproperties
-//
-// Or use AsAny() to get the underlying value
-func (u ResponsesDelegationConfigToolShellEnvironmentUnionParam) GetSkills() (res responsesDelegationConfigToolShellEnvironmentUnionParamSkills) {
-	if vt := u.OfContainerAuto; vt != nil {
-		res.any = &vt.Skills
-	} else if vt := u.OfLocal; vt != nil {
-		res.any = &vt.Skills
-	}
-	return
-}
-
-// Can have the runtime types
-// [_[]ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam],
-// [_[]ResponsesDelegationConfigToolShellEnvironmentLocalSkillParam]
-type responsesDelegationConfigToolShellEnvironmentUnionParamSkills struct{ any }
-
-// Use the following switch statement to get the type of the union:
-//
-//	switch u.AsAny().(type) {
-//	case *[]live.ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam:
-//	case *[]live.ResponsesDelegationConfigToolShellEnvironmentLocalSkillParam:
-//	default:
-//	    fmt.Errorf("not present")
-//	}
-func (u responsesDelegationConfigToolShellEnvironmentUnionParamSkills) AsAny() any { return u.any }
-
-func init() {
-	apijson.RegisterUnion[ResponsesDelegationConfigToolShellEnvironmentUnionParam](
-		"type",
-		apijson.Discriminator[ResponsesDelegationConfigToolShellEnvironmentContainerAutoParam]("container_auto"),
-		apijson.Discriminator[ResponsesDelegationConfigToolShellEnvironmentContainerReferenceParam]("container_reference"),
-		apijson.Discriminator[ResponsesDelegationConfigToolShellEnvironmentLocalParam]("local"),
-	)
-}
-
-// The property Type is required.
-type ResponsesDelegationConfigToolShellEnvironmentContainerAutoParam struct {
-	// An optional list of uploaded files to make available to your code.
-	FileIDs []string `json:"file_ids,omitzero"`
-	// The memory limit for the container.
-	//
-	// Any of "1g", "4g", "16g", "64g".
-	MemoryLimit string `json:"memory_limit,omitzero"`
-	// Network access policy for the container.
-	NetworkPolicy ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam `json:"network_policy,omitzero"`
-	// An optional list of skills referenced by id or inline data.
-	Skills []ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam `json:"skills,omitzero"`
-	// Automatically creates a container for this request
-	//
-	// This field can be elided, and will marshal its zero value as "container_auto".
-	Type constant.ContainerAuto `json:"type" default:"container_auto"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolShellEnvironmentContainerAutoParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolShellEnvironmentContainerAutoParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAutoParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ResponsesDelegationConfigToolShellEnvironmentContainerAutoParam](
-		"memory_limit", "1g", "4g", "16g", "64g",
-	)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam struct {
-	OfDisabled  *ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam  `json:",omitzero,inline"`
-	OfAllowlist *ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfDisabled, u.OfAllowlist)
-}
-func (u *ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam) GetAllowedDomains() []string {
-	if vt := u.OfAllowlist; vt != nil {
-		return vt.AllowedDomains
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam) GetType() *string {
-	if vt := u.OfDisabled; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfAllowlist; vt != nil {
-		return (*string)(&vt.Type)
-	}
-	return nil
-}
-
-func init() {
-	apijson.RegisterUnion[ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam](
-		"type",
-		apijson.Discriminator[ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam]("disabled"),
-		apijson.Discriminator[ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam]("allowlist"),
-	)
-}
-
-func NewResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam() ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam {
-	return ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam{
-		Type: "disabled",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam].
-type ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam struct {
-	// Disable outbound network access. Always `disabled`.
-	Type constant.Disabled `json:"type" default:"disabled"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The properties AllowedDomains, Type are required.
-type ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam struct {
-	// A list of allowed domains when type is `allowlist`.
-	AllowedDomains []string `json:"allowed_domains,omitzero" api:"required"`
-	// Allow outbound network access only to specified domains. Always `allowlist`.
-	//
-	// This field can be elided, and will marshal its zero value as "allowlist".
-	Type constant.Allowlist `json:"type" default:"allowlist"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam struct {
-	OfSkillReference *ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam `json:",omitzero,inline"`
-	OfInline         *ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineParam         `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfSkillReference, u.OfInline)
-}
-func (u *ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetSkillID() *string {
-	if vt := u.OfSkillReference; vt != nil {
-		return &vt.SkillID
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetVersion() *string {
-	if vt := u.OfSkillReference; vt != nil && vt.Version.Valid() {
-		return &vt.Version.Value
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetDescription() *string {
-	if vt := u.OfInline; vt != nil {
-		return &vt.Description
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetName() *string {
-	if vt := u.OfInline; vt != nil {
-		return &vt.Name
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetSource() *ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam {
-	if vt := u.OfInline; vt != nil {
-		return &vt.Source
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetType() *string {
-	if vt := u.OfSkillReference; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfInline; vt != nil {
-		return (*string)(&vt.Type)
-	}
-	return nil
-}
-
-func init() {
-	apijson.RegisterUnion[ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam](
-		"type",
-		apijson.Discriminator[ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam]("skill_reference"),
-		apijson.Discriminator[ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineParam]("inline"),
-	)
-}
-
-// The properties SkillID, Type are required.
-type ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam struct {
-	// The ID of the referenced skill.
-	SkillID string `json:"skill_id" api:"required"`
-	// Optional skill version. Use a positive integer or 'latest'. Omit for default.
-	Version param.Opt[string] `json:"version,omitzero"`
-	// References a skill created with the /v1/skills endpoint.
-	//
-	// This field can be elided, and will marshal its zero value as "skill_reference".
-	Type constant.SkillReference `json:"type" default:"skill_reference"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The properties Description, Name, Source, Type are required.
-type ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineParam struct {
-	// The description of the skill.
-	Description string `json:"description" api:"required"`
-	// The name of the skill.
-	Name string `json:"name" api:"required"`
-	// Inline skill payload
-	Source ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam `json:"source,omitzero" api:"required"`
-	// Defines an inline skill for this request.
-	//
-	// This field can be elided, and will marshal its zero value as "inline".
-	Type constant.Inline `json:"type" default:"inline"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Inline skill payload
-//
-// The properties Data, MediaType, Type are required.
-type ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam struct {
-	// Base64-encoded skill zip bundle.
-	Data string `json:"data" api:"required"`
-	// The media type of the inline skill payload. Must be `application/zip`.
-	//
-	// This field can be elided, and will marshal its zero value as "application/zip".
-	MediaType constant.ApplicationZip `json:"media_type" default:"application/zip"`
-	// The type of the inline skill source. Must be `base64`.
-	//
-	// This field can be elided, and will marshal its zero value as "base64".
-	Type constant.Base64 `json:"type" default:"base64"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The properties ContainerID, Type are required.
-type ResponsesDelegationConfigToolShellEnvironmentContainerReferenceParam struct {
-	// The ID of the referenced container.
-	ContainerID string `json:"container_id" api:"required"`
-	// References a container created with the /v1/containers endpoint
-	//
-	// This field can be elided, and will marshal its zero value as
-	// "container_reference".
-	Type constant.ContainerReference `json:"type" default:"container_reference"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolShellEnvironmentContainerReferenceParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolShellEnvironmentContainerReferenceParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolShellEnvironmentContainerReferenceParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The property Type is required.
-type ResponsesDelegationConfigToolShellEnvironmentLocalParam struct {
-	// An optional list of skills.
-	Skills []ResponsesDelegationConfigToolShellEnvironmentLocalSkillParam `json:"skills,omitzero"`
-	// Use a local computer environment.
-	//
-	// This field can be elided, and will marshal its zero value as "local".
-	Type constant.Local `json:"type" default:"local"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolShellEnvironmentLocalParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolShellEnvironmentLocalParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolShellEnvironmentLocalParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The properties Description, Name, Path are required.
-type ResponsesDelegationConfigToolShellEnvironmentLocalSkillParam struct {
-	// The description of the skill.
-	Description string `json:"description" api:"required"`
-	// The name of the skill.
-	Name string `json:"name" api:"required"`
-	// The path to the directory containing the skill.
-	Path string `json:"path" api:"required"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolShellEnvironmentLocalSkillParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolShellEnvironmentLocalSkillParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolShellEnvironmentLocalSkillParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationConfigToolImageGenerationParam() ResponsesDelegationConfigToolImageGenerationParam {
-	return ResponsesDelegationConfigToolImageGenerationParam{
-		Type: "image_generation",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationConfigToolImageGenerationParam].
-type ResponsesDelegationConfigToolImageGenerationParam struct {
-	Type constant.ImageGeneration `json:"type" default:"image_generation"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolImageGenerationParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolImageGenerationParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolImageGenerationParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationConfigToolMcpParam() ResponsesDelegationConfigToolMcpParam {
-	return ResponsesDelegationConfigToolMcpParam{
-		Type: "mcp",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationConfigToolMcpParam].
-type ResponsesDelegationConfigToolMcpParam struct {
-	Type constant.Mcp `json:"type" default:"mcp"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolMcpParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolMcpParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolMcpParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationConfigToolCustomParam() ResponsesDelegationConfigToolCustomParam {
-	return ResponsesDelegationConfigToolCustomParam{
-		Type: "custom",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationConfigToolCustomParam].
-type ResponsesDelegationConfigToolCustomParam struct {
-	Type constant.Custom `json:"type" default:"custom"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolCustomParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolCustomParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolCustomParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationConfigToolNamespaceParam() ResponsesDelegationConfigToolNamespaceParam {
-	return ResponsesDelegationConfigToolNamespaceParam{
-		Type: "namespace",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationConfigToolNamespaceParam].
-type ResponsesDelegationConfigToolNamespaceParam struct {
-	Type constant.Namespace `json:"type" default:"namespace"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolNamespaceParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolNamespaceParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolNamespaceParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationConfigToolToolSearchParam() ResponsesDelegationConfigToolToolSearchParam {
-	return ResponsesDelegationConfigToolToolSearchParam{
-		Type: "tool_search",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationConfigToolToolSearchParam].
-type ResponsesDelegationConfigToolToolSearchParam struct {
-	Type constant.ToolSearch `json:"type" default:"tool_search"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolToolSearchParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolToolSearchParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolToolSearchParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationConfigToolProgrammaticToolCallingParam() ResponsesDelegationConfigToolProgrammaticToolCallingParam {
-	return ResponsesDelegationConfigToolProgrammaticToolCallingParam{
-		Type: "programmatic_tool_calling",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationConfigToolProgrammaticToolCallingParam].
-type ResponsesDelegationConfigToolProgrammaticToolCallingParam struct {
-	Type constant.ProgrammaticToolCalling `json:"type" default:"programmatic_tool_calling"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolProgrammaticToolCallingParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolProgrammaticToolCallingParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolProgrammaticToolCallingParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationConfigToolComputerParam() ResponsesDelegationConfigToolComputerParam {
-	return ResponsesDelegationConfigToolComputerParam{
-		Type: "computer",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationConfigToolComputerParam].
-type ResponsesDelegationConfigToolComputerParam struct {
-	Type constant.Computer `json:"type" default:"computer"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolComputerParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolComputerParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolComputerParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationConfigToolApplyPatchParam() ResponsesDelegationConfigToolApplyPatchParam {
-	return ResponsesDelegationConfigToolApplyPatchParam{
-		Type: "apply_patch",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationConfigToolApplyPatchParam].
-type ResponsesDelegationConfigToolApplyPatchParam struct {
-	Type constant.ApplyPatch `json:"type" default:"apply_patch"`
-	paramObj
-}
-
-func (r ResponsesDelegationConfigToolApplyPatchParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolApplyPatchParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationConfigToolApplyPatchParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -1890,16 +1236,45 @@ func init() {
 // Use [param.IsOmitted] to confirm if a field is set.
 type ResponsesDelegationUpdateConfigToolChoiceUnionParam struct {
 	// Check if union is this variant with !param.IsOmitted(union.OfLiveToolChoiceEnum)
-	OfLiveToolChoiceEnum param.Opt[string] `json:",omitzero,inline"`
-	OfAnyMap             map[string]any    `json:",omitzero,inline"`
+	OfLiveToolChoiceEnum                                                   param.Opt[string]                                                     `json:",omitzero,inline"`
+	OfResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam *ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam `json:",omitzero,inline"`
+	OfResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam      *ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam      `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ResponsesDelegationUpdateConfigToolChoiceUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfLiveToolChoiceEnum, u.OfAnyMap)
+	return param.MarshalUnion(u, u.OfLiveToolChoiceEnum, u.OfResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam, u.OfResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam)
 }
 func (u *ResponsesDelegationUpdateConfigToolChoiceUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolChoiceUnionParam) GetServerLabel() *string {
+	if vt := u.OfResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam; vt != nil {
+		return &vt.ServerLabel
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolChoiceUnionParam) GetName() *string {
+	if vt := u.OfResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam; vt != nil {
+		return (*string)(&vt.Name)
+	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam; vt != nil {
+		return (*string)(&vt.Name)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolChoiceUnionParam) GetType() *string {
+	if vt := u.OfResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
 }
 
 type ResponsesDelegationUpdateConfigToolChoiceLiveToolChoiceEnum string
@@ -1910,40 +1285,50 @@ const (
 	ResponsesDelegationUpdateConfigToolChoiceLiveToolChoiceEnumRequired ResponsesDelegationUpdateConfigToolChoiceLiveToolChoiceEnum = "required"
 )
 
+// The properties Name, Type are required.
+type ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam struct {
+	Name string `json:"name" api:"required"`
+	// This field can be elided, and will marshal its zero value as "function".
+	Type constant.Function `json:"type" default:"function"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Name, ServerLabel, Type are required.
+type ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam struct {
+	Name        string `json:"name" api:"required"`
+	ServerLabel string `json:"server_label" api:"required"`
+	// This field can be elided, and will marshal its zero value as "mcp".
+	Type constant.Mcp `json:"type" default:"mcp"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ResponsesDelegationUpdateConfigToolUnionParam struct {
-	OfFunction                *FunctionToolParam                                               `json:",omitzero,inline"`
-	OfWebSearch               *ResponsesDelegationUpdateConfigToolWebSearchParam               `json:",omitzero,inline"`
-	OfFileSearch              *ResponsesDelegationUpdateConfigToolFileSearchParam              `json:",omitzero,inline"`
-	OfCodeInterpreter         *ResponsesDelegationUpdateConfigToolCodeInterpreterParam         `json:",omitzero,inline"`
-	OfShell                   *ResponsesDelegationUpdateConfigToolShellParam                   `json:",omitzero,inline"`
-	OfImageGeneration         *ResponsesDelegationUpdateConfigToolImageGenerationParam         `json:",omitzero,inline"`
-	OfMcp                     *ResponsesDelegationUpdateConfigToolMcpParam                     `json:",omitzero,inline"`
-	OfCustom                  *ResponsesDelegationUpdateConfigToolCustomParam                  `json:",omitzero,inline"`
-	OfNamespace               *ResponsesDelegationUpdateConfigToolNamespaceParam               `json:",omitzero,inline"`
-	OfToolSearch              *ResponsesDelegationUpdateConfigToolToolSearchParam              `json:",omitzero,inline"`
-	OfProgrammaticToolCalling *ResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam `json:",omitzero,inline"`
-	OfComputer                *ResponsesDelegationUpdateConfigToolComputerParam                `json:",omitzero,inline"`
-	OfApplyPatch              *ResponsesDelegationUpdateConfigToolApplyPatchParam              `json:",omitzero,inline"`
+	OfFunction  *FunctionToolParam                                 `json:",omitzero,inline"`
+	OfWebSearch *ResponsesDelegationUpdateConfigToolWebSearchParam `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ResponsesDelegationUpdateConfigToolUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfFunction,
-		u.OfWebSearch,
-		u.OfFileSearch,
-		u.OfCodeInterpreter,
-		u.OfShell,
-		u.OfImageGeneration,
-		u.OfMcp,
-		u.OfCustom,
-		u.OfNamespace,
-		u.OfToolSearch,
-		u.OfProgrammaticToolCalling,
-		u.OfComputer,
-		u.OfApplyPatch)
+	return param.MarshalUnion(u, u.OfFunction, u.OfWebSearch)
 }
 func (u *ResponsesDelegationUpdateConfigToolUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1982,40 +1367,10 @@ func (u ResponsesDelegationUpdateConfigToolUnionParam) GetStrict() *bool {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationUpdateConfigToolUnionParam) GetEnvironment() *ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam {
-	if vt := u.OfShell; vt != nil {
-		return &vt.Environment
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationUpdateConfigToolUnionParam) GetType() *string {
 	if vt := u.OfFunction; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfWebSearch; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfFileSearch; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfCodeInterpreter; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfShell; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfImageGeneration; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfMcp; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfCustom; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfNamespace; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfToolSearch; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfProgrammaticToolCalling; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfComputer; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfApplyPatch; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -2026,17 +1381,6 @@ func init() {
 		"type",
 		apijson.Discriminator[FunctionToolParam]("function"),
 		apijson.Discriminator[ResponsesDelegationUpdateConfigToolWebSearchParam]("web_search"),
-		apijson.Discriminator[ResponsesDelegationUpdateConfigToolFileSearchParam]("file_search"),
-		apijson.Discriminator[ResponsesDelegationUpdateConfigToolCodeInterpreterParam]("code_interpreter"),
-		apijson.Discriminator[ResponsesDelegationUpdateConfigToolShellParam]("shell"),
-		apijson.Discriminator[ResponsesDelegationUpdateConfigToolImageGenerationParam]("image_generation"),
-		apijson.Discriminator[ResponsesDelegationUpdateConfigToolMcpParam]("mcp"),
-		apijson.Discriminator[ResponsesDelegationUpdateConfigToolCustomParam]("custom"),
-		apijson.Discriminator[ResponsesDelegationUpdateConfigToolNamespaceParam]("namespace"),
-		apijson.Discriminator[ResponsesDelegationUpdateConfigToolToolSearchParam]("tool_search"),
-		apijson.Discriminator[ResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam]("programmatic_tool_calling"),
-		apijson.Discriminator[ResponsesDelegationUpdateConfigToolComputerParam]("computer"),
-		apijson.Discriminator[ResponsesDelegationUpdateConfigToolApplyPatchParam]("apply_patch"),
 	)
 }
 
@@ -2061,651 +1405,6 @@ func (r ResponsesDelegationUpdateConfigToolWebSearchParam) MarshalJSON() (data [
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *ResponsesDelegationUpdateConfigToolWebSearchParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationUpdateConfigToolFileSearchParam() ResponsesDelegationUpdateConfigToolFileSearchParam {
-	return ResponsesDelegationUpdateConfigToolFileSearchParam{
-		Type: "file_search",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationUpdateConfigToolFileSearchParam].
-type ResponsesDelegationUpdateConfigToolFileSearchParam struct {
-	Type constant.FileSearch `json:"type" default:"file_search"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolFileSearchParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolFileSearchParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolFileSearchParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationUpdateConfigToolCodeInterpreterParam() ResponsesDelegationUpdateConfigToolCodeInterpreterParam {
-	return ResponsesDelegationUpdateConfigToolCodeInterpreterParam{
-		Type: "code_interpreter",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationUpdateConfigToolCodeInterpreterParam].
-type ResponsesDelegationUpdateConfigToolCodeInterpreterParam struct {
-	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolCodeInterpreterParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolCodeInterpreterParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolCodeInterpreterParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// A Responses shell tool. Use a hosted container or return local shell results
-// with response.item.create. Domain secrets are not supported.
-//
-// The property Type is required.
-type ResponsesDelegationUpdateConfigToolShellParam struct {
-	Environment ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam `json:"environment,omitzero"`
-	// This field can be elided, and will marshal its zero value as "shell".
-	Type constant.Shell `json:"type" default:"shell"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolShellParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolShellParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolShellParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam struct {
-	OfContainerAuto      *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoParam      `json:",omitzero,inline"`
-	OfContainerReference *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerReferenceParam `json:",omitzero,inline"`
-	OfLocal              *ResponsesDelegationUpdateConfigToolShellEnvironmentLocalParam              `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfContainerAuto, u.OfContainerReference, u.OfLocal)
-}
-func (u *ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam) GetFileIDs() []string {
-	if vt := u.OfContainerAuto; vt != nil {
-		return vt.FileIDs
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam) GetMemoryLimit() *string {
-	if vt := u.OfContainerAuto; vt != nil {
-		return &vt.MemoryLimit
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam) GetNetworkPolicy() *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam {
-	if vt := u.OfContainerAuto; vt != nil {
-		return &vt.NetworkPolicy
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam) GetContainerID() *string {
-	if vt := u.OfContainerReference; vt != nil {
-		return &vt.ContainerID
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam) GetType() *string {
-	if vt := u.OfContainerAuto; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfContainerReference; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfLocal; vt != nil {
-		return (*string)(&vt.Type)
-	}
-	return nil
-}
-
-// Returns a subunion which exports methods to access subproperties
-//
-// Or use AsAny() to get the underlying value
-func (u ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam) GetSkills() (res responsesDelegationUpdateConfigToolShellEnvironmentUnionParamSkills) {
-	if vt := u.OfContainerAuto; vt != nil {
-		res.any = &vt.Skills
-	} else if vt := u.OfLocal; vt != nil {
-		res.any = &vt.Skills
-	}
-	return
-}
-
-// Can have the runtime types
-// [_[]ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam],
-// [_[]ResponsesDelegationUpdateConfigToolShellEnvironmentLocalSkillParam]
-type responsesDelegationUpdateConfigToolShellEnvironmentUnionParamSkills struct{ any }
-
-// Use the following switch statement to get the type of the union:
-//
-//	switch u.AsAny().(type) {
-//	case *[]live.ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam:
-//	case *[]live.ResponsesDelegationUpdateConfigToolShellEnvironmentLocalSkillParam:
-//	default:
-//	    fmt.Errorf("not present")
-//	}
-func (u responsesDelegationUpdateConfigToolShellEnvironmentUnionParamSkills) AsAny() any {
-	return u.any
-}
-
-func init() {
-	apijson.RegisterUnion[ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam](
-		"type",
-		apijson.Discriminator[ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoParam]("container_auto"),
-		apijson.Discriminator[ResponsesDelegationUpdateConfigToolShellEnvironmentContainerReferenceParam]("container_reference"),
-		apijson.Discriminator[ResponsesDelegationUpdateConfigToolShellEnvironmentLocalParam]("local"),
-	)
-}
-
-// The property Type is required.
-type ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoParam struct {
-	// An optional list of uploaded files to make available to your code.
-	FileIDs []string `json:"file_ids,omitzero"`
-	// The memory limit for the container.
-	//
-	// Any of "1g", "4g", "16g", "64g".
-	MemoryLimit string `json:"memory_limit,omitzero"`
-	// Network access policy for the container.
-	NetworkPolicy ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam `json:"network_policy,omitzero"`
-	// An optional list of skills referenced by id or inline data.
-	Skills []ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam `json:"skills,omitzero"`
-	// Automatically creates a container for this request
-	//
-	// This field can be elided, and will marshal its zero value as "container_auto".
-	Type constant.ContainerAuto `json:"type" default:"container_auto"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoParam](
-		"memory_limit", "1g", "4g", "16g", "64g",
-	)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam struct {
-	OfDisabled  *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam  `json:",omitzero,inline"`
-	OfAllowlist *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfDisabled, u.OfAllowlist)
-}
-func (u *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam) GetAllowedDomains() []string {
-	if vt := u.OfAllowlist; vt != nil {
-		return vt.AllowedDomains
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam) GetType() *string {
-	if vt := u.OfDisabled; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfAllowlist; vt != nil {
-		return (*string)(&vt.Type)
-	}
-	return nil
-}
-
-func init() {
-	apijson.RegisterUnion[ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam](
-		"type",
-		apijson.Discriminator[ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam]("disabled"),
-		apijson.Discriminator[ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam]("allowlist"),
-	)
-}
-
-func NewResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam() ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam {
-	return ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam{
-		Type: "disabled",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam].
-type ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam struct {
-	// Disable outbound network access. Always `disabled`.
-	Type constant.Disabled `json:"type" default:"disabled"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The properties AllowedDomains, Type are required.
-type ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam struct {
-	// A list of allowed domains when type is `allowlist`.
-	AllowedDomains []string `json:"allowed_domains,omitzero" api:"required"`
-	// Allow outbound network access only to specified domains. Always `allowlist`.
-	//
-	// This field can be elided, and will marshal its zero value as "allowlist".
-	Type constant.Allowlist `json:"type" default:"allowlist"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam struct {
-	OfSkillReference *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam `json:",omitzero,inline"`
-	OfInline         *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineParam         `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfSkillReference, u.OfInline)
-}
-func (u *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetSkillID() *string {
-	if vt := u.OfSkillReference; vt != nil {
-		return &vt.SkillID
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetVersion() *string {
-	if vt := u.OfSkillReference; vt != nil && vt.Version.Valid() {
-		return &vt.Version.Value
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetDescription() *string {
-	if vt := u.OfInline; vt != nil {
-		return &vt.Description
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetName() *string {
-	if vt := u.OfInline; vt != nil {
-		return &vt.Name
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetSource() *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam {
-	if vt := u.OfInline; vt != nil {
-		return &vt.Source
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetType() *string {
-	if vt := u.OfSkillReference; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfInline; vt != nil {
-		return (*string)(&vt.Type)
-	}
-	return nil
-}
-
-func init() {
-	apijson.RegisterUnion[ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam](
-		"type",
-		apijson.Discriminator[ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam]("skill_reference"),
-		apijson.Discriminator[ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineParam]("inline"),
-	)
-}
-
-// The properties SkillID, Type are required.
-type ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam struct {
-	// The ID of the referenced skill.
-	SkillID string `json:"skill_id" api:"required"`
-	// Optional skill version. Use a positive integer or 'latest'. Omit for default.
-	Version param.Opt[string] `json:"version,omitzero"`
-	// References a skill created with the /v1/skills endpoint.
-	//
-	// This field can be elided, and will marshal its zero value as "skill_reference".
-	Type constant.SkillReference `json:"type" default:"skill_reference"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The properties Description, Name, Source, Type are required.
-type ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineParam struct {
-	// The description of the skill.
-	Description string `json:"description" api:"required"`
-	// The name of the skill.
-	Name string `json:"name" api:"required"`
-	// Inline skill payload
-	Source ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam `json:"source,omitzero" api:"required"`
-	// Defines an inline skill for this request.
-	//
-	// This field can be elided, and will marshal its zero value as "inline".
-	Type constant.Inline `json:"type" default:"inline"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Inline skill payload
-//
-// The properties Data, MediaType, Type are required.
-type ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam struct {
-	// Base64-encoded skill zip bundle.
-	Data string `json:"data" api:"required"`
-	// The media type of the inline skill payload. Must be `application/zip`.
-	//
-	// This field can be elided, and will marshal its zero value as "application/zip".
-	MediaType constant.ApplicationZip `json:"media_type" default:"application/zip"`
-	// The type of the inline skill source. Must be `base64`.
-	//
-	// This field can be elided, and will marshal its zero value as "base64".
-	Type constant.Base64 `json:"type" default:"base64"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The properties ContainerID, Type are required.
-type ResponsesDelegationUpdateConfigToolShellEnvironmentContainerReferenceParam struct {
-	// The ID of the referenced container.
-	ContainerID string `json:"container_id" api:"required"`
-	// References a container created with the /v1/containers endpoint
-	//
-	// This field can be elided, and will marshal its zero value as
-	// "container_reference".
-	Type constant.ContainerReference `json:"type" default:"container_reference"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolShellEnvironmentContainerReferenceParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolShellEnvironmentContainerReferenceParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerReferenceParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The property Type is required.
-type ResponsesDelegationUpdateConfigToolShellEnvironmentLocalParam struct {
-	// An optional list of skills.
-	Skills []ResponsesDelegationUpdateConfigToolShellEnvironmentLocalSkillParam `json:"skills,omitzero"`
-	// Use a local computer environment.
-	//
-	// This field can be elided, and will marshal its zero value as "local".
-	Type constant.Local `json:"type" default:"local"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolShellEnvironmentLocalParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolShellEnvironmentLocalParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolShellEnvironmentLocalParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The properties Description, Name, Path are required.
-type ResponsesDelegationUpdateConfigToolShellEnvironmentLocalSkillParam struct {
-	// The description of the skill.
-	Description string `json:"description" api:"required"`
-	// The name of the skill.
-	Name string `json:"name" api:"required"`
-	// The path to the directory containing the skill.
-	Path string `json:"path" api:"required"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolShellEnvironmentLocalSkillParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolShellEnvironmentLocalSkillParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolShellEnvironmentLocalSkillParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationUpdateConfigToolImageGenerationParam() ResponsesDelegationUpdateConfigToolImageGenerationParam {
-	return ResponsesDelegationUpdateConfigToolImageGenerationParam{
-		Type: "image_generation",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationUpdateConfigToolImageGenerationParam].
-type ResponsesDelegationUpdateConfigToolImageGenerationParam struct {
-	Type constant.ImageGeneration `json:"type" default:"image_generation"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolImageGenerationParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolImageGenerationParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolImageGenerationParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationUpdateConfigToolMcpParam() ResponsesDelegationUpdateConfigToolMcpParam {
-	return ResponsesDelegationUpdateConfigToolMcpParam{
-		Type: "mcp",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationUpdateConfigToolMcpParam].
-type ResponsesDelegationUpdateConfigToolMcpParam struct {
-	Type constant.Mcp `json:"type" default:"mcp"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolMcpParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolMcpParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolMcpParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationUpdateConfigToolCustomParam() ResponsesDelegationUpdateConfigToolCustomParam {
-	return ResponsesDelegationUpdateConfigToolCustomParam{
-		Type: "custom",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationUpdateConfigToolCustomParam].
-type ResponsesDelegationUpdateConfigToolCustomParam struct {
-	Type constant.Custom `json:"type" default:"custom"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolCustomParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolCustomParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolCustomParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationUpdateConfigToolNamespaceParam() ResponsesDelegationUpdateConfigToolNamespaceParam {
-	return ResponsesDelegationUpdateConfigToolNamespaceParam{
-		Type: "namespace",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationUpdateConfigToolNamespaceParam].
-type ResponsesDelegationUpdateConfigToolNamespaceParam struct {
-	Type constant.Namespace `json:"type" default:"namespace"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolNamespaceParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolNamespaceParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolNamespaceParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationUpdateConfigToolToolSearchParam() ResponsesDelegationUpdateConfigToolToolSearchParam {
-	return ResponsesDelegationUpdateConfigToolToolSearchParam{
-		Type: "tool_search",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationUpdateConfigToolToolSearchParam].
-type ResponsesDelegationUpdateConfigToolToolSearchParam struct {
-	Type constant.ToolSearch `json:"type" default:"tool_search"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolToolSearchParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolToolSearchParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolToolSearchParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam() ResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam {
-	return ResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam{
-		Type: "programmatic_tool_calling",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam].
-type ResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam struct {
-	Type constant.ProgrammaticToolCalling `json:"type" default:"programmatic_tool_calling"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationUpdateConfigToolComputerParam() ResponsesDelegationUpdateConfigToolComputerParam {
-	return ResponsesDelegationUpdateConfigToolComputerParam{
-		Type: "computer",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationUpdateConfigToolComputerParam].
-type ResponsesDelegationUpdateConfigToolComputerParam struct {
-	Type constant.Computer `json:"type" default:"computer"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolComputerParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolComputerParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolComputerParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func NewResponsesDelegationUpdateConfigToolApplyPatchParam() ResponsesDelegationUpdateConfigToolApplyPatchParam {
-	return ResponsesDelegationUpdateConfigToolApplyPatchParam{
-		Type: "apply_patch",
-	}
-}
-
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationUpdateConfigToolApplyPatchParam].
-type ResponsesDelegationUpdateConfigToolApplyPatchParam struct {
-	Type constant.ApplyPatch `json:"type" default:"apply_patch"`
-	paramObj
-}
-
-func (r ResponsesDelegationUpdateConfigToolApplyPatchParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolApplyPatchParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponsesDelegationUpdateConfigToolApplyPatchParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

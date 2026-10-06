@@ -72,7 +72,8 @@ func (r *BetaAgentSessionTurnItemService) ListAutoPaging(ctx context.Context, se
 }
 
 type BetaAgentSessionTurnItemListParams struct {
-	// Return resources after this resource ID in the selected order.
+	// Return items after this cursor in the selected order. Pass the previous
+	// response's last_id, which can differ from the last item's ID.
 	After param.Opt[string] `query:"after,omitzero" json:"-"`
 	// The maximum number of resources to return, between 1 and 100. Defaults to 20.
 	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`

@@ -168,8 +168,7 @@ func (r *FileDeleted) UnmarshalJSON(data []byte) error {
 type FileObject struct {
 	// The file identifier, which can be referenced in the API endpoints.
 	ID string `json:"id" api:"required"`
-	// The size of the file, in bytes. In a completed file upload response, this can be
-	// null when the file size is not yet available.
+	// The size of the file, in bytes.
 	Bytes int64 `json:"bytes" api:"required"`
 	// The Unix timestamp (in seconds) for when the file was created.
 	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
@@ -191,12 +190,10 @@ type FileObject struct {
 	//
 	// Deprecated: deprecated
 	Status FileObjectStatus `json:"status" api:"required"`
-	// The Unix timestamp (in seconds) for when the file will expire. In a completed
-	// file upload response, this can be null when no expiry is set.
+	// The Unix timestamp (in seconds) for when the file will expire.
 	ExpiresAt int64 `json:"expires_at" format:"unixtime"`
 	// Deprecated. For details on why a fine-tuning training file failed validation,
-	// see the `error` field on `fine_tuning.job`. Completed file upload responses can
-	// return null when these details are unset.
+	// see the `error` field on `fine_tuning.job`.
 	//
 	// Deprecated: deprecated
 	StatusDetails string `json:"status_details"`
