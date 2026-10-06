@@ -114,6 +114,7 @@ type ChatKitThreadDeleted string                              // Always "chatkit
 type ChatKitUserMessage string                                // Always "chatkit.user_message"
 type ChatKitWidget string                                     // Always "chatkit.widget"
 type CheckpointPermission string                              // Always "checkpoint.permission"
+type Choice string                                            // Always "choice"
 type Click string                                             // Always "click"
 type Client string                                            // Always "client"
 type ClientSecretBasic string                                 // Always "client_secret_basic"
@@ -323,6 +324,7 @@ type OutputAudioBufferStarted string                          // Always "output_
 type OutputAudioBufferStopped string                          // Always "output_audio_buffer.stopped"
 type OutputText string                                        // Always "output_text"
 type Page string                                              // Always "page"
+type Predicate string                                         // Always "predicate"
 type Program string                                           // Always "program"
 type ProgramOutput string                                     // Always "program_output"
 type ProgrammaticToolCalling string                           // Always "programmatic_tool_calling"
@@ -435,6 +437,7 @@ type SafetyCase string                                        // Always "safety.
 type SafetyDeactivationIssued string                          // Always "safety.deactivation_issued"
 type SafetyOrgAlertCreated string                             // Always "safety.org_alert.created"
 type SafetyWarningIssued string                               // Always "safety.warning_issued"
+type Score string                                             // Always "score"
 type ScoreModel string                                        // Always "score_model"
 type Screenshot string                                        // Always "screenshot"
 type Scroll string                                            // Always "scroll"
@@ -735,6 +738,7 @@ func (c ChatKitThreadDeleted) Default() ChatKitThreadDeleted   { return "chatkit
 func (c ChatKitUserMessage) Default() ChatKitUserMessage       { return "chatkit.user_message" }
 func (c ChatKitWidget) Default() ChatKitWidget                 { return "chatkit.widget" }
 func (c CheckpointPermission) Default() CheckpointPermission   { return "checkpoint.permission" }
+func (c Choice) Default() Choice                               { return "choice" }
 func (c Click) Default() Click                                 { return "click" }
 func (c Client) Default() Client                               { return "client" }
 func (c ClientSecretBasic) Default() ClientSecretBasic         { return "client_secret_basic" }
@@ -1058,6 +1062,7 @@ func (c OutputAudioBufferStopped) Default() OutputAudioBufferStopped {
 }
 func (c OutputText) Default() OutputText       { return "output_text" }
 func (c Page) Default() Page                   { return "page" }
+func (c Predicate) Default() Predicate         { return "predicate" }
 func (c Program) Default() Program             { return "program" }
 func (c ProgramOutput) Default() ProgramOutput { return "program_output" }
 func (c ProgrammaticToolCalling) Default() ProgrammaticToolCalling {
@@ -1280,6 +1285,7 @@ func (c SafetyDeactivationIssued) Default() SafetyDeactivationIssued {
 }
 func (c SafetyOrgAlertCreated) Default() SafetyOrgAlertCreated { return "safety.org_alert.created" }
 func (c SafetyWarningIssued) Default() SafetyWarningIssued     { return "safety.warning_issued" }
+func (c Score) Default() Score                                 { return "score" }
 func (c ScoreModel) Default() ScoreModel                       { return "score_model" }
 func (c Screenshot) Default() Screenshot                       { return "screenshot" }
 func (c Scroll) Default() Scroll                               { return "scroll" }
@@ -1566,6 +1572,7 @@ func (c ChatKitThreadDeleted) MarshalJSON() ([]byte, error)             { return
 func (c ChatKitUserMessage) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c ChatKitWidget) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c CheckpointPermission) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c Choice) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c Click) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c Client) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c ClientSecretBasic) MarshalJSON() ([]byte, error)                { return marshalString(c) }
@@ -1795,6 +1802,7 @@ func (c OutputAudioBufferStarted) MarshalJSON() ([]byte, error)              { r
 func (c OutputAudioBufferStopped) MarshalJSON() ([]byte, error)              { return marshalString(c) }
 func (c OutputText) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c Page) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
+func (c Predicate) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c Program) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c ProgramOutput) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c ProgrammaticToolCalling) MarshalJSON() ([]byte, error)               { return marshalString(c) }
@@ -1911,6 +1919,7 @@ func (c SafetyCase) MarshalJSON() ([]byte, error)                          { ret
 func (c SafetyDeactivationIssued) MarshalJSON() ([]byte, error)            { return marshalString(c) }
 func (c SafetyOrgAlertCreated) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c SafetyWarningIssued) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c Score) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c ScoreModel) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c Screenshot) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c Scroll) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
