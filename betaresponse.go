@@ -14072,8 +14072,8 @@ type BetaResponseInputItemUnion struct {
 	// This field is from variant [BetaResponseInputItemAgentMessage].
 	Recipient string `json:"recipient"`
 	Execution string `json:"execution"`
-	// This field is a union of [[]BetaToolUnion], [[]BetaToolUnion],
-	// [[]BetaResponseInputItemMcpListToolsTool]
+	// This field is a union of [[]BetaResponseToolSearchOutputItemParamToolUnionResp],
+	// [[]BetaToolUnion], [[]BetaResponseInputItemMcpListToolsTool]
 	Tools BetaResponseInputItemUnionTools `json:"tools"`
 	// This field is from variant [BetaResponseConfigurationUpdateItemParamResp].
 	Reasoning BetaResponseConfigurationUpdateItemParamReasoningResp `json:"reasoning"`
@@ -14783,8 +14783,12 @@ func (r *BetaResponseInputItemUnionCaller) UnmarshalJSON(data []byte) error {
 // [BetaResponseInputItemUnion].
 //
 // If the underlying value is not a json object, one of the following properties
-// will be valid: OfBetaToolArray OfBetaResponseInputItemMcpListToolsTools]
+// will be valid: OfBetaResponseToolSearchOutputItemToolArray OfBetaToolArray
+// OfBetaResponseInputItemMcpListToolsTools]
 type BetaResponseInputItemUnionTools struct {
+	// This field will be present if the value is a
+	// [[]BetaResponseToolSearchOutputItemParamToolUnionResp] instead of an object.
+	OfBetaResponseToolSearchOutputItemToolArray []BetaResponseToolSearchOutputItemParamToolUnionResp `json:",inline"`
 	// This field will be present if the value is a [[]BetaToolUnion] instead of an
 	// object.
 	OfBetaToolArray []BetaToolUnion `json:",inline"`
@@ -14792,9 +14796,10 @@ type BetaResponseInputItemUnionTools struct {
 	// [[]BetaResponseInputItemMcpListToolsTool] instead of an object.
 	OfBetaResponseInputItemMcpListToolsTools []BetaResponseInputItemMcpListToolsTool `json:",inline"`
 	JSON                                     struct {
-		OfBetaToolArray                          respjson.Field
-		OfBetaResponseInputItemMcpListToolsTools respjson.Field
-		raw                                      string
+		OfBetaResponseToolSearchOutputItemToolArray respjson.Field
+		OfBetaToolArray                             respjson.Field
+		OfBetaResponseInputItemMcpListToolsTools    respjson.Field
+		raw                                         string
 	} `json:"-"`
 }
 
@@ -17475,7 +17480,7 @@ func BetaResponseInputItemParamOfToolSearchCall(arguments any) BetaResponseInput
 	return BetaResponseInputItemUnionParam{OfToolSearchCall: &toolSearchCall}
 }
 
-func BetaResponseInputItemParamOfToolSearchOutput(tools []BetaToolUnionParam) BetaResponseInputItemUnionParam {
+func BetaResponseInputItemParamOfToolSearchOutput(tools []BetaResponseToolSearchOutputItemParamToolUnion) BetaResponseInputItemUnionParam {
 	var toolSearchOutput BetaResponseToolSearchOutputItemParam
 	toolSearchOutput.Tools = tools
 	return BetaResponseInputItemUnionParam{OfToolSearchOutput: &toolSearchOutput}
@@ -18953,13 +18958,14 @@ func (u BetaResponseInputItemUnionParam) GetTools() (res betaResponseInputItemUn
 	return
 }
 
-// Can have the runtime types [_[]BetaToolUnionParam],
-// [_[]BetaResponseInputItemMcpListToolsToolParam]
+// Can have the runtime types [_[]BetaResponseToolSearchOutputItemParamToolUnion],
+// [_[]BetaToolUnionParam], [\*[]BetaResponseInputItemMcpListToolsToolParam]
 type betaResponseInputItemUnionParamTools struct{ any }
 
 // Use the following switch statement to get the type of the union:
 //
 //	switch u.AsAny().(type) {
+//	case *[]openai.BetaResponseToolSearchOutputItemParamToolUnion:
 //	case *[]openai.BetaToolUnionParam:
 //	case *[]openai.BetaResponseInputItemMcpListToolsToolParam:
 //	default:
@@ -30198,7 +30204,7 @@ func (r *BetaResponseToolSearchOutputItemAgent) UnmarshalJSON(data []byte) error
 
 type BetaResponseToolSearchOutputItemParamResp struct {
 	// The loaded tool definitions returned by the tool search output.
-	Tools []BetaToolUnion `json:"tools" api:"required"`
+	Tools []BetaResponseToolSearchOutputItemParamToolUnionResp `json:"tools" api:"required"`
 	// The item type. Always `tool_search_output`.
 	Type constant.ToolSearchOutput `json:"type" default:"tool_search_output"`
 	// The unique ID of this tool search output.
@@ -30245,6 +30251,1010 @@ func (r BetaResponseToolSearchOutputItemParamResp) ToParam() BetaResponseToolSea
 	return param.Override[BetaResponseToolSearchOutputItemParam](json.RawMessage(r.RawJSON()))
 }
 
+// BetaResponseToolSearchOutputItemParamToolUnionResp contains all possible
+// properties and values from [BetaFunctionTool], [BetaFileSearchTool],
+// [BetaComputerTool], [BetaComputerUsePreviewTool], [BetaWebSearchTool],
+// [BetaResponseToolSearchOutputItemParamToolMcp],
+// [BetaResponseToolSearchOutputItemParamToolCodeInterpreter],
+// [BetaResponseToolSearchOutputItemParamToolProgrammaticToolCalling],
+// [BetaResponseToolSearchOutputItemParamToolImageGeneration],
+// [BetaResponseToolSearchOutputItemParamToolLocalShell], [BetaFunctionShellTool],
+// [BetaCustomTool], [BetaToolSearchOutputNamespaceTool], [BetaToolSearchTool],
+// [BetaWebSearchPreviewTool], [BetaApplyPatchTool].
+//
+// Use the [BetaResponseToolSearchOutputItemParamToolUnionResp.AsAny] method to
+// switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaResponseToolSearchOutputItemParamToolUnionResp struct {
+	Name       string `json:"name"`
+	Parameters any    `json:"parameters"`
+	// This field is from variant [BetaFunctionTool].
+	Strict bool `json:"strict"`
+	// Any of "function", "file_search", "computer", "computer_use_preview", nil,
+	// "mcp", "code_interpreter", "programmatic_tool_calling", "image_generation",
+	// "local_shell", "shell", "custom", "namespace", "tool_search", nil,
+	// "apply_patch".
+	Type           string   `json:"type"`
+	AllowedCallers []string `json:"allowed_callers"`
+	Async          bool     `json:"async"`
+	DeferLoading   bool     `json:"defer_loading"`
+	Description    string   `json:"description"`
+	// This field is from variant [BetaFunctionTool].
+	OutputSchema map[string]any `json:"output_schema"`
+	// This field is from variant [BetaFileSearchTool].
+	VectorStoreIDs []string `json:"vector_store_ids"`
+	// This field is a union of [BetaFileSearchToolFiltersUnion],
+	// [BetaWebSearchToolFilters]
+	Filters BetaResponseToolSearchOutputItemParamToolUnionRespFilters `json:"filters"`
+	// This field is from variant [BetaFileSearchTool].
+	MaxNumResults int64 `json:"max_num_results"`
+	// This field is from variant [BetaFileSearchTool].
+	RankingOptions BetaFileSearchToolRankingOptions `json:"ranking_options"`
+	// This field is from variant [BetaComputerUsePreviewTool].
+	DisplayHeight int64 `json:"display_height"`
+	// This field is from variant [BetaComputerUsePreviewTool].
+	DisplayWidth int64 `json:"display_width"`
+	// This field is a union of [BetaComputerUsePreviewToolEnvironment],
+	// [BetaFunctionShellToolEnvironmentUnion]
+	Environment BetaResponseToolSearchOutputItemParamToolUnionRespEnvironment `json:"environment"`
+	// This field is from variant [BetaWebSearchTool].
+	ExternalWebAccess bool   `json:"external_web_access"`
+	SearchContextSize string `json:"search_context_size"`
+	// This field is a union of [BetaWebSearchToolUserLocation],
+	// [BetaWebSearchPreviewToolUserLocation]
+	UserLocation BetaResponseToolSearchOutputItemParamToolUnionRespUserLocation `json:"user_location"`
+	// This field is from variant [BetaResponseToolSearchOutputItemParamToolMcp].
+	ServerLabel string `json:"server_label"`
+	// This field is from variant [BetaResponseToolSearchOutputItemParamToolMcp].
+	AllowedTools BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnionResp `json:"allowed_tools"`
+	// This field is from variant [BetaResponseToolSearchOutputItemParamToolMcp].
+	Authorization string `json:"authorization"`
+	// This field is from variant [BetaResponseToolSearchOutputItemParamToolMcp].
+	ConnectorID string `json:"connector_id"`
+	// This field is from variant [BetaResponseToolSearchOutputItemParamToolMcp].
+	Headers map[string]string `json:"headers"`
+	// This field is from variant [BetaResponseToolSearchOutputItemParamToolMcp].
+	RequireApproval BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnionResp `json:"require_approval"`
+	// This field is from variant [BetaResponseToolSearchOutputItemParamToolMcp].
+	ServerDescription string `json:"server_description"`
+	// This field is from variant [BetaResponseToolSearchOutputItemParamToolMcp].
+	ServerURL string `json:"server_url"`
+	// This field is from variant [BetaResponseToolSearchOutputItemParamToolMcp].
+	TunnelID string `json:"tunnel_id"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolCodeInterpreter].
+	Container BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnionResp `json:"container"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	Action string `json:"action"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	Background string `json:"background"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	InputFidelity string `json:"input_fidelity"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	InputImageMask BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMaskResp `json:"input_image_mask"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	Model string `json:"model"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	Moderation string `json:"moderation"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	OutputCompression int64 `json:"output_compression"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	OutputFormat string `json:"output_format"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	PartialImages int64 `json:"partial_images"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	Quality string `json:"quality"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	Size string `json:"size"`
+	// This field is from variant [BetaCustomTool].
+	Format BetaCustomToolFormatUnion `json:"format"`
+	// This field is from variant [BetaToolSearchOutputNamespaceTool].
+	Tools []BetaToolSearchOutputNamespaceToolToolUnion `json:"tools"`
+	// This field is from variant [BetaToolSearchTool].
+	Execution BetaToolSearchToolExecution `json:"execution"`
+	// This field is from variant [BetaWebSearchPreviewTool].
+	SearchContentTypes []string `json:"search_content_types"`
+	JSON               struct {
+		Name               respjson.Field
+		Parameters         respjson.Field
+		Strict             respjson.Field
+		Type               respjson.Field
+		AllowedCallers     respjson.Field
+		Async              respjson.Field
+		DeferLoading       respjson.Field
+		Description        respjson.Field
+		OutputSchema       respjson.Field
+		VectorStoreIDs     respjson.Field
+		Filters            respjson.Field
+		MaxNumResults      respjson.Field
+		RankingOptions     respjson.Field
+		DisplayHeight      respjson.Field
+		DisplayWidth       respjson.Field
+		Environment        respjson.Field
+		ExternalWebAccess  respjson.Field
+		SearchContextSize  respjson.Field
+		UserLocation       respjson.Field
+		ServerLabel        respjson.Field
+		AllowedTools       respjson.Field
+		Authorization      respjson.Field
+		ConnectorID        respjson.Field
+		Headers            respjson.Field
+		RequireApproval    respjson.Field
+		ServerDescription  respjson.Field
+		ServerURL          respjson.Field
+		TunnelID           respjson.Field
+		Container          respjson.Field
+		Action             respjson.Field
+		Background         respjson.Field
+		InputFidelity      respjson.Field
+		InputImageMask     respjson.Field
+		Model              respjson.Field
+		Moderation         respjson.Field
+		OutputCompression  respjson.Field
+		OutputFormat       respjson.Field
+		PartialImages      respjson.Field
+		Quality            respjson.Field
+		Size               respjson.Field
+		Format             respjson.Field
+		Tools              respjson.Field
+		Execution          respjson.Field
+		SearchContentTypes respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsFunction() (v BetaFunctionTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsFileSearch() (v BetaFileSearchTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsComputer() (v BetaComputerTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsComputerUsePreview() (v BetaComputerUsePreviewTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsWebSearch() (v BetaWebSearchTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsMcp() (v BetaResponseToolSearchOutputItemParamToolMcp) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsCodeInterpreter() (v BetaResponseToolSearchOutputItemParamToolCodeInterpreter) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsProgrammaticToolCalling() (v BetaResponseToolSearchOutputItemParamToolProgrammaticToolCalling) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsImageGeneration() (v BetaResponseToolSearchOutputItemParamToolImageGeneration) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsLocalShell() (v BetaResponseToolSearchOutputItemParamToolLocalShell) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsShell() (v BetaFunctionShellTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsCustom() (v BetaCustomTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsNamespace() (v BetaToolSearchOutputNamespaceTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsToolSearch() (v BetaToolSearchTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsWebSearchPreview() (v BetaWebSearchPreviewTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsApplyPatch() (v BetaApplyPatchTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) RawJSON() string { return u.JSON.raw }
+
+func (r *BetaResponseToolSearchOutputItemParamToolUnionResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseToolSearchOutputItemParamToolUnionRespFilters is an implicit
+// subunion of [BetaResponseToolSearchOutputItemParamToolUnionResp].
+// BetaResponseToolSearchOutputItemParamToolUnionRespFilters provides convenient
+// access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [BetaResponseToolSearchOutputItemParamToolUnionResp].
+type BetaResponseToolSearchOutputItemParamToolUnionRespFilters struct {
+	// This field is from variant [BetaFileSearchToolFiltersUnion].
+	Key  string `json:"key"`
+	Type string `json:"type"`
+	// This field is from variant [BetaFileSearchToolFiltersUnion].
+	Value BetaFileSearchToolFiltersComparisonFilterValueUnion `json:"value"`
+	// This field is from variant [BetaFileSearchToolFiltersUnion].
+	Filters []BetaFileSearchToolFiltersCompoundFilterFilterUnion `json:"filters"`
+	// This field is from variant [BetaWebSearchToolFilters].
+	AllowedDomains []string `json:"allowed_domains"`
+	JSON           struct {
+		Key            respjson.Field
+		Type           respjson.Field
+		Value          respjson.Field
+		Filters        respjson.Field
+		AllowedDomains respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+func (r *BetaResponseToolSearchOutputItemParamToolUnionRespFilters) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseToolSearchOutputItemParamToolUnionRespEnvironment is an implicit
+// subunion of [BetaResponseToolSearchOutputItemParamToolUnionResp].
+// BetaResponseToolSearchOutputItemParamToolUnionRespEnvironment provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [BetaResponseToolSearchOutputItemParamToolUnionResp].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfBetaComputerUsePreviewToolEnvironment]
+type BetaResponseToolSearchOutputItemParamToolUnionRespEnvironment struct {
+	// This field will be present if the value is a
+	// [BetaComputerUsePreviewToolEnvironment] instead of an object.
+	OfBetaComputerUsePreviewToolEnvironment BetaComputerUsePreviewToolEnvironment `json:",inline"`
+	Type                                    string                                `json:"type"`
+	// This field is from variant [BetaFunctionShellToolEnvironmentUnion].
+	FileIDs []string `json:"file_ids"`
+	// This field is from variant [BetaFunctionShellToolEnvironmentUnion].
+	MemoryLimit BetaContainerAutoMemoryLimit `json:"memory_limit"`
+	// This field is from variant [BetaFunctionShellToolEnvironmentUnion].
+	NetworkPolicy BetaContainerAutoNetworkPolicyUnion `json:"network_policy"`
+	// This field is a union of [[]BetaContainerAutoSkillUnion], [[]BetaLocalSkill]
+	Skills BetaResponseToolSearchOutputItemParamToolUnionRespEnvironmentSkills `json:"skills"`
+	// This field is from variant [BetaFunctionShellToolEnvironmentUnion].
+	ContainerID string `json:"container_id"`
+	JSON        struct {
+		OfBetaComputerUsePreviewToolEnvironment respjson.Field
+		Type                                    respjson.Field
+		FileIDs                                 respjson.Field
+		MemoryLimit                             respjson.Field
+		NetworkPolicy                           respjson.Field
+		Skills                                  respjson.Field
+		ContainerID                             respjson.Field
+		raw                                     string
+	} `json:"-"`
+}
+
+func (r *BetaResponseToolSearchOutputItemParamToolUnionRespEnvironment) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseToolSearchOutputItemParamToolUnionRespEnvironmentSkills is an
+// implicit subunion of [BetaResponseToolSearchOutputItemParamToolUnionResp].
+// BetaResponseToolSearchOutputItemParamToolUnionRespEnvironmentSkills provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [BetaResponseToolSearchOutputItemParamToolUnionResp].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfBetaContainerAutoSkills OfBetaLocalSkillArray]
+type BetaResponseToolSearchOutputItemParamToolUnionRespEnvironmentSkills struct {
+	// This field will be present if the value is a [[]BetaContainerAutoSkillUnion]
+	// instead of an object.
+	OfBetaContainerAutoSkills []BetaContainerAutoSkillUnion `json:",inline"`
+	// This field will be present if the value is a [[]BetaLocalSkill] instead of an
+	// object.
+	OfBetaLocalSkillArray []BetaLocalSkill `json:",inline"`
+	JSON                  struct {
+		OfBetaContainerAutoSkills respjson.Field
+		OfBetaLocalSkillArray     respjson.Field
+		raw                       string
+	} `json:"-"`
+}
+
+func (r *BetaResponseToolSearchOutputItemParamToolUnionRespEnvironmentSkills) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseToolSearchOutputItemParamToolUnionRespUserLocation is an implicit
+// subunion of [BetaResponseToolSearchOutputItemParamToolUnionResp].
+// BetaResponseToolSearchOutputItemParamToolUnionRespUserLocation provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [BetaResponseToolSearchOutputItemParamToolUnionResp].
+type BetaResponseToolSearchOutputItemParamToolUnionRespUserLocation struct {
+	City     string `json:"city"`
+	Country  string `json:"country"`
+	Region   string `json:"region"`
+	Timezone string `json:"timezone"`
+	Type     string `json:"type"`
+	JSON     struct {
+		City     respjson.Field
+		Country  respjson.Field
+		Region   respjson.Field
+		Timezone respjson.Field
+		Type     respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (r *BetaResponseToolSearchOutputItemParamToolUnionRespUserLocation) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Give the model access to additional tools via remote Model Context Protocol
+// (MCP) servers.
+// [Learn more about MCP](https://developers.openai.com/api/docs/guides/tools-connectors-mcp).
+type BetaResponseToolSearchOutputItemParamToolMcp struct {
+	// A label for this MCP server, used to identify it in tool calls.
+	ServerLabel string `json:"server_label" api:"required"`
+	// The type of the MCP tool. Always `mcp`.
+	Type constant.Mcp `json:"type" default:"mcp"`
+	// The tool invocation context(s).
+	//
+	// Any of "direct", "programmatic".
+	AllowedCallers []string `json:"allowed_callers" api:"nullable"`
+	// List of allowed tool names or a filter object.
+	AllowedTools BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnionResp `json:"allowed_tools" api:"nullable"`
+	// An OAuth access token that can be used with a remote MCP server, either with a
+	// custom MCP server URL or a service connector. Your application must handle the
+	// OAuth authorization flow and provide the token here.
+	Authorization string `json:"authorization"`
+	// Identifier for service connectors, like those available in ChatGPT. One of
+	// `server_url`, `connector_id`, or `tunnel_id` must be provided. Learn more about
+	// service connectors
+	// [here](https://developers.openai.com/api/docs/guides/tools-connectors-mcp#connectors).
+	//
+	// This field is deprecated for models released after September 1, 2026. Use
+	// `server_url` to connect to a remote MCP server, or `tunnel_id` to connect
+	// through a Secure MCP Tunnel.
+	//
+	// Currently supported `connector_id` values are:
+	//
+	// - Dropbox: `connector_dropbox`
+	// - Gmail: `connector_gmail`
+	// - Google Calendar: `connector_googlecalendar`
+	// - Google Drive: `connector_googledrive`
+	// - Microsoft Teams: `connector_microsoftteams`
+	// - Outlook Calendar: `connector_outlookcalendar`
+	// - Outlook Email: `connector_outlookemail`
+	// - SharePoint: `connector_sharepoint`
+	//
+	// Any of "connector_dropbox", "connector_gmail", "connector_googlecalendar",
+	// "connector_googledrive", "connector_microsoftteams",
+	// "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint".
+	//
+	// Deprecated: deprecated
+	ConnectorID string `json:"connector_id"`
+	// Whether this MCP tool is deferred and discovered via tool search.
+	DeferLoading bool `json:"defer_loading"`
+	// Optional HTTP headers to send to the MCP server. Use for authentication or other
+	// purposes.
+	Headers map[string]string `json:"headers" api:"nullable"`
+	// Specify which of the MCP server's tools require approval.
+	RequireApproval BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnionResp `json:"require_approval" api:"nullable"`
+	// Optional description of the MCP server, used to provide more context.
+	ServerDescription string `json:"server_description"`
+	// The URL for the MCP server. One of `server_url`, `connector_id`, or `tunnel_id`
+	// must be provided.
+	ServerURL string `json:"server_url" format:"uri"`
+	// The Secure MCP Tunnel ID to use instead of a direct server URL. One of
+	// `server_url`, `connector_id`, or `tunnel_id` must be provided.
+	TunnelID string `json:"tunnel_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ServerLabel       respjson.Field
+		Type              respjson.Field
+		AllowedCallers    respjson.Field
+		AllowedTools      respjson.Field
+		Authorization     respjson.Field
+		ConnectorID       respjson.Field
+		DeferLoading      respjson.Field
+		Headers           respjson.Field
+		RequireApproval   respjson.Field
+		ServerDescription respjson.Field
+		ServerURL         respjson.Field
+		TunnelID          respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolMcp) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseToolSearchOutputItemParamToolMcp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnionResp contains all
+// possible properties and values from [[]string],
+// [BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilter].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfMcpAllowedTools]
+type BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnionResp struct {
+	// This field will be present if the value is a [[]string] instead of an object.
+	OfMcpAllowedTools []string `json:",inline"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilter].
+	ReadOnly bool `json:"read_only"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilter].
+	ToolNames []string `json:"tool_names"`
+	JSON      struct {
+		OfMcpAllowedTools respjson.Field
+		ReadOnly          respjson.Field
+		ToolNames         respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnionResp) AsMcpAllowedTools() (v []string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnionResp) AsMcpToolFilter() (v BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilter) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnionResp) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnionResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A filter object to specify which tools are allowed.
+type BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilter struct {
+	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
+	// is
+	// [annotated with `readOnlyHint`](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations-readonlyhint),
+	// it will match this filter.
+	ReadOnly bool `json:"read_only"`
+	// List of allowed tool names.
+	ToolNames []string `json:"tool_names"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ReadOnly    respjson.Field
+		ToolNames   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilter) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnionResp contains
+// all possible properties and values from
+// [BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilter],
+// [string].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfMcpToolApprovalSetting]
+type BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnionResp struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfMcpToolApprovalSetting string `json:",inline"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilter].
+	Always BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlwaysResp `json:"always"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilter].
+	Never BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNeverResp `json:"never"`
+	JSON  struct {
+		OfMcpToolApprovalSetting respjson.Field
+		Always                   respjson.Field
+		Never                    respjson.Field
+		raw                      string
+	} `json:"-"`
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnionResp) AsMcpToolApprovalFilter() (v BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilter) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnionResp) AsMcpToolApprovalSetting() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnionResp) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnionResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Specify which of the MCP server's tools require approval. Can be `always`,
+// `never`, or a filter object associated with tools that require approval.
+type BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilter struct {
+	// A filter object to specify which tools are allowed.
+	Always BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlwaysResp `json:"always"`
+	// A filter object to specify which tools are allowed.
+	Never BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNeverResp `json:"never"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Always      respjson.Field
+		Never       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilter) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A filter object to specify which tools are allowed.
+type BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlwaysResp struct {
+	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
+	// is
+	// [annotated with `readOnlyHint`](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations-readonlyhint),
+	// it will match this filter.
+	ReadOnly bool `json:"read_only"`
+	// List of allowed tool names.
+	ToolNames []string `json:"tool_names"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ReadOnly    respjson.Field
+		ToolNames   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlwaysResp) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlwaysResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A filter object to specify which tools are allowed.
+type BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNeverResp struct {
+	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
+	// is
+	// [annotated with `readOnlyHint`](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations-readonlyhint),
+	// it will match this filter.
+	ReadOnly bool `json:"read_only"`
+	// List of allowed tool names.
+	ToolNames []string `json:"tool_names"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ReadOnly    respjson.Field
+		ToolNames   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNeverResp) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNeverResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Specify a single approval policy for all tools. One of `always` or `never`. When
+// set to `always`, all tools will require approval. When set to `never`, all tools
+// will not require approval.
+type BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalSetting string
+
+const (
+	BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalSettingAlways BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalSetting = "always"
+	BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalSettingNever  BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalSetting = "never"
+)
+
+// A tool that runs Python code to help generate a response to a prompt.
+type BetaResponseToolSearchOutputItemParamToolCodeInterpreter struct {
+	// The code interpreter container. Can be a container ID or an object that
+	// specifies uploaded file IDs to make available to your code, along with an
+	// optional `memory_limit` setting.
+	Container BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnionResp `json:"container" api:"required"`
+	// The type of the code interpreter tool. Always `code_interpreter`.
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
+	// The tool invocation context(s).
+	//
+	// Any of "direct", "programmatic".
+	AllowedCallers []string `json:"allowed_callers" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Container      respjson.Field
+		Type           respjson.Field
+		AllowedCallers respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolCodeInterpreter) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseToolSearchOutputItemParamToolCodeInterpreter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnionResp
+// contains all possible properties and values from [string],
+// [BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAuto].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString]
+type BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnionResp struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAuto].
+	Type constant.Auto `json:"type"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAuto].
+	FileIDs []string `json:"file_ids"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAuto].
+	MemoryLimit string `json:"memory_limit"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAuto].
+	NetworkPolicy BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp `json:"network_policy"`
+	JSON          struct {
+		OfString      respjson.Field
+		Type          respjson.Field
+		FileIDs       respjson.Field
+		MemoryLimit   respjson.Field
+		NetworkPolicy respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnionResp) AsString() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnionResp) AsCodeInterpreterToolAuto() (v BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAuto) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnionResp) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnionResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Configuration for a code interpreter container. Optionally specify the IDs of
+// the files to run the code on.
+type BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAuto struct {
+	// Always `auto`.
+	Type constant.Auto `json:"type" default:"auto"`
+	// An optional list of uploaded files to make available to your code.
+	FileIDs []string `json:"file_ids"`
+	// The memory limit for the code interpreter container.
+	//
+	// Any of "1g", "4g", "16g", "64g".
+	MemoryLimit string `json:"memory_limit" api:"nullable"`
+	// Network access policy for the container.
+	NetworkPolicy BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp `json:"network_policy"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type          respjson.Field
+		FileIDs       respjson.Field
+		MemoryLimit   respjson.Field
+		NetworkPolicy respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAuto) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAuto) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp
+// contains all possible properties and values from
+// [BetaContainerNetworkPolicyDisabled], [BetaContainerNetworkPolicyAllowlist].
+//
+// Use the
+// [BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp.AsAny]
+// method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp struct {
+	// Any of "disabled", "allowlist".
+	Type string `json:"type"`
+	// This field is from variant [BetaContainerNetworkPolicyAllowlist].
+	AllowedDomains []string `json:"allowed_domains"`
+	// This field is from variant [BetaContainerNetworkPolicyAllowlist].
+	DomainSecrets []BetaContainerNetworkPolicyDomainSecret `json:"domain_secrets"`
+	JSON          struct {
+		Type           respjson.Field
+		AllowedDomains respjson.Field
+		DomainSecrets  respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// anyBetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyResp
+// is implemented by each variant of
+// [BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp]
+// to add type safety for the return type of
+// [BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp.AsAny]
+type anyBetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyResp interface {
+	implBetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp()
+}
+
+func (BetaContainerNetworkPolicyDisabled) implBetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp() {
+}
+func (BetaContainerNetworkPolicyAllowlist) implBetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp.AsAny().(type) {
+//	case openai.BetaContainerNetworkPolicyDisabled:
+//	case openai.BetaContainerNetworkPolicyAllowlist:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp) AsAny() anyBetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyResp {
+	switch u.Type {
+	case "disabled":
+		return u.AsDisabled()
+	case "allowlist":
+		return u.AsAllowlist()
+	}
+	return nil
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp) AsDisabled() (v BetaContainerNetworkPolicyDisabled) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp) AsAllowlist() (v BetaContainerNetworkPolicyAllowlist) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponseToolSearchOutputItemParamToolProgrammaticToolCalling struct {
+	// The type of the tool. Always `programmatic_tool_calling`.
+	Type constant.ProgrammaticToolCalling `json:"type" default:"programmatic_tool_calling"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolProgrammaticToolCalling) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseToolSearchOutputItemParamToolProgrammaticToolCalling) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A tool that generates images using the GPT image models.
+type BetaResponseToolSearchOutputItemParamToolImageGeneration struct {
+	// The type of the image generation tool. Always `image_generation`.
+	Type constant.ImageGeneration `json:"type" default:"image_generation"`
+	// Whether to generate a new image or edit an existing image. Default: `auto`.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action"`
+	// Allows to set transparency for the background of the generated image(s). Must be
+	// one of `transparent`, `opaque`, or `auto` (default value). When `auto` is used,
+	// the model will automatically determine the best background for the image.
+	//
+	// `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`, including their `2026-09-08`
+	// snapshots, support `opaque` and `transparent` backgrounds. Transparent
+	// backgrounds are available for supported GPT Image models. For `gpt-image-2` and
+	// `gpt-image-2-2026-04-21`, this support is in preview. When using `transparent`,
+	// set the output format to `png` or `webp`.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background string `json:"background"`
+	// Control how much effort the model will exert to match the style and features,
+	// especially facial features, of input images. Supports `high` and `low` on
+	// `gpt-image-1` and `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For
+	// `gpt-image-2`, omit this parameter. Defaults to `low` on supported models.
+	//
+	// Any of "high", "low".
+	InputFidelity string `json:"input_fidelity" api:"nullable"`
+	// Optional mask for inpainting. Contains `image_url` (string, optional) and
+	// `file_id` (string, optional).
+	InputImageMask BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMaskResp `json:"input_image_mask"`
+	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
+	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`,
+	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
+	// `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, or
+	// `chatgpt-image-latest`. Default: `gpt-image-1`.
+	Model string `json:"model"`
+	// Moderation level for the generated image. Default: `auto`.
+	//
+	// Any of "auto", "low".
+	Moderation string `json:"moderation"`
+	// Compression level for the output image. Default: 100.
+	OutputCompression int64 `json:"output_compression"`
+	// The output format of the generated image. One of `png`, `webp`, or `jpeg`.
+	// Default: `png`.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat string `json:"output_format"`
+	// Number of partial images to generate in streaming mode, from 0 (default value)
+	// to 3.
+	PartialImages int64 `json:"partial_images"`
+	// The quality of the generated image. The GPT image models support `low`,
+	// `medium`, and `high`. `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`,
+	// including their `2026-09-08` snapshots, also support `xhigh` and `max`. Default:
+	// `auto`.
+	//
+	// Any of "low", "medium", "high", "xhigh", "max", "auto".
+	Quality string `json:"quality"`
+	// The size of the generated images. For `gpt-image-2`, `gpt-image-2-2026-04-21`,
+	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
+	// `gpt-image-2.5-flare`, and `gpt-image-2.5-flare-2026-09-08`, arbitrary
+	// resolutions are supported as `WIDTHxHEIGHT` strings, for example `1536x864`.
+	// Width and height must both be divisible by 16 and the requested aspect ratio
+	// must be between 1:3 and 3:1. Resolutions above `2560x1440` are experimental, and
+	// the maximum supported resolution is `3840x2160`. The requested size must also
+	// satisfy the model's current pixel and edge limits. The standard sizes
+	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
+	// `auto` is supported for models that allow automatic sizing.
+	Size string `json:"size"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type              respjson.Field
+		Action            respjson.Field
+		Background        respjson.Field
+		InputFidelity     respjson.Field
+		InputImageMask    respjson.Field
+		Model             respjson.Field
+		Moderation        respjson.Field
+		OutputCompression respjson.Field
+		OutputFormat      respjson.Field
+		PartialImages     respjson.Field
+		Quality           respjson.Field
+		Size              respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolImageGeneration) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseToolSearchOutputItemParamToolImageGeneration) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Optional mask for inpainting. Contains `image_url` (string, optional) and
+// `file_id` (string, optional).
+type BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMaskResp struct {
+	// File ID for the mask image.
+	FileID string `json:"file_id"`
+	// Base64-encoded mask image.
+	ImageURL string `json:"image_url"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		FileID      respjson.Field
+		ImageURL    respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMaskResp) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMaskResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A tool that allows the model to execute shell commands in a local environment.
+type BetaResponseToolSearchOutputItemParamToolLocalShell struct {
+	// The type of the local shell tool. Always `local_shell`.
+	Type constant.LocalShell `json:"type" default:"local_shell"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolLocalShell) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseToolSearchOutputItemParamToolLocalShell) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The agent that produced this item.
 type BetaResponseToolSearchOutputItemParamAgentResp struct {
 	// The canonical name of the agent that produced this item.
@@ -30283,7 +31293,7 @@ const (
 // The properties Tools, Type are required.
 type BetaResponseToolSearchOutputItemParam struct {
 	// The loaded tool definitions returned by the tool search output.
-	Tools []BetaToolUnionParam `json:"tools,omitzero" api:"required"`
+	Tools []BetaResponseToolSearchOutputItemParamToolUnion `json:"tools,omitzero" api:"required"`
 	// The unique ID of this tool search output.
 	ID param.Opt[string] `json:"id,omitzero"`
 	// The unique ID of the tool search call generated by the model.
@@ -30311,6 +31321,1218 @@ func (r BetaResponseToolSearchOutputItemParam) MarshalJSON() (data []byte, err e
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *BetaResponseToolSearchOutputItemParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponseToolSearchOutputItemParamToolUnion struct {
+	OfFunction                *BetaFunctionToolParam                                                 `json:",omitzero,inline"`
+	OfFileSearch              *BetaFileSearchToolParam                                               `json:",omitzero,inline"`
+	OfComputer                *BetaComputerToolParam                                                 `json:",omitzero,inline"`
+	OfComputerUsePreview      *BetaComputerUsePreviewToolParam                                       `json:",omitzero,inline"`
+	OfWebSearch               *BetaWebSearchToolParam                                                `json:",omitzero,inline"`
+	OfMcp                     *BetaResponseToolSearchOutputItemParamToolMcpParam                     `json:",omitzero,inline"`
+	OfCodeInterpreter         *BetaResponseToolSearchOutputItemParamToolCodeInterpreterParam         `json:",omitzero,inline"`
+	OfProgrammaticToolCalling *BetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam `json:",omitzero,inline"`
+	OfImageGeneration         *BetaResponseToolSearchOutputItemParamToolImageGenerationParam         `json:",omitzero,inline"`
+	OfLocalShell              *BetaResponseToolSearchOutputItemParamToolLocalShellParam              `json:",omitzero,inline"`
+	OfShell                   *BetaFunctionShellToolParam                                            `json:",omitzero,inline"`
+	OfCustom                  *BetaCustomToolParam                                                   `json:",omitzero,inline"`
+	OfNamespace               *BetaToolSearchOutputNamespaceToolParam                                `json:",omitzero,inline"`
+	OfToolSearch              *BetaToolSearchToolParam                                               `json:",omitzero,inline"`
+	OfWebSearchPreview        *BetaWebSearchPreviewToolParam                                         `json:",omitzero,inline"`
+	OfApplyPatch              *BetaApplyPatchToolParam                                               `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfFunction,
+		u.OfFileSearch,
+		u.OfComputer,
+		u.OfComputerUsePreview,
+		u.OfWebSearch,
+		u.OfMcp,
+		u.OfCodeInterpreter,
+		u.OfProgrammaticToolCalling,
+		u.OfImageGeneration,
+		u.OfLocalShell,
+		u.OfShell,
+		u.OfCustom,
+		u.OfNamespace,
+		u.OfToolSearch,
+		u.OfWebSearchPreview,
+		u.OfApplyPatch)
+}
+func (u *BetaResponseToolSearchOutputItemParamToolUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetStrict() *bool {
+	if vt := u.OfFunction; vt != nil && vt.Strict.Valid() {
+		return &vt.Strict.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetOutputSchema() map[string]any {
+	if vt := u.OfFunction; vt != nil {
+		return vt.OutputSchema
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetVectorStoreIDs() []string {
+	if vt := u.OfFileSearch; vt != nil {
+		return vt.VectorStoreIDs
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetMaxNumResults() *int64 {
+	if vt := u.OfFileSearch; vt != nil && vt.MaxNumResults.Valid() {
+		return &vt.MaxNumResults.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetRankingOptions() *BetaFileSearchToolRankingOptionsParam {
+	if vt := u.OfFileSearch; vt != nil {
+		return &vt.RankingOptions
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetDisplayHeight() *int64 {
+	if vt := u.OfComputerUsePreview; vt != nil {
+		return &vt.DisplayHeight
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetDisplayWidth() *int64 {
+	if vt := u.OfComputerUsePreview; vt != nil {
+		return &vt.DisplayWidth
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetExternalWebAccess() *bool {
+	if vt := u.OfWebSearch; vt != nil && vt.ExternalWebAccess.Valid() {
+		return &vt.ExternalWebAccess.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetServerLabel() *string {
+	if vt := u.OfMcp; vt != nil {
+		return &vt.ServerLabel
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetAllowedTools() *BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnion {
+	if vt := u.OfMcp; vt != nil {
+		return &vt.AllowedTools
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetAuthorization() *string {
+	if vt := u.OfMcp; vt != nil && vt.Authorization.Valid() {
+		return &vt.Authorization.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetConnectorID() *string {
+	if vt := u.OfMcp; vt != nil {
+		return &vt.ConnectorID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetHeaders() map[string]string {
+	if vt := u.OfMcp; vt != nil {
+		return vt.Headers
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetRequireApproval() *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnion {
+	if vt := u.OfMcp; vt != nil {
+		return &vt.RequireApproval
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetServerDescription() *string {
+	if vt := u.OfMcp; vt != nil && vt.ServerDescription.Valid() {
+		return &vt.ServerDescription.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetServerURL() *string {
+	if vt := u.OfMcp; vt != nil && vt.ServerURL.Valid() {
+		return &vt.ServerURL.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetTunnelID() *string {
+	if vt := u.OfMcp; vt != nil && vt.TunnelID.Valid() {
+		return &vt.TunnelID.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetContainer() *BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnion {
+	if vt := u.OfCodeInterpreter; vt != nil {
+		return &vt.Container
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetAction() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Action
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetBackground() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Background
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetInputFidelity() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.InputFidelity
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetInputImageMask() *BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMask {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.InputImageMask
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetModel() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Model
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetModeration() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Moderation
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetOutputCompression() *int64 {
+	if vt := u.OfImageGeneration; vt != nil && vt.OutputCompression.Valid() {
+		return &vt.OutputCompression.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetOutputFormat() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.OutputFormat
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetPartialImages() *int64 {
+	if vt := u.OfImageGeneration; vt != nil && vt.PartialImages.Valid() {
+		return &vt.PartialImages.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetQuality() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Quality
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetSize() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Size
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetFormat() *BetaCustomToolFormatUnionParam {
+	if vt := u.OfCustom; vt != nil {
+		return &vt.Format
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetTools() []BetaToolSearchOutputNamespaceToolToolUnionParam {
+	if vt := u.OfNamespace; vt != nil {
+		return vt.Tools
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetExecution() *string {
+	if vt := u.OfToolSearch; vt != nil {
+		return (*string)(&vt.Execution)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetSearchContentTypes() []string {
+	if vt := u.OfWebSearchPreview; vt != nil {
+		return vt.SearchContentTypes
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetName() *string {
+	if vt := u.OfFunction; vt != nil {
+		return (*string)(&vt.Name)
+	} else if vt := u.OfCustom; vt != nil {
+		return (*string)(&vt.Name)
+	} else if vt := u.OfNamespace; vt != nil {
+		return (*string)(&vt.Name)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetType() *string {
+	if vt := u.OfFunction; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFileSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfComputer; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfComputerUsePreview; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfWebSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfMcp; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCodeInterpreter; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfProgrammaticToolCalling; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfImageGeneration; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfLocalShell; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfShell; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCustom; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfNamespace; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfToolSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfWebSearchPreview; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfApplyPatch; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetAsync() *bool {
+	if vt := u.OfFunction; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
+	} else if vt := u.OfCustom; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetDeferLoading() *bool {
+	if vt := u.OfFunction; vt != nil && vt.DeferLoading.Valid() {
+		return &vt.DeferLoading.Value
+	} else if vt := u.OfMcp; vt != nil && vt.DeferLoading.Valid() {
+		return &vt.DeferLoading.Value
+	} else if vt := u.OfCustom; vt != nil && vt.DeferLoading.Valid() {
+		return &vt.DeferLoading.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetDescription() *string {
+	if vt := u.OfFunction; vt != nil && vt.Description.Valid() {
+		return &vt.Description.Value
+	} else if vt := u.OfCustom; vt != nil && vt.Description.Valid() {
+		return &vt.Description.Value
+	} else if vt := u.OfNamespace; vt != nil {
+		return (*string)(&vt.Description)
+	} else if vt := u.OfToolSearch; vt != nil && vt.Description.Valid() {
+		return &vt.Description.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetSearchContextSize() *string {
+	if vt := u.OfWebSearch; vt != nil {
+		return (*string)(&vt.SearchContextSize)
+	} else if vt := u.OfWebSearchPreview; vt != nil {
+		return (*string)(&vt.SearchContextSize)
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetParameters() (res betaResponseToolSearchOutputItemParamToolUnionParameters) {
+	if vt := u.OfFunction; vt != nil {
+		res.any = &vt.Parameters
+	} else if vt := u.OfToolSearch; vt != nil {
+		res.any = &vt.Parameters
+	}
+	return
+}
+
+// Can have the runtime types [*map[string]any], [*any]
+type betaResponseToolSearchOutputItemParamToolUnionParameters struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *map[string]any:
+//	case *any:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u betaResponseToolSearchOutputItemParamToolUnionParameters) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's AllowedCallers property, if
+// present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetAllowedCallers() []string {
+	if vt := u.OfFunction; vt != nil {
+		return vt.AllowedCallers
+	} else if vt := u.OfMcp; vt != nil {
+		return vt.AllowedCallers
+	} else if vt := u.OfCodeInterpreter; vt != nil {
+		return vt.AllowedCallers
+	} else if vt := u.OfShell; vt != nil {
+		return vt.AllowedCallers
+	} else if vt := u.OfCustom; vt != nil {
+		return vt.AllowedCallers
+	} else if vt := u.OfApplyPatch; vt != nil {
+		return vt.AllowedCallers
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetFilters() (res betaResponseToolSearchOutputItemParamToolUnionFilters) {
+	if vt := u.OfFileSearch; vt != nil {
+		res.any = vt.Filters.asAny()
+	} else if vt := u.OfWebSearch; vt != nil {
+		res.any = &vt.Filters
+	}
+	return
+}
+
+// Can have the runtime types [*BetaFileSearchToolFiltersComparisonFilterParam],
+// [*BetaFileSearchToolFiltersCompoundFilterParam],
+// [*BetaWebSearchToolFiltersParam]
+type betaResponseToolSearchOutputItemParamToolUnionFilters struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *openai.BetaFileSearchToolFiltersComparisonFilterParam:
+//	case *openai.BetaFileSearchToolFiltersCompoundFilterParam:
+//	case *openai.BetaWebSearchToolFiltersParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u betaResponseToolSearchOutputItemParamToolUnionFilters) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetKey() *string {
+	switch vt := u.any.(type) {
+	case *BetaFileSearchToolFiltersUnionParam:
+		return vt.GetKey()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetValue() *BetaFileSearchToolFiltersComparisonFilterValueUnionParam {
+	switch vt := u.any.(type) {
+	case *BetaFileSearchToolFiltersUnionParam:
+		return vt.GetValue()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetFilters() []BetaFileSearchToolFiltersCompoundFilterFilterUnionParam {
+	switch vt := u.any.(type) {
+	case *BetaFileSearchToolFiltersUnionParam:
+		return vt.GetFilters()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetAllowedDomains() []string {
+	switch vt := u.any.(type) {
+	case *BetaWebSearchToolFiltersParam:
+		return vt.AllowedDomains
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetType() *string {
+	switch vt := u.any.(type) {
+	case *BetaFileSearchToolFiltersUnionParam:
+		return vt.GetType()
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetEnvironment() (res betaResponseToolSearchOutputItemParamToolUnionEnvironment) {
+	if vt := u.OfComputerUsePreview; vt != nil {
+		res.any = (*string)(&vt.Environment)
+	} else if vt := u.OfShell; vt != nil {
+		res.any = vt.Environment.asAny()
+	}
+	return
+}
+
+// Can have the runtime types [*string], [*BetaContainerAutoParam],
+// [*BetaLocalEnvironmentParam], [*BetaContainerReferenceParam]
+type betaResponseToolSearchOutputItemParamToolUnionEnvironment struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *string:
+//	case *openai.BetaContainerAutoParam:
+//	case *openai.BetaLocalEnvironmentParam:
+//	case *openai.BetaContainerReferenceParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetFileIDs() []string {
+	switch vt := u.any.(type) {
+	case *BetaFunctionShellToolEnvironmentUnionParam:
+		return vt.GetFileIDs()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetMemoryLimit() *string {
+	switch vt := u.any.(type) {
+	case *BetaFunctionShellToolEnvironmentUnionParam:
+		return vt.GetMemoryLimit()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetNetworkPolicy() *BetaContainerAutoNetworkPolicyUnionParam {
+	switch vt := u.any.(type) {
+	case *BetaFunctionShellToolEnvironmentUnionParam:
+		return vt.GetNetworkPolicy()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetContainerID() *string {
+	switch vt := u.any.(type) {
+	case *BetaFunctionShellToolEnvironmentUnionParam:
+		return vt.GetContainerID()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetType() *string {
+	switch vt := u.any.(type) {
+	case *BetaFunctionShellToolEnvironmentUnionParam:
+		return vt.GetType()
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetSkills() (res betaResponseToolSearchOutputItemParamToolUnionEnvironmentSkills) {
+	switch vt := u.any.(type) {
+	case *BetaFunctionShellToolEnvironmentUnionParam:
+		res.any = vt.GetSkills()
+	}
+	return res
+}
+
+// Can have the runtime types [_[]BetaContainerAutoSkillUnionParam],
+// [_[]BetaLocalSkillParam]
+type betaResponseToolSearchOutputItemParamToolUnionEnvironmentSkills struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *[]openai.BetaContainerAutoSkillUnionParam:
+//	case *[]openai.BetaLocalSkillParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u betaResponseToolSearchOutputItemParamToolUnionEnvironmentSkills) AsAny() any { return u.any }
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetUserLocation() (res betaResponseToolSearchOutputItemParamToolUnionUserLocation) {
+	if vt := u.OfWebSearch; vt != nil {
+		res.any = &vt.UserLocation
+	} else if vt := u.OfWebSearchPreview; vt != nil {
+		res.any = &vt.UserLocation
+	}
+	return
+}
+
+// Can have the runtime types [*BetaWebSearchToolUserLocationParam],
+// [*BetaWebSearchPreviewToolUserLocationParam]
+type betaResponseToolSearchOutputItemParamToolUnionUserLocation struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *openai.BetaWebSearchToolUserLocationParam:
+//	case *openai.BetaWebSearchPreviewToolUserLocationParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetCity() *string {
+	switch vt := u.any.(type) {
+	case *BetaWebSearchToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.City)
+	case *BetaWebSearchPreviewToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.City)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetCountry() *string {
+	switch vt := u.any.(type) {
+	case *BetaWebSearchToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Country)
+	case *BetaWebSearchPreviewToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Country)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetRegion() *string {
+	switch vt := u.any.(type) {
+	case *BetaWebSearchToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Region)
+	case *BetaWebSearchPreviewToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Region)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetTimezone() *string {
+	switch vt := u.any.(type) {
+	case *BetaWebSearchToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Timezone)
+	case *BetaWebSearchPreviewToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Timezone)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetType() *string {
+	switch vt := u.any.(type) {
+	case *BetaWebSearchToolUserLocationParam:
+		return (*string)(&vt.Type)
+	case *BetaWebSearchPreviewToolUserLocationParam:
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[BetaResponseToolSearchOutputItemParamToolUnion](
+		"type",
+		apijson.Discriminator[BetaFunctionToolParam]("function"),
+		apijson.Discriminator[BetaFileSearchToolParam]("file_search"),
+		apijson.Discriminator[BetaComputerToolParam]("computer"),
+		apijson.Discriminator[BetaComputerUsePreviewToolParam]("computer_use_preview"),
+		apijson.Discriminator[BetaWebSearchToolParam]("web_search"),
+		apijson.Discriminator[BetaWebSearchToolParam]("web_search_2025_08_26"),
+		apijson.Discriminator[BetaResponseToolSearchOutputItemParamToolMcpParam]("mcp"),
+		apijson.Discriminator[BetaResponseToolSearchOutputItemParamToolCodeInterpreterParam]("code_interpreter"),
+		apijson.Discriminator[BetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam]("programmatic_tool_calling"),
+		apijson.Discriminator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam]("image_generation"),
+		apijson.Discriminator[BetaResponseToolSearchOutputItemParamToolLocalShellParam]("local_shell"),
+		apijson.Discriminator[BetaFunctionShellToolParam]("shell"),
+		apijson.Discriminator[BetaCustomToolParam]("custom"),
+		apijson.Discriminator[BetaToolSearchOutputNamespaceToolParam]("namespace"),
+		apijson.Discriminator[BetaToolSearchToolParam]("tool_search"),
+		apijson.Discriminator[BetaWebSearchPreviewToolParam]("web_search_preview"),
+		apijson.Discriminator[BetaWebSearchPreviewToolParam]("web_search_preview_2025_03_11"),
+		apijson.Discriminator[BetaApplyPatchToolParam]("apply_patch"),
+	)
+}
+
+// Give the model access to additional tools via remote Model Context Protocol
+// (MCP) servers.
+// [Learn more about MCP](https://developers.openai.com/api/docs/guides/tools-connectors-mcp).
+//
+// The properties ServerLabel, Type are required.
+type BetaResponseToolSearchOutputItemParamToolMcpParam struct {
+	// A label for this MCP server, used to identify it in tool calls.
+	ServerLabel string `json:"server_label" api:"required"`
+	// An OAuth access token that can be used with a remote MCP server, either with a
+	// custom MCP server URL or a service connector. Your application must handle the
+	// OAuth authorization flow and provide the token here.
+	Authorization param.Opt[string] `json:"authorization,omitzero"`
+	// Whether this MCP tool is deferred and discovered via tool search.
+	DeferLoading param.Opt[bool] `json:"defer_loading,omitzero"`
+	// Optional description of the MCP server, used to provide more context.
+	ServerDescription param.Opt[string] `json:"server_description,omitzero"`
+	// The URL for the MCP server. One of `server_url`, `connector_id`, or `tunnel_id`
+	// must be provided.
+	ServerURL param.Opt[string] `json:"server_url,omitzero" format:"uri"`
+	// The Secure MCP Tunnel ID to use instead of a direct server URL. One of
+	// `server_url`, `connector_id`, or `tunnel_id` must be provided.
+	TunnelID param.Opt[string] `json:"tunnel_id,omitzero"`
+	// The tool invocation context(s).
+	//
+	// Any of "direct", "programmatic".
+	AllowedCallers []string `json:"allowed_callers,omitzero"`
+	// List of allowed tool names or a filter object.
+	AllowedTools BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnion `json:"allowed_tools,omitzero"`
+	// Optional HTTP headers to send to the MCP server. Use for authentication or other
+	// purposes.
+	Headers map[string]string `json:"headers,omitzero"`
+	// Specify which of the MCP server's tools require approval.
+	RequireApproval BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnion `json:"require_approval,omitzero"`
+	// Identifier for service connectors, like those available in ChatGPT. One of
+	// `server_url`, `connector_id`, or `tunnel_id` must be provided. Learn more about
+	// service connectors
+	// [here](https://developers.openai.com/api/docs/guides/tools-connectors-mcp#connectors).
+	//
+	// This field is deprecated for models released after September 1, 2026. Use
+	// `server_url` to connect to a remote MCP server, or `tunnel_id` to connect
+	// through a Secure MCP Tunnel.
+	//
+	// Currently supported `connector_id` values are:
+	//
+	// - Dropbox: `connector_dropbox`
+	// - Gmail: `connector_gmail`
+	// - Google Calendar: `connector_googlecalendar`
+	// - Google Drive: `connector_googledrive`
+	// - Microsoft Teams: `connector_microsoftteams`
+	// - Outlook Calendar: `connector_outlookcalendar`
+	// - Outlook Email: `connector_outlookemail`
+	// - SharePoint: `connector_sharepoint`
+	//
+	// Any of "connector_dropbox", "connector_gmail", "connector_googlecalendar",
+	// "connector_googledrive", "connector_microsoftteams",
+	// "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint".
+	//
+	// Deprecated: deprecated
+	ConnectorID string `json:"connector_id,omitzero"`
+	// The type of the MCP tool. Always `mcp`.
+	//
+	// This field can be elided, and will marshal its zero value as "mcp".
+	Type constant.Mcp `json:"type" default:"mcp"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolMcpParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolMcpParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolMcpParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolMcpParam](
+		"connector_id", "connector_dropbox", "connector_gmail", "connector_googlecalendar", "connector_googledrive", "connector_microsoftteams", "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnion struct {
+	OfMcpAllowedTools []string                                                                    `json:",omitzero,inline"`
+	OfMcpToolFilter   *BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilterParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfMcpAllowedTools, u.OfMcpToolFilter)
+}
+func (u *BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// A filter object to specify which tools are allowed.
+type BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilterParam struct {
+	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
+	// is
+	// [annotated with `readOnlyHint`](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations-readonlyhint),
+	// it will match this filter.
+	ReadOnly param.Opt[bool] `json:"read_only,omitzero"`
+	// List of allowed tool names.
+	ToolNames []string `json:"tool_names,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilterParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnion struct {
+	OfMcpToolApprovalFilter *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterParam `json:",omitzero,inline"`
+	// Check if union is this variant with
+	// !param.IsOmitted(union.OfMcpToolApprovalSetting)
+	OfMcpToolApprovalSetting param.Opt[string] `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfMcpToolApprovalFilter, u.OfMcpToolApprovalSetting)
+}
+func (u *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Specify which of the MCP server's tools require approval. Can be `always`,
+// `never`, or a filter object associated with tools that require approval.
+type BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterParam struct {
+	// A filter object to specify which tools are allowed.
+	Always BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlways `json:"always,omitzero"`
+	// A filter object to specify which tools are allowed.
+	Never BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNever `json:"never,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A filter object to specify which tools are allowed.
+type BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlways struct {
+	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
+	// is
+	// [annotated with `readOnlyHint`](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations-readonlyhint),
+	// it will match this filter.
+	ReadOnly param.Opt[bool] `json:"read_only,omitzero"`
+	// List of allowed tool names.
+	ToolNames []string `json:"tool_names,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlways) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlways
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlways) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A filter object to specify which tools are allowed.
+type BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNever struct {
+	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
+	// is
+	// [annotated with `readOnlyHint`](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations-readonlyhint),
+	// it will match this filter.
+	ReadOnly param.Opt[bool] `json:"read_only,omitzero"`
+	// List of allowed tool names.
+	ToolNames []string `json:"tool_names,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNever) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNever
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNever) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A tool that runs Python code to help generate a response to a prompt.
+//
+// The properties Container, Type are required.
+type BetaResponseToolSearchOutputItemParamToolCodeInterpreterParam struct {
+	// The code interpreter container. Can be a container ID or an object that
+	// specifies uploaded file IDs to make available to your code, along with an
+	// optional `memory_limit` setting.
+	Container BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnion `json:"container,omitzero" api:"required"`
+	// The tool invocation context(s).
+	//
+	// Any of "direct", "programmatic".
+	AllowedCallers []string `json:"allowed_callers,omitzero"`
+	// The type of the code interpreter tool. Always `code_interpreter`.
+	//
+	// This field can be elided, and will marshal its zero value as "code_interpreter".
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolCodeInterpreterParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolCodeInterpreterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolCodeInterpreterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnion struct {
+	OfString                  param.Opt[string]                                                                              `json:",omitzero,inline"`
+	OfCodeInterpreterToolAuto *BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfCodeInterpreterToolAuto)
+}
+func (u *BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Configuration for a code interpreter container. Optionally specify the IDs of
+// the files to run the code on.
+//
+// The property Type is required.
+type BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoParam struct {
+	// The memory limit for the code interpreter container.
+	//
+	// Any of "1g", "4g", "16g", "64g".
+	MemoryLimit string `json:"memory_limit,omitzero"`
+	// An optional list of uploaded files to make available to your code.
+	FileIDs []string `json:"file_ids,omitzero"`
+	// Network access policy for the container.
+	NetworkPolicy BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion `json:"network_policy,omitzero"`
+	// Always `auto`.
+	//
+	// This field can be elided, and will marshal its zero value as "auto".
+	Type constant.Auto `json:"type" default:"auto"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoParam](
+		"memory_limit", "1g", "4g", "16g", "64g",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion struct {
+	OfDisabled  *BetaContainerNetworkPolicyDisabledParam  `json:",omitzero,inline"`
+	OfAllowlist *BetaContainerNetworkPolicyAllowlistParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfDisabled, u.OfAllowlist)
+}
+func (u *BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion) GetAllowedDomains() []string {
+	if vt := u.OfAllowlist; vt != nil {
+		return vt.AllowedDomains
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion) GetDomainSecrets() []BetaContainerNetworkPolicyDomainSecretParam {
+	if vt := u.OfAllowlist; vt != nil {
+		return vt.DomainSecrets
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion) GetType() *string {
+	if vt := u.OfDisabled; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfAllowlist; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion](
+		"type",
+		apijson.Discriminator[BetaContainerNetworkPolicyDisabledParam]("disabled"),
+		apijson.Discriminator[BetaContainerNetworkPolicyAllowlistParam]("allowlist"),
+	)
+}
+
+func NewBetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam() BetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam {
+	return BetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam{
+		Type: "programmatic_tool_calling",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewBetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam].
+type BetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam struct {
+	// The type of the tool. Always `programmatic_tool_calling`.
+	Type constant.ProgrammaticToolCalling `json:"type" default:"programmatic_tool_calling"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A tool that generates images using the GPT image models.
+//
+// The property Type is required.
+type BetaResponseToolSearchOutputItemParamToolImageGenerationParam struct {
+	// Compression level for the output image. Default: 100.
+	OutputCompression param.Opt[int64] `json:"output_compression,omitzero"`
+	// Number of partial images to generate in streaming mode, from 0 (default value)
+	// to 3.
+	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
+	// Control how much effort the model will exert to match the style and features,
+	// especially facial features, of input images. Supports `high` and `low` on
+	// `gpt-image-1` and `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For
+	// `gpt-image-2`, omit this parameter. Defaults to `low` on supported models.
+	//
+	// Any of "high", "low".
+	InputFidelity string `json:"input_fidelity,omitzero"`
+	// Whether to generate a new image or edit an existing image. Default: `auto`.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action,omitzero"`
+	// Allows to set transparency for the background of the generated image(s). Must be
+	// one of `transparent`, `opaque`, or `auto` (default value). When `auto` is used,
+	// the model will automatically determine the best background for the image.
+	//
+	// `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`, including their `2026-09-08`
+	// snapshots, support `opaque` and `transparent` backgrounds. Transparent
+	// backgrounds are available for supported GPT Image models. For `gpt-image-2` and
+	// `gpt-image-2-2026-04-21`, this support is in preview. When using `transparent`,
+	// set the output format to `png` or `webp`.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background string `json:"background,omitzero"`
+	// Optional mask for inpainting. Contains `image_url` (string, optional) and
+	// `file_id` (string, optional).
+	InputImageMask BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMask `json:"input_image_mask,omitzero"`
+	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
+	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`,
+	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
+	// `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, or
+	// `chatgpt-image-latest`. Default: `gpt-image-1`.
+	Model string `json:"model,omitzero"`
+	// Moderation level for the generated image. Default: `auto`.
+	//
+	// Any of "auto", "low".
+	Moderation string `json:"moderation,omitzero"`
+	// The output format of the generated image. One of `png`, `webp`, or `jpeg`.
+	// Default: `png`.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat string `json:"output_format,omitzero"`
+	// The quality of the generated image. The GPT image models support `low`,
+	// `medium`, and `high`. `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`,
+	// including their `2026-09-08` snapshots, also support `xhigh` and `max`. Default:
+	// `auto`.
+	//
+	// Any of "low", "medium", "high", "xhigh", "max", "auto".
+	Quality string `json:"quality,omitzero"`
+	// The size of the generated images. For `gpt-image-2`, `gpt-image-2-2026-04-21`,
+	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
+	// `gpt-image-2.5-flare`, and `gpt-image-2.5-flare-2026-09-08`, arbitrary
+	// resolutions are supported as `WIDTHxHEIGHT` strings, for example `1536x864`.
+	// Width and height must both be divisible by 16 and the requested aspect ratio
+	// must be between 1:3 and 3:1. Resolutions above `2560x1440` are experimental, and
+	// the maximum supported resolution is `3840x2160`. The requested size must also
+	// satisfy the model's current pixel and edge limits. The standard sizes
+	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
+	// `auto` is supported for models that allow automatic sizing.
+	Size string `json:"size,omitzero"`
+	// The type of the image generation tool. Always `image_generation`.
+	//
+	// This field can be elided, and will marshal its zero value as "image_generation".
+	Type constant.ImageGeneration `json:"type" default:"image_generation"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolImageGenerationParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolImageGenerationParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolImageGenerationParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
+		"action", "generate", "edit", "auto",
+	)
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
+		"background", "transparent", "opaque", "auto",
+	)
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
+		"input_fidelity", "high", "low",
+	)
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
+		"moderation", "auto", "low",
+	)
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
+		"output_format", "png", "webp", "jpeg",
+	)
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
+		"quality", "low", "medium", "high", "xhigh", "max", "auto",
+	)
+}
+
+// Optional mask for inpainting. Contains `image_url` (string, optional) and
+// `file_id` (string, optional).
+type BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMask struct {
+	// File ID for the mask image.
+	FileID param.Opt[string] `json:"file_id,omitzero"`
+	// Base64-encoded mask image.
+	ImageURL param.Opt[string] `json:"image_url,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMask) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMask
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMask) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewBetaResponseToolSearchOutputItemParamToolLocalShellParam() BetaResponseToolSearchOutputItemParamToolLocalShellParam {
+	return BetaResponseToolSearchOutputItemParamToolLocalShellParam{
+		Type: "local_shell",
+	}
+}
+
+// A tool that allows the model to execute shell commands in a local environment.
+//
+// This struct has a constant value, construct it with
+// [NewBetaResponseToolSearchOutputItemParamToolLocalShellParam].
+type BetaResponseToolSearchOutputItemParamToolLocalShellParam struct {
+	// The type of the local shell tool. Always `local_shell`.
+	Type constant.LocalShell `json:"type" default:"local_shell"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolLocalShellParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolLocalShellParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolLocalShellParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -33327,6 +35549,348 @@ func (r BetaToolChoiceTypesParam) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *BetaToolChoiceTypesParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Groups function/custom tools under a shared namespace.
+type BetaToolSearchOutputNamespaceTool struct {
+	// A description of the namespace shown to the model.
+	Description string `json:"description" api:"required"`
+	// The namespace name used in tool calls (for example, `crm`).
+	Name string `json:"name" api:"required"`
+	// The function/custom tools loaded inside this namespace.
+	Tools []BetaToolSearchOutputNamespaceToolToolUnion `json:"tools" api:"required"`
+	// The type of the tool. Always `namespace`.
+	Type constant.Namespace `json:"type" default:"namespace"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Description respjson.Field
+		Name        respjson.Field
+		Tools       respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaToolSearchOutputNamespaceTool) RawJSON() string { return r.JSON.raw }
+func (r *BetaToolSearchOutputNamespaceTool) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this BetaToolSearchOutputNamespaceTool to a
+// BetaToolSearchOutputNamespaceToolParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// BetaToolSearchOutputNamespaceToolParam.Overrides()
+func (r BetaToolSearchOutputNamespaceTool) ToParam() BetaToolSearchOutputNamespaceToolParam {
+	return param.Override[BetaToolSearchOutputNamespaceToolParam](json.RawMessage(r.RawJSON()))
+}
+
+// BetaToolSearchOutputNamespaceToolToolUnion contains all possible properties and
+// values from [BetaToolSearchOutputNamespaceToolToolFunction], [BetaCustomTool].
+//
+// Use the [BetaToolSearchOutputNamespaceToolToolUnion.AsAny] method to switch on
+// the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaToolSearchOutputNamespaceToolToolUnion struct {
+	Name string `json:"name"`
+	// Any of "function", "custom".
+	Type           string   `json:"type"`
+	AllowedCallers []string `json:"allowed_callers"`
+	Async          bool     `json:"async"`
+	DeferLoading   bool     `json:"defer_loading"`
+	Description    string   `json:"description"`
+	// This field is from variant [BetaToolSearchOutputNamespaceToolToolFunction].
+	OutputSchema map[string]any `json:"output_schema"`
+	// This field is from variant [BetaToolSearchOutputNamespaceToolToolFunction].
+	Parameters any `json:"parameters"`
+	// This field is from variant [BetaToolSearchOutputNamespaceToolToolFunction].
+	Strict bool `json:"strict"`
+	// This field is from variant [BetaCustomTool].
+	Format BetaCustomToolFormatUnion `json:"format"`
+	JSON   struct {
+		Name           respjson.Field
+		Type           respjson.Field
+		AllowedCallers respjson.Field
+		Async          respjson.Field
+		DeferLoading   respjson.Field
+		Description    respjson.Field
+		OutputSchema   respjson.Field
+		Parameters     respjson.Field
+		Strict         respjson.Field
+		Format         respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// anyBetaToolSearchOutputNamespaceToolTool is implemented by each variant of
+// [BetaToolSearchOutputNamespaceToolToolUnion] to add type safety for the return
+// type of [BetaToolSearchOutputNamespaceToolToolUnion.AsAny]
+type anyBetaToolSearchOutputNamespaceToolTool interface {
+	implBetaToolSearchOutputNamespaceToolToolUnion()
+}
+
+func (BetaToolSearchOutputNamespaceToolToolFunction) implBetaToolSearchOutputNamespaceToolToolUnion() {
+}
+func (BetaCustomTool) implBetaToolSearchOutputNamespaceToolToolUnion() {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := BetaToolSearchOutputNamespaceToolToolUnion.AsAny().(type) {
+//	case openai.BetaToolSearchOutputNamespaceToolToolFunction:
+//	case openai.BetaCustomTool:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u BetaToolSearchOutputNamespaceToolToolUnion) AsAny() anyBetaToolSearchOutputNamespaceToolTool {
+	switch u.Type {
+	case "function":
+		return u.AsFunction()
+	case "custom":
+		return u.AsCustom()
+	}
+	return nil
+}
+
+func (u BetaToolSearchOutputNamespaceToolToolUnion) AsFunction() (v BetaToolSearchOutputNamespaceToolToolFunction) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaToolSearchOutputNamespaceToolToolUnion) AsCustom() (v BetaCustomTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaToolSearchOutputNamespaceToolToolUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *BetaToolSearchOutputNamespaceToolToolUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaToolSearchOutputNamespaceToolToolFunction struct {
+	// The name of the loaded function tool.
+	Name string            `json:"name" api:"required"`
+	Type constant.Function `json:"type" default:"function"`
+	// The tool invocation context(s).
+	//
+	// Any of "direct", "programmatic".
+	AllowedCallers []string `json:"allowed_callers" api:"nullable"`
+	// Whether the tool response can be returned asynchronously versus immediately
+	// returned on next response creation.
+	Async bool `json:"async"`
+	// Whether this function should be deferred and discovered via tool search.
+	DeferLoading bool   `json:"defer_loading"`
+	Description  string `json:"description" api:"nullable"`
+	// A JSON Schema describing the JSON value encoded in string outputs for this
+	// function tool. This does not describe content-array outputs.
+	OutputSchema map[string]any `json:"output_schema" api:"nullable"`
+	Parameters   any            `json:"parameters" api:"nullable"`
+	// Whether to enforce strict parameter validation. If omitted, Responses attempts
+	// to use strict validation when the schema is compatible, and falls back to
+	// non-strict validation otherwise.
+	Strict bool `json:"strict" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Name           respjson.Field
+		Type           respjson.Field
+		AllowedCallers respjson.Field
+		Async          respjson.Field
+		DeferLoading   respjson.Field
+		Description    respjson.Field
+		OutputSchema   respjson.Field
+		Parameters     respjson.Field
+		Strict         respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaToolSearchOutputNamespaceToolToolFunction) RawJSON() string { return r.JSON.raw }
+func (r *BetaToolSearchOutputNamespaceToolToolFunction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Groups function/custom tools under a shared namespace.
+//
+// The properties Description, Name, Tools, Type are required.
+type BetaToolSearchOutputNamespaceToolParam struct {
+	// A description of the namespace shown to the model.
+	Description string `json:"description" api:"required"`
+	// The namespace name used in tool calls (for example, `crm`).
+	Name string `json:"name" api:"required"`
+	// The function/custom tools loaded inside this namespace.
+	Tools []BetaToolSearchOutputNamespaceToolToolUnionParam `json:"tools,omitzero" api:"required"`
+	// The type of the tool. Always `namespace`.
+	//
+	// This field can be elided, and will marshal its zero value as "namespace".
+	Type constant.Namespace `json:"type" default:"namespace"`
+	paramObj
+}
+
+func (r BetaToolSearchOutputNamespaceToolParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaToolSearchOutputNamespaceToolParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaToolSearchOutputNamespaceToolParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaToolSearchOutputNamespaceToolToolUnionParam struct {
+	OfFunction *BetaToolSearchOutputNamespaceToolToolFunctionParam `json:",omitzero,inline"`
+	OfCustom   *BetaCustomToolParam                                `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfFunction, u.OfCustom)
+}
+func (u *BetaToolSearchOutputNamespaceToolToolUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetOutputSchema() map[string]any {
+	if vt := u.OfFunction; vt != nil {
+		return vt.OutputSchema
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetParameters() *any {
+	if vt := u.OfFunction; vt != nil {
+		return &vt.Parameters
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetStrict() *bool {
+	if vt := u.OfFunction; vt != nil && vt.Strict.Valid() {
+		return &vt.Strict.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetFormat() *BetaCustomToolFormatUnionParam {
+	if vt := u.OfCustom; vt != nil {
+		return &vt.Format
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetName() *string {
+	if vt := u.OfFunction; vt != nil {
+		return (*string)(&vt.Name)
+	} else if vt := u.OfCustom; vt != nil {
+		return (*string)(&vt.Name)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetType() *string {
+	if vt := u.OfFunction; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCustom; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetAsync() *bool {
+	if vt := u.OfFunction; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
+	} else if vt := u.OfCustom; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetDeferLoading() *bool {
+	if vt := u.OfFunction; vt != nil && vt.DeferLoading.Valid() {
+		return &vt.DeferLoading.Value
+	} else if vt := u.OfCustom; vt != nil && vt.DeferLoading.Valid() {
+		return &vt.DeferLoading.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetDescription() *string {
+	if vt := u.OfFunction; vt != nil && vt.Description.Valid() {
+		return &vt.Description.Value
+	} else if vt := u.OfCustom; vt != nil && vt.Description.Valid() {
+		return &vt.Description.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's AllowedCallers property, if
+// present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetAllowedCallers() []string {
+	if vt := u.OfFunction; vt != nil {
+		return vt.AllowedCallers
+	} else if vt := u.OfCustom; vt != nil {
+		return vt.AllowedCallers
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[BetaToolSearchOutputNamespaceToolToolUnionParam](
+		"type",
+		apijson.Discriminator[BetaToolSearchOutputNamespaceToolToolFunctionParam]("function"),
+		apijson.Discriminator[BetaCustomToolParam]("custom"),
+	)
+}
+
+// The properties Name, Type are required.
+type BetaToolSearchOutputNamespaceToolToolFunctionParam struct {
+	// The name of the loaded function tool.
+	Name        string            `json:"name" api:"required"`
+	Description param.Opt[string] `json:"description,omitzero"`
+	// Whether to enforce strict parameter validation. If omitted, Responses attempts
+	// to use strict validation when the schema is compatible, and falls back to
+	// non-strict validation otherwise.
+	Strict param.Opt[bool] `json:"strict,omitzero"`
+	// Whether the tool response can be returned asynchronously versus immediately
+	// returned on next response creation.
+	Async param.Opt[bool] `json:"async,omitzero"`
+	// Whether this function should be deferred and discovered via tool search.
+	DeferLoading param.Opt[bool] `json:"defer_loading,omitzero"`
+	// The tool invocation context(s).
+	//
+	// Any of "direct", "programmatic".
+	AllowedCallers []string `json:"allowed_callers,omitzero"`
+	// A JSON Schema describing the JSON value encoded in string outputs for this
+	// function tool. This does not describe content-array outputs.
+	OutputSchema map[string]any `json:"output_schema,omitzero"`
+	Parameters   any            `json:"parameters,omitzero"`
+	// This field can be elided, and will marshal its zero value as "function".
+	Type constant.Function `json:"type" default:"function"`
+	paramObj
+}
+
+func (r BetaToolSearchOutputNamespaceToolToolFunctionParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaToolSearchOutputNamespaceToolToolFunctionParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaToolSearchOutputNamespaceToolToolFunctionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
