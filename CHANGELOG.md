@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.73.0](https://github.com/openai/openai-go/compare/v3.72.0...v3.73.0) (2026-10-06)
+
+
+### Features
+
+* **api:** add standalone Decisions support ([#1036](https://github.com/openai/openai-go/issues/1036)) ([e57ff4a](https://github.com/openai/openai-go/commit/e57ff4aeb3a7260205ec4adba1812ba66d075f15))
+
 ## [3.72.0](https://github.com/openai/openai-go/compare/v3.71.2...v3.72.0) (2026-10-06)
 
 
