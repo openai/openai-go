@@ -134,3 +134,95 @@ func TestResponseToInputPreservesCompleteOutputForFollowupRequest(t *testing.T) 
 		t.Fatalf("ToInput() dropped output fields: %s", data)
 	}
 }
+
+
+func TestDharmaHistoryUnknownAndIsolation(t *testing.T) {
+	t.Run("unknown output item survives in order", func(t *testing.T) {
+		const body = `{"output":[{"id":"future_123","type":"future_fixture","payload":{"nested":[1,null,{"ok":true}]},"list":[{"name":"first"},null,[2,3]]},{"id":"msg_123","type":"message","role":"assistant","content":[{"type":"output_text","text":"after unknown"}],"status":"completed"}]}`
+
+		var response responses.Response
+		if err := json.Unmarshal([]byte(body), &response); err != nil {
+			t.Fatal(err)
+		}
+		if len(response.Output) != 2 {
+			t.Fatalf("decoded %d output items, want 2", len(response.Output))
+		}
+
+		input := response.ToInput()
+		if len(input) != 2 {
+			t.Fatalf("ToInput() returned %d items, want 2", len(input))
+		}
+
+		gotJSON, err := json.Marshal(input)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		var original struct {
+			Output any `json:"output"`
+		}
+		if err := json.Unmarshal([]byte(body), &original); err != nil {
+			t.Fatal(err)
+		}
+		var got any
+		if err := json.Unmarshal(gotJSON, &got); err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(got, original.Output) {
+			t.Fatalf("ToInput() changed output semantics:\n got: %s\nwant: %s", gotJSON, body)
+		}
+	})
+
+	t.Run("returned override bytes do not alias source or later conversions", func(t *testing.T) {
+		const body = `{"output":[{"id":"future_123","type":"future_fixture","nested":{"items":[1,null,{"value":"kept"}]}},{"id":"msg_123","type":"message","role":"assistant","content":[{"type":"output_text","text":"after unknown"}],"status":"completed"}]}`
+
+		var response responses.Response
+		if err := json.Unmarshal([]byte(body), &response); err != nil {
+			t.Fatal(err)
+		}
+
+		first := response.ToInput()
+		before, err := json.Marshal(first)
+		if err != nil {
+			t.Fatal(err)
+		}
+		sourceRaw := response.Output[0].RawJSON()
+
+		override, ok := first[0].Overrides()
+		if !ok || len(override) == 0 {
+			t.Fatal("first ToInput() item did not contain raw override bytes")
+		}
+		override[0] ^= 0xff
+
+		after, err := json.Marshal(response.ToInput())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(after) != string(before) {
+			t.Fatalf("mutating returned override affected a later ToInput():\n before: %s\n  after: %s", before, after)
+		}
+		if response.Output[0].RawJSON() != sourceRaw {
+			t.Fatal("mutating returned override changed source RawJSON")
+		}
+	})
+
+	t.Run("empty and null output serialize as empty input", func(t *testing.T) {
+		for _, body := range []string{`{"output":[]}`, `{"output":null}`} {
+			var response responses.Response
+			if err := json.Unmarshal([]byte(body), &response); err != nil {
+				t.Fatal(err)
+			}
+			input := response.ToInput()
+			if len(input) != 0 {
+				t.Fatalf("ToInput() returned %d items for %s, want 0", len(input), body)
+			}
+			got, err := json.Marshal(input)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(got) != "[]" {
+				t.Fatalf("ToInput() serialized as %s for %s, want []", got, body)
+			}
+		}
+	})
+}
