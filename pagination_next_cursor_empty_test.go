@@ -73,7 +73,7 @@ func TestNextCursorPaginationFollowsEmptyPages(t *testing.T) {
 			pager := client.Admin.Organization.Groups.ListAutoPaging(
 				context.Background(), openai.AdminOrganizationGroupListParams{},
 			)
-			var got []string
+			got := []string{}
 			for pager.Next() {
 				got = append(got, pager.Current().ID)
 			}
