@@ -218,7 +218,9 @@ type BetaAgentSessionNewParamsAgent struct {
 	//
 	// Any of "auto", "default", "flex", "priority", "fast".
 	ServiceTier string `json:"service_tier,omitzero"`
-	// Tools available to the agent. Omit to inherit, or pass null to clear them.
+	// Tools available to the agent. Omit to inherit, or pass null to clear them. The
+	// resolved tool list must fit within 3 MiB (3,145,728 bytes) of compact UTF-8
+	// JSON.
 	Tools []AgentToolParamUnion `json:"tools,omitzero"`
 	// Configuration for creating and coordinating subagents.
 	MultiAgent MultiAgentConfigParam `json:"multi_agent,omitzero"`

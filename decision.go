@@ -406,6 +406,7 @@ type DecisionUsage struct {
 	OutputTokens        int64                            `json:"output_tokens" api:"required"`
 	OutputTokensDetails DecisionUsageOutputTokensDetails `json:"output_tokens_details" api:"required"`
 	TotalTokens         int64                            `json:"total_tokens" api:"required"`
+	ComputeUnits        int64                            `json:"compute_units" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		InputTokens         respjson.Field
@@ -413,6 +414,7 @@ type DecisionUsage struct {
 		OutputTokens        respjson.Field
 		OutputTokensDetails respjson.Field
 		TotalTokens         respjson.Field
+		ComputeUnits        respjson.Field
 		ExtraFields         map[string]respjson.Field
 		raw                 string
 	} `json:"-"`

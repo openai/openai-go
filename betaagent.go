@@ -9260,7 +9260,8 @@ type BetaAgentNewParams struct {
 	//
 	// Any of "auto", "default", "flex", "priority", "fast".
 	ServiceTier BetaAgentNewParamsServiceTier `json:"service_tier,omitzero"`
-	// Tools available to the agent. Defaults to an empty list.
+	// Tools available to the agent. Defaults to an empty list. The tool list must fit
+	// within 3 MiB (3,145,728 bytes) of compact UTF-8 JSON.
 	Tools []PersistedAgentToolParamUnion `json:"tools,omitzero"`
 	// Configuration for creating and coordinating subagents. Subagent tools are
 	// disabled by default.
@@ -9308,7 +9309,8 @@ type BetaAgentUpdateParams struct {
 	//
 	// Any of "auto", "default", "flex", "priority", "fast".
 	ServiceTier BetaAgentUpdateParamsServiceTier `json:"service_tier,omitzero"`
-	// Tools available to the agent.
+	// Replaces the tool list. Omit to leave it unchanged, or pass null to clear it.
+	// The replacement must fit within 3 MiB (3,145,728 bytes) of compact UTF-8 JSON.
 	Tools []PersistedAgentToolParamUnion `json:"tools,omitzero"`
 	// Configuration for creating and coordinating subagents.
 	MultiAgent MultiAgentConfigParam `json:"multi_agent,omitzero"`
