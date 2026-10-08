@@ -10,13 +10,15 @@ import (
 	"github.com/openai/openai-go/v3/webhooks"
 )
 
-func TestSignedAgentSessionWebhooks(t *testing.T) {
+func TestSignedAgentWebhooks(t *testing.T) {
 	client := openai.NewClient(option.WithWebhookSecret(webhookHelperSecret))
 	timestamp := time.Now().Unix()
 	for _, tc := range []struct {
 		event string
 		data  string
 	}{
+		{"agent.environment.ready", `{"id":"as_1"}`},
+		{"agent.environment.failed", `{"id":"as_1"}`},
 		{"agent.session.action_required", `{"id":"as_1","required_action":{"type":"function_call"}}`},
 		{"agent.session.created", `{"id":"as_1","environment_type":"sandbox","environment_id":"env_1","connect":{"remote_url":"https://synthetic.example/agent"}}`},
 		{"agent.session.failed", `{"id":"as_1","environment_type":"sandbox","environment_id":"env_1"}`},
@@ -33,6 +35,14 @@ func TestSignedAgentSessionWebhooks(t *testing.T) {
 				t.Fatalf("wrong event envelope: %#v", event)
 			}
 			switch v := event.AsAny().(type) {
+			case webhooks.AgentEnvironmentReadyWebhookEvent:
+				if tc.event != "agent.environment.ready" || v.Data.ID != "as_1" {
+					t.Fatalf("ready: %#v", v)
+				}
+			case webhooks.AgentEnvironmentFailedWebhookEvent:
+				if tc.event != "agent.environment.failed" || v.Data.ID != "as_1" {
+					t.Fatalf("failed: %#v", v)
+				}
 			case webhooks.AgentSessionActionRequiredWebhookEvent:
 				if tc.event != "agent.session.action_required" || v.Data.RequiredAction.Type != "function_call" {
 					t.Fatalf("action: %#v", v)

@@ -13,6 +13,44 @@ import (
 	"github.com/openai/openai-go/v3/option"
 )
 
+func TestSessionAttachesPrewarmedEnvironment(t *testing.T) {
+	requests := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests++
+		if r.Method != http.MethodPost || r.URL.Path != "/agents/sessions" {
+			t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+		}
+		if r.Header.Get("OpenAI-Beta") != "agents=v1" {
+			t.Error("missing Managed Agents beta header")
+		}
+		var body map[string]json.RawMessage
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Errorf("decode request: %v", err)
+		}
+		var environment map[string]any
+		if err := json.Unmarshal(body["environment"], &environment); err != nil {
+			t.Errorf("decode environment: %v", err)
+		}
+		want := map[string]any{"type": "openai_hosted", "environment_id": "ccarenv_test"}
+		if !reflect.DeepEqual(environment, want) {
+			t.Errorf("environment = %v; want %v", environment, want)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"id":"session_test","object":"agent.session"}`))
+	}))
+	defer server.Close()
+	client := openai.NewClient(option.WithAPIKey("test-key"), option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithMaxRetries(0))
+	session, err := client.Beta.Agents.Sessions.New(context.Background(), openai.BetaAgentSessionNewParams{
+		Environment: openai.EnvironmentParamUnion{OfParamOpenAIHosted: &openai.EnvironmentParamOpenAIHosted{EnvironmentID: openai.String("ccarenv_test")}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if session.ID != "session_test" || requests != 1 {
+		t.Fatalf("session = %q, requests = %d; want session_test and one request", session.ID, requests)
+	}
+}
+
 func TestAgentsIDListPaginationPreservesFilters(t *testing.T) {
 	cases := []struct {
 		name    string
