@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.74.0](https://github.com/openai/openai-go/compare/v3.73.0...v3.74.0) (2026-10-08)
+
+
+### Features
+
+* **agents:** handle local tools during session creation streams ([#1030](https://github.com/openai/openai-go/issues/1030)) ([7e4e1b1](https://github.com/openai/openai-go/commit/7e4e1b19121941c2ea7298ce64011caf2ec11e2b))
+
+
+### Bug Fixes
+
+* **api:** correct custom voice creation parameters ([#1040](https://github.com/openai/openai-go/issues/1040)) ([6dbe457](https://github.com/openai/openai-go/commit/6dbe4579c1555e109cb00f83ea6e06cc192be990))
+
 ## [3.73.0](https://github.com/openai/openai-go/compare/v3.72.0...v3.73.0) (2026-10-06)
 
 
