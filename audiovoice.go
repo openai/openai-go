@@ -41,17 +41,17 @@ func NewAudioVoiceService(opts ...option.RequestOption) (r AudioVoiceService) {
 	return
 }
 
-// Creates a voice from a text prompt or from a consent recording and an audio
-// sample.
+// Create a custom voice you can use for audio output (for example, in
+// Text-to-Speech and the Realtime API). This requires an audio sample and a
+// previously uploaded consent recording.
 //
-// For prompt-based creation, send `type: "prompt"` with a `name` and `prompt` as
-// JSON or multipart form data. For creation from an audio sample, send
-// `type: "audio_sample"` with a `name`, `audio_sample`, and `consent` recording ID
-// as multipart form data. The type defaults to `audio_sample` when omitted.
+// Send `name`, `audio_sample`, and the `consent` recording ID as multipart form
+// data. The optional `type` defaults to `audio_sample`.
 //
-// Returns the saved voice's metadata. Voices created from text prompts are
-// supported only in Live, not in Realtime or the speech endpoint. The response
-// does not include preview audio.
+// Returns the saved voice's metadata. See the
+// [custom voices guide](https://developers.openai.com/api/docs/guides/text-to-speech#custom-voices)
+// for requirements and best practices. Custom voices are limited to eligible
+// customers.
 func (r *AudioVoiceService) New(ctx context.Context, body AudioVoiceNewParams, opts ...option.RequestOption) (res *Voice, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -60,8 +60,7 @@ func (r *AudioVoiceService) New(ctx context.Context, body AudioVoiceNewParams, o
 	return res, err
 }
 
-// A custom voice that can be used for audio output. Voices created from text
-// prompts are supported only in Live.
+// A custom voice that can be used for audio output.
 type Voice struct {
 	// The voice identifier, which can be referenced in API endpoints.
 	ID string `json:"id" api:"required"`
@@ -71,10 +70,9 @@ type Voice struct {
 	Name string `json:"name" api:"required"`
 	// The object type, which is always `audio.voice`.
 	Object constant.AudioVoice `json:"object" default:"audio.voice"`
-	// How the voice was created. Voices created from text prompts are supported only
-	// in Live.
+	// How the voice was created.
 	//
-	// Any of "audio_sample", "prompt".
+	// Any of "audio_sample".
 	Type VoiceType `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -94,13 +92,11 @@ func (r *Voice) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// How the voice was created. Voices created from text prompts are supported only
-// in Live.
+// How the voice was created.
 type VoiceType string
 
 const (
 	VoiceTypeAudioSample VoiceType = "audio_sample"
-	VoiceTypePrompt      VoiceType = "prompt"
 )
 
 type AudioVoiceNewParams struct {
@@ -111,8 +107,6 @@ type AudioVoiceNewParams struct {
 
 	// This field is a request body variant, only one variant field can be set.
 	OfAudioSample *AudioVoiceNewParamsBodyAudioSample `json:",inline"`
-	// This field is a request body variant, only one variant field can be set.
-	OfPrompt *AudioVoiceNewParamsBodyPrompt `json:",inline"`
 
 	paramObj
 }
@@ -128,20 +122,12 @@ func (u AudioVoiceNewParams) MarshalMultipart() (data []byte, contentType string
 		populatedVariants++
 	}
 
-	if u.OfPrompt != nil {
-		populatedVariants++
-	}
-
 	if populatedVariants > 1 {
 		return nil, "", fmt.Errorf("expected union to have only one present variant, got %d", populatedVariants)
 	}
 
 	if u.OfAudioSample != nil {
 		return u.OfAudioSample.MarshalMultipart()
-	}
-
-	if u.OfPrompt != nil {
-		return u.OfPrompt.MarshalMultipart()
 	}
 
 	data, err = param.MarshalUnion(u)
@@ -199,65 +185,5 @@ func (r AudioVoiceNewParamsBodyAudioSample) MarshalMultipartTo(writer *multipart
 func init() {
 	apijson.RegisterFieldValidator[AudioVoiceNewParamsBodyAudioSample](
 		"type", "audio_sample",
-	)
-}
-
-// Creates a synthetic voice from a text description. Supports application/json or
-// multipart/form-data.
-//
-// The properties Name, Prompt, Type are required.
-type AudioVoiceNewParamsBodyPrompt struct {
-	// The name of the new voice.
-	Name string `json:"name" api:"required"`
-	// A description of the desired voice. Must not contain only whitespace.
-	Prompt string `json:"prompt" api:"required"`
-	// Set to `prompt` to create a voice from a text description.
-	//
-	// Any of "prompt".
-	Type string `json:"type" api:"required"`
-	// The voice creation model to use. Defaults to `auto`.
-	//
-	// Any of "auto", "2026-10-01".
-	Model string `json:"model,omitzero"`
-	// Optional text for the voice to speak during creation. If omitted, a script is
-	// generated from the prompt. Must not be blank after trimming whitespace; scripts
-	// that are too short are rejected.
-	ScriptHint param.Opt[string] `json:"script_hint,omitzero"`
-	paramObj
-}
-
-func (r AudioVoiceNewParamsBodyPrompt) MarshalMultipart() (data []byte, contentType string, err error) {
-	buf := bytes.NewBuffer(nil)
-	writer := multipart.NewWriter(buf)
-	err = apiform.MarshalRoot(r, writer)
-	if err == nil {
-		err = apiform.WriteExtras(writer, r.ExtraFields())
-	}
-	if err != nil {
-		_ = writer.Close()
-		return nil, "", err
-	}
-	err = writer.Close()
-	if err != nil {
-		return nil, "", err
-	}
-	return buf.Bytes(), writer.FormDataContentType(), nil
-}
-
-// MarshalMultipartTo writes multipart fields without buffering file contents.
-// The caller owns writer and must close it to finish the multipart body.
-func (r AudioVoiceNewParamsBodyPrompt) MarshalMultipartTo(writer *multipart.Writer) error {
-	if err := apiform.MarshalRoot(r, writer); err != nil {
-		return err
-	}
-	return apiform.WriteExtras(writer, r.ExtraFields())
-}
-
-func init() {
-	apijson.RegisterFieldValidator[AudioVoiceNewParamsBodyPrompt](
-		"type", "prompt",
-	)
-	apijson.RegisterFieldValidator[AudioVoiceNewParamsBodyPrompt](
-		"model", "auto", "2026-10-01",
 	)
 }

@@ -68,8 +68,7 @@ type AudioSpeechNewParams struct {
 	// object with an `id`, for example `{ "id": "voice_1234" }`. Previews of the
 	// voices are available in the
 	// [Text to speech guide](https://developers.openai.com/api/docs/guides/text-to-speech#voice-options).
-	// Custom voices must be created from audio samples. Voices created from text
-	// prompts are supported only in Live.
+	// Custom voices must be created from audio samples.
 	Voice AudioSpeechNewParamsVoiceUnion `json:"voice,omitzero" api:"required"`
 	// Control the voice of your generated audio with additional instructions. Does not
 	// work with `tts-1` or `tts-1-hd`.
@@ -123,8 +122,7 @@ func (u *AudioSpeechNewParamsVoiceUnion) UnmarshalJSON(data []byte) error {
 // object with an `id`, for example `{ "id": "voice_1234" }`. Previews of the
 // voices are available in the
 // [Text to speech guide](https://developers.openai.com/api/docs/guides/text-to-speech#voice-options).
-// Custom voices must be created from audio samples. Voices created from text
-// prompts are supported only in Live.
+// Custom voices must be created from audio samples.
 type AudioSpeechNewParamsVoiceString2 string
 
 const (
