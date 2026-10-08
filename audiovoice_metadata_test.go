@@ -25,17 +25,6 @@ func TestAudioVoicesNewRootMetadata(t *testing.T) {
 		wantFile bool
 	}{
 		{
-			name: "prompt root overrides child and retains extra fields",
-			request: func() openai.AudioVoiceNewParams {
-				child := &openai.AudioVoiceNewParamsBodyPrompt{Type: "prompt", Name: "old name", Prompt: "calm"}
-				child.SetExtraFields(map[string]any{"child_field": "keep", "name": "child name"})
-				r := openai.AudioVoiceNewParams{OfPrompt: child}
-				r.SetExtraFields(map[string]any{"name": "root name", "future_count": 2, "prompt": param.Omit})
-				return r
-			},
-			want: map[string][]string{"name": {"root name"}, "type": {"prompt"}, "child_field": {"keep"}, "future_count": {"2"}},
-		},
-		{
 			name: "audio sample keeps file and root extras",
 			request: func() openai.AudioVoiceNewParams {
 				r := openai.AudioVoiceNewParams{OfAudioSample: &openai.AudioVoiceNewParamsBodyAudioSample{
@@ -46,15 +35,6 @@ func TestAudioVoicesNewRootMetadata(t *testing.T) {
 			},
 			want:     map[string][]string{"name": {"root name"}, "consent": {"consent_1"}, "future_field": {"value"}},
 			wantFile: true,
-		},
-		{
-			name: "prompt child metadata overrides without root extras",
-			request: func() openai.AudioVoiceNewParams {
-				child := &openai.AudioVoiceNewParamsBodyPrompt{Type: "prompt", Name: "old name", Prompt: "calm"}
-				child.SetExtraFields(map[string]any{"child_field": "keep", "name": "child name"})
-				return openai.AudioVoiceNewParams{OfPrompt: child}
-			},
-			want: map[string][]string{"name": {"child name"}, "type": {"prompt"}, "prompt": {"calm"}, "child_field": {"keep"}},
 		},
 		{
 			name: "audio sample child metadata overrides without root extras",
@@ -69,48 +49,39 @@ func TestAudioVoicesNewRootMetadata(t *testing.T) {
 			wantFile: true,
 		},
 		{
-			name: "prompt child JSON replaces reflected fields",
-			request: func() openai.AudioVoiceNewParams {
-				child := &openai.AudioVoiceNewParamsBodyPrompt{Type: "prompt", Name: "ignored", Prompt: "ignored"}
-				param.SetJSON([]byte(`{"name":"json override","type":"prompt","prompt":"soft"}`), child)
-				return openai.AudioVoiceNewParams{OfPrompt: child}
-			},
-			json: `{"name":"json override","type":"prompt","prompt":"soft"}`,
-		},
-		{
 			name: "audio sample child JSON ignores the file and stale fields",
 			request: func() openai.AudioVoiceNewParams {
 				child := &openai.AudioVoiceNewParamsBodyAudioSample{AudioSample: bytes.NewBufferString("ignored"), Consent: "ignored", Name: "ignored"}
-				param.SetJSON([]byte(`{"name":"replacement","type":"prompt","prompt":"soft"}`), child)
+				param.SetJSON([]byte(`{"name":"replacement","type":"audio_sample"}`), child)
 				return openai.AudioVoiceNewParams{OfAudioSample: child}
 			},
-			json: `{"name":"replacement","type":"prompt","prompt":"soft"}`,
+			json: `{"name":"replacement","type":"audio_sample"}`,
 		},
 		{
 			name: "root extras overlay typed child override",
 			request: func() openai.AudioVoiceNewParams {
-				child := param.Override[openai.AudioVoiceNewParamsBodyPrompt](map[string]any{"name": "child", "type": "prompt", "prompt": "calm", "script_hint": "drop"})
-				r := openai.AudioVoiceNewParams{OfPrompt: &child}
-				r.SetExtraFields(map[string]any{"name": "root", "script_hint": param.Omit})
+				child := param.Override[openai.AudioVoiceNewParamsBodyAudioSample](map[string]any{"name": "child", "type": "audio_sample", "future_field": "drop"})
+				r := openai.AudioVoiceNewParams{OfAudioSample: &child}
+				r.SetExtraFields(map[string]any{"name": "root", "future_field": param.Omit})
 				return r
 			},
-			json: `{"name":"root","prompt":"calm","type":"prompt"}`,
+			json: `{"name":"root","type":"audio_sample"}`,
 		},
 		{
 			name: "root JSON takes priority over child JSON",
 			request: func() openai.AudioVoiceNewParams {
-				child := param.Override[openai.AudioVoiceNewParamsBodyPrompt](map[string]any{"name": "child", "type": "prompt", "prompt": "ignored"})
-				r := openai.AudioVoiceNewParams{OfPrompt: &child}
-				param.SetJSON([]byte(`{"name":"root","type":"prompt","prompt":"calm"}`), &r)
+				child := param.Override[openai.AudioVoiceNewParamsBodyAudioSample](map[string]any{"name": "child", "type": "audio_sample"})
+				r := openai.AudioVoiceNewParams{OfAudioSample: &child}
+				param.SetJSON([]byte(`{"name":"root","type":"audio_sample"}`), &r)
 				return r
 			},
-			json: `{"name":"root","type":"prompt","prompt":"calm"}`,
+			json: `{"name":"root","type":"audio_sample"}`,
 		},
 		{
 			name: "child null uses the standard null parameter contract",
 			request: func() openai.AudioVoiceNewParams {
-				child := param.NullStruct[openai.AudioVoiceNewParamsBodyPrompt]()
-				return openai.AudioVoiceNewParams{OfPrompt: &child}
+				child := param.NullStruct[openai.AudioVoiceNewParamsBodyAudioSample]()
+				return openai.AudioVoiceNewParams{OfAudioSample: &child}
 			},
 			json: "null",
 		},
@@ -132,22 +103,9 @@ func TestAudioVoicesNewRootMetadata(t *testing.T) {
 			},
 			json: "null",
 		},
-		{
-			name: "set json ignores existing variants",
-			request: func() openai.AudioVoiceNewParams {
-				r := openai.AudioVoiceNewParams{
-					OfPrompt:      &openai.AudioVoiceNewParamsBodyPrompt{Type: "prompt", Name: "ignored", Prompt: "ignored"},
-					OfAudioSample: &openai.AudioVoiceNewParamsBodyAudioSample{Name: "also ignored"},
-				}
-				param.SetJSON([]byte(`{"name":"json override","type":"prompt","prompt":"soft"}`), &r)
-				return r
-			},
-			json: `{"name":"json override","type":"prompt","prompt":"soft"}`,
-		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			req := test.request()
-			oldPrompt := req.OfPrompt
 			client := openai.NewClient(option.WithBaseURL("https://synthetic.example/"), option.WithAPIKey("test-key"),
 				option.WithHTTPClient(&http.Client{Transport: voiceMetadataTransport(func(r *http.Request) (*http.Response, error) {
 					if test.json != "" {
@@ -186,13 +144,10 @@ func TestAudioVoicesNewRootMetadata(t *testing.T) {
 							t.Fatalf("unexpected files %v", r.MultipartForm.File)
 						}
 					}
-					return &http.Response{StatusCode: 200, Header: http.Header{"Content-Type": {"application/json"}}, Body: io.NopCloser(bytes.NewBufferString(`{"id":"voice_synthetic","name":"n","type":"prompt"}`)), Request: r}, nil
+					return &http.Response{StatusCode: 200, Header: http.Header{"Content-Type": {"application/json"}}, Body: io.NopCloser(bytes.NewBufferString(`{"id":"voice_synthetic","name":"n","type":"audio_sample"}`)), Request: r}, nil
 				})}))
 			if _, err := client.Audio.Voices.New(context.Background(), req); err != nil {
 				t.Fatal(err)
-			}
-			if oldPrompt != nil && test.json == "" && oldPrompt.ExtraFields()["name"] != "child name" {
-				t.Fatalf("mutated caller metadata: %v", oldPrompt.ExtraFields())
 			}
 		})
 	}
