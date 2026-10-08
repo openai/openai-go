@@ -6181,6 +6181,14 @@ func (u EnvironmentParamUnion) GetEnv() map[string]string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u EnvironmentParamUnion) GetEnvironmentID() *string {
+	if vt := u.OfParamOpenAIHosted; vt != nil && vt.EnvironmentID.Valid() {
+		return &vt.EnvironmentID.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u EnvironmentParamUnion) GetEnvironmentTemplateID() *string {
 	if vt := u.OfParamOpenAIHosted; vt != nil && vt.EnvironmentTemplateID.Valid() {
 		return &vt.EnvironmentTemplateID.Value
@@ -6304,6 +6312,9 @@ func (r *EnvironmentParamNone) UnmarshalJSON(data []byte) error {
 //
 // The property Type is required.
 type EnvironmentParamOpenAIHosted struct {
+	// An existing prewarmed environment. Cannot be combined with a template or inline
+	// configuration.
+	EnvironmentID param.Opt[string] `json:"environment_id,omitzero"`
 	// A reusable hosted template applied before inline session configuration. Omitted
 	// fields inherit the template; network overrides cannot broaden its policy.
 	EnvironmentTemplateID param.Opt[string] `json:"environment_template_id,omitzero"`

@@ -24,7 +24,9 @@ type Agent string                                             // Always "agent"
 type AgentMessage string                                      // Always "agent_message"
 type AgentDeleted string                                      // Always "agent.deleted"
 type AgentEnvironment string                                  // Always "agent.environment"
+type AgentEnvironmentFailed string                            // Always "agent.environment.failed"
 type AgentEnvironmentFile string                              // Always "agent.environment.file"
+type AgentEnvironmentReady string                             // Always "agent.environment.ready"
 type AgentEnvironmentTemplate string                          // Always "agent.environment.template"
 type AgentEnvironmentTemplateDeleted string                   // Always "agent.environment.template.deleted"
 type AgentOutputCommandExecutionOutputDelta string            // Always "agent.output.command_execution_output.delta"
@@ -574,13 +576,15 @@ type WebhookEndpointDeleted string                            // Always "webhook
 type WebhookEndpointTest string                               // Always "webhook_endpoint.test"
 type Webrtc string                                            // Always "webrtc"
 
-func (c Active) Default() Active                             { return "active" }
-func (c AdditionalTools) Default() AdditionalTools           { return "additional_tools" }
-func (c Agent) Default() Agent                               { return "agent" }
-func (c AgentMessage) Default() AgentMessage                 { return "agent_message" }
-func (c AgentDeleted) Default() AgentDeleted                 { return "agent.deleted" }
-func (c AgentEnvironment) Default() AgentEnvironment         { return "agent.environment" }
-func (c AgentEnvironmentFile) Default() AgentEnvironmentFile { return "agent.environment.file" }
+func (c Active) Default() Active                                 { return "active" }
+func (c AdditionalTools) Default() AdditionalTools               { return "additional_tools" }
+func (c Agent) Default() Agent                                   { return "agent" }
+func (c AgentMessage) Default() AgentMessage                     { return "agent_message" }
+func (c AgentDeleted) Default() AgentDeleted                     { return "agent.deleted" }
+func (c AgentEnvironment) Default() AgentEnvironment             { return "agent.environment" }
+func (c AgentEnvironmentFailed) Default() AgentEnvironmentFailed { return "agent.environment.failed" }
+func (c AgentEnvironmentFile) Default() AgentEnvironmentFile     { return "agent.environment.file" }
+func (c AgentEnvironmentReady) Default() AgentEnvironmentReady   { return "agent.environment.ready" }
 func (c AgentEnvironmentTemplate) Default() AgentEnvironmentTemplate {
 	return "agent.environment.template"
 }
@@ -1470,7 +1474,9 @@ func (c Agent) MarshalJSON() ([]byte, error)                           { return 
 func (c AgentMessage) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c AgentDeleted) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c AgentEnvironment) MarshalJSON() ([]byte, error)                { return marshalString(c) }
+func (c AgentEnvironmentFailed) MarshalJSON() ([]byte, error)          { return marshalString(c) }
 func (c AgentEnvironmentFile) MarshalJSON() ([]byte, error)            { return marshalString(c) }
+func (c AgentEnvironmentReady) MarshalJSON() ([]byte, error)           { return marshalString(c) }
 func (c AgentEnvironmentTemplate) MarshalJSON() ([]byte, error)        { return marshalString(c) }
 func (c AgentEnvironmentTemplateDeleted) MarshalJSON() ([]byte, error) { return marshalString(c) }
 func (c AgentOutputCommandExecutionOutputDelta) MarshalJSON() ([]byte, error) {
