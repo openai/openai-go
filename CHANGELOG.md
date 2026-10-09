@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.75.0](https://github.com/openai/openai-go/compare/v3.74.0...v3.75.0) (2026-10-09)
+
+
+### Features
+
+* **go:** require Go 1.26 and update HTTP/2 dependencies ([#1042](https://github.com/openai/openai-go/issues/1042)) ([9e036c6](https://github.com/openai/openai-go/commit/9e036c682db4acaca9ba6efb81b8e25128c19249))
+
 ## [3.74.0](https://github.com/openai/openai-go/compare/v3.73.0...v3.74.0) (2026-10-08)
 
 
