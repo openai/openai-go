@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.76.0](https://github.com/openai/openai-go/compare/v3.75.0...v3.76.0) (2026-10-09)
+
+
+### Features
+
+* **api:** add agent environment webhook events and vault updates ([#1045](https://github.com/openai/openai-go/issues/1045)) ([5e8959e](https://github.com/openai/openai-go/commit/5e8959e5e956c9a0f40a6bd805cff23db6b0c4af))
+
+
+### Build System
+
+* **deps:** bump actions/cache from 5.1.0 to 6.1.0 ([#1027](https://github.com/openai/openai-go/issues/1027)) ([59deac5](https://github.com/openai/openai-go/commit/59deac56fbf39695a29367e73f302646fdd2aa80))
+
 ## [3.75.0](https://github.com/openai/openai-go/compare/v3.74.0...v3.75.0) (2026-10-09)
 
 
