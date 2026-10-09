@@ -190,6 +190,9 @@ type BetaAgentSessionNewParams struct {
 	// Up to 16 string key-value pairs, with keys up to 64 and values up to 512
 	// characters. Omission or null defaults to an empty map.
 	Metadata map[string]string `json:"metadata,omitzero"`
+	// Optional spending limit in USD cents. Omission or null creates an unlimited
+	// session.
+	SpendControl BetaAgentSessionNewParamsSpendControl `json:"spend_control,omitzero"`
 	// The IDs of vaults made available to the session.
 	VaultIDs []string `json:"vault_ids,omitzero"`
 	// Agent configuration. With `agent_id`, supplied fields override the saved agent
@@ -218,7 +221,9 @@ type BetaAgentSessionNewParamsAgent struct {
 	//
 	// Any of "auto", "default", "flex", "priority", "fast".
 	ServiceTier string `json:"service_tier,omitzero"`
-	// Tools available to the agent. Omit to inherit, or pass null to clear them.
+	// Tools available to the agent. Omit to inherit, or pass null to clear them. The
+	// resolved tool list must fit within 3 MiB (3,145,728 bytes) of compact UTF-8
+	// JSON.
 	Tools []AgentToolParamUnion `json:"tools,omitzero"`
 	// Configuration for creating and coordinating subagents.
 	MultiAgent MultiAgentConfigParam `json:"multi_agent,omitzero"`
@@ -260,11 +265,32 @@ func (u *BetaAgentSessionNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
+// Optional spending limit in USD cents. Omission or null creates an unlimited
+// session.
+//
+// The property Limit is required.
+type BetaAgentSessionNewParamsSpendControl struct {
+	// Positive USD cents, or null to remove the limit.
+	Limit param.Opt[int64] `json:"limit,omitzero" api:"required"`
+	paramObj
+}
+
+func (r BetaAgentSessionNewParamsSpendControl) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentSessionNewParamsSpendControl
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentSessionNewParamsSpendControl) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type BetaAgentSessionUpdateParams struct {
 	// Replaces all metadata. Omit to leave unchanged, or pass null or {} to clear it.
 	// Up to 16 string key-value pairs, with keys up to 64 and values up to 512
 	// characters.
 	Metadata map[string]string `json:"metadata,omitzero"`
+	// Omit to retain the limit; null or a null limit removes it without resetting
+	// spend.
+	SpendControl BetaAgentSessionUpdateParamsSpendControl `json:"spend_control,omitzero"`
 	// Model settings for subsequent turns. Omitted fields stay unchanged.
 	Agent BetaAgentSessionUpdateParamsAgent `json:"agent,omitzero"`
 	paramObj
@@ -316,16 +342,33 @@ func (r *BetaAgentSessionUpdateParamsAgentReasoning) UnmarshalJSON(data []byte) 
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Omit to retain the limit; null or a null limit removes it without resetting
+// spend.
+//
+// The property Limit is required.
+type BetaAgentSessionUpdateParamsSpendControl struct {
+	// Positive USD cents, or null to remove the limit.
+	Limit param.Opt[int64] `json:"limit,omitzero" api:"required"`
+	paramObj
+}
+
+func (r BetaAgentSessionUpdateParamsSpendControl) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentSessionUpdateParamsSpendControl
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentSessionUpdateParamsSpendControl) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type BetaAgentSessionListParams struct {
 	// Return resources after this resource ID in the selected order.
 	After param.Opt[string] `query:"after,omitzero" json:"-"`
 	// Only return sessions whose root agent has this ID. Omit to return sessions for
 	// all agents.
 	AgentID param.Opt[string] `query:"agent_id,omitzero" json:"-"`
-	// The maximum number of resources to return.
+	// The maximum number of resources to return, between 1 and 100. Defaults to 20.
 	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
-	// Sort order by the `created_at` timestamp. Use `asc` for ascending order or
-	// `desc` for descending order. Defaults to `desc`.
+	// The order in which resources are returned. Defaults to `desc`.
 	//
 	// Any of "asc", "desc".
 	Order BetaAgentSessionListParamsOrder `query:"order,omitzero" json:"-"`
@@ -341,8 +384,7 @@ func (r BetaAgentSessionListParams) URLQuery() (v url.Values, err error) {
 	})
 }
 
-// Sort order by the `created_at` timestamp. Use `asc` for ascending order or
-// `desc` for descending order. Defaults to `desc`.
+// The order in which resources are returned. Defaults to `desc`.
 type BetaAgentSessionListParamsOrder string
 
 const (

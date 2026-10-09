@@ -191,13 +191,13 @@ func (r *SessionArtifactDeleted) UnmarshalJSON(data []byte) error {
 }
 
 type BetaAgentSessionArtifactListParams struct {
-	// Return artifacts after this immutable artifact ID.
+	// Return resources after this resource ID in the selected order.
 	After param.Opt[string] `query:"after,omitzero" json:"-"`
 	// Restrict the listing to artifacts produced by this environment.
 	EnvironmentID param.Opt[string] `query:"environment_id,omitzero" json:"-"`
-	// The maximum number of artifacts to return, between 1 and 100.
+	// The maximum number of resources to return, between 1 and 100. Defaults to 20.
 	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
-	// Sort by creation time and ID. Defaults to descending.
+	// The order in which resources are returned. Defaults to `desc`.
 	//
 	// Any of "asc", "desc".
 	Order BetaAgentSessionArtifactListParamsOrder `query:"order,omitzero" json:"-"`
@@ -213,7 +213,7 @@ func (r BetaAgentSessionArtifactListParams) URLQuery() (v url.Values, err error)
 	})
 }
 
-// Sort by creation time and ID. Defaults to descending.
+// The order in which resources are returned. Defaults to `desc`.
 type BetaAgentSessionArtifactListParamsOrder string
 
 const (

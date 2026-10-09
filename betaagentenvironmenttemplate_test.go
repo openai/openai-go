@@ -43,9 +43,9 @@ func TestBetaAgentEnvironmentTemplateNewWithOptionalParams(t *testing.T) {
 		}},
 		Name: openai.String("x"),
 		Network: openai.BetaAgentEnvironmentTemplateNewParamsNetwork{
-			Access:         "enabled",
-			AllowedDomains: []string{"string"},
-			BlockedDomains: []string{"string"},
+			Access:         "restricted",
+			AllowedDomains: []string{"example.com"},
+			BlockedDomains: []string{},
 		},
 		Packages: openai.BetaAgentEnvironmentTemplateNewParamsPackages{
 			Npm:    []string{"string"},
@@ -136,9 +136,9 @@ func TestBetaAgentEnvironmentTemplateUpdateWithOptionalParams(t *testing.T) {
 			}},
 			Name: openai.String("x"),
 			Network: openai.BetaAgentEnvironmentTemplateUpdateParamsNetwork{
-				Access:         "enabled",
-				AllowedDomains: []string{"string"},
-				BlockedDomains: []string{"string"},
+				Access:         "restricted",
+				AllowedDomains: []string{"example.com"},
+				BlockedDomains: []string{},
 			},
 			Packages: openai.BetaAgentEnvironmentTemplateUpdateParamsPackages{
 				Npm:    []string{"string"},

@@ -16,6 +16,7 @@ import (
 	"github.com/openai/openai-go/v3/packages/pagination"
 	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 // List user actions and configuration changes within this organization.
@@ -1035,7 +1036,8 @@ func (r *AdminOrganizationAuditLogListResponseExternalStorageRegisteredData) Unm
 
 // AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion
 // contains all possible properties and values from [AwsExternalStorageProvider],
-// [AzureExternalStorageProvider], [GcpExternalStorageProvider].
+// [AzureExternalStorageProvider], [GcpExternalStorageProvider],
+// [AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderOci].
 //
 // Use the
 // [AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion.AsAny]
@@ -1051,7 +1053,7 @@ type AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderU
 	Region     string `json:"region"`
 	// This field is from variant [AwsExternalStorageProvider].
 	RoleArn string `json:"role_arn"`
-	// Any of "aws", "azure", "gcp".
+	// Any of "aws", "azure", "gcp", "oci".
 	Type string `json:"type"`
 	// This field is from variant [AzureExternalStorageProvider].
 	AccountName string `json:"account_name"`
@@ -1071,7 +1073,10 @@ type AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderU
 	WorkloadIdentityProjectNumber string `json:"workload_identity_project_number"`
 	// This field is from variant [GcpExternalStorageProvider].
 	WorkloadIdentityProviderID string `json:"workload_identity_provider_id"`
-	JSON                       struct {
+	// This field is from variant
+	// [AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderOci].
+	TenancyOcid string `json:"tenancy_ocid"`
+	JSON        struct {
 		AccountID                     respjson.Field
 		Bucket                        respjson.Field
 		ExternalID                    respjson.Field
@@ -1087,6 +1092,7 @@ type AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderU
 		WorkloadIdentityPoolID        respjson.Field
 		WorkloadIdentityProjectNumber respjson.Field
 		WorkloadIdentityProviderID    respjson.Field
+		TenancyOcid                   respjson.Field
 		raw                           string
 	} `json:"-"`
 }
@@ -1106,6 +1112,8 @@ func (AzureExternalStorageProvider) implAdminOrganizationAuditLogListResponseExt
 }
 func (GcpExternalStorageProvider) implAdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion() {
 }
+func (AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderOci) implAdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion() {
+}
 
 // Use the following switch statement to find the correct variant
 //
@@ -1113,6 +1121,7 @@ func (GcpExternalStorageProvider) implAdminOrganizationAuditLogListResponseExter
 //	case openai.AwsExternalStorageProvider:
 //	case openai.AzureExternalStorageProvider:
 //	case openai.GcpExternalStorageProvider:
+//	case openai.AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderOci:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -1124,6 +1133,8 @@ func (u AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProvid
 		return u.AsAzure()
 	case "gcp":
 		return u.AsGcp()
+	case "oci":
+		return u.AsOci()
 	}
 	return nil
 }
@@ -1143,12 +1154,41 @@ func (u AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProvid
 	return
 }
 
+func (u AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion) AsOci() (v AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderOci) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
 // Returns the unmodified JSON received from the API
 func (u AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion) RawJSON() string {
 	return u.JSON.raw
 }
 
 func (r *AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderOci struct {
+	Bucket      string       `json:"bucket" api:"required"`
+	Region      string       `json:"region" api:"required"`
+	TenancyOcid string       `json:"tenancy_ocid" api:"required"`
+	Type        constant.Oci `json:"type" default:"oci"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Bucket      respjson.Field
+		Region      respjson.Field
+		TenancyOcid respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderOci) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationAuditLogListResponseExternalStorageRegisteredDataProviderOci) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

@@ -2,6 +2,7 @@ package webhooks_test
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
@@ -71,6 +72,50 @@ func TestSignedAgentSessionWebhooks(t *testing.T) {
 					t.Fatalf("invalid data was not preserved for %s: %#v", tc.event, invalidEvent)
 				}
 			})
+		})
+	}
+}
+
+func TestSignedAgentEnvironmentWebhooks(t *testing.T) {
+	client := openai.NewClient(option.WithWebhookSecret(webhookHelperSecret))
+	timestamp := time.Now().Unix()
+	for _, tc := range []struct {
+		event    string
+		accessor func(webhooks.UnwrapWebhookEventUnion) (any, string)
+	}{
+		{"agent.environment.ready", func(u webhooks.UnwrapWebhookEventUnion) (any, string) {
+			v := u.AsAgentEnvironmentReady()
+			return v, v.Data.ID
+		}},
+		{"agent.environment.failed", func(u webhooks.UnwrapWebhookEventUnion) (any, string) {
+			v := u.AsAgentEnvironmentFailed()
+			return v, v.Data.ID
+		}},
+		{"agent.environment.suspended", func(u webhooks.UnwrapWebhookEventUnion) (any, string) {
+			v := u.AsAgentEnvironmentSuspended()
+			return v, v.Data.ID
+		}},
+		{"agent.environment.expired", func(u webhooks.UnwrapWebhookEventUnion) (any, string) {
+			v := u.AsAgentEnvironmentExpired()
+			return v, v.Data.ID
+		}},
+	} {
+		t.Run(tc.event, func(t *testing.T) {
+			payload := []byte(fmt.Sprintf(`{"id":"evt_1","object":"event","created_at":%d,"type":%q,"data":{"id":"env_1"}}`, timestamp, tc.event))
+			event, err := client.Webhooks.Unwrap(payload, signedWebhookHelperHeaders(t, payload, timestamp))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if event.ID != "evt_1" || event.Object != "event" || event.CreatedAt != timestamp || event.Type != tc.event || event.Data.ID != "env_1" {
+				t.Fatalf("wrong environment event envelope: %#v", event)
+			}
+			typed, environmentID := tc.accessor(*event)
+			if environmentID != "env_1" {
+				t.Fatalf("typed environment ID = %q, want env_1", environmentID)
+			}
+			if got := event.AsAny(); !reflect.DeepEqual(got, typed) {
+				t.Fatalf("AsAny() = %#v (%T), want %#v (%T)", got, got, typed, typed)
+			}
 		})
 	}
 }

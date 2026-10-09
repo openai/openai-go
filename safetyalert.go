@@ -64,19 +64,23 @@ type SafetyAlert struct {
 	// that response execution stopped.
 	RequestPaused bool   `json:"request_paused" api:"required"`
 	ResponseID    string `json:"response_id" api:"required"`
+	// A generated explanation, temporarily available for eligible zero data retention
+	// alerts. Omitted when unavailable.
+	DetailedExplanation string `json:"detailed_explanation" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID            respjson.Field
-		CreatedAt     respjson.Field
-		ErrorType     respjson.Field
-		Model         respjson.Field
-		Object        respjson.Field
-		Reason        respjson.Field
-		RequestID     respjson.Field
-		RequestPaused respjson.Field
-		ResponseID    respjson.Field
-		ExtraFields   map[string]respjson.Field
-		raw           string
+		ID                  respjson.Field
+		CreatedAt           respjson.Field
+		ErrorType           respjson.Field
+		Model               respjson.Field
+		Object              respjson.Field
+		Reason              respjson.Field
+		RequestID           respjson.Field
+		RequestPaused       respjson.Field
+		ResponseID          respjson.Field
+		DetailedExplanation respjson.Field
+		ExtraFields         map[string]respjson.Field
+		raw                 string
 	} `json:"-"`
 }
 

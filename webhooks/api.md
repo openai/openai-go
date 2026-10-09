@@ -2,6 +2,10 @@
 
 Response Types:
 
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#AgentEnvironmentExpiredWebhookEvent">AgentEnvironmentExpiredWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#AgentEnvironmentFailedWebhookEvent">AgentEnvironmentFailedWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#AgentEnvironmentReadyWebhookEvent">AgentEnvironmentReadyWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#AgentEnvironmentSuspendedWebhookEvent">AgentEnvironmentSuspendedWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#AgentSessionActionRequiredWebhookEvent">AgentSessionActionRequiredWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#AgentSessionCreatedWebhookEvent">AgentSessionCreatedWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#AgentSessionFailedWebhookEvent">AgentSessionFailedWebhookEvent</a>
