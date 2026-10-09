@@ -156,7 +156,10 @@ func TestBetaAgentVaultCredentialListWithOptionalParams(t *testing.T) {
 		"vault_id",
 		openai.BetaAgentVaultCredentialListParams{
 			After: openai.String("after"),
-			Limit: openai.Int(0),
+			Limit: openai.Int(1),
+			Metadata: map[string]string{
+				"foo": "string",
+			},
 			Order: openai.BetaAgentVaultCredentialListParamsOrderAsc,
 			Status: openai.VaultStatusFilterUnionParam{
 				OfStatus: openai.Opt(openai.VaultStatusActive),

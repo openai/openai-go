@@ -1451,6 +1451,9 @@ type AgentSession struct {
 	Usage TokenUsage `json:"usage" api:"required"`
 	// The IDs of vaults made available to the session.
 	VaultIDs []string `json:"vault_ids" api:"required"`
+	// Configured spending limit and best-effort consumption, in USD cents. Unlimited
+	// sessions omit this object.
+	SpendControl AgentSessionSpendControl `json:"spend_control"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID              respjson.Field
@@ -1465,6 +1468,7 @@ type AgentSession struct {
 		Status          respjson.Field
 		Usage           respjson.Field
 		VaultIDs        respjson.Field
+		SpendControl    respjson.Field
 		ExtraFields     map[string]respjson.Field
 		raw             string
 	} `json:"-"`
@@ -1903,6 +1907,28 @@ const (
 	AgentSessionStatusFailed         AgentSessionStatus = "failed"
 )
 
+// Configured spending limit and best-effort consumption, in USD cents. Unlimited
+// sessions omit this object.
+type AgentSessionSpendControl struct {
+	// Best-effort recorded spend floored to whole USD cents, or null when unavailable.
+	Consumed int64 `json:"consumed" api:"required"`
+	// The configured positive limit in USD cents.
+	Limit int64 `json:"limit" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Consumed    respjson.Field
+		Limit       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionSpendControl) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionSpendControl) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // An assistant message produced by the agent.
 type AgentSessionAssistantMessage struct {
 	// The ID of the message.
@@ -2061,6 +2087,36 @@ func (r *AgentSessionEnvironmentDisconnectedEvent) UnmarshalJSON(data []byte) er
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Emitted after a suspended hosted session environment and its checkpoint expire.
+type AgentSessionEnvironmentExpiredEvent struct {
+	// The current environment state.
+	Environment AgentSessionEnvironmentState `json:"environment" api:"required"`
+	// The unique ID of the event.
+	EventID string `json:"event_id" api:"required"`
+	// The ID of the session associated with the event.
+	SessionID string `json:"session_id" api:"required"`
+	// The ID of the turn associated with the event, when applicable.
+	TurnID string `json:"turn_id" api:"required"`
+	// The type of the object. Always `agent.session.environment.expired`.
+	Type constant.AgentSessionEnvironmentExpired `json:"type" default:"agent.session.environment.expired"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Environment respjson.Field
+		EventID     respjson.Field
+		SessionID   respjson.Field
+		TurnID      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionEnvironmentExpiredEvent) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionEnvironmentExpiredEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Emitted when a session environment fails.
 type AgentSessionEnvironmentFailedEvent struct {
 	// The current environment state.
@@ -2193,7 +2249,8 @@ type AgentSessionEnvironmentState struct {
 	Error AgentSessionEnvironmentStateError `json:"error" api:"required"`
 	// The environment's connection status.
 	//
-	// Any of "pending", "ready", "connected", "disconnected", "failed".
+	// Any of "pending", "ready", "connected", "disconnected", "suspended", "expired",
+	// "failed".
 	Status AgentSessionEnvironmentStateStatus `json:"status" api:"required"`
 	// The environment type.
 	Type string `json:"type" api:"required"`
@@ -2246,8 +2303,40 @@ const (
 	AgentSessionEnvironmentStateStatusReady        AgentSessionEnvironmentStateStatus = "ready"
 	AgentSessionEnvironmentStateStatusConnected    AgentSessionEnvironmentStateStatus = "connected"
 	AgentSessionEnvironmentStateStatusDisconnected AgentSessionEnvironmentStateStatus = "disconnected"
+	AgentSessionEnvironmentStateStatusSuspended    AgentSessionEnvironmentStateStatus = "suspended"
+	AgentSessionEnvironmentStateStatusExpired      AgentSessionEnvironmentStateStatus = "expired"
 	AgentSessionEnvironmentStateStatusFailed       AgentSessionEnvironmentStateStatus = "failed"
 )
+
+// Emitted after an idle hosted session environment is checkpointed and stopped.
+type AgentSessionEnvironmentSuspendedEvent struct {
+	// The current environment state.
+	Environment AgentSessionEnvironmentState `json:"environment" api:"required"`
+	// The unique ID of the event.
+	EventID string `json:"event_id" api:"required"`
+	// The ID of the session associated with the event.
+	SessionID string `json:"session_id" api:"required"`
+	// The ID of the turn associated with the event, when applicable.
+	TurnID string `json:"turn_id" api:"required"`
+	// The type of the object. Always `agent.session.environment.suspended`.
+	Type constant.AgentSessionEnvironmentSuspended `json:"type" default:"agent.session.environment.suspended"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Environment respjson.Field
+		EventID     respjson.Field
+		SessionID   respjson.Field
+		TurnID      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionEnvironmentSuspendedEvent) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionEnvironmentSuspendedEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Emitted when a turn or session fails.
 type AgentSessionErrorEvent struct {
@@ -2278,6 +2367,7 @@ func (r *AgentSessionErrorEvent) UnmarshalJSON(data []byte) error {
 
 // AgentSessionEventUnion contains all possible properties and values from
 // [AgentSessionErrorEvent], [AgentSessionEnvironmentReadyEvent],
+// [AgentSessionEnvironmentSuspendedEvent], [AgentSessionEnvironmentExpiredEvent],
 // [AgentSessionEnvironmentResetEvent],
 // [AgentOutputCommandExecutionOutputDeltaEvent], [AgentSessionCreatedEvent],
 // [AgentSessionTurnCreatedEvent], [AgentSessionTurnInProgressEvent],
@@ -2306,6 +2396,7 @@ type AgentSessionEventUnion struct {
 	EventID   string       `json:"event_id"`
 	SessionID string       `json:"session_id"`
 	// Any of "error", "agent.session.environment.ready",
+	// "agent.session.environment.suspended", "agent.session.environment.expired",
 	// "agent.session.environment.reset",
 	// "agent.output.command_execution_output.delta", "agent.session.created",
 	// "agent.session.turn.created", "agent.session.turn.in_progress",
@@ -2385,6 +2476,8 @@ type anyAgentSessionEvent interface {
 
 func (AgentSessionErrorEvent) implAgentSessionEventUnion()                         {}
 func (AgentSessionEnvironmentReadyEvent) implAgentSessionEventUnion()              {}
+func (AgentSessionEnvironmentSuspendedEvent) implAgentSessionEventUnion()          {}
+func (AgentSessionEnvironmentExpiredEvent) implAgentSessionEventUnion()            {}
 func (AgentSessionEnvironmentResetEvent) implAgentSessionEventUnion()              {}
 func (AgentOutputCommandExecutionOutputDeltaEvent) implAgentSessionEventUnion()    {}
 func (AgentSessionCreatedEvent) implAgentSessionEventUnion()                       {}
@@ -2420,6 +2513,8 @@ func (AgentSessionTurnReasoningSummaryTextDoneEvent) implAgentSessionEventUnion(
 //	switch variant := AgentSessionEventUnion.AsAny().(type) {
 //	case openai.AgentSessionErrorEvent:
 //	case openai.AgentSessionEnvironmentReadyEvent:
+//	case openai.AgentSessionEnvironmentSuspendedEvent:
+//	case openai.AgentSessionEnvironmentExpiredEvent:
 //	case openai.AgentSessionEnvironmentResetEvent:
 //	case openai.AgentOutputCommandExecutionOutputDeltaEvent:
 //	case openai.AgentSessionCreatedEvent:
@@ -2458,6 +2553,10 @@ func (u AgentSessionEventUnion) AsAny() anyAgentSessionEvent {
 		return u.AsError()
 	case "agent.session.environment.ready":
 		return u.AsAgentSessionEnvironmentReady()
+	case "agent.session.environment.suspended":
+		return u.AsAgentSessionEnvironmentSuspended()
+	case "agent.session.environment.expired":
+		return u.AsAgentSessionEnvironmentExpired()
 	case "agent.session.environment.reset":
 		return u.AsAgentSessionEnvironmentReset()
 	case "agent.output.command_execution_output.delta":
@@ -2526,6 +2625,16 @@ func (u AgentSessionEventUnion) AsError() (v AgentSessionErrorEvent) {
 }
 
 func (u AgentSessionEventUnion) AsAgentSessionEnvironmentReady() (v AgentSessionEnvironmentReadyEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AgentSessionEventUnion) AsAgentSessionEnvironmentSuspended() (v AgentSessionEnvironmentSuspendedEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AgentSessionEventUnion) AsAgentSessionEnvironmentExpired() (v AgentSessionEnvironmentExpiredEvent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -6181,6 +6290,14 @@ func (u EnvironmentParamUnion) GetEnv() map[string]string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u EnvironmentParamUnion) GetEnvironmentID() *string {
+	if vt := u.OfParamOpenAIHosted; vt != nil && vt.EnvironmentID.Valid() {
+		return &vt.EnvironmentID.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u EnvironmentParamUnion) GetEnvironmentTemplateID() *string {
 	if vt := u.OfParamOpenAIHosted; vt != nil && vt.EnvironmentTemplateID.Valid() {
 		return &vt.EnvironmentTemplateID.Value
@@ -6304,6 +6421,9 @@ func (r *EnvironmentParamNone) UnmarshalJSON(data []byte) error {
 //
 // The property Type is required.
 type EnvironmentParamOpenAIHosted struct {
+	// An existing prewarmed environment. Cannot be combined with a template or inline
+	// configuration.
+	EnvironmentID param.Opt[string] `json:"environment_id,omitzero"`
 	// A reusable hosted template applied before inline session configuration. Omitted
 	// fields inherit the template; network overrides cannot broaden its policy.
 	EnvironmentTemplateID param.Opt[string] `json:"environment_template_id,omitzero"`
@@ -8655,11 +8775,12 @@ type SessionTurnError struct {
 	// Any of "context_length_exceeded", "session_budget_exceeded",
 	// "usage_limit_exceeded", "project_spend_limit_exceeded",
 	// "organization_spend_limit_exceeded", "organization_usage_limit_exceeded",
-	// "credit_balance_exhausted", "rate_limit_exceeded", "flex_unavailable",
-	// "server_overloaded", "cyber_policy", "misalignment_policy_violation",
-	// "connection_failed", "server_error", "authentication_error", "invalid_request",
-	// "resource_not_found", "sandbox_error", "executor_version_incompatible",
-	// "active_turn_not_steerable", "request_timeout", "internal_error".
+	// "billing_not_active", "credit_balance_exhausted", "rate_limit_exceeded",
+	// "flex_unavailable", "server_overloaded", "cyber_policy",
+	// "misalignment_policy_violation", "connection_failed", "server_error",
+	// "authentication_error", "invalid_request", "resource_not_found",
+	// "sandbox_error", "executor_version_incompatible", "active_turn_not_steerable",
+	// "request_timeout", "internal_error".
 	Code SessionTurnErrorCode `json:"code" api:"required"`
 	// A customer-safe explanation of the failure.
 	Message string `json:"message" api:"required"`
@@ -8688,6 +8809,7 @@ const (
 	SessionTurnErrorCodeProjectSpendLimitExceeded      SessionTurnErrorCode = "project_spend_limit_exceeded"
 	SessionTurnErrorCodeOrganizationSpendLimitExceeded SessionTurnErrorCode = "organization_spend_limit_exceeded"
 	SessionTurnErrorCodeOrganizationUsageLimitExceeded SessionTurnErrorCode = "organization_usage_limit_exceeded"
+	SessionTurnErrorCodeBillingNotActive               SessionTurnErrorCode = "billing_not_active"
 	SessionTurnErrorCodeCreditBalanceExhausted         SessionTurnErrorCode = "credit_balance_exhausted"
 	SessionTurnErrorCodeRateLimitExceeded              SessionTurnErrorCode = "rate_limit_exceeded"
 	SessionTurnErrorCodeFlexUnavailable                SessionTurnErrorCode = "flex_unavailable"
@@ -9260,7 +9382,8 @@ type BetaAgentNewParams struct {
 	//
 	// Any of "auto", "default", "flex", "priority", "fast".
 	ServiceTier BetaAgentNewParamsServiceTier `json:"service_tier,omitzero"`
-	// Tools available to the agent. Defaults to an empty list.
+	// Tools available to the agent. Defaults to an empty list. The tool list must fit
+	// within 3 MiB (3,145,728 bytes) of compact UTF-8 JSON.
 	Tools []PersistedAgentToolParamUnion `json:"tools,omitzero"`
 	// Configuration for creating and coordinating subagents. Subagent tools are
 	// disabled by default.
@@ -9308,7 +9431,8 @@ type BetaAgentUpdateParams struct {
 	//
 	// Any of "auto", "default", "flex", "priority", "fast".
 	ServiceTier BetaAgentUpdateParamsServiceTier `json:"service_tier,omitzero"`
-	// Tools available to the agent.
+	// Replaces the tool list. Omit to leave it unchanged, or pass null to clear it.
+	// The replacement must fit within 3 MiB (3,145,728 bytes) of compact UTF-8 JSON.
 	Tools []PersistedAgentToolParamUnion `json:"tools,omitzero"`
 	// Configuration for creating and coordinating subagents.
 	MultiAgent MultiAgentConfigParam `json:"multi_agent,omitzero"`
@@ -9342,7 +9466,7 @@ const (
 type BetaAgentListParams struct {
 	// Return resources after this resource ID in the selected order.
 	After param.Opt[string] `query:"after,omitzero" json:"-"`
-	// The maximum number of resources to return.
+	// The maximum number of resources to return, between 1 and 100. Defaults to 20.
 	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
 	// The order in which resources are returned. Defaults to `desc`.
 	//

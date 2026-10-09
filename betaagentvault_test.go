@@ -66,6 +66,39 @@ func TestBetaAgentVaultGet(t *testing.T) {
 	}
 }
 
+func TestBetaAgentVaultUpdateWithOptionalParams(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
+	)
+	_, err := client.Beta.Agents.Vaults.Update(
+		context.TODO(),
+		"vault_id",
+		openai.BetaAgentVaultUpdateParams{
+			Metadata: map[string]string{
+				"foo": "string",
+			},
+			Name: openai.String("x"),
+		},
+	)
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
 func TestBetaAgentVaultListWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -82,7 +115,10 @@ func TestBetaAgentVaultListWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Beta.Agents.Vaults.List(context.TODO(), openai.BetaAgentVaultListParams{
 		After: openai.String("after"),
-		Limit: openai.Int(0),
+		Limit: openai.Int(1),
+		Metadata: map[string]string{
+			"foo": "string",
+		},
 		Order: openai.BetaAgentVaultListParamsOrderAsc,
 		Status: openai.VaultStatusFilterUnionParam{
 			OfStatus: openai.Opt(openai.VaultStatusActive),
