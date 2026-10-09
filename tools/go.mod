@@ -1,6 +1,6 @@
 module github.com/openai/openai-go/v3/tools
 
-go 1.25.0
+go 1.26.0
 
 require (
 	golang.org/x/mod v0.38.0 // indirect
