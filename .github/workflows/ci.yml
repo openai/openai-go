@@ -137,8 +137,8 @@ jobs:
         # Keep this matrix synchronized with GO_VERSION_POLICY.md. The monthly
         # Codex review proposes both changes together when a Go release lands.
         go-version:
-          - '1.25.x'
           - '1.26.x'
+          - '1.27.x'
     # setup-go installs the selected matrix version first. "local" then stops
     # the go command from silently switching to a newer toolchain.
     env:
@@ -204,7 +204,7 @@ jobs:
           # findings do not obscure dependency findings. Resolve the range
           # against Go's official feed: its vulnerability database can publish
           # new advisories before setup-go's version mirror lists the fix.
-          go-version: '1.26.x'
+          go-version: '1.27.x'
           check-latest: true
           go-download-base-url: https://go.dev/dl
 

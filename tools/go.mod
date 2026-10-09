@@ -1,6 +1,6 @@
 module github.com/openai/openai-go/v3/tools
 
-go 1.25.0
+go 1.26.0
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.3.0 // indirect

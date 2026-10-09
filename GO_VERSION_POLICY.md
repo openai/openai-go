@@ -36,8 +36,15 @@ proposes the current and immediately preceding stable Go releases.
 
 | SDK version | Go requirement |
 | --- | --- |
-| v3.45.0 through current | Go 1.25 or later |
+| Current release | Go 1.26 or later |
+| v3.45.0 through v3.74.0 | Go 1.25 or later; v3.74.0 is the final compatible release |
 | v3.44.0 | Final release that builds with Go 1.22–1.24 |
+
+This release ends Go 1.25 compatibility because the fixed HTTP/2
+module requires Go 1.26. There is no active Go 1.25 grace period. CI tests
+Go 1.26 and Go 1.27. Use their latest patch releases; the corresponding
+standard-library HTTP/2 fixes require Go 1.26.9 or Go 1.27.2 or later patches
+in those release lines. The SDK module path remains `/v3`.
 
 Previously published SDK versions remain available. Unsupported Go releases
 and older SDK versions receive no guaranteed fixes or security backports. Users

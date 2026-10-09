@@ -2,7 +2,7 @@ module github.com/openai/openai-go/examples
 
 replace github.com/openai/openai-go/v3 => ../
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/ebitengine/oto/v3 v3.5.1
@@ -38,7 +38,7 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.2 // indirect
-	golang.org/x/net v0.58.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 )

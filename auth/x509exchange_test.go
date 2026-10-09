@@ -498,14 +498,13 @@ func TestX509ExchangeReusesMutualTLSConnectionAfterRetryableStatus(t *testing.T)
 
 func TestX509ExchangeReusesMutualTLSConnectionAtChunkedErrorBoundary(t *testing.T) {
 	for _, test := range []struct {
-		name            string
-		bodyLength      int
-		wantConnections int32
+		name       string
+		bodyLength int
 	}{
-		{name: "below maximum error body", bodyLength: x509ErrorResponseMaximum - 1, wantConnections: 1},
-		{name: "exactly maximum error body", bodyLength: x509ErrorResponseMaximum, wantConnections: 1},
-		{name: "one-byte oversized error body", bodyLength: x509ErrorResponseMaximum + 1, wantConnections: 2},
-		{name: "two-byte oversized error body", bodyLength: x509ErrorResponseMaximum + 2, wantConnections: 2},
+		{name: "below maximum error body", bodyLength: x509ErrorResponseMaximum - 1},
+		{name: "exactly maximum error body", bodyLength: x509ErrorResponseMaximum},
+		{name: "one-byte oversized error body", bodyLength: x509ErrorResponseMaximum + 1},
+		{name: "two-byte oversized error body", bodyLength: x509ErrorResponseMaximum + 2},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			var requests, connections atomic.Int32
@@ -587,9 +586,14 @@ func TestX509ExchangeReusesMutualTLSConnectionAtChunkedErrorBoundary(t *testing.
 			if err != nil || second.value != x509ExchangeSyntheticToken {
 				t.Fatalf("exchange after chunked retryable response = token:%v error:%v", second, err)
 			}
-			if requests.Load() != 2 || connections.Load() != test.wantConnections {
-				t.Errorf("chunked issuer requests/TLS handshakes = %d/%d, want 2/%d",
-					requests.Load(), connections.Load(), test.wantConnections)
+			if requests.Load() != 2 {
+				t.Errorf("chunked issuer requests = %d, want 2", requests.Load())
+			}
+			// Go 1.27 may drain small oversized bodies after Close and reuse
+			// their connections. Only fully consumed bodies require reuse here;
+			// the large-body test below separately verifies connection closure.
+			if test.bodyLength <= x509ErrorResponseMaximum && connections.Load() != 1 {
+				t.Errorf("chunked issuer TLS handshakes = %d, want 1", connections.Load())
 			}
 		})
 	}
@@ -628,6 +632,11 @@ func TestX509ExchangeBoundsRetryableErrorBodyDraining(t *testing.T) {
 }
 
 func TestX509ExchangeClosesOversizedRetryableMutualTLSResponses(t *testing.T) {
+	// Go 1.27 can drain small unread bodies after Close and reuse the connection.
+	// Exceed that bounded drain so this test still observes connection closure;
+	// TestX509ExchangeBoundsRetryableErrorBodyDraining covers the SDK read limit.
+	const oversizedBodyLength = 1 << 20
+
 	for _, declared := range []bool{false, true} {
 		name := "chunked oversized error"
 		if declared {
@@ -638,7 +647,7 @@ func TestX509ExchangeClosesOversizedRetryableMutualTLSResponses(t *testing.T) {
 			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				if requests.Add(1) == 1 {
 					if declared {
-						w.Header().Set("Content-Length", strconv.Itoa(x509ErrorResponseMaximum+2))
+						w.Header().Set("Content-Length", strconv.Itoa(oversizedBodyLength))
 					}
 					w.WriteHeader(http.StatusTooManyRequests)
 					if !declared {
@@ -646,7 +655,7 @@ func TestX509ExchangeClosesOversizedRetryableMutualTLSResponses(t *testing.T) {
 							flush.Flush()
 						}
 					}
-					_, _ = io.WriteString(w, strings.Repeat("x", x509ErrorResponseMaximum+2))
+					_, _ = io.WriteString(w, strings.Repeat("x", oversizedBodyLength))
 					return
 				}
 				_, _ = io.WriteString(w, x509ValidExchangeResponse())
