@@ -32,7 +32,7 @@ $ ./scripts/lint
 
 This will install all the required dependencies and build the SDK.
 
-Contributors need [Go 1.25 or later](https://go.dev/doc/install) and
+Contributors need [Go 1.26 or later](https://go.dev/doc/install) and
 [Node.js 14 or later](https://nodejs.org/). Homebrew can install both from
 the repository's `Brewfile`; they can also be installed manually.
 CI tests every supported Go release line with `GOTOOLCHAIN=local`, so

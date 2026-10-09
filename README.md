@@ -37,9 +37,15 @@ go get -u 'github.com/openai/openai-go/v3@v3.74.0'
 
 ## Requirements
 
-SDK v3.45.0 and later require Go 1.25 or later. If your application must
-remain on Go 1.22–1.24, pin SDK v3.44.0, the final compatible release. Older
-SDK releases receive no guaranteed fixes or security backports.
+This version requires Go 1.26 or later. Use the latest patch release of Go
+1.26 or Go 1.27; the HTTP/2 security fixes require Go 1.26.9 or Go 1.27.2
+or later patches in those release lines.
+
+If your application must remain on Go 1.25, pin SDK v3.74.0, the final
+compatible release. For Go 1.22–1.24, pin SDK v3.44.0. These older SDK
+releases receive no guaranteed fixes or security backports, and v3.74.0
+retains the affected HTTP/2 dependency. Upgrade your Go toolchain to use
+the security update.
 
 See the [Go version support policy](GO_VERSION_POLICY.md) for the supported
 release window and upgrade guidance.
