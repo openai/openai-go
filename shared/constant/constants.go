@@ -24,7 +24,11 @@ type Agent string                                             // Always "agent"
 type AgentMessage string                                      // Always "agent_message"
 type AgentDeleted string                                      // Always "agent.deleted"
 type AgentEnvironment string                                  // Always "agent.environment"
+type AgentEnvironmentExpired string                           // Always "agent.environment.expired"
+type AgentEnvironmentFailed string                            // Always "agent.environment.failed"
 type AgentEnvironmentFile string                              // Always "agent.environment.file"
+type AgentEnvironmentReady string                             // Always "agent.environment.ready"
+type AgentEnvironmentSuspended string                         // Always "agent.environment.suspended"
 type AgentEnvironmentTemplate string                          // Always "agent.environment.template"
 type AgentEnvironmentTemplateDeleted string                   // Always "agent.environment.template.deleted"
 type AgentOutputCommandExecutionOutputDelta string            // Always "agent.output.command_execution_output.delta"
@@ -36,10 +40,12 @@ type AgentSessionCreated string                               // Always "agent.s
 type AgentSessionDeleted string                               // Always "agent.session.deleted"
 type AgentSessionEnvironmentConnected string                  // Always "agent.session.environment.connected"
 type AgentSessionEnvironmentDisconnected string               // Always "agent.session.environment.disconnected"
+type AgentSessionEnvironmentExpired string                    // Always "agent.session.environment.expired"
 type AgentSessionEnvironmentFailed string                     // Always "agent.session.environment.failed"
 type AgentSessionEnvironmentPending string                    // Always "agent.session.environment.pending"
 type AgentSessionEnvironmentReady string                      // Always "agent.session.environment.ready"
 type AgentSessionEnvironmentReset string                      // Always "agent.session.environment.reset"
+type AgentSessionEnvironmentSuspended string                  // Always "agent.session.environment.suspended"
 type AgentSessionFailed string                                // Always "agent.session.failed"
 type AgentSessionIdle string                                  // Always "agent.session.idle"
 type AgentSessionInProgress string                            // Always "agent.session.in_progress"
@@ -276,6 +282,7 @@ type MultiAgentCall string                                    // Always "multi_a
 type MultiAgentCallOutput string                              // Always "multi_agent_call_output"
 type Namespace string                                         // Always "namespace"
 type None string                                              // Always "none"
+type Oci string                                               // Always "oci"
 type OpenPage string                                          // Always "open_page"
 type OpenAIHosted string                                      // Always "openai_hosted"
 type OrganizationAdminAPIKey string                           // Always "organization.admin_api_key"
@@ -574,13 +581,21 @@ type WebhookEndpointDeleted string                            // Always "webhook
 type WebhookEndpointTest string                               // Always "webhook_endpoint.test"
 type Webrtc string                                            // Always "webrtc"
 
-func (c Active) Default() Active                             { return "active" }
-func (c AdditionalTools) Default() AdditionalTools           { return "additional_tools" }
-func (c Agent) Default() Agent                               { return "agent" }
-func (c AgentMessage) Default() AgentMessage                 { return "agent_message" }
-func (c AgentDeleted) Default() AgentDeleted                 { return "agent.deleted" }
-func (c AgentEnvironment) Default() AgentEnvironment         { return "agent.environment" }
-func (c AgentEnvironmentFile) Default() AgentEnvironmentFile { return "agent.environment.file" }
+func (c Active) Default() Active                     { return "active" }
+func (c AdditionalTools) Default() AdditionalTools   { return "additional_tools" }
+func (c Agent) Default() Agent                       { return "agent" }
+func (c AgentMessage) Default() AgentMessage         { return "agent_message" }
+func (c AgentDeleted) Default() AgentDeleted         { return "agent.deleted" }
+func (c AgentEnvironment) Default() AgentEnvironment { return "agent.environment" }
+func (c AgentEnvironmentExpired) Default() AgentEnvironmentExpired {
+	return "agent.environment.expired"
+}
+func (c AgentEnvironmentFailed) Default() AgentEnvironmentFailed { return "agent.environment.failed" }
+func (c AgentEnvironmentFile) Default() AgentEnvironmentFile     { return "agent.environment.file" }
+func (c AgentEnvironmentReady) Default() AgentEnvironmentReady   { return "agent.environment.ready" }
+func (c AgentEnvironmentSuspended) Default() AgentEnvironmentSuspended {
+	return "agent.environment.suspended"
+}
 func (c AgentEnvironmentTemplate) Default() AgentEnvironmentTemplate {
 	return "agent.environment.template"
 }
@@ -606,6 +621,9 @@ func (c AgentSessionEnvironmentConnected) Default() AgentSessionEnvironmentConne
 func (c AgentSessionEnvironmentDisconnected) Default() AgentSessionEnvironmentDisconnected {
 	return "agent.session.environment.disconnected"
 }
+func (c AgentSessionEnvironmentExpired) Default() AgentSessionEnvironmentExpired {
+	return "agent.session.environment.expired"
+}
 func (c AgentSessionEnvironmentFailed) Default() AgentSessionEnvironmentFailed {
 	return "agent.session.environment.failed"
 }
@@ -617,6 +635,9 @@ func (c AgentSessionEnvironmentReady) Default() AgentSessionEnvironmentReady {
 }
 func (c AgentSessionEnvironmentReset) Default() AgentSessionEnvironmentReset {
 	return "agent.session.environment.reset"
+}
+func (c AgentSessionEnvironmentSuspended) Default() AgentSessionEnvironmentSuspended {
+	return "agent.session.environment.suspended"
 }
 func (c AgentSessionFailed) Default() AgentSessionFailed         { return "agent.session.failed" }
 func (c AgentSessionIdle) Default() AgentSessionIdle             { return "agent.session.idle" }
@@ -944,6 +965,7 @@ func (c MultiAgentCall) Default() MultiAgentCall                 { return "multi
 func (c MultiAgentCallOutput) Default() MultiAgentCallOutput     { return "multi_agent_call_output" }
 func (c Namespace) Default() Namespace                           { return "namespace" }
 func (c None) Default() None                                     { return "none" }
+func (c Oci) Default() Oci                                       { return "oci" }
 func (c OpenPage) Default() OpenPage                             { return "open_page" }
 func (c OpenAIHosted) Default() OpenAIHosted                     { return "openai_hosted" }
 func (c OrganizationAdminAPIKey) Default() OrganizationAdminAPIKey {
@@ -1470,7 +1492,11 @@ func (c Agent) MarshalJSON() ([]byte, error)                           { return 
 func (c AgentMessage) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c AgentDeleted) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c AgentEnvironment) MarshalJSON() ([]byte, error)                { return marshalString(c) }
+func (c AgentEnvironmentExpired) MarshalJSON() ([]byte, error)         { return marshalString(c) }
+func (c AgentEnvironmentFailed) MarshalJSON() ([]byte, error)          { return marshalString(c) }
 func (c AgentEnvironmentFile) MarshalJSON() ([]byte, error)            { return marshalString(c) }
+func (c AgentEnvironmentReady) MarshalJSON() ([]byte, error)           { return marshalString(c) }
+func (c AgentEnvironmentSuspended) MarshalJSON() ([]byte, error)       { return marshalString(c) }
 func (c AgentEnvironmentTemplate) MarshalJSON() ([]byte, error)        { return marshalString(c) }
 func (c AgentEnvironmentTemplateDeleted) MarshalJSON() ([]byte, error) { return marshalString(c) }
 func (c AgentOutputCommandExecutionOutputDelta) MarshalJSON() ([]byte, error) {
@@ -1484,10 +1510,12 @@ func (c AgentSessionCreated) MarshalJSON() ([]byte, error)                 { ret
 func (c AgentSessionDeleted) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c AgentSessionEnvironmentConnected) MarshalJSON() ([]byte, error)    { return marshalString(c) }
 func (c AgentSessionEnvironmentDisconnected) MarshalJSON() ([]byte, error) { return marshalString(c) }
+func (c AgentSessionEnvironmentExpired) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c AgentSessionEnvironmentFailed) MarshalJSON() ([]byte, error)       { return marshalString(c) }
 func (c AgentSessionEnvironmentPending) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c AgentSessionEnvironmentReady) MarshalJSON() ([]byte, error)        { return marshalString(c) }
 func (c AgentSessionEnvironmentReset) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c AgentSessionEnvironmentSuspended) MarshalJSON() ([]byte, error)    { return marshalString(c) }
 func (c AgentSessionFailed) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c AgentSessionIdle) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c AgentSessionInProgress) MarshalJSON() ([]byte, error)              { return marshalString(c) }
@@ -1742,6 +1770,7 @@ func (c MultiAgentCall) MarshalJSON() ([]byte, error)                      { ret
 func (c MultiAgentCallOutput) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c Namespace) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c None) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
+func (c Oci) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
 func (c OpenPage) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c OpenAIHosted) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c OrganizationAdminAPIKey) MarshalJSON() ([]byte, error)             { return marshalString(c) }

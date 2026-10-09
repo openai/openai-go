@@ -1422,11 +1422,14 @@ func (r *BetaAgentVaultCredentialUpdateParams) UnmarshalJSON(data []byte) error 
 type BetaAgentVaultCredentialListParams struct {
 	// Return resources after this resource ID in the selected order.
 	After param.Opt[string] `query:"after,omitzero" json:"-"`
-	// The maximum number of resources to return. Defaults to 20. Values are clamped
-	// between 1 and 100.
+	// The maximum number of resources to return, between 1 and 100. Defaults to 20.
 	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
-	// Sort order by the `created_at` timestamp. Use `asc` for ascending order or
-	// `desc` for descending order. Defaults to `desc`.
+	// Exact string matches supplied as `metadata[key]=value`. All supplied pairs must
+	// match. Up to 16 pairs, with keys from 1 to 64 characters and values up to 512
+	// characters. Filtering is eventually consistent; metadata changes may take time
+	// to appear.
+	Metadata map[string]string `query:"metadata,omitzero" json:"-"`
+	// The order in which resources are returned. Defaults to `desc`.
 	//
 	// Any of "asc", "desc".
 	Order BetaAgentVaultCredentialListParamsOrder `query:"order,omitzero" json:"-"`
@@ -1445,8 +1448,7 @@ func (r BetaAgentVaultCredentialListParams) URLQuery() (v url.Values, err error)
 	})
 }
 
-// Sort order by the `created_at` timestamp. Use `asc` for ascending order or
-// `desc` for descending order. Defaults to `desc`.
+// The order in which resources are returned. Defaults to `desc`.
 type BetaAgentVaultCredentialListParamsOrder string
 
 const (

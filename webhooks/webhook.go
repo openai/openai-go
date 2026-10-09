@@ -149,6 +149,200 @@ func (r *WebhookService) Unwrap(payload []byte, opts ...option.RequestOption) (*
 	return res, nil
 }
 
+// Sent when an agent environment expires and can no longer resume from a snapshot.
+type AgentEnvironmentExpiredWebhookEvent struct {
+	// The unique ID of the event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp, in seconds, when the event was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// Identifies the environment whose lifecycle changed.
+	Data AgentEnvironmentExpiredWebhookEventData `json:"data" api:"required"`
+	// The object type. Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// The event type. Always `agent.environment.expired`.
+	Type constant.AgentEnvironmentExpired `json:"type" default:"agent.environment.expired"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentEnvironmentExpiredWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *AgentEnvironmentExpiredWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Identifies the environment whose lifecycle changed.
+type AgentEnvironmentExpiredWebhookEventData struct {
+	// The ID of the environment.
+	ID string `json:"id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentEnvironmentExpiredWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *AgentEnvironmentExpiredWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Sent when setup fails for a prewarmed OpenAI-hosted environment before it is
+// attached to a session.
+type AgentEnvironmentFailedWebhookEvent struct {
+	// The unique ID of the event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp, in seconds, when the event was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// Identifies the environment whose lifecycle changed.
+	Data AgentEnvironmentFailedWebhookEventData `json:"data" api:"required"`
+	// The object type. Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// The event type. Always `agent.environment.failed`.
+	Type constant.AgentEnvironmentFailed `json:"type" default:"agent.environment.failed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentEnvironmentFailedWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *AgentEnvironmentFailedWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Identifies the environment whose lifecycle changed.
+type AgentEnvironmentFailedWebhookEventData struct {
+	// The ID of the environment.
+	ID string `json:"id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentEnvironmentFailedWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *AgentEnvironmentFailedWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Sent when a prewarmed OpenAI-hosted environment finishes setup before being
+// attached to a session.
+type AgentEnvironmentReadyWebhookEvent struct {
+	// The unique ID of the event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp, in seconds, when the event was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// Identifies the environment whose lifecycle changed.
+	Data AgentEnvironmentReadyWebhookEventData `json:"data" api:"required"`
+	// The object type. Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// The event type. Always `agent.environment.ready`.
+	Type constant.AgentEnvironmentReady `json:"type" default:"agent.environment.ready"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentEnvironmentReadyWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *AgentEnvironmentReadyWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Identifies the environment whose lifecycle changed.
+type AgentEnvironmentReadyWebhookEventData struct {
+	// The ID of the environment.
+	ID string `json:"id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentEnvironmentReadyWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *AgentEnvironmentReadyWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Sent when an agent environment is suspended and can resume from a snapshot.
+type AgentEnvironmentSuspendedWebhookEvent struct {
+	// The unique ID of the event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp, in seconds, when the event was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// Identifies the environment whose lifecycle changed.
+	Data AgentEnvironmentSuspendedWebhookEventData `json:"data" api:"required"`
+	// The object type. Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// The event type. Always `agent.environment.suspended`.
+	Type constant.AgentEnvironmentSuspended `json:"type" default:"agent.environment.suspended"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentEnvironmentSuspendedWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *AgentEnvironmentSuspendedWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Identifies the environment whose lifecycle changed.
+type AgentEnvironmentSuspendedWebhookEventData struct {
+	// The ID of the environment.
+	ID string `json:"id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentEnvironmentSuspendedWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *AgentEnvironmentSuspendedWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Sent when an agent session requires an action. Retrieve the session for action
 // details.
 type AgentSessionActionRequiredWebhookEvent struct {
@@ -1734,6 +1928,8 @@ func (r *SafetyWarningIssuedWebhookEventData) UnmarshalJSON(data []byte) error {
 }
 
 // UnwrapWebhookEventUnion contains all possible properties and values from
+// [AgentEnvironmentExpiredWebhookEvent], [AgentEnvironmentFailedWebhookEvent],
+// [AgentEnvironmentReadyWebhookEvent], [AgentEnvironmentSuspendedWebhookEvent],
 // [AgentSessionActionRequiredWebhookEvent], [AgentSessionCreatedWebhookEvent],
 // [AgentSessionFailedWebhookEvent], [AgentSessionIdleWebhookEvent],
 // [AgentSessionInProgressWebhookEvent], [BatchCancelledWebhookEvent],
@@ -1754,7 +1950,11 @@ func (r *SafetyWarningIssuedWebhookEventData) UnmarshalJSON(data []byte) error {
 type UnwrapWebhookEventUnion struct {
 	ID        string `json:"id"`
 	CreatedAt int64  `json:"created_at"`
-	// This field is a union of [AgentSessionActionRequiredWebhookEventData],
+	// This field is a union of [AgentEnvironmentExpiredWebhookEventData],
+	// [AgentEnvironmentFailedWebhookEventData],
+	// [AgentEnvironmentReadyWebhookEventData],
+	// [AgentEnvironmentSuspendedWebhookEventData],
+	// [AgentSessionActionRequiredWebhookEventData],
 	// [AgentSessionCreatedWebhookEventData], [AgentSessionFailedWebhookEventData],
 	// [AgentSessionIdleWebhookEventData], [AgentSessionInProgressWebhookEventData],
 	// [BatchCancelledWebhookEventData], [BatchCompletedWebhookEventData],
@@ -1770,7 +1970,9 @@ type UnwrapWebhookEventUnion struct {
 	// [SafetyOrgAlertCreatedWebhookEventData], [SafetyWarningIssuedWebhookEventData]
 	Data   UnwrapWebhookEventUnionData `json:"data"`
 	Object string                      `json:"object"`
-	// Any of "agent.session.action_required", "agent.session.created",
+	// Any of "agent.environment.expired", "agent.environment.failed",
+	// "agent.environment.ready", "agent.environment.suspended",
+	// "agent.session.action_required", "agent.session.created",
 	// "agent.session.failed", "agent.session.idle", "agent.session.in_progress",
 	// "batch.cancelled", "batch.completed", "batch.expired", "batch.failed",
 	// "eval.run.canceled", "eval.run.failed", "eval.run.succeeded",
@@ -1798,6 +2000,10 @@ type anyUnwrapWebhookEvent interface {
 	implUnwrapWebhookEventUnion()
 }
 
+func (AgentEnvironmentExpiredWebhookEvent) implUnwrapWebhookEventUnion()    {}
+func (AgentEnvironmentFailedWebhookEvent) implUnwrapWebhookEventUnion()     {}
+func (AgentEnvironmentReadyWebhookEvent) implUnwrapWebhookEventUnion()      {}
+func (AgentEnvironmentSuspendedWebhookEvent) implUnwrapWebhookEventUnion()  {}
 func (AgentSessionActionRequiredWebhookEvent) implUnwrapWebhookEventUnion() {}
 func (AgentSessionCreatedWebhookEvent) implUnwrapWebhookEventUnion()        {}
 func (AgentSessionFailedWebhookEvent) implUnwrapWebhookEventUnion()         {}
@@ -1828,6 +2034,10 @@ func (SafetyWarningIssuedWebhookEvent) implUnwrapWebhookEventUnion()        {}
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := UnwrapWebhookEventUnion.AsAny().(type) {
+//	case webhooks.AgentEnvironmentExpiredWebhookEvent:
+//	case webhooks.AgentEnvironmentFailedWebhookEvent:
+//	case webhooks.AgentEnvironmentReadyWebhookEvent:
+//	case webhooks.AgentEnvironmentSuspendedWebhookEvent:
 //	case webhooks.AgentSessionActionRequiredWebhookEvent:
 //	case webhooks.AgentSessionCreatedWebhookEvent:
 //	case webhooks.AgentSessionFailedWebhookEvent:
@@ -1859,6 +2069,14 @@ func (SafetyWarningIssuedWebhookEvent) implUnwrapWebhookEventUnion()        {}
 //	}
 func (u UnwrapWebhookEventUnion) AsAny() anyUnwrapWebhookEvent {
 	switch u.Type {
+	case "agent.environment.expired":
+		return u.AsAgentEnvironmentExpired()
+	case "agent.environment.failed":
+		return u.AsAgentEnvironmentFailed()
+	case "agent.environment.ready":
+		return u.AsAgentEnvironmentReady()
+	case "agent.environment.suspended":
+		return u.AsAgentEnvironmentSuspended()
 	case "agent.session.action_required":
 		return u.AsAgentSessionActionRequired()
 	case "agent.session.created":
@@ -1913,6 +2131,26 @@ func (u UnwrapWebhookEventUnion) AsAny() anyUnwrapWebhookEvent {
 		return u.AsSafetyWarningIssued()
 	}
 	return nil
+}
+
+func (u UnwrapWebhookEventUnion) AsAgentEnvironmentExpired() (v AgentEnvironmentExpiredWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsAgentEnvironmentFailed() (v AgentEnvironmentFailedWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsAgentEnvironmentReady() (v AgentEnvironmentReadyWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsAgentEnvironmentSuspended() (v AgentEnvironmentSuspendedWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
 func (u UnwrapWebhookEventUnion) AsAgentSessionActionRequired() (v AgentSessionActionRequiredWebhookEvent) {
@@ -2299,7 +2537,9 @@ type WebhookNewParams struct {
 	// "response.incomplete", "eval.run.succeeded", "eval.run.failed",
 	// "eval.run.canceled", "fine_tuning.job.succeeded", "fine_tuning.job.failed",
 	// "fine_tuning.job.cancelled", "realtime.call.incoming", "video.completed",
-	// "video.failed", "agent.session.created", "agent.session.action_required",
+	// "video.failed", "agent.environment.ready", "agent.environment.failed",
+	// "agent.environment.suspended", "agent.environment.expired",
+	// "agent.session.created", "agent.session.action_required",
 	// "agent.session.in_progress", "agent.session.idle", "agent.session.failed",
 	// "safety.alert.created".
 	EventTypes []string `json:"event_types,omitzero" api:"required"`
@@ -2330,7 +2570,9 @@ type WebhookUpdateParams struct {
 	// "response.incomplete", "eval.run.succeeded", "eval.run.failed",
 	// "eval.run.canceled", "fine_tuning.job.succeeded", "fine_tuning.job.failed",
 	// "fine_tuning.job.cancelled", "realtime.call.incoming", "video.completed",
-	// "video.failed", "agent.session.created", "agent.session.action_required",
+	// "video.failed", "agent.environment.ready", "agent.environment.failed",
+	// "agent.environment.suspended", "agent.environment.expired",
+	// "agent.session.created", "agent.session.action_required",
 	// "agent.session.in_progress", "agent.session.idle", "agent.session.failed",
 	// "safety.alert.created".
 	EventTypes []string `json:"event_types,omitzero"`
@@ -2384,7 +2626,9 @@ type WebhookTestParams struct {
 	// "response.incomplete", "eval.run.succeeded", "eval.run.failed",
 	// "eval.run.canceled", "fine_tuning.job.succeeded", "fine_tuning.job.failed",
 	// "fine_tuning.job.cancelled", "realtime.call.incoming", "video.completed",
-	// "video.failed", "agent.session.created", "agent.session.action_required",
+	// "video.failed", "agent.environment.ready", "agent.environment.failed",
+	// "agent.environment.suspended", "agent.environment.expired",
+	// "agent.session.created", "agent.session.action_required",
 	// "agent.session.in_progress", "agent.session.idle", "agent.session.failed",
 	// "safety.alert.created".
 	EventType WebhookTestParamsEventType `json:"event_type,omitzero" api:"required"`
@@ -2420,6 +2664,10 @@ const (
 	WebhookTestParamsEventTypeRealtimeCallIncoming       WebhookTestParamsEventType = "realtime.call.incoming"
 	WebhookTestParamsEventTypeVideoCompleted             WebhookTestParamsEventType = "video.completed"
 	WebhookTestParamsEventTypeVideoFailed                WebhookTestParamsEventType = "video.failed"
+	WebhookTestParamsEventTypeAgentEnvironmentReady      WebhookTestParamsEventType = "agent.environment.ready"
+	WebhookTestParamsEventTypeAgentEnvironmentFailed     WebhookTestParamsEventType = "agent.environment.failed"
+	WebhookTestParamsEventTypeAgentEnvironmentSuspended  WebhookTestParamsEventType = "agent.environment.suspended"
+	WebhookTestParamsEventTypeAgentEnvironmentExpired    WebhookTestParamsEventType = "agent.environment.expired"
 	WebhookTestParamsEventTypeAgentSessionCreated        WebhookTestParamsEventType = "agent.session.created"
 	WebhookTestParamsEventTypeAgentSessionActionRequired WebhookTestParamsEventType = "agent.session.action_required"
 	WebhookTestParamsEventTypeAgentSessionInProgress     WebhookTestParamsEventType = "agent.session.in_progress"

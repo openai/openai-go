@@ -35,17 +35,17 @@ func NewDecisionService(opts ...option.RequestOption) (r DecisionService) {
 	return
 }
 
-// Evaluate ordered classification and scoring questions against shared input.
-// Answers are returned in question order.
+// Use this endpoint to ask classification or scoring questions about the same
+// input. You’ll get the answers back in the order you asked the questions.
 //
-// Supply input as a string or user messages containing text and inline images.
-// Only user messages with `input_text` and `input_image` parts are supported;
-// non-user roles, function calls, files, audio, and item references are not
-// supported. Images require a data URL, not an external URL or file ID. At most
-// 128 images are allowed across the request.
+// For text, you can pass a string. You can also send user messages containing
+// `input_text` and `input_image` parts, with up to 128 images per request. Images
+// can be base64 data URLs or publicly accessible HTTP(S) URLs. File IDs aren’t
+// accepted. Other message roles, function calls, files, audio, and item references
+// aren’t supported.
 //
-// Each question can return a refusal instead of a scored answer. A refusal has
-// type `refusal` and the corresponding question name, or null if unnamed.
+// Sometimes a question returns a refusal instead of an answer. The result has type
+// `refusal` and includes the question’s name, or `null` if you didn’t give it one.
 func (r *DecisionService) New(ctx context.Context, body DecisionNewParams, opts ...option.RequestOption) (res *Decision, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -380,7 +380,8 @@ func (r *DecisionAnswerScoreProbability) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The host may decline one question without disclosing its refusal score.
+// The model declined to answer this question. Other questions in the same request
+// can still receive answers.
 type DecisionAnswerRefusal struct {
 	Name string `json:"name" api:"required"`
 	// The type of the object. Always `refusal`.
@@ -458,11 +459,12 @@ func (r *DecisionUsageOutputTokensDetails) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// An inline image. External URLs and file IDs are not supported.
+// An image provided as a base64 data URL or a publicly accessible HTTP(S) URL.
+// File IDs are not supported.
 //
 // The properties ImageURL, Type are required.
 type DecisionInputImageParam struct {
-	// A base64-encoded image in a data URL.
+	// A base64-encoded image in a data URL or a publicly accessible HTTP(S) image URL.
 	ImageURL string `json:"image_url" api:"required"`
 	// The image detail level, using the selected model's image profile. Defaults to
 	// auto.
@@ -493,11 +495,11 @@ const (
 	DecisionInputImageDetailOriginal DecisionInputImageDetail = "original"
 )
 
-// A user message containing text or inline images.
+// A user message containing text or images.
 //
 // The properties Content, Role are required.
 type DecisionInputMessageParam struct {
-	// Text evidence or an ordered list of text and inline image parts.
+	// Text evidence or an ordered list of text and image parts.
 	Content DecisionInputMessageContentUnionParam `json:"content,omitzero" api:"required"`
 	// Any of "message".
 	Type DecisionInputMessageType `json:"type,omitzero"`
@@ -623,10 +625,10 @@ func (r *DecisionInputTextParam) UnmarshalJSON(data []byte) error {
 }
 
 type DecisionNewParams struct {
-	// Shared evidence, as a string or an array of user messages containing text and
-	// inline images. Non-user roles, function calls, function-call outputs, files,
-	// audio, and item references are not supported. At most 128 image parts are
-	// allowed across all messages in one request.
+	// The text or images to evaluate for every question. Provide a text string or user
+	// messages containing text and images. Images can be base64 data URLs or publicly
+	// accessible HTTP(S) URLs; at most 128 images are allowed across all messages in
+	// one request. Files, audio, tools, and item references are not supported.
 	Input     DecisionNewParamsInputUnion      `json:"input,omitzero" api:"required"`
 	Model     string                           `json:"model" api:"required"`
 	Questions []DecisionNewParamsQuestionUnion `json:"questions,omitzero" api:"required"`
@@ -738,6 +740,8 @@ func init() {
 	)
 }
 
+// Estimate how likely it is that a statement about the input is true.
+//
 // The properties Instructions, Type are required.
 type DecisionNewParamsQuestionPredicate struct {
 	Instructions string            `json:"instructions" api:"required"`
@@ -757,8 +761,11 @@ func (r *DecisionNewParamsQuestionPredicate) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Choose from the supplied options based on the input.
+//
 // The properties Choices, Instructions, Type are required.
 type DecisionNewParamsQuestionChoice struct {
+	// Provide between 2 and 255 choices. Each choice must be unique.
 	Choices      []DecisionNewParamsQuestionChoiceChoice `json:"choices,omitzero" api:"required"`
 	Instructions string                                  `json:"instructions" api:"required"`
 	Name         param.Opt[string]                       `json:"name,omitzero"`
@@ -809,6 +816,8 @@ func (u *DecisionNewParamsQuestionChoiceChoiceValueUnion) UnmarshalJSON(data []b
 	return apijson.UnmarshalRoot(data, u)
 }
 
+// Rate the input against the supplied ordered levels.
+//
 // The properties Instructions, Levels, Type are required.
 type DecisionNewParamsQuestionScore struct {
 	Instructions string                                `json:"instructions" api:"required"`

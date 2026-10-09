@@ -67,6 +67,9 @@ func TestBetaAgentSessionNewWithOptionalParams(t *testing.T) {
 		Metadata: map[string]string{
 			"foo": "string",
 		},
+		SpendControl: openai.BetaAgentSessionNewParamsSpendControl{
+			Limit: openai.Int(1),
+		},
 		VaultIDs: []string{"string"},
 	})
 	if err != nil {
@@ -129,6 +132,9 @@ func TestBetaAgentSessionUpdateWithOptionalParams(t *testing.T) {
 			},
 			Metadata: map[string]string{
 				"foo": "string",
+			},
+			SpendControl: openai.BetaAgentSessionUpdateParamsSpendControl{
+				Limit: openai.Int(1),
 			},
 		},
 	)
