@@ -109,6 +109,43 @@ func TestNewDecoderMatchesRegisteredMediaTypeWithCaseAndParameters(t *testing.T)
 	}
 }
 
+func TestDecoderRegistryIsSafeForConcurrentAccess(t *testing.T) {
+	const contentType = "application/x-openai-go-concurrent"
+	decoder := &testDecoder{}
+	register := func(io.ReadCloser) Decoder { return decoder }
+
+	var wg sync.WaitGroup
+	for i := 0; i < 4; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < 1000; j++ {
+				RegisterDecoder(contentType, register)
+			}
+		}()
+	}
+	for i := 0; i < 4; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < 1000; j++ {
+				got := NewDecoder(&http.Response{
+					Header: http.Header{"Content-Type": {contentType}},
+					Body:   io.NopCloser(strings.NewReader("")),
+				})
+				if got != decoder {
+					got.Close()
+				}
+			}
+		}()
+	}
+	wg.Wait()
+
+	decoderTypesMu.Lock()
+	delete(decoderTypes, contentType)
+	decoderTypesMu.Unlock()
+}
+
 func TestNewDecoderPreservesRegisteredContentTypeParameters(t *testing.T) {
 	const (
 		mediaType = "application/x-openai-go-test-parameters"
