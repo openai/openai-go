@@ -4,6 +4,8 @@ import (
 	"errors"
 	"reflect"
 
+	"github.com/openai/openai-go/v3/packages/param"
+
 	"github.com/tidwall/gjson"
 
 	"github.com/openai/openai-go/v3/packages/param"
@@ -79,7 +81,11 @@ func (d *decoderBuilder) newStructUnionDecoder(t reflect.Type) decoderFunc {
 	for _, variant := range unionEntry.variants {
 		// For each union variant, find a matching decoder and save it
 		for _, decoder := range decoders {
-			if decoder.field.Type.Elem() == variant.Type {
+			fieldType := decoder.field.Type
+			if fieldType.Kind() == reflect.Ptr {
+				fieldType = fieldType.Elem()
+			}
+			if fieldType == variant.Type {
 				discriminatedDecoders = append(discriminatedDecoders, discriminatedDecoder{
 					decoder,
 					variant.DiscriminatorValue,
