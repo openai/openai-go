@@ -3,6 +3,7 @@ package ssestream
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"reflect"
@@ -678,4 +679,42 @@ func TestStreamDiscardsIncompleteEventAtEOF(t *testing.T) {
 	if err := stream.Err(); err != nil {
 		t.Fatalf("unexpected stream error: %v", err)
 	}
+}
+
+func TestRegisterDecoderConcurrentWithNewDecoder(t *testing.T) {
+	const workers = 4
+	const iterations = 200
+	var wg sync.WaitGroup
+	for worker := 0; worker < workers; worker++ {
+		wg.Add(1)
+		go func(worker int) {
+			defer wg.Done()
+			for i := 0; i < iterations; i++ {
+				RegisterDecoder(
+					fmt.Sprintf("application/x-openai-test-%d-%d", worker, i),
+					func(io.ReadCloser) Decoder { return nil },
+				)
+			}
+		}(worker)
+	}
+	for range workers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for range iterations {
+				decoder := NewDecoder(&http.Response{
+					Header: http.Header{"Content-Type": []string{"text/event-stream"}},
+					Body:   io.NopCloser(strings.NewReader("")),
+				})
+				if decoder == nil {
+					t.Error("NewDecoder returned nil")
+					continue
+				}
+				if err := decoder.Close(); err != nil {
+					t.Errorf("close decoder: %v", err)
+				}
+			}
+		}()
+	}
+	wg.Wait()
 }
