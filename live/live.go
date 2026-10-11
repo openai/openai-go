@@ -70,6 +70,7 @@ const (
 	BuiltInVoiceQuartz   BuiltInVoice = "quartz"
 	BuiltInVoiceRipple   BuiltInVoice = "ripple"
 	BuiltInVoiceSage     BuiltInVoice = "sage"
+	BuiltInVoiceShida    BuiltInVoice = "shida"
 	BuiltInVoiceShimmer  BuiltInVoice = "shimmer"
 	BuiltInVoiceStone    BuiltInVoice = "stone"
 	BuiltInVoiceTempo    BuiltInVoice = "tempo"
