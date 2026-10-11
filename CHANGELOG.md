@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.77.0](https://github.com/openai/openai-go/compare/v3.76.0...v3.77.0) (2026-10-11)
+
+
+### Features
+
+* **api:** add shida to named Live voices ([#1048](https://github.com/openai/openai-go/issues/1048)) ([2922f3e](https://github.com/openai/openai-go/commit/2922f3e8a846d561d85e4aabb90f017c2de10851))
+
+
+### Chores
+
+* **api:** retain existing vault update support ([#1046](https://github.com/openai/openai-go/issues/1046)) ([995b15b](https://github.com/openai/openai-go/commit/995b15be7b35005587c61f6d9f60c215cc5105ef))
+
 ## [3.76.0](https://github.com/openai/openai-go/compare/v3.75.0...v3.76.0) (2026-10-09)
 
 
