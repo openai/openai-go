@@ -185,6 +185,42 @@ func TestAdminOrganizationUsageCostsWithOptionalParams(t *testing.T) {
 	}
 }
 
+func TestAdminOrganizationUsageDecisionsWithOptionalParams(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
+	)
+	_, err := client.Admin.Organization.Usage.Decisions(context.TODO(), openai.AdminOrganizationUsageDecisionsParams{
+		StartTime:   0,
+		APIKeyIDs:   []string{"string"},
+		Batch:       openai.Bool(true),
+		BucketWidth: openai.AdminOrganizationUsageDecisionsParamsBucketWidth1m,
+		EndTime:     openai.Int(0),
+		GroupBy:     []string{"project_id"},
+		Limit:       openai.Int(0),
+		Models:      []string{"string"},
+		Page:        openai.String("page"),
+		ProjectIDs:  []string{"string"},
+		UserIDs:     []string{"string"},
+	})
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
 func TestAdminOrganizationUsageEmbeddingsWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {

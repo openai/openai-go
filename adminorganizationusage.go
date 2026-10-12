@@ -82,6 +82,15 @@ func (r *AdminOrganizationUsageService) Costs(ctx context.Context, query AdminOr
 	return res, err
 }
 
+// Get Decisions API usage details for the organization.
+func (r *AdminOrganizationUsageService) Decisions(ctx context.Context, query AdminOrganizationUsageDecisionsParams, opts ...option.RequestOption) (res *AdminOrganizationUsageDecisionsResponse, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	path := "organization/usage/decisions"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	return res, err
+}
+
 // Get embeddings usage details for the organization.
 func (r *AdminOrganizationUsageService) Embeddings(ctx context.Context, query AdminOrganizationUsageEmbeddingsParams, opts ...option.RequestOption) (res *AdminOrganizationUsageEmbeddingsResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
@@ -4608,6 +4617,156 @@ func (r AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResultAmou
 	return r.JSON.raw
 }
 func (r *AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResultAmount) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type AdminOrganizationUsageDecisionsResponse struct {
+	Data     []AdminOrganizationUsageDecisionsResponseData `json:"data" api:"required"`
+	HasMore  bool                                          `json:"has_more" api:"required"`
+	NextPage string                                        `json:"next_page" api:"required"`
+	Object   constant.Page                                 `json:"object" default:"page"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		HasMore     respjson.Field
+		NextPage    respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageDecisionsResponse) RawJSON() string { return r.JSON.raw }
+func (r *AdminOrganizationUsageDecisionsResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type AdminOrganizationUsageDecisionsResponseData struct {
+	EndTime   int64                                               `json:"end_time" api:"required"`
+	Object    constant.Bucket                                     `json:"object" default:"bucket"`
+	Results   []AdminOrganizationUsageDecisionsResponseDataResult `json:"results" api:"required"`
+	StartTime int64                                               `json:"start_time" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		EndTime     respjson.Field
+		Object      respjson.Field
+		Results     respjson.Field
+		StartTime   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageDecisionsResponseData) RawJSON() string { return r.JSON.raw }
+func (r *AdminOrganizationUsageDecisionsResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated Decisions API usage details of the specific time bucket.
+type AdminOrganizationUsageDecisionsResponseDataResult struct {
+	// The aggregated number of input tokens used, including cached and cache-write
+	// tokens. This includes text, audio, and image tokens. For customers subscribed to
+	// Scale Tier, this includes Scale Tier tokens.
+	InputTokens int64 `json:"input_tokens" api:"required"`
+	// The count of requests made to the model.
+	NumModelRequests int64                                     `json:"num_model_requests" api:"required"`
+	Object           constant.OrganizationUsageDecisionsResult `json:"object" default:"organization.usage.decisions.result"`
+	// The aggregated number of output tokens used across text, audio, and image
+	// outputs. For customers subscribed to Scale Tier, this includes Scale Tier
+	// tokens.
+	OutputTokens int64 `json:"output_tokens" api:"required"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When grouped by `api_source`, `agents_api` identifies attributed Agents API
+	// activity and `unlabeled` includes all records without published source
+	// attribution, including historical and unknown origins. Unlabeled does not imply
+	// direct API usage. Without source grouping, this field is null.
+	//
+	// Any of "agents_api", "unlabeled".
+	APISource string `json:"api_source" api:"nullable"`
+	// When `group_by=batch`, this field tells whether the grouped usage result is
+	// batch or not.
+	Batch bool `json:"batch" api:"nullable"`
+	// The aggregated number of uncached audio input tokens used.
+	InputAudioTokens int64 `json:"input_audio_tokens" api:"nullable"`
+	// The aggregated number of input tokens written to the cache with a 12-hour
+	// retention period.
+	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens" api:"nullable"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period.
+	InputCacheWriteTokens int64 `json:"input_cache_write_tokens" api:"nullable"`
+	// The aggregated number of cached audio input tokens used.
+	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens" api:"nullable"`
+	// The aggregated number of cached image input tokens used.
+	InputCachedImageTokens int64 `json:"input_cached_image_tokens" api:"nullable"`
+	// The aggregated number of cached text input tokens used.
+	InputCachedTextTokens int64 `json:"input_cached_text_tokens" api:"nullable"`
+	// The aggregated number of cached input tokens used across text, audio, and image
+	// inputs. For customers subscribed to Scale Tier, this includes Scale Tier tokens.
+	InputCachedTokens int64 `json:"input_cached_tokens" api:"nullable"`
+	// The aggregated number of uncached image input tokens used.
+	InputImageTokens int64 `json:"input_image_tokens" api:"nullable"`
+	// The aggregated number of uncached text input tokens used, excluding cache-write
+	// tokens.
+	InputTextTokens int64 `json:"input_text_tokens" api:"nullable"`
+	// The aggregated number of uncached input tokens used across text, audio, and
+	// image inputs, excluding cache-write tokens.
+	InputUncachedTokens int64 `json:"input_uncached_tokens" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// The aggregated number of audio output tokens used.
+	OutputAudioTokens int64 `json:"output_audio_tokens" api:"nullable"`
+	// The aggregated number of image output tokens used.
+	OutputImageTokens int64 `json:"output_image_tokens" api:"nullable"`
+	// The aggregated number of text output tokens used.
+	OutputTextTokens int64 `json:"output_text_tokens" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=service_tier`, this field provides the service tier of the
+	// grouped usage result.
+	ServiceTier string `json:"service_tier" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		InputTokens              respjson.Field
+		NumModelRequests         respjson.Field
+		Object                   respjson.Field
+		OutputTokens             respjson.Field
+		APIKeyID                 respjson.Field
+		APISource                respjson.Field
+		Batch                    respjson.Field
+		InputAudioTokens         respjson.Field
+		InputCacheWrite12hTokens respjson.Field
+		InputCacheWriteTokens    respjson.Field
+		InputCachedAudioTokens   respjson.Field
+		InputCachedImageTokens   respjson.Field
+		InputCachedTextTokens    respjson.Field
+		InputCachedTokens        respjson.Field
+		InputImageTokens         respjson.Field
+		InputTextTokens          respjson.Field
+		InputUncachedTokens      respjson.Field
+		Model                    respjson.Field
+		OutputAudioTokens        respjson.Field
+		OutputImageTokens        respjson.Field
+		OutputTextTokens         respjson.Field
+		ProjectID                respjson.Field
+		ServiceTier              respjson.Field
+		UserID                   respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageDecisionsResponseDataResult) RawJSON() string { return r.JSON.raw }
+func (r *AdminOrganizationUsageDecisionsResponseDataResult) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -10224,6 +10383,67 @@ type AdminOrganizationUsageCostsParamsBucketWidth string
 
 const (
 	AdminOrganizationUsageCostsParamsBucketWidth1d AdminOrganizationUsageCostsParamsBucketWidth = "1d"
+)
+
+type AdminOrganizationUsageDecisionsParams struct {
+	// Start time (Unix seconds) of the query time range, inclusive.
+	StartTime int64 `query:"start_time" api:"required" json:"-"`
+	// If `true`, return batch jobs only. If `false`, return non-batch jobs only. By
+	// default, return both.
+	Batch param.Opt[bool] `query:"batch,omitzero" json:"-"`
+	// End time (Unix seconds) of the query time range, exclusive.
+	EndTime param.Opt[int64] `query:"end_time,omitzero" json:"-"`
+	// Specifies the number of buckets to return.
+	//
+	// - `bucket_width=1d`: default: 7, max: 31
+	// - `bucket_width=1h`: default: 24, max: 168
+	// - `bucket_width=1m`: default: 60, max: 1440
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
+	// A cursor for use in pagination. Corresponding to the `next_page` field from the
+	// previous response.
+	Page param.Opt[string] `query:"page,omitzero" json:"-"`
+	// Return only usage for these API keys.
+	APIKeyIDs []string `query:"api_key_ids,omitzero" json:"-"`
+	// Width of each time bucket in response. Currently `1m`, `1h` and `1d` are
+	// supported, default to `1d`.
+	//
+	// Any of "1m", "1h", "1d".
+	BucketWidth AdminOrganizationUsageDecisionsParamsBucketWidth `query:"bucket_width,omitzero" json:"-"`
+	// Group the usage data by the specified fields. Support fields include
+	// `project_id`, `user_id`, `api_key_id`, `model`, `batch`, `service_tier`,
+	// `api_source` or any combination of them. When grouped by `api_source`, results
+	// use `agents_api` for attributed Agents API activity and `unlabeled` for all
+	// other activity. Without source grouping, `api_source` is null.
+	//
+	// Any of "project_id", "user_id", "api_key_id", "model", "batch", "service_tier",
+	// "api_source".
+	GroupBy []string `query:"group_by,omitzero" json:"-"`
+	// Return only usage for these models.
+	Models []string `query:"models,omitzero" json:"-"`
+	// Return only usage for these projects.
+	ProjectIDs []string `query:"project_ids,omitzero" json:"-"`
+	// Return only usage for these users.
+	UserIDs []string `query:"user_ids,omitzero" json:"-"`
+	paramObj
+}
+
+// URLQuery serializes [AdminOrganizationUsageDecisionsParams]'s query parameters
+// as `url.Values`.
+func (r AdminOrganizationUsageDecisionsParams) URLQuery() (v url.Values, err error) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
+}
+
+// Width of each time bucket in response. Currently `1m`, `1h` and `1d` are
+// supported, default to `1d`.
+type AdminOrganizationUsageDecisionsParamsBucketWidth string
+
+const (
+	AdminOrganizationUsageDecisionsParamsBucketWidth1m AdminOrganizationUsageDecisionsParamsBucketWidth = "1m"
+	AdminOrganizationUsageDecisionsParamsBucketWidth1h AdminOrganizationUsageDecisionsParamsBucketWidth = "1h"
+	AdminOrganizationUsageDecisionsParamsBucketWidth1d AdminOrganizationUsageDecisionsParamsBucketWidth = "1d"
 )
 
 type AdminOrganizationUsageEmbeddingsParams struct {
