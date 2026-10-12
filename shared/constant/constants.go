@@ -315,6 +315,7 @@ type OrganizationUsageAudioSpeechesResult string              // Always "organiz
 type OrganizationUsageAudioTranscriptionsResult string        // Always "organization.usage.audio_transcriptions.result"
 type OrganizationUsageCodeInterpreterSessionsResult string    // Always "organization.usage.code_interpreter_sessions.result"
 type OrganizationUsageCompletionsResult string                // Always "organization.usage.completions.result"
+type OrganizationUsageDecisionsResult string                  // Always "organization.usage.decisions.result"
 type OrganizationUsageEmbeddingsResult string                 // Always "organization.usage.embeddings.result"
 type OrganizationUsageFileSearchesResult string               // Always "organization.usage.file_searches.result"
 type OrganizationUsageImagesResult string                     // Always "organization.usage.images.result"
@@ -1047,6 +1048,9 @@ func (c OrganizationUsageCodeInterpreterSessionsResult) Default() OrganizationUs
 }
 func (c OrganizationUsageCompletionsResult) Default() OrganizationUsageCompletionsResult {
 	return "organization.usage.completions.result"
+}
+func (c OrganizationUsageDecisionsResult) Default() OrganizationUsageDecisionsResult {
+	return "organization.usage.decisions.result"
 }
 func (c OrganizationUsageEmbeddingsResult) Default() OrganizationUsageEmbeddingsResult {
 	return "organization.usage.embeddings.result"
@@ -1815,6 +1819,7 @@ func (c OrganizationUsageCodeInterpreterSessionsResult) MarshalJSON() ([]byte, e
 	return marshalString(c)
 }
 func (c OrganizationUsageCompletionsResult) MarshalJSON() ([]byte, error)    { return marshalString(c) }
+func (c OrganizationUsageDecisionsResult) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c OrganizationUsageEmbeddingsResult) MarshalJSON() ([]byte, error)     { return marshalString(c) }
 func (c OrganizationUsageFileSearchesResult) MarshalJSON() ([]byte, error)   { return marshalString(c) }
 func (c OrganizationUsageImagesResult) MarshalJSON() ([]byte, error)         { return marshalString(c) }
