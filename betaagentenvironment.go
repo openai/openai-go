@@ -46,6 +46,7 @@ func NewBetaAgentEnvironmentService(opts ...option.RequestOption) (r BetaAgentEn
 // Creates an OpenAI-hosted environment before creating a session. Requires access
 // to the prewarming beta.
 func (r *BetaAgentEnvironmentService) New(ctx context.Context, params BetaAgentEnvironmentNewParams, opts ...option.RequestOption) (res *EnvironmentInfo, err error) {
+	opts = slices.Clone(opts)
 	if !param.IsOmitted(params.IdempotencyKey) {
 		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
