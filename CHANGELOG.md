@@ -1,5 +1,21 @@
 # Changelog
 
+## [3.78.0](https://github.com/openai/openai-go/compare/v3.77.0...v3.78.0) (2026-10-13)
+
+
+### Features
+
+* **api:** support updating project API key expiry ([#1051](https://github.com/openai/openai-go/issues/1051)) ([783537a](https://github.com/openai/openai-go/commit/783537ab2c9cb9481483cecdbac05eed5b6a9b12))
+
+
+### Build System
+
+* **deps:** bump github.com/aws/aws-sdk-go-v2 in / ([#1026](https://github.com/openai/openai-go/issues/1026)) ([8dfc8f1](https://github.com/openai/openai-go/commit/8dfc8f1abe9fdfe3f815f1eac11338790bb5c6d1))
+* **deps:** bump github.com/aws/aws-sdk-go-v2/config in / ([#983](https://github.com/openai/openai-go/issues/983)) ([8e06cf4](https://github.com/openai/openai-go/commit/8e06cf4a7294093952419bc9968a950357edbeab))
+* **deps:** bump github.com/Azure/azure-sdk-for-go/sdk/azcore in / ([#1052](https://github.com/openai/openai-go/issues/1052)) ([5f94bd8](https://github.com/openai/openai-go/commit/5f94bd8596b00fc5b6040e45075e0705d4d4a9ec))
+* **deps:** bump openai/codex-action from 1.12 to 1.13 ([#1055](https://github.com/openai/openai-go/issues/1055)) ([d62dfab](https://github.com/openai/openai-go/commit/d62dfababf8120c9ed84ebf75a77fcbc724bdfc0))
+* **deps:** bump the codeql group across 1 directory with 2 updates ([#984](https://github.com/openai/openai-go/issues/984)) ([432746c](https://github.com/openai/openai-go/commit/432746c956c3aed7b1b54b55bcfd99d8ab446df3))
+
 ## [3.77.0](https://github.com/openai/openai-go/compare/v3.76.0...v3.77.0) (2026-10-12)
 
 
