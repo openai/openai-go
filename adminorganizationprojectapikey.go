@@ -55,6 +55,29 @@ func (r *AdminOrganizationProjectAPIKeyService) Get(ctx context.Context, project
 	return res, err
 }
 
+// Updates the expiration of an existing API key in the project, including a
+// service-account-owned key. Requires permission to write project API keys.
+//
+// Provide `expires_in_seconds` to set the expiration relative to this request. The
+// value must satisfy the organization's and project's expiry policies. Expired
+// keys cannot be updated. Retrying resets the expiration relative to the new
+// request. The response contains only the redacted key, not its secret.
+func (r *AdminOrganizationProjectAPIKeyService) Update(ctx context.Context, projectID string, apiKeyID string, body AdminOrganizationProjectAPIKeyUpdateParams, opts ...option.RequestOption) (res *ProjectAPIKey, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if projectID == "" {
+		err = errors.New("missing required project_id parameter")
+		return nil, err
+	}
+	if apiKeyID == "" {
+		err = errors.New("missing required api_key_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("organization/projects/%s/api_keys/%s", projectID, apiKeyID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	return res, err
+}
+
 // Returns a list of API keys in the project.
 func (r *AdminOrganizationProjectAPIKeyService) List(ctx context.Context, projectID string, query AdminOrganizationProjectAPIKeyListParams, opts ...option.RequestOption) (res *pagination.ConversationCursorPage[ProjectAPIKey], err error) {
 	var raw *http.Response
@@ -254,6 +277,22 @@ type AdminOrganizationProjectAPIKeyDeleteResponse struct {
 // Returns the unmodified JSON received from the API
 func (r AdminOrganizationProjectAPIKeyDeleteResponse) RawJSON() string { return r.JSON.raw }
 func (r *AdminOrganizationProjectAPIKeyDeleteResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type AdminOrganizationProjectAPIKeyUpdateParams struct {
+	// Number of seconds from this request until the API key expires. Must comply with
+	// the organization and project expiry policies. Expired keys cannot be updated.
+	// Retrying resets the expiry relative to the new request.
+	ExpiresInSeconds int64 `json:"expires_in_seconds" api:"required"`
+	paramObj
+}
+
+func (r AdminOrganizationProjectAPIKeyUpdateParams) MarshalJSON() (data []byte, err error) {
+	type shadow AdminOrganizationProjectAPIKeyUpdateParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AdminOrganizationProjectAPIKeyUpdateParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
