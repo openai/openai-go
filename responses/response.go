@@ -13594,6 +13594,8 @@ type ResponseInputItemImageGenerationCall struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background" api:"nullable"`
+	// Details of a moderation failure, when available.
+	Error ResponseInputItemImageGenerationCallError `json:"error"`
 	// The output format used for generation.
 	//
 	// Any of "png", "webp", "jpeg".
@@ -13615,6 +13617,7 @@ type ResponseInputItemImageGenerationCall struct {
 		Type          respjson.Field
 		Action        respjson.Field
 		Background    respjson.Field
+		Error         respjson.Field
 		OutputFormat  respjson.Field
 		Quality       respjson.Field
 		RevisedPrompt respjson.Field
@@ -13627,6 +13630,61 @@ type ResponseInputItemImageGenerationCall struct {
 // Returns the unmodified JSON received from the API
 func (r ResponseInputItemImageGenerationCall) RawJSON() string { return r.JSON.raw }
 func (r *ResponseInputItemImageGenerationCall) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Details of a moderation failure, when available.
+type ResponseInputItemImageGenerationCallError struct {
+	// The error code.
+	Code string `json:"code" api:"required"`
+	// A description of the error.
+	Message string `json:"message" api:"required"`
+	// The related request parameter.
+	Param string `json:"param" api:"required"`
+	// The error type.
+	Type string `json:"type" api:"required"`
+	// Public details for a `moderation_blocked` error, when available.
+	ModerationDetails ResponseInputItemImageGenerationCallErrorModerationDetails `json:"moderation_details"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code              respjson.Field
+		Message           respjson.Field
+		Param             respjson.Field
+		Type              respjson.Field
+		ModerationDetails respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseInputItemImageGenerationCallError) RawJSON() string { return r.JSON.raw }
+func (r *ResponseInputItemImageGenerationCallError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Public details for a `moderation_blocked` error, when available.
+type ResponseInputItemImageGenerationCallErrorModerationDetails struct {
+	// Public moderation categories. New category values may be added over time.
+	Categories []string `json:"categories" api:"required"`
+	// The stage where moderation blocked the image generation call.
+	//
+	// Any of "input", "output", "unknown".
+	ModerationStage string `json:"moderation_stage" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Categories      respjson.Field
+		ModerationStage respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseInputItemImageGenerationCallErrorModerationDetails) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponseInputItemImageGenerationCallErrorModerationDetails) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -16560,6 +16618,8 @@ type ResponseInputItemImageGenerationCallParam struct {
 	Quality string `json:"quality,omitzero"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size param.Opt[string] `json:"size,omitzero"`
+	// Details of a moderation failure, when available.
+	Error ResponseInputItemImageGenerationCallErrorParam `json:"error,omitzero"`
 	// The type of the image generation call. Always `image_generation_call`.
 	//
 	// This field can be elided, and will marshal its zero value as
@@ -16582,6 +16642,58 @@ func init() {
 	)
 	apijson.RegisterFieldValidator[ResponseInputItemImageGenerationCallParam](
 		"quality", "low", "medium", "high", "xhigh", "max", "auto",
+	)
+}
+
+// Details of a moderation failure, when available.
+//
+// The properties Code, Message, Param, Type are required.
+type ResponseInputItemImageGenerationCallErrorParam struct {
+	// The error code.
+	Code param.Opt[string] `json:"code,omitzero" api:"required"`
+	// The related request parameter.
+	Param param.Opt[string] `json:"param,omitzero" api:"required"`
+	// A description of the error.
+	Message string `json:"message" api:"required"`
+	// The error type.
+	Type string `json:"type" api:"required"`
+	// Public details for a `moderation_blocked` error, when available.
+	ModerationDetails ResponseInputItemImageGenerationCallErrorModerationDetailsParam `json:"moderation_details,omitzero"`
+	paramObj
+}
+
+func (r ResponseInputItemImageGenerationCallErrorParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseInputItemImageGenerationCallErrorParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseInputItemImageGenerationCallErrorParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Public details for a `moderation_blocked` error, when available.
+//
+// The properties Categories, ModerationStage are required.
+type ResponseInputItemImageGenerationCallErrorModerationDetailsParam struct {
+	// Public moderation categories. New category values may be added over time.
+	Categories []string `json:"categories,omitzero" api:"required"`
+	// The stage where moderation blocked the image generation call.
+	//
+	// Any of "input", "output", "unknown".
+	ModerationStage string `json:"moderation_stage,omitzero" api:"required"`
+	paramObj
+}
+
+func (r ResponseInputItemImageGenerationCallErrorModerationDetailsParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseInputItemImageGenerationCallErrorModerationDetailsParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseInputItemImageGenerationCallErrorModerationDetailsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemImageGenerationCallErrorModerationDetailsParam](
+		"moderation_stage", "input", "output", "unknown",
 	)
 }
 
@@ -18817,6 +18929,8 @@ type ResponseItemImageGenerationCall struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background" api:"nullable"`
+	// Details of a moderation failure, when available.
+	Error ResponseItemImageGenerationCallError `json:"error"`
 	// The output format used for generation.
 	//
 	// Any of "png", "webp", "jpeg".
@@ -18838,6 +18952,7 @@ type ResponseItemImageGenerationCall struct {
 		Type          respjson.Field
 		Action        respjson.Field
 		Background    respjson.Field
+		Error         respjson.Field
 		OutputFormat  respjson.Field
 		Quality       respjson.Field
 		RevisedPrompt respjson.Field
@@ -18850,6 +18965,59 @@ type ResponseItemImageGenerationCall struct {
 // Returns the unmodified JSON received from the API
 func (r ResponseItemImageGenerationCall) RawJSON() string { return r.JSON.raw }
 func (r *ResponseItemImageGenerationCall) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Details of a moderation failure, when available.
+type ResponseItemImageGenerationCallError struct {
+	// The error code.
+	Code string `json:"code" api:"required"`
+	// A description of the error.
+	Message string `json:"message" api:"required"`
+	// The related request parameter.
+	Param string `json:"param" api:"required"`
+	// The error type.
+	Type string `json:"type" api:"required"`
+	// Public details for a `moderation_blocked` error, when available.
+	ModerationDetails ResponseItemImageGenerationCallErrorModerationDetails `json:"moderation_details"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code              respjson.Field
+		Message           respjson.Field
+		Param             respjson.Field
+		Type              respjson.Field
+		ModerationDetails respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseItemImageGenerationCallError) RawJSON() string { return r.JSON.raw }
+func (r *ResponseItemImageGenerationCallError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Public details for a `moderation_blocked` error, when available.
+type ResponseItemImageGenerationCallErrorModerationDetails struct {
+	// Public moderation categories. New category values may be added over time.
+	Categories []string `json:"categories" api:"required"`
+	// The stage where moderation blocked the image generation call.
+	//
+	// Any of "input", "output", "unknown".
+	ModerationStage string `json:"moderation_stage" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Categories      respjson.Field
+		ModerationStage respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseItemImageGenerationCallErrorModerationDetails) RawJSON() string { return r.JSON.raw }
+func (r *ResponseItemImageGenerationCallErrorModerationDetails) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -20193,6 +20361,8 @@ type ResponseOutputItemImageGenerationCall struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background" api:"nullable"`
+	// Details of a moderation failure, when available.
+	Error ResponseOutputItemImageGenerationCallError `json:"error"`
 	// The output format used for generation.
 	//
 	// Any of "png", "webp", "jpeg".
@@ -20214,6 +20384,7 @@ type ResponseOutputItemImageGenerationCall struct {
 		Type          respjson.Field
 		Action        respjson.Field
 		Background    respjson.Field
+		Error         respjson.Field
 		OutputFormat  respjson.Field
 		Quality       respjson.Field
 		RevisedPrompt respjson.Field
@@ -20226,6 +20397,61 @@ type ResponseOutputItemImageGenerationCall struct {
 // Returns the unmodified JSON received from the API
 func (r ResponseOutputItemImageGenerationCall) RawJSON() string { return r.JSON.raw }
 func (r *ResponseOutputItemImageGenerationCall) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Details of a moderation failure, when available.
+type ResponseOutputItemImageGenerationCallError struct {
+	// The error code.
+	Code string `json:"code" api:"required"`
+	// A description of the error.
+	Message string `json:"message" api:"required"`
+	// The related request parameter.
+	Param string `json:"param" api:"required"`
+	// The error type.
+	Type string `json:"type" api:"required"`
+	// Public details for a `moderation_blocked` error, when available.
+	ModerationDetails ResponseOutputItemImageGenerationCallErrorModerationDetails `json:"moderation_details"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code              respjson.Field
+		Message           respjson.Field
+		Param             respjson.Field
+		Type              respjson.Field
+		ModerationDetails respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseOutputItemImageGenerationCallError) RawJSON() string { return r.JSON.raw }
+func (r *ResponseOutputItemImageGenerationCallError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Public details for a `moderation_blocked` error, when available.
+type ResponseOutputItemImageGenerationCallErrorModerationDetails struct {
+	// Public moderation categories. New category values may be added over time.
+	Categories []string `json:"categories" api:"required"`
+	// The stage where moderation blocked the image generation call.
+	//
+	// Any of "input", "output", "unknown".
+	ModerationStage string `json:"moderation_stage" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Categories      respjson.Field
+		ModerationStage respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseOutputItemImageGenerationCallErrorModerationDetails) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponseOutputItemImageGenerationCallErrorModerationDetails) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
