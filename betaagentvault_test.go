@@ -87,7 +87,7 @@ func TestBetaAgentVaultUpdateWithOptionalParams(t *testing.T) {
 			Metadata: map[string]string{
 				"foo": "string",
 			},
-			Name: openai.String("x"),
+			Name: openai.String("Research vault"),
 		},
 	)
 	if err != nil {
