@@ -35,17 +35,8 @@ func NewDecisionService(opts ...option.RequestOption) (r DecisionService) {
 	return
 }
 
-// Use this endpoint to ask classification or scoring questions about the same
-// input. You’ll get the answers back in the order you asked the questions.
-//
-// For text, you can pass a string. You can also send user messages containing
-// `input_text` and `input_image` parts, with up to 128 images per request. Images
-// can be base64 data URLs or publicly accessible HTTP(S) URLs. File IDs aren’t
-// accepted. Other message roles, function calls, files, audio, and item references
-// aren’t supported.
-//
-// Sometimes a question returns a refusal instead of an answer. The result has type
-// `refusal` and includes the question’s name, or `null` if you didn’t give it one.
+// Use this endpoint to quickly answer classification or scoring questions about
+// some input. You can ask multiple questions in one request.
 func (r *DecisionService) New(ctx context.Context, body DecisionNewParams, opts ...option.RequestOption) (res *Decision, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -55,9 +46,14 @@ func (r *DecisionService) New(ctx context.Context, body DecisionNewParams, opts 
 }
 
 type Decision struct {
+	// Answers in question order. Any question can return a refusal instead of an
+	// answer; other questions can still receive answers. A refusal has
+	// `type: "refusal"` and the question's `name`, or `null` if it was unnamed.
 	Answers []DecisionAnswerUnion `json:"answers" api:"required"`
-	Model   string                `json:"model" api:"required"`
-	Usage   DecisionUsage         `json:"usage" api:"required"`
+	// The model used.
+	Model string `json:"model" api:"required"`
+	// Token usage for the request.
+	Usage DecisionUsage `json:"usage" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Answers     respjson.Field
@@ -401,6 +397,7 @@ func (r *DecisionAnswerRefusal) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Token usage for the request.
 type DecisionUsage struct {
 	InputTokens         int64                            `json:"input_tokens" api:"required"`
 	InputTokensDetails  DecisionUsageInputTokensDetails  `json:"input_tokens_details" api:"required"`
@@ -629,8 +626,11 @@ type DecisionNewParams struct {
 	// messages containing text and images. Images can be base64 data URLs or publicly
 	// accessible HTTP(S) URLs; at most 128 images are allowed across all messages in
 	// one request. Files, audio, tools, and item references are not supported.
-	Input     DecisionNewParamsInputUnion      `json:"input,omitzero" api:"required"`
-	Model     string                           `json:"model" api:"required"`
+	Input DecisionNewParamsInputUnion `json:"input,omitzero" api:"required"`
+	// The model to use. Only `gpt-6-luna` is supported.
+	Model string `json:"model" api:"required"`
+	// Ask 1–200 questions about the input. Each question can be a predicate, choice,
+	// or score. Answers come back in the same order.
 	Questions []DecisionNewParamsQuestionUnion `json:"questions,omitzero" api:"required"`
 	// Opaque caller-provided end-user identifier, scoped by the verified org. Match
 	// Responses' limit; this is never the authenticated user identity.
