@@ -8352,11 +8352,17 @@ type ResponseError struct {
 	// A human-readable description of the error.
 	Message      string                    `json:"message" api:"required"`
 	Misalignment ResponseErrorMisalignment `json:"misalignment"`
+	// The request parameter associated with the error, or null if none was recorded.
+	Param string `json:"param" api:"nullable"`
+	// The original error type, or null if it was not recorded.
+	Type string `json:"type" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Code         respjson.Field
 		Message      respjson.Field
 		Misalignment respjson.Field
+		Param        respjson.Field
+		Type         respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -36533,17 +36539,20 @@ func (r *ResponseCompactParams) UnmarshalJSON(data []byte) error {
 type ResponseCompactParamsModel string
 
 const (
-	ResponseCompactParamsModelGPT6Astra            ResponseCompactParamsModel = "gpt-6-astra"
-	ResponseCompactParamsModelGPT6_1Sol            ResponseCompactParamsModel = "gpt-6.1-sol"
-	ResponseCompactParamsModelGPT6Sol              ResponseCompactParamsModel = "gpt-6-sol"
-	ResponseCompactParamsModelGPT6Luna             ResponseCompactParamsModel = "gpt-6-luna"
-	ResponseCompactParamsModelGPT5_6Sol            ResponseCompactParamsModel = "gpt-5.6-sol"
-	ResponseCompactParamsModelGPT5_6Terra          ResponseCompactParamsModel = "gpt-5.6-terra"
-	ResponseCompactParamsModelGPT5_6Luna           ResponseCompactParamsModel = "gpt-5.6-luna"
-	ResponseCompactParamsModelGPT5_5               ResponseCompactParamsModel = "gpt-5.5"
-	ResponseCompactParamsModelGPT5_5_2026_04_23    ResponseCompactParamsModel = "gpt-5.5-2026-04-23"
-	ResponseCompactParamsModelGPT5_4               ResponseCompactParamsModel = "gpt-5.4"
-	ResponseCompactParamsModelGPT5_4Mini           ResponseCompactParamsModel = "gpt-5.4-mini"
+	ResponseCompactParamsModelGPT6Astra         ResponseCompactParamsModel = "gpt-6-astra"
+	ResponseCompactParamsModelGPT6_1Sol         ResponseCompactParamsModel = "gpt-6.1-sol"
+	ResponseCompactParamsModelGPT6Sol           ResponseCompactParamsModel = "gpt-6-sol"
+	ResponseCompactParamsModelGPT6Luna          ResponseCompactParamsModel = "gpt-6-luna"
+	ResponseCompactParamsModelGPT5_6Sol         ResponseCompactParamsModel = "gpt-5.6-sol"
+	ResponseCompactParamsModelGPT5_6Terra       ResponseCompactParamsModel = "gpt-5.6-terra"
+	ResponseCompactParamsModelGPT5_6Luna        ResponseCompactParamsModel = "gpt-5.6-luna"
+	ResponseCompactParamsModelGPT5_5            ResponseCompactParamsModel = "gpt-5.5"
+	ResponseCompactParamsModelGPT5_5_2026_04_23 ResponseCompactParamsModel = "gpt-5.5-2026-04-23"
+	ResponseCompactParamsModelGPT5_4            ResponseCompactParamsModel = "gpt-5.4"
+	ResponseCompactParamsModelGPT5_4Mini        ResponseCompactParamsModel = "gpt-5.4-mini"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	ResponseCompactParamsModelGPT5_4Nano           ResponseCompactParamsModel = "gpt-5.4-nano"
 	ResponseCompactParamsModelGPT5_4Mini2026_03_17 ResponseCompactParamsModel = "gpt-5.4-mini-2026-03-17"
 	ResponseCompactParamsModelGPT5_4Nano2026_03_17 ResponseCompactParamsModel = "gpt-5.4-nano-2026-03-17"
@@ -36559,8 +36568,11 @@ const (
 	ResponseCompactParamsModelGPT5_2ChatLatest    ResponseCompactParamsModel = "gpt-5.2-chat-latest"
 	ResponseCompactParamsModelGPT5_2Pro           ResponseCompactParamsModel = "gpt-5.2-pro"
 	ResponseCompactParamsModelGPT5_2Pro2025_12_11 ResponseCompactParamsModel = "gpt-5.2-pro-2025-12-11"
-	ResponseCompactParamsModelGPT5_1              ResponseCompactParamsModel = "gpt-5.1"
-	ResponseCompactParamsModelGPT5_1_2025_11_13   ResponseCompactParamsModel = "gpt-5.1-2025-11-13"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT5_1            ResponseCompactParamsModel = "gpt-5.1"
+	ResponseCompactParamsModelGPT5_1_2025_11_13 ResponseCompactParamsModel = "gpt-5.1-2025-11-13"
 	// Deprecated: Announced shutdown date: 2026-07-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -36604,8 +36616,14 @@ const (
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
-	ResponseCompactParamsModelGPT4_1Nano           ResponseCompactParamsModel = "gpt-4.1-nano"
-	ResponseCompactParamsModelGPT4_1_2025_04_14    ResponseCompactParamsModel = "gpt-4.1-2025-04-14"
+	ResponseCompactParamsModelGPT4_1Nano ResponseCompactParamsModel = "gpt-4.1-nano"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4_1_2025_04_14 ResponseCompactParamsModel = "gpt-4.1-2025-04-14"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	ResponseCompactParamsModelGPT4_1Mini2025_04_14 ResponseCompactParamsModel = "gpt-4.1-mini-2025-04-14"
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -36660,8 +36678,14 @@ const (
 	// replacements.
 	ResponseCompactParamsModelO1Mini2024_09_12 ResponseCompactParamsModel = "o1-mini-2024-09-12"
 	ResponseCompactParamsModelGPT4o            ResponseCompactParamsModel = "gpt-4o"
-	ResponseCompactParamsModelGPT4o2024_11_20  ResponseCompactParamsModel = "gpt-4o-2024-11-20"
-	ResponseCompactParamsModelGPT4o2024_08_06  ResponseCompactParamsModel = "gpt-4o-2024-08-06"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4o2024_11_20 ResponseCompactParamsModel = "gpt-4o-2024-11-20"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4o2024_08_06 ResponseCompactParamsModel = "gpt-4o-2024-08-06"
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -36721,8 +36745,11 @@ const (
 	// Deprecated: Announced shutdown date: 2026-02-12. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
-	ResponseCompactParamsModelCodexMiniLatest     ResponseCompactParamsModel = "codex-mini-latest"
-	ResponseCompactParamsModelGPT4oMini           ResponseCompactParamsModel = "gpt-4o-mini"
+	ResponseCompactParamsModelCodexMiniLatest ResponseCompactParamsModel = "codex-mini-latest"
+	ResponseCompactParamsModelGPT4oMini       ResponseCompactParamsModel = "gpt-4o-mini"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	ResponseCompactParamsModelGPT4oMini2024_07_18 ResponseCompactParamsModel = "gpt-4o-mini-2024-07-18"
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
