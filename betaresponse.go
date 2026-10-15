@@ -4760,20 +4760,17 @@ func (r *BetaResponseInstructionsUnion) UnmarshalJSON(data []byte) error {
 type BetaResponseModel string
 
 const (
-	BetaResponseModelGPT6Astra         BetaResponseModel = "gpt-6-astra"
-	BetaResponseModelGPT6_1Sol         BetaResponseModel = "gpt-6.1-sol"
-	BetaResponseModelGPT6Sol           BetaResponseModel = "gpt-6-sol"
-	BetaResponseModelGPT6Luna          BetaResponseModel = "gpt-6-luna"
-	BetaResponseModelGPT5_6Sol         BetaResponseModel = "gpt-5.6-sol"
-	BetaResponseModelGPT5_6Terra       BetaResponseModel = "gpt-5.6-terra"
-	BetaResponseModelGPT5_6Luna        BetaResponseModel = "gpt-5.6-luna"
-	BetaResponseModelGPT5_5            BetaResponseModel = "gpt-5.5"
-	BetaResponseModelGPT5_5_2026_04_23 BetaResponseModel = "gpt-5.5-2026-04-23"
-	BetaResponseModelGPT5_4            BetaResponseModel = "gpt-5.4"
-	BetaResponseModelGPT5_4Mini        BetaResponseModel = "gpt-5.4-mini"
-	// Deprecated: Announced shutdown date: 2027-04-01. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
+	BetaResponseModelGPT6Astra            BetaResponseModel = "gpt-6-astra"
+	BetaResponseModelGPT6_1Sol            BetaResponseModel = "gpt-6.1-sol"
+	BetaResponseModelGPT6Sol              BetaResponseModel = "gpt-6-sol"
+	BetaResponseModelGPT6Luna             BetaResponseModel = "gpt-6-luna"
+	BetaResponseModelGPT5_6Sol            BetaResponseModel = "gpt-5.6-sol"
+	BetaResponseModelGPT5_6Terra          BetaResponseModel = "gpt-5.6-terra"
+	BetaResponseModelGPT5_6Luna           BetaResponseModel = "gpt-5.6-luna"
+	BetaResponseModelGPT5_5               BetaResponseModel = "gpt-5.5"
+	BetaResponseModelGPT5_5_2026_04_23    BetaResponseModel = "gpt-5.5-2026-04-23"
+	BetaResponseModelGPT5_4               BetaResponseModel = "gpt-5.4"
+	BetaResponseModelGPT5_4Mini           BetaResponseModel = "gpt-5.4-mini"
 	BetaResponseModelGPT5_4Nano           BetaResponseModel = "gpt-5.4-nano"
 	BetaResponseModelGPT5_4Mini2026_03_17 BetaResponseModel = "gpt-5.4-mini-2026-03-17"
 	BetaResponseModelGPT5_4Nano2026_03_17 BetaResponseModel = "gpt-5.4-nano-2026-03-17"
@@ -4789,11 +4786,8 @@ const (
 	BetaResponseModelGPT5_2ChatLatest    BetaResponseModel = "gpt-5.2-chat-latest"
 	BetaResponseModelGPT5_2Pro           BetaResponseModel = "gpt-5.2-pro"
 	BetaResponseModelGPT5_2Pro2025_12_11 BetaResponseModel = "gpt-5.2-pro-2025-12-11"
-	// Deprecated: Announced shutdown date: 2027-04-01. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
-	BetaResponseModelGPT5_1            BetaResponseModel = "gpt-5.1"
-	BetaResponseModelGPT5_1_2025_11_13 BetaResponseModel = "gpt-5.1-2025-11-13"
+	BetaResponseModelGPT5_1              BetaResponseModel = "gpt-5.1"
+	BetaResponseModelGPT5_1_2025_11_13   BetaResponseModel = "gpt-5.1-2025-11-13"
 	// Deprecated: Announced shutdown date: 2026-07-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -4837,14 +4831,8 @@ const (
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
-	BetaResponseModelGPT4_1Nano BetaResponseModel = "gpt-4.1-nano"
-	// Deprecated: Announced shutdown date: 2027-01-14. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
-	BetaResponseModelGPT4_1_2025_04_14 BetaResponseModel = "gpt-4.1-2025-04-14"
-	// Deprecated: Announced shutdown date: 2027-01-14. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
+	BetaResponseModelGPT4_1Nano           BetaResponseModel = "gpt-4.1-nano"
+	BetaResponseModelGPT4_1_2025_04_14    BetaResponseModel = "gpt-4.1-2025-04-14"
 	BetaResponseModelGPT4_1Mini2025_04_14 BetaResponseModel = "gpt-4.1-mini-2025-04-14"
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -4899,14 +4887,8 @@ const (
 	// replacements.
 	BetaResponseModelO1Mini2024_09_12 BetaResponseModel = "o1-mini-2024-09-12"
 	BetaResponseModelGPT4o            BetaResponseModel = "gpt-4o"
-	// Deprecated: Announced shutdown date: 2027-01-14. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
-	BetaResponseModelGPT4o2024_11_20 BetaResponseModel = "gpt-4o-2024-11-20"
-	// Deprecated: Announced shutdown date: 2027-01-14. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
-	BetaResponseModelGPT4o2024_08_06 BetaResponseModel = "gpt-4o-2024-08-06"
+	BetaResponseModelGPT4o2024_11_20  BetaResponseModel = "gpt-4o-2024-11-20"
+	BetaResponseModelGPT4o2024_08_06  BetaResponseModel = "gpt-4o-2024-08-06"
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -4966,11 +4948,8 @@ const (
 	// Deprecated: Announced shutdown date: 2026-02-12. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
-	BetaResponseModelCodexMiniLatest BetaResponseModel = "codex-mini-latest"
-	BetaResponseModelGPT4oMini       BetaResponseModel = "gpt-4o-mini"
-	// Deprecated: Announced shutdown date: 2027-01-14. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
+	BetaResponseModelCodexMiniLatest     BetaResponseModel = "codex-mini-latest"
+	BetaResponseModelGPT4oMini           BetaResponseModel = "gpt-4o-mini"
 	BetaResponseModelGPT4oMini2024_07_18 BetaResponseModel = "gpt-4o-mini-2024-07-18"
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -9451,17 +9430,11 @@ type BetaResponseError struct {
 	// A human-readable description of the error.
 	Message      string                        `json:"message" api:"required"`
 	Misalignment BetaResponseErrorMisalignment `json:"misalignment"`
-	// The request parameter associated with the error, or null if none was recorded.
-	Param string `json:"param" api:"nullable"`
-	// The original error type, or null if it was not recorded.
-	Type string `json:"type" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Code         respjson.Field
 		Message      respjson.Field
 		Misalignment respjson.Field
-		Param        respjson.Field
-		Type         respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -36928,20 +36901,17 @@ func (u *BetaResponseNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 type BetaResponseNewParamsModel string
 
 const (
-	BetaResponseNewParamsModelGPT6Astra         BetaResponseNewParamsModel = "gpt-6-astra"
-	BetaResponseNewParamsModelGPT6_1Sol         BetaResponseNewParamsModel = "gpt-6.1-sol"
-	BetaResponseNewParamsModelGPT6Sol           BetaResponseNewParamsModel = "gpt-6-sol"
-	BetaResponseNewParamsModelGPT6Luna          BetaResponseNewParamsModel = "gpt-6-luna"
-	BetaResponseNewParamsModelGPT5_6Sol         BetaResponseNewParamsModel = "gpt-5.6-sol"
-	BetaResponseNewParamsModelGPT5_6Terra       BetaResponseNewParamsModel = "gpt-5.6-terra"
-	BetaResponseNewParamsModelGPT5_6Luna        BetaResponseNewParamsModel = "gpt-5.6-luna"
-	BetaResponseNewParamsModelGPT5_5            BetaResponseNewParamsModel = "gpt-5.5"
-	BetaResponseNewParamsModelGPT5_5_2026_04_23 BetaResponseNewParamsModel = "gpt-5.5-2026-04-23"
-	BetaResponseNewParamsModelGPT5_4            BetaResponseNewParamsModel = "gpt-5.4"
-	BetaResponseNewParamsModelGPT5_4Mini        BetaResponseNewParamsModel = "gpt-5.4-mini"
-	// Deprecated: Announced shutdown date: 2027-04-01. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
+	BetaResponseNewParamsModelGPT6Astra            BetaResponseNewParamsModel = "gpt-6-astra"
+	BetaResponseNewParamsModelGPT6_1Sol            BetaResponseNewParamsModel = "gpt-6.1-sol"
+	BetaResponseNewParamsModelGPT6Sol              BetaResponseNewParamsModel = "gpt-6-sol"
+	BetaResponseNewParamsModelGPT6Luna             BetaResponseNewParamsModel = "gpt-6-luna"
+	BetaResponseNewParamsModelGPT5_6Sol            BetaResponseNewParamsModel = "gpt-5.6-sol"
+	BetaResponseNewParamsModelGPT5_6Terra          BetaResponseNewParamsModel = "gpt-5.6-terra"
+	BetaResponseNewParamsModelGPT5_6Luna           BetaResponseNewParamsModel = "gpt-5.6-luna"
+	BetaResponseNewParamsModelGPT5_5               BetaResponseNewParamsModel = "gpt-5.5"
+	BetaResponseNewParamsModelGPT5_5_2026_04_23    BetaResponseNewParamsModel = "gpt-5.5-2026-04-23"
+	BetaResponseNewParamsModelGPT5_4               BetaResponseNewParamsModel = "gpt-5.4"
+	BetaResponseNewParamsModelGPT5_4Mini           BetaResponseNewParamsModel = "gpt-5.4-mini"
 	BetaResponseNewParamsModelGPT5_4Nano           BetaResponseNewParamsModel = "gpt-5.4-nano"
 	BetaResponseNewParamsModelGPT5_4Mini2026_03_17 BetaResponseNewParamsModel = "gpt-5.4-mini-2026-03-17"
 	BetaResponseNewParamsModelGPT5_4Nano2026_03_17 BetaResponseNewParamsModel = "gpt-5.4-nano-2026-03-17"
@@ -36957,11 +36927,8 @@ const (
 	BetaResponseNewParamsModelGPT5_2ChatLatest    BetaResponseNewParamsModel = "gpt-5.2-chat-latest"
 	BetaResponseNewParamsModelGPT5_2Pro           BetaResponseNewParamsModel = "gpt-5.2-pro"
 	BetaResponseNewParamsModelGPT5_2Pro2025_12_11 BetaResponseNewParamsModel = "gpt-5.2-pro-2025-12-11"
-	// Deprecated: Announced shutdown date: 2027-04-01. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
-	BetaResponseNewParamsModelGPT5_1            BetaResponseNewParamsModel = "gpt-5.1"
-	BetaResponseNewParamsModelGPT5_1_2025_11_13 BetaResponseNewParamsModel = "gpt-5.1-2025-11-13"
+	BetaResponseNewParamsModelGPT5_1              BetaResponseNewParamsModel = "gpt-5.1"
+	BetaResponseNewParamsModelGPT5_1_2025_11_13   BetaResponseNewParamsModel = "gpt-5.1-2025-11-13"
 	// Deprecated: Announced shutdown date: 2026-07-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -37005,14 +36972,8 @@ const (
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
-	BetaResponseNewParamsModelGPT4_1Nano BetaResponseNewParamsModel = "gpt-4.1-nano"
-	// Deprecated: Announced shutdown date: 2027-01-14. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
-	BetaResponseNewParamsModelGPT4_1_2025_04_14 BetaResponseNewParamsModel = "gpt-4.1-2025-04-14"
-	// Deprecated: Announced shutdown date: 2027-01-14. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
+	BetaResponseNewParamsModelGPT4_1Nano           BetaResponseNewParamsModel = "gpt-4.1-nano"
+	BetaResponseNewParamsModelGPT4_1_2025_04_14    BetaResponseNewParamsModel = "gpt-4.1-2025-04-14"
 	BetaResponseNewParamsModelGPT4_1Mini2025_04_14 BetaResponseNewParamsModel = "gpt-4.1-mini-2025-04-14"
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -37067,14 +37028,8 @@ const (
 	// replacements.
 	BetaResponseNewParamsModelO1Mini2024_09_12 BetaResponseNewParamsModel = "o1-mini-2024-09-12"
 	BetaResponseNewParamsModelGPT4o            BetaResponseNewParamsModel = "gpt-4o"
-	// Deprecated: Announced shutdown date: 2027-01-14. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
-	BetaResponseNewParamsModelGPT4o2024_11_20 BetaResponseNewParamsModel = "gpt-4o-2024-11-20"
-	// Deprecated: Announced shutdown date: 2027-01-14. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
-	BetaResponseNewParamsModelGPT4o2024_08_06 BetaResponseNewParamsModel = "gpt-4o-2024-08-06"
+	BetaResponseNewParamsModelGPT4o2024_11_20  BetaResponseNewParamsModel = "gpt-4o-2024-11-20"
+	BetaResponseNewParamsModelGPT4o2024_08_06  BetaResponseNewParamsModel = "gpt-4o-2024-08-06"
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -37134,11 +37089,8 @@ const (
 	// Deprecated: Announced shutdown date: 2026-02-12. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
-	BetaResponseNewParamsModelCodexMiniLatest BetaResponseNewParamsModel = "codex-mini-latest"
-	BetaResponseNewParamsModelGPT4oMini       BetaResponseNewParamsModel = "gpt-4o-mini"
-	// Deprecated: Announced shutdown date: 2027-01-14. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
+	BetaResponseNewParamsModelCodexMiniLatest     BetaResponseNewParamsModel = "codex-mini-latest"
+	BetaResponseNewParamsModelGPT4oMini           BetaResponseNewParamsModel = "gpt-4o-mini"
 	BetaResponseNewParamsModelGPT4oMini2024_07_18 BetaResponseNewParamsModel = "gpt-4o-mini-2024-07-18"
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -37829,20 +37781,17 @@ func (r *BetaResponseCompactParams) UnmarshalJSON(data []byte) error {
 type BetaResponseCompactParamsModel string
 
 const (
-	BetaResponseCompactParamsModelGPT6Astra         BetaResponseCompactParamsModel = "gpt-6-astra"
-	BetaResponseCompactParamsModelGPT6_1Sol         BetaResponseCompactParamsModel = "gpt-6.1-sol"
-	BetaResponseCompactParamsModelGPT6Sol           BetaResponseCompactParamsModel = "gpt-6-sol"
-	BetaResponseCompactParamsModelGPT6Luna          BetaResponseCompactParamsModel = "gpt-6-luna"
-	BetaResponseCompactParamsModelGPT5_6Sol         BetaResponseCompactParamsModel = "gpt-5.6-sol"
-	BetaResponseCompactParamsModelGPT5_6Terra       BetaResponseCompactParamsModel = "gpt-5.6-terra"
-	BetaResponseCompactParamsModelGPT5_6Luna        BetaResponseCompactParamsModel = "gpt-5.6-luna"
-	BetaResponseCompactParamsModelGPT5_5            BetaResponseCompactParamsModel = "gpt-5.5"
-	BetaResponseCompactParamsModelGPT5_5_2026_04_23 BetaResponseCompactParamsModel = "gpt-5.5-2026-04-23"
-	BetaResponseCompactParamsModelGPT5_4            BetaResponseCompactParamsModel = "gpt-5.4"
-	BetaResponseCompactParamsModelGPT5_4Mini        BetaResponseCompactParamsModel = "gpt-5.4-mini"
-	// Deprecated: Announced shutdown date: 2027-04-01. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
+	BetaResponseCompactParamsModelGPT6Astra            BetaResponseCompactParamsModel = "gpt-6-astra"
+	BetaResponseCompactParamsModelGPT6_1Sol            BetaResponseCompactParamsModel = "gpt-6.1-sol"
+	BetaResponseCompactParamsModelGPT6Sol              BetaResponseCompactParamsModel = "gpt-6-sol"
+	BetaResponseCompactParamsModelGPT6Luna             BetaResponseCompactParamsModel = "gpt-6-luna"
+	BetaResponseCompactParamsModelGPT5_6Sol            BetaResponseCompactParamsModel = "gpt-5.6-sol"
+	BetaResponseCompactParamsModelGPT5_6Terra          BetaResponseCompactParamsModel = "gpt-5.6-terra"
+	BetaResponseCompactParamsModelGPT5_6Luna           BetaResponseCompactParamsModel = "gpt-5.6-luna"
+	BetaResponseCompactParamsModelGPT5_5               BetaResponseCompactParamsModel = "gpt-5.5"
+	BetaResponseCompactParamsModelGPT5_5_2026_04_23    BetaResponseCompactParamsModel = "gpt-5.5-2026-04-23"
+	BetaResponseCompactParamsModelGPT5_4               BetaResponseCompactParamsModel = "gpt-5.4"
+	BetaResponseCompactParamsModelGPT5_4Mini           BetaResponseCompactParamsModel = "gpt-5.4-mini"
 	BetaResponseCompactParamsModelGPT5_4Nano           BetaResponseCompactParamsModel = "gpt-5.4-nano"
 	BetaResponseCompactParamsModelGPT5_4Mini2026_03_17 BetaResponseCompactParamsModel = "gpt-5.4-mini-2026-03-17"
 	BetaResponseCompactParamsModelGPT5_4Nano2026_03_17 BetaResponseCompactParamsModel = "gpt-5.4-nano-2026-03-17"
@@ -37858,11 +37807,8 @@ const (
 	BetaResponseCompactParamsModelGPT5_2ChatLatest    BetaResponseCompactParamsModel = "gpt-5.2-chat-latest"
 	BetaResponseCompactParamsModelGPT5_2Pro           BetaResponseCompactParamsModel = "gpt-5.2-pro"
 	BetaResponseCompactParamsModelGPT5_2Pro2025_12_11 BetaResponseCompactParamsModel = "gpt-5.2-pro-2025-12-11"
-	// Deprecated: Announced shutdown date: 2027-04-01. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
-	BetaResponseCompactParamsModelGPT5_1            BetaResponseCompactParamsModel = "gpt-5.1"
-	BetaResponseCompactParamsModelGPT5_1_2025_11_13 BetaResponseCompactParamsModel = "gpt-5.1-2025-11-13"
+	BetaResponseCompactParamsModelGPT5_1              BetaResponseCompactParamsModel = "gpt-5.1"
+	BetaResponseCompactParamsModelGPT5_1_2025_11_13   BetaResponseCompactParamsModel = "gpt-5.1-2025-11-13"
 	// Deprecated: Announced shutdown date: 2026-07-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -37906,14 +37852,8 @@ const (
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
-	BetaResponseCompactParamsModelGPT4_1Nano BetaResponseCompactParamsModel = "gpt-4.1-nano"
-	// Deprecated: Announced shutdown date: 2027-01-14. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
-	BetaResponseCompactParamsModelGPT4_1_2025_04_14 BetaResponseCompactParamsModel = "gpt-4.1-2025-04-14"
-	// Deprecated: Announced shutdown date: 2027-01-14. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
+	BetaResponseCompactParamsModelGPT4_1Nano           BetaResponseCompactParamsModel = "gpt-4.1-nano"
+	BetaResponseCompactParamsModelGPT4_1_2025_04_14    BetaResponseCompactParamsModel = "gpt-4.1-2025-04-14"
 	BetaResponseCompactParamsModelGPT4_1Mini2025_04_14 BetaResponseCompactParamsModel = "gpt-4.1-mini-2025-04-14"
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -37968,14 +37908,8 @@ const (
 	// replacements.
 	BetaResponseCompactParamsModelO1Mini2024_09_12 BetaResponseCompactParamsModel = "o1-mini-2024-09-12"
 	BetaResponseCompactParamsModelGPT4o            BetaResponseCompactParamsModel = "gpt-4o"
-	// Deprecated: Announced shutdown date: 2027-01-14. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
-	BetaResponseCompactParamsModelGPT4o2024_11_20 BetaResponseCompactParamsModel = "gpt-4o-2024-11-20"
-	// Deprecated: Announced shutdown date: 2027-01-14. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
-	BetaResponseCompactParamsModelGPT4o2024_08_06 BetaResponseCompactParamsModel = "gpt-4o-2024-08-06"
+	BetaResponseCompactParamsModelGPT4o2024_11_20  BetaResponseCompactParamsModel = "gpt-4o-2024-11-20"
+	BetaResponseCompactParamsModelGPT4o2024_08_06  BetaResponseCompactParamsModel = "gpt-4o-2024-08-06"
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -38035,11 +37969,8 @@ const (
 	// Deprecated: Announced shutdown date: 2026-02-12. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
-	BetaResponseCompactParamsModelCodexMiniLatest BetaResponseCompactParamsModel = "codex-mini-latest"
-	BetaResponseCompactParamsModelGPT4oMini       BetaResponseCompactParamsModel = "gpt-4o-mini"
-	// Deprecated: Announced shutdown date: 2027-01-14. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
+	BetaResponseCompactParamsModelCodexMiniLatest     BetaResponseCompactParamsModel = "codex-mini-latest"
+	BetaResponseCompactParamsModelGPT4oMini           BetaResponseCompactParamsModel = "gpt-4o-mini"
 	BetaResponseCompactParamsModelGPT4oMini2024_07_18 BetaResponseCompactParamsModel = "gpt-4o-mini-2024-07-18"
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
