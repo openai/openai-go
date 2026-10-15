@@ -470,6 +470,9 @@ type SessionInputTranscriptDelta string                       // Always "session
 type SessionInstructionsAppend string                         // Always "session.instructions.append"
 type SessionInstructionsAppended string                       // Always "session.instructions.appended"
 type SessionOutputAudioDelta string                           // Always "session.output_audio.delta"
+type SessionOutputAudioFixturePlay string                     // Always "session.output_audio.fixture.play"
+type SessionOutputAudioFixturePlayed string                   // Always "session.output_audio.fixture.played"
+type SessionOutputAudioFixturePlaying string                  // Always "session.output_audio.fixture.playing"
 type SessionOutputTranscriptDelta string                      // Always "session.output_transcript.delta"
 type SessionStart string                                      // Always "session.start"
 type SessionStarted string                                    // Always "session.started"
@@ -1358,6 +1361,15 @@ func (c SessionInstructionsAppended) Default() SessionInstructionsAppended {
 func (c SessionOutputAudioDelta) Default() SessionOutputAudioDelta {
 	return "session.output_audio.delta"
 }
+func (c SessionOutputAudioFixturePlay) Default() SessionOutputAudioFixturePlay {
+	return "session.output_audio.fixture.play"
+}
+func (c SessionOutputAudioFixturePlayed) Default() SessionOutputAudioFixturePlayed {
+	return "session.output_audio.fixture.played"
+}
+func (c SessionOutputAudioFixturePlaying) Default() SessionOutputAudioFixturePlaying {
+	return "session.output_audio.fixture.playing"
+}
 func (c SessionOutputTranscriptDelta) Default() SessionOutputTranscriptDelta {
 	return "session.output_transcript.delta"
 }
@@ -1978,6 +1990,9 @@ func (c SessionInputTranscriptDelta) MarshalJSON() ([]byte, error)         { ret
 func (c SessionInstructionsAppend) MarshalJSON() ([]byte, error)           { return marshalString(c) }
 func (c SessionInstructionsAppended) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c SessionOutputAudioDelta) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c SessionOutputAudioFixturePlay) MarshalJSON() ([]byte, error)       { return marshalString(c) }
+func (c SessionOutputAudioFixturePlayed) MarshalJSON() ([]byte, error)     { return marshalString(c) }
+func (c SessionOutputAudioFixturePlaying) MarshalJSON() ([]byte, error)    { return marshalString(c) }
 func (c SessionOutputTranscriptDelta) MarshalJSON() ([]byte, error)        { return marshalString(c) }
 func (c SessionStart) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c SessionStarted) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
