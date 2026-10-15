@@ -129,21 +129,13 @@ def evaluate(
     fetch: bool = False,
     pull_heads: list[str] | None = None,
     measurement: tuple[dict[str, Any], bytes] | None = None,
-    policy_sha: str | None = None,
 ) -> tuple[dict[str, Any], bytes]:
     """In a queue, isolate each PR but budget the complete merged candidate."""
     base, head = report.require_sha(base), report.require_sha(head)
-    policy_sha = report.require_sha(policy_sha or base)
-    result: dict[str, Any] = {
-        "base_sha": base,
-        "policy_sha": policy_sha,
-        "head_sha": head,
-        "checks": {},
-    }
+    result: dict[str, Any] = {"base_sha": base, "head_sha": head, "checks": {}}
     checks = result["checks"]
     proposed_limits: list[int] = []
     try:
-        read_budget(repo, policy_sha)
         read_budget(repo, base)
         read_budget(repo, head)
         if pull_heads is not None and not pull_heads:
@@ -160,7 +152,7 @@ def evaluate(
 
     patch = b""
     try:
-        limit = read_budget(repo, policy_sha)
+        limit = read_budget(repo, base)
         result["limit"] = limit
         measured, patch = (
             measurement
@@ -211,8 +203,7 @@ def write_result(out: Path, result: dict[str, Any], patch: bytes = b"") -> None:
         ]
         lines += [
             "",
-            f"Policy: `{result['policy_sha']}` · candidate: `{result['head_sha']}`.",
-            f"Target {result.get('target_branch', 'baseline')}: `{result['base_sha']}`.",
+            f"Policy: `{result['base_sha']}` · candidate: `{result['head_sha']}`.",
             f"Verified generated snapshot: `{result['generated']['commit']}`.",
             "",
             "| Largest custom patches | Added | Deleted |",
@@ -306,60 +297,42 @@ def github_evaluate(
         or run["path"].split("@", 1)[0] != ".github/workflows/castiron-custom-code.yml"
         or run["status"] != "completed"
         or run["run_attempt"] != signal["run_attempt"]
-        or run["event"] != signal["event"]
     ):
         raise ValueError("unexpected or superseded source workflow run")
     head = report.require_sha(run["head_sha"])
-    measured = None
     if run["event"] == "pull_request":
-        current = report.current_pull(repository, run)
-        if current is None:
-            raise ValueError(
-                "source run must identify exactly one current PR targeting main or next"
-            )
-        _, branch = current
-        if trusted_report_dir is not None:
-            measured = json.loads((trusted_report_dir / "report.json").read_text())
-            base = report.require_sha(measured["target_base_sha"])
-        else:
-            base = (
-                main
-                if branch == "main"
-                else report.require_sha(
-                    report.api("GET", f"{root}/git/ref/heads/{branch}")["object"]["sha"]
-                )
-            )
+        associated = report.associated_pulls(repository, run)
+        current: list[int] = []
+        for number in sorted({int(pr["number"]) for pr in associated}):
+            if number <= 0:
+                raise ValueError("invalid associated PR number")
+            pull = report.api("GET", f"{root}/pulls/{number}")
+            if (
+                pull["state"] == "open"
+                and pull["head"]["sha"] == head
+                and pull["base"]["repo"]["full_name"] == repository
+                and pull["base"]["ref"] == branch
+            ):
+                current.append(number)
+        if len(current) != 1:
+            raise ValueError("source run must identify exactly one current PR targeting main")
     elif run["event"] == "merge_group":
-        # Both the target baseline and trusted policy must still be current.
-        branch = next(
-            (
-                name
-                for name in report.TARGET_BRANCHES
-                if run["head_branch"].startswith(f"gh-readonly-queue/{name}/")
-            ),
-            "",
-        )
-        if not branch:
-            raise ValueError("queue signal does not target main or next")
+        # Queue candidates independently validate actual current main. A PR's
+        # captured snapshot must never authorize a different merged candidate.
         current_main = report.require_sha(
-            report.api("GET", f"{root}/git/ref/heads/main")["object"]["sha"]
+            report.api("GET", f"{root}/git/ref/heads/{branch}")["object"]["sha"]
         )
         if main != current_main:
             raise ValueError("trusted checkout is stale; rerun against current main")
-        base = (
-            main
-            if branch == "main"
-            else report.require_sha(
-                report.api("GET", f"{root}/git/ref/heads/{branch}")["object"]["sha"]
-            )
-        )
+        if not run["head_branch"].startswith(f"gh-readonly-queue/{branch}/"):
+            raise ValueError("queue signal does not target main")
     else:
         raise ValueError("unsupported budget event")
     # PR statuses can outlive their base revision. Require the queue's fresh,
     # combined candidate check before merging rather than relying on those alone.
     rules = report.api("GET", f"{root}/rules/branches/{branch}")
     if not any(rule["type"] == "merge_queue" for rule in rules):
-        raise ValueError(f"{branch} must require a merge queue before activating the budget gate")
+        raise ValueError("main must require a merge queue before activating the budget gate")
     measurement = None
     if trusted_report_dir is not None:
         # Only the preceding main-branch step may supply this directory. Never
@@ -367,13 +340,8 @@ def github_evaluate(
         # object store, avoiding a second snapshot fetch/hash/diff computation.
         if run["event"] != "pull_request":
             raise ValueError("only PR runs can reuse the trusted report")
-        assert measured is not None
-        if (
-            measured["target_branch"] != branch
-            or measured["policy_sha"] != main
-            or measured["head_sha"] != head
-            or (branch == "main" and base != main)
-        ):
+        measured = json.loads((trusted_report_dir / "report.json").read_text())
+        if measured["target_base_sha"] != main or measured["head_sha"] != head:
             raise ValueError("trusted report does not match the captured base/head")
         if report.git(repo, "rev-parse", "--is-bare-repository").strip() != b"true":
             raise ValueError("trusted report must use a bare object store")
@@ -383,13 +351,11 @@ def github_evaluate(
             raise ValueError("Git object directory must be fresh")
         subprocess.run(["git", "init", "--bare", str(repo)], check=True, capture_output=True)
         report.git(repo, "remote", "add", "origin", f"https://github.com/{repository}.git")
-        report.git(
-            repo, "fetch", "--quiet", "--no-tags", "origin", *dict.fromkeys((main, base, head))
-        )
+        report.git(repo, "fetch", "--quiet", "--no-tags", "origin", main, head)
     pull_heads: list[str] | None = None
     if run["event"] == "merge_group":
-        if report.git(repo, "merge-base", base, head).decode().strip() != base:
-            raise ValueError("merge group does not include current target; retry the current group")
+        if report.git(repo, "merge-base", main, head).decode().strip() != main:
+            raise ValueError("merge group does not include current main; retry the current group")
         pull_heads = []
         entries = queued_entries(repository, branch)
         if not any(queue_head == head for _, queue_head in entries):
@@ -402,18 +368,15 @@ def github_evaluate(
                 pull_heads.append(candidate)
         if not pull_heads:
             raise ValueError("cannot verify merge-group PR membership; retry the current group")
-    result, patch = evaluate(
+    return evaluate(
         repo,
-        base,
+        main,
         head,
         public=not metadata["private"],
         fetch=True,
         pull_heads=pull_heads,
         measurement=measurement,
-        policy_sha=main,
     )
-    result["target_branch"] = branch
-    return result, patch
 
 
 def main() -> int:
@@ -461,11 +424,8 @@ def main() -> int:
     write_result(args.out, result, patch)
     if args.command == "github" and "GITHUB_OUTPUT" in os.environ:
         with Path(os.environ["GITHUB_OUTPUT"]).open("a") as output:
-            output.writelines(
-                f"{name}={result['checks'][name]['state']}\n" for name in ("isolation", "budget")
-            )
-            output.write(f"target_branch={result.get('target_branch', '')}\n")
-            output.write(f"policy_sha={result.get('policy_sha', '')}\n")
+            for name in ("isolation", "budget"):
+                output.write(f"{name}={result['checks'][name]['state']}\n")
             output.write(f"base_sha={result.get('base_sha', '')}\n")
             output.write(f"head_sha={result.get('head_sha', '')}\n")
     return 0 if all(c["state"] == "success" for c in result["checks"].values()) else 1

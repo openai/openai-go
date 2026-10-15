@@ -92,29 +92,6 @@ class BudgetTests(GitTestCase):
         self.assertEqual(result["checks"]["isolation"]["state"], "success")
         self.assertEqual(result["checks"]["budget"]["state"], "success")
 
-    def test_next_uses_main_policy_and_target_diff_independently(self) -> None:
-        self.git("checkout", "-q", "-b", "next", self.base)
-        self.policy(100)
-        target = self.commit("next carries a different policy")
-        self.write("generated.py", "generated\n" + "custom\n" * 11)
-        head = self.commit("next change")
-        result = self.evaluate(head, base=target, policy_sha=self.base)
-        self.assertEqual(result["base_sha"], target)
-        self.assertEqual(result["policy_sha"], self.base)
-        self.assertEqual(result["checks"]["isolation"]["state"], "success")
-        self.assertEqual(result["checks"]["budget"]["state"], "failure")
-        self.assertEqual(result["limit"], 10)
-        self.git("checkout", "-q", "main")
-        self.policy(20)
-        policy = self.commit("approved main policy")
-        result = self.evaluate(head, base=target, policy_sha=policy)
-        self.assertEqual(result["checks"]["budget"]["state"], "success")
-        self.policy(1)
-        policy = self.commit("main lowers policy after PR passed")
-        result = self.evaluate(head, base=target, policy_sha=policy, pull_heads=[head])
-        self.assertEqual(result["checks"]["budget"]["state"], "failure")
-        self.assertEqual(result["limit"], 1)
-
     def test_decrease_must_fit_current_usage(self) -> None:
         self.write("generated.py", "generated\ncustom\ncustom\n")
         base = self.commit()
@@ -233,9 +210,7 @@ class BudgetTests(GitTestCase):
             "--out",
             str(out),
         ]
-        completed = subprocess.run(
-            command, cwd=self.repo, capture_output=True, text=True, check=False
-        )
+        completed = subprocess.run(command, cwd=self.repo, capture_output=True, text=True, check=False)
         self.assertEqual(completed.returncode, 0, completed.stderr + completed.stdout)
         self.assertEqual(json.loads((out / "budget.json").read_text())["total"], 0)
 
