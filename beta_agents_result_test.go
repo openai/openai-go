@@ -215,6 +215,31 @@ func TestBetaAgentFinalResultUnhandledFollowup(t *testing.T) {
 	}
 }
 
+func TestBetaAgentFinalResultRechecksReplacedRequiredActions(t *testing.T) {
+	for _, clear := range []bool{false, true} {
+		t.Run(fmt.Sprintf("clear_%t", clear), func(t *testing.T) {
+			action := `{"type":"function_call","turn_id":"root","call_id":"call","name":"lookup","arguments":{}}`
+			actions := strings.TrimSuffix(strings.Repeat(action+",", 4096), ",")
+			events := []string{betaResultTurn("created", "root", "null"), agentEvent("requires_action", "pending", `,"session":{"id":"session","required_actions":[`+actions+`]}`)}
+			for i := 0; i < 4096; i++ {
+				events = append(events, agentEvent("turn.output_text.delta", fmt.Sprintf("delta-%d", i), `,"turn_id":"root","delta":"x"`))
+			}
+			if clear {
+				events = append(events, agentEvent("in_progress", "clear", ""))
+			}
+			events = append(events, agentEvent("requires_action", "replacement", `,"session":{"id":"session","required_actions":[{"type":"function_call","turn_id":"root","call_id":"unhandled","name":"missing","arguments":{}}]}`))
+			_, client := newAgentHelperServer(t, events...)
+			calls := 0
+			stream := client.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{Input: "question", ToolHandlers: map[string]openai.AgentToolHandler{"lookup": func(context.Context, map[string]any) (any, error) { calls++; return nil, nil }}})
+			_, err := stream.FinalResult()
+			var failure *openai.BetaAgentTurnResultError
+			if !errors.As(err, &failure) || failure.Reason != "requires_action" || len(failure.RequiredActions) != 1 || failure.RequiredActions[0].Name != "missing" || calls != 0 {
+				t.Fatalf("unexpected result: err=%v calls=%d", err, calls)
+			}
+		})
+	}
+}
+
 func TestBetaAgentFinalResultIgnoresLaterTurns(t *testing.T) {
 	events := []string{betaResultTurn("created", "root", "null"), betaResultMessage("done", "m", "root", `"final_answer"`, "answer", 0), betaResultTurn("completed", "root", "null"), betaResultIdle(), betaResultTurn("created", "later", "null"), agentEvent("failed", "later-failure", `,"session":{"id":"session","status":"failed"}`), `{"type":"error","error":{"message":"later delivery error"}}`}
 	stream := openai.BetaAgentSessionWithResultCollection(betaResultCreateStream(t, events, false))
