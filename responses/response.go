@@ -12519,6 +12519,9 @@ type ResponseInputItemUnion struct {
 	Result           string                         `json:"result"`
 	// This field is from variant [ResponseInputItemImageGenerationCall].
 	Background string `json:"background"`
+	// This field is a union of [ResponseInputItemImageGenerationCallError], [string],
+	// [McpToolCallErrorUnion]
+	Error ResponseInputItemUnionError `json:"error"`
 	// This field is from variant [ResponseInputItemImageGenerationCall].
 	OutputFormat string `json:"output_format"`
 	// This field is from variant [ResponseInputItemImageGenerationCall].
@@ -12537,11 +12540,9 @@ type ResponseInputItemUnion struct {
 	// This field is from variant [ResponseInputItemShellCallOutput].
 	MaxOutputLength int64 `json:"max_output_length"`
 	// This field is from variant [ResponseInputItemApplyPatchCall].
-	Operation   ResponseInputItemApplyPatchCallOperationUnion `json:"operation"`
-	ServerLabel string                                        `json:"server_label"`
-	// This field is a union of [string], [McpToolCallErrorUnion]
-	Error             ResponseInputItemUnionError `json:"error"`
-	ApprovalRequestID string                      `json:"approval_request_id"`
+	Operation         ResponseInputItemApplyPatchCallOperationUnion `json:"operation"`
+	ServerLabel       string                                        `json:"server_label"`
+	ApprovalRequestID string                                        `json:"approval_request_id"`
 	// This field is from variant [ResponseInputItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [ResponseInputItemMcpApprovalResponse].
@@ -12577,6 +12578,7 @@ type ResponseInputItemUnion struct {
 		EncryptedContent         respjson.Field
 		Result                   respjson.Field
 		Background               respjson.Field
+		Error                    respjson.Field
 		OutputFormat             respjson.Field
 		Quality                  respjson.Field
 		RevisedPrompt            respjson.Field
@@ -12588,7 +12590,6 @@ type ResponseInputItemUnion struct {
 		MaxOutputLength          respjson.Field
 		Operation                respjson.Field
 		ServerLabel              respjson.Field
-		Error                    respjson.Field
 		ApprovalRequestID        respjson.Field
 		Approve                  respjson.Field
 		Reason                   respjson.Field
@@ -13193,18 +13194,25 @@ func (r *ResponseInputItemUnionTools) UnmarshalJSON(data []byte) error {
 type ResponseInputItemUnionError struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
-	Code     int64  `json:"code"`
-	Message  string `json:"message"`
-	Type     string `json:"type"`
+	// This field is a union of [string], [int64]
+	Code    ResponseInputItemUnionErrorCode `json:"code"`
+	Message string                          `json:"message"`
+	// This field is from variant [ResponseInputItemImageGenerationCallError].
+	Param string `json:"param"`
+	Type  string `json:"type"`
+	// This field is from variant [ResponseInputItemImageGenerationCallError].
+	ModerationDetails ResponseInputItemImageGenerationCallErrorModerationDetails `json:"moderation_details"`
 	// This field is from variant [McpToolCallErrorUnion].
 	Content any `json:"content"`
 	JSON    struct {
-		OfString respjson.Field
-		Code     respjson.Field
-		Message  respjson.Field
-		Type     respjson.Field
-		Content  respjson.Field
-		raw      string
+		OfString          respjson.Field
+		Code              respjson.Field
+		Message           respjson.Field
+		Param             respjson.Field
+		Type              respjson.Field
+		ModerationDetails respjson.Field
+		Content           respjson.Field
+		raw               string
 	} `json:"-"`
 }
 
@@ -13223,6 +13231,31 @@ func (r *ResponseInputItemUnionError) UnmarshalJSON(data []byte) error {
 	}
 	*r = decoded
 	return nil
+}
+
+// ResponseInputItemUnionErrorCode is an implicit subunion of
+// [ResponseInputItemUnion]. ResponseInputItemUnionErrorCode provides convenient
+// access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [ResponseInputItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfInt]
+type ResponseInputItemUnionErrorCode struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a [int64] instead of an object.
+	OfInt int64 `json:",inline"`
+	JSON  struct {
+		OfString respjson.Field
+		OfInt    respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (r *ResponseInputItemUnionErrorCode) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // ToParam converts this ResponseInputItemUnion to a ResponseInputItemUnionParam.
@@ -16160,7 +16193,9 @@ func (u responseInputItemUnionParamTools) AsAny() any { return u.any }
 //
 // Or use AsAny() to get the underlying value
 func (u ResponseInputItemUnionParam) GetError() (res responseInputItemUnionParamError) {
-	if vt := u.OfMcpListTools; vt != nil && vt.Error.Valid() {
+	if vt := u.OfImageGenerationCall; vt != nil {
+		res.any = &vt.Error
+	} else if vt := u.OfMcpListTools; vt != nil && vt.Error.Valid() {
 		res.any = &vt.Error.Value
 	} else if vt := u.OfMcpCall; vt != nil {
 		res.any = vt.Error.asAny()
@@ -16168,13 +16203,15 @@ func (u ResponseInputItemUnionParam) GetError() (res responseInputItemUnionParam
 	return
 }
 
-// Can have the runtime types [*string], [*McpToolCallErrorMcpProtocolErrorParam],
+// Can have the runtime types [*ResponseInputItemImageGenerationCallErrorParam],
+// [*string], [*McpToolCallErrorMcpProtocolErrorParam],
 // [*McpToolCallErrorMcpToolExecutionErrorParam], [*McpToolCallErrorHTTPErrorParam]
 type responseInputItemUnionParamError struct{ any }
 
 // Use the following switch statement to get the type of the union:
 //
 //	switch u.AsAny().(type) {
+//	case *responses.ResponseInputItemImageGenerationCallErrorParam:
 //	case *string:
 //	case *responses.McpToolCallErrorMcpProtocolErrorParam:
 //	case *responses.McpToolCallErrorMcpToolExecutionErrorParam:
@@ -16185,28 +16222,19 @@ type responseInputItemUnionParamError struct{ any }
 func (u responseInputItemUnionParamError) AsAny() any { return u.any }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u responseInputItemUnionParamError) GetCode() *int64 {
+func (u responseInputItemUnionParamError) GetParam() *string {
 	switch vt := u.any.(type) {
-	case *McpToolCallErrorUnionParam:
-		return vt.GetCode()
+	case *ResponseInputItemImageGenerationCallErrorParam:
+		return paramutil.AddrIfPresent(vt.Param)
 	}
 	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u responseInputItemUnionParamError) GetMessage() *string {
+func (u responseInputItemUnionParamError) GetModerationDetails() *ResponseInputItemImageGenerationCallErrorModerationDetailsParam {
 	switch vt := u.any.(type) {
-	case *McpToolCallErrorUnionParam:
-		return vt.GetMessage()
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u responseInputItemUnionParamError) GetType() *string {
-	switch vt := u.any.(type) {
-	case *McpToolCallErrorUnionParam:
-		return vt.GetType()
+	case *ResponseInputItemImageGenerationCallErrorParam:
+		return &vt.ModerationDetails
 	}
 	return nil
 }
@@ -16216,6 +16244,56 @@ func (u responseInputItemUnionParamError) GetContent() *any {
 	switch vt := u.any.(type) {
 	case *McpToolCallErrorUnionParam:
 		return vt.GetContent()
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u responseInputItemUnionParamError) GetCode() (res responseInputItemUnionParamErrorCode) {
+	switch vt := u.any.(type) {
+	case *ResponseInputItemImageGenerationCallErrorParam:
+		if vt.Code.Valid() {
+			res.any = &vt.Code.Value
+		}
+	case *McpToolCallErrorUnionParam:
+		res.any = vt.GetCode()
+	}
+	return res
+}
+
+// Can have the runtime types [*string], [*int64]
+type responseInputItemUnionParamErrorCode struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *string:
+//	case *int64:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u responseInputItemUnionParamErrorCode) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u responseInputItemUnionParamError) GetMessage() *string {
+	switch vt := u.any.(type) {
+	case *ResponseInputItemImageGenerationCallErrorParam:
+		return (*string)(&vt.Message)
+	case *McpToolCallErrorUnionParam:
+		return vt.GetMessage()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u responseInputItemUnionParamError) GetType() *string {
+	switch vt := u.any.(type) {
+	case *ResponseInputItemImageGenerationCallErrorParam:
+		return (*string)(&vt.Type)
+	case *McpToolCallErrorUnionParam:
+		return vt.GetType()
 	}
 	return nil
 }
@@ -18155,6 +18233,9 @@ type ResponseItemUnion struct {
 	Result      string `json:"result"`
 	// This field is from variant [ResponseItemImageGenerationCall].
 	Background string `json:"background"`
+	// This field is a union of [ResponseItemImageGenerationCallError], [string],
+	// [McpToolCallErrorUnion]
+	Error ResponseItemUnionError `json:"error"`
 	// This field is from variant [ResponseItemImageGenerationCall].
 	OutputFormat string `json:"output_format"`
 	// This field is from variant [ResponseItemImageGenerationCall].
@@ -18172,11 +18253,9 @@ type ResponseItemUnion struct {
 	// This field is from variant [ResponseFunctionShellToolCallOutput].
 	MaxOutputLength int64 `json:"max_output_length"`
 	// This field is from variant [ResponseApplyPatchToolCall].
-	Operation   ResponseApplyPatchToolCallOperationUnion `json:"operation"`
-	ServerLabel string                                   `json:"server_label"`
-	// This field is a union of [string], [McpToolCallErrorUnion]
-	Error             ResponseItemUnionError `json:"error"`
-	ApprovalRequestID string                 `json:"approval_request_id"`
+	Operation         ResponseApplyPatchToolCallOperationUnion `json:"operation"`
+	ServerLabel       string                                   `json:"server_label"`
+	ApprovalRequestID string                                   `json:"approval_request_id"`
 	// This field is from variant [ResponseItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [ResponseItemMcpApprovalResponse].
@@ -18213,6 +18292,7 @@ type ResponseItemUnion struct {
 		Fingerprint              respjson.Field
 		Result                   respjson.Field
 		Background               respjson.Field
+		Error                    respjson.Field
 		OutputFormat             respjson.Field
 		Quality                  respjson.Field
 		RevisedPrompt            respjson.Field
@@ -18223,7 +18303,6 @@ type ResponseItemUnion struct {
 		MaxOutputLength          respjson.Field
 		Operation                respjson.Field
 		ServerLabel              respjson.Field
-		Error                    respjson.Field
 		ApprovalRequestID        respjson.Field
 		Approve                  respjson.Field
 		Reason                   respjson.Field
@@ -18794,18 +18873,25 @@ func (r *ResponseItemUnionTools) UnmarshalJSON(data []byte) error {
 type ResponseItemUnionError struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
-	Code     int64  `json:"code"`
-	Message  string `json:"message"`
-	Type     string `json:"type"`
+	// This field is a union of [string], [int64]
+	Code    ResponseItemUnionErrorCode `json:"code"`
+	Message string                     `json:"message"`
+	// This field is from variant [ResponseItemImageGenerationCallError].
+	Param string `json:"param"`
+	Type  string `json:"type"`
+	// This field is from variant [ResponseItemImageGenerationCallError].
+	ModerationDetails ResponseItemImageGenerationCallErrorModerationDetails `json:"moderation_details"`
 	// This field is from variant [McpToolCallErrorUnion].
 	Content any `json:"content"`
 	JSON    struct {
-		OfString respjson.Field
-		Code     respjson.Field
-		Message  respjson.Field
-		Type     respjson.Field
-		Content  respjson.Field
-		raw      string
+		OfString          respjson.Field
+		Code              respjson.Field
+		Message           respjson.Field
+		Param             respjson.Field
+		Type              respjson.Field
+		ModerationDetails respjson.Field
+		Content           respjson.Field
+		raw               string
 	} `json:"-"`
 }
 
@@ -18824,6 +18910,31 @@ func (r *ResponseItemUnionError) UnmarshalJSON(data []byte) error {
 	}
 	*r = decoded
 	return nil
+}
+
+// ResponseItemUnionErrorCode is an implicit subunion of [ResponseItemUnion].
+// ResponseItemUnionErrorCode provides convenient access to the sub-properties of
+// the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [ResponseItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfInt]
+type ResponseItemUnionErrorCode struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a [int64] instead of an object.
+	OfInt int64 `json:",inline"`
+	JSON  struct {
+		OfString respjson.Field
+		OfInt    respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (r *ResponseItemUnionErrorCode) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type ResponseItemAdditionalTools struct {
@@ -19612,6 +19723,9 @@ type ResponseOutputItemUnion struct {
 	Tools ResponseOutputItemUnionTools `json:"tools"`
 	// This field is from variant [ResponseOutputItemImageGenerationCall].
 	Background string `json:"background"`
+	// This field is a union of [ResponseOutputItemImageGenerationCallError],
+	// [McpToolCallErrorUnion], [string]
+	Error ResponseOutputItemUnionError `json:"error"`
 	// This field is from variant [ResponseOutputItemImageGenerationCall].
 	OutputFormat string `json:"output_format"`
 	// This field is from variant [ResponseOutputItemImageGenerationCall].
@@ -19632,8 +19746,6 @@ type ResponseOutputItemUnion struct {
 	Operation         ResponseApplyPatchToolCallOperationUnion `json:"operation"`
 	ServerLabel       string                                   `json:"server_label"`
 	ApprovalRequestID string                                   `json:"approval_request_id"`
-	// This field is a union of [McpToolCallErrorUnion], [string]
-	Error ResponseOutputItemUnionError `json:"error"`
 	// This field is from variant [ResponseOutputItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [ResponseOutputItemMcpApprovalResponse].
@@ -19669,6 +19781,7 @@ type ResponseOutputItemUnion struct {
 		Execution                respjson.Field
 		Tools                    respjson.Field
 		Background               respjson.Field
+		Error                    respjson.Field
 		OutputFormat             respjson.Field
 		Quality                  respjson.Field
 		RevisedPrompt            respjson.Field
@@ -19680,7 +19793,6 @@ type ResponseOutputItemUnion struct {
 		Operation                respjson.Field
 		ServerLabel              respjson.Field
 		ApprovalRequestID        respjson.Field
-		Error                    respjson.Field
 		Approve                  respjson.Field
 		Reason                   respjson.Field
 		Input                    respjson.Field
@@ -20226,18 +20338,25 @@ func (r *ResponseOutputItemUnionTools) UnmarshalJSON(data []byte) error {
 type ResponseOutputItemUnionError struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
-	Code     int64  `json:"code"`
-	Message  string `json:"message"`
-	Type     string `json:"type"`
+	// This field is a union of [string], [int64]
+	Code    ResponseOutputItemUnionErrorCode `json:"code"`
+	Message string                           `json:"message"`
+	// This field is from variant [ResponseOutputItemImageGenerationCallError].
+	Param string `json:"param"`
+	Type  string `json:"type"`
+	// This field is from variant [ResponseOutputItemImageGenerationCallError].
+	ModerationDetails ResponseOutputItemImageGenerationCallErrorModerationDetails `json:"moderation_details"`
 	// This field is from variant [McpToolCallErrorUnion].
 	Content any `json:"content"`
 	JSON    struct {
-		OfString respjson.Field
-		Code     respjson.Field
-		Message  respjson.Field
-		Type     respjson.Field
-		Content  respjson.Field
-		raw      string
+		OfString          respjson.Field
+		Code              respjson.Field
+		Message           respjson.Field
+		Param             respjson.Field
+		Type              respjson.Field
+		ModerationDetails respjson.Field
+		Content           respjson.Field
+		raw               string
 	} `json:"-"`
 }
 
@@ -20256,6 +20375,31 @@ func (r *ResponseOutputItemUnionError) UnmarshalJSON(data []byte) error {
 	}
 	*r = decoded
 	return nil
+}
+
+// ResponseOutputItemUnionErrorCode is an implicit subunion of
+// [ResponseOutputItemUnion]. ResponseOutputItemUnionErrorCode provides convenient
+// access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [ResponseOutputItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfInt]
+type ResponseOutputItemUnionErrorCode struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a [int64] instead of an object.
+	OfInt int64 `json:",inline"`
+	JSON  struct {
+		OfString respjson.Field
+		OfInt    respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (r *ResponseOutputItemUnionErrorCode) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type ResponseOutputItemProgram struct {

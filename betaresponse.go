@@ -14117,6 +14117,9 @@ type BetaResponseInputItemUnion struct {
 	Result           string                             `json:"result"`
 	// This field is from variant [BetaResponseInputItemImageGenerationCall].
 	Background string `json:"background"`
+	// This field is a union of [BetaResponseInputItemImageGenerationCallError],
+	// [string], [BetaMcpToolCallErrorUnion]
+	Error BetaResponseInputItemUnionError `json:"error"`
 	// This field is from variant [BetaResponseInputItemImageGenerationCall].
 	OutputFormat string `json:"output_format"`
 	// This field is from variant [BetaResponseInputItemImageGenerationCall].
@@ -14135,11 +14138,9 @@ type BetaResponseInputItemUnion struct {
 	// This field is from variant [BetaResponseInputItemShellCallOutput].
 	MaxOutputLength int64 `json:"max_output_length"`
 	// This field is from variant [BetaResponseInputItemApplyPatchCall].
-	Operation   BetaResponseInputItemApplyPatchCallOperationUnion `json:"operation"`
-	ServerLabel string                                            `json:"server_label"`
-	// This field is a union of [string], [BetaMcpToolCallErrorUnion]
-	Error             BetaResponseInputItemUnionError `json:"error"`
-	ApprovalRequestID string                          `json:"approval_request_id"`
+	Operation         BetaResponseInputItemApplyPatchCallOperationUnion `json:"operation"`
+	ServerLabel       string                                            `json:"server_label"`
+	ApprovalRequestID string                                            `json:"approval_request_id"`
 	// This field is from variant [BetaResponseInputItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [BetaResponseInputItemMcpApprovalResponse].
@@ -14178,6 +14179,7 @@ type BetaResponseInputItemUnion struct {
 		EncryptedContent         respjson.Field
 		Result                   respjson.Field
 		Background               respjson.Field
+		Error                    respjson.Field
 		OutputFormat             respjson.Field
 		Quality                  respjson.Field
 		RevisedPrompt            respjson.Field
@@ -14189,7 +14191,6 @@ type BetaResponseInputItemUnion struct {
 		MaxOutputLength          respjson.Field
 		Operation                respjson.Field
 		ServerLabel              respjson.Field
-		Error                    respjson.Field
 		ApprovalRequestID        respjson.Field
 		Approve                  respjson.Field
 		Reason                   respjson.Field
@@ -14853,18 +14854,25 @@ func (r *BetaResponseInputItemUnionTools) UnmarshalJSON(data []byte) error {
 type BetaResponseInputItemUnionError struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
-	Code     int64  `json:"code"`
-	Message  string `json:"message"`
-	Type     string `json:"type"`
+	// This field is a union of [string], [int64]
+	Code    BetaResponseInputItemUnionErrorCode `json:"code"`
+	Message string                              `json:"message"`
+	// This field is from variant [BetaResponseInputItemImageGenerationCallError].
+	Param string `json:"param"`
+	Type  string `json:"type"`
+	// This field is from variant [BetaResponseInputItemImageGenerationCallError].
+	ModerationDetails BetaResponseInputItemImageGenerationCallErrorModerationDetails `json:"moderation_details"`
 	// This field is from variant [BetaMcpToolCallErrorUnion].
 	Content any `json:"content"`
 	JSON    struct {
-		OfString respjson.Field
-		Code     respjson.Field
-		Message  respjson.Field
-		Type     respjson.Field
-		Content  respjson.Field
-		raw      string
+		OfString          respjson.Field
+		Code              respjson.Field
+		Message           respjson.Field
+		Param             respjson.Field
+		Type              respjson.Field
+		ModerationDetails respjson.Field
+		Content           respjson.Field
+		raw               string
 	} `json:"-"`
 }
 
@@ -14883,6 +14891,31 @@ func (r *BetaResponseInputItemUnionError) UnmarshalJSON(data []byte) error {
 	}
 	*r = decoded
 	return nil
+}
+
+// BetaResponseInputItemUnionErrorCode is an implicit subunion of
+// [BetaResponseInputItemUnion]. BetaResponseInputItemUnionErrorCode provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [BetaResponseInputItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfInt]
+type BetaResponseInputItemUnionErrorCode struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a [int64] instead of an object.
+	OfInt int64 `json:",inline"`
+	JSON  struct {
+		OfString respjson.Field
+		OfInt    respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (r *BetaResponseInputItemUnionErrorCode) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // ToParam converts this BetaResponseInputItemUnion to a
@@ -19069,7 +19102,9 @@ func (u betaResponseInputItemUnionParamTools) AsAny() any { return u.any }
 //
 // Or use AsAny() to get the underlying value
 func (u BetaResponseInputItemUnionParam) GetError() (res betaResponseInputItemUnionParamError) {
-	if vt := u.OfMcpListTools; vt != nil && vt.Error.Valid() {
+	if vt := u.OfImageGenerationCall; vt != nil {
+		res.any = &vt.Error
+	} else if vt := u.OfMcpListTools; vt != nil && vt.Error.Valid() {
 		res.any = &vt.Error.Value
 	} else if vt := u.OfMcpCall; vt != nil {
 		res.any = vt.Error.asAny()
@@ -19077,7 +19112,8 @@ func (u BetaResponseInputItemUnionParam) GetError() (res betaResponseInputItemUn
 	return
 }
 
-// Can have the runtime types [*string],
+// Can have the runtime types
+// [*BetaResponseInputItemImageGenerationCallErrorParam], [*string],
 // [*BetaMcpToolCallErrorMcpProtocolErrorParam],
 // [*BetaMcpToolCallErrorMcpToolExecutionErrorParam],
 // [*BetaMcpToolCallErrorHTTPErrorParam]
@@ -19086,6 +19122,7 @@ type betaResponseInputItemUnionParamError struct{ any }
 // Use the following switch statement to get the type of the union:
 //
 //	switch u.AsAny().(type) {
+//	case *openai.BetaResponseInputItemImageGenerationCallErrorParam:
 //	case *string:
 //	case *openai.BetaMcpToolCallErrorMcpProtocolErrorParam:
 //	case *openai.BetaMcpToolCallErrorMcpToolExecutionErrorParam:
@@ -19096,28 +19133,19 @@ type betaResponseInputItemUnionParamError struct{ any }
 func (u betaResponseInputItemUnionParamError) AsAny() any { return u.any }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u betaResponseInputItemUnionParamError) GetCode() *int64 {
+func (u betaResponseInputItemUnionParamError) GetParam() *string {
 	switch vt := u.any.(type) {
-	case *BetaMcpToolCallErrorUnionParam:
-		return vt.GetCode()
+	case *BetaResponseInputItemImageGenerationCallErrorParam:
+		return paramutil.AddrIfPresent(vt.Param)
 	}
 	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u betaResponseInputItemUnionParamError) GetMessage() *string {
+func (u betaResponseInputItemUnionParamError) GetModerationDetails() *BetaResponseInputItemImageGenerationCallErrorModerationDetailsParam {
 	switch vt := u.any.(type) {
-	case *BetaMcpToolCallErrorUnionParam:
-		return vt.GetMessage()
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u betaResponseInputItemUnionParamError) GetType() *string {
-	switch vt := u.any.(type) {
-	case *BetaMcpToolCallErrorUnionParam:
-		return vt.GetType()
+	case *BetaResponseInputItemImageGenerationCallErrorParam:
+		return &vt.ModerationDetails
 	}
 	return nil
 }
@@ -19127,6 +19155,56 @@ func (u betaResponseInputItemUnionParamError) GetContent() *any {
 	switch vt := u.any.(type) {
 	case *BetaMcpToolCallErrorUnionParam:
 		return vt.GetContent()
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u betaResponseInputItemUnionParamError) GetCode() (res betaResponseInputItemUnionParamErrorCode) {
+	switch vt := u.any.(type) {
+	case *BetaResponseInputItemImageGenerationCallErrorParam:
+		if vt.Code.Valid() {
+			res.any = &vt.Code.Value
+		}
+	case *BetaMcpToolCallErrorUnionParam:
+		res.any = vt.GetCode()
+	}
+	return res
+}
+
+// Can have the runtime types [*string], [*int64]
+type betaResponseInputItemUnionParamErrorCode struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *string:
+//	case *int64:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u betaResponseInputItemUnionParamErrorCode) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseInputItemUnionParamError) GetMessage() *string {
+	switch vt := u.any.(type) {
+	case *BetaResponseInputItemImageGenerationCallErrorParam:
+		return (*string)(&vt.Message)
+	case *BetaMcpToolCallErrorUnionParam:
+		return vt.GetMessage()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseInputItemUnionParamError) GetType() *string {
+	switch vt := u.any.(type) {
+	case *BetaResponseInputItemImageGenerationCallErrorParam:
+		return (*string)(&vt.Type)
+	case *BetaMcpToolCallErrorUnionParam:
+		return vt.GetType()
 	}
 	return nil
 }
@@ -22000,6 +22078,9 @@ type BetaResponseItemUnion struct {
 	Result      string `json:"result"`
 	// This field is from variant [BetaResponseItemImageGenerationCall].
 	Background string `json:"background"`
+	// This field is a union of [BetaResponseItemImageGenerationCallError], [string],
+	// [BetaMcpToolCallErrorUnion]
+	Error BetaResponseItemUnionError `json:"error"`
 	// This field is from variant [BetaResponseItemImageGenerationCall].
 	OutputFormat string `json:"output_format"`
 	// This field is from variant [BetaResponseItemImageGenerationCall].
@@ -22017,11 +22098,9 @@ type BetaResponseItemUnion struct {
 	// This field is from variant [BetaResponseFunctionShellToolCallOutput].
 	MaxOutputLength int64 `json:"max_output_length"`
 	// This field is from variant [BetaResponseApplyPatchToolCall].
-	Operation   BetaResponseApplyPatchToolCallOperationUnion `json:"operation"`
-	ServerLabel string                                       `json:"server_label"`
-	// This field is a union of [string], [BetaMcpToolCallErrorUnion]
-	Error             BetaResponseItemUnionError `json:"error"`
-	ApprovalRequestID string                     `json:"approval_request_id"`
+	Operation         BetaResponseApplyPatchToolCallOperationUnion `json:"operation"`
+	ServerLabel       string                                       `json:"server_label"`
+	ApprovalRequestID string                                       `json:"approval_request_id"`
 	// This field is from variant [BetaResponseItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [BetaResponseItemMcpApprovalResponse].
@@ -22061,6 +22140,7 @@ type BetaResponseItemUnion struct {
 		Fingerprint              respjson.Field
 		Result                   respjson.Field
 		Background               respjson.Field
+		Error                    respjson.Field
 		OutputFormat             respjson.Field
 		Quality                  respjson.Field
 		RevisedPrompt            respjson.Field
@@ -22071,7 +22151,6 @@ type BetaResponseItemUnion struct {
 		MaxOutputLength          respjson.Field
 		Operation                respjson.Field
 		ServerLabel              respjson.Field
-		Error                    respjson.Field
 		ApprovalRequestID        respjson.Field
 		Approve                  respjson.Field
 		Reason                   respjson.Field
@@ -22698,18 +22777,25 @@ func (r *BetaResponseItemUnionTools) UnmarshalJSON(data []byte) error {
 type BetaResponseItemUnionError struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
-	Code     int64  `json:"code"`
-	Message  string `json:"message"`
-	Type     string `json:"type"`
+	// This field is a union of [string], [int64]
+	Code    BetaResponseItemUnionErrorCode `json:"code"`
+	Message string                         `json:"message"`
+	// This field is from variant [BetaResponseItemImageGenerationCallError].
+	Param string `json:"param"`
+	Type  string `json:"type"`
+	// This field is from variant [BetaResponseItemImageGenerationCallError].
+	ModerationDetails BetaResponseItemImageGenerationCallErrorModerationDetails `json:"moderation_details"`
 	// This field is from variant [BetaMcpToolCallErrorUnion].
 	Content any `json:"content"`
 	JSON    struct {
-		OfString respjson.Field
-		Code     respjson.Field
-		Message  respjson.Field
-		Type     respjson.Field
-		Content  respjson.Field
-		raw      string
+		OfString          respjson.Field
+		Code              respjson.Field
+		Message           respjson.Field
+		Param             respjson.Field
+		Type              respjson.Field
+		ModerationDetails respjson.Field
+		Content           respjson.Field
+		raw               string
 	} `json:"-"`
 }
 
@@ -22728,6 +22814,31 @@ func (r *BetaResponseItemUnionError) UnmarshalJSON(data []byte) error {
 	}
 	*r = decoded
 	return nil
+}
+
+// BetaResponseItemUnionErrorCode is an implicit subunion of
+// [BetaResponseItemUnion]. BetaResponseItemUnionErrorCode provides convenient
+// access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [BetaResponseItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfInt]
+type BetaResponseItemUnionErrorCode struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a [int64] instead of an object.
+	OfInt int64 `json:",inline"`
+	JSON  struct {
+		OfString respjson.Field
+		OfInt    respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (r *BetaResponseItemUnionErrorCode) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaResponseItemAgentMessage struct {
@@ -24430,6 +24541,9 @@ type BetaResponseOutputItemUnion struct {
 	Tools BetaResponseOutputItemUnionTools `json:"tools"`
 	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
 	Background string `json:"background"`
+	// This field is a union of [BetaResponseOutputItemImageGenerationCallError],
+	// [BetaMcpToolCallErrorUnion], [string]
+	Error BetaResponseOutputItemUnionError `json:"error"`
 	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
 	OutputFormat string `json:"output_format"`
 	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
@@ -24450,8 +24564,6 @@ type BetaResponseOutputItemUnion struct {
 	Operation         BetaResponseApplyPatchToolCallOperationUnion `json:"operation"`
 	ServerLabel       string                                       `json:"server_label"`
 	ApprovalRequestID string                                       `json:"approval_request_id"`
-	// This field is a union of [BetaMcpToolCallErrorUnion], [string]
-	Error BetaResponseOutputItemUnionError `json:"error"`
 	// This field is from variant [BetaResponseOutputItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [BetaResponseOutputItemMcpApprovalResponse].
@@ -24490,6 +24602,7 @@ type BetaResponseOutputItemUnion struct {
 		Execution                respjson.Field
 		Tools                    respjson.Field
 		Background               respjson.Field
+		Error                    respjson.Field
 		OutputFormat             respjson.Field
 		Quality                  respjson.Field
 		RevisedPrompt            respjson.Field
@@ -24501,7 +24614,6 @@ type BetaResponseOutputItemUnion struct {
 		Operation                respjson.Field
 		ServerLabel              respjson.Field
 		ApprovalRequestID        respjson.Field
-		Error                    respjson.Field
 		Approve                  respjson.Field
 		Reason                   respjson.Field
 		Input                    respjson.Field
@@ -25103,18 +25215,25 @@ func (r *BetaResponseOutputItemUnionTools) UnmarshalJSON(data []byte) error {
 type BetaResponseOutputItemUnionError struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
-	Code     int64  `json:"code"`
-	Message  string `json:"message"`
-	Type     string `json:"type"`
+	// This field is a union of [string], [int64]
+	Code    BetaResponseOutputItemUnionErrorCode `json:"code"`
+	Message string                               `json:"message"`
+	// This field is from variant [BetaResponseOutputItemImageGenerationCallError].
+	Param string `json:"param"`
+	Type  string `json:"type"`
+	// This field is from variant [BetaResponseOutputItemImageGenerationCallError].
+	ModerationDetails BetaResponseOutputItemImageGenerationCallErrorModerationDetails `json:"moderation_details"`
 	// This field is from variant [BetaMcpToolCallErrorUnion].
 	Content any `json:"content"`
 	JSON    struct {
-		OfString respjson.Field
-		Code     respjson.Field
-		Message  respjson.Field
-		Type     respjson.Field
-		Content  respjson.Field
-		raw      string
+		OfString          respjson.Field
+		Code              respjson.Field
+		Message           respjson.Field
+		Param             respjson.Field
+		Type              respjson.Field
+		ModerationDetails respjson.Field
+		Content           respjson.Field
+		raw               string
 	} `json:"-"`
 }
 
@@ -25133,6 +25252,31 @@ func (r *BetaResponseOutputItemUnionError) UnmarshalJSON(data []byte) error {
 	}
 	*r = decoded
 	return nil
+}
+
+// BetaResponseOutputItemUnionErrorCode is an implicit subunion of
+// [BetaResponseOutputItemUnion]. BetaResponseOutputItemUnionErrorCode provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [BetaResponseOutputItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfInt]
+type BetaResponseOutputItemUnionErrorCode struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a [int64] instead of an object.
+	OfInt int64 `json:",inline"`
+	JSON  struct {
+		OfString respjson.Field
+		OfInt    respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (r *BetaResponseOutputItemUnionErrorCode) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaResponseOutputItemAgentMessage struct {
