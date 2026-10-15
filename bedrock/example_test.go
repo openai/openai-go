@@ -130,7 +130,7 @@ func ExampleNewClient_bearer() {
 	client, err := bedrock.NewClient(context.Background(), bedrock.Config{
 		AWSRegion: "us-west-2",
 		APIKey:    "bedrock-bearer-token",
-		BaseURL:   "https://bedrock-mantle.us-west-2.api.aws/openai/v1",
+		BaseURL:   "https://bedrock-mantle.us-west-2.api.aws/v1",
 	})
 	if err != nil {
 		panic(err)
