@@ -41,7 +41,7 @@ func TestAdminOrganizationProjectAPIKeyGet(t *testing.T) {
 	}
 }
 
-func TestAdminOrganizationProjectAPIKeyUpdate(t *testing.T) {
+func TestAdminOrganizationProjectAPIKeyUpdateWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -61,6 +61,7 @@ func TestAdminOrganizationProjectAPIKeyUpdate(t *testing.T) {
 		"api_key_id",
 		openai.AdminOrganizationProjectAPIKeyUpdateParams{
 			ExpiresInSeconds: 1,
+			Scopes:           []string{"api.all.read"},
 		},
 	)
 	if err != nil {
