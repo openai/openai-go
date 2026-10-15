@@ -114,20 +114,22 @@ func (s *AgentSessionStream) FinalResult() (*BetaAgentTurnResult, error) {
 }
 
 type betaAgentTurnCollector struct {
-	handlers      map[string]AgentToolHandler
-	enabled       bool
-	started       bool
-	sessionID     string
-	turn          *Turn
-	terminal      bool
-	boundary      bool
-	sessionFailed bool
-	messages      map[int64]AgentSessionMessage
-	required      []AgentSessionRequiredActionUnion
-	collectionErr error
-	finalized     bool
-	result        *BetaAgentTurnResult
-	err           error
+	handlers          map[string]AgentToolHandler
+	enabled           bool
+	started           bool
+	sessionID         string
+	turn              *Turn
+	terminal          bool
+	boundary          bool
+	sessionFailed     bool
+	messages          map[int64]AgentSessionMessage
+	required          []AgentSessionRequiredActionUnion
+	requiredChecked   bool
+	requiredUnhandled bool
+	collectionErr     error
+	finalized         bool
+	result            *BetaAgentTurnResult
+	err               error
 }
 
 func (c *betaAgentTurnCollector) enable() {
@@ -158,6 +160,7 @@ func (c *betaAgentTurnCollector) Accumulate(event AgentSessionEventUnion) {
 		c.sessionID = event.Session.ID
 	case "agent.session.requires_action":
 		c.required = nil
+		c.requiredChecked = false
 		for _, action := range event.Session.RequiredActions {
 			var copy AgentSessionRequiredActionUnion
 			if c.collectionErr = json.Unmarshal([]byte(action.RawJSON()), &copy); c.collectionErr != nil {
@@ -228,12 +231,21 @@ func (c *betaAgentTurnCollector) stopped(handlers map[string]AgentToolHandler) b
 	if c.collectionErr != nil || c.boundary || c.sessionFailed || (c.terminal && c.turn != nil && c.turn.Status != "completed") {
 		return true
 	}
-	for _, action := range c.required {
-		if action.Type != "function_call" || handlers[action.Name] == nil {
-			return true
-		}
+	if len(c.required) == 0 {
+		return false
 	}
-	return false
+	// Each collector uses a fixed handler map; unrelated events cannot change eligibility.
+	if !c.requiredChecked {
+		c.requiredUnhandled = false
+		for _, action := range c.required {
+			if action.Type != "function_call" || handlers[action.Name] == nil {
+				c.requiredUnhandled = true
+				break
+			}
+		}
+		c.requiredChecked = true
+	}
+	return c.requiredUnhandled
 }
 
 func (c *betaAgentTurnCollector) finalResult(cause error) (*BetaAgentTurnResult, error) {

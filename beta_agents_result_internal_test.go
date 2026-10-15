@@ -13,6 +13,37 @@ import (
 	"testing"
 )
 
+// BenchmarkBetaAgentCollectorRetainedActions isolates the eligibility check from
+// SSE decoding and HTTP overhead. Time per unrelated event should not grow with
+// the retained action count. Compare with the parent of the cache change using:
+// go test -run '^$' -bench '^BenchmarkBetaAgentCollectorRetainedActions$' -count=3
+func BenchmarkBetaAgentCollectorRetainedActions(b *testing.B) {
+	for _, count := range []int{1, 4096} {
+		b.Run(fmt.Sprintf("actions_%d", count), func(b *testing.B) {
+			handlers := map[string]AgentToolHandler{"lookup": func(context.Context, map[string]any) (any, error) {
+				b.Fatal("unrelated events must not invoke tool handlers")
+				return nil, nil
+			}}
+			c := &betaAgentTurnCollector{enabled: true, required: make([]AgentSessionRequiredActionUnion, count)}
+			for i := range c.required {
+				c.required[i] = AgentSessionRequiredActionUnion{Type: "function_call", Name: "lookup"}
+			}
+			if c.stopped(handlers) {
+				b.Fatal("matching handlers must allow observation to continue")
+			}
+			event := AgentSessionEventUnion{Type: "agent.session.turn.output_text.delta", TurnID: "root", Delta: "x"}
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				c.Accumulate(event)
+				if c.stopped(handlers) {
+					b.Fatal("unrelated event stopped observation")
+				}
+			}
+		})
+	}
+}
+
 func TestBetaAgentCollectorRetainsOnlyFinalPayload(t *testing.T) {
 	c := &betaAgentTurnCollector{}
 	c.enable()
