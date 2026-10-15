@@ -248,10 +248,14 @@ func betaAgentPrepareSelection(ctx context.Context, files map[string]string) ([]
 		if err := betaAgentFileDestination(destination); err != nil {
 			return nil, err
 		}
-		for parent := path.Dir(destination); parent != "/workspace"; parent = path.Dir(parent) {
-			if _, exists := files[parent]; exists {
-				return nil, errors.New("file destinations overlap")
-			}
+		// Descendants are contiguous in sorted order; do not rescan every ancestor prefix.
+		prefix := destination + "/"
+		index, _ := slices.BinarySearch(destinations, prefix)
+		if index < len(destinations) && strings.HasPrefix(destinations[index], prefix) {
+			return nil, errors.New("file destinations overlap")
+		}
+		if err := ctx.Err(); err != nil {
+			return nil, err
 		}
 		source, err := filepath.Abs(files[destination])
 		if err != nil {

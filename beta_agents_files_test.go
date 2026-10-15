@@ -15,6 +15,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	openai "github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
@@ -103,6 +104,7 @@ func TestBetaAgentFilesPreflightBeforeNetwork(t *testing.T) {
 	}
 	for _, files := range []map[string]string{
 		{"/workspace/a": source, "/workspace/a/b": source},
+		{"/workspace/a": source, "/workspace/a-": source, "/workspace/a/b": source},
 		{"/workspace/a": source, "/workspace/z": "missing-source"},
 	} {
 		if _, err := client.Beta.Agents.Environments.Files.Prepare(context.Background(), files); err == nil {
@@ -123,6 +125,24 @@ func TestBetaAgentFilesPreflightBeforeNetwork(t *testing.T) {
 	}
 	if requests.Load() != 0 {
 		t.Fatal("preflight did not precede requests")
+	}
+}
+
+func TestBetaAgentFilesDeepDestinationPreflight(t *testing.T) {
+	client := openai.NewClient(option.WithAPIKey("synthetic"))
+	source := filepath.Join(t.TempDir(), "missing")
+	for _, destination := range []string{
+		"/workspace/" + strings.Repeat("a/", 65536) + "f",
+		"/workspace/" + strings.Repeat("a", 131072) + "f",
+	} {
+		start := time.Now()
+		_, err := client.Beta.Agents.Environments.Files.Prepare(context.Background(), map[string]string{destination: source})
+		if !os.IsNotExist(err) {
+			t.Fatalf("expected source validation failure before network, got %v", err)
+		}
+		if elapsed := time.Since(start); elapsed > 2*time.Second {
+			t.Fatalf("destination preflight took %v", elapsed)
+		}
 	}
 }
 
