@@ -75,6 +75,7 @@ func TestImageEditWithOptionalParams(t *testing.T) {
 		PartialImages:     openai.Int(1),
 		Quality:           openai.ImageEditParamsQualityHigh,
 		ResponseFormat:    openai.ImageEditParamsResponseFormatURL,
+		SafetyIdentifier:  openai.String("user-1234"),
 		Size:              openai.ImageEditParamsSize1024x1024,
 		User:              openai.String("user-1234"),
 	})
@@ -112,6 +113,7 @@ func TestImageGenerateWithOptionalParams(t *testing.T) {
 		PartialImages:     openai.Int(1),
 		Quality:           openai.ImageGenerateParamsQualityMedium,
 		ResponseFormat:    openai.ImageGenerateParamsResponseFormatURL,
+		SafetyIdentifier:  openai.String("user-1234"),
 		Size:              openai.ImageGenerateParamsSize1024x1024,
 		Style:             openai.ImageGenerateParamsStyleVivid,
 		User:              openai.String("user-1234"),
