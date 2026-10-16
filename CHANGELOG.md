@@ -1,5 +1,49 @@
 # Changelog
 
+## [3.79.0](https://github.com/openai/openai-go/compare/v3.78.0...v3.79.0) (2026-10-16)
+
+
+### Features
+
+* **api:** add Live audio fixture playback event constants ([#1068](https://github.com/openai/openai-go/issues/1068)) ([35c6598](https://github.com/openai/openai-go/commit/35c659814a66f7ae7a6cc99ed4ca30c8687f7ca7))
+* **api:** add prompt-based voice creation ([#1078](https://github.com/openai/openai-go/issues/1078)) ([5276983](https://github.com/openai/openai-go/commit/52769832c19273db16e2185479be11278a157dff))
+* **api:** add regional processing residency options ([#1065](https://github.com/openai/openai-go/issues/1065)) ([09aad65](https://github.com/openai/openai-go/commit/09aad65f35995809048a5f150dee40446922e34b))
+* **api:** add response error diagnostics and model notices ([#1069](https://github.com/openai/openai-go/issues/1069)) ([036df07](https://github.com/openai/openai-go/commit/036df078239cbc51259a7f4e4015e340d4790fb3))
+* **api:** add safety identifiers to image requests and responses ([#1079](https://github.com/openai/openai-go/issues/1079)) ([35b78d9](https://github.com/openai/openai-go/commit/35b78d9bcaf4358887b38dd877e015407efbe6fd))
+* **api:** expose image tool error and moderation details ([#1061](https://github.com/openai/openai-go/issues/1061)) ([32b409c](https://github.com/openai/openai-go/commit/32b409cf04fe993a03e9d83ae71a61634b8fa49d))
+* **api:** support project API key scope updates ([#1066](https://github.com/openai/openai-go/issues/1066)) ([b5aa5a0](https://github.com/openai/openai-go/commit/b5aa5a0c36d7741d47d0e03616e7a53b1107cb54))
+* configure vector batch uploads and cancel on failure ([#1034](https://github.com/openai/openai-go/issues/1034)) ([23625e1](https://github.com/openai/openai-go/commit/23625e1fed621c98bbcf54a187046a395254b7d8))
+* **live:** group transcript deltas without owning the connection ([#1077](https://github.com/openai/openai-go/issues/1077)) ([b56ecc0](https://github.com/openai/openai-go/commit/b56ecc0c84a4fd3b2b7f1b0d518889084245d871))
+
+
+### Bug Fixes
+
+* **api:** isolate request options when adding typed headers ([#1057](https://github.com/openai/openai-go/issues/1057)) ([2809c85](https://github.com/openai/openai-go/commit/2809c85d2a9f837f9be9571b151a1aff354ed7a2))
+* **streaming:** cache pending action handler checks ([#1064](https://github.com/openai/openai-go/issues/1064)) ([7f17b88](https://github.com/openai/openai-go/commit/7f17b88cf779caaad941cfb441b830da6aa8f875))
+* **uploads:** avoid repeated destination ancestor scans ([#1070](https://github.com/openai/openai-go/issues/1070)) ([427af28](https://github.com/openai/openai-go/commit/427af28a8426b0b72ed92ec28d52681bbe5cfcfa))
+* **uploads:** omit directories from inferred filenames ([#1063](https://github.com/openai/openai-go/issues/1063)) ([309877c](https://github.com/openai/openai-go/commit/309877cf0e31969c0b83630d25d906a0bdf93b1d))
+
+
+### Chores
+
+* **api:** clarify Decisions request and response fields ([#1062](https://github.com/openai/openai-go/issues/1062)) ([0d881ea](https://github.com/openai/openai-go/commit/0d881eaba87b012b203c903dbd8928f9f8153e3a))
+* **api:** document Realtime response error messages ([#1067](https://github.com/openai/openai-go/issues/1067)) ([5da8f6d](https://github.com/openai/openai-go/commit/5da8f6d96b829a20e207f9b6099515a99f7f17df))
+
+
+### Documentation
+
+* **webhooks:** explain durable delivery deduplication ([#1060](https://github.com/openai/openai-go/issues/1060)) ([0ac4189](https://github.com/openai/openai-go/commit/0ac4189b011b9095c8ba29448504cb519ba0ee28))
+
+
+### Refactors
+
+* use generated WebSocket request bindings ([#1076](https://github.com/openai/openai-go/issues/1076)) ([d0e67ec](https://github.com/openai/openai-go/commit/d0e67ec297429c72e79ae3e871fdd02a66b337c3))
+
+
+### Build System
+
+* **deps:** bump AWS SDK config to v1.33.6 ([#1059](https://github.com/openai/openai-go/issues/1059)) ([de698b0](https://github.com/openai/openai-go/commit/de698b0a5d08cedb27d814d73a0e43cdb2702654))
+
 ## [3.78.0](https://github.com/openai/openai-go/compare/v3.77.0...v3.78.0) (2026-10-13)
 
 
