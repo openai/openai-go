@@ -25,6 +25,36 @@ func TestAudioVoicesNewRootMetadata(t *testing.T) {
 		wantFile bool
 	}{
 		{
+			name: "prompt keeps root extras",
+			request: func() openai.AudioVoiceNewParams {
+				r := openai.AudioVoiceNewParams{OfPrompt: &openai.AudioVoiceNewParamsBodyPrompt{
+					Name: "old name", Prompt: "Warm narrator", Type: "prompt",
+				}}
+				r.SetExtraFields(map[string]any{"name": "root name", "future_field": "value"})
+				return r
+			},
+			want: map[string][]string{"name": {"root name"}, "prompt": {"Warm narrator"}, "type": {"prompt"}, "future_field": {"value"}},
+		},
+		{
+			name: "prompt child metadata overrides without root extras",
+			request: func() openai.AudioVoiceNewParams {
+				child := &openai.AudioVoiceNewParamsBodyPrompt{Name: "old name", Prompt: "Warm narrator", Type: "prompt"}
+				child.SetExtraFields(map[string]any{"name": "child name", "future_field": "value"})
+				return openai.AudioVoiceNewParams{OfPrompt: child}
+			},
+			want: map[string][]string{"name": {"child name"}, "prompt": {"Warm narrator"}, "type": {"prompt"}, "future_field": {"value"}},
+		},
+		{
+			name: "prompt root extras overlay child JSON",
+			request: func() openai.AudioVoiceNewParams {
+				child := param.Override[openai.AudioVoiceNewParamsBodyPrompt](map[string]any{"name": "child", "type": "prompt", "prompt": "Warm narrator"})
+				r := openai.AudioVoiceNewParams{OfPrompt: &child}
+				r.SetExtraFields(map[string]any{"name": "root"})
+				return r
+			},
+			json: `{"name":"root","prompt":"Warm narrator","type":"prompt"}`,
+		},
+		{
 			name: "audio sample keeps file and root extras",
 			request: func() openai.AudioVoiceNewParams {
 				r := openai.AudioVoiceNewParams{OfAudioSample: &openai.AudioVoiceNewParamsBodyAudioSample{
