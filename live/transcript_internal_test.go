@@ -4,9 +4,60 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 	"testing/synctest"
+	"time"
 )
+
+func TestTranscriptDeferredSeparatorsCoalesce(t *testing.T) {
+	for _, prefix := range []string{"", "okay"} {
+		t.Run(prefix, func(t *testing.T) {
+			synctest.Test(t, func(t *testing.T) {
+				var updates []TranscriptUpdate
+				g, err := NewTranscriptGrouper(TranscriptGrouperOptions{OnUpdate: func(u TranscriptUpdate) {
+					updates = append(updates, u)
+				}})
+				if err != nil {
+					t.Fatal(err)
+				}
+				defer g.Close()
+				push := func(id int, text string, end int) {
+					t.Helper()
+					var event ServerEventUnion
+					raw := fmt.Sprintf(`{"type":"session.output_transcript.delta","event_id":"compact_%d","delta":%q,"start_ms":0,"end_ms":%d}`, id, text, end)
+					if decodeErr := json.Unmarshal([]byte(raw), &event); decodeErr != nil {
+						t.Fatal(decodeErr)
+					}
+					if pushErr := g.Push(event); pushErr != nil {
+						t.Fatal(pushErr)
+					}
+				}
+				if prefix != "" {
+					push(-1, prefix, 100)
+				}
+				for i := 0; i < 12000; i++ {
+					push(i, " ", 100)
+				}
+				if len(g.pending) > 2 {
+					t.Fatalf("retained %d deferred fragments for one source start", len(g.pending))
+				}
+				time.Sleep(5 * time.Second)
+				synctest.Wait()
+				if len(updates) != 0 {
+					t.Fatal("published an acknowledgment before source context")
+				}
+				push(12000, "more", 200)
+				g.Close()
+				last := updates[len(updates)-1]
+				if last.Reason != "manual" || last.Segment.Text != prefix+strings.Repeat(" ", 12000)+"more" ||
+					last.Segment.StartMs != 0 || last.Segment.EndMs != 200 {
+					t.Fatalf("lost deferred text or timing: %#v", last)
+				}
+			})
+		})
+	}
+}
 
 func TestTranscriptEventIDRetentionIsBounded(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {

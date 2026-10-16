@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"math"
+	"strings"
 	"sync"
 	"time"
 
@@ -55,26 +56,28 @@ type TranscriptGrouperOptions struct {
 // older IDs may be accepted again. Initial possible acknowledgments wait for
 // source-timestamp context or Close, rather than a network-arrival deadline.
 type TranscriptGrouper struct {
-	mu              sync.Mutex
-	group           transcriptGrouping
-	onUpdate        func(TranscriptUpdate)
-	seen            map[[sha256.Size]byte]struct{}
-	recentIDs       [][sha256.Size]byte
-	nextID          int
-	lastStart       map[string]int64
-	pending         []transcriptFragment
-	pendingAck      transcriptAcknowledgment
-	pendingAckCount int
-	pendingAckEnd   int64
-	updates         []TranscriptUpdate
-	dispatching     bool
-	closed          bool
-	timer           *time.Timer
-	generation      uint64
-	anchorMs        int64
-	anchored        bool
-	receivedAt      time.Time
-	updateDue       time.Time
+	mu                sync.Mutex
+	group             transcriptGrouping
+	onUpdate          func(TranscriptUpdate)
+	seen              map[[sha256.Size]byte]struct{}
+	recentIDs         [][sha256.Size]byte
+	nextID            int
+	lastStart         map[string]int64
+	pending           []transcriptFragment
+	pendingText       strings.Builder
+	pendingSeparators bool
+	pendingAck        transcriptAcknowledgment
+	pendingAckCount   int
+	pendingAckEnd     int64
+	updates           []TranscriptUpdate
+	dispatching       bool
+	closed            bool
+	timer             *time.Timer
+	generation        uint64
+	anchorMs          int64
+	anchored          bool
+	receivedAt        time.Time
+	updateDue         time.Time
 }
 
 type transcriptFragment struct {
@@ -214,6 +217,7 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 			}
 		}
 		g.pending = nil
+		g.pendingText.Reset()
 		g.pendingAckCount = 0
 		emitted = g.commit(before)
 		emitted = append(emitted, g.group.close(g.sourceNow(now), "timestamp_reset")...)
@@ -223,6 +227,7 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 	} else if firstOverlap < 0 && firstAfter >= 0 {
 		emitted = g.commit(g.pending[:firstAfter])
 		g.pending = g.pending[firstAfter:]
+		g.pendingText.Reset()
 		g.pendingAckCount = 0
 		emitted = append(emitted, g.commit([]transcriptFragment{f})...)
 		emitted = append(emitted, g.flushPending()...)
@@ -245,10 +250,11 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 			if prefix > 0 {
 				emitted = g.commit(g.pending[:prefix])
 				g.pending = g.pending[prefix:]
+				g.pendingText.Reset()
 				g.pendingAckCount = 0
 			}
 		}
-		g.pending = append(g.pending, f)
+		g.appendPending(f)
 		if firstOverlap >= 0 {
 			emitted = append(emitted, g.flushPending()...)
 		}
@@ -257,7 +263,7 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 		if g.group.speaker() == f.speaker {
 			emitted = append(emitted, g.commit([]transcriptFragment{f})...)
 		} else {
-			g.pending = append(g.pending, f)
+			g.appendPending(f)
 		}
 	}
 	g.schedule(now)
@@ -267,6 +273,32 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 		g.drain()
 	}
 	return nil
+}
+
+func (g *TranscriptGrouper) appendPending(f transcriptFragment) {
+	separators := strings.IndexFunc(f.text, func(r rune) bool {
+		return r != '-' && !transcriptSeparator(r)
+	}) < 0
+	if separators && g.pendingSeparators && len(g.pending) > 0 {
+		last := &g.pending[len(g.pending)-1]
+		// Equal intervals have identical overlap and reset decisions. Keep
+		// different intervals and non-separator prefixes distinct: merging
+		// them would change grouping or acknowledgment suppression.
+		if last.speaker == f.speaker && last.start == f.start && last.end == f.end {
+			if g.pendingAckCount == len(g.pending) {
+				g.group.advanceAck(&g.pendingAck, f.text)
+			}
+			if g.pendingText.Len() == 0 {
+				g.pendingText.WriteString(last.text)
+			}
+			g.pendingText.WriteString(f.text)
+			last.text = g.pendingText.String()
+			return
+		}
+	}
+	g.pendingText.Reset()
+	g.pendingSeparators = separators
+	g.pending = append(g.pending, f)
 }
 
 func (g *TranscriptGrouper) remember(digest [sha256.Size]byte) {
@@ -333,6 +365,7 @@ func (g *TranscriptGrouper) commit(parts []transcriptFragment) []TranscriptUpdat
 func (g *TranscriptGrouper) flushPending() []TranscriptUpdate {
 	parts := g.pending
 	g.pending = nil
+	g.pendingText.Reset()
 	g.pendingAckCount = 0
 	return g.commit(parts)
 }
