@@ -279,7 +279,7 @@
     },
     "audiospeech.go": {
       "mode": "100644",
-      "sha256": "77c99d970478c8f0fe54b0c606d0386c99b2fb94e8fd1991ef942b3191274bfc"
+      "sha256": "7db96541b10bd5b35128b72f069497b88d28a2faf7b524c7c232836ce9349b4b"
     },
     "audiospeech_test.go": {
       "mode": "100644",
@@ -303,7 +303,7 @@
     },
     "audiovoice.go": {
       "mode": "100644",
-      "sha256": "6267af896e3a290022ee1af976a618519f3dbc2acfda0cc8f339fb0b846f5157"
+      "sha256": "81b15110f3feeeb210b6cbbbfa2bc5ab47d5c0815a2eefc873c1ab675ae10b9d"
     },
     "audiovoice_test.go": {
       "mode": "100644",
@@ -547,7 +547,7 @@
     },
     "chatcompletion.go": {
       "mode": "100644",
-      "sha256": "b3f6b3f4e47da84061f1be65e541ef9ec614b5cff2fd14418347d77b3c0df20a"
+      "sha256": "e93b053a0fb8b072cbd6439131b121764ef850624b59f1988ba9c1112fd64f00"
     },
     "chatcompletion_test.go": {
       "mode": "100644",
@@ -847,7 +847,7 @@
     },
     "realtime/realtime.go": {
       "mode": "100644",
-      "sha256": "5164d560eacc9ba01360115782609610b563e8e52a8619427a2d714886773d5b"
+      "sha256": "14be029a7a99f953f281e43366cafc13014492d6642e1e6bcce536c81e7cb733"
     },
     "realtime/translation.go": {
       "mode": "100644",
