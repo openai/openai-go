@@ -223,7 +223,19 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 		emitted = append(emitted, g.group.close(g.sourceNow(now), "timestamp_reset")...)
 		clear(g.lastStart)
 		g.anchored = false
-		emitted = append(emitted, g.commit(append(after, f))...)
+		parts := append(after, f)
+		if f.speaker == "assistant" && (len(after) == 0 || after[0].speaker == "assistant") {
+			// A new epoch has no source context for an initial acknowledgment.
+			// Keep it deferred just as on a newly created grouper.
+			for _, part := range parts {
+				g.appendPending(part)
+			}
+			if !g.pendingAcknowledgment() {
+				emitted = append(emitted, g.flushPending()...)
+			}
+		} else {
+			emitted = append(emitted, g.commit(parts)...)
+		}
 	} else if firstOverlap < 0 && firstAfter >= 0 {
 		emitted = g.commit(g.pending[:firstAfter])
 		g.pending = g.pending[firstAfter:]

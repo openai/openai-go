@@ -1295,6 +1295,39 @@ func BenchmarkLiveTranscriptDeferredAcknowledgment(b *testing.B) {
 	}
 }
 
+func TestLiveTranscriptAcknowledgmentAfterAssistantTimestampReset(t *testing.T) {
+	for _, userFirst := range []bool{true, false} {
+		t.Run(fmt.Sprint(userFirst), func(t *testing.T) {
+			synctest.Test(t, func(t *testing.T) {
+				var c transcriptCollector
+				g, err := live.NewTranscriptGrouper(live.TranscriptGrouperOptions{OnUpdate: c.push})
+				if err != nil {
+					t.Fatal(err)
+				}
+				defer g.Close()
+				pushTranscript(t, g, "old", "assistant", "Old answer", 1000, 1100)
+				time.Sleep(3 * time.Second)
+				synctest.Wait()
+				previous := len(c.snapshot())
+				if userFirst {
+					pushTranscript(t, g, "user", "user", "Hello", 0, 500)
+				}
+				pushTranscript(t, g, "ack", "assistant", "okay", 0, 100)
+				if !userFirst {
+					time.Sleep(5 * time.Second)
+					synctest.Wait()
+					if len(c.snapshot()) != previous {
+						t.Fatal("published acknowledgment after reset before source context")
+					}
+					pushTranscript(t, g, "user", "user", "Hello", 0, 500)
+				}
+				g.Close()
+				checkTranscriptFinish(t, &c, [][2]string{{"assistant", "Old answer"}, {"user", "Hello"}})
+			})
+		})
+	}
+}
+
 func TestLiveTranscriptLaterAcknowledgmentWaitsForSourceContext(t *testing.T) {
 	for _, userFirst := range []bool{true, false} {
 		t.Run(fmt.Sprint(userFirst), func(t *testing.T) {
