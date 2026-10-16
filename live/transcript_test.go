@@ -31,7 +31,7 @@ func (c *transcriptCollector) snapshot() []live.TranscriptUpdate {
 	return append([]live.TranscriptUpdate(nil), c.updates...)
 }
 
-func transcriptEvent(t *testing.T, id, speaker, text string, start, end int64) live.ServerEventUnion {
+func transcriptEvent(t testing.TB, id, speaker, text string, start, end int64) live.ServerEventUnion {
 	t.Helper()
 	kind := "session.input_transcript.delta"
 	if speaker == "assistant" {
@@ -1238,6 +1238,58 @@ func TestLiveTranscriptRejectsFalseTerminalAndRetainsPending(t *testing.T) {
 					t.Fatal("stale timers delivered after the real terminal")
 				}
 			})
+		})
+	}
+}
+
+func TestLiveTranscriptLongDeferredAcknowledgment(t *testing.T) {
+	for _, prefix := range []string{"okay", ""} {
+		t.Run(prefix, func(t *testing.T) {
+			synctest.Test(t, func(t *testing.T) {
+				var c transcriptCollector
+				g, err := live.NewTranscriptGrouper(live.TranscriptGrouperOptions{OnUpdate: c.push})
+				if err != nil {
+					t.Fatal(err)
+				}
+				if prefix != "" {
+					pushTranscript(t, g, "prefix", "assistant", prefix, 0, 100)
+				}
+				for i := 0; i < 12000; i++ {
+					pushTranscript(t, g, fmt.Sprint(i), "assistant", " ", 0, 100)
+				}
+				time.Sleep(5 * time.Second)
+				synctest.Wait()
+				if len(c.snapshot()) != 0 {
+					t.Fatal("published before source context")
+				}
+				pushTranscript(t, g, "continuation", "assistant", "more", 100, 200)
+				g.Close()
+				checkTranscriptFinish(t, &c, [][2]string{{"assistant", prefix + strings.Repeat(" ", 12000) + "more"}})
+			})
+		})
+	}
+}
+
+func BenchmarkLiveTranscriptDeferredAcknowledgment(b *testing.B) {
+	for _, count := range []int{1000, 10000} {
+		b.Run(fmt.Sprint(count), func(b *testing.B) {
+			events := make([]live.ServerEventUnion, count)
+			for i := range events {
+				events[i] = transcriptEvent(b, fmt.Sprint(i), "assistant", " ", 0, 100)
+			}
+			b.ResetTimer()
+			for n := 0; n < b.N; n++ {
+				g, err := live.NewTranscriptGrouper(live.TranscriptGrouperOptions{})
+				if err != nil {
+					b.Fatal(err)
+				}
+				for _, event := range events {
+					if err := g.Push(event); err != nil {
+						b.Fatal(err)
+					}
+				}
+				g.Close()
+			}
 		})
 	}
 }

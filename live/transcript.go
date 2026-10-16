@@ -50,23 +50,26 @@ type TranscriptGrouperOptions struct {
 // older IDs may be accepted again. Initial possible acknowledgments wait for
 // source-timestamp context or Close, rather than a network-arrival deadline.
 type TranscriptGrouper struct {
-	mu          sync.Mutex
-	group       transcriptGrouping
-	onUpdate    func(TranscriptUpdate)
-	seen        map[[sha256.Size]byte]struct{}
-	recentIDs   [][sha256.Size]byte
-	nextID      int
-	lastStart   map[string]int64
-	pending     []transcriptFragment
-	updates     []TranscriptUpdate
-	dispatching bool
-	closed      bool
-	timer       *time.Timer
-	generation  uint64
-	anchorMs    int64
-	anchored    bool
-	receivedAt  time.Time
-	updateDue   time.Time
+	mu              sync.Mutex
+	group           transcriptGrouping
+	onUpdate        func(TranscriptUpdate)
+	seen            map[[sha256.Size]byte]struct{}
+	recentIDs       [][sha256.Size]byte
+	nextID          int
+	lastStart       map[string]int64
+	pending         []transcriptFragment
+	pendingAck      transcriptAcknowledgment
+	pendingAckCount int
+	pendingAckEnd   int64
+	updates         []TranscriptUpdate
+	dispatching     bool
+	closed          bool
+	timer           *time.Timer
+	generation      uint64
+	anchorMs        int64
+	anchored        bool
+	receivedAt      time.Time
+	updateDue       time.Time
 }
 
 type transcriptFragment struct {
@@ -188,6 +191,7 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 			}
 		}
 		g.pending = nil
+		g.pendingAckCount = 0
 		emitted = g.commit(before)
 		emitted = append(emitted, g.group.close(g.sourceNow(now), "timestamp_reset")...)
 		clear(g.lastStart)
@@ -196,6 +200,7 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 	} else if firstOverlap < 0 && firstAfter >= 0 {
 		emitted = g.commit(g.pending[:firstAfter])
 		g.pending = g.pending[firstAfter:]
+		g.pendingAckCount = 0
 		emitted = append(emitted, g.commit([]transcriptFragment{f})...)
 		emitted = append(emitted, g.flushPending()...)
 	} else if firstOverlap >= 0 || initialAssistant {
@@ -217,6 +222,7 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 			if prefix > 0 {
 				emitted = g.commit(g.pending[:prefix])
 				g.pending = g.pending[prefix:]
+				g.pendingAckCount = 0
 			}
 		}
 		g.pending = append(g.pending, f)
@@ -309,6 +315,7 @@ func (g *TranscriptGrouper) commit(parts []transcriptFragment) []TranscriptUpdat
 func (g *TranscriptGrouper) flushPending() []TranscriptUpdate {
 	parts := g.pending
 	g.pending = nil
+	g.pendingAckCount = 0
 	return g.commit(parts)
 }
 
@@ -331,16 +338,19 @@ func (g *TranscriptGrouper) pendingAcknowledgment() bool {
 	if g.group.current != nil || g.group.hasAssistantEnd || len(g.pending) == 0 || g.pending[0].speaker != "assistant" {
 		return false
 	}
-	ack := transcriptAcknowledgment{node: g.group.ackRoot}
-	start, end := g.pending[0].start, g.pending[0].end
-	for _, part := range g.pending {
-		end = max(end, part.end)
-		g.group.advanceAck(&ack, part.text)
-		if ack.node == nil || float64(end-start) >= g.group.backchannelDuration {
-			return false
-		}
+	if g.pendingAckCount == 0 {
+		g.pendingAck = transcriptAcknowledgment{node: g.group.ackRoot}
+		g.pendingAckEnd = g.pending[0].end
 	}
-	return true
+	// Advance only over new fragments. Deferred whitespace and punctuation may
+	// last arbitrarily long without changing the acknowledgment decision.
+	for _, part := range g.pending[g.pendingAckCount:] {
+		g.pendingAckEnd = max(g.pendingAckEnd, part.end)
+		g.group.advanceAck(&g.pendingAck, part.text)
+	}
+	g.pendingAckCount = len(g.pending)
+	return g.pendingAck.node != nil &&
+		float64(g.pendingAckEnd-g.pending[0].start) < g.group.backchannelDuration
 }
 
 func (g *TranscriptGrouper) schedule(now time.Time) {
