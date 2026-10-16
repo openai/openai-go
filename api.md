@@ -40,6 +40,7 @@ Params Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DecisionInputMessageParam">DecisionInputMessageParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DecisionInputPartUnionParam">DecisionInputPartUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DecisionInputTextParam">DecisionInputTextParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DecisionPromptCacheBreakpointParam">DecisionPromptCacheBreakpointParam</a>
 
 Response Types:
 
