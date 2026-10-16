@@ -131,3 +131,61 @@ func BenchmarkTranscriptInterleavedPoints(b *testing.B) {
 		})
 	}
 }
+
+func TestTranscriptBackpressureRestartsRecoveredCallback(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		var g *TranscriptGrouper
+		calls := 0
+		event := func(i int) ServerEventUnion {
+			kind := "session.input_transcript.delta"
+			if i%2 == 1 {
+				kind = "session.output_transcript.delta"
+			}
+			var e ServerEventUnion
+			raw := fmt.Sprintf(`{"type":%q,"event_id":"panic_%d","delta":"word","start_ms":%d,"end_ms":%d}`, kind, i, i*5000, i*5000+100)
+			if err := json.Unmarshal([]byte(raw), &e); err != nil {
+				t.Fatal(err)
+			}
+			return e
+		}
+		var err error
+		g, err = NewTranscriptGrouper(TranscriptGrouperOptions{OnUpdate: func(TranscriptUpdate) {
+			calls++
+			if calls != 1 {
+				return
+			}
+			for i := 2; i < 2048; i++ {
+				if err := g.Push(event(i)); errors.Is(err, ErrTranscriptBackpressure) {
+					panic("callback failed after filling its backlog")
+				} else if err != nil {
+					t.Fatal(err)
+				}
+			}
+			t.Fatal("callback did not reach backpressure")
+		}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := g.Push(event(0)); err != nil {
+			t.Fatal(err)
+		}
+		func() {
+			defer func() {
+				if recover() == nil {
+					t.Error("expected callback panic")
+				}
+			}()
+			_ = g.Push(event(1))
+		}()
+		defer g.Close()
+		if err := g.Push(event(3000)); !errors.Is(err, ErrTranscriptBackpressure) {
+			t.Fatalf("first retry = %v", err)
+		}
+		if calls <= 1 {
+			t.Fatal("idle callback backlog never restarted after recovery")
+		}
+		if err := g.Push(event(3000)); err != nil {
+			t.Fatalf("event was not retryable after drain: %v", err)
+		}
+	})
+}

@@ -170,7 +170,13 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 	// reentry cannot block waiting for the callback itself to drain the queue.
 	// Already accepted input can still finish its current and buffered turns.
 	if len(g.updates) >= 1024 {
+		// A recovered callback panic may leave a full but idle queue.
+		// Restart that dispatcher without admitting the new event.
+		shouldDrain := g.enqueue(nil)
 		g.mu.Unlock()
+		if shouldDrain {
+			g.drain()
+		}
 		return ErrTranscriptBackpressure
 	}
 	g.remember(digest)
