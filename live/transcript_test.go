@@ -2,6 +2,7 @@ package live_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -1321,6 +1322,79 @@ func TestLiveTranscriptLaterAcknowledgmentWaitsForSourceContext(t *testing.T) {
 				}
 				g.Close()
 				checkTranscriptFinish(t, &c, [][2]string{{"assistant", "Old answer"}, {"user", "Hello"}})
+			})
+		})
+	}
+}
+
+func TestLiveTranscriptSlowCallbackBackpressure(t *testing.T) {
+	for _, closeWhileBlocked := range []bool{false, true} {
+		t.Run(fmt.Sprintf("closeWhileBlocked=%v", closeWhileBlocked), func(t *testing.T) {
+			synctest.Test(t, func(t *testing.T) {
+				var c transcriptCollector
+				entered, release := make(chan struct{}), make(chan struct{})
+				first := true
+				g, err := live.NewTranscriptGrouper(live.TranscriptGrouperOptions{OnUpdate: func(u live.TranscriptUpdate) {
+					if first {
+						first = false
+						close(entered)
+						<-release
+					}
+					c.push(u)
+				}})
+				if err != nil {
+					t.Fatal(err)
+				}
+				pushTranscript(t, g, "initial", "user", "initial", 0, 100)
+				<-entered
+				want := [][2]string{{"user", "initial"}}
+				var rejected live.ServerEventUnion
+				for i := 1; i <= 2000; i++ {
+					speaker := "assistant"
+					if i%2 == 0 {
+						speaker = "user"
+					}
+					word := fmt.Sprintf("word_%d", i)
+					event := transcriptEvent(t, word, speaker, word, int64(i*5000), int64(i*5000+100))
+					if err := g.Push(event); err != nil {
+						if !errors.Is(err, live.ErrTranscriptBackpressure) {
+							t.Fatal(err)
+						}
+						rejected = event
+						break
+					}
+					want = append(want, [2]string{speaker, word})
+				}
+				if rejected.Type == "" {
+					close(release)
+					g.Close()
+					t.Fatal("slow callback accepted an unbounded update backlog")
+				}
+				// A duplicate and unrelated event consume no queue space.
+				if err := g.Push(transcriptEvent(t, "initial", "user", "initial", 0, 100)); err != nil {
+					t.Fatal(err)
+				}
+				if err := g.Push(live.ServerEventUnion{}); err != nil {
+					t.Fatal(err)
+				}
+				if closeWhileBlocked {
+					g.Close()
+				}
+				close(release)
+				synctest.Wait()
+				if !closeWhileBlocked {
+					if err := g.Push(rejected); err != nil {
+						t.Fatal(err)
+					}
+					if rejected.Type == "session.input_transcript.delta" {
+						want = append(want, [2]string{"user", rejected.AsInputTranscriptDeltaEvent().Delta})
+					} else {
+						want = append(want, [2]string{"assistant", rejected.AsOutputTranscriptDeltaEvent().Delta})
+					}
+					g.Close()
+				}
+				synctest.Wait()
+				checkTranscriptFinish(t, &c, want)
 			})
 		})
 	}

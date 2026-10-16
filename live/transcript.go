@@ -12,6 +12,11 @@ import (
 	"github.com/openai/openai-go/v3/packages/param"
 )
 
+// ErrTranscriptBackpressure means a slow callback has left at least 1024
+// updates waiting. Push has not consumed the event; it may be retried after
+// callbacks catch up. Close and session.closed still flush accepted input.
+var ErrTranscriptBackpressure = errors.New("live transcript callback backlog is full")
+
 // TranscriptSegment is a complete display snapshot, not a server turn/item.
 // Replace text on an existing ID. Previously delivered values remain unchanged.
 type TranscriptSegment struct {
@@ -100,7 +105,9 @@ func NewTranscriptGrouper(opts TranscriptGrouperOptions) (*TranscriptGrouper, er
 
 // Push consumes one typed event without mutating it. Other events and duplicate
 // IDs are ignored. Invalid transcript intervals, empty event IDs, or Push after
-// Close return an error. A real session.closed flushes and closes the grouper.
+// Close return an error. If callbacks fall behind, ErrTranscriptBackpressure
+// rejects a new delta without consuming it. A real session.closed flushes and
+// closes the grouper, even while callbacks are behind.
 func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 	now := time.Now()
 	g.mu.Lock()
@@ -154,10 +161,19 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 		g.mu.Unlock()
 		return nil
 	}
-	if !g.remember(id) {
+	digest := sha256.Sum256([]byte(id))
+	if _, duplicate := g.seen[digest]; duplicate {
 		g.mu.Unlock()
 		return nil
 	}
+	// Reject before changing grouping, timer or duplicate state. Callback
+	// reentry cannot block waiting for the callback itself to drain the queue.
+	// Already accepted input can still finish its current and buffered turns.
+	if len(g.updates) >= 1024 {
+		g.mu.Unlock()
+		return ErrTranscriptBackpressure
+	}
+	g.remember(digest)
 	var emitted []TranscriptUpdate
 	firstOverlap, firstAfter, initialAssistant := -1, -1, false
 	if len(g.pending) > 0 {
@@ -247,12 +263,8 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 	return nil
 }
 
-func (g *TranscriptGrouper) remember(id string) bool {
+func (g *TranscriptGrouper) remember(digest [sha256.Size]byte) {
 	const limit = 4096
-	digest := sha256.Sum256([]byte(id))
-	if _, exists := g.seen[digest]; exists {
-		return false
-	}
 	if len(g.recentIDs) == limit {
 		delete(g.seen, g.recentIDs[g.nextID])
 		g.recentIDs[g.nextID] = digest
@@ -261,7 +273,6 @@ func (g *TranscriptGrouper) remember(id string) bool {
 		g.recentIDs = append(g.recentIDs, digest)
 	}
 	g.seen[digest] = struct{}{}
-	return true
 }
 
 // Close finalizes once, cancels the owned timer and permits an in-progress
@@ -411,7 +422,15 @@ func (g *TranscriptGrouper) schedule(now time.Time) {
 }
 
 func (g *TranscriptGrouper) enqueue(emitted []TranscriptUpdate) bool {
-	g.updates = append(g.updates, emitted...)
+	for _, update := range emitted {
+		last := len(g.updates) - 1
+		if last >= 0 && update.Reason == "" && g.updates[last].Reason == "" &&
+			g.updates[last].Segment.ID == update.Segment.ID {
+			g.updates[last] = update
+		} else {
+			g.updates = append(g.updates, update)
+		}
+	}
 	if g.dispatching || len(g.updates) == 0 {
 		return false
 	}

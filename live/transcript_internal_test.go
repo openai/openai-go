@@ -2,6 +2,7 @@ package live
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"testing"
 	"testing/synctest"
@@ -34,51 +35,72 @@ func TestTranscriptEventIDRetentionIsBounded(t *testing.T) {
 	})
 }
 
-func TestTranscriptDrainedQueueReleasesBurst(t *testing.T) {
+func TestTranscriptReentrantBackpressureReleasesBurst(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		var grouper *TranscriptGrouper
-		var updates int
+		var updates, accepted, finals int
 		var lastReason string
-		push := func(id int, speaker string) {
+		overloaded := false
+		push := func(id int, speaker string) error {
 			t.Helper()
 			kind := "session.input_transcript.delta"
 			if speaker == "assistant" {
 				kind = "session.output_transcript.delta"
 			}
 			var event ServerEventUnion
-			raw := fmt.Sprintf(`{"type":%q,"event_id":"burst_%d","delta":"word","start_ms":%d,"end_ms":%d}`,
-				kind, id, id*5000, id*5000+100)
+			raw := fmt.Sprintf(`{"type":%q,"event_id":"burst_%d","delta":"word","start_ms":%d,"end_ms":%d}`, kind, id, id*5000, id*5000+100)
 			if err := json.Unmarshal([]byte(raw), &event); err != nil {
 				t.Fatal(err)
 			}
-			if err := grouper.Push(event); err != nil {
-				t.Fatal(err)
+			return grouper.Push(event)
+		}
+		checkBound := func() {
+			grouper.mu.Lock()
+			defer grouper.mu.Unlock()
+			// The final accepted event and its unfinished turns need at most
+			// ten completion snapshots beyond the admission threshold.
+			if len(grouper.updates) > 1024+10 {
+				t.Fatalf("unbounded callback backlog: %d", len(grouper.updates))
 			}
 		}
 		var err error
 		grouper, err = NewTranscriptGrouper(TranscriptGrouperOptions{OnUpdate: func(update TranscriptUpdate) {
 			updates++
 			lastReason = update.Reason
+			if update.Reason != "" {
+				finals++
+			}
 			if updates == 1 {
-				// Accumulate a backlog while a callback is in progress, then
-				// close before that backlog has been delivered.
-				for i := 2; i < 258; i++ {
+				for i := 2; i < 2048; i++ {
 					speaker := "user"
 					if i%2 == 0 {
 						speaker = "assistant"
 					}
-					push(i, speaker)
+					if err := push(i, speaker); err != nil {
+						if !errors.Is(err, ErrTranscriptBackpressure) {
+							t.Fatal(err)
+						}
+						overloaded = true
+						break
+					}
+					accepted++
 				}
+				checkBound()
 				grouper.Close()
+				checkBound()
 			}
 		}})
 		if err != nil {
 			t.Fatal(err)
 		}
-		push(0, "user")
-		push(1, "user")
-		if updates < 256 || lastReason != "manual" {
-			t.Fatalf("backlog was not delivered through Close: %d updates, last reason %q", updates, lastReason)
+		if err := push(0, "user"); err != nil {
+			t.Fatal(err)
+		}
+		if err := push(1, "user"); err != nil {
+			t.Fatal(err)
+		}
+		if !overloaded || finals != accepted+1 || lastReason != "manual" {
+			t.Fatalf("lost accepted turns or failed to bound backlog: overloaded=%v accepted=%d finals=%d reason=%q", overloaded, accepted, finals, lastReason)
 		}
 		grouper.mu.Lock()
 		defer grouper.mu.Unlock()
