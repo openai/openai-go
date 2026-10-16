@@ -76,9 +76,9 @@ func TestTranscriptReentrantBackpressureReleasesBurst(t *testing.T) {
 					if i%2 == 0 {
 						speaker = "assistant"
 					}
-					if err := push(i, speaker); err != nil {
-						if !errors.Is(err, ErrTranscriptBackpressure) {
-							t.Fatal(err)
+					if pushErr := push(i, speaker); pushErr != nil {
+						if !errors.Is(pushErr, ErrTranscriptBackpressure) {
+							t.Fatal(pushErr)
 						}
 						overloaded = true
 						break
@@ -155,10 +155,10 @@ func TestTranscriptBackpressureRestartsRecoveredCallback(t *testing.T) {
 				return
 			}
 			for i := 2; i < 2048; i++ {
-				if err := g.Push(event(i)); errors.Is(err, ErrTranscriptBackpressure) {
+				if pushErr := g.Push(event(i)); errors.Is(pushErr, ErrTranscriptBackpressure) {
 					panic("callback failed after filling its backlog")
-				} else if err != nil {
-					t.Fatal(err)
+				} else if pushErr != nil {
+					t.Fatal(pushErr)
 				}
 			}
 			t.Fatal("callback did not reach backpressure")
