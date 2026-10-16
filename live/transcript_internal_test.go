@@ -183,7 +183,7 @@ func BenchmarkTranscriptInterleavedPoints(b *testing.B) {
 	}
 }
 
-func TestTranscriptBackpressureRestartsRecoveredCallback(t *testing.T) {
+func TestTranscriptCallbackPanicDrainsFullBacklog(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		var g *TranscriptGrouper
 		calls := 0
@@ -229,11 +229,8 @@ func TestTranscriptBackpressureRestartsRecoveredCallback(t *testing.T) {
 			_ = g.Push(event(1))
 		}()
 		defer g.Close()
-		if err := g.Push(event(3000)); !errors.Is(err, ErrTranscriptBackpressure) {
-			t.Fatalf("first retry = %v", err)
-		}
 		if calls <= 1 {
-			t.Fatal("idle callback backlog never restarted after recovery")
+			t.Fatal("callback backlog did not drain before panic returned")
 		}
 		if err := g.Push(event(3000)); err != nil {
 			t.Fatalf("event was not retryable after drain: %v", err)

@@ -40,8 +40,8 @@ type TranscriptUpdate struct {
 // defaults. Set BackchannelMaxDuration to param.NewOpt(time.Duration(0)) to
 // disable acknowledgment suppression. Callbacks run in order outside the
 // grouper lock, on the Push/Close caller or an owned timer; they may reenter it.
-// If a callback panics after the grouper closes, remaining queued callbacks
-// run before the original panic is rethrown.
+// If a callback panics, remaining queued callbacks run before the original
+// panic is rethrown. Panic propagation waits for the callback queue to drain.
 type TranscriptGrouperOptions struct {
 	OnUpdate                  func(TranscriptUpdate)
 	MinTurnSeparation         param.Opt[time.Duration]
@@ -201,8 +201,7 @@ func (g *TranscriptGrouper) push(event any) error {
 	// reentry cannot block waiting for the callback itself to drain the queue.
 	// Already accepted input can still finish its current and buffered turns.
 	if len(g.updates) >= 1024 {
-		// A recovered callback panic may leave a full but idle queue.
-		// Restart that dispatcher without admitting the new event.
+		// Restart an idle dispatcher without admitting the new event.
 		shouldDrain := g.enqueue(nil)
 		g.mu.Unlock()
 		if shouldDrain {
@@ -567,16 +566,6 @@ func (g *TranscriptGrouper) drain() {
 				}()
 				g.onUpdate(update)
 			}()
-			if firstPanic != nil {
-				g.mu.Lock()
-				if !g.closed {
-					g.dispatching = false
-					complete = true
-					g.mu.Unlock()
-					panic(firstPanic)
-				}
-				g.mu.Unlock()
-			}
 		}
 	}
 }

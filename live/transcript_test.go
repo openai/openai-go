@@ -1469,6 +1469,53 @@ func TestLiveTranscriptReentrantCloseDrainsAfterCallbackPanic(t *testing.T) {
 	}
 }
 
+func TestLiveTranscriptConcurrentPushDrainsAfterCallbackPanic(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		var c transcriptCollector
+		entered, release := make(chan struct{}), make(chan struct{})
+		panicked := make(chan any, 1)
+		first := true
+		g, err := live.NewTranscriptGrouper(live.TranscriptGrouperOptions{OnUpdate: func(u live.TranscriptUpdate) {
+			c.push(u)
+			if first {
+				first = false
+				close(entered)
+				<-release
+				panic("first callback panic")
+			}
+		}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer g.Close()
+		pushTranscript(t, g, "first", "user", "Hello", 0, 100)
+		go func() {
+			defer func() { panicked <- recover() }()
+			pushTranscript(t, g, "second", "assistant", "Answer", 5000, 5100)
+		}()
+		<-entered
+		err = g.Push(transcriptEvent(t, "third", "user", "Next", 10000, 10100))
+		close(release)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if value := <-panicked; value != "first callback panic" {
+			t.Fatalf("panic = %v, want first callback panic", value)
+		}
+		found := false
+		for _, update := range c.snapshot() {
+			if update.Segment.Text == "Answer" {
+				found = true
+			}
+		}
+		if !found {
+			t.Fatal("accepted concurrent update was not delivered before panic returned")
+		}
+		g.Close()
+		checkTranscriptFinish(t, &c, [][2]string{{"user", "Hello"}, {"assistant", "Answer"}, {"user", "Next"}})
+	})
+}
+
 func TestLiveTranscriptSlowCallbackBackpressure(t *testing.T) {
 	for _, closeWhileBlocked := range []bool{false, true} {
 		t.Run(fmt.Sprintf("closeWhileBlocked=%v", closeWhileBlocked), func(t *testing.T) {
