@@ -195,9 +195,6 @@ type ConversationItemUnion struct {
 	Result string                      `json:"result"`
 	// This field is from variant [ConversationItemImageGenerationCall].
 	Background string `json:"background"`
-	// This field is a union of [ConversationItemImageGenerationCallError], [string],
-	// [responses.McpToolCallErrorUnion]
-	Error ConversationItemUnionError `json:"error"`
 	// This field is from variant [ConversationItemImageGenerationCall].
 	OutputFormat string `json:"output_format"`
 	// This field is from variant [ConversationItemImageGenerationCall].
@@ -233,9 +230,11 @@ type ConversationItemUnion struct {
 	// This field is from variant [responses.ResponseFunctionShellToolCallOutput].
 	MaxOutputLength int64 `json:"max_output_length"`
 	// This field is from variant [responses.ResponseApplyPatchToolCall].
-	Operation         responses.ResponseApplyPatchToolCallOperationUnion `json:"operation"`
-	ServerLabel       string                                             `json:"server_label"`
-	ApprovalRequestID string                                             `json:"approval_request_id"`
+	Operation   responses.ResponseApplyPatchToolCallOperationUnion `json:"operation"`
+	ServerLabel string                                             `json:"server_label"`
+	// This field is a union of [string], [responses.McpToolCallErrorUnion]
+	Error             ConversationItemUnionError `json:"error"`
+	ApprovalRequestID string                     `json:"approval_request_id"`
 	// This field is from variant [ConversationItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [ConversationItemMcpApprovalResponse].
@@ -262,7 +261,6 @@ type ConversationItemUnion struct {
 		Action                   respjson.Field
 		Result                   respjson.Field
 		Background               respjson.Field
-		Error                    respjson.Field
 		OutputFormat             respjson.Field
 		Quality                  respjson.Field
 		RevisedPrompt            respjson.Field
@@ -283,6 +281,7 @@ type ConversationItemUnion struct {
 		MaxOutputLength          respjson.Field
 		Operation                respjson.Field
 		ServerLabel              respjson.Field
+		Error                    respjson.Field
 		ApprovalRequestID        respjson.Field
 		Approve                  respjson.Field
 		Reason                   respjson.Field
@@ -780,82 +779,6 @@ func (r *ConversationItemUnionAction) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// ConversationItemUnionError is an implicit subunion of [ConversationItemUnion].
-// ConversationItemUnionError provides convenient access to the sub-properties of
-// the union.
-//
-// For type safety it is recommended to directly use a variant of the
-// [ConversationItemUnion].
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString]
-type ConversationItemUnionError struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field is a union of [string], [int64]
-	Code    ConversationItemUnionErrorCode `json:"code"`
-	Message string                         `json:"message"`
-	// This field is from variant [ConversationItemImageGenerationCallError].
-	Param string `json:"param"`
-	Type  string `json:"type"`
-	// This field is from variant [ConversationItemImageGenerationCallError].
-	ModerationDetails ConversationItemImageGenerationCallErrorModerationDetails `json:"moderation_details"`
-	// This field is from variant [responses.McpToolCallErrorUnion].
-	Content any `json:"content"`
-	JSON    struct {
-		OfString          respjson.Field
-		Code              respjson.Field
-		Message           respjson.Field
-		Param             respjson.Field
-		Type              respjson.Field
-		ModerationDetails respjson.Field
-		Content           respjson.Field
-		raw               string
-	} `json:"-"`
-}
-
-func (r *ConversationItemUnionError) UnmarshalJSON(data []byte) error {
-	var decoded ConversationItemUnionError
-	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
-		return err
-	}
-	trimmed := bytes.TrimSpace(data)
-	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
-		if decoded.JSON.OfString.Valid() {
-			*r = decoded
-			return nil
-		}
-		return fmt.Errorf("cannot unmarshal JSON into ConversationItemUnionError: no matching inline variant")
-	}
-	*r = decoded
-	return nil
-}
-
-// ConversationItemUnionErrorCode is an implicit subunion of
-// [ConversationItemUnion]. ConversationItemUnionErrorCode provides convenient
-// access to the sub-properties of the union.
-//
-// For type safety it is recommended to directly use a variant of the
-// [ConversationItemUnion].
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfInt]
-type ConversationItemUnionErrorCode struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field will be present if the value is a [int64] instead of an object.
-	OfInt int64 `json:",inline"`
-	JSON  struct {
-		OfString respjson.Field
-		OfInt    respjson.Field
-		raw      string
-	} `json:"-"`
-}
-
-func (r *ConversationItemUnionErrorCode) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 // ConversationItemUnionTools is an implicit subunion of [ConversationItemUnion].
 // ConversationItemUnionTools provides convenient access to the sub-properties of
 // the union.
@@ -881,6 +804,50 @@ type ConversationItemUnionTools struct {
 
 func (r *ConversationItemUnionTools) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// ConversationItemUnionError is an implicit subunion of [ConversationItemUnion].
+// ConversationItemUnionError provides convenient access to the sub-properties of
+// the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [ConversationItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString]
+type ConversationItemUnionError struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	Code     int64  `json:"code"`
+	Message  string `json:"message"`
+	Type     string `json:"type"`
+	// This field is from variant [responses.McpToolCallErrorUnion].
+	Content any `json:"content"`
+	JSON    struct {
+		OfString respjson.Field
+		Code     respjson.Field
+		Message  respjson.Field
+		Type     respjson.Field
+		Content  respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (r *ConversationItemUnionError) UnmarshalJSON(data []byte) error {
+	var decoded ConversationItemUnionError
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
+		if decoded.JSON.OfString.Valid() {
+			*r = decoded
+			return nil
+		}
+		return fmt.Errorf("cannot unmarshal JSON into ConversationItemUnionError: no matching inline variant")
+	}
+	*r = decoded
+	return nil
 }
 
 // An image generation request made by the model.

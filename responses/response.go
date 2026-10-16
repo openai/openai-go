@@ -10862,7 +10862,7 @@ func (r ResponseFunctionWebSearch) ToParam() ResponseFunctionWebSearchParam {
 // ResponseFunctionWebSearchActionUnion contains all possible properties and values
 // from [ResponseFunctionWebSearchActionSearch],
 // [ResponseFunctionWebSearchActionOpenPage],
-// [ResponseFunctionWebSearchActionFindInPage].
+// [ResponseFunctionWebSearchActionFind].
 //
 // Use the [ResponseFunctionWebSearchActionUnion.AsAny] method to switch on the
 // variant.
@@ -10878,7 +10878,7 @@ type ResponseFunctionWebSearchActionUnion struct {
 	// This field is from variant [ResponseFunctionWebSearchActionSearch].
 	Sources []ResponseFunctionWebSearchActionSearchSource `json:"sources"`
 	URL     string                                        `json:"url"`
-	// This field is from variant [ResponseFunctionWebSearchActionFindInPage].
+	// This field is from variant [ResponseFunctionWebSearchActionFind].
 	Pattern string `json:"pattern"`
 	JSON    struct {
 		Type    respjson.Field
@@ -10898,16 +10898,16 @@ type anyResponseFunctionWebSearchAction interface {
 	implResponseFunctionWebSearchActionUnion()
 }
 
-func (ResponseFunctionWebSearchActionSearch) implResponseFunctionWebSearchActionUnion()     {}
-func (ResponseFunctionWebSearchActionOpenPage) implResponseFunctionWebSearchActionUnion()   {}
-func (ResponseFunctionWebSearchActionFindInPage) implResponseFunctionWebSearchActionUnion() {}
+func (ResponseFunctionWebSearchActionSearch) implResponseFunctionWebSearchActionUnion()   {}
+func (ResponseFunctionWebSearchActionOpenPage) implResponseFunctionWebSearchActionUnion() {}
+func (ResponseFunctionWebSearchActionFind) implResponseFunctionWebSearchActionUnion()     {}
 
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseFunctionWebSearchActionUnion.AsAny().(type) {
 //	case responses.ResponseFunctionWebSearchActionSearch:
 //	case responses.ResponseFunctionWebSearchActionOpenPage:
-//	case responses.ResponseFunctionWebSearchActionFindInPage:
+//	case responses.ResponseFunctionWebSearchActionFind:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -10933,7 +10933,7 @@ func (u ResponseFunctionWebSearchActionUnion) AsOpenPage() (v ResponseFunctionWe
 	return
 }
 
-func (u ResponseFunctionWebSearchActionUnion) AsFindInPage() (v ResponseFunctionWebSearchActionFindInPage) {
+func (u ResponseFunctionWebSearchActionUnion) AsFindInPage() (v ResponseFunctionWebSearchActionFind) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -11017,7 +11017,7 @@ func (r *ResponseFunctionWebSearchActionOpenPage) UnmarshalJSON(data []byte) err
 }
 
 // Action type "find_in_page": Searches for a pattern within a loaded page.
-type ResponseFunctionWebSearchActionFindInPage struct {
+type ResponseFunctionWebSearchActionFind struct {
 	// The pattern or text to search for within the page.
 	Pattern string `json:"pattern" api:"required"`
 	// The action type.
@@ -11035,8 +11035,8 @@ type ResponseFunctionWebSearchActionFindInPage struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r ResponseFunctionWebSearchActionFindInPage) RawJSON() string { return r.JSON.raw }
-func (r *ResponseFunctionWebSearchActionFindInPage) UnmarshalJSON(data []byte) error {
+func (r ResponseFunctionWebSearchActionFind) RawJSON() string { return r.JSON.raw }
+func (r *ResponseFunctionWebSearchActionFind) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -11085,9 +11085,9 @@ func (r *ResponseFunctionWebSearchParam) UnmarshalJSON(data []byte) error {
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ResponseFunctionWebSearchActionUnionParam struct {
-	OfSearch     *ResponseFunctionWebSearchActionSearchParam     `json:",omitzero,inline"`
-	OfOpenPage   *ResponseFunctionWebSearchActionOpenPageParam   `json:",omitzero,inline"`
-	OfFindInPage *ResponseFunctionWebSearchActionFindInPageParam `json:",omitzero,inline"`
+	OfSearch     *ResponseFunctionWebSearchActionSearchParam   `json:",omitzero,inline"`
+	OfOpenPage   *ResponseFunctionWebSearchActionOpenPageParam `json:",omitzero,inline"`
+	OfFindInPage *ResponseFunctionWebSearchActionFindParam     `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -11168,7 +11168,7 @@ func init() {
 		"type",
 		apijson.Discriminator[ResponseFunctionWebSearchActionSearchParam]("search"),
 		apijson.Discriminator[ResponseFunctionWebSearchActionOpenPageParam]("open_page"),
-		apijson.Discriminator[ResponseFunctionWebSearchActionFindInPageParam]("find_in_page"),
+		apijson.Discriminator[ResponseFunctionWebSearchActionFindParam]("find_in_page"),
 	)
 }
 
@@ -11244,7 +11244,7 @@ func (r *ResponseFunctionWebSearchActionOpenPageParam) UnmarshalJSON(data []byte
 // Action type "find_in_page": Searches for a pattern within a loaded page.
 //
 // The properties Pattern, Type, URL are required.
-type ResponseFunctionWebSearchActionFindInPageParam struct {
+type ResponseFunctionWebSearchActionFindParam struct {
 	// The pattern or text to search for within the page.
 	Pattern string `json:"pattern" api:"required"`
 	// The URL of the page searched for the pattern.
@@ -11256,11 +11256,11 @@ type ResponseFunctionWebSearchActionFindInPageParam struct {
 	paramObj
 }
 
-func (r ResponseFunctionWebSearchActionFindInPageParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponseFunctionWebSearchActionFindInPageParam
+func (r ResponseFunctionWebSearchActionFindParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseFunctionWebSearchActionFindParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ResponseFunctionWebSearchActionFindInPageParam) UnmarshalJSON(data []byte) error {
+func (r *ResponseFunctionWebSearchActionFindParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -12519,9 +12519,6 @@ type ResponseInputItemUnion struct {
 	Result           string                         `json:"result"`
 	// This field is from variant [ResponseInputItemImageGenerationCall].
 	Background string `json:"background"`
-	// This field is a union of [ResponseInputItemImageGenerationCallError], [string],
-	// [McpToolCallErrorUnion]
-	Error ResponseInputItemUnionError `json:"error"`
 	// This field is from variant [ResponseInputItemImageGenerationCall].
 	OutputFormat string `json:"output_format"`
 	// This field is from variant [ResponseInputItemImageGenerationCall].
@@ -12540,9 +12537,11 @@ type ResponseInputItemUnion struct {
 	// This field is from variant [ResponseInputItemShellCallOutput].
 	MaxOutputLength int64 `json:"max_output_length"`
 	// This field is from variant [ResponseInputItemApplyPatchCall].
-	Operation         ResponseInputItemApplyPatchCallOperationUnion `json:"operation"`
-	ServerLabel       string                                        `json:"server_label"`
-	ApprovalRequestID string                                        `json:"approval_request_id"`
+	Operation   ResponseInputItemApplyPatchCallOperationUnion `json:"operation"`
+	ServerLabel string                                        `json:"server_label"`
+	// This field is a union of [string], [McpToolCallErrorUnion]
+	Error             ResponseInputItemUnionError `json:"error"`
+	ApprovalRequestID string                      `json:"approval_request_id"`
 	// This field is from variant [ResponseInputItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [ResponseInputItemMcpApprovalResponse].
@@ -12578,7 +12577,6 @@ type ResponseInputItemUnion struct {
 		EncryptedContent         respjson.Field
 		Result                   respjson.Field
 		Background               respjson.Field
-		Error                    respjson.Field
 		OutputFormat             respjson.Field
 		Quality                  respjson.Field
 		RevisedPrompt            respjson.Field
@@ -12590,6 +12588,7 @@ type ResponseInputItemUnion struct {
 		MaxOutputLength          respjson.Field
 		Operation                respjson.Field
 		ServerLabel              respjson.Field
+		Error                    respjson.Field
 		ApprovalRequestID        respjson.Field
 		Approve                  respjson.Field
 		Reason                   respjson.Field
@@ -13194,25 +13193,18 @@ func (r *ResponseInputItemUnionTools) UnmarshalJSON(data []byte) error {
 type ResponseInputItemUnionError struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
-	// This field is a union of [string], [int64]
-	Code    ResponseInputItemUnionErrorCode `json:"code"`
-	Message string                          `json:"message"`
-	// This field is from variant [ResponseInputItemImageGenerationCallError].
-	Param string `json:"param"`
-	Type  string `json:"type"`
-	// This field is from variant [ResponseInputItemImageGenerationCallError].
-	ModerationDetails ResponseInputItemImageGenerationCallErrorModerationDetails `json:"moderation_details"`
+	Code     int64  `json:"code"`
+	Message  string `json:"message"`
+	Type     string `json:"type"`
 	// This field is from variant [McpToolCallErrorUnion].
 	Content any `json:"content"`
 	JSON    struct {
-		OfString          respjson.Field
-		Code              respjson.Field
-		Message           respjson.Field
-		Param             respjson.Field
-		Type              respjson.Field
-		ModerationDetails respjson.Field
-		Content           respjson.Field
-		raw               string
+		OfString respjson.Field
+		Code     respjson.Field
+		Message  respjson.Field
+		Type     respjson.Field
+		Content  respjson.Field
+		raw      string
 	} `json:"-"`
 }
 
@@ -13231,31 +13223,6 @@ func (r *ResponseInputItemUnionError) UnmarshalJSON(data []byte) error {
 	}
 	*r = decoded
 	return nil
-}
-
-// ResponseInputItemUnionErrorCode is an implicit subunion of
-// [ResponseInputItemUnion]. ResponseInputItemUnionErrorCode provides convenient
-// access to the sub-properties of the union.
-//
-// For type safety it is recommended to directly use a variant of the
-// [ResponseInputItemUnion].
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfInt]
-type ResponseInputItemUnionErrorCode struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field will be present if the value is a [int64] instead of an object.
-	OfInt int64 `json:",inline"`
-	JSON  struct {
-		OfString respjson.Field
-		OfInt    respjson.Field
-		raw      string
-	} `json:"-"`
-}
-
-func (r *ResponseInputItemUnionErrorCode) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 // ToParam converts this ResponseInputItemUnion to a ResponseInputItemUnionParam.
@@ -14938,7 +14905,7 @@ func ResponseInputItemParamOfComputerCallOutput(callID string, output ResponseCo
 }
 
 func ResponseInputItemParamOfWebSearchCall[
-	T ResponseFunctionWebSearchActionSearchParam | ResponseFunctionWebSearchActionOpenPageParam | ResponseFunctionWebSearchActionFindInPageParam,
+	T ResponseFunctionWebSearchActionSearchParam | ResponseFunctionWebSearchActionOpenPageParam | ResponseFunctionWebSearchActionFindParam,
 ](action T, id string, status ResponseFunctionWebSearchStatus) ResponseInputItemUnionParam {
 	var webSearchCall ResponseFunctionWebSearchParam
 	switch v := any(action).(type) {
@@ -14946,7 +14913,7 @@ func ResponseInputItemParamOfWebSearchCall[
 		webSearchCall.Action.OfSearch = &v
 	case ResponseFunctionWebSearchActionOpenPageParam:
 		webSearchCall.Action.OfOpenPage = &v
-	case ResponseFunctionWebSearchActionFindInPageParam:
+	case ResponseFunctionWebSearchActionFindParam:
 		webSearchCall.Action.OfFindInPage = &v
 	}
 	webSearchCall.ID = id
@@ -15755,7 +15722,7 @@ func (u ResponseInputItemUnionParam) GetAction() (res responseInputItemUnionPara
 // [*ResponseComputerToolCallActionWaitParam],
 // [*ResponseFunctionWebSearchActionSearchParam],
 // [*ResponseFunctionWebSearchActionOpenPageParam],
-// [*ResponseFunctionWebSearchActionFindInPageParam], [*string],
+// [*ResponseFunctionWebSearchActionFindParam], [*string],
 // [*ResponseInputItemLocalShellCallActionParam],
 // [*ResponseInputItemShellCallActionParam]
 type responseInputItemUnionParamAction struct{ any }
@@ -15774,7 +15741,7 @@ type responseInputItemUnionParamAction struct{ any }
 //	case *responses.ResponseComputerToolCallActionWaitParam:
 //	case *responses.ResponseFunctionWebSearchActionSearchParam:
 //	case *responses.ResponseFunctionWebSearchActionOpenPageParam:
-//	case *responses.ResponseFunctionWebSearchActionFindInPageParam:
+//	case *responses.ResponseFunctionWebSearchActionFindParam:
 //	case *string:
 //	case *responses.ResponseInputItemLocalShellCallActionParam:
 //	case *responses.ResponseInputItemShellCallActionParam:
@@ -15786,8 +15753,8 @@ func (u responseInputItemUnionParamAction) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetButton() *string {
 	switch vt := u.any.(type) {
-	case *ResponseComputerToolCallActionUnionParam:
-		return vt.GetButton()
+	case *ResponseComputerToolCallActionClickParam:
+		return &vt.Button
 	}
 	return nil
 }
@@ -15795,8 +15762,8 @@ func (u responseInputItemUnionParamAction) GetButton() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetPath() []ResponseComputerToolCallActionDragPathParam {
 	switch vt := u.any.(type) {
-	case *ResponseComputerToolCallActionUnionParam:
-		return vt.GetPath()
+	case *ResponseComputerToolCallActionDragParam:
+		return vt.Path
 	}
 	return nil
 }
@@ -15804,8 +15771,8 @@ func (u responseInputItemUnionParamAction) GetPath() []ResponseComputerToolCallA
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetScrollX() *int64 {
 	switch vt := u.any.(type) {
-	case *ResponseComputerToolCallActionUnionParam:
-		return vt.GetScrollX()
+	case *ResponseComputerToolCallActionScrollParam:
+		return &vt.ScrollX
 	}
 	return nil
 }
@@ -15813,8 +15780,8 @@ func (u responseInputItemUnionParamAction) GetScrollX() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetScrollY() *int64 {
 	switch vt := u.any.(type) {
-	case *ResponseComputerToolCallActionUnionParam:
-		return vt.GetScrollY()
+	case *ResponseComputerToolCallActionScrollParam:
+		return &vt.ScrollY
 	}
 	return nil
 }
@@ -15822,8 +15789,8 @@ func (u responseInputItemUnionParamAction) GetScrollY() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetText() *string {
 	switch vt := u.any.(type) {
-	case *ResponseComputerToolCallActionUnionParam:
-		return vt.GetText()
+	case *ResponseComputerToolCallActionTypeParam:
+		return &vt.Text
 	}
 	return nil
 }
@@ -15831,8 +15798,8 @@ func (u responseInputItemUnionParamAction) GetText() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetQueries() []string {
 	switch vt := u.any.(type) {
-	case *ResponseFunctionWebSearchActionUnionParam:
-		return vt.GetQueries()
+	case *ResponseFunctionWebSearchActionSearchParam:
+		return vt.Queries
 	}
 	return nil
 }
@@ -15840,8 +15807,8 @@ func (u responseInputItemUnionParamAction) GetQueries() []string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetQuery() *string {
 	switch vt := u.any.(type) {
-	case *ResponseFunctionWebSearchActionUnionParam:
-		return vt.GetQuery()
+	case *ResponseFunctionWebSearchActionSearchParam:
+		return paramutil.AddrIfPresent(vt.Query)
 	}
 	return nil
 }
@@ -15849,8 +15816,8 @@ func (u responseInputItemUnionParamAction) GetQuery() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetSources() []ResponseFunctionWebSearchActionSearchSourceParam {
 	switch vt := u.any.(type) {
-	case *ResponseFunctionWebSearchActionUnionParam:
-		return vt.GetSources()
+	case *ResponseFunctionWebSearchActionSearchParam:
+		return vt.Sources
 	}
 	return nil
 }
@@ -15858,8 +15825,8 @@ func (u responseInputItemUnionParamAction) GetSources() []ResponseFunctionWebSea
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetPattern() *string {
 	switch vt := u.any.(type) {
-	case *ResponseFunctionWebSearchActionUnionParam:
-		return vt.GetPattern()
+	case *ResponseFunctionWebSearchActionFindParam:
+		return &vt.Pattern
 	}
 	return nil
 }
@@ -15921,10 +15888,30 @@ func (u responseInputItemUnionParamAction) GetMaxOutputLength() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetType() *string {
 	switch vt := u.any.(type) {
-	case *ResponseComputerToolCallActionUnionParam:
-		return vt.GetType()
-	case *ResponseFunctionWebSearchActionUnionParam:
-		return vt.GetType()
+	case *ResponseComputerToolCallActionClickParam:
+		return (*string)(&vt.Type)
+	case *ResponseComputerToolCallActionDoubleClickParam:
+		return (*string)(&vt.Type)
+	case *ResponseComputerToolCallActionDragParam:
+		return (*string)(&vt.Type)
+	case *ResponseComputerToolCallActionKeypressParam:
+		return (*string)(&vt.Type)
+	case *ResponseComputerToolCallActionMoveParam:
+		return (*string)(&vt.Type)
+	case *ResponseComputerToolCallActionScreenshotParam:
+		return (*string)(&vt.Type)
+	case *ResponseComputerToolCallActionScrollParam:
+		return (*string)(&vt.Type)
+	case *ResponseComputerToolCallActionTypeParam:
+		return (*string)(&vt.Type)
+	case *ResponseComputerToolCallActionWaitParam:
+		return (*string)(&vt.Type)
+	case *ResponseFunctionWebSearchActionSearchParam:
+		return (*string)(&vt.Type)
+	case *ResponseFunctionWebSearchActionOpenPageParam:
+		return (*string)(&vt.Type)
+	case *ResponseFunctionWebSearchActionFindParam:
+		return (*string)(&vt.Type)
 	case *ResponseInputItemLocalShellCallActionParam:
 		return (*string)(&vt.Type)
 	}
@@ -15934,8 +15921,14 @@ func (u responseInputItemUnionParamAction) GetType() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetX() *int64 {
 	switch vt := u.any.(type) {
-	case *ResponseComputerToolCallActionUnionParam:
-		return vt.GetX()
+	case *ResponseComputerToolCallActionClickParam:
+		return (*int64)(&vt.X)
+	case *ResponseComputerToolCallActionDoubleClickParam:
+		return (*int64)(&vt.X)
+	case *ResponseComputerToolCallActionMoveParam:
+		return (*int64)(&vt.X)
+	case *ResponseComputerToolCallActionScrollParam:
+		return (*int64)(&vt.X)
 	}
 	return nil
 }
@@ -15943,8 +15936,14 @@ func (u responseInputItemUnionParamAction) GetX() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetY() *int64 {
 	switch vt := u.any.(type) {
-	case *ResponseComputerToolCallActionUnionParam:
-		return vt.GetY()
+	case *ResponseComputerToolCallActionClickParam:
+		return (*int64)(&vt.Y)
+	case *ResponseComputerToolCallActionDoubleClickParam:
+		return (*int64)(&vt.Y)
+	case *ResponseComputerToolCallActionMoveParam:
+		return (*int64)(&vt.Y)
+	case *ResponseComputerToolCallActionScrollParam:
+		return (*int64)(&vt.Y)
 	}
 	return nil
 }
@@ -15952,8 +15951,10 @@ func (u responseInputItemUnionParamAction) GetY() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetURL() *string {
 	switch vt := u.any.(type) {
-	case *ResponseFunctionWebSearchActionUnionParam:
-		return vt.GetURL()
+	case *ResponseFunctionWebSearchActionOpenPageParam:
+		return paramutil.AddrIfPresent(vt.URL)
+	case *ResponseFunctionWebSearchActionFindParam:
+		return (*string)(&vt.URL)
 	}
 	return nil
 }
@@ -15972,8 +15973,18 @@ func (u responseInputItemUnionParamAction) GetTimeoutMs() *int64 {
 // Returns a pointer to the underlying variant's Keys property, if present.
 func (u responseInputItemUnionParamAction) GetKeys() []string {
 	switch vt := u.any.(type) {
-	case *ResponseComputerToolCallActionUnionParam:
-		return vt.GetKeys()
+	case *ResponseComputerToolCallActionClickParam:
+		return vt.Keys
+	case *ResponseComputerToolCallActionDoubleClickParam:
+		return vt.Keys
+	case *ResponseComputerToolCallActionDragParam:
+		return vt.Keys
+	case *ResponseComputerToolCallActionKeypressParam:
+		return vt.Keys
+	case *ResponseComputerToolCallActionMoveParam:
+		return vt.Keys
+	case *ResponseComputerToolCallActionScrollParam:
+		return vt.Keys
 	}
 	return nil
 }
@@ -16117,22 +16128,38 @@ func (u responseInputItemUnionParamCaller) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamCaller) GetType() *string {
 	switch vt := u.any.(type) {
-	case *ResponseFunctionToolCallCallerUnionParam:
-		return vt.GetType()
-	case *ResponseInputItemFunctionCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *ResponseInputItemShellCallCallerUnionParam:
-		return vt.GetType()
-	case *ResponseInputItemShellCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *ResponseInputItemApplyPatchCallCallerUnionParam:
-		return vt.GetType()
-	case *ResponseInputItemApplyPatchCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *ResponseCustomToolCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *ResponseCustomToolCallCallerUnionParam:
-		return vt.GetType()
+	case *ResponseFunctionToolCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *ResponseFunctionToolCallCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemFunctionCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemFunctionCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemShellCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemShellCallCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemShellCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemShellCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemApplyPatchCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemApplyPatchCallCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemApplyPatchCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemApplyPatchCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *ResponseCustomToolCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *ResponseCustomToolCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *ResponseCustomToolCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *ResponseCustomToolCallCallerProgramParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -16140,22 +16167,22 @@ func (u responseInputItemUnionParamCaller) GetType() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamCaller) GetCallerID() *string {
 	switch vt := u.any.(type) {
-	case *ResponseFunctionToolCallCallerUnionParam:
-		return vt.GetCallerID()
-	case *ResponseInputItemFunctionCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *ResponseInputItemShellCallCallerUnionParam:
-		return vt.GetCallerID()
-	case *ResponseInputItemShellCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *ResponseInputItemApplyPatchCallCallerUnionParam:
-		return vt.GetCallerID()
-	case *ResponseInputItemApplyPatchCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *ResponseCustomToolCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *ResponseCustomToolCallCallerUnionParam:
-		return vt.GetCallerID()
+	case *ResponseFunctionToolCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *ResponseInputItemFunctionCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *ResponseInputItemShellCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *ResponseInputItemShellCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *ResponseInputItemApplyPatchCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *ResponseInputItemApplyPatchCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *ResponseCustomToolCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *ResponseCustomToolCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
 	}
 	return nil
 }
@@ -16193,9 +16220,7 @@ func (u responseInputItemUnionParamTools) AsAny() any { return u.any }
 //
 // Or use AsAny() to get the underlying value
 func (u ResponseInputItemUnionParam) GetError() (res responseInputItemUnionParamError) {
-	if vt := u.OfImageGenerationCall; vt != nil {
-		res.any = &vt.Error
-	} else if vt := u.OfMcpListTools; vt != nil && vt.Error.Valid() {
+	if vt := u.OfMcpListTools; vt != nil && vt.Error.Valid() {
 		res.any = &vt.Error.Value
 	} else if vt := u.OfMcpCall; vt != nil {
 		res.any = vt.Error.asAny()
@@ -16203,15 +16228,13 @@ func (u ResponseInputItemUnionParam) GetError() (res responseInputItemUnionParam
 	return
 }
 
-// Can have the runtime types [*ResponseInputItemImageGenerationCallErrorParam],
-// [*string], [*McpToolCallErrorMcpProtocolErrorParam],
+// Can have the runtime types [*string], [*McpToolCallErrorMcpProtocolErrorParam],
 // [*McpToolCallErrorMcpToolExecutionErrorParam], [*McpToolCallErrorHTTPErrorParam]
 type responseInputItemUnionParamError struct{ any }
 
 // Use the following switch statement to get the type of the union:
 //
 //	switch u.AsAny().(type) {
-//	case *responses.ResponseInputItemImageGenerationCallErrorParam:
 //	case *string:
 //	case *responses.McpToolCallErrorMcpProtocolErrorParam:
 //	case *responses.McpToolCallErrorMcpToolExecutionErrorParam:
@@ -16222,67 +16245,23 @@ type responseInputItemUnionParamError struct{ any }
 func (u responseInputItemUnionParamError) AsAny() any { return u.any }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u responseInputItemUnionParamError) GetParam() *string {
+func (u responseInputItemUnionParamError) GetCode() *int64 {
 	switch vt := u.any.(type) {
-	case *ResponseInputItemImageGenerationCallErrorParam:
-		return paramutil.AddrIfPresent(vt.Param)
+	case *McpToolCallErrorMcpProtocolErrorParam:
+		return (*int64)(&vt.Code)
+	case *McpToolCallErrorHTTPErrorParam:
+		return (*int64)(&vt.Code)
 	}
 	return nil
 }
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u responseInputItemUnionParamError) GetModerationDetails() *ResponseInputItemImageGenerationCallErrorModerationDetailsParam {
-	switch vt := u.any.(type) {
-	case *ResponseInputItemImageGenerationCallErrorParam:
-		return &vt.ModerationDetails
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u responseInputItemUnionParamError) GetContent() *any {
-	switch vt := u.any.(type) {
-	case *McpToolCallErrorUnionParam:
-		return vt.GetContent()
-	}
-	return nil
-}
-
-// Returns a subunion which exports methods to access subproperties
-//
-// Or use AsAny() to get the underlying value
-func (u responseInputItemUnionParamError) GetCode() (res responseInputItemUnionParamErrorCode) {
-	switch vt := u.any.(type) {
-	case *ResponseInputItemImageGenerationCallErrorParam:
-		if vt.Code.Valid() {
-			res.any = &vt.Code.Value
-		}
-	case *McpToolCallErrorUnionParam:
-		res.any = vt.GetCode()
-	}
-	return res
-}
-
-// Can have the runtime types [*string], [*int64]
-type responseInputItemUnionParamErrorCode struct{ any }
-
-// Use the following switch statement to get the type of the union:
-//
-//	switch u.AsAny().(type) {
-//	case *string:
-//	case *int64:
-//	default:
-//	    fmt.Errorf("not present")
-//	}
-func (u responseInputItemUnionParamErrorCode) AsAny() any { return u.any }
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamError) GetMessage() *string {
 	switch vt := u.any.(type) {
-	case *ResponseInputItemImageGenerationCallErrorParam:
+	case *McpToolCallErrorMcpProtocolErrorParam:
 		return (*string)(&vt.Message)
-	case *McpToolCallErrorUnionParam:
-		return vt.GetMessage()
+	case *McpToolCallErrorHTTPErrorParam:
+		return (*string)(&vt.Message)
 	}
 	return nil
 }
@@ -16290,10 +16269,21 @@ func (u responseInputItemUnionParamError) GetMessage() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamError) GetType() *string {
 	switch vt := u.any.(type) {
-	case *ResponseInputItemImageGenerationCallErrorParam:
+	case *McpToolCallErrorMcpProtocolErrorParam:
 		return (*string)(&vt.Type)
-	case *McpToolCallErrorUnionParam:
-		return vt.GetType()
+	case *McpToolCallErrorMcpToolExecutionErrorParam:
+		return (*string)(&vt.Type)
+	case *McpToolCallErrorHTTPErrorParam:
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u responseInputItemUnionParamError) GetContent() *any {
+	switch vt := u.any.(type) {
+	case *McpToolCallErrorMcpToolExecutionErrorParam:
+		return &vt.Content
 	}
 	return nil
 }
@@ -18233,9 +18223,6 @@ type ResponseItemUnion struct {
 	Result      string `json:"result"`
 	// This field is from variant [ResponseItemImageGenerationCall].
 	Background string `json:"background"`
-	// This field is a union of [ResponseItemImageGenerationCallError], [string],
-	// [McpToolCallErrorUnion]
-	Error ResponseItemUnionError `json:"error"`
 	// This field is from variant [ResponseItemImageGenerationCall].
 	OutputFormat string `json:"output_format"`
 	// This field is from variant [ResponseItemImageGenerationCall].
@@ -18253,9 +18240,11 @@ type ResponseItemUnion struct {
 	// This field is from variant [ResponseFunctionShellToolCallOutput].
 	MaxOutputLength int64 `json:"max_output_length"`
 	// This field is from variant [ResponseApplyPatchToolCall].
-	Operation         ResponseApplyPatchToolCallOperationUnion `json:"operation"`
-	ServerLabel       string                                   `json:"server_label"`
-	ApprovalRequestID string                                   `json:"approval_request_id"`
+	Operation   ResponseApplyPatchToolCallOperationUnion `json:"operation"`
+	ServerLabel string                                   `json:"server_label"`
+	// This field is a union of [string], [McpToolCallErrorUnion]
+	Error             ResponseItemUnionError `json:"error"`
+	ApprovalRequestID string                 `json:"approval_request_id"`
 	// This field is from variant [ResponseItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [ResponseItemMcpApprovalResponse].
@@ -18292,7 +18281,6 @@ type ResponseItemUnion struct {
 		Fingerprint              respjson.Field
 		Result                   respjson.Field
 		Background               respjson.Field
-		Error                    respjson.Field
 		OutputFormat             respjson.Field
 		Quality                  respjson.Field
 		RevisedPrompt            respjson.Field
@@ -18303,6 +18291,7 @@ type ResponseItemUnion struct {
 		MaxOutputLength          respjson.Field
 		Operation                respjson.Field
 		ServerLabel              respjson.Field
+		Error                    respjson.Field
 		ApprovalRequestID        respjson.Field
 		Approve                  respjson.Field
 		Reason                   respjson.Field
@@ -18873,25 +18862,18 @@ func (r *ResponseItemUnionTools) UnmarshalJSON(data []byte) error {
 type ResponseItemUnionError struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
-	// This field is a union of [string], [int64]
-	Code    ResponseItemUnionErrorCode `json:"code"`
-	Message string                     `json:"message"`
-	// This field is from variant [ResponseItemImageGenerationCallError].
-	Param string `json:"param"`
-	Type  string `json:"type"`
-	// This field is from variant [ResponseItemImageGenerationCallError].
-	ModerationDetails ResponseItemImageGenerationCallErrorModerationDetails `json:"moderation_details"`
+	Code     int64  `json:"code"`
+	Message  string `json:"message"`
+	Type     string `json:"type"`
 	// This field is from variant [McpToolCallErrorUnion].
 	Content any `json:"content"`
 	JSON    struct {
-		OfString          respjson.Field
-		Code              respjson.Field
-		Message           respjson.Field
-		Param             respjson.Field
-		Type              respjson.Field
-		ModerationDetails respjson.Field
-		Content           respjson.Field
-		raw               string
+		OfString respjson.Field
+		Code     respjson.Field
+		Message  respjson.Field
+		Type     respjson.Field
+		Content  respjson.Field
+		raw      string
 	} `json:"-"`
 }
 
@@ -18910,31 +18892,6 @@ func (r *ResponseItemUnionError) UnmarshalJSON(data []byte) error {
 	}
 	*r = decoded
 	return nil
-}
-
-// ResponseItemUnionErrorCode is an implicit subunion of [ResponseItemUnion].
-// ResponseItemUnionErrorCode provides convenient access to the sub-properties of
-// the union.
-//
-// For type safety it is recommended to directly use a variant of the
-// [ResponseItemUnion].
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfInt]
-type ResponseItemUnionErrorCode struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field will be present if the value is a [int64] instead of an object.
-	OfInt int64 `json:",inline"`
-	JSON  struct {
-		OfString respjson.Field
-		OfInt    respjson.Field
-		raw      string
-	} `json:"-"`
-}
-
-func (r *ResponseItemUnionErrorCode) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 type ResponseItemAdditionalTools struct {
@@ -19723,9 +19680,6 @@ type ResponseOutputItemUnion struct {
 	Tools ResponseOutputItemUnionTools `json:"tools"`
 	// This field is from variant [ResponseOutputItemImageGenerationCall].
 	Background string `json:"background"`
-	// This field is a union of [ResponseOutputItemImageGenerationCallError],
-	// [McpToolCallErrorUnion], [string]
-	Error ResponseOutputItemUnionError `json:"error"`
 	// This field is from variant [ResponseOutputItemImageGenerationCall].
 	OutputFormat string `json:"output_format"`
 	// This field is from variant [ResponseOutputItemImageGenerationCall].
@@ -19746,6 +19700,8 @@ type ResponseOutputItemUnion struct {
 	Operation         ResponseApplyPatchToolCallOperationUnion `json:"operation"`
 	ServerLabel       string                                   `json:"server_label"`
 	ApprovalRequestID string                                   `json:"approval_request_id"`
+	// This field is a union of [McpToolCallErrorUnion], [string]
+	Error ResponseOutputItemUnionError `json:"error"`
 	// This field is from variant [ResponseOutputItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [ResponseOutputItemMcpApprovalResponse].
@@ -19781,7 +19737,6 @@ type ResponseOutputItemUnion struct {
 		Execution                respjson.Field
 		Tools                    respjson.Field
 		Background               respjson.Field
-		Error                    respjson.Field
 		OutputFormat             respjson.Field
 		Quality                  respjson.Field
 		RevisedPrompt            respjson.Field
@@ -19793,6 +19748,7 @@ type ResponseOutputItemUnion struct {
 		Operation                respjson.Field
 		ServerLabel              respjson.Field
 		ApprovalRequestID        respjson.Field
+		Error                    respjson.Field
 		Approve                  respjson.Field
 		Reason                   respjson.Field
 		Input                    respjson.Field
@@ -20338,25 +20294,18 @@ func (r *ResponseOutputItemUnionTools) UnmarshalJSON(data []byte) error {
 type ResponseOutputItemUnionError struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
-	// This field is a union of [string], [int64]
-	Code    ResponseOutputItemUnionErrorCode `json:"code"`
-	Message string                           `json:"message"`
-	// This field is from variant [ResponseOutputItemImageGenerationCallError].
-	Param string `json:"param"`
-	Type  string `json:"type"`
-	// This field is from variant [ResponseOutputItemImageGenerationCallError].
-	ModerationDetails ResponseOutputItemImageGenerationCallErrorModerationDetails `json:"moderation_details"`
+	Code     int64  `json:"code"`
+	Message  string `json:"message"`
+	Type     string `json:"type"`
 	// This field is from variant [McpToolCallErrorUnion].
 	Content any `json:"content"`
 	JSON    struct {
-		OfString          respjson.Field
-		Code              respjson.Field
-		Message           respjson.Field
-		Param             respjson.Field
-		Type              respjson.Field
-		ModerationDetails respjson.Field
-		Content           respjson.Field
-		raw               string
+		OfString respjson.Field
+		Code     respjson.Field
+		Message  respjson.Field
+		Type     respjson.Field
+		Content  respjson.Field
+		raw      string
 	} `json:"-"`
 }
 
@@ -20375,31 +20324,6 @@ func (r *ResponseOutputItemUnionError) UnmarshalJSON(data []byte) error {
 	}
 	*r = decoded
 	return nil
-}
-
-// ResponseOutputItemUnionErrorCode is an implicit subunion of
-// [ResponseOutputItemUnion]. ResponseOutputItemUnionErrorCode provides convenient
-// access to the sub-properties of the union.
-//
-// For type safety it is recommended to directly use a variant of the
-// [ResponseOutputItemUnion].
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfInt]
-type ResponseOutputItemUnionErrorCode struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field will be present if the value is a [int64] instead of an object.
-	OfInt int64 `json:",inline"`
-	JSON  struct {
-		OfString respjson.Field
-		OfInt    respjson.Field
-		raw      string
-	} `json:"-"`
-}
-
-func (r *ResponseOutputItemUnionErrorCode) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 type ResponseOutputItemProgram struct {
@@ -27528,8 +27452,8 @@ func (u responseToolSearchOutputItemParamToolUnionFilters) AsAny() any { return 
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseToolSearchOutputItemParamToolUnionFilters) GetKey() *string {
 	switch vt := u.any.(type) {
-	case *FileSearchToolFiltersUnionParam:
-		return vt.GetKey()
+	case *shared.ComparisonFilterParam:
+		return &vt.Key
 	}
 	return nil
 }
@@ -27537,8 +27461,8 @@ func (u responseToolSearchOutputItemParamToolUnionFilters) GetKey() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseToolSearchOutputItemParamToolUnionFilters) GetValue() *shared.ComparisonFilterValueUnionParam {
 	switch vt := u.any.(type) {
-	case *FileSearchToolFiltersUnionParam:
-		return vt.GetValue()
+	case *shared.ComparisonFilterParam:
+		return &vt.Value
 	}
 	return nil
 }
@@ -27546,8 +27470,8 @@ func (u responseToolSearchOutputItemParamToolUnionFilters) GetValue() *shared.Co
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseToolSearchOutputItemParamToolUnionFilters) GetFilters() []shared.CompoundFilterFilterUnionParam {
 	switch vt := u.any.(type) {
-	case *FileSearchToolFiltersUnionParam:
-		return vt.GetFilters()
+	case *shared.CompoundFilterParam:
+		return vt.Filters
 	}
 	return nil
 }
@@ -27564,8 +27488,10 @@ func (u responseToolSearchOutputItemParamToolUnionFilters) GetAllowedDomains() [
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseToolSearchOutputItemParamToolUnionFilters) GetType() *string {
 	switch vt := u.any.(type) {
-	case *FileSearchToolFiltersUnionParam:
-		return vt.GetType()
+	case *shared.ComparisonFilterParam:
+		return (*string)(&vt.Type)
+	case *shared.CompoundFilterParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -27601,8 +27527,8 @@ func (u responseToolSearchOutputItemParamToolUnionEnvironment) AsAny() any { ret
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetFileIDs() []string {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetFileIDs()
+	case *ContainerAutoParam:
+		return vt.FileIDs
 	}
 	return nil
 }
@@ -27610,8 +27536,8 @@ func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetFileIDs() []st
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetMemoryLimit() *string {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetMemoryLimit()
+	case *ContainerAutoParam:
+		return (*string)(&vt.MemoryLimit)
 	}
 	return nil
 }
@@ -27619,8 +27545,8 @@ func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetMemoryLimit() 
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetNetworkPolicy() *ContainerAutoNetworkPolicyUnionParam {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetNetworkPolicy()
+	case *ContainerAutoParam:
+		return &vt.NetworkPolicy
 	}
 	return nil
 }
@@ -27628,8 +27554,8 @@ func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetNetworkPolicy(
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetContainerID() *string {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetContainerID()
+	case *ContainerReferenceParam:
+		return &vt.ContainerID
 	}
 	return nil
 }
@@ -27637,8 +27563,12 @@ func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetContainerID() 
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetType() *string {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetType()
+	case *ContainerAutoParam:
+		return (*string)(&vt.Type)
+	case *LocalEnvironmentParam:
+		return (*string)(&vt.Type)
+	case *ContainerReferenceParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -27648,8 +27578,10 @@ func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetType() *string
 // Or use AsAny() to get the underlying value
 func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetSkills() (res responseToolSearchOutputItemParamToolUnionEnvironmentSkills) {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		res.any = vt.GetSkills()
+	case *ContainerAutoParam:
+		res.any = &vt.Skills
+	case *LocalEnvironmentParam:
+		res.any = &vt.Skills
 	}
 	return res
 }
@@ -34007,8 +33939,8 @@ func (u toolUnionParamFilters) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamFilters) GetKey() *string {
 	switch vt := u.any.(type) {
-	case *FileSearchToolFiltersUnionParam:
-		return vt.GetKey()
+	case *shared.ComparisonFilterParam:
+		return &vt.Key
 	}
 	return nil
 }
@@ -34016,8 +33948,8 @@ func (u toolUnionParamFilters) GetKey() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamFilters) GetValue() *shared.ComparisonFilterValueUnionParam {
 	switch vt := u.any.(type) {
-	case *FileSearchToolFiltersUnionParam:
-		return vt.GetValue()
+	case *shared.ComparisonFilterParam:
+		return &vt.Value
 	}
 	return nil
 }
@@ -34025,8 +33957,8 @@ func (u toolUnionParamFilters) GetValue() *shared.ComparisonFilterValueUnionPara
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamFilters) GetFilters() []shared.CompoundFilterFilterUnionParam {
 	switch vt := u.any.(type) {
-	case *FileSearchToolFiltersUnionParam:
-		return vt.GetFilters()
+	case *shared.CompoundFilterParam:
+		return vt.Filters
 	}
 	return nil
 }
@@ -34043,8 +33975,10 @@ func (u toolUnionParamFilters) GetAllowedDomains() []string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamFilters) GetType() *string {
 	switch vt := u.any.(type) {
-	case *FileSearchToolFiltersUnionParam:
-		return vt.GetType()
+	case *shared.ComparisonFilterParam:
+		return (*string)(&vt.Type)
+	case *shared.CompoundFilterParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -34080,8 +34014,8 @@ func (u toolUnionParamEnvironment) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamEnvironment) GetFileIDs() []string {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetFileIDs()
+	case *ContainerAutoParam:
+		return vt.FileIDs
 	}
 	return nil
 }
@@ -34089,8 +34023,8 @@ func (u toolUnionParamEnvironment) GetFileIDs() []string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamEnvironment) GetMemoryLimit() *string {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetMemoryLimit()
+	case *ContainerAutoParam:
+		return (*string)(&vt.MemoryLimit)
 	}
 	return nil
 }
@@ -34098,8 +34032,8 @@ func (u toolUnionParamEnvironment) GetMemoryLimit() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamEnvironment) GetNetworkPolicy() *ContainerAutoNetworkPolicyUnionParam {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetNetworkPolicy()
+	case *ContainerAutoParam:
+		return &vt.NetworkPolicy
 	}
 	return nil
 }
@@ -34107,8 +34041,8 @@ func (u toolUnionParamEnvironment) GetNetworkPolicy() *ContainerAutoNetworkPolic
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamEnvironment) GetContainerID() *string {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetContainerID()
+	case *ContainerReferenceParam:
+		return &vt.ContainerID
 	}
 	return nil
 }
@@ -34116,8 +34050,12 @@ func (u toolUnionParamEnvironment) GetContainerID() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamEnvironment) GetType() *string {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetType()
+	case *ContainerAutoParam:
+		return (*string)(&vt.Type)
+	case *LocalEnvironmentParam:
+		return (*string)(&vt.Type)
+	case *ContainerReferenceParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -34127,8 +34065,10 @@ func (u toolUnionParamEnvironment) GetType() *string {
 // Or use AsAny() to get the underlying value
 func (u toolUnionParamEnvironment) GetSkills() (res toolUnionParamEnvironmentSkills) {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		res.any = vt.GetSkills()
+	case *ContainerAutoParam:
+		res.any = &vt.Skills
+	case *LocalEnvironmentParam:
+		res.any = &vt.Skills
 	}
 	return res
 }

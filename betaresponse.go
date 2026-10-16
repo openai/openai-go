@@ -14117,9 +14117,6 @@ type BetaResponseInputItemUnion struct {
 	Result           string                             `json:"result"`
 	// This field is from variant [BetaResponseInputItemImageGenerationCall].
 	Background string `json:"background"`
-	// This field is a union of [BetaResponseInputItemImageGenerationCallError],
-	// [string], [BetaMcpToolCallErrorUnion]
-	Error BetaResponseInputItemUnionError `json:"error"`
 	// This field is from variant [BetaResponseInputItemImageGenerationCall].
 	OutputFormat string `json:"output_format"`
 	// This field is from variant [BetaResponseInputItemImageGenerationCall].
@@ -14138,9 +14135,11 @@ type BetaResponseInputItemUnion struct {
 	// This field is from variant [BetaResponseInputItemShellCallOutput].
 	MaxOutputLength int64 `json:"max_output_length"`
 	// This field is from variant [BetaResponseInputItemApplyPatchCall].
-	Operation         BetaResponseInputItemApplyPatchCallOperationUnion `json:"operation"`
-	ServerLabel       string                                            `json:"server_label"`
-	ApprovalRequestID string                                            `json:"approval_request_id"`
+	Operation   BetaResponseInputItemApplyPatchCallOperationUnion `json:"operation"`
+	ServerLabel string                                            `json:"server_label"`
+	// This field is a union of [string], [BetaMcpToolCallErrorUnion]
+	Error             BetaResponseInputItemUnionError `json:"error"`
+	ApprovalRequestID string                          `json:"approval_request_id"`
 	// This field is from variant [BetaResponseInputItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [BetaResponseInputItemMcpApprovalResponse].
@@ -14179,7 +14178,6 @@ type BetaResponseInputItemUnion struct {
 		EncryptedContent         respjson.Field
 		Result                   respjson.Field
 		Background               respjson.Field
-		Error                    respjson.Field
 		OutputFormat             respjson.Field
 		Quality                  respjson.Field
 		RevisedPrompt            respjson.Field
@@ -14191,6 +14189,7 @@ type BetaResponseInputItemUnion struct {
 		MaxOutputLength          respjson.Field
 		Operation                respjson.Field
 		ServerLabel              respjson.Field
+		Error                    respjson.Field
 		ApprovalRequestID        respjson.Field
 		Approve                  respjson.Field
 		Reason                   respjson.Field
@@ -14854,25 +14853,18 @@ func (r *BetaResponseInputItemUnionTools) UnmarshalJSON(data []byte) error {
 type BetaResponseInputItemUnionError struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
-	// This field is a union of [string], [int64]
-	Code    BetaResponseInputItemUnionErrorCode `json:"code"`
-	Message string                              `json:"message"`
-	// This field is from variant [BetaResponseInputItemImageGenerationCallError].
-	Param string `json:"param"`
-	Type  string `json:"type"`
-	// This field is from variant [BetaResponseInputItemImageGenerationCallError].
-	ModerationDetails BetaResponseInputItemImageGenerationCallErrorModerationDetails `json:"moderation_details"`
+	Code     int64  `json:"code"`
+	Message  string `json:"message"`
+	Type     string `json:"type"`
 	// This field is from variant [BetaMcpToolCallErrorUnion].
 	Content any `json:"content"`
 	JSON    struct {
-		OfString          respjson.Field
-		Code              respjson.Field
-		Message           respjson.Field
-		Param             respjson.Field
-		Type              respjson.Field
-		ModerationDetails respjson.Field
-		Content           respjson.Field
-		raw               string
+		OfString respjson.Field
+		Code     respjson.Field
+		Message  respjson.Field
+		Type     respjson.Field
+		Content  respjson.Field
+		raw      string
 	} `json:"-"`
 }
 
@@ -14891,31 +14883,6 @@ func (r *BetaResponseInputItemUnionError) UnmarshalJSON(data []byte) error {
 	}
 	*r = decoded
 	return nil
-}
-
-// BetaResponseInputItemUnionErrorCode is an implicit subunion of
-// [BetaResponseInputItemUnion]. BetaResponseInputItemUnionErrorCode provides
-// convenient access to the sub-properties of the union.
-//
-// For type safety it is recommended to directly use a variant of the
-// [BetaResponseInputItemUnion].
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfInt]
-type BetaResponseInputItemUnionErrorCode struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field will be present if the value is a [int64] instead of an object.
-	OfInt int64 `json:",inline"`
-	JSON  struct {
-		OfString respjson.Field
-		OfInt    respjson.Field
-		raw      string
-	} `json:"-"`
-}
-
-func (r *BetaResponseInputItemUnionErrorCode) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 // ToParam converts this BetaResponseInputItemUnion to a
@@ -18689,8 +18656,8 @@ func (u betaResponseInputItemUnionParamAction) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetButton() *string {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetButton()
+	case *BetaComputerActionClickParam:
+		return &vt.Button
 	}
 	return nil
 }
@@ -18698,8 +18665,8 @@ func (u betaResponseInputItemUnionParamAction) GetButton() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetPath() []BetaComputerActionDragPathParam {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetPath()
+	case *BetaComputerActionDragParam:
+		return vt.Path
 	}
 	return nil
 }
@@ -18707,8 +18674,8 @@ func (u betaResponseInputItemUnionParamAction) GetPath() []BetaComputerActionDra
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetScrollX() *int64 {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetScrollX()
+	case *BetaComputerActionScrollParam:
+		return &vt.ScrollX
 	}
 	return nil
 }
@@ -18716,8 +18683,8 @@ func (u betaResponseInputItemUnionParamAction) GetScrollX() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetScrollY() *int64 {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetScrollY()
+	case *BetaComputerActionScrollParam:
+		return &vt.ScrollY
 	}
 	return nil
 }
@@ -18725,8 +18692,8 @@ func (u betaResponseInputItemUnionParamAction) GetScrollY() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetText() *string {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetText()
+	case *BetaComputerActionTypeParam:
+		return &vt.Text
 	}
 	return nil
 }
@@ -18734,8 +18701,8 @@ func (u betaResponseInputItemUnionParamAction) GetText() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetQueries() []string {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionWebSearchActionUnionParam:
-		return vt.GetQueries()
+	case *BetaResponseFunctionWebSearchActionSearchParam:
+		return vt.Queries
 	}
 	return nil
 }
@@ -18743,8 +18710,8 @@ func (u betaResponseInputItemUnionParamAction) GetQueries() []string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetQuery() *string {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionWebSearchActionUnionParam:
-		return vt.GetQuery()
+	case *BetaResponseFunctionWebSearchActionSearchParam:
+		return paramutil.AddrIfPresent(vt.Query)
 	}
 	return nil
 }
@@ -18752,8 +18719,8 @@ func (u betaResponseInputItemUnionParamAction) GetQuery() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetSources() []BetaResponseFunctionWebSearchActionSearchSourceParam {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionWebSearchActionUnionParam:
-		return vt.GetSources()
+	case *BetaResponseFunctionWebSearchActionSearchParam:
+		return vt.Sources
 	}
 	return nil
 }
@@ -18761,8 +18728,8 @@ func (u betaResponseInputItemUnionParamAction) GetSources() []BetaResponseFuncti
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetPattern() *string {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionWebSearchActionUnionParam:
-		return vt.GetPattern()
+	case *BetaResponseFunctionWebSearchActionFindInPageParam:
+		return &vt.Pattern
 	}
 	return nil
 }
@@ -18824,10 +18791,30 @@ func (u betaResponseInputItemUnionParamAction) GetMaxOutputLength() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetType() *string {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetType()
-	case *BetaResponseFunctionWebSearchActionUnionParam:
-		return vt.GetType()
+	case *BetaComputerActionClickParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionDoubleClickParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionDragParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionKeypressParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionMoveParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionScreenshotParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionScrollParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionTypeParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionWaitParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseFunctionWebSearchActionSearchParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseFunctionWebSearchActionOpenPageParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseFunctionWebSearchActionFindInPageParam:
+		return (*string)(&vt.Type)
 	case *BetaResponseInputItemLocalShellCallActionParam:
 		return (*string)(&vt.Type)
 	}
@@ -18837,8 +18824,14 @@ func (u betaResponseInputItemUnionParamAction) GetType() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetX() *int64 {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetX()
+	case *BetaComputerActionClickParam:
+		return (*int64)(&vt.X)
+	case *BetaComputerActionDoubleClickParam:
+		return (*int64)(&vt.X)
+	case *BetaComputerActionMoveParam:
+		return (*int64)(&vt.X)
+	case *BetaComputerActionScrollParam:
+		return (*int64)(&vt.X)
 	}
 	return nil
 }
@@ -18846,8 +18839,14 @@ func (u betaResponseInputItemUnionParamAction) GetX() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetY() *int64 {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetY()
+	case *BetaComputerActionClickParam:
+		return (*int64)(&vt.Y)
+	case *BetaComputerActionDoubleClickParam:
+		return (*int64)(&vt.Y)
+	case *BetaComputerActionMoveParam:
+		return (*int64)(&vt.Y)
+	case *BetaComputerActionScrollParam:
+		return (*int64)(&vt.Y)
 	}
 	return nil
 }
@@ -18855,8 +18854,10 @@ func (u betaResponseInputItemUnionParamAction) GetY() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetURL() *string {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionWebSearchActionUnionParam:
-		return vt.GetURL()
+	case *BetaResponseFunctionWebSearchActionOpenPageParam:
+		return paramutil.AddrIfPresent(vt.URL)
+	case *BetaResponseFunctionWebSearchActionFindInPageParam:
+		return (*string)(&vt.URL)
 	}
 	return nil
 }
@@ -18875,8 +18876,18 @@ func (u betaResponseInputItemUnionParamAction) GetTimeoutMs() *int64 {
 // Returns a pointer to the underlying variant's Keys property, if present.
 func (u betaResponseInputItemUnionParamAction) GetKeys() []string {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetKeys()
+	case *BetaComputerActionClickParam:
+		return vt.Keys
+	case *BetaComputerActionDoubleClickParam:
+		return vt.Keys
+	case *BetaComputerActionDragParam:
+		return vt.Keys
+	case *BetaComputerActionKeypressParam:
+		return vt.Keys
+	case *BetaComputerActionMoveParam:
+		return vt.Keys
+	case *BetaComputerActionScrollParam:
+		return vt.Keys
 	}
 	return nil
 }
@@ -19026,22 +19037,38 @@ func (u betaResponseInputItemUnionParamCaller) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamCaller) GetType() *string {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionToolCallCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseInputItemFunctionCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseInputItemShellCallCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseInputItemShellCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseInputItemApplyPatchCallCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseInputItemApplyPatchCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseCustomToolCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseCustomToolCallCallerUnionParam:
-		return vt.GetType()
+	case *BetaResponseFunctionToolCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseFunctionToolCallCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemFunctionCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemFunctionCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemShellCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemShellCallCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemShellCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemShellCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemApplyPatchCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemApplyPatchCallCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemApplyPatchCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemApplyPatchCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseCustomToolCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseCustomToolCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseCustomToolCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseCustomToolCallCallerProgramParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -19049,22 +19076,22 @@ func (u betaResponseInputItemUnionParamCaller) GetType() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamCaller) GetCallerID() *string {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionToolCallCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseInputItemFunctionCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseInputItemShellCallCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseInputItemShellCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseInputItemApplyPatchCallCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseInputItemApplyPatchCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseCustomToolCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseCustomToolCallCallerUnionParam:
-		return vt.GetCallerID()
+	case *BetaResponseFunctionToolCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseInputItemFunctionCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseInputItemShellCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseInputItemShellCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseInputItemApplyPatchCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseInputItemApplyPatchCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseCustomToolCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseCustomToolCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
 	}
 	return nil
 }
@@ -19102,9 +19129,7 @@ func (u betaResponseInputItemUnionParamTools) AsAny() any { return u.any }
 //
 // Or use AsAny() to get the underlying value
 func (u BetaResponseInputItemUnionParam) GetError() (res betaResponseInputItemUnionParamError) {
-	if vt := u.OfImageGenerationCall; vt != nil {
-		res.any = &vt.Error
-	} else if vt := u.OfMcpListTools; vt != nil && vt.Error.Valid() {
+	if vt := u.OfMcpListTools; vt != nil && vt.Error.Valid() {
 		res.any = &vt.Error.Value
 	} else if vt := u.OfMcpCall; vt != nil {
 		res.any = vt.Error.asAny()
@@ -19112,8 +19137,7 @@ func (u BetaResponseInputItemUnionParam) GetError() (res betaResponseInputItemUn
 	return
 }
 
-// Can have the runtime types
-// [*BetaResponseInputItemImageGenerationCallErrorParam], [*string],
+// Can have the runtime types [*string],
 // [*BetaMcpToolCallErrorMcpProtocolErrorParam],
 // [*BetaMcpToolCallErrorMcpToolExecutionErrorParam],
 // [*BetaMcpToolCallErrorHTTPErrorParam]
@@ -19122,7 +19146,6 @@ type betaResponseInputItemUnionParamError struct{ any }
 // Use the following switch statement to get the type of the union:
 //
 //	switch u.AsAny().(type) {
-//	case *openai.BetaResponseInputItemImageGenerationCallErrorParam:
 //	case *string:
 //	case *openai.BetaMcpToolCallErrorMcpProtocolErrorParam:
 //	case *openai.BetaMcpToolCallErrorMcpToolExecutionErrorParam:
@@ -19133,67 +19156,23 @@ type betaResponseInputItemUnionParamError struct{ any }
 func (u betaResponseInputItemUnionParamError) AsAny() any { return u.any }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u betaResponseInputItemUnionParamError) GetParam() *string {
+func (u betaResponseInputItemUnionParamError) GetCode() *int64 {
 	switch vt := u.any.(type) {
-	case *BetaResponseInputItemImageGenerationCallErrorParam:
-		return paramutil.AddrIfPresent(vt.Param)
+	case *BetaMcpToolCallErrorMcpProtocolErrorParam:
+		return (*int64)(&vt.Code)
+	case *BetaMcpToolCallErrorHTTPErrorParam:
+		return (*int64)(&vt.Code)
 	}
 	return nil
 }
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u betaResponseInputItemUnionParamError) GetModerationDetails() *BetaResponseInputItemImageGenerationCallErrorModerationDetailsParam {
-	switch vt := u.any.(type) {
-	case *BetaResponseInputItemImageGenerationCallErrorParam:
-		return &vt.ModerationDetails
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u betaResponseInputItemUnionParamError) GetContent() *any {
-	switch vt := u.any.(type) {
-	case *BetaMcpToolCallErrorUnionParam:
-		return vt.GetContent()
-	}
-	return nil
-}
-
-// Returns a subunion which exports methods to access subproperties
-//
-// Or use AsAny() to get the underlying value
-func (u betaResponseInputItemUnionParamError) GetCode() (res betaResponseInputItemUnionParamErrorCode) {
-	switch vt := u.any.(type) {
-	case *BetaResponseInputItemImageGenerationCallErrorParam:
-		if vt.Code.Valid() {
-			res.any = &vt.Code.Value
-		}
-	case *BetaMcpToolCallErrorUnionParam:
-		res.any = vt.GetCode()
-	}
-	return res
-}
-
-// Can have the runtime types [*string], [*int64]
-type betaResponseInputItemUnionParamErrorCode struct{ any }
-
-// Use the following switch statement to get the type of the union:
-//
-//	switch u.AsAny().(type) {
-//	case *string:
-//	case *int64:
-//	default:
-//	    fmt.Errorf("not present")
-//	}
-func (u betaResponseInputItemUnionParamErrorCode) AsAny() any { return u.any }
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamError) GetMessage() *string {
 	switch vt := u.any.(type) {
-	case *BetaResponseInputItemImageGenerationCallErrorParam:
+	case *BetaMcpToolCallErrorMcpProtocolErrorParam:
 		return (*string)(&vt.Message)
-	case *BetaMcpToolCallErrorUnionParam:
-		return vt.GetMessage()
+	case *BetaMcpToolCallErrorHTTPErrorParam:
+		return (*string)(&vt.Message)
 	}
 	return nil
 }
@@ -19201,10 +19180,21 @@ func (u betaResponseInputItemUnionParamError) GetMessage() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamError) GetType() *string {
 	switch vt := u.any.(type) {
-	case *BetaResponseInputItemImageGenerationCallErrorParam:
+	case *BetaMcpToolCallErrorMcpProtocolErrorParam:
 		return (*string)(&vt.Type)
-	case *BetaMcpToolCallErrorUnionParam:
-		return vt.GetType()
+	case *BetaMcpToolCallErrorMcpToolExecutionErrorParam:
+		return (*string)(&vt.Type)
+	case *BetaMcpToolCallErrorHTTPErrorParam:
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseInputItemUnionParamError) GetContent() *any {
+	switch vt := u.any.(type) {
+	case *BetaMcpToolCallErrorMcpToolExecutionErrorParam:
+		return &vt.Content
 	}
 	return nil
 }
@@ -22078,9 +22068,6 @@ type BetaResponseItemUnion struct {
 	Result      string `json:"result"`
 	// This field is from variant [BetaResponseItemImageGenerationCall].
 	Background string `json:"background"`
-	// This field is a union of [BetaResponseItemImageGenerationCallError], [string],
-	// [BetaMcpToolCallErrorUnion]
-	Error BetaResponseItemUnionError `json:"error"`
 	// This field is from variant [BetaResponseItemImageGenerationCall].
 	OutputFormat string `json:"output_format"`
 	// This field is from variant [BetaResponseItemImageGenerationCall].
@@ -22098,9 +22085,11 @@ type BetaResponseItemUnion struct {
 	// This field is from variant [BetaResponseFunctionShellToolCallOutput].
 	MaxOutputLength int64 `json:"max_output_length"`
 	// This field is from variant [BetaResponseApplyPatchToolCall].
-	Operation         BetaResponseApplyPatchToolCallOperationUnion `json:"operation"`
-	ServerLabel       string                                       `json:"server_label"`
-	ApprovalRequestID string                                       `json:"approval_request_id"`
+	Operation   BetaResponseApplyPatchToolCallOperationUnion `json:"operation"`
+	ServerLabel string                                       `json:"server_label"`
+	// This field is a union of [string], [BetaMcpToolCallErrorUnion]
+	Error             BetaResponseItemUnionError `json:"error"`
+	ApprovalRequestID string                     `json:"approval_request_id"`
 	// This field is from variant [BetaResponseItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [BetaResponseItemMcpApprovalResponse].
@@ -22140,7 +22129,6 @@ type BetaResponseItemUnion struct {
 		Fingerprint              respjson.Field
 		Result                   respjson.Field
 		Background               respjson.Field
-		Error                    respjson.Field
 		OutputFormat             respjson.Field
 		Quality                  respjson.Field
 		RevisedPrompt            respjson.Field
@@ -22151,6 +22139,7 @@ type BetaResponseItemUnion struct {
 		MaxOutputLength          respjson.Field
 		Operation                respjson.Field
 		ServerLabel              respjson.Field
+		Error                    respjson.Field
 		ApprovalRequestID        respjson.Field
 		Approve                  respjson.Field
 		Reason                   respjson.Field
@@ -22777,25 +22766,18 @@ func (r *BetaResponseItemUnionTools) UnmarshalJSON(data []byte) error {
 type BetaResponseItemUnionError struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
-	// This field is a union of [string], [int64]
-	Code    BetaResponseItemUnionErrorCode `json:"code"`
-	Message string                         `json:"message"`
-	// This field is from variant [BetaResponseItemImageGenerationCallError].
-	Param string `json:"param"`
-	Type  string `json:"type"`
-	// This field is from variant [BetaResponseItemImageGenerationCallError].
-	ModerationDetails BetaResponseItemImageGenerationCallErrorModerationDetails `json:"moderation_details"`
+	Code     int64  `json:"code"`
+	Message  string `json:"message"`
+	Type     string `json:"type"`
 	// This field is from variant [BetaMcpToolCallErrorUnion].
 	Content any `json:"content"`
 	JSON    struct {
-		OfString          respjson.Field
-		Code              respjson.Field
-		Message           respjson.Field
-		Param             respjson.Field
-		Type              respjson.Field
-		ModerationDetails respjson.Field
-		Content           respjson.Field
-		raw               string
+		OfString respjson.Field
+		Code     respjson.Field
+		Message  respjson.Field
+		Type     respjson.Field
+		Content  respjson.Field
+		raw      string
 	} `json:"-"`
 }
 
@@ -22814,31 +22796,6 @@ func (r *BetaResponseItemUnionError) UnmarshalJSON(data []byte) error {
 	}
 	*r = decoded
 	return nil
-}
-
-// BetaResponseItemUnionErrorCode is an implicit subunion of
-// [BetaResponseItemUnion]. BetaResponseItemUnionErrorCode provides convenient
-// access to the sub-properties of the union.
-//
-// For type safety it is recommended to directly use a variant of the
-// [BetaResponseItemUnion].
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfInt]
-type BetaResponseItemUnionErrorCode struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field will be present if the value is a [int64] instead of an object.
-	OfInt int64 `json:",inline"`
-	JSON  struct {
-		OfString respjson.Field
-		OfInt    respjson.Field
-		raw      string
-	} `json:"-"`
-}
-
-func (r *BetaResponseItemUnionErrorCode) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaResponseItemAgentMessage struct {
@@ -24541,9 +24498,6 @@ type BetaResponseOutputItemUnion struct {
 	Tools BetaResponseOutputItemUnionTools `json:"tools"`
 	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
 	Background string `json:"background"`
-	// This field is a union of [BetaResponseOutputItemImageGenerationCallError],
-	// [BetaMcpToolCallErrorUnion], [string]
-	Error BetaResponseOutputItemUnionError `json:"error"`
 	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
 	OutputFormat string `json:"output_format"`
 	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
@@ -24564,6 +24518,8 @@ type BetaResponseOutputItemUnion struct {
 	Operation         BetaResponseApplyPatchToolCallOperationUnion `json:"operation"`
 	ServerLabel       string                                       `json:"server_label"`
 	ApprovalRequestID string                                       `json:"approval_request_id"`
+	// This field is a union of [BetaMcpToolCallErrorUnion], [string]
+	Error BetaResponseOutputItemUnionError `json:"error"`
 	// This field is from variant [BetaResponseOutputItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [BetaResponseOutputItemMcpApprovalResponse].
@@ -24602,7 +24558,6 @@ type BetaResponseOutputItemUnion struct {
 		Execution                respjson.Field
 		Tools                    respjson.Field
 		Background               respjson.Field
-		Error                    respjson.Field
 		OutputFormat             respjson.Field
 		Quality                  respjson.Field
 		RevisedPrompt            respjson.Field
@@ -24614,6 +24569,7 @@ type BetaResponseOutputItemUnion struct {
 		Operation                respjson.Field
 		ServerLabel              respjson.Field
 		ApprovalRequestID        respjson.Field
+		Error                    respjson.Field
 		Approve                  respjson.Field
 		Reason                   respjson.Field
 		Input                    respjson.Field
@@ -25215,25 +25171,18 @@ func (r *BetaResponseOutputItemUnionTools) UnmarshalJSON(data []byte) error {
 type BetaResponseOutputItemUnionError struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
-	// This field is a union of [string], [int64]
-	Code    BetaResponseOutputItemUnionErrorCode `json:"code"`
-	Message string                               `json:"message"`
-	// This field is from variant [BetaResponseOutputItemImageGenerationCallError].
-	Param string `json:"param"`
-	Type  string `json:"type"`
-	// This field is from variant [BetaResponseOutputItemImageGenerationCallError].
-	ModerationDetails BetaResponseOutputItemImageGenerationCallErrorModerationDetails `json:"moderation_details"`
+	Code     int64  `json:"code"`
+	Message  string `json:"message"`
+	Type     string `json:"type"`
 	// This field is from variant [BetaMcpToolCallErrorUnion].
 	Content any `json:"content"`
 	JSON    struct {
-		OfString          respjson.Field
-		Code              respjson.Field
-		Message           respjson.Field
-		Param             respjson.Field
-		Type              respjson.Field
-		ModerationDetails respjson.Field
-		Content           respjson.Field
-		raw               string
+		OfString respjson.Field
+		Code     respjson.Field
+		Message  respjson.Field
+		Type     respjson.Field
+		Content  respjson.Field
+		raw      string
 	} `json:"-"`
 }
 
@@ -25252,31 +25201,6 @@ func (r *BetaResponseOutputItemUnionError) UnmarshalJSON(data []byte) error {
 	}
 	*r = decoded
 	return nil
-}
-
-// BetaResponseOutputItemUnionErrorCode is an implicit subunion of
-// [BetaResponseOutputItemUnion]. BetaResponseOutputItemUnionErrorCode provides
-// convenient access to the sub-properties of the union.
-//
-// For type safety it is recommended to directly use a variant of the
-// [BetaResponseOutputItemUnion].
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfInt]
-type BetaResponseOutputItemUnionErrorCode struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field will be present if the value is a [int64] instead of an object.
-	OfInt int64 `json:",inline"`
-	JSON  struct {
-		OfString respjson.Field
-		OfInt    respjson.Field
-		raw      string
-	} `json:"-"`
-}
-
-func (r *BetaResponseOutputItemUnionErrorCode) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaResponseOutputItemAgentMessage struct {
@@ -32205,8 +32129,8 @@ func (u betaResponseToolSearchOutputItemParamToolUnionFilters) AsAny() any { ret
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetKey() *string {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetKey()
+	case *BetaFileSearchToolFiltersComparisonFilterParam:
+		return &vt.Key
 	}
 	return nil
 }
@@ -32214,8 +32138,8 @@ func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetKey() *string 
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetValue() *BetaFileSearchToolFiltersComparisonFilterValueUnionParam {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetValue()
+	case *BetaFileSearchToolFiltersComparisonFilterParam:
+		return &vt.Value
 	}
 	return nil
 }
@@ -32223,8 +32147,8 @@ func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetValue() *BetaF
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetFilters() []BetaFileSearchToolFiltersCompoundFilterFilterUnionParam {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetFilters()
+	case *BetaFileSearchToolFiltersCompoundFilterParam:
+		return vt.Filters
 	}
 	return nil
 }
@@ -32241,8 +32165,10 @@ func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetAllowedDomains
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetType() *string {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetType()
+	case *BetaFileSearchToolFiltersComparisonFilterParam:
+		return (*string)(&vt.Type)
+	case *BetaFileSearchToolFiltersCompoundFilterParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -32278,8 +32204,8 @@ func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) AsAny() any {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetFileIDs() []string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetFileIDs()
+	case *BetaContainerAutoParam:
+		return vt.FileIDs
 	}
 	return nil
 }
@@ -32287,8 +32213,8 @@ func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetFileIDs() 
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetMemoryLimit() *string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetMemoryLimit()
+	case *BetaContainerAutoParam:
+		return (*string)(&vt.MemoryLimit)
 	}
 	return nil
 }
@@ -32296,8 +32222,8 @@ func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetMemoryLimi
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetNetworkPolicy() *BetaContainerAutoNetworkPolicyUnionParam {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetNetworkPolicy()
+	case *BetaContainerAutoParam:
+		return &vt.NetworkPolicy
 	}
 	return nil
 }
@@ -32305,8 +32231,8 @@ func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetNetworkPol
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetContainerID() *string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetContainerID()
+	case *BetaContainerReferenceParam:
+		return &vt.ContainerID
 	}
 	return nil
 }
@@ -32314,8 +32240,12 @@ func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetContainerI
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetType() *string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetType()
+	case *BetaContainerAutoParam:
+		return (*string)(&vt.Type)
+	case *BetaLocalEnvironmentParam:
+		return (*string)(&vt.Type)
+	case *BetaContainerReferenceParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -32325,8 +32255,10 @@ func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetType() *st
 // Or use AsAny() to get the underlying value
 func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetSkills() (res betaResponseToolSearchOutputItemParamToolUnionEnvironmentSkills) {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		res.any = vt.GetSkills()
+	case *BetaContainerAutoParam:
+		res.any = &vt.Skills
+	case *BetaLocalEnvironmentParam:
+		res.any = &vt.Skills
 	}
 	return res
 }
@@ -34734,8 +34666,8 @@ func (u betaToolUnionParamFilters) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamFilters) GetKey() *string {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetKey()
+	case *BetaFileSearchToolFiltersComparisonFilterParam:
+		return &vt.Key
 	}
 	return nil
 }
@@ -34743,8 +34675,8 @@ func (u betaToolUnionParamFilters) GetKey() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamFilters) GetValue() *BetaFileSearchToolFiltersComparisonFilterValueUnionParam {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetValue()
+	case *BetaFileSearchToolFiltersComparisonFilterParam:
+		return &vt.Value
 	}
 	return nil
 }
@@ -34752,8 +34684,8 @@ func (u betaToolUnionParamFilters) GetValue() *BetaFileSearchToolFiltersComparis
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamFilters) GetFilters() []BetaFileSearchToolFiltersCompoundFilterFilterUnionParam {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetFilters()
+	case *BetaFileSearchToolFiltersCompoundFilterParam:
+		return vt.Filters
 	}
 	return nil
 }
@@ -34770,8 +34702,10 @@ func (u betaToolUnionParamFilters) GetAllowedDomains() []string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamFilters) GetType() *string {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetType()
+	case *BetaFileSearchToolFiltersComparisonFilterParam:
+		return (*string)(&vt.Type)
+	case *BetaFileSearchToolFiltersCompoundFilterParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -34807,8 +34741,8 @@ func (u betaToolUnionParamEnvironment) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamEnvironment) GetFileIDs() []string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetFileIDs()
+	case *BetaContainerAutoParam:
+		return vt.FileIDs
 	}
 	return nil
 }
@@ -34816,8 +34750,8 @@ func (u betaToolUnionParamEnvironment) GetFileIDs() []string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamEnvironment) GetMemoryLimit() *string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetMemoryLimit()
+	case *BetaContainerAutoParam:
+		return (*string)(&vt.MemoryLimit)
 	}
 	return nil
 }
@@ -34825,8 +34759,8 @@ func (u betaToolUnionParamEnvironment) GetMemoryLimit() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamEnvironment) GetNetworkPolicy() *BetaContainerAutoNetworkPolicyUnionParam {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetNetworkPolicy()
+	case *BetaContainerAutoParam:
+		return &vt.NetworkPolicy
 	}
 	return nil
 }
@@ -34834,8 +34768,8 @@ func (u betaToolUnionParamEnvironment) GetNetworkPolicy() *BetaContainerAutoNetw
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamEnvironment) GetContainerID() *string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetContainerID()
+	case *BetaContainerReferenceParam:
+		return &vt.ContainerID
 	}
 	return nil
 }
@@ -34843,8 +34777,12 @@ func (u betaToolUnionParamEnvironment) GetContainerID() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamEnvironment) GetType() *string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetType()
+	case *BetaContainerAutoParam:
+		return (*string)(&vt.Type)
+	case *BetaLocalEnvironmentParam:
+		return (*string)(&vt.Type)
+	case *BetaContainerReferenceParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -34854,8 +34792,10 @@ func (u betaToolUnionParamEnvironment) GetType() *string {
 // Or use AsAny() to get the underlying value
 func (u betaToolUnionParamEnvironment) GetSkills() (res betaToolUnionParamEnvironmentSkills) {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		res.any = vt.GetSkills()
+	case *BetaContainerAutoParam:
+		res.any = &vt.Skills
+	case *BetaLocalEnvironmentParam:
+		res.any = &vt.Skills
 	}
 	return res
 }
