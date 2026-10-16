@@ -2,11 +2,13 @@
 
 Params Types:
 
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#AudioFormatUnionParam">AudioFormatUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#BuiltInVoice">BuiltInVoice</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#ClientConfigParam">ClientConfigParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#ClientDelegationParam">ClientDelegationParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#CustomVoiceParam">CustomVoiceParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#DataChannelConfigParam">DataChannelConfigParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#ForkSessionConfigParam">ForkSessionConfigParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#FunctionToolParam">FunctionToolParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#InitialItemUnionParam">InitialItemUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#MediaSessionConfigParam">MediaSessionConfigParam</a>
@@ -14,10 +16,25 @@ Params Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#ResponsesDelegationConfigParam">ResponsesDelegationConfigParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#ResponsesDelegationUpdateConfigParam">ResponsesDelegationUpdateConfigParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#ServerEventSelectorParam">ServerEventSelectorParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#SessionConfigParam">SessionConfigParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#SessionUpdateConfigParam">SessionUpdateConfigParam</a>
 
 Response Types:
 
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#AudioFormatUnion">AudioFormatUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#BuiltInVoice">BuiltInVoice</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#ClientConfig">ClientConfig</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#ClientDelegation">ClientDelegation</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#CustomVoice">CustomVoice</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#DataChannelConfig">DataChannelConfig</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#LiveError">LiveError</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#FunctionTool">FunctionTool</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#InitialItemUnion">InitialItemUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#OutputAudioDeltaEvent">OutputAudioDeltaEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#ResponsesDelegationConfig">ResponsesDelegationConfig</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#ServerEventSelector">ServerEventSelector</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#SessionResource">SessionResource</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#SessionUsage">SessionUsage</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#LiveNewResponse">LiveNewResponse</a>
 
 Methods:

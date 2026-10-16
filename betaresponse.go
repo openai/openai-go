@@ -18656,8 +18656,8 @@ func (u betaResponseInputItemUnionParamAction) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetButton() *string {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetButton()
+	case *BetaComputerActionClickParam:
+		return &vt.Button
 	}
 	return nil
 }
@@ -18665,8 +18665,8 @@ func (u betaResponseInputItemUnionParamAction) GetButton() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetPath() []BetaComputerActionDragPathParam {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetPath()
+	case *BetaComputerActionDragParam:
+		return vt.Path
 	}
 	return nil
 }
@@ -18674,8 +18674,8 @@ func (u betaResponseInputItemUnionParamAction) GetPath() []BetaComputerActionDra
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetScrollX() *int64 {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetScrollX()
+	case *BetaComputerActionScrollParam:
+		return &vt.ScrollX
 	}
 	return nil
 }
@@ -18683,8 +18683,8 @@ func (u betaResponseInputItemUnionParamAction) GetScrollX() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetScrollY() *int64 {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetScrollY()
+	case *BetaComputerActionScrollParam:
+		return &vt.ScrollY
 	}
 	return nil
 }
@@ -18692,8 +18692,8 @@ func (u betaResponseInputItemUnionParamAction) GetScrollY() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetText() *string {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetText()
+	case *BetaComputerActionTypeParam:
+		return &vt.Text
 	}
 	return nil
 }
@@ -18701,8 +18701,8 @@ func (u betaResponseInputItemUnionParamAction) GetText() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetQueries() []string {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionWebSearchActionUnionParam:
-		return vt.GetQueries()
+	case *BetaResponseFunctionWebSearchActionSearchParam:
+		return vt.Queries
 	}
 	return nil
 }
@@ -18710,8 +18710,8 @@ func (u betaResponseInputItemUnionParamAction) GetQueries() []string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetQuery() *string {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionWebSearchActionUnionParam:
-		return vt.GetQuery()
+	case *BetaResponseFunctionWebSearchActionSearchParam:
+		return paramutil.AddrIfPresent(vt.Query)
 	}
 	return nil
 }
@@ -18719,8 +18719,8 @@ func (u betaResponseInputItemUnionParamAction) GetQuery() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetSources() []BetaResponseFunctionWebSearchActionSearchSourceParam {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionWebSearchActionUnionParam:
-		return vt.GetSources()
+	case *BetaResponseFunctionWebSearchActionSearchParam:
+		return vt.Sources
 	}
 	return nil
 }
@@ -18728,8 +18728,8 @@ func (u betaResponseInputItemUnionParamAction) GetSources() []BetaResponseFuncti
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetPattern() *string {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionWebSearchActionUnionParam:
-		return vt.GetPattern()
+	case *BetaResponseFunctionWebSearchActionFindInPageParam:
+		return &vt.Pattern
 	}
 	return nil
 }
@@ -18791,10 +18791,30 @@ func (u betaResponseInputItemUnionParamAction) GetMaxOutputLength() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetType() *string {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetType()
-	case *BetaResponseFunctionWebSearchActionUnionParam:
-		return vt.GetType()
+	case *BetaComputerActionClickParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionDoubleClickParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionDragParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionKeypressParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionMoveParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionScreenshotParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionScrollParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionTypeParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionWaitParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseFunctionWebSearchActionSearchParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseFunctionWebSearchActionOpenPageParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseFunctionWebSearchActionFindInPageParam:
+		return (*string)(&vt.Type)
 	case *BetaResponseInputItemLocalShellCallActionParam:
 		return (*string)(&vt.Type)
 	}
@@ -18804,8 +18824,14 @@ func (u betaResponseInputItemUnionParamAction) GetType() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetX() *int64 {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetX()
+	case *BetaComputerActionClickParam:
+		return (*int64)(&vt.X)
+	case *BetaComputerActionDoubleClickParam:
+		return (*int64)(&vt.X)
+	case *BetaComputerActionMoveParam:
+		return (*int64)(&vt.X)
+	case *BetaComputerActionScrollParam:
+		return (*int64)(&vt.X)
 	}
 	return nil
 }
@@ -18813,8 +18839,14 @@ func (u betaResponseInputItemUnionParamAction) GetX() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetY() *int64 {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetY()
+	case *BetaComputerActionClickParam:
+		return (*int64)(&vt.Y)
+	case *BetaComputerActionDoubleClickParam:
+		return (*int64)(&vt.Y)
+	case *BetaComputerActionMoveParam:
+		return (*int64)(&vt.Y)
+	case *BetaComputerActionScrollParam:
+		return (*int64)(&vt.Y)
 	}
 	return nil
 }
@@ -18822,8 +18854,10 @@ func (u betaResponseInputItemUnionParamAction) GetY() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetURL() *string {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionWebSearchActionUnionParam:
-		return vt.GetURL()
+	case *BetaResponseFunctionWebSearchActionOpenPageParam:
+		return paramutil.AddrIfPresent(vt.URL)
+	case *BetaResponseFunctionWebSearchActionFindInPageParam:
+		return (*string)(&vt.URL)
 	}
 	return nil
 }
@@ -18842,8 +18876,18 @@ func (u betaResponseInputItemUnionParamAction) GetTimeoutMs() *int64 {
 // Returns a pointer to the underlying variant's Keys property, if present.
 func (u betaResponseInputItemUnionParamAction) GetKeys() []string {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetKeys()
+	case *BetaComputerActionClickParam:
+		return vt.Keys
+	case *BetaComputerActionDoubleClickParam:
+		return vt.Keys
+	case *BetaComputerActionDragParam:
+		return vt.Keys
+	case *BetaComputerActionKeypressParam:
+		return vt.Keys
+	case *BetaComputerActionMoveParam:
+		return vt.Keys
+	case *BetaComputerActionScrollParam:
+		return vt.Keys
 	}
 	return nil
 }
@@ -18993,22 +19037,38 @@ func (u betaResponseInputItemUnionParamCaller) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamCaller) GetType() *string {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionToolCallCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseInputItemFunctionCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseInputItemShellCallCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseInputItemShellCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseInputItemApplyPatchCallCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseInputItemApplyPatchCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseCustomToolCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseCustomToolCallCallerUnionParam:
-		return vt.GetType()
+	case *BetaResponseFunctionToolCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseFunctionToolCallCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemFunctionCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemFunctionCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemShellCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemShellCallCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemShellCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemShellCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemApplyPatchCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemApplyPatchCallCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemApplyPatchCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemApplyPatchCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseCustomToolCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseCustomToolCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseCustomToolCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseCustomToolCallCallerProgramParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -19016,22 +19076,22 @@ func (u betaResponseInputItemUnionParamCaller) GetType() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamCaller) GetCallerID() *string {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionToolCallCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseInputItemFunctionCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseInputItemShellCallCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseInputItemShellCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseInputItemApplyPatchCallCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseInputItemApplyPatchCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseCustomToolCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseCustomToolCallCallerUnionParam:
-		return vt.GetCallerID()
+	case *BetaResponseFunctionToolCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseInputItemFunctionCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseInputItemShellCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseInputItemShellCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseInputItemApplyPatchCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseInputItemApplyPatchCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseCustomToolCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseCustomToolCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
 	}
 	return nil
 }
@@ -19098,8 +19158,10 @@ func (u betaResponseInputItemUnionParamError) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamError) GetCode() *int64 {
 	switch vt := u.any.(type) {
-	case *BetaMcpToolCallErrorUnionParam:
-		return vt.GetCode()
+	case *BetaMcpToolCallErrorMcpProtocolErrorParam:
+		return (*int64)(&vt.Code)
+	case *BetaMcpToolCallErrorHTTPErrorParam:
+		return (*int64)(&vt.Code)
 	}
 	return nil
 }
@@ -19107,8 +19169,10 @@ func (u betaResponseInputItemUnionParamError) GetCode() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamError) GetMessage() *string {
 	switch vt := u.any.(type) {
-	case *BetaMcpToolCallErrorUnionParam:
-		return vt.GetMessage()
+	case *BetaMcpToolCallErrorMcpProtocolErrorParam:
+		return (*string)(&vt.Message)
+	case *BetaMcpToolCallErrorHTTPErrorParam:
+		return (*string)(&vt.Message)
 	}
 	return nil
 }
@@ -19116,8 +19180,12 @@ func (u betaResponseInputItemUnionParamError) GetMessage() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamError) GetType() *string {
 	switch vt := u.any.(type) {
-	case *BetaMcpToolCallErrorUnionParam:
-		return vt.GetType()
+	case *BetaMcpToolCallErrorMcpProtocolErrorParam:
+		return (*string)(&vt.Type)
+	case *BetaMcpToolCallErrorMcpToolExecutionErrorParam:
+		return (*string)(&vt.Type)
+	case *BetaMcpToolCallErrorHTTPErrorParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -19125,8 +19193,8 @@ func (u betaResponseInputItemUnionParamError) GetType() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamError) GetContent() *any {
 	switch vt := u.any.(type) {
-	case *BetaMcpToolCallErrorUnionParam:
-		return vt.GetContent()
+	case *BetaMcpToolCallErrorMcpToolExecutionErrorParam:
+		return &vt.Content
 	}
 	return nil
 }
@@ -32066,8 +32134,8 @@ func (u betaResponseToolSearchOutputItemParamToolUnionFilters) AsAny() any { ret
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetKey() *string {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetKey()
+	case *BetaFileSearchToolFiltersComparisonFilterParam:
+		return &vt.Key
 	}
 	return nil
 }
@@ -32075,8 +32143,8 @@ func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetKey() *string 
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetValue() *BetaFileSearchToolFiltersComparisonFilterValueUnionParam {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetValue()
+	case *BetaFileSearchToolFiltersComparisonFilterParam:
+		return &vt.Value
 	}
 	return nil
 }
@@ -32084,8 +32152,8 @@ func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetValue() *BetaF
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetFilters() []BetaFileSearchToolFiltersCompoundFilterFilterUnionParam {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetFilters()
+	case *BetaFileSearchToolFiltersCompoundFilterParam:
+		return vt.Filters
 	}
 	return nil
 }
@@ -32102,8 +32170,10 @@ func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetAllowedDomains
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetType() *string {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetType()
+	case *BetaFileSearchToolFiltersComparisonFilterParam:
+		return (*string)(&vt.Type)
+	case *BetaFileSearchToolFiltersCompoundFilterParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -32139,8 +32209,8 @@ func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) AsAny() any {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetFileIDs() []string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetFileIDs()
+	case *BetaContainerAutoParam:
+		return vt.FileIDs
 	}
 	return nil
 }
@@ -32148,8 +32218,8 @@ func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetFileIDs() 
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetMemoryLimit() *string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetMemoryLimit()
+	case *BetaContainerAutoParam:
+		return (*string)(&vt.MemoryLimit)
 	}
 	return nil
 }
@@ -32157,8 +32227,8 @@ func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetMemoryLimi
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetNetworkPolicy() *BetaContainerAutoNetworkPolicyUnionParam {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetNetworkPolicy()
+	case *BetaContainerAutoParam:
+		return &vt.NetworkPolicy
 	}
 	return nil
 }
@@ -32166,8 +32236,8 @@ func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetNetworkPol
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetContainerID() *string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetContainerID()
+	case *BetaContainerReferenceParam:
+		return &vt.ContainerID
 	}
 	return nil
 }
@@ -32175,8 +32245,12 @@ func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetContainerI
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetType() *string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetType()
+	case *BetaContainerAutoParam:
+		return (*string)(&vt.Type)
+	case *BetaLocalEnvironmentParam:
+		return (*string)(&vt.Type)
+	case *BetaContainerReferenceParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -32186,8 +32260,10 @@ func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetType() *st
 // Or use AsAny() to get the underlying value
 func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetSkills() (res betaResponseToolSearchOutputItemParamToolUnionEnvironmentSkills) {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		res.any = vt.GetSkills()
+	case *BetaContainerAutoParam:
+		res.any = &vt.Skills
+	case *BetaLocalEnvironmentParam:
+		res.any = &vt.Skills
 	}
 	return res
 }
@@ -34595,8 +34671,8 @@ func (u betaToolUnionParamFilters) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamFilters) GetKey() *string {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetKey()
+	case *BetaFileSearchToolFiltersComparisonFilterParam:
+		return &vt.Key
 	}
 	return nil
 }
@@ -34604,8 +34680,8 @@ func (u betaToolUnionParamFilters) GetKey() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamFilters) GetValue() *BetaFileSearchToolFiltersComparisonFilterValueUnionParam {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetValue()
+	case *BetaFileSearchToolFiltersComparisonFilterParam:
+		return &vt.Value
 	}
 	return nil
 }
@@ -34613,8 +34689,8 @@ func (u betaToolUnionParamFilters) GetValue() *BetaFileSearchToolFiltersComparis
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamFilters) GetFilters() []BetaFileSearchToolFiltersCompoundFilterFilterUnionParam {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetFilters()
+	case *BetaFileSearchToolFiltersCompoundFilterParam:
+		return vt.Filters
 	}
 	return nil
 }
@@ -34631,8 +34707,10 @@ func (u betaToolUnionParamFilters) GetAllowedDomains() []string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamFilters) GetType() *string {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetType()
+	case *BetaFileSearchToolFiltersComparisonFilterParam:
+		return (*string)(&vt.Type)
+	case *BetaFileSearchToolFiltersCompoundFilterParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -34668,8 +34746,8 @@ func (u betaToolUnionParamEnvironment) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamEnvironment) GetFileIDs() []string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetFileIDs()
+	case *BetaContainerAutoParam:
+		return vt.FileIDs
 	}
 	return nil
 }
@@ -34677,8 +34755,8 @@ func (u betaToolUnionParamEnvironment) GetFileIDs() []string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamEnvironment) GetMemoryLimit() *string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetMemoryLimit()
+	case *BetaContainerAutoParam:
+		return (*string)(&vt.MemoryLimit)
 	}
 	return nil
 }
@@ -34686,8 +34764,8 @@ func (u betaToolUnionParamEnvironment) GetMemoryLimit() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamEnvironment) GetNetworkPolicy() *BetaContainerAutoNetworkPolicyUnionParam {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetNetworkPolicy()
+	case *BetaContainerAutoParam:
+		return &vt.NetworkPolicy
 	}
 	return nil
 }
@@ -34695,8 +34773,8 @@ func (u betaToolUnionParamEnvironment) GetNetworkPolicy() *BetaContainerAutoNetw
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamEnvironment) GetContainerID() *string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetContainerID()
+	case *BetaContainerReferenceParam:
+		return &vt.ContainerID
 	}
 	return nil
 }
@@ -34704,8 +34782,12 @@ func (u betaToolUnionParamEnvironment) GetContainerID() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamEnvironment) GetType() *string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetType()
+	case *BetaContainerAutoParam:
+		return (*string)(&vt.Type)
+	case *BetaLocalEnvironmentParam:
+		return (*string)(&vt.Type)
+	case *BetaContainerReferenceParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -34715,8 +34797,10 @@ func (u betaToolUnionParamEnvironment) GetType() *string {
 // Or use AsAny() to get the underlying value
 func (u betaToolUnionParamEnvironment) GetSkills() (res betaToolUnionParamEnvironmentSkills) {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		res.any = vt.GetSkills()
+	case *BetaContainerAutoParam:
+		res.any = &vt.Skills
+	case *BetaLocalEnvironmentParam:
+		res.any = &vt.Skills
 	}
 	return res
 }

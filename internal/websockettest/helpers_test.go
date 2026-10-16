@@ -413,6 +413,9 @@ func TestResponsesCustomHeaderPrecedenceAndReconnect(t *testing.T) {
 		}
 	}
 	check("1")
+	// Reconnecting refreshes the request, but retains the options captured when
+	// Connect was called even if the service is reconfigured in the meantime.
+	client.Responses.Options = append(client.Responses.Options, option.WithBaseURL("http://127.0.0.1:1"))
 	replacement, err := connection.Reconnect(ctx)
 	if err != nil {
 		t.Fatal(err)
