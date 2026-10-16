@@ -38,6 +38,11 @@ func TestDecisionNewWithOptionalParams(t *testing.T) {
 				Name:         openai.String("name"),
 			},
 		}},
+		PromptCacheKey: openai.String("prompt_cache_key"),
+		PromptCacheOptions: openai.DecisionNewParamsPromptCacheOptions{
+			Mode: openai.String("implicit"),
+			Ttl:  "30m",
+		},
 		SafetyIdentifier: openai.String("safety_identifier"),
 	})
 	if err != nil {

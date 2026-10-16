@@ -468,6 +468,10 @@ type DecisionInputImageParam struct {
 	//
 	// Any of "low", "high", "auto", "original".
 	Detail DecisionInputImageDetail `json:"detail,omitzero"`
+	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
+	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
+	// token block.
+	PromptCacheBreakpoint DecisionPromptCacheBreakpointParam `json:"prompt_cache_breakpoint,omitzero"`
 	// This field can be elided, and will marshal its zero value as "input_image".
 	Type constant.InputImage `json:"type" default:"input_image"`
 	paramObj
@@ -597,6 +601,17 @@ func (u DecisionInputPartUnionParam) GetType() *string {
 	return nil
 }
 
+// Returns a pointer to the underlying variant's PromptCacheBreakpoint property, if
+// present.
+func (u DecisionInputPartUnionParam) GetPromptCacheBreakpoint() *DecisionPromptCacheBreakpointParam {
+	if vt := u.OfInputText; vt != nil {
+		return &vt.PromptCacheBreakpoint
+	} else if vt := u.OfInputImage; vt != nil {
+		return &vt.PromptCacheBreakpoint
+	}
+	return nil
+}
+
 func init() {
 	apijson.RegisterUnion[DecisionInputPartUnionParam](
 		"type",
@@ -608,6 +623,10 @@ func init() {
 // The properties Text, Type are required.
 type DecisionInputTextParam struct {
 	Text string `json:"text" api:"required"`
+	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
+	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
+	// token block.
+	PromptCacheBreakpoint DecisionPromptCacheBreakpointParam `json:"prompt_cache_breakpoint,omitzero"`
 	// This field can be elided, and will marshal its zero value as "input_text".
 	Type constant.InputText `json:"type" default:"input_text"`
 	paramObj
@@ -618,6 +637,32 @@ func (r DecisionInputTextParam) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *DecisionInputTextParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewDecisionPromptCacheBreakpointParam() DecisionPromptCacheBreakpointParam {
+	return DecisionPromptCacheBreakpointParam{
+		Mode: "explicit",
+	}
+}
+
+// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
+// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
+// token block.
+//
+// This struct has a constant value, construct it with
+// [NewDecisionPromptCacheBreakpointParam].
+type DecisionPromptCacheBreakpointParam struct {
+	// The breakpoint mode. Always `explicit`.
+	Mode constant.Explicit `json:"mode" default:"explicit"`
+	paramObj
+}
+
+func (r DecisionPromptCacheBreakpointParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionPromptCacheBreakpointParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionPromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -632,9 +677,21 @@ type DecisionNewParams struct {
 	// Ask 1–200 questions about the input. Each question can be a predicate, choice,
 	// or score. Answers come back in the same order.
 	Questions []DecisionNewParamsQuestionUnion `json:"questions,omitzero" api:"required"`
+	// Partition prompt cache reuse by caller-provided key.
+	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
 	// Opaque caller-provided end-user identifier, scoped by the verified org. Match
 	// Responses' limit; this is never the authenticated user identity.
 	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
+	// Options for prompt caching. Supported for `gpt-5.6` and later models. By
+	// default, OpenAI automatically chooses one implicit cache breakpoint. You can add
+	// explicit breakpoints to content blocks with `prompt_cache_breakpoint`. Each
+	// request can write up to four breakpoints. For cache matching, OpenAI considers
+	// up to the latest 80 breakpoints in the conversation, without a content-block
+	// lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
+	// `ttl` defaults to `30m`, which is currently the only supported value. See the
+	// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
+	// for current details.
+	PromptCacheOptions DecisionNewParamsPromptCacheOptions `json:"prompt_cache_options,omitzero"`
 	paramObj
 }
 
@@ -851,4 +908,46 @@ func (r DecisionNewParamsQuestionScoreLevel) MarshalJSON() (data []byte, err err
 }
 func (r *DecisionNewParamsQuestionScoreLevel) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// Options for prompt caching. Supported for `gpt-5.6` and later models. By
+// default, OpenAI automatically chooses one implicit cache breakpoint. You can add
+// explicit breakpoints to content blocks with `prompt_cache_breakpoint`. Each
+// request can write up to four breakpoints. For cache matching, OpenAI considers
+// up to the latest 80 breakpoints in the conversation, without a content-block
+// lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
+// `ttl` defaults to `30m`, which is currently the only supported value. See the
+// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
+// for current details.
+type DecisionNewParamsPromptCacheOptions struct {
+	// Controls whether OpenAI automatically creates an implicit cache breakpoint.
+	// Defaults to `implicit`. With `implicit`, OpenAI creates one implicit breakpoint
+	// and writes up to the latest three explicit breakpoints in the request. With
+	// `explicit`, OpenAI does not create an implicit breakpoint and writes up to the
+	// latest four explicit breakpoints. If there are no explicit breakpoints, the
+	// request does not use prompt caching.
+	//
+	// Any of "implicit", "explicit".
+	Mode param.Opt[string] `json:"mode,omitzero"`
+	// The minimum lifetime applied to every implicit and explicit cache breakpoint
+	// written by the request. Defaults to `30m`, which is currently the only supported
+	// value. The backend may retain cache entries for longer.
+	//
+	// Any of "30m".
+	Ttl string `json:"ttl,omitzero"`
+	paramObj
+}
+
+func (r DecisionNewParamsPromptCacheOptions) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionNewParamsPromptCacheOptions
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionNewParamsPromptCacheOptions) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionNewParamsPromptCacheOptions](
+		"ttl", "30m",
+	)
 }
