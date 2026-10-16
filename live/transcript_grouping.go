@@ -337,7 +337,7 @@ func (g *transcriptGrouping) userContinued() bool {
 }
 func (g *transcriptGrouping) recentAssistant() bool {
 	return g.current != nil && g.buffered != nil && g.hasAssistantEnd &&
-		(g.buffered.start < g.lastAssistantEnd ||
+		(g.buffered.start <= g.lastAssistantEnd ||
 			float64(g.buffered.start) < float64(g.lastAssistantEnd)+g.isolation && g.buffered.start <= g.current.start)
 }
 func (g *transcriptGrouping) keepBackchannel(now float64) bool {

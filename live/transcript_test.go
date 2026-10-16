@@ -849,19 +849,79 @@ func TestLiveTranscriptLargeInitialAssistantBurst(t *testing.T) {
 }
 
 func TestLiveTranscriptFlushesPendingBeforeTimestampReset(t *testing.T) {
+	for _, interval := range [][2]int64{{1100, 1200}, {950, 1150}} {
+		t.Run(fmt.Sprint(interval), func(t *testing.T) {
+			synctest.Test(t, func(t *testing.T) {
+				var c transcriptCollector
+				g, err := live.NewTranscriptGrouper(live.TranscriptGrouperOptions{OnUpdate: c.push})
+				if err != nil {
+					t.Fatal(err)
+				}
+				pushTranscript(t, g, "u1", "user", "Old question", 1000, 1100)
+				time.Sleep(50 * time.Millisecond)
+				synctest.Wait()
+				pushTranscript(t, g, "a1", "assistant", "Old answer", interval[0], interval[1])
+				pushTranscript(t, g, "u2", "user", "New question", 0, 100)
+				g.Close()
+				checkTranscriptFinish(t, &c, [][2]string{{"user", "Old question"}, {"assistant", "Old answer"}, {"user", "New question"}})
+			})
+		})
+	}
+}
+
+func TestLiveTranscriptInitialAcknowledgmentWaitsForSourceContext(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		var c transcriptCollector
 		g, err := live.NewTranscriptGrouper(live.TranscriptGrouperOptions{OnUpdate: c.push})
 		if err != nil {
 			t.Fatal(err)
 		}
-		pushTranscript(t, g, "u1", "user", "Old question", 1000, 1100)
+		pushTranscript(t, g, "a1", "assistant", "okay", 0, 200)
+		time.Sleep(5 * time.Second)
+		synctest.Wait()
+		if len(c.snapshot()) != 0 {
+			t.Fatal("published an acknowledgment before source context arrived")
+		}
+		pushTranscript(t, g, "u1", "user", "Hello", 0, 500)
+		g.Close()
+		checkTranscriptFinish(t, &c, [][2]string{{"user", "Hello"}})
+	})
+}
+
+func TestLiveTranscriptResetKeepsNewEpochPendingFragments(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		var c transcriptCollector
+		g, err := live.NewTranscriptGrouper(live.TranscriptGrouperOptions{OnUpdate: c.push})
+		if err != nil {
+			t.Fatal(err)
+		}
+		pushTranscript(t, g, "old", "user", "Old question", 1000, 1100)
 		time.Sleep(50 * time.Millisecond)
 		synctest.Wait()
-		pushTranscript(t, g, "a1", "assistant", "Old answer", 1100, 1200)
-		pushTranscript(t, g, "u2", "user", "New question", 0, 100)
+		pushTranscript(t, g, "a1", "assistant", "okay", 0, 100)
+		pushTranscript(t, g, "u1", "user", "New question", 0, 500)
 		g.Close()
-		checkTranscriptFinish(t, &c, [][2]string{{"user", "Old question"}, {"assistant", "Old answer"}, {"user", "New question"}})
+		checkTranscriptFinish(t, &c, [][2]string{{"user", "Old question"}, {"user", "New question"}})
+	})
+}
+
+func TestLiveTranscriptAdjacentAssistantTailIsPreserved(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		var c transcriptCollector
+		g, err := live.NewTranscriptGrouper(live.TranscriptGrouperOptions{OnUpdate: c.push})
+		if err != nil {
+			t.Fatal(err)
+		}
+		pushTranscript(t, g, "a0", "assistant", "First", 0, 300)
+		time.Sleep(50 * time.Millisecond)
+		synctest.Wait()
+		pushTranscript(t, g, "u1", "user", "Tell", 200, 500)
+		time.Sleep(50 * time.Millisecond)
+		synctest.Wait()
+		pushTranscript(t, g, "a1", "assistant", "okay", 300, 400)
+		pushTranscript(t, g, "u2", "user", " me", 500, 700)
+		g.Close()
+		checkTranscriptFinish(t, &c, [][2]string{{"assistant", "First"}, {"user", "Tell me"}, {"assistant", "okay"}})
 	})
 }
 

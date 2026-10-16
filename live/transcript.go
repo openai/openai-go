@@ -2,6 +2,7 @@ package live
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"math"
@@ -45,11 +46,16 @@ type TranscriptGrouperOptions struct {
 // TranscriptGrouper accepts public Live server events explicitly, so callers
 // keep raw events and complete control of transport lifetime. Close it on
 // transport loss or teardown; it flushes once and stops only its owned timer.
+// Duplicate tracking retains hashes of the latest 4096 accepted event IDs;
+// older IDs may be accepted again. Initial possible acknowledgments wait for
+// source-timestamp context or Close, rather than a network-arrival deadline.
 type TranscriptGrouper struct {
 	mu          sync.Mutex
 	group       transcriptGrouping
 	onUpdate    func(TranscriptUpdate)
-	seen        map[string]struct{}
+	seen        map[[sha256.Size]byte]struct{}
+	recentIDs   [][sha256.Size]byte
+	nextID      int
 	lastStart   map[string]int64
 	pending     []transcriptFragment
 	updates     []TranscriptUpdate
@@ -83,7 +89,7 @@ func NewTranscriptGrouper(opts TranscriptGrouperOptions) (*TranscriptGrouper, er
 		return nil, err
 	}
 	g := &TranscriptGrouper{
-		onUpdate: opts.OnUpdate, seen: make(map[string]struct{}), lastStart: make(map[string]int64),
+		onUpdate: opts.OnUpdate, seen: make(map[[sha256.Size]byte]struct{}), lastStart: make(map[string]int64),
 		group: newTranscriptGrouping(opts, "segment_"+hex.EncodeToString(id[:])),
 	}
 	return g, nil
@@ -111,7 +117,7 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 			g.mu.Unlock()
 			return errors.New("live transcript terminal requires type, event ID, reason, session and usage")
 		}
-		if _, exists := g.seen[e.EventID]; exists {
+		if _, exists := g.seen[sha256.Sum256([]byte(e.EventID))]; exists {
 			g.mu.Unlock()
 			return nil
 		}
@@ -145,11 +151,10 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 		g.mu.Unlock()
 		return nil
 	}
-	if _, exists := g.seen[id]; exists {
+	if !g.remember(id) {
 		g.mu.Unlock()
 		return nil
 	}
-	g.seen[id] = struct{}{}
 	var emitted []TranscriptUpdate
 	firstOverlap, firstAfter, initialAssistant := -1, -1, false
 	if len(g.pending) > 0 {
@@ -172,8 +177,22 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 	}
 	previous, hasPrevious := g.lastStart[f.speaker]
 	if hasPrevious && f.start < previous {
-		emitted = g.flushPending()
-		emitted = append(emitted, g.commit([]transcriptFragment{f})...)
+		var before, after []transcriptFragment
+		for _, part := range g.pending {
+			oldOverlap := g.group.current != nil && g.group.current.overlaps(part)
+			newOverlap := transcriptOverlap(part.start, part.end, f.start, f.end)
+			if part.start < previous && (!oldOverlap || newOverlap) {
+				after = append(after, part)
+			} else {
+				before = append(before, part)
+			}
+		}
+		g.pending = nil
+		emitted = g.commit(before)
+		emitted = append(emitted, g.group.close(g.sourceNow(now), "timestamp_reset")...)
+		clear(g.lastStart)
+		g.anchored = false
+		emitted = append(emitted, g.commit(append(after, f))...)
 	} else if firstOverlap < 0 && firstAfter >= 0 {
 		emitted = g.commit(g.pending[:firstAfter])
 		g.pending = g.pending[firstAfter:]
@@ -221,6 +240,23 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 	return nil
 }
 
+func (g *TranscriptGrouper) remember(id string) bool {
+	const limit = 4096
+	digest := sha256.Sum256([]byte(id))
+	if _, exists := g.seen[digest]; exists {
+		return false
+	}
+	if len(g.recentIDs) == limit {
+		delete(g.seen, g.recentIDs[g.nextID])
+		g.recentIDs[g.nextID] = digest
+		g.nextID = (g.nextID + 1) % limit
+	} else {
+		g.recentIDs = append(g.recentIDs, digest)
+	}
+	g.seen[digest] = struct{}{}
+	return true
+}
+
 // Close finalizes once, cancels the owned timer and permits an in-progress
 // callback to finish. It cannot close a socket because it never owns one.
 func (g *TranscriptGrouper) Close() {
@@ -242,6 +278,7 @@ func (g *TranscriptGrouper) finish(now time.Time, reason string) []TranscriptUpd
 	emitted := g.flushPending()
 	emitted = append(emitted, g.group.close(g.sourceNow(now), reason)...)
 	g.seen = nil
+	g.recentIDs = nil
 	return emitted
 }
 
@@ -290,6 +327,22 @@ func (g *TranscriptGrouper) stopTimer() {
 	}
 }
 
+func (g *TranscriptGrouper) pendingAcknowledgment() bool {
+	if g.group.current != nil || g.group.hasAssistantEnd || len(g.pending) == 0 || g.pending[0].speaker != "assistant" {
+		return false
+	}
+	ack := transcriptAcknowledgment{node: g.group.ackRoot}
+	start, end := g.pending[0].start, g.pending[0].end
+	for _, part := range g.pending {
+		end = max(end, part.end)
+		g.group.advanceAck(&ack, part.text)
+		if ack.node == nil || float64(end-start) >= g.group.backchannelDuration {
+			return false
+		}
+	}
+	return true
+}
+
 func (g *TranscriptGrouper) schedule(now time.Time) {
 	g.stopTimer()
 	if g.closed {
@@ -297,7 +350,9 @@ func (g *TranscriptGrouper) schedule(now time.Time) {
 	}
 	wait := math.Inf(1)
 	if len(g.pending) > 0 {
-		wait = float64(g.pending[0].received.Add(50 * time.Millisecond).Sub(now))
+		if !g.pendingAcknowledgment() {
+			wait = float64(g.pending[0].received.Add(50 * time.Millisecond).Sub(now))
+		}
 	} else if due, ok := g.group.deadline(); ok {
 		wait = (due - g.sourceNow(now)) * float64(time.Millisecond)
 	}

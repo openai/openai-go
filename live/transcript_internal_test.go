@@ -7,6 +7,33 @@ import (
 	"testing/synctest"
 )
 
+func TestTranscriptEventIDRetentionIsBounded(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		g, err := NewTranscriptGrouper(TranscriptGrouperOptions{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer g.Close()
+		for i := 0; i < 12000; i++ {
+			kind := "session.input_transcript.delta"
+			if i%2 == 1 {
+				kind = "session.output_transcript.delta"
+			}
+			var event ServerEventUnion
+			raw := fmt.Sprintf(`{"type":%q,"event_id":"retained_%d","delta":"word","start_ms":%d,"end_ms":%d}`, kind, i, i*5000, i*5000+100)
+			if err := json.Unmarshal([]byte(raw), &event); err != nil {
+				t.Fatal(err)
+			}
+			if err := g.Push(event); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if len(g.seen) > 4096 {
+			t.Fatalf("retained %d event IDs after finalized turns", len(g.seen))
+		}
+	})
+}
+
 func TestTranscriptDrainedQueueReleasesBurst(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		var grouper *TranscriptGrouper
