@@ -114,6 +114,35 @@ func NewTranscriptGrouper(opts TranscriptGrouperOptions) (*TranscriptGrouper, er
 // rejects a new delta without consuming it. A real session.closed flushes and
 // closes the grouper, even while callbacks are behind.
 func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
+	if !transcriptEventType(event.Type) {
+		return g.push(nil)
+	}
+	return g.push(event.AsAny())
+}
+
+// PushSideband consumes an event received from a Live sideband connection.
+// It has the same validation, deduplication and lifetime rules as Push.
+func (g *TranscriptGrouper) PushSideband(event ConnectServerEventUnion) error {
+	if !transcriptEventType(event.Type) {
+		return g.push(nil)
+	}
+	return g.push(event.AsAny())
+}
+
+// PushFork consumes an event received from a Live fork connection.
+// It has the same validation, deduplication and lifetime rules as Push.
+func (g *TranscriptGrouper) PushFork(event ForkServerEventUnion) error {
+	if !transcriptEventType(event.Type) {
+		return g.push(nil)
+	}
+	return g.push(event.AsAny())
+}
+
+func transcriptEventType(kind string) bool {
+	return kind == "session.closed" || kind == "session.input_transcript.delta" || kind == "session.output_transcript.delta"
+}
+
+func (g *TranscriptGrouper) push(event any) error {
 	now := time.Now()
 	g.mu.Lock()
 	if g.closed {
@@ -123,9 +152,8 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 	var f transcriptFragment
 	var id string
 	var valid bool
-	switch event.Type {
-	case "session.closed":
-		e := event.AsSessionClosedEvent()
+	switch e := event.(type) {
+	case SessionClosedEvent:
 		if !e.JSON.Type.Valid() || e.Type != "session.closed" ||
 			!e.JSON.EventID.Valid() || e.EventID == "" ||
 			!e.JSON.Reason.Valid() || e.Reason == "" || !e.JSON.Session.Valid() || !e.JSON.Usage.Valid() {
@@ -142,14 +170,12 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 			g.drain()
 		}
 		return nil
-	case "session.input_transcript.delta":
-		e := event.AsInputTranscriptDeltaEvent()
+	case InputTranscriptDeltaEvent:
 		f = transcriptFragment{"user", e.Delta, e.StartMs, e.EndMs, now}
 		id = e.EventID
 		valid = e.JSON.Type.Valid() && e.Type == "session.input_transcript.delta" &&
 			e.JSON.EventID.Valid() && e.JSON.Delta.Valid() && e.JSON.StartMs.Valid() && e.JSON.EndMs.Valid()
-	case "session.output_transcript.delta":
-		e := event.AsOutputTranscriptDeltaEvent()
+	case OutputTranscriptDeltaEvent:
 		f = transcriptFragment{"assistant", e.Delta, e.StartMs, e.EndMs, now}
 		id = e.EventID
 		valid = e.JSON.Type.Valid() && e.Type == "session.output_transcript.delta" &&
@@ -222,9 +248,24 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 		g.pendingText.Reset()
 		g.pendingAckCount = 0
 		emitted = g.commit(before)
+		// The other speaker may already have settled on the new timeline.
+		// Keep its published turn and identity when its interval overlaps
+		// the reset and no older pending turn needs to be finalized first.
+		current := g.group.current
+		if len(before) == 0 && g.group.buffered == nil && current != nil &&
+			current.speaker != f.speaker && current.start < previous && current.overlaps(f) {
+			g.group.current = nil
+		} else {
+			current = nil
+		}
 		emitted = append(emitted, g.group.close(g.sourceNow(now), "timestamp_reset")...)
 		clear(g.lastStart)
 		g.anchored = false
+		if current != nil {
+			g.group.current = current
+			g.lastStart[current.speaker] = current.starts[len(current.starts)-1]
+			g.anchorMs, g.receivedAt, g.anchored = current.end, current.received, true
+		}
 		parts := append(after, f)
 		if f.speaker == "assistant" && (len(after) == 0 || after[0].speaker == "assistant") {
 			// A new epoch has no source context for an initial acknowledgment.

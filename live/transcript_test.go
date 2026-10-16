@@ -117,6 +117,66 @@ func TestLiveTranscriptTypedInputSnapshotsAndDedup(t *testing.T) {
 	})
 }
 
+func TestLiveTranscriptConnectionEventTypes(t *testing.T) {
+	for _, name := range []string{"live", "sideband", "fork"} {
+		t.Run(name, func(t *testing.T) {
+			synctest.Test(t, func(t *testing.T) {
+				var c transcriptCollector
+				g, err := live.NewTranscriptGrouper(live.TranscriptGrouperOptions{OnUpdate: c.push})
+				if err != nil {
+					t.Fatal(err)
+				}
+				defer g.Close()
+				push := func(raw string) error {
+					switch name {
+					case "sideband":
+						var event live.ConnectServerEventUnion
+						if err := json.Unmarshal([]byte(raw), &event); err != nil {
+							t.Fatal(err)
+						}
+						return g.PushSideband(event)
+					case "fork":
+						var event live.ForkServerEventUnion
+						if err := json.Unmarshal([]byte(raw), &event); err != nil {
+							t.Fatal(err)
+						}
+						return g.PushFork(event)
+					default:
+						var event live.ServerEventUnion
+						if err := json.Unmarshal([]byte(raw), &event); err != nil {
+							t.Fatal(err)
+						}
+						return g.Push(event)
+					}
+				}
+				if err := push(`{"type":"session.input_transcript.delta","event_id":"missing-fields"}`); err == nil {
+					t.Fatal("accepted a malformed transcript event")
+				}
+				for _, raw := range []string{
+					`{"type":"future.event"}`,
+					`{"type":"session.input_transcript.delta","event_id":"user","delta":"Hello","start_ms":0,"end_ms":500}`,
+					`{"type":"session.input_transcript.delta","event_id":"user","delta":"Hello","start_ms":0,"end_ms":500}`,
+					`{"type":"session.output_transcript.delta","event_id":"assistant","delta":"The answer","start_ms":1000,"end_ms":1200}`,
+					`{"type":"session.closed","event_id":"closed","reason":"remote_hangup","session":{},"usage":{}}`,
+				} {
+					if err := push(raw); err != nil {
+						t.Fatal(err)
+					}
+				}
+				checkTranscriptFinish(t, &c, [][2]string{{"user", "Hello"}, {"assistant", "The answer"}})
+				for _, update := range c.snapshot() {
+					if update.Reason != "" && update.Reason != "session_closed" && update.Reason != "speaker_change" {
+						t.Fatalf("unexpected finalization: %#v", update)
+					}
+				}
+				if err := push(`{"type":"future.event"}`); err == nil {
+					t.Fatal("accepted an event after session.closed")
+				}
+			})
+		})
+	}
+}
+
 func TestLiveTranscriptOverlapAndBargeIn(t *testing.T) {
 	for _, inputFirst := range []bool{true, false} {
 		t.Run(fmt.Sprint(inputFirst), func(t *testing.T) {
@@ -1296,8 +1356,17 @@ func BenchmarkLiveTranscriptDeferredAcknowledgment(b *testing.B) {
 }
 
 func TestLiveTranscriptAcknowledgmentAfterAssistantTimestampReset(t *testing.T) {
-	for _, userFirst := range []bool{true, false} {
-		t.Run(fmt.Sprint(userFirst), func(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		userFirst bool
+		settle    time.Duration
+	}{
+		{"user-pending", true, 0},
+		{"user-committed", true, 50 * time.Millisecond},
+		{"user-delayed", true, 5 * time.Second},
+		{"assistant-first", false, 5 * time.Second},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
 			synctest.Test(t, func(t *testing.T) {
 				var c transcriptCollector
 				g, err := live.NewTranscriptGrouper(live.TranscriptGrouperOptions{OnUpdate: c.push})
@@ -1309,12 +1378,14 @@ func TestLiveTranscriptAcknowledgmentAfterAssistantTimestampReset(t *testing.T) 
 				time.Sleep(3 * time.Second)
 				synctest.Wait()
 				previous := len(c.snapshot())
-				if userFirst {
+				if tc.userFirst {
 					pushTranscript(t, g, "user", "user", "Hello", 0, 500)
+					time.Sleep(tc.settle)
+					synctest.Wait()
 				}
 				pushTranscript(t, g, "ack", "assistant", "okay", 0, 100)
-				if !userFirst {
-					time.Sleep(5 * time.Second)
+				if !tc.userFirst {
+					time.Sleep(tc.settle)
 					synctest.Wait()
 					if len(c.snapshot()) != previous {
 						t.Fatal("published acknowledgment after reset before source context")

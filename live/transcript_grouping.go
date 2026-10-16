@@ -12,6 +12,7 @@ type transcriptTurn struct {
 	id, previous, speaker string
 	text                  strings.Builder
 	start, end            int64
+	received              time.Time
 	emitted               int
 	canDrop               bool
 	continued             bool
@@ -212,7 +213,7 @@ func (g *transcriptGrouping) ingest(f transcriptFragment) []TranscriptUpdate {
 func (g *transcriptGrouping) newTurn(f transcriptFragment) *transcriptTurn {
 	t := &transcriptTurn{
 		id:      g.prefix + "_" + strconv.FormatUint(g.nextID, 10),
-		speaker: f.speaker, start: f.start, end: f.end, canDrop: true,
+		speaker: f.speaker, start: f.start, end: f.end, received: f.received, canDrop: true,
 	}
 	g.nextID++
 	g.appendTurn(t, f)
@@ -221,7 +222,9 @@ func (g *transcriptGrouping) newTurn(f transcriptFragment) *transcriptTurn {
 
 func (g *transcriptGrouping) appendTurn(t *transcriptTurn, f transcriptFragment) {
 	t.text.WriteString(f.text)
-	t.end = max(t.end, f.end)
+	if f.end > t.end {
+		t.end, t.received = f.end, f.received
+	}
 	if len(t.starts) == 0 || t.starts[len(t.starts)-1] != f.start {
 		t.starts = append(t.starts, f.start)
 	}
