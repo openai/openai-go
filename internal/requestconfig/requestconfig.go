@@ -691,6 +691,9 @@ func (cfg *RequestConfig) Execute() (err error) {
 			}
 		}
 		if ctx != nil && ctx.Err() != nil {
+			if res != nil && res.Body != nil {
+				_ = res.Body.Close()
+			}
 			return ctx.Err()
 		}
 		if !shouldRetry(cfg.Request, res, err) || retryCount >= cfg.MaxRetries {

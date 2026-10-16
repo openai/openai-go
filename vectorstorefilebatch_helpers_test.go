@@ -411,6 +411,62 @@ func TestVectorStoreFileBatchHelperCancelsFailedUploads(t *testing.T) {
 	})
 }
 
+type vectorBatchResponseBodyTracker struct {
+	io.Reader
+	closes int
+}
+
+func (b *vectorBatchResponseBodyTracker) Close() error {
+	b.closes++
+	return nil
+}
+
+func TestVectorStoreFileBatchHelperClosesCanceledSiblingResponse(t *testing.T) {
+	for _, withError := range []bool{false, true} {
+		t.Run(fmt.Sprintf("response_with_error=%t", withError), func(t *testing.T) {
+			synctest.Test(t, func(t *testing.T) {
+				failure := errors.New("synthetic upload failure")
+				siblingStarted := make(chan struct{})
+				body := &vectorBatchResponseBodyTracker{Reader: strings.NewReader(`{"id":"file_other"}`)}
+				service := vectorBatchService(func(req *http.Request) (*http.Response, error) {
+					stage, err := vectorBatchStage(req)
+					if err != nil {
+						return nil, err
+					}
+					if stage != "upload" {
+						t.Errorf("unexpected %s after upload failure", stage)
+						return nil, failure
+					}
+					contents, err := readVectorBatchUpload(req)
+					if err != nil {
+						return nil, err
+					}
+					if contents == "failure" {
+						<-siblingStarted
+						return nil, failure
+					}
+					close(siblingStarted)
+					<-req.Context().Done()
+					response := vectorBatchResponse(req, "")
+					response.Body = body
+					if withError {
+						return response, req.Context().Err()
+					}
+					return response, nil
+				})
+				batch, err := service.UploadAndPoll(context.Background(), "vs_test",
+					[]openai.FileNewParams{vectorBatchUpload("failure"), vectorBatchUpload("other")}, nil, 7)
+				if batch != nil || !errors.Is(err, failure) {
+					t.Errorf("batch = %#v, error = %v; want original upload failure", batch, err)
+				}
+				if body.closes != 1 {
+					t.Errorf("sibling response closed %d times, want 1", body.closes)
+				}
+			})
+		})
+	}
+}
+
 func TestVectorStoreFileBatchHelperCancellation(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
