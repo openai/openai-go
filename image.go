@@ -160,18 +160,23 @@ type ImageEditCompletedEvent struct {
 	// For the GPT image models only, the token usage information for the image
 	// generation.
 	Usage ImageEditCompletedEventUsage `json:"usage" api:"required"`
+	// The effective safety identifier used for safety monitoring and abuse detection.
+	// This is the non-empty `safety_identifier` from the request, or the deprecated
+	// `user` value when `safety_identifier` is omitted, null, or empty.
+	SafetyIdentifier string `json:"safety_identifier" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		B64JSON      respjson.Field
-		Background   respjson.Field
-		CreatedAt    respjson.Field
-		OutputFormat respjson.Field
-		Quality      respjson.Field
-		Size         respjson.Field
-		Type         respjson.Field
-		Usage        respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		B64JSON          respjson.Field
+		Background       respjson.Field
+		CreatedAt        respjson.Field
+		OutputFormat     respjson.Field
+		Quality          respjson.Field
+		Size             respjson.Field
+		Type             respjson.Field
+		Usage            respjson.Field
+		SafetyIdentifier respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 
@@ -374,7 +379,9 @@ type ImageEditStreamEventUnion struct {
 	Type string `json:"type"`
 	// This field is from variant [ImageEditCompletedEvent].
 	Usage ImageEditCompletedEventUsage `json:"usage"`
-	JSON  struct {
+	// This field is from variant [ImageEditCompletedEvent].
+	SafetyIdentifier string `json:"safety_identifier"`
+	JSON             struct {
 		B64JSON           respjson.Field
 		Background        respjson.Field
 		CreatedAt         respjson.Field
@@ -384,6 +391,7 @@ type ImageEditStreamEventUnion struct {
 		Size              respjson.Field
 		Type              respjson.Field
 		Usage             respjson.Field
+		SafetyIdentifier  respjson.Field
 		raw               string
 	} `json:"-"`
 }
@@ -458,18 +466,23 @@ type ImageGenCompletedEvent struct {
 	// For the GPT image models only, the token usage information for the image
 	// generation.
 	Usage ImageGenCompletedEventUsage `json:"usage" api:"required"`
+	// The effective safety identifier used for safety monitoring and abuse detection.
+	// This is the non-empty `safety_identifier` from the request, or the deprecated
+	// `user` value when `safety_identifier` is omitted, null, or empty.
+	SafetyIdentifier string `json:"safety_identifier" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		B64JSON      respjson.Field
-		Background   respjson.Field
-		CreatedAt    respjson.Field
-		OutputFormat respjson.Field
-		Quality      respjson.Field
-		Size         respjson.Field
-		Type         respjson.Field
-		Usage        respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		B64JSON          respjson.Field
+		Background       respjson.Field
+		CreatedAt        respjson.Field
+		OutputFormat     respjson.Field
+		Quality          respjson.Field
+		Size             respjson.Field
+		Type             respjson.Field
+		Usage            respjson.Field
+		SafetyIdentifier respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 
@@ -672,7 +685,9 @@ type ImageGenStreamEventUnion struct {
 	Type string `json:"type"`
 	// This field is from variant [ImageGenCompletedEvent].
 	Usage ImageGenCompletedEventUsage `json:"usage"`
-	JSON  struct {
+	// This field is from variant [ImageGenCompletedEvent].
+	SafetyIdentifier string `json:"safety_identifier"`
+	JSON             struct {
 		B64JSON           respjson.Field
 		Background        respjson.Field
 		CreatedAt         respjson.Field
@@ -682,6 +697,7 @@ type ImageGenStreamEventUnion struct {
 		Size              respjson.Field
 		Type              respjson.Field
 		Usage             respjson.Field
+		SafetyIdentifier  respjson.Field
 		raw               string
 	} `json:"-"`
 }
@@ -772,21 +788,26 @@ type ImagesResponse struct {
 	//
 	// Any of "low", "medium", "high", "xhigh", "max".
 	Quality ImagesResponseQuality `json:"quality"`
+	// The effective safety identifier used for safety monitoring and abuse detection.
+	// This is the non-empty `safety_identifier` from the request, or the deprecated
+	// `user` value when `safety_identifier` is omitted, null, or empty.
+	SafetyIdentifier string `json:"safety_identifier" api:"nullable"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size ImagesResponseSize `json:"size"`
 	// For `gpt-image-1` only, the token usage information for the image generation.
 	Usage ImagesResponseUsage `json:"usage"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Created      respjson.Field
-		Background   respjson.Field
-		Data         respjson.Field
-		OutputFormat respjson.Field
-		Quality      respjson.Field
-		Size         respjson.Field
-		Usage        respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		Created          respjson.Field
+		Background       respjson.Field
+		Data             respjson.Field
+		OutputFormat     respjson.Field
+		Quality          respjson.Field
+		SafetyIdentifier respjson.Field
+		Size             respjson.Field
+		Usage            respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 
@@ -1007,8 +1028,16 @@ type ImageEditParams struct {
 	// Note that the final image may be sent before the full number of partial images
 	// are generated if the full image is generated more quickly.
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
-	// A unique identifier representing your end-user, which can help OpenAI to monitor
-	// and detect abuse.
+	// A stable identifier for an end user in your organization, used for safety
+	// monitoring and abuse detection. Hash a username or email address to avoid
+	// sending identifying information. A non-empty value takes precedence over the
+	// deprecated `user` parameter. If omitted, null, or empty, the API uses `user`
+	// when available.
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
+	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
+	// Deprecated: use `safety_identifier` instead. This parameter remains accepted for
+	// backward compatibility and is used when `safety_identifier` is omitted, null, or
+	// empty.
 	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
 	User param.Opt[string] `json:"user,omitzero"`
 	// Allows to set transparency for the background of the generated image(s). Must be
@@ -1226,8 +1255,16 @@ type ImageGenerateParams struct {
 	// Note that the final image may be sent before the full number of partial images
 	// are generated if the full image is generated more quickly.
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
-	// A unique identifier representing your end-user, which can help OpenAI to monitor
-	// and detect abuse.
+	// A stable identifier for an end user in your organization, used for safety
+	// monitoring and abuse detection. Hash a username or email address to avoid
+	// sending identifying information. A non-empty value takes precedence over the
+	// deprecated `user` parameter. If omitted, null, or empty, the API uses `user`
+	// when available.
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
+	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
+	// Deprecated: use `safety_identifier` instead. This parameter remains accepted for
+	// backward compatibility and is used when `safety_identifier` is omitted, null, or
+	// empty.
 	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
 	User param.Opt[string] `json:"user,omitzero"`
 	// Allows to set transparency for the background of the generated image(s). Must be

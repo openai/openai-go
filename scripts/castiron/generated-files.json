@@ -719,11 +719,11 @@
     },
     "image.go": {
       "mode": "100644",
-      "sha256": "5ecf1cb94ecc21e20740e48cafe1bcef1ce98942b1f6ac15b552dd13ed193a11"
+      "sha256": "787d260e3736069bb7c373fb1654a589e5bd7c8569222aa053e5f6b6fdf5e7bb"
     },
     "image_test.go": {
       "mode": "100644",
-      "sha256": "22abd752c3af3e44bedc3ed4d8682b0691a43e2e61a192ba7ccb5f4a482f5706"
+      "sha256": "66a7b9c4f0a4b93d6b3f5b139418a5dfafbfacbb9490cf5224a3cab0daeee8ef"
     },
     "internal/apiform/encoding.go": {
       "mode": "100644",
