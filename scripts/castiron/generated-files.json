@@ -3,7 +3,7 @@
   "files": {
     ".github/workflows/castiron-custom-code-comment.yml": {
       "mode": "100644",
-      "sha256": "815b1e8ed09255088d37b7b09a758a567037c2ee5b56397fe8b096b7c97e8a41"
+      "sha256": "02b1c497461fcaf604e1389e7dcab06cfcca01635a8cb2e92f8769245a2aaead"
     },
     ".github/workflows/castiron-custom-code.yml": {
       "mode": "100644",
@@ -487,7 +487,7 @@
     },
     "betaresponse.go": {
       "mode": "100644",
-      "sha256": "7093456d896a545c66cc3626f88fd69793a0f9edcff03f9df4d96f6d62e296ba"
+      "sha256": "db92e196864f5d0ba08a1cb9c14565042ae512d3e67a8a25001e3ac519fba14b"
     },
     "betaresponse_test.go": {
       "mode": "100644",
@@ -743,19 +743,43 @@
     },
     "live/api.md": {
       "mode": "100644",
-      "sha256": "68cbfcfc8ad0afbcda3b74d74e6c899cbd2a70c79dea6d520e73fba40c786e60"
+      "sha256": "b6a20f7cf2da3f3d3dac21181d611f55a78f07ffd8bcafef9bb796a988b82ed3"
     },
     "live/fork.go": {
       "mode": "100644",
-      "sha256": "437b1964fbe65b6a5a684bf23f8eb8625420dacdbf4bb1093c3f197e08fdc816"
+      "sha256": "82c031095b8f5ee2e735c7a33659d9559a278ed5b30a0d4334154ecfa3f4681c"
     },
     "live/live.go": {
       "mode": "100644",
-      "sha256": "a2bde627aa6d2d28afd2281078f84fed0f00de8a9f5bcba3bb0363d3c819263f"
+      "sha256": "b963e8979fea98d864d7472982e4be2c4efc0f2939e0ce41635cd0e00da79506"
+    },
+    "live/live_forks_websocket.go": {
+      "mode": "100644",
+      "sha256": "bab9360cbeb230fc19f71e8311c6a636ecb3457026ba15bab2f7fd0624b9ecc1"
+    },
+    "live/live_forks_websocket_binding.go": {
+      "mode": "100644",
+      "sha256": "15736e23924917d21cf7a321d968f0b215cf9c423caebd5a660c3d281a6a8274"
+    },
+    "live/live_sideband_websocket.go": {
+      "mode": "100644",
+      "sha256": "92a7a9832d1e4fb7f1abf3d30d34a2062074f3c398720af749b5a4190a9f8299"
+    },
+    "live/live_sideband_websocket_binding.go": {
+      "mode": "100644",
+      "sha256": "b6ef794f9efacd4ce27007c6ef12203660e7055698991316fa08d40f27325579"
     },
     "live/live_test.go": {
       "mode": "100644",
       "sha256": "8a78d1cfb1cc72dfa805fa00cf924bf1c62a58fbc9675fd364bb7e65aa5984cd"
+    },
+    "live/live_websocket.go": {
+      "mode": "100644",
+      "sha256": "4d91b4f23557dcb8a4693cc132ada9ac3ac2740f025d236dc2f208cef1a44365"
+    },
+    "live/live_websocket_binding.go": {
+      "mode": "100644",
+      "sha256": "3417e2c9626644173762831c51b4f52b216320b0fbb509779ced23060b829844"
     },
     "live/session.go": {
       "mode": "100644",
@@ -767,7 +791,7 @@
     },
     "live/sideband.go": {
       "mode": "100644",
-      "sha256": "a01e0910e4db89c08319d2490b262475a6f56057c38e3293d5bbc27c6dbd26d1"
+      "sha256": "0d5c62cb5ca1fe0b67e5365212e363182fe141c8af4114f8e5170e09d1489951"
     },
     "model.go": {
       "mode": "100644",
@@ -867,11 +891,19 @@
     },
     "responses/response.go": {
       "mode": "100644",
-      "sha256": "a22bdf26d21723030dbbd692cce6d2459528c13494610ba44727bc3a74ece030"
+      "sha256": "246abb04b5697a457a06d9e2013f88be55893eb0caef2e6fdcfeeb4384105312"
     },
     "responses/response_test.go": {
       "mode": "100644",
       "sha256": "9d50b75101688107de2377d55a7772c40cd0f1e6a3f08f3ff1cbffd84aec0da3"
+    },
+    "responses/responses_websocket.go": {
+      "mode": "100644",
+      "sha256": "30ef94d44f4c51c3e14e46401c288b880814ac74683658ea9f660805f23191a5"
+    },
+    "responses/responses_websocket_binding.go": {
+      "mode": "100644",
+      "sha256": "52efd6a10f1b28cb389e97406535a61bba5d7597e82d2e7283980a35826b976a"
     },
     "responses/unknown_union_list_root.go": {
       "mode": "100644",
@@ -899,7 +931,7 @@
     },
     "scripts/castiron/CUSTOM_CODE.md": {
       "mode": "100644",
-      "sha256": "a09c400c4991f4d2ff8b9b49ac8cb577c3a13e7643d5d7085ec4b1f07fbc6564"
+      "sha256": "c83e57879ee995c2871ff41a775758301d634199a00886e339a41212db711f39"
     },
     "scripts/castiron/README.md": {
       "mode": "100644",
@@ -907,7 +939,7 @@
     },
     "scripts/castiron/custom_code_budget.py": {
       "mode": "100644",
-      "sha256": "4bffc531f6807ab95da5ef52e0f9deb69d81a42b467551e088df99516acff941"
+      "sha256": "e6f19706c26f9b996f7d6d5f8a654e54fbc8c49a5d2fce045c1996b119feee33"
     },
     "scripts/castiron/custom_code_report.py": {
       "mode": "100644",
@@ -927,23 +959,23 @@
     },
     "scripts/castiron/test_custom_code_budget.py": {
       "mode": "100644",
-      "sha256": "e89192ddeb77ca8c3fb06ab2ae524c30fa3d83292438d7a7fabc4a0144e4f106"
+      "sha256": "cf4938bca739d01f1db2a421ec97e4fe8b41b8bc2d2c634a01247e36cb464649"
     },
     "scripts/castiron/test_custom_code_github.py": {
       "mode": "100644",
-      "sha256": "2d5700e28b539bb31a0a547a35803c7cf0627e89c1c0430a1307284aff3279b6"
+      "sha256": "aa170458b1b58523df78073a96ba8c58b75fce03206ff7d62d99b29791c6ca39"
     },
     "scripts/castiron/test_custom_code_publication.py": {
       "mode": "100644",
-      "sha256": "835b5728882d5fb3fb41f93a5ca71034e357b938164fdee8d0d456195b92b133"
+      "sha256": "99b266761f427d77990e68ce2fdea4b5f1a5b175612b3a9f4355c094939130ca"
     },
     "scripts/castiron/test_custom_code_report.py": {
       "mode": "100644",
-      "sha256": "2f6ef126e8298fb4eb68ebbb95e8966006525aa4078ec4392083c7076cf4a36d"
+      "sha256": "5c17ac9b5596e7f69aaefe3f29615cdac425323594854a91e1759c88d92a68bb"
     },
     "shared/constant/constants.go": {
       "mode": "100644",
-      "sha256": "e88d3033b7b2c2704c04aa4b2bd020d5f8cf07fe9a15d06713fd2f48e353a374"
+      "sha256": "b39570b3940c9f7444f76e078b70478999b9866b61ec3aebd4e21af0fbecb4c1"
     },
     "shared/shared.go": {
       "mode": "100644",
