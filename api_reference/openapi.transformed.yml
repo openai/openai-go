@@ -71789,6 +71789,9 @@ components:
       - type
       - url
       - pattern
+      x-stainless-naming:
+        go:
+          type_name: ResponseFunctionWebSearchActionFind
     WebSearchActionOpenPage:
       type: object
       title: Open page action
@@ -93325,6 +93328,9 @@ components:
       - type
       - code
       - message
+      x-stainless-naming:
+        go:
+          model_name: LiveError
     LiveErrorEvent:
       description: Reports an error in the Live session, such as an invalid client command. Use error.client_event_id, when present, to identify the command that caused the error.
       example:

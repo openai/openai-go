@@ -1562,6 +1562,8 @@ connections use the same attested transport and bearer-token exchange, including
 custom request headers and the configured opening retry budget. Close each
 WebSocket connection to release its stream; capability `Close` retains its
 ordinary behavior of allowing already active requests to finish.
+X.509-authenticated WebSocket connections are limited to Responses. Live,
+fork, and sideband WebSocket connections do not support X.509 authentication.
 A legacy `http.Transport.Dial` remains supported for compatibility when
 `DialContext` is unset, but its in-progress
 dial call cannot itself be interrupted by context cancellation. The capability

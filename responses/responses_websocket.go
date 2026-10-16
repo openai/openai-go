@@ -4,11 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/websocket"
-	"net/http"
-	"slices"
 	"time"
 )
 
@@ -26,10 +23,10 @@ type ResponseConnection struct {
 // Connect opens a Responses API WebSocket. ctx and HTTP client timeouts bound
 // opening only. The caller owns the connection lifetime through Close or Abort.
 func (r *ResponseService) Connect(ctx context.Context, options ResponseConnectionOptions, opts ...option.RequestOption) (*ResponseConnection, error) {
-	requestOptions := slices.Concat([]option.RequestOption{requestconfig.WithBearerAuthSecurity()}, r.Options, opts)
+	newRequest := r.newWebSocketRequest(opts...)
 	var open func(context.Context) (*ResponseConnection, error)
 	open = func(ctx context.Context) (*ResponseConnection, error) {
-		cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, "responses", nil, nil, requestOptions...)
+		cfg, err := newRequest(ctx)
 		if err != nil {
 			return nil, err
 		}

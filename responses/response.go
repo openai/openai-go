@@ -15757,8 +15757,8 @@ func (u responseInputItemUnionParamAction) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetButton() *string {
 	switch vt := u.any.(type) {
-	case *ResponseComputerToolCallActionUnionParam:
-		return vt.GetButton()
+	case *ResponseComputerToolCallActionClickParam:
+		return &vt.Button
 	}
 	return nil
 }
@@ -15766,8 +15766,8 @@ func (u responseInputItemUnionParamAction) GetButton() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetPath() []ResponseComputerToolCallActionDragPathParam {
 	switch vt := u.any.(type) {
-	case *ResponseComputerToolCallActionUnionParam:
-		return vt.GetPath()
+	case *ResponseComputerToolCallActionDragParam:
+		return vt.Path
 	}
 	return nil
 }
@@ -15775,8 +15775,8 @@ func (u responseInputItemUnionParamAction) GetPath() []ResponseComputerToolCallA
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetScrollX() *int64 {
 	switch vt := u.any.(type) {
-	case *ResponseComputerToolCallActionUnionParam:
-		return vt.GetScrollX()
+	case *ResponseComputerToolCallActionScrollParam:
+		return &vt.ScrollX
 	}
 	return nil
 }
@@ -15784,8 +15784,8 @@ func (u responseInputItemUnionParamAction) GetScrollX() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetScrollY() *int64 {
 	switch vt := u.any.(type) {
-	case *ResponseComputerToolCallActionUnionParam:
-		return vt.GetScrollY()
+	case *ResponseComputerToolCallActionScrollParam:
+		return &vt.ScrollY
 	}
 	return nil
 }
@@ -15793,8 +15793,8 @@ func (u responseInputItemUnionParamAction) GetScrollY() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetText() *string {
 	switch vt := u.any.(type) {
-	case *ResponseComputerToolCallActionUnionParam:
-		return vt.GetText()
+	case *ResponseComputerToolCallActionTypeParam:
+		return &vt.Text
 	}
 	return nil
 }
@@ -15802,8 +15802,8 @@ func (u responseInputItemUnionParamAction) GetText() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetQueries() []string {
 	switch vt := u.any.(type) {
-	case *ResponseFunctionWebSearchActionUnionParam:
-		return vt.GetQueries()
+	case *ResponseFunctionWebSearchActionSearchParam:
+		return vt.Queries
 	}
 	return nil
 }
@@ -15811,8 +15811,8 @@ func (u responseInputItemUnionParamAction) GetQueries() []string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetQuery() *string {
 	switch vt := u.any.(type) {
-	case *ResponseFunctionWebSearchActionUnionParam:
-		return vt.GetQuery()
+	case *ResponseFunctionWebSearchActionSearchParam:
+		return paramutil.AddrIfPresent(vt.Query)
 	}
 	return nil
 }
@@ -15820,8 +15820,8 @@ func (u responseInputItemUnionParamAction) GetQuery() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetSources() []ResponseFunctionWebSearchActionSearchSourceParam {
 	switch vt := u.any.(type) {
-	case *ResponseFunctionWebSearchActionUnionParam:
-		return vt.GetSources()
+	case *ResponseFunctionWebSearchActionSearchParam:
+		return vt.Sources
 	}
 	return nil
 }
@@ -15829,8 +15829,8 @@ func (u responseInputItemUnionParamAction) GetSources() []ResponseFunctionWebSea
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetPattern() *string {
 	switch vt := u.any.(type) {
-	case *ResponseFunctionWebSearchActionUnionParam:
-		return vt.GetPattern()
+	case *ResponseFunctionWebSearchActionFindParam:
+		return &vt.Pattern
 	}
 	return nil
 }
@@ -15892,10 +15892,30 @@ func (u responseInputItemUnionParamAction) GetMaxOutputLength() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetType() *string {
 	switch vt := u.any.(type) {
-	case *ResponseComputerToolCallActionUnionParam:
-		return vt.GetType()
-	case *ResponseFunctionWebSearchActionUnionParam:
-		return vt.GetType()
+	case *ResponseComputerToolCallActionClickParam:
+		return (*string)(&vt.Type)
+	case *ResponseComputerToolCallActionDoubleClickParam:
+		return (*string)(&vt.Type)
+	case *ResponseComputerToolCallActionDragParam:
+		return (*string)(&vt.Type)
+	case *ResponseComputerToolCallActionKeypressParam:
+		return (*string)(&vt.Type)
+	case *ResponseComputerToolCallActionMoveParam:
+		return (*string)(&vt.Type)
+	case *ResponseComputerToolCallActionScreenshotParam:
+		return (*string)(&vt.Type)
+	case *ResponseComputerToolCallActionScrollParam:
+		return (*string)(&vt.Type)
+	case *ResponseComputerToolCallActionTypeParam:
+		return (*string)(&vt.Type)
+	case *ResponseComputerToolCallActionWaitParam:
+		return (*string)(&vt.Type)
+	case *ResponseFunctionWebSearchActionSearchParam:
+		return (*string)(&vt.Type)
+	case *ResponseFunctionWebSearchActionOpenPageParam:
+		return (*string)(&vt.Type)
+	case *ResponseFunctionWebSearchActionFindParam:
+		return (*string)(&vt.Type)
 	case *ResponseInputItemLocalShellCallActionParam:
 		return (*string)(&vt.Type)
 	}
@@ -15905,8 +15925,14 @@ func (u responseInputItemUnionParamAction) GetType() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetX() *int64 {
 	switch vt := u.any.(type) {
-	case *ResponseComputerToolCallActionUnionParam:
-		return vt.GetX()
+	case *ResponseComputerToolCallActionClickParam:
+		return (*int64)(&vt.X)
+	case *ResponseComputerToolCallActionDoubleClickParam:
+		return (*int64)(&vt.X)
+	case *ResponseComputerToolCallActionMoveParam:
+		return (*int64)(&vt.X)
+	case *ResponseComputerToolCallActionScrollParam:
+		return (*int64)(&vt.X)
 	}
 	return nil
 }
@@ -15914,8 +15940,14 @@ func (u responseInputItemUnionParamAction) GetX() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetY() *int64 {
 	switch vt := u.any.(type) {
-	case *ResponseComputerToolCallActionUnionParam:
-		return vt.GetY()
+	case *ResponseComputerToolCallActionClickParam:
+		return (*int64)(&vt.Y)
+	case *ResponseComputerToolCallActionDoubleClickParam:
+		return (*int64)(&vt.Y)
+	case *ResponseComputerToolCallActionMoveParam:
+		return (*int64)(&vt.Y)
+	case *ResponseComputerToolCallActionScrollParam:
+		return (*int64)(&vt.Y)
 	}
 	return nil
 }
@@ -15923,8 +15955,10 @@ func (u responseInputItemUnionParamAction) GetY() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetURL() *string {
 	switch vt := u.any.(type) {
-	case *ResponseFunctionWebSearchActionUnionParam:
-		return vt.GetURL()
+	case *ResponseFunctionWebSearchActionOpenPageParam:
+		return paramutil.AddrIfPresent(vt.URL)
+	case *ResponseFunctionWebSearchActionFindParam:
+		return (*string)(&vt.URL)
 	}
 	return nil
 }
@@ -15943,8 +15977,18 @@ func (u responseInputItemUnionParamAction) GetTimeoutMs() *int64 {
 // Returns a pointer to the underlying variant's Keys property, if present.
 func (u responseInputItemUnionParamAction) GetKeys() []string {
 	switch vt := u.any.(type) {
-	case *ResponseComputerToolCallActionUnionParam:
-		return vt.GetKeys()
+	case *ResponseComputerToolCallActionClickParam:
+		return vt.Keys
+	case *ResponseComputerToolCallActionDoubleClickParam:
+		return vt.Keys
+	case *ResponseComputerToolCallActionDragParam:
+		return vt.Keys
+	case *ResponseComputerToolCallActionKeypressParam:
+		return vt.Keys
+	case *ResponseComputerToolCallActionMoveParam:
+		return vt.Keys
+	case *ResponseComputerToolCallActionScrollParam:
+		return vt.Keys
 	}
 	return nil
 }
@@ -16088,22 +16132,38 @@ func (u responseInputItemUnionParamCaller) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamCaller) GetType() *string {
 	switch vt := u.any.(type) {
-	case *ResponseFunctionToolCallCallerUnionParam:
-		return vt.GetType()
-	case *ResponseInputItemFunctionCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *ResponseInputItemShellCallCallerUnionParam:
-		return vt.GetType()
-	case *ResponseInputItemShellCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *ResponseInputItemApplyPatchCallCallerUnionParam:
-		return vt.GetType()
-	case *ResponseInputItemApplyPatchCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *ResponseCustomToolCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *ResponseCustomToolCallCallerUnionParam:
-		return vt.GetType()
+	case *ResponseFunctionToolCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *ResponseFunctionToolCallCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemFunctionCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemFunctionCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemShellCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemShellCallCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemShellCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemShellCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemApplyPatchCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemApplyPatchCallCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemApplyPatchCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *ResponseInputItemApplyPatchCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *ResponseCustomToolCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *ResponseCustomToolCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *ResponseCustomToolCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *ResponseCustomToolCallCallerProgramParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -16111,22 +16171,22 @@ func (u responseInputItemUnionParamCaller) GetType() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamCaller) GetCallerID() *string {
 	switch vt := u.any.(type) {
-	case *ResponseFunctionToolCallCallerUnionParam:
-		return vt.GetCallerID()
-	case *ResponseInputItemFunctionCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *ResponseInputItemShellCallCallerUnionParam:
-		return vt.GetCallerID()
-	case *ResponseInputItemShellCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *ResponseInputItemApplyPatchCallCallerUnionParam:
-		return vt.GetCallerID()
-	case *ResponseInputItemApplyPatchCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *ResponseCustomToolCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *ResponseCustomToolCallCallerUnionParam:
-		return vt.GetCallerID()
+	case *ResponseFunctionToolCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *ResponseInputItemFunctionCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *ResponseInputItemShellCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *ResponseInputItemShellCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *ResponseInputItemApplyPatchCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *ResponseInputItemApplyPatchCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *ResponseCustomToolCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *ResponseCustomToolCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
 	}
 	return nil
 }
@@ -16191,8 +16251,10 @@ func (u responseInputItemUnionParamError) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamError) GetCode() *int64 {
 	switch vt := u.any.(type) {
-	case *McpToolCallErrorUnionParam:
-		return vt.GetCode()
+	case *McpToolCallErrorMcpProtocolErrorParam:
+		return (*int64)(&vt.Code)
+	case *McpToolCallErrorHTTPErrorParam:
+		return (*int64)(&vt.Code)
 	}
 	return nil
 }
@@ -16200,8 +16262,10 @@ func (u responseInputItemUnionParamError) GetCode() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamError) GetMessage() *string {
 	switch vt := u.any.(type) {
-	case *McpToolCallErrorUnionParam:
-		return vt.GetMessage()
+	case *McpToolCallErrorMcpProtocolErrorParam:
+		return (*string)(&vt.Message)
+	case *McpToolCallErrorHTTPErrorParam:
+		return (*string)(&vt.Message)
 	}
 	return nil
 }
@@ -16209,8 +16273,12 @@ func (u responseInputItemUnionParamError) GetMessage() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamError) GetType() *string {
 	switch vt := u.any.(type) {
-	case *McpToolCallErrorUnionParam:
-		return vt.GetType()
+	case *McpToolCallErrorMcpProtocolErrorParam:
+		return (*string)(&vt.Type)
+	case *McpToolCallErrorMcpToolExecutionErrorParam:
+		return (*string)(&vt.Type)
+	case *McpToolCallErrorHTTPErrorParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -16218,8 +16286,8 @@ func (u responseInputItemUnionParamError) GetType() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamError) GetContent() *any {
 	switch vt := u.any.(type) {
-	case *McpToolCallErrorUnionParam:
-		return vt.GetContent()
+	case *McpToolCallErrorMcpToolExecutionErrorParam:
+		return &vt.Content
 	}
 	return nil
 }
@@ -27363,8 +27431,8 @@ func (u responseToolSearchOutputItemParamToolUnionFilters) AsAny() any { return 
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseToolSearchOutputItemParamToolUnionFilters) GetKey() *string {
 	switch vt := u.any.(type) {
-	case *FileSearchToolFiltersUnionParam:
-		return vt.GetKey()
+	case *shared.ComparisonFilterParam:
+		return &vt.Key
 	}
 	return nil
 }
@@ -27372,8 +27440,8 @@ func (u responseToolSearchOutputItemParamToolUnionFilters) GetKey() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseToolSearchOutputItemParamToolUnionFilters) GetValue() *shared.ComparisonFilterValueUnionParam {
 	switch vt := u.any.(type) {
-	case *FileSearchToolFiltersUnionParam:
-		return vt.GetValue()
+	case *shared.ComparisonFilterParam:
+		return &vt.Value
 	}
 	return nil
 }
@@ -27381,8 +27449,8 @@ func (u responseToolSearchOutputItemParamToolUnionFilters) GetValue() *shared.Co
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseToolSearchOutputItemParamToolUnionFilters) GetFilters() []shared.CompoundFilterFilterUnionParam {
 	switch vt := u.any.(type) {
-	case *FileSearchToolFiltersUnionParam:
-		return vt.GetFilters()
+	case *shared.CompoundFilterParam:
+		return vt.Filters
 	}
 	return nil
 }
@@ -27399,8 +27467,10 @@ func (u responseToolSearchOutputItemParamToolUnionFilters) GetAllowedDomains() [
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseToolSearchOutputItemParamToolUnionFilters) GetType() *string {
 	switch vt := u.any.(type) {
-	case *FileSearchToolFiltersUnionParam:
-		return vt.GetType()
+	case *shared.ComparisonFilterParam:
+		return (*string)(&vt.Type)
+	case *shared.CompoundFilterParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -27436,8 +27506,8 @@ func (u responseToolSearchOutputItemParamToolUnionEnvironment) AsAny() any { ret
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetFileIDs() []string {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetFileIDs()
+	case *ContainerAutoParam:
+		return vt.FileIDs
 	}
 	return nil
 }
@@ -27445,8 +27515,8 @@ func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetFileIDs() []st
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetMemoryLimit() *string {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetMemoryLimit()
+	case *ContainerAutoParam:
+		return (*string)(&vt.MemoryLimit)
 	}
 	return nil
 }
@@ -27454,8 +27524,8 @@ func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetMemoryLimit() 
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetNetworkPolicy() *ContainerAutoNetworkPolicyUnionParam {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetNetworkPolicy()
+	case *ContainerAutoParam:
+		return &vt.NetworkPolicy
 	}
 	return nil
 }
@@ -27463,8 +27533,8 @@ func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetNetworkPolicy(
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetContainerID() *string {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetContainerID()
+	case *ContainerReferenceParam:
+		return &vt.ContainerID
 	}
 	return nil
 }
@@ -27472,8 +27542,12 @@ func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetContainerID() 
 // Returns a pointer to the underlying variant's property, if present.
 func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetType() *string {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetType()
+	case *ContainerAutoParam:
+		return (*string)(&vt.Type)
+	case *LocalEnvironmentParam:
+		return (*string)(&vt.Type)
+	case *ContainerReferenceParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -27483,8 +27557,10 @@ func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetType() *string
 // Or use AsAny() to get the underlying value
 func (u responseToolSearchOutputItemParamToolUnionEnvironment) GetSkills() (res responseToolSearchOutputItemParamToolUnionEnvironmentSkills) {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		res.any = vt.GetSkills()
+	case *ContainerAutoParam:
+		res.any = &vt.Skills
+	case *LocalEnvironmentParam:
+		res.any = &vt.Skills
 	}
 	return res
 }
@@ -33842,8 +33918,8 @@ func (u toolUnionParamFilters) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamFilters) GetKey() *string {
 	switch vt := u.any.(type) {
-	case *FileSearchToolFiltersUnionParam:
-		return vt.GetKey()
+	case *shared.ComparisonFilterParam:
+		return &vt.Key
 	}
 	return nil
 }
@@ -33851,8 +33927,8 @@ func (u toolUnionParamFilters) GetKey() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamFilters) GetValue() *shared.ComparisonFilterValueUnionParam {
 	switch vt := u.any.(type) {
-	case *FileSearchToolFiltersUnionParam:
-		return vt.GetValue()
+	case *shared.ComparisonFilterParam:
+		return &vt.Value
 	}
 	return nil
 }
@@ -33860,8 +33936,8 @@ func (u toolUnionParamFilters) GetValue() *shared.ComparisonFilterValueUnionPara
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamFilters) GetFilters() []shared.CompoundFilterFilterUnionParam {
 	switch vt := u.any.(type) {
-	case *FileSearchToolFiltersUnionParam:
-		return vt.GetFilters()
+	case *shared.CompoundFilterParam:
+		return vt.Filters
 	}
 	return nil
 }
@@ -33878,8 +33954,10 @@ func (u toolUnionParamFilters) GetAllowedDomains() []string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamFilters) GetType() *string {
 	switch vt := u.any.(type) {
-	case *FileSearchToolFiltersUnionParam:
-		return vt.GetType()
+	case *shared.ComparisonFilterParam:
+		return (*string)(&vt.Type)
+	case *shared.CompoundFilterParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -33915,8 +33993,8 @@ func (u toolUnionParamEnvironment) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamEnvironment) GetFileIDs() []string {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetFileIDs()
+	case *ContainerAutoParam:
+		return vt.FileIDs
 	}
 	return nil
 }
@@ -33924,8 +34002,8 @@ func (u toolUnionParamEnvironment) GetFileIDs() []string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamEnvironment) GetMemoryLimit() *string {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetMemoryLimit()
+	case *ContainerAutoParam:
+		return (*string)(&vt.MemoryLimit)
 	}
 	return nil
 }
@@ -33933,8 +34011,8 @@ func (u toolUnionParamEnvironment) GetMemoryLimit() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamEnvironment) GetNetworkPolicy() *ContainerAutoNetworkPolicyUnionParam {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetNetworkPolicy()
+	case *ContainerAutoParam:
+		return &vt.NetworkPolicy
 	}
 	return nil
 }
@@ -33942,8 +34020,8 @@ func (u toolUnionParamEnvironment) GetNetworkPolicy() *ContainerAutoNetworkPolic
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamEnvironment) GetContainerID() *string {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetContainerID()
+	case *ContainerReferenceParam:
+		return &vt.ContainerID
 	}
 	return nil
 }
@@ -33951,8 +34029,12 @@ func (u toolUnionParamEnvironment) GetContainerID() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamEnvironment) GetType() *string {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		return vt.GetType()
+	case *ContainerAutoParam:
+		return (*string)(&vt.Type)
+	case *LocalEnvironmentParam:
+		return (*string)(&vt.Type)
+	case *ContainerReferenceParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -33962,8 +34044,10 @@ func (u toolUnionParamEnvironment) GetType() *string {
 // Or use AsAny() to get the underlying value
 func (u toolUnionParamEnvironment) GetSkills() (res toolUnionParamEnvironmentSkills) {
 	switch vt := u.any.(type) {
-	case *FunctionShellToolEnvironmentUnionParam:
-		res.any = vt.GetSkills()
+	case *ContainerAutoParam:
+		res.any = &vt.Skills
+	case *LocalEnvironmentParam:
+		res.any = &vt.Skills
 	}
 	return res
 }
