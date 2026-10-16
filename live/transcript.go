@@ -182,9 +182,10 @@ func (g *TranscriptGrouper) Push(event ServerEventUnion) error {
 	if hasPrevious && f.start < previous {
 		var before, after []transcriptFragment
 		for _, part := range g.pending {
-			oldOverlap := g.group.current != nil && g.group.current.overlaps(part)
+			// Move only positively overlapping fragments into the new epoch.
+			// A disjoint fragment remains on the old timeline when its age is ambiguous.
 			newOverlap := transcriptOverlap(part.start, part.end, f.start, f.end)
-			if part.start < previous && (!oldOverlap || newOverlap) {
+			if part.start < previous && newOverlap {
 				after = append(after, part)
 			} else {
 				before = append(before, part)
@@ -335,7 +336,12 @@ func (g *TranscriptGrouper) stopTimer() {
 }
 
 func (g *TranscriptGrouper) pendingAcknowledgment() bool {
-	if g.group.current != nil || g.group.hasAssistantEnd || len(g.pending) == 0 || g.pending[0].speaker != "assistant" {
+	if g.group.current != nil || len(g.pending) == 0 || g.pending[0].speaker != "assistant" {
+		return false
+	}
+	// Only an overlapping or adjacent tail is known to belong to the prior
+	// assistant without waiting for the other speaker's source interval.
+	if g.group.hasAssistantEnd && g.pending[0].start <= g.group.lastAssistantEnd {
 		return false
 	}
 	if g.pendingAckCount == 0 {

@@ -849,7 +849,7 @@ func TestLiveTranscriptLargeInitialAssistantBurst(t *testing.T) {
 }
 
 func TestLiveTranscriptFlushesPendingBeforeTimestampReset(t *testing.T) {
-	for _, interval := range [][2]int64{{1100, 1200}, {950, 1150}} {
+	for _, interval := range [][2]int64{{1100, 1200}, {950, 1150}, {900, 950}} {
 		t.Run(fmt.Sprint(interval), func(t *testing.T) {
 			synctest.Test(t, func(t *testing.T) {
 				var c transcriptCollector
@@ -1290,6 +1290,38 @@ func BenchmarkLiveTranscriptDeferredAcknowledgment(b *testing.B) {
 				}
 				g.Close()
 			}
+		})
+	}
+}
+
+func TestLiveTranscriptLaterAcknowledgmentWaitsForSourceContext(t *testing.T) {
+	for _, userFirst := range []bool{true, false} {
+		t.Run(fmt.Sprint(userFirst), func(t *testing.T) {
+			synctest.Test(t, func(t *testing.T) {
+				var c transcriptCollector
+				g, err := live.NewTranscriptGrouper(live.TranscriptGrouperOptions{OnUpdate: c.push})
+				if err != nil {
+					t.Fatal(err)
+				}
+				pushTranscript(t, g, "old", "assistant", "Old answer", 0, 100)
+				time.Sleep(3 * time.Second)
+				synctest.Wait()
+				previous := len(c.snapshot())
+				if userFirst {
+					pushTranscript(t, g, "u1", "user", "Hello", 5000, 5500)
+				}
+				pushTranscript(t, g, "a1", "assistant", "okay", 5000, 5100)
+				if !userFirst {
+					time.Sleep(5 * time.Second)
+					synctest.Wait()
+					if len(c.snapshot()) != previous {
+						t.Fatal("published a later acknowledgment before source context")
+					}
+					pushTranscript(t, g, "u1", "user", "Hello", 5000, 5500)
+				}
+				g.Close()
+				checkTranscriptFinish(t, &c, [][2]string{{"assistant", "Old answer"}, {"user", "Hello"}})
+			})
 		})
 	}
 }
