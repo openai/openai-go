@@ -1360,6 +1360,44 @@ func TestLiveTranscriptLaterAcknowledgmentWaitsForSourceContext(t *testing.T) {
 	}
 }
 
+func TestLiveTranscriptReentrantCloseDrainsAfterCallbackPanic(t *testing.T) {
+	for _, panicAgain := range []bool{false, true} {
+		t.Run(fmt.Sprint(panicAgain), func(t *testing.T) {
+			synctest.Test(t, func(t *testing.T) {
+				var c transcriptCollector
+				var g *live.TranscriptGrouper
+				calls := 0
+				var err error
+				g, err = live.NewTranscriptGrouper(live.TranscriptGrouperOptions{OnUpdate: func(u live.TranscriptUpdate) {
+					calls++
+					c.push(u)
+					if calls == 1 {
+						g.Close()
+						panic("first callback panic")
+					}
+					if panicAgain {
+						panic("later callback panic")
+					}
+				}})
+				if err != nil {
+					t.Fatal(err)
+				}
+				defer g.Close()
+				pushTranscript(t, g, "user", "user", "Hello", 0, 100)
+				func() {
+					defer func() {
+						if value := recover(); value != "first callback panic" {
+							t.Errorf("panic = %v, want first callback panic", value)
+						}
+					}()
+					pushTranscript(t, g, "assistant", "assistant", "Answer", 5000, 5100)
+				}()
+				checkTranscriptFinish(t, &c, [][2]string{{"user", "Hello"}, {"assistant", "Answer"}})
+			})
+		})
+	}
+}
+
 func TestLiveTranscriptSlowCallbackBackpressure(t *testing.T) {
 	for _, closeWhileBlocked := range []bool{false, true} {
 		t.Run(fmt.Sprintf("closeWhileBlocked=%v", closeWhileBlocked), func(t *testing.T) {
