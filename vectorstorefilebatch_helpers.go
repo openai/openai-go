@@ -3,10 +3,14 @@ package openai
 import (
 	"context"
 	"errors"
+	"io"
+	"path/filepath"
 	"sync"
 
 	"github.com/openai/openai-go/v3/option"
 )
+
+const defaultVectorStoreFileBatchUploadConcurrency = 16
 
 func newVectorStoreFileBatchAndPoll(r *VectorStoreFileBatchService, ctx context.Context, vectorStoreId string, body VectorStoreFileBatchNewParams, pollIntervalMs int, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
 	batch, err := r.New(ctx, vectorStoreId, body, opts...)
@@ -17,34 +21,69 @@ func newVectorStoreFileBatchAndPoll(r *VectorStoreFileBatchService, ctx context.
 }
 
 func uploadVectorStoreFileBatchAndPoll(r *VectorStoreFileBatchService, ctx context.Context, vectorStoreID string, files []FileNewParams, fileIDs []string, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFileBatch, error) {
+	maxConcurrency := r.MaxUploadConcurrency
+	if maxConcurrency < 0 {
+		return nil, errors.New("vector store file batch: MaxUploadConcurrency must not be negative")
+	}
+	if maxConcurrency == 0 {
+		maxConcurrency = defaultVectorStoreFileBatchUploadConcurrency
+	}
 	if len(files) <= 0 {
 		return nil, errors.New("No `files` provided to process. If you've already uploaded files you should use `.NewAndPoll()` instead")
 	}
 
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	uploadCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	filesService := NewFileService(r.Options...)
 
 	uploadedFileIDs := make(chan string, len(files))
-	fileUploadErrors := make(chan error, len(files))
+	var firstError error
+	var failureOnce sync.Once
 	wg := sync.WaitGroup{}
 
-	for _, file := range files {
+	// Bound active uploads, including multipart bodies buffered for retries.
+	var next int
+	var mu sync.Mutex
+	for range min(maxConcurrency, len(files)) {
 		wg.Add(1)
-		go func(file FileNewParams) {
+		go func() {
 			defer wg.Done()
-			fileObj, err := filesService.New(ctx, file, opts...)
-			if err != nil {
-				fileUploadErrors <- err
-				return
+			for {
+				mu.Lock()
+				if next == len(files) || uploadCtx.Err() != nil {
+					mu.Unlock()
+					return
+				}
+				file := files[next]
+				next++
+				mu.Unlock()
+				if file.File != nil {
+					file.File = vectorBatchReader{uploadCtx, file.File}
+				}
+				fileObj, err := filesService.New(uploadCtx, file, opts...)
+				if err != nil {
+					failureOnce.Do(func() {
+						firstError = err
+						cancel()
+					})
+					return
+				}
+				uploadedFileIDs <- fileObj.ID
 			}
-			uploadedFileIDs <- fileObj.ID
-		}(file)
+		}()
 	}
 
 	wg.Wait()
 	close(uploadedFileIDs)
-	close(fileUploadErrors)
 
-	for err := range fileUploadErrors {
+	if firstError != nil {
+		return nil, firstError
+	}
+	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
 
@@ -55,4 +94,35 @@ func uploadVectorStoreFileBatchAndPoll(r *VectorStoreFileBatchService, ctx conte
 	return r.NewAndPoll(ctx, vectorStoreID, VectorStoreFileBatchNewParams{
 		FileIDs: fileIDs,
 	}, pollIntervalMs, opts...)
+}
+
+// Check cancellation between reads without taking ownership of caller readers.
+// An already-blocked Read still needs to be released by its owner.
+type vectorBatchReader struct {
+	ctx context.Context
+	io.Reader
+}
+
+func (r vectorBatchReader) Read(p []byte) (int, error) {
+	if err := r.ctx.Err(); err != nil {
+		return 0, err
+	}
+	return r.Reader.Read(p)
+}
+
+func (r vectorBatchReader) Filename() string {
+	if named, ok := r.Reader.(interface{ Filename() string }); ok {
+		return named.Filename()
+	}
+	if named, ok := r.Reader.(interface{ Name() string }); ok {
+		return filepath.Base(named.Name())
+	}
+	return "anonymous_file"
+}
+
+func (r vectorBatchReader) ContentType() string {
+	if typed, ok := r.Reader.(interface{ ContentType() string }); ok {
+		return typed.ContentType()
+	}
+	return "application/octet-stream"
 }

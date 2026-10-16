@@ -27,13 +27,19 @@ import (
 // the [NewVectorStoreFileBatchService] method instead.
 type VectorStoreFileBatchService struct {
 	Options []option.RequestOption
+
+	// MaxUploadConcurrency limits the number of active uploads per UploadAndPoll
+	// call. Zero uses the default of 16; negative values are invalid.
+	// Set this before concurrent use. To override it for one call, copy the
+	// service first. Each active upload may buffer its entire body for retries.
+	MaxUploadConcurrency int
 }
 
 // NewVectorStoreFileBatchService generates a new service that applies the given
 // options to each request. These options are applied after the parent client's
 // options (if there is one), and before any request-specific options.
 func NewVectorStoreFileBatchService(opts ...option.RequestOption) (r VectorStoreFileBatchService) {
-	r = VectorStoreFileBatchService{}
+	r = VectorStoreFileBatchService{MaxUploadConcurrency: defaultVectorStoreFileBatchUploadConcurrency}
 	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
