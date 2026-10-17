@@ -65,6 +65,24 @@ func ConnectClientEventParamOfSessionCommentaryAppend(content string, delegation
 	return ConnectClientEventUnionParam{OfSessionCommentaryAppend: &sessionCommentaryAppend}
 }
 
+func ConnectClientEventParamOfDecisionCreate(eventID string) ConnectClientEventUnionParam {
+	var decisionCreate DecisionCreateEventParam
+	decisionCreate.EventID = eventID
+	return ConnectClientEventUnionParam{OfDecisionCreate: &decisionCreate}
+}
+
+func ConnectClientEventParamOfDecisionItemCreate(item DecisionItemCreateEventItemParam) ConnectClientEventUnionParam {
+	var decisionItemCreate DecisionItemCreateEventParam
+	decisionItemCreate.Item = item
+	return ConnectClientEventUnionParam{OfDecisionItemCreate: &decisionItemCreate}
+}
+
+func ConnectClientEventParamOfDecisionItemDelete(itemID string) ConnectClientEventUnionParam {
+	var decisionItemDelete DecisionItemDeleteEventParam
+	decisionItemDelete.ItemID = itemID
+	return ConnectClientEventUnionParam{OfDecisionItemDelete: &decisionItemDelete}
+}
+
 func ConnectClientEventParamOfResponseItemCreate[
 	T responses.EasyInputMessageParam | responses.ResponseInputItemMessageParam | responses.ResponseOutputMessageParam | responses.ResponseFileSearchToolCallParam | responses.ResponseComputerToolCallParam | responses.ResponseInputItemComputerCallOutputParam | responses.ResponseFunctionWebSearchParam | responses.ResponseFunctionToolCallParam | responses.ResponseInputItemFunctionCallOutputParam | responses.ResponseInputItemToolSearchCallParam | responses.ResponseToolSearchOutputItemParam | responses.ResponseInputItemAdditionalToolsParam | responses.ResponseConfigurationUpdateItemParam | responses.ResponseReasoningItemParam | responses.ResponseCompactionItemParam | responses.ResponseInputItemImageGenerationCallParam | responses.ResponseCodeInterpreterToolCallParam | responses.ResponseInputItemLocalShellCallParam | responses.ResponseInputItemLocalShellCallOutputParam | responses.ResponseInputItemShellCallParam | responses.ResponseInputItemShellCallOutputParam | responses.ResponseInputItemApplyPatchCallParam | responses.ResponseInputItemApplyPatchCallOutputParam | responses.ResponseInputItemMcpListToolsParam | responses.ResponseInputItemMcpApprovalRequestParam | responses.ResponseInputItemMcpApprovalResponseParam | responses.ResponseInputItemMcpCallParam | responses.ResponseCustomToolCallOutputParam | responses.ResponseCustomToolCallParam | responses.ResponseInputItemCompactionTriggerParam | responses.ResponseInputItemItemReferenceParam | responses.ResponseInputItemProgramParam | responses.ResponseInputItemProgramOutputParam,
 ](item T) ConnectClientEventUnionParam {
@@ -151,6 +169,9 @@ type ConnectClientEventUnionParam struct {
 	OfSessionInstructionsAppend     *InstructionsAppendEventParam     `json:",omitzero,inline"`
 	OfSessionThinkingAppend         *ThinkingAppendEventParam         `json:",omitzero,inline"`
 	OfSessionCommentaryAppend       *CommentaryAppendEventParam       `json:",omitzero,inline"`
+	OfDecisionCreate                *DecisionCreateEventParam         `json:",omitzero,inline"`
+	OfDecisionItemCreate            *DecisionItemCreateEventParam     `json:",omitzero,inline"`
+	OfDecisionItemDelete            *DecisionItemDeleteEventParam     `json:",omitzero,inline"`
 	OfResponseItemCreate            *ResponseItemCreateEventParam     `json:",omitzero,inline"`
 	OfResponseCreate                *ResponseCreateEventParam         `json:",omitzero,inline"`
 	OfSessionClose                  *SessionCloseEventParam           `json:",omitzero,inline"`
@@ -165,6 +186,9 @@ func (u ConnectClientEventUnionParam) MarshalJSON() ([]byte, error) {
 		u.OfSessionInstructionsAppend,
 		u.OfSessionThinkingAppend,
 		u.OfSessionCommentaryAppend,
+		u.OfDecisionCreate,
+		u.OfDecisionItemCreate,
+		u.OfDecisionItemDelete,
 		u.OfResponseItemCreate,
 		u.OfResponseCreate,
 		u.OfSessionClose)
@@ -185,6 +209,14 @@ func (u ConnectClientEventUnionParam) GetSession() *SessionUpdateConfigParam {
 func (u ConnectClientEventUnionParam) GetAudio() *string {
 	if vt := u.OfSessionOutputAudioFixturePlay; vt != nil {
 		return &vt.Audio
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ConnectClientEventUnionParam) GetItemID() *string {
+	if vt := u.OfDecisionItemDelete; vt != nil {
+		return &vt.ItemID
 	}
 	return nil
 }
@@ -213,6 +245,12 @@ func (u ConnectClientEventUnionParam) GetType() *string {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfSessionCommentaryAppend; vt != nil {
 		return (*string)(&vt.Type)
+	} else if vt := u.OfDecisionCreate; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfDecisionItemCreate; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfDecisionItemDelete; vt != nil {
+		return (*string)(&vt.Type)
 	} else if vt := u.OfResponseItemCreate; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfResponseCreate; vt != nil {
@@ -238,6 +276,12 @@ func (u ConnectClientEventUnionParam) GetEventID() *string {
 	} else if vt := u.OfSessionThinkingAppend; vt != nil && vt.EventID.Valid() {
 		return &vt.EventID.Value
 	} else if vt := u.OfSessionCommentaryAppend; vt != nil && vt.EventID.Valid() {
+		return &vt.EventID.Value
+	} else if vt := u.OfDecisionCreate; vt != nil {
+		return (*string)(&vt.EventID)
+	} else if vt := u.OfDecisionItemCreate; vt != nil && vt.EventID.Valid() {
+		return &vt.EventID.Value
+	} else if vt := u.OfDecisionItemDelete; vt != nil && vt.EventID.Valid() {
 		return &vt.EventID.Value
 	} else if vt := u.OfResponseItemCreate; vt != nil && vt.EventID.Valid() {
 		return &vt.EventID.Value
@@ -283,6 +327,9 @@ func init() {
 		apijson.Discriminator[InstructionsAppendEventParam]("session.instructions.append"),
 		apijson.Discriminator[ThinkingAppendEventParam]("session.thinking.append"),
 		apijson.Discriminator[CommentaryAppendEventParam]("session.commentary.append"),
+		apijson.Discriminator[DecisionCreateEventParam]("decision.create"),
+		apijson.Discriminator[DecisionItemCreateEventParam]("decision.item.create"),
+		apijson.Discriminator[DecisionItemDeleteEventParam]("decision.item.delete"),
 		apijson.Discriminator[ResponseItemCreateEventParam]("response.item.create"),
 		apijson.Discriminator[ResponseCreateEventParam]("response.create"),
 		apijson.Discriminator[SessionCloseEventParam]("session.close"),
@@ -294,7 +341,8 @@ func init() {
 // [InputAudioUnmutedEvent], [OutputAudioFixturePlayingEvent],
 // [OutputAudioFixturePlayedEvent], [InstructionsAppendedEvent],
 // [ThinkingAppendedEvent], [CommentaryAppendedEvent], [InputTranscriptDeltaEvent],
-// [OutputTranscriptDeltaEvent], [DelegationCreatedEvent], [ResponseEvent],
+// [OutputTranscriptDeltaEvent], [DelegationCreatedEvent], [DecisionEvent],
+// [DecisionItemCreatedEvent], [DecisionItemDeletedEvent], [ResponseEvent],
 // [SessionUsageUpdatedEvent], [SessionClosedEvent], [ErrorEvent], [InfoEvent].
 //
 // Use the [ConnectServerEventUnion.AsAny] method to switch on the variant.
@@ -313,6 +361,9 @@ type ConnectServerEventUnion struct {
 	OfInputTranscriptDeltaEvent      InputTranscriptDeltaEvent      `json:",inline"`
 	OfOutputTranscriptDeltaEvent     OutputTranscriptDeltaEvent     `json:",inline"`
 	OfDelegationCreatedEvent         DelegationCreatedEvent         `json:",inline"`
+	OfDecisionEvent                  DecisionEvent                  `json:",inline"`
+	OfDecisionItemCreatedEvent       DecisionItemCreatedEvent       `json:",inline"`
+	OfDecisionItemDeletedEvent       DecisionItemDeletedEvent       `json:",inline"`
 	OfResponseEvent                  ResponseEvent                  `json:",inline"`
 	OfSessionUsageUpdatedEvent       SessionUsageUpdatedEvent       `json:",inline"`
 	OfSessionClosedEvent             SessionClosedEvent             `json:",inline"`
@@ -332,6 +383,9 @@ type ConnectServerEventUnion struct {
 		OfInputTranscriptDeltaEvent      respjson.Field
 		OfOutputTranscriptDeltaEvent     respjson.Field
 		OfDelegationCreatedEvent         respjson.Field
+		OfDecisionEvent                  respjson.Field
+		OfDecisionItemCreatedEvent       respjson.Field
+		OfDecisionItemDeletedEvent       respjson.Field
 		OfResponseEvent                  respjson.Field
 		OfSessionUsageUpdatedEvent       respjson.Field
 		OfSessionClosedEvent             respjson.Field
@@ -361,6 +415,9 @@ func (CommentaryAppendedEvent) implConnectServerEventUnion()        {}
 func (InputTranscriptDeltaEvent) implConnectServerEventUnion()      {}
 func (OutputTranscriptDeltaEvent) implConnectServerEventUnion()     {}
 func (DelegationCreatedEvent) implConnectServerEventUnion()         {}
+func (DecisionEvent) implConnectServerEventUnion()                  {}
+func (DecisionItemCreatedEvent) implConnectServerEventUnion()       {}
+func (DecisionItemDeletedEvent) implConnectServerEventUnion()       {}
 func (ResponseEvent) implConnectServerEventUnion()                  {}
 func (SessionUsageUpdatedEvent) implConnectServerEventUnion()       {}
 func (SessionClosedEvent) implConnectServerEventUnion()             {}
@@ -382,6 +439,9 @@ func (InfoEvent) implConnectServerEventUnion()                      {}
 //	case live.InputTranscriptDeltaEvent:
 //	case live.OutputTranscriptDeltaEvent:
 //	case live.DelegationCreatedEvent:
+//	case live.DecisionEvent:
+//	case live.DecisionItemCreatedEvent:
+//	case live.DecisionItemDeletedEvent:
 //	case live.ResponseEvent:
 //	case live.SessionUsageUpdatedEvent:
 //	case live.SessionClosedEvent:
@@ -416,6 +476,12 @@ func (u ConnectServerEventUnion) AsAny() anyConnectServerEvent {
 		return u.AsOutputTranscriptDeltaEvent()
 	case "session.delegation.created":
 		return u.AsDelegationCreatedEvent()
+	case "decision.event":
+		return u.AsDecisionEvent()
+	case "decision.item.created":
+		return u.AsDecisionItemCreatedEvent()
+	case "decision.item.deleted":
+		return u.AsDecisionItemDeletedEvent()
 	case "response.event":
 		return u.AsResponseEvent()
 	case "session.usage.updated":
@@ -486,6 +552,21 @@ func (u ConnectServerEventUnion) AsOutputTranscriptDeltaEvent() (v OutputTranscr
 }
 
 func (u ConnectServerEventUnion) AsDelegationCreatedEvent() (v DelegationCreatedEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConnectServerEventUnion) AsDecisionEvent() (v DecisionEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConnectServerEventUnion) AsDecisionItemCreatedEvent() (v DecisionItemCreatedEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConnectServerEventUnion) AsDecisionItemDeletedEvent() (v DecisionItemDeletedEvent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -599,6 +680,21 @@ func (r *ConnectServerEventUnion) unmarshalWebsocketEvent(data []byte) error {
 			return err
 		}
 		r.JSON.OfDelegationCreatedEvent = respjson.NewField(r.JSON.raw)
+	case "decision.event":
+		if err := apijson.UnmarshalRoot(data, &r.OfDecisionEvent); err != nil {
+			return err
+		}
+		r.JSON.OfDecisionEvent = respjson.NewField(r.JSON.raw)
+	case "decision.item.created":
+		if err := apijson.UnmarshalRoot(data, &r.OfDecisionItemCreatedEvent); err != nil {
+			return err
+		}
+		r.JSON.OfDecisionItemCreatedEvent = respjson.NewField(r.JSON.raw)
+	case "decision.item.deleted":
+		if err := apijson.UnmarshalRoot(data, &r.OfDecisionItemDeletedEvent); err != nil {
+			return err
+		}
+		r.JSON.OfDecisionItemDeletedEvent = respjson.NewField(r.JSON.raw)
 	case "response.event":
 		if err := apijson.UnmarshalRoot(data, &r.OfResponseEvent); err != nil {
 			return err
