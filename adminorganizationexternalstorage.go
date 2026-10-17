@@ -175,7 +175,7 @@ type ExternalStorageConfiguration struct {
 	Object    constant.OrganizationExternalStorage      `json:"object" default:"organization.external_storage"`
 	ProjectID string                                    `json:"project_id" api:"required"`
 	Provider  ExternalStorageConfigurationProviderUnion `json:"provider" api:"required"`
-	// Any of "pending", "validated", "unhealthy".
+	// Any of "pending", "validated", "degraded", "unhealthy".
 	Status ExternalStorageConfigurationStatus `json:"status" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -325,6 +325,7 @@ type ExternalStorageConfigurationStatus string
 const (
 	ExternalStorageConfigurationStatusPending   ExternalStorageConfigurationStatus = "pending"
 	ExternalStorageConfigurationStatusValidated ExternalStorageConfigurationStatus = "validated"
+	ExternalStorageConfigurationStatusDegraded  ExternalStorageConfigurationStatus = "degraded"
 	ExternalStorageConfigurationStatusUnhealthy ExternalStorageConfigurationStatus = "unhealthy"
 )
 
