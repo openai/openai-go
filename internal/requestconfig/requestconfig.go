@@ -35,8 +35,6 @@ const defaultMaxRetryAfterDelay = 2 * time.Minute
 func getDefaultHeaders() map[string]string {
 	return map[string]string{
 		"User-Agent": fmt.Sprintf("OpenAI/Go %s", internal.PackageVersion),
-		// Temporary SDK-1144 negative qualification: intentionally disable automatic gzip decoding.
-		"Accept-Encoding": "gzip",
 	}
 }
 
