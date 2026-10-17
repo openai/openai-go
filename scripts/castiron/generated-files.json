@@ -271,7 +271,7 @@
     },
     "api.md": {
       "mode": "100644",
-      "sha256": "3a607a00104555761ea8b9dab76270ba06b4e992812180d1ae7cd27539c03bf8"
+      "sha256": "b92f6b4170030353ec0f4a3feaa6a7694dd63710d4ccfb1455cdc0ff80abfc31"
     },
     "audio.go": {
       "mode": "100644",
@@ -320,6 +320,14 @@
     "beta.go": {
       "mode": "100644",
       "sha256": "72e6bcfd39f69515db20b30ee5738496ac5332254990826cddaf540307f4a3f7"
+    },
+    "beta_responses_websocket.go": {
+      "mode": "100644",
+      "sha256": "be3c152f906f656cb0305077e4ff26ae1935012ac8941b279752aa413d6dc19b"
+    },
+    "beta_responses_websocket_binding.go": {
+      "mode": "100644",
+      "sha256": "ed922ea88d34dcaa38505cfe38bc4b19283f3bbf0e757afc6b94c42f927c2537"
     },
     "betaagent.go": {
       "mode": "100644",
@@ -487,7 +495,7 @@
     },
     "betaresponse.go": {
       "mode": "100644",
-      "sha256": "54f15a0e45d40270a2cac79b81f05bb0d4397ee515e9bf24fccfe82cc4f14f24"
+      "sha256": "7ce9cde641c9ceba8fece5eafaa0005876e553152486de2db1f9dded9379c6a6"
     },
     "betaresponse_test.go": {
       "mode": "100644",
@@ -743,7 +751,7 @@
     },
     "live/api.md": {
       "mode": "100644",
-      "sha256": "55e14a21a60ab77a1a9bb933fecfeca10bd5f00b5f95b54e7f1ec83f3d8b8ff2"
+      "sha256": "f33ce27755cbf3f7d652140cd64b6311c9893104fabe95e5a606f0ae111cd872"
     },
     "live/fork.go": {
       "mode": "100644",
@@ -791,7 +799,7 @@
     },
     "live/sideband.go": {
       "mode": "100644",
-      "sha256": "ae2a0c9a902fef70f1fdf438c958380fb1eeec97bca14a0130443445e19b2b81"
+      "sha256": "7859eba83ef8c87f54c9ca73979f77f027b2b13d5aabc4f7dc93d6edbc6f45c6"
     },
     "model.go": {
       "mode": "100644",
