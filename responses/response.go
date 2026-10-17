@@ -88,7 +88,8 @@ func (r *ResponseService) NewStreaming(ctx context.Context, body ResponseNewPara
 	)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
-	opts = append(opts, option.WithJSONSet("stream", true))
+	// Temporary SDK-1144 negative qualification: explicit gzip prevents automatic decoding.
+	opts = append(opts, option.WithJSONSet("stream", true), option.WithHeader("Accept-Encoding", "gzip"))
 	path := "responses"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
 	return ssestream.NewStream[ResponseStreamEventUnion](ssestream.NewDecoder(raw), err)
