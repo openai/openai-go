@@ -743,15 +743,15 @@
     },
     "live/api.md": {
       "mode": "100644",
-      "sha256": "b6a20f7cf2da3f3d3dac21181d611f55a78f07ffd8bcafef9bb796a988b82ed3"
+      "sha256": "55e14a21a60ab77a1a9bb933fecfeca10bd5f00b5f95b54e7f1ec83f3d8b8ff2"
     },
     "live/fork.go": {
       "mode": "100644",
-      "sha256": "ceebb1b8dc2ac59c892fed4c0ef01e42c7e2b8817a33fb164381d2a1a1c4a6cc"
+      "sha256": "23e674cf66981b30eb40425b677af7a1bd563483353ca964c78df43620f57270"
     },
     "live/live.go": {
       "mode": "100644",
-      "sha256": "da968e172bf72f50d2c48b238b140e22e3ff72623fe546a7f198c66ca500343f"
+      "sha256": "eb449afd6880ed9860084ba4ebd0ae9b78742dc4d68c9543f909905de3f28749"
     },
     "live/live_forks_websocket.go": {
       "mode": "100644",
@@ -771,7 +771,7 @@
     },
     "live/live_test.go": {
       "mode": "100644",
-      "sha256": "8a78d1cfb1cc72dfa805fa00cf924bf1c62a58fbc9675fd364bb7e65aa5984cd"
+      "sha256": "facf8768eb755d4902be759e7d7c6c5b3c9320fcc76d04e25f751d7bded279ce"
     },
     "live/live_websocket.go": {
       "mode": "100644",
@@ -783,15 +783,15 @@
     },
     "live/session.go": {
       "mode": "100644",
-      "sha256": "7dfe0c79e66556c663d1bee72e4e208ccf23af7df626f7918787eaa6ce1a1929"
+      "sha256": "097d1694aed79909416444ef06567f5547fcf151cf4ca3a6f21dbbef66afa1cf"
     },
     "live/session_test.go": {
       "mode": "100644",
-      "sha256": "6d0188e0a7d0e5cb0b6574de6b07dedace7bc474305b3a3d83d49bab788371a6"
+      "sha256": "9aadb69058955d2f5cbd2ad175dbd8f2b43279c074a60126f3ffe3380263c154"
     },
     "live/sideband.go": {
       "mode": "100644",
-      "sha256": "92924ca52db9d7c3e14b14d07d43d0f65ba5b8d22eda4ce86cf469e0d1c60253"
+      "sha256": "ae2a0c9a902fef70f1fdf438c958380fb1eeec97bca14a0130443445e19b2b81"
     },
     "model.go": {
       "mode": "100644",
@@ -975,7 +975,7 @@
     },
     "shared/constant/constants.go": {
       "mode": "100644",
-      "sha256": "b39570b3940c9f7444f76e078b70478999b9866b61ec3aebd4e21af0fbecb4c1"
+      "sha256": "1988ff65b56b0290b3d5d9337733fcaafab76552135d7e93934268eddd97a809"
     },
     "shared/shared.go": {
       "mode": "100644",

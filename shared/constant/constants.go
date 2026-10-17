@@ -170,6 +170,14 @@ type CreatedAt string                                         // Always "created
 type Custom string                                            // Always "custom"
 type CustomToolCall string                                    // Always "custom_tool_call"
 type CustomToolCallOutput string                              // Always "custom_tool_call_output"
+type DecisionCompleted string                                 // Always "decision.completed"
+type DecisionCreate string                                    // Always "decision.create"
+type DecisionEvent string                                     // Always "decision.event"
+type DecisionItemCreate string                                // Always "decision.item.create"
+type DecisionItemCreated string                               // Always "decision.item.created"
+type DecisionItemDelete string                                // Always "decision.item.delete"
+type DecisionItemDeleted string                               // Always "decision.item.deleted"
+type Decisions string                                         // Always "decisions"
 type Delegation string                                        // Always "delegation"
 type DeleteFile string                                        // Always "delete_file"
 type Developer string                                         // Always "developer"
@@ -839,6 +847,14 @@ func (c CreatedAt) Default() CreatedAt                           { return "creat
 func (c Custom) Default() Custom                                 { return "custom" }
 func (c CustomToolCall) Default() CustomToolCall                 { return "custom_tool_call" }
 func (c CustomToolCallOutput) Default() CustomToolCallOutput     { return "custom_tool_call_output" }
+func (c DecisionCompleted) Default() DecisionCompleted           { return "decision.completed" }
+func (c DecisionCreate) Default() DecisionCreate                 { return "decision.create" }
+func (c DecisionEvent) Default() DecisionEvent                   { return "decision.event" }
+func (c DecisionItemCreate) Default() DecisionItemCreate         { return "decision.item.create" }
+func (c DecisionItemCreated) Default() DecisionItemCreated       { return "decision.item.created" }
+func (c DecisionItemDelete) Default() DecisionItemDelete         { return "decision.item.delete" }
+func (c DecisionItemDeleted) Default() DecisionItemDeleted       { return "decision.item.deleted" }
+func (c Decisions) Default() Decisions                           { return "decisions" }
 func (c Delegation) Default() Delegation                         { return "delegation" }
 func (c DeleteFile) Default() DeleteFile                         { return "delete_file" }
 func (c Developer) Default() Developer                           { return "developer" }
@@ -1674,6 +1690,14 @@ func (c CreatedAt) MarshalJSON() ([]byte, error)                           { ret
 func (c Custom) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c CustomToolCall) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c CustomToolCallOutput) MarshalJSON() ([]byte, error)                { return marshalString(c) }
+func (c DecisionCompleted) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
+func (c DecisionCreate) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c DecisionEvent) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c DecisionItemCreate) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c DecisionItemCreated) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c DecisionItemDelete) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c DecisionItemDeleted) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c Decisions) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c Delegation) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c DeleteFile) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c Developer) MarshalJSON() ([]byte, error)                           { return marshalString(c) }

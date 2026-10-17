@@ -8,6 +8,9 @@ Params Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#ClientDelegationParam">ClientDelegationParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#CustomVoiceParam">CustomVoiceParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#DataChannelConfigParam">DataChannelConfigParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#DecisionTriggerParam">DecisionTriggerParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#DecisionsDelegationConfigParam">DecisionsDelegationConfigParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#DecisionsDelegationUpdateConfigParam">DecisionsDelegationUpdateConfigParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#ForkSessionConfigParam">ForkSessionConfigParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#FunctionToolParam">FunctionToolParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#InitialItemUnionParam">InitialItemUnionParam</a>
@@ -27,6 +30,8 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#ClientDelegation">ClientDelegation</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#CustomVoice">CustomVoice</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#DataChannelConfig">DataChannelConfig</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#DecisionTrigger">DecisionTrigger</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#DecisionsDelegationConfig">DecisionsDelegationConfig</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#LiveError">LiveError</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#FunctionTool">FunctionTool</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#InitialItemUnion">InitialItemUnion</a>

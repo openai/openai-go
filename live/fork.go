@@ -79,6 +79,24 @@ func ForkClientEventParamOfSessionCommentaryAppend(content string, delegationID 
 	return ForkClientEventUnionParam{OfSessionCommentaryAppend: &sessionCommentaryAppend}
 }
 
+func ForkClientEventParamOfDecisionCreate(eventID string) ForkClientEventUnionParam {
+	var decisionCreate DecisionCreateEventParam
+	decisionCreate.EventID = eventID
+	return ForkClientEventUnionParam{OfDecisionCreate: &decisionCreate}
+}
+
+func ForkClientEventParamOfDecisionItemCreate(item DecisionItemCreateEventItemParam) ForkClientEventUnionParam {
+	var decisionItemCreate DecisionItemCreateEventParam
+	decisionItemCreate.Item = item
+	return ForkClientEventUnionParam{OfDecisionItemCreate: &decisionItemCreate}
+}
+
+func ForkClientEventParamOfDecisionItemDelete(itemID string) ForkClientEventUnionParam {
+	var decisionItemDelete DecisionItemDeleteEventParam
+	decisionItemDelete.ItemID = itemID
+	return ForkClientEventUnionParam{OfDecisionItemDelete: &decisionItemDelete}
+}
+
 func ForkClientEventParamOfResponseItemCreate[
 	T responses.EasyInputMessageParam | responses.ResponseInputItemMessageParam | responses.ResponseOutputMessageParam | responses.ResponseFileSearchToolCallParam | responses.ResponseComputerToolCallParam | responses.ResponseInputItemComputerCallOutputParam | responses.ResponseFunctionWebSearchParam | responses.ResponseFunctionToolCallParam | responses.ResponseInputItemFunctionCallOutputParam | responses.ResponseInputItemToolSearchCallParam | responses.ResponseToolSearchOutputItemParam | responses.ResponseInputItemAdditionalToolsParam | responses.ResponseConfigurationUpdateItemParam | responses.ResponseReasoningItemParam | responses.ResponseCompactionItemParam | responses.ResponseInputItemImageGenerationCallParam | responses.ResponseCodeInterpreterToolCallParam | responses.ResponseInputItemLocalShellCallParam | responses.ResponseInputItemLocalShellCallOutputParam | responses.ResponseInputItemShellCallParam | responses.ResponseInputItemShellCallOutputParam | responses.ResponseInputItemApplyPatchCallParam | responses.ResponseInputItemApplyPatchCallOutputParam | responses.ResponseInputItemMcpListToolsParam | responses.ResponseInputItemMcpApprovalRequestParam | responses.ResponseInputItemMcpApprovalResponseParam | responses.ResponseInputItemMcpCallParam | responses.ResponseCustomToolCallOutputParam | responses.ResponseCustomToolCallParam | responses.ResponseInputItemCompactionTriggerParam | responses.ResponseInputItemItemReferenceParam | responses.ResponseInputItemProgramParam | responses.ResponseInputItemProgramOutputParam,
 ](item T) ForkClientEventUnionParam {
@@ -167,6 +185,9 @@ type ForkClientEventUnionParam struct {
 	OfSessionInstructionsAppend     *InstructionsAppendEventParam     `json:",omitzero,inline"`
 	OfSessionThinkingAppend         *ThinkingAppendEventParam         `json:",omitzero,inline"`
 	OfSessionCommentaryAppend       *CommentaryAppendEventParam       `json:",omitzero,inline"`
+	OfDecisionCreate                *DecisionCreateEventParam         `json:",omitzero,inline"`
+	OfDecisionItemCreate            *DecisionItemCreateEventParam     `json:",omitzero,inline"`
+	OfDecisionItemDelete            *DecisionItemDeleteEventParam     `json:",omitzero,inline"`
 	OfResponseItemCreate            *ResponseItemCreateEventParam     `json:",omitzero,inline"`
 	OfResponseCreate                *ResponseCreateEventParam         `json:",omitzero,inline"`
 	OfSessionClose                  *SessionCloseEventParam           `json:",omitzero,inline"`
@@ -183,12 +204,23 @@ func (u ForkClientEventUnionParam) MarshalJSON() ([]byte, error) {
 		u.OfSessionInstructionsAppend,
 		u.OfSessionThinkingAppend,
 		u.OfSessionCommentaryAppend,
+		u.OfDecisionCreate,
+		u.OfDecisionItemCreate,
+		u.OfDecisionItemDelete,
 		u.OfResponseItemCreate,
 		u.OfResponseCreate,
 		u.OfSessionClose)
 }
 func (u *ForkClientEventUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ForkClientEventUnionParam) GetItemID() *string {
+	if vt := u.OfDecisionItemDelete; vt != nil {
+		return &vt.ItemID
+	}
+	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -219,6 +251,12 @@ func (u ForkClientEventUnionParam) GetType() *string {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfSessionCommentaryAppend; vt != nil {
 		return (*string)(&vt.Type)
+	} else if vt := u.OfDecisionCreate; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfDecisionItemCreate; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfDecisionItemDelete; vt != nil {
+		return (*string)(&vt.Type)
 	} else if vt := u.OfResponseItemCreate; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfResponseCreate; vt != nil {
@@ -248,6 +286,12 @@ func (u ForkClientEventUnionParam) GetEventID() *string {
 	} else if vt := u.OfSessionThinkingAppend; vt != nil && vt.EventID.Valid() {
 		return &vt.EventID.Value
 	} else if vt := u.OfSessionCommentaryAppend; vt != nil && vt.EventID.Valid() {
+		return &vt.EventID.Value
+	} else if vt := u.OfDecisionCreate; vt != nil {
+		return (*string)(&vt.EventID)
+	} else if vt := u.OfDecisionItemCreate; vt != nil && vt.EventID.Valid() {
+		return &vt.EventID.Value
+	} else if vt := u.OfDecisionItemDelete; vt != nil && vt.EventID.Valid() {
 		return &vt.EventID.Value
 	} else if vt := u.OfResponseItemCreate; vt != nil && vt.EventID.Valid() {
 		return &vt.EventID.Value
@@ -346,6 +390,15 @@ func (u forkClientEventUnionParamSession) GetStore() *bool {
 	return nil
 }
 
+// Returns a pointer to the underlying variant's property, if present.
+func (u forkClientEventUnionParamSession) GetTriggers() []DecisionTriggerParam {
+	switch vt := u.any.(type) {
+	case *SessionUpdateConfigParam:
+		return vt.Triggers
+	}
+	return nil
+}
+
 // Returns a subunion which exports methods to access subproperties
 //
 // Or use AsAny() to get the underlying value
@@ -360,7 +413,8 @@ func (u forkClientEventUnionParamSession) GetDelegation() (res forkClientEventUn
 }
 
 // Can have the runtime types [*ForkSessionConfigDelegationParam],
-// [*ClientDelegationParam], [*SessionUpdateConfigDelegationResponsesParam]
+// [*ClientDelegationParam], [*SessionUpdateConfigDelegationResponsesParam],
+// [*SessionUpdateConfigDelegationDecisionsParam]
 type forkClientEventUnionParamSessionDelegation struct{ any }
 
 // Use the following switch statement to get the type of the union:
@@ -369,10 +423,20 @@ type forkClientEventUnionParamSessionDelegation struct{ any }
 //	case *live.ForkSessionConfigDelegationParam:
 //	case *live.ClientDelegationParam:
 //	case *live.SessionUpdateConfigDelegationResponsesParam:
+//	case *live.SessionUpdateConfigDelegationDecisionsParam:
 //	default:
 //	    fmt.Errorf("not present")
 //	}
 func (u forkClientEventUnionParamSessionDelegation) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u forkClientEventUnionParamSessionDelegation) GetDecisions() *DecisionsDelegationUpdateConfigParam {
+	switch vt := u.any.(type) {
+	case *SessionUpdateConfigDelegationDecisionsParam:
+		return &vt.Decisions
+	}
+	return nil
+}
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u forkClientEventUnionParamSessionDelegation) GetType() *string {
@@ -382,6 +446,8 @@ func (u forkClientEventUnionParamSessionDelegation) GetType() *string {
 	case *ClientDelegationParam:
 		return (*string)(&vt.Type)
 	case *SessionUpdateConfigDelegationResponsesParam:
+		return (*string)(&vt.Type)
+	case *SessionUpdateConfigDelegationDecisionsParam:
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -410,6 +476,9 @@ func init() {
 		apijson.Discriminator[InstructionsAppendEventParam]("session.instructions.append"),
 		apijson.Discriminator[ThinkingAppendEventParam]("session.thinking.append"),
 		apijson.Discriminator[CommentaryAppendEventParam]("session.commentary.append"),
+		apijson.Discriminator[DecisionCreateEventParam]("decision.create"),
+		apijson.Discriminator[DecisionItemCreateEventParam]("decision.item.create"),
+		apijson.Discriminator[DecisionItemDeleteEventParam]("decision.item.delete"),
 		apijson.Discriminator[ResponseItemCreateEventParam]("response.item.create"),
 		apijson.Discriminator[ResponseCreateEventParam]("response.create"),
 		apijson.Discriminator[SessionCloseEventParam]("session.close"),
@@ -423,7 +492,8 @@ func init() {
 // [ThinkingAppendedEvent], [CommentaryAppendedEvent],
 // [ForkServerEventSessionInputAudioAppend], [OutputAudioDeltaEvent],
 // [InputTranscriptDeltaEvent], [OutputTranscriptDeltaEvent],
-// [DelegationCreatedEvent], [ResponseEvent], [SessionUsageUpdatedEvent],
+// [DelegationCreatedEvent], [DecisionEvent], [DecisionItemCreatedEvent],
+// [DecisionItemDeletedEvent], [ResponseEvent], [SessionUsageUpdatedEvent],
 // [SessionClosedEvent], [ErrorEvent], [InfoEvent],
 // [ForkServerEventTransportDtmfReceived], [ForkServerEventTransportDtmfSend],
 // [ForkServerEventTransportRinging], [ForkServerEventTransportAnswered],
@@ -447,6 +517,9 @@ type ForkServerEventUnion struct {
 	OfInputTranscriptDeltaEvent              InputTranscriptDeltaEvent              `json:",inline"`
 	OfOutputTranscriptDeltaEvent             OutputTranscriptDeltaEvent             `json:",inline"`
 	OfDelegationCreatedEvent                 DelegationCreatedEvent                 `json:",inline"`
+	OfDecisionEvent                          DecisionEvent                          `json:",inline"`
+	OfDecisionItemCreatedEvent               DecisionItemCreatedEvent               `json:",inline"`
+	OfDecisionItemDeletedEvent               DecisionItemDeletedEvent               `json:",inline"`
 	OfResponseEvent                          ResponseEvent                          `json:",inline"`
 	OfSessionUsageUpdatedEvent               SessionUsageUpdatedEvent               `json:",inline"`
 	OfSessionClosedEvent                     SessionClosedEvent                     `json:",inline"`
@@ -473,6 +546,9 @@ type ForkServerEventUnion struct {
 		OfInputTranscriptDeltaEvent              respjson.Field
 		OfOutputTranscriptDeltaEvent             respjson.Field
 		OfDelegationCreatedEvent                 respjson.Field
+		OfDecisionEvent                          respjson.Field
+		OfDecisionItemCreatedEvent               respjson.Field
+		OfDecisionItemDeletedEvent               respjson.Field
 		OfResponseEvent                          respjson.Field
 		OfSessionUsageUpdatedEvent               respjson.Field
 		OfSessionClosedEvent                     respjson.Field
@@ -508,6 +584,9 @@ func (OutputAudioDeltaEvent) implForkServerEventUnion()                  {}
 func (InputTranscriptDeltaEvent) implForkServerEventUnion()              {}
 func (OutputTranscriptDeltaEvent) implForkServerEventUnion()             {}
 func (DelegationCreatedEvent) implForkServerEventUnion()                 {}
+func (DecisionEvent) implForkServerEventUnion()                          {}
+func (DecisionItemCreatedEvent) implForkServerEventUnion()               {}
+func (DecisionItemDeletedEvent) implForkServerEventUnion()               {}
 func (ResponseEvent) implForkServerEventUnion()                          {}
 func (SessionUsageUpdatedEvent) implForkServerEventUnion()               {}
 func (SessionClosedEvent) implForkServerEventUnion()                     {}
@@ -536,6 +615,9 @@ func (ForkServerEventTransportFailed) implForkServerEventUnion()         {}
 //	case live.InputTranscriptDeltaEvent:
 //	case live.OutputTranscriptDeltaEvent:
 //	case live.DelegationCreatedEvent:
+//	case live.DecisionEvent:
+//	case live.DecisionItemCreatedEvent:
+//	case live.DecisionItemDeletedEvent:
 //	case live.ResponseEvent:
 //	case live.SessionUsageUpdatedEvent:
 //	case live.SessionClosedEvent:
@@ -579,6 +661,12 @@ func (u ForkServerEventUnion) AsAny() anyForkServerEvent {
 		return u.AsSessionOutputTranscriptDelta()
 	case "session.delegation.created":
 		return u.AsSessionDelegationCreated()
+	case "decision.event":
+		return u.AsDecisionEvent()
+	case "decision.item.created":
+		return u.AsDecisionItemCreated()
+	case "decision.item.deleted":
+		return u.AsDecisionItemDeleted()
 	case "response.event":
 		return u.AsResponseEvent()
 	case "session.usage.updated":
@@ -669,6 +757,21 @@ func (u ForkServerEventUnion) AsSessionOutputTranscriptDelta() (v OutputTranscri
 }
 
 func (u ForkServerEventUnion) AsSessionDelegationCreated() (v DelegationCreatedEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ForkServerEventUnion) AsDecisionEvent() (v DecisionEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ForkServerEventUnion) AsDecisionItemCreated() (v DecisionItemCreatedEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ForkServerEventUnion) AsDecisionItemDeleted() (v DecisionItemDeletedEvent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -817,6 +920,21 @@ func (r *ForkServerEventUnion) unmarshalWebsocketEvent(data []byte) error {
 			return err
 		}
 		r.JSON.OfDelegationCreatedEvent = respjson.NewField(r.JSON.raw)
+	case "decision.event":
+		if err := apijson.UnmarshalRoot(data, &r.OfDecisionEvent); err != nil {
+			return err
+		}
+		r.JSON.OfDecisionEvent = respjson.NewField(r.JSON.raw)
+	case "decision.item.created":
+		if err := apijson.UnmarshalRoot(data, &r.OfDecisionItemCreatedEvent); err != nil {
+			return err
+		}
+		r.JSON.OfDecisionItemCreatedEvent = respjson.NewField(r.JSON.raw)
+	case "decision.item.deleted":
+		if err := apijson.UnmarshalRoot(data, &r.OfDecisionItemDeletedEvent); err != nil {
+			return err
+		}
+		r.JSON.OfDecisionItemDeletedEvent = respjson.NewField(r.JSON.raw)
 	case "response.event":
 		if err := apijson.UnmarshalRoot(data, &r.OfResponseEvent); err != nil {
 			return err
