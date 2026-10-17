@@ -11,6 +11,7 @@ import (
 	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/packages/respjson"
 	"github.com/openai/openai-go/v3/responses"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 // SidebandService contains methods and other services that help with interacting
@@ -343,56 +344,72 @@ func init() {
 // [ThinkingAppendedEvent], [CommentaryAppendedEvent], [InputTranscriptDeltaEvent],
 // [OutputTranscriptDeltaEvent], [DelegationCreatedEvent], [DecisionEvent],
 // [DecisionItemCreatedEvent], [DecisionItemDeletedEvent], [ResponseEvent],
-// [SessionUsageUpdatedEvent], [SessionClosedEvent], [ErrorEvent], [InfoEvent].
+// [SessionUsageUpdatedEvent], [SessionClosedEvent], [ErrorEvent], [InfoEvent],
+// [ConnectServerEventSessionInputAudioAppend],
+// [ConnectServerEventTransportDtmfReceived],
+// [ConnectServerEventTransportDtmfSend], [ConnectServerEventTransportRinging],
+// [ConnectServerEventTransportAnswered], [ConnectServerEventTransportFailed].
 //
 // Use the [ConnectServerEventUnion.AsAny] method to switch on the variant.
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ConnectServerEventUnion struct {
-	OfSessionStartedEvent            SessionStartedEvent            `json:",inline"`
-	OfSessionUpdatedEvent            SessionUpdatedEvent            `json:",inline"`
-	OfInputAudioMutedEvent           InputAudioMutedEvent           `json:",inline"`
-	OfInputAudioUnmutedEvent         InputAudioUnmutedEvent         `json:",inline"`
-	OfOutputAudioFixturePlayingEvent OutputAudioFixturePlayingEvent `json:",inline"`
-	OfOutputAudioFixturePlayedEvent  OutputAudioFixturePlayedEvent  `json:",inline"`
-	OfInstructionsAppendedEvent      InstructionsAppendedEvent      `json:",inline"`
-	OfThinkingAppendedEvent          ThinkingAppendedEvent          `json:",inline"`
-	OfCommentaryAppendedEvent        CommentaryAppendedEvent        `json:",inline"`
-	OfInputTranscriptDeltaEvent      InputTranscriptDeltaEvent      `json:",inline"`
-	OfOutputTranscriptDeltaEvent     OutputTranscriptDeltaEvent     `json:",inline"`
-	OfDelegationCreatedEvent         DelegationCreatedEvent         `json:",inline"`
-	OfDecisionEvent                  DecisionEvent                  `json:",inline"`
-	OfDecisionItemCreatedEvent       DecisionItemCreatedEvent       `json:",inline"`
-	OfDecisionItemDeletedEvent       DecisionItemDeletedEvent       `json:",inline"`
-	OfResponseEvent                  ResponseEvent                  `json:",inline"`
-	OfSessionUsageUpdatedEvent       SessionUsageUpdatedEvent       `json:",inline"`
-	OfSessionClosedEvent             SessionClosedEvent             `json:",inline"`
-	OfErrorEvent                     ErrorEvent                     `json:",inline"`
-	OfInfoEvent                      InfoEvent                      `json:",inline"`
-	Type                             string                         `json:"type"`
-	JSON                             struct {
-		OfSessionStartedEvent            respjson.Field
-		OfSessionUpdatedEvent            respjson.Field
-		OfInputAudioMutedEvent           respjson.Field
-		OfInputAudioUnmutedEvent         respjson.Field
-		OfOutputAudioFixturePlayingEvent respjson.Field
-		OfOutputAudioFixturePlayedEvent  respjson.Field
-		OfInstructionsAppendedEvent      respjson.Field
-		OfThinkingAppendedEvent          respjson.Field
-		OfCommentaryAppendedEvent        respjson.Field
-		OfInputTranscriptDeltaEvent      respjson.Field
-		OfOutputTranscriptDeltaEvent     respjson.Field
-		OfDelegationCreatedEvent         respjson.Field
-		OfDecisionEvent                  respjson.Field
-		OfDecisionItemCreatedEvent       respjson.Field
-		OfDecisionItemDeletedEvent       respjson.Field
-		OfResponseEvent                  respjson.Field
-		OfSessionUsageUpdatedEvent       respjson.Field
-		OfSessionClosedEvent             respjson.Field
-		OfErrorEvent                     respjson.Field
-		OfInfoEvent                      respjson.Field
-		Type                             respjson.Field
-		raw                              string
+	OfSessionStartedEvent                       SessionStartedEvent                       `json:",inline"`
+	OfSessionUpdatedEvent                       SessionUpdatedEvent                       `json:",inline"`
+	OfInputAudioMutedEvent                      InputAudioMutedEvent                      `json:",inline"`
+	OfInputAudioUnmutedEvent                    InputAudioUnmutedEvent                    `json:",inline"`
+	OfOutputAudioFixturePlayingEvent            OutputAudioFixturePlayingEvent            `json:",inline"`
+	OfOutputAudioFixturePlayedEvent             OutputAudioFixturePlayedEvent             `json:",inline"`
+	OfInstructionsAppendedEvent                 InstructionsAppendedEvent                 `json:",inline"`
+	OfThinkingAppendedEvent                     ThinkingAppendedEvent                     `json:",inline"`
+	OfCommentaryAppendedEvent                   CommentaryAppendedEvent                   `json:",inline"`
+	OfInputTranscriptDeltaEvent                 InputTranscriptDeltaEvent                 `json:",inline"`
+	OfOutputTranscriptDeltaEvent                OutputTranscriptDeltaEvent                `json:",inline"`
+	OfDelegationCreatedEvent                    DelegationCreatedEvent                    `json:",inline"`
+	OfDecisionEvent                             DecisionEvent                             `json:",inline"`
+	OfDecisionItemCreatedEvent                  DecisionItemCreatedEvent                  `json:",inline"`
+	OfDecisionItemDeletedEvent                  DecisionItemDeletedEvent                  `json:",inline"`
+	OfResponseEvent                             ResponseEvent                             `json:",inline"`
+	OfSessionUsageUpdatedEvent                  SessionUsageUpdatedEvent                  `json:",inline"`
+	OfSessionClosedEvent                        SessionClosedEvent                        `json:",inline"`
+	OfErrorEvent                                ErrorEvent                                `json:",inline"`
+	OfInfoEvent                                 InfoEvent                                 `json:",inline"`
+	OfConnectServerEventSessionInputAudioAppend ConnectServerEventSessionInputAudioAppend `json:",inline"`
+	OfConnectServerEventTransportDtmfReceived   ConnectServerEventTransportDtmfReceived   `json:",inline"`
+	OfConnectServerEventTransportDtmfSend       ConnectServerEventTransportDtmfSend       `json:",inline"`
+	OfConnectServerEventTransportRinging        ConnectServerEventTransportRinging        `json:",inline"`
+	OfConnectServerEventTransportAnswered       ConnectServerEventTransportAnswered       `json:",inline"`
+	OfConnectServerEventTransportFailed         ConnectServerEventTransportFailed         `json:",inline"`
+	Type                                        string                                    `json:"type"`
+	JSON                                        struct {
+		OfSessionStartedEvent                       respjson.Field
+		OfSessionUpdatedEvent                       respjson.Field
+		OfInputAudioMutedEvent                      respjson.Field
+		OfInputAudioUnmutedEvent                    respjson.Field
+		OfOutputAudioFixturePlayingEvent            respjson.Field
+		OfOutputAudioFixturePlayedEvent             respjson.Field
+		OfInstructionsAppendedEvent                 respjson.Field
+		OfThinkingAppendedEvent                     respjson.Field
+		OfCommentaryAppendedEvent                   respjson.Field
+		OfInputTranscriptDeltaEvent                 respjson.Field
+		OfOutputTranscriptDeltaEvent                respjson.Field
+		OfDelegationCreatedEvent                    respjson.Field
+		OfDecisionEvent                             respjson.Field
+		OfDecisionItemCreatedEvent                  respjson.Field
+		OfDecisionItemDeletedEvent                  respjson.Field
+		OfResponseEvent                             respjson.Field
+		OfSessionUsageUpdatedEvent                  respjson.Field
+		OfSessionClosedEvent                        respjson.Field
+		OfErrorEvent                                respjson.Field
+		OfInfoEvent                                 respjson.Field
+		OfConnectServerEventSessionInputAudioAppend respjson.Field
+		OfConnectServerEventTransportDtmfReceived   respjson.Field
+		OfConnectServerEventTransportDtmfSend       respjson.Field
+		OfConnectServerEventTransportRinging        respjson.Field
+		OfConnectServerEventTransportAnswered       respjson.Field
+		OfConnectServerEventTransportFailed         respjson.Field
+		Type                                        respjson.Field
+		raw                                         string
 	} `json:"-"`
 }
 
@@ -403,26 +420,32 @@ type anyConnectServerEvent interface {
 	implConnectServerEventUnion()
 }
 
-func (SessionStartedEvent) implConnectServerEventUnion()            {}
-func (SessionUpdatedEvent) implConnectServerEventUnion()            {}
-func (InputAudioMutedEvent) implConnectServerEventUnion()           {}
-func (InputAudioUnmutedEvent) implConnectServerEventUnion()         {}
-func (OutputAudioFixturePlayingEvent) implConnectServerEventUnion() {}
-func (OutputAudioFixturePlayedEvent) implConnectServerEventUnion()  {}
-func (InstructionsAppendedEvent) implConnectServerEventUnion()      {}
-func (ThinkingAppendedEvent) implConnectServerEventUnion()          {}
-func (CommentaryAppendedEvent) implConnectServerEventUnion()        {}
-func (InputTranscriptDeltaEvent) implConnectServerEventUnion()      {}
-func (OutputTranscriptDeltaEvent) implConnectServerEventUnion()     {}
-func (DelegationCreatedEvent) implConnectServerEventUnion()         {}
-func (DecisionEvent) implConnectServerEventUnion()                  {}
-func (DecisionItemCreatedEvent) implConnectServerEventUnion()       {}
-func (DecisionItemDeletedEvent) implConnectServerEventUnion()       {}
-func (ResponseEvent) implConnectServerEventUnion()                  {}
-func (SessionUsageUpdatedEvent) implConnectServerEventUnion()       {}
-func (SessionClosedEvent) implConnectServerEventUnion()             {}
-func (ErrorEvent) implConnectServerEventUnion()                     {}
-func (InfoEvent) implConnectServerEventUnion()                      {}
+func (SessionStartedEvent) implConnectServerEventUnion()                       {}
+func (SessionUpdatedEvent) implConnectServerEventUnion()                       {}
+func (InputAudioMutedEvent) implConnectServerEventUnion()                      {}
+func (InputAudioUnmutedEvent) implConnectServerEventUnion()                    {}
+func (OutputAudioFixturePlayingEvent) implConnectServerEventUnion()            {}
+func (OutputAudioFixturePlayedEvent) implConnectServerEventUnion()             {}
+func (InstructionsAppendedEvent) implConnectServerEventUnion()                 {}
+func (ThinkingAppendedEvent) implConnectServerEventUnion()                     {}
+func (CommentaryAppendedEvent) implConnectServerEventUnion()                   {}
+func (InputTranscriptDeltaEvent) implConnectServerEventUnion()                 {}
+func (OutputTranscriptDeltaEvent) implConnectServerEventUnion()                {}
+func (DelegationCreatedEvent) implConnectServerEventUnion()                    {}
+func (DecisionEvent) implConnectServerEventUnion()                             {}
+func (DecisionItemCreatedEvent) implConnectServerEventUnion()                  {}
+func (DecisionItemDeletedEvent) implConnectServerEventUnion()                  {}
+func (ResponseEvent) implConnectServerEventUnion()                             {}
+func (SessionUsageUpdatedEvent) implConnectServerEventUnion()                  {}
+func (SessionClosedEvent) implConnectServerEventUnion()                        {}
+func (ErrorEvent) implConnectServerEventUnion()                                {}
+func (InfoEvent) implConnectServerEventUnion()                                 {}
+func (ConnectServerEventSessionInputAudioAppend) implConnectServerEventUnion() {}
+func (ConnectServerEventTransportDtmfReceived) implConnectServerEventUnion()   {}
+func (ConnectServerEventTransportDtmfSend) implConnectServerEventUnion()       {}
+func (ConnectServerEventTransportRinging) implConnectServerEventUnion()        {}
+func (ConnectServerEventTransportAnswered) implConnectServerEventUnion()       {}
+func (ConnectServerEventTransportFailed) implConnectServerEventUnion()         {}
 
 // Use the following switch statement to find the correct variant
 //
@@ -447,6 +470,12 @@ func (InfoEvent) implConnectServerEventUnion()                      {}
 //	case live.SessionClosedEvent:
 //	case live.ErrorEvent:
 //	case live.InfoEvent:
+//	case live.ConnectServerEventSessionInputAudioAppend:
+//	case live.ConnectServerEventTransportDtmfReceived:
+//	case live.ConnectServerEventTransportDtmfSend:
+//	case live.ConnectServerEventTransportRinging:
+//	case live.ConnectServerEventTransportAnswered:
+//	case live.ConnectServerEventTransportFailed:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -492,6 +521,18 @@ func (u ConnectServerEventUnion) AsAny() anyConnectServerEvent {
 		return u.AsErrorEvent()
 	case "info":
 		return u.AsInfoEvent()
+	case "session.input_audio.append":
+		return u.AsConnectServerEventSessionInputAudioAppend()
+	case "transport.dtmf.received":
+		return u.AsConnectServerEventTransportDtmfReceived()
+	case "transport.dtmf.send":
+		return u.AsConnectServerEventTransportDtmfSend()
+	case "transport.ringing":
+		return u.AsConnectServerEventTransportRinging()
+	case "transport.answered":
+		return u.AsConnectServerEventTransportAnswered()
+	case "transport.failed":
+		return u.AsConnectServerEventTransportFailed()
 	}
 	return nil
 }
@@ -592,6 +633,36 @@ func (u ConnectServerEventUnion) AsErrorEvent() (v ErrorEvent) {
 }
 
 func (u ConnectServerEventUnion) AsInfoEvent() (v InfoEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConnectServerEventUnion) AsConnectServerEventSessionInputAudioAppend() (v ConnectServerEventSessionInputAudioAppend) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConnectServerEventUnion) AsConnectServerEventTransportDtmfReceived() (v ConnectServerEventTransportDtmfReceived) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConnectServerEventUnion) AsConnectServerEventTransportDtmfSend() (v ConnectServerEventTransportDtmfSend) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConnectServerEventUnion) AsConnectServerEventTransportRinging() (v ConnectServerEventTransportRinging) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConnectServerEventUnion) AsConnectServerEventTransportAnswered() (v ConnectServerEventTransportAnswered) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConnectServerEventUnion) AsConnectServerEventTransportFailed() (v ConnectServerEventTransportFailed) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -720,6 +791,202 @@ func (r *ConnectServerEventUnion) unmarshalWebsocketEvent(data []byte) error {
 			return err
 		}
 		r.JSON.OfInfoEvent = respjson.NewField(r.JSON.raw)
+	case "session.input_audio.append":
+		if err := apijson.UnmarshalRoot(data, &r.OfConnectServerEventSessionInputAudioAppend); err != nil {
+			return err
+		}
+		r.JSON.OfConnectServerEventSessionInputAudioAppend = respjson.NewField(r.JSON.raw)
+	case "transport.dtmf.received":
+		if err := apijson.UnmarshalRoot(data, &r.OfConnectServerEventTransportDtmfReceived); err != nil {
+			return err
+		}
+		r.JSON.OfConnectServerEventTransportDtmfReceived = respjson.NewField(r.JSON.raw)
+	case "transport.dtmf.send":
+		if err := apijson.UnmarshalRoot(data, &r.OfConnectServerEventTransportDtmfSend); err != nil {
+			return err
+		}
+		r.JSON.OfConnectServerEventTransportDtmfSend = respjson.NewField(r.JSON.raw)
+	case "transport.ringing":
+		if err := apijson.UnmarshalRoot(data, &r.OfConnectServerEventTransportRinging); err != nil {
+			return err
+		}
+		r.JSON.OfConnectServerEventTransportRinging = respjson.NewField(r.JSON.raw)
+	case "transport.answered":
+		if err := apijson.UnmarshalRoot(data, &r.OfConnectServerEventTransportAnswered); err != nil {
+			return err
+		}
+		r.JSON.OfConnectServerEventTransportAnswered = respjson.NewField(r.JSON.raw)
+	case "transport.failed":
+		if err := apijson.UnmarshalRoot(data, &r.OfConnectServerEventTransportFailed); err != nil {
+			return err
+		}
+		r.JSON.OfConnectServerEventTransportFailed = respjson.NewField(r.JSON.raw)
 	}
 	return nil
+}
+
+// Input audio received from the primary transport and reflected to a Live sideband
+// connection before model-input muting.
+type ConnectServerEventSessionInputAudioAppend struct {
+	// Base64-encoded raw mono PCM16LE at 24 kHz received from the primary transport,
+	// reflected to the sideband before model-input muting. This server event uses the
+	// same audio key as the client command, but is not an acknowledgment of it.
+	Audio string `json:"audio" api:"required"`
+	// The event type, always `session.input_audio.append`.
+	Type constant.SessionInputAudioAppend `json:"type" default:"session.input_audio.append"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Audio       respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ConnectServerEventSessionInputAudioAppend) RawJSON() string { return r.JSON.raw }
+func (r *ConnectServerEventSessionInputAudioAppend) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A SIP DTMF keypress received from the caller. Delivered only to sideband
+// observers.
+type ConnectServerEventTransportDtmfReceived struct {
+	Event   string                         `json:"event" api:"required"`
+	EventID string                         `json:"event_id" api:"required"`
+	Type    constant.TransportDtmfReceived `json:"type" default:"transport.dtmf.received"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Event       respjson.Field
+		EventID     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ConnectServerEventTransportDtmfReceived) RawJSON() string { return r.JSON.raw }
+func (r *ConnectServerEventTransportDtmfReceived) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A SIP DTMF keypress successfully sent to the SIP trunk. Delivered only to
+// sideband observers; this is not a client command.
+type ConnectServerEventTransportDtmfSend struct {
+	// The event_id of the client command, when supplied.
+	ClientEventID string                     `json:"client_event_id"`
+	Event         string                     `json:"event" api:"required"`
+	EventID       string                     `json:"event_id" api:"required"`
+	Type          constant.TransportDtmfSend `json:"type" default:"transport.dtmf.send"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ClientEventID respjson.Field
+		Event         respjson.Field
+		EventID       respjson.Field
+		Type          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ConnectServerEventTransportDtmfSend) RawJSON() string { return r.JSON.raw }
+func (r *ConnectServerEventTransportDtmfSend) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The outbound SIP provider leg is ringing or providing early media. Delivered
+// only to sideband observers.
+type ConnectServerEventTransportRinging struct {
+	EventID string `json:"event_id" api:"required"`
+	// The canonical Live session ID.
+	SessionID string                    `json:"session_id" api:"required"`
+	Type      constant.TransportRinging `json:"type" default:"transport.ringing"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		EventID     respjson.Field
+		SessionID   respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ConnectServerEventTransportRinging) RawJSON() string { return r.JSON.raw }
+func (r *ConnectServerEventTransportRinging) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The outbound SIP provider leg answered and media is established. Delivered only
+// to sideband observers.
+type ConnectServerEventTransportAnswered struct {
+	EventID string `json:"event_id" api:"required"`
+	// The canonical Live session ID.
+	SessionID string                     `json:"session_id" api:"required"`
+	Type      constant.TransportAnswered `json:"type" default:"transport.answered"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		EventID     respjson.Field
+		SessionID   respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ConnectServerEventTransportAnswered) RawJSON() string { return r.JSON.raw }
+func (r *ConnectServerEventTransportAnswered) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An asynchronous outbound SIP setup failure. Delivered only to sideband
+// observers.
+type ConnectServerEventTransportFailed struct {
+	Error   ConnectServerEventTransportFailedError `json:"error" api:"required"`
+	EventID string                                 `json:"event_id" api:"required"`
+	// The canonical Live session ID.
+	SessionID string                   `json:"session_id" api:"required"`
+	Type      constant.TransportFailed `json:"type" default:"transport.failed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Error       respjson.Field
+		EventID     respjson.Field
+		SessionID   respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ConnectServerEventTransportFailed) RawJSON() string { return r.JSON.raw }
+func (r *ConnectServerEventTransportFailed) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ConnectServerEventTransportFailedError struct {
+	// The call setup failure code.
+	Code    string             `json:"code" api:"required"`
+	Message string             `json:"message" api:"required"`
+	Type    constant.CallError `json:"type" default:"call_error"`
+	// The parameter related to the error, if any. Empty when no parameter applies.
+	Param string `json:"param"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Message     respjson.Field
+		Type        respjson.Field
+		Param       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ConnectServerEventTransportFailedError) RawJSON() string { return r.JSON.raw }
+func (r *ConnectServerEventTransportFailedError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
