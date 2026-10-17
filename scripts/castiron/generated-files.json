@@ -51,7 +51,7 @@
     },
     "adminorganizationexternalstorage.go": {
       "mode": "100644",
-      "sha256": "d5a909f9036f8b378f05f6564ea3cd926036439123d9d439d7c2d14644a9dd16"
+      "sha256": "1dc162ef74ceeefda8f3f318b9e7f0f6e464c1ee14490623a7fd9a6ea53520b9"
     },
     "adminorganizationexternalstorage_test.go": {
       "mode": "100644",
