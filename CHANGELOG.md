@@ -1,5 +1,22 @@
 # Changelog
 
+## [3.80.0](https://github.com/openai/openai-go/compare/v3.79.0...v3.80.0) (2026-10-17)
+
+
+### Features
+
+* **api:** add Decisions delegation, triggers, and Live events ([#1085](https://github.com/openai/openai-go/issues/1085)) ([b2b5266](https://github.com/openai/openai-go/commit/b2b5266df322b9b04e1f94696c80e0346cbf7586))
+* **api:** add Decisions prompt caching options ([#1080](https://github.com/openai/openai-go/issues/1080)) ([f64d1d0](https://github.com/openai/openai-go/commit/f64d1d05b1df7c20d45e972e27d6a3d1787dd215))
+* **api:** add degraded external storage status ([#1087](https://github.com/openai/openai-go/issues/1087)) ([56aa836](https://github.com/openai/openai-go/commit/56aa83638fa54c1c080ea849d69ea4f0533c3251))
+* **api:** add Realtime and Translation WebSocket connections ([#1086](https://github.com/openai/openai-go/issues/1086)) ([a797c6b](https://github.com/openai/openai-go/commit/a797c6b157a16aeda5b469b5bf74c9dbcbb7172a))
+
+
+### Chores
+
+* **api:** add Assistants model shutdown notices ([#1084](https://github.com/openai/openai-go/issues/1084)) ([d417996](https://github.com/openai/openai-go/commit/d417996c970cd28e7e2cdc3ae11438c4425160c7))
+* **api:** add shutdown notices for GPT-4 model aliases ([#1082](https://github.com/openai/openai-go/issues/1082)) ([cbaf599](https://github.com/openai/openai-go/commit/cbaf5991a056186314e104f90d73fe0ed034f85b))
+* **api:** clarify the Live startup history token limit ([#1071](https://github.com/openai/openai-go/issues/1071)) ([b50536c](https://github.com/openai/openai-go/commit/b50536cfe66964cd0a168235e184799504509b68))
+
 ## [3.79.0](https://github.com/openai/openai-go/compare/v3.78.0...v3.79.0) (2026-10-16)
 
 
