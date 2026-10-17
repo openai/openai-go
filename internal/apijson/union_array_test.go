@@ -168,3 +168,62 @@ func TestArrayDecoderDoesNotPreserveWrongDiscriminatorType(t *testing.T) {
 		t.Fatalf("wrong discriminator type should keep the array invalid; decoded parts = %d", len(got.Parts))
 	}
 }
+
+type inlineSelectorConstant string
+
+func (inlineSelectorConstant) Default() inlineSelectorConstant { return "" }
+
+type inlineSelectorA struct {
+	K     inlineSelectorConstant `json:"k" default:"x"`
+	R     inlineSelectorConstant `json:"r" default:"a"`
+	Value int                    `json:"value"`
+}
+type inlineSelectorB struct {
+	K     inlineSelectorConstant `json:"k" default:"x"`
+	R     inlineSelectorConstant `json:"r" default:"b"`
+	Q     inlineSelectorConstant `json:"q" default:"q"`
+	S     inlineSelectorConstant `json:"s" default:"c"`
+	Value int                    `json:"value"`
+}
+type inlineSelectorC struct {
+	Q     inlineSelectorConstant `json:"q" default:"q"`
+	S     inlineSelectorConstant `json:"s" default:"d"`
+	Value int                    `json:"value"`
+}
+
+func TestInlineUnionSelectionPreservesAmbiguousAndUnknownValues(t *testing.T) {
+	for _, target := range []any{
+		&struct {
+			A inlineSelectorA `json:",inline"`
+			B inlineSelectorB `json:",inline"`
+			C inlineSelectorC `json:",inline"`
+		}{},
+		&struct {
+			C inlineSelectorC `json:",inline"`
+			B inlineSelectorB `json:",inline"`
+			A inlineSelectorA `json:",inline"`
+		}{},
+	} {
+		for _, tc := range []struct{ wire, selected string }{
+			{`{"k":"x","r":"a","value":1}`, "A"},
+			{`{"k":"x","r":"b","value":1}`, "B"},
+			{`{"k":"x","r":"a","q":"q","s":"c","value":1}`, ""},
+			{`{"k":"x","r":"future","value":1}`, ""},
+			{`{"k":"x","r":null,"value":1}`, ""},
+			{`{"k":"x","r":42,"value":1}`, ""},
+			{`{"k":"x","value":1}`, ""},
+			{`{"k":"future","r":"a","value":1}`, ""},
+		} {
+			if err := UnmarshalRoot([]byte(tc.wire), target); err != nil {
+				t.Fatal(err)
+			}
+			value := reflect.ValueOf(target).Elem()
+			for i := 0; i < value.NumField(); i++ {
+				want := tc.selected == "" || value.Type().Field(i).Name == tc.selected
+				if got := value.Field(i).FieldByName("Value").Int() == 1; got != want {
+					t.Errorf("%s: %s selected=%v, want %v", tc.wire, value.Type().Field(i).Name, got, want)
+				}
+			}
+		}
+	}
+}

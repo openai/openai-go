@@ -30604,9 +30604,6 @@ func (r BetaResponseToolSearchOutputItemParamResp) ToParam() BetaResponseToolSea
 // [BetaCustomTool], [BetaToolSearchOutputNamespaceTool], [BetaToolSearchTool],
 // [BetaWebSearchPreviewTool], [BetaApplyPatchTool].
 //
-// Use the [BetaResponseToolSearchOutputItemParamToolUnionResp.AsAny] method to
-// switch on the variant.
-//
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type BetaResponseToolSearchOutputItemParamToolUnionResp struct {
 	Name       string `json:"name"`
@@ -33178,8 +33175,6 @@ func (r *BetaSkillReferenceParam) UnmarshalJSON(data []byte) error {
 // [BetaToolImageGeneration], [BetaToolLocalShell], [BetaFunctionShellTool],
 // [BetaCustomTool], [BetaNamespaceTool], [BetaToolSearchTool],
 // [BetaWebSearchPreviewTool], [BetaApplyPatchTool].
-//
-// Use the [BetaToolUnion.AsAny] method to switch on the variant.
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type BetaToolUnion struct {

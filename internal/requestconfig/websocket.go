@@ -140,9 +140,12 @@ func (cfg *RequestConfig) PrepareWebSocket() (*http.Request, *http.Client, error
 	for i := len(cfg.Middlewares) - 1; i >= 0; i-- {
 		handler = applyMiddleware(cfg.Middlewares[i], handler)
 	}
+	// Authenticate only the endpoint prepared by this binding, even if middleware
+	// changes the request URL before the credential exchange.
+	expectedPath := websocketUpgradePath{path: target.Path, escapedPath: target.EscapedPath()}
 	handshakeClient := &http.Client{
 		Transport: websocketRoundTripper(func(req *http.Request) (*http.Response, error) {
-			req = req.WithContext(context.WithValue(req.Context(), websocketUpgradeContextKey{}, true))
+			req = req.WithContext(context.WithValue(req.Context(), websocketUpgradeContextKey{}, expectedPath))
 			for retryCount := 0; ; retryCount++ {
 				attempt := req.Clone(req.Context())
 				if req.Header.Get("X-Stainless-Retry-Count") == "0" {
@@ -188,18 +191,27 @@ func (cfg *RequestConfig) WebSocketOpenTimeout() time.Duration {
 // ordinary HTTP request with user-supplied protocol upgrade headers.
 type websocketUpgradeContextKey struct{}
 
+type websocketUpgradePath struct {
+	path        string
+	escapedPath string
+}
+
 // WebSocketValidationRequest returns an ordinary HTTP view of an SDK-owned
-// Responses upgrade for authentication policy checks. It validates the complete
+// upgrade for authentication policy checks. It validates the complete
 // upgrade framing before omitting only the two protocol-switch headers. The
 // actual request and its headers remain unchanged.
 func WebSocketValidationRequest(request *http.Request) (*http.Request, error) {
-	if request == nil || request.Context().Value(websocketUpgradeContextKey{}) != true {
+	if request == nil {
 		return request, nil
 	}
-	if request.URL == nil || request.Method != http.MethodGet || request.URL.Path != "/v1/responses" ||
-		request.URL.EscapedPath() != "/v1/responses" || request.ContentLength != 0 ||
+	expectedPath, prepared := request.Context().Value(websocketUpgradeContextKey{}).(websocketUpgradePath)
+	if !prepared {
+		return request, nil
+	}
+	if request.URL == nil || request.Method != http.MethodGet || request.URL.Path != expectedPath.path ||
+		request.URL.EscapedPath() != expectedPath.escapedPath || request.ContentLength != 0 ||
 		(request.Body != nil && request.Body != http.NoBody) {
-		return nil, errors.New("websocket: X.509 upgrades require a bodyless GET to /v1/responses")
+		return nil, errors.New("websocket: X.509 upgrades require a bodyless GET to " + expectedPath.path)
 	}
 	counts := make(map[string]int)
 	for name, values := range request.Header {

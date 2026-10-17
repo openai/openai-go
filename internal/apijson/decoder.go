@@ -419,6 +419,7 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type, isRoot bool) decod
 		d.dateFormat = oldFormat
 	}
 
+	selectInline := inlineUnionSelector(t, inlineDecoders)
 	return func(node gjson.Result, value reflect.Value, state *decoderState) (err error) {
 		// Plain structs represent JSON objects. Inline structs represent
 		// unions and may legitimately decode from scalar or array values.
@@ -444,9 +445,15 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type, isRoot bool) decod
 			_ = decoder.fn(node, value.FieldByIndex(decoder.idx), state)
 		}
 
-		for _, inlineDecoder := range inlineDecoders {
+		selectedInline := selectInline(node)
+		for i, inlineDecoder := range inlineDecoders {
 			var meta Field
 			dest := value.FieldByIndex(inlineDecoder.idx)
+			if selectedInline >= 0 && selectedInline != i {
+				dest.SetZero()
+				setMetadataSubField(value, inlineDecoder.idx, inlineDecoder.goname, Field{})
+				continue
+			}
 			isValid := false
 			if dest.IsValid() && node.Type != gjson.Null {
 				inlineState := decoderState{exactness: state.exactness, strict: true}
