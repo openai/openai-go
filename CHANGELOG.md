@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.81.0](https://github.com/openai/openai-go/compare/v3.80.0...v3.81.0) (2026-10-17)
+
+
+### Features
+
+* **api:** add typed Live sideband events and beta connections ([#1088](https://github.com/openai/openai-go/issues/1088)) ([ae2075c](https://github.com/openai/openai-go/commit/ae2075ca3ccefc53f0e6821fbb34ff4f9bf70431))
+* **api:** add ultrafast service tier for Agents ([#1090](https://github.com/openai/openai-go/issues/1090)) ([e436eec](https://github.com/openai/openai-go/commit/e436eec03fe3e33b5e9caa5a4e972fc3e06606fc))
+
 ## [3.80.0](https://github.com/openai/openai-go/compare/v3.79.0...v3.80.0) (2026-10-17)
 
 
