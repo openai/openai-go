@@ -8,6 +8,7 @@ import (
 	"errors"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/websocket"
+	"github.com/tidwall/gjson"
 )
 
 // ResponseConnectionOptions configures a WebSocket connection.
@@ -61,7 +62,9 @@ func decodeResponseWebsocketEvent(data []byte) (responseWebsocketEvent, error) {
 	if err := json.Unmarshal(data, &envelope); err != nil {
 		return responseWebsocketEvent{}, err
 	}
-	if envelope.Type == "" {
+	// Typed decoding uses the first exact key; keep legacy envelope validation too.
+	kind := gjson.GetBytes(data, "type")
+	if envelope.Type == "" || (kind.Exists() && (kind.Type != gjson.String || kind.Str == "")) {
 		return responseWebsocketEvent{}, errors.New("websocket event is missing type")
 	}
 	return responseWebsocketEvent{data: data}, nil

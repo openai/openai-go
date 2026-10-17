@@ -3,15 +3,29 @@
 Params Types:
 
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#AudioTranscriptionParam">AudioTranscriptionParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#ConversationItemUnionParam">ConversationItemUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#NoiseReductionType">NoiseReductionType</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeAudioConfigParam">RealtimeAudioConfigParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeAudioConfigInputParam">RealtimeAudioConfigInputParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeAudioConfigOutputParam">RealtimeAudioConfigOutputParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeAudioFormatsUnionParam">RealtimeAudioFormatsUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeAudioInputTurnDetectionUnionParam">RealtimeAudioInputTurnDetectionUnionParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeConversationItemAssistantMessageParam">RealtimeConversationItemAssistantMessageParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeConversationItemFunctionCallParam">RealtimeConversationItemFunctionCallParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeConversationItemFunctionCallOutputParam">RealtimeConversationItemFunctionCallOutputParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeConversationItemSystemMessageParam">RealtimeConversationItemSystemMessageParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeConversationItemUserMessageParam">RealtimeConversationItemUserMessageParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeFunctionToolParam">RealtimeFunctionToolParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeMcpApprovalRequestParam">RealtimeMcpApprovalRequestParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeMcpApprovalResponseParam">RealtimeMcpApprovalResponseParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeMcpListToolsParam">RealtimeMcpListToolsParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeMcpProtocolErrorParam">RealtimeMcpProtocolErrorParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeMcpToolCallParam">RealtimeMcpToolCallParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeMcpToolExecutionErrorParam">RealtimeMcpToolExecutionErrorParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeMcphttpErrorParam">RealtimeMcphttpErrorParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeReasoningParam">RealtimeReasoningParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeReasoningEffort">RealtimeReasoningEffort</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeResponseCreateParams">RealtimeResponseCreateParams</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeSessionCreateRequestParam">RealtimeSessionCreateRequestParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeToolChoiceConfigUnionParam">RealtimeToolChoiceConfigUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeToolsConfigParam">RealtimeToolsConfigParam</a>
@@ -23,17 +37,35 @@ Params Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTranscriptionSessionCreateRequestParam">RealtimeTranscriptionSessionCreateRequestParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTranslationClientSecretCreateRequestParam">RealtimeTranslationClientSecretCreateRequestParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTranslationSessionCreateRequestParam">RealtimeTranslationSessionCreateRequestParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTranslationSessionUpdateRequestParam">RealtimeTranslationSessionUpdateRequestParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTruncationUnionParam">RealtimeTruncationUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTruncationRetentionRatioParam">RealtimeTruncationRetentionRatioParam</a>
 
 Response Types:
 
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#AudioTranscription">AudioTranscription</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#ConversationItemUnion">ConversationItemUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#LogProbProperties">LogProbProperties</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#NoiseReductionType">NoiseReductionType</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeAudioFormatsUnion">RealtimeAudioFormatsUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeConversationItemAssistantMessage">RealtimeConversationItemAssistantMessage</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeConversationItemFunctionCall">RealtimeConversationItemFunctionCall</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeConversationItemFunctionCallOutput">RealtimeConversationItemFunctionCallOutput</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeConversationItemSystemMessage">RealtimeConversationItemSystemMessage</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeConversationItemUserMessage">RealtimeConversationItemUserMessage</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeFunctionTool">RealtimeFunctionTool</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeMcpApprovalRequest">RealtimeMcpApprovalRequest</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeMcpApprovalResponse">RealtimeMcpApprovalResponse</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeMcpListTools">RealtimeMcpListTools</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeMcpProtocolError">RealtimeMcpProtocolError</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeMcpToolCall">RealtimeMcpToolCall</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeMcpToolExecutionError">RealtimeMcpToolExecutionError</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeMcphttpError">RealtimeMcphttpError</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeReasoning">RealtimeReasoning</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeReasoningEffort">RealtimeReasoningEffort</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeResponse">RealtimeResponse</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeSessionCreateRequest">RealtimeSessionCreateRequest</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTranscriptionSessionCreateRequest">RealtimeTranscriptionSessionCreateRequest</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTranslationClientSecretCreateResponse">RealtimeTranslationClientSecretCreateResponse</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTranslationSession">RealtimeTranslationSession</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTruncationUnion">RealtimeTruncationUnion</a>
