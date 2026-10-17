@@ -303,7 +303,7 @@
     },
     "audiovoice.go": {
       "mode": "100644",
-      "sha256": "adc2778c8dadbf75f5dcc1cbc57b561cfd7e6678b45f26f62159853f65e1b09b"
+      "sha256": "81b15110f3feeeb210b6cbbbfa2bc5ab47d5c0815a2eefc873c1ab675ae10b9d"
     },
     "audiovoice_test.go": {
       "mode": "100644",
@@ -459,7 +459,7 @@
     },
     "betaassistant.go": {
       "mode": "100644",
-      "sha256": "b5f633a1192df88ec350fbad856b830882109c9fe0a875f6fe93f6303ef95e57"
+      "sha256": "376d14a27491e291b9fcab19bbda087f6d7c223c205957843398545b8372a670"
     },
     "betaassistant_test.go": {
       "mode": "100644",
