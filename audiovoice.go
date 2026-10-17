@@ -18,6 +18,8 @@ import (
 	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/packages/respjson"
 	"github.com/openai/openai-go/v3/shared/constant"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 )
 
 // Turn audio into text or text into audio.
@@ -117,11 +119,35 @@ type AudioVoiceNewParams struct {
 	// This field is a request body variant, only one variant field can be set.
 	OfPrompt *AudioVoiceNewParamsBodyPrompt `json:",inline"`
 
-	paramObj
+	paramUnion
 }
 
 func (r *AudioVoiceNewParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+
+	// Preserve the API's default branch when the discriminator is omitted.
+	key := apijson.EscapeSJSONKey("type")
+	if gjson.ParseBytes(data).IsObject() && !gjson.GetBytes(data, key).Exists() {
+		var err error
+		data, err = sjson.SetBytes(data, key, "audio_sample")
+		if err != nil {
+			return err
+		}
+	}
+
+	// Decode afresh so reusing a params value cannot leave another arm populated.
+	var decoded AudioVoiceNewParams
+	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
+		return err
+	}
+	*r = decoded
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[AudioVoiceNewParams]("type",
+		apijson.Discriminator[AudioVoiceNewParamsBodyAudioSample]("audio_sample"),
+		apijson.Discriminator[AudioVoiceNewParamsBodyPrompt]("prompt"),
+	)
 }
 
 func (u AudioVoiceNewParams) MarshalMultipart() (data []byte, contentType string, err error) {

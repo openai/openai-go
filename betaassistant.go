@@ -2118,26 +2118,38 @@ func (r *BetaAssistantUpdateParams) UnmarshalJSON(data []byte) error {
 type BetaAssistantUpdateParamsModel string
 
 const (
-	BetaAssistantUpdateParamsModelGPT5                    BetaAssistantUpdateParamsModel = "gpt-5"
-	BetaAssistantUpdateParamsModelGPT5Mini                BetaAssistantUpdateParamsModel = "gpt-5-mini"
-	BetaAssistantUpdateParamsModelGPT5Nano                BetaAssistantUpdateParamsModel = "gpt-5-nano"
-	BetaAssistantUpdateParamsModelGPT5_2025_08_07         BetaAssistantUpdateParamsModel = "gpt-5-2025-08-07"
-	BetaAssistantUpdateParamsModelGPT5Mini2025_08_07      BetaAssistantUpdateParamsModel = "gpt-5-mini-2025-08-07"
-	BetaAssistantUpdateParamsModelGPT5Nano2025_08_07      BetaAssistantUpdateParamsModel = "gpt-5-nano-2025-08-07"
-	BetaAssistantUpdateParamsModelGPT4_1                  BetaAssistantUpdateParamsModel = "gpt-4.1"
-	BetaAssistantUpdateParamsModelGPT4_1Mini              BetaAssistantUpdateParamsModel = "gpt-4.1-mini"
-	BetaAssistantUpdateParamsModelGPT4_1Nano              BetaAssistantUpdateParamsModel = "gpt-4.1-nano"
-	BetaAssistantUpdateParamsModelGPT4_1_2025_04_14       BetaAssistantUpdateParamsModel = "gpt-4.1-2025-04-14"
-	BetaAssistantUpdateParamsModelGPT4_1Mini2025_04_14    BetaAssistantUpdateParamsModel = "gpt-4.1-mini-2025-04-14"
-	BetaAssistantUpdateParamsModelGPT4_1Nano2025_04_14    BetaAssistantUpdateParamsModel = "gpt-4.1-nano-2025-04-14"
-	BetaAssistantUpdateParamsModelO3Mini                  BetaAssistantUpdateParamsModel = "o3-mini"
-	BetaAssistantUpdateParamsModelO3Mini2025_01_31        BetaAssistantUpdateParamsModel = "o3-mini-2025-01-31"
-	BetaAssistantUpdateParamsModelO1                      BetaAssistantUpdateParamsModel = "o1"
-	BetaAssistantUpdateParamsModelO1_2024_12_17           BetaAssistantUpdateParamsModel = "o1-2024-12-17"
-	BetaAssistantUpdateParamsModelGPT4o                   BetaAssistantUpdateParamsModel = "gpt-4o"
-	BetaAssistantUpdateParamsModelGPT4o2024_11_20         BetaAssistantUpdateParamsModel = "gpt-4o-2024-11-20"
-	BetaAssistantUpdateParamsModelGPT4o2024_08_06         BetaAssistantUpdateParamsModel = "gpt-4o-2024-08-06"
-	BetaAssistantUpdateParamsModelGPT4o2024_05_13         BetaAssistantUpdateParamsModel = "gpt-4o-2024-05-13"
+	BetaAssistantUpdateParamsModelGPT5               BetaAssistantUpdateParamsModel = "gpt-5"
+	BetaAssistantUpdateParamsModelGPT5Mini           BetaAssistantUpdateParamsModel = "gpt-5-mini"
+	BetaAssistantUpdateParamsModelGPT5Nano           BetaAssistantUpdateParamsModel = "gpt-5-nano"
+	BetaAssistantUpdateParamsModelGPT5_2025_08_07    BetaAssistantUpdateParamsModel = "gpt-5-2025-08-07"
+	BetaAssistantUpdateParamsModelGPT5Mini2025_08_07 BetaAssistantUpdateParamsModel = "gpt-5-mini-2025-08-07"
+	BetaAssistantUpdateParamsModelGPT5Nano2025_08_07 BetaAssistantUpdateParamsModel = "gpt-5-nano-2025-08-07"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaAssistantUpdateParamsModelGPT4_1 BetaAssistantUpdateParamsModel = "gpt-4.1"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaAssistantUpdateParamsModelGPT4_1Mini           BetaAssistantUpdateParamsModel = "gpt-4.1-mini"
+	BetaAssistantUpdateParamsModelGPT4_1Nano           BetaAssistantUpdateParamsModel = "gpt-4.1-nano"
+	BetaAssistantUpdateParamsModelGPT4_1_2025_04_14    BetaAssistantUpdateParamsModel = "gpt-4.1-2025-04-14"
+	BetaAssistantUpdateParamsModelGPT4_1Mini2025_04_14 BetaAssistantUpdateParamsModel = "gpt-4.1-mini-2025-04-14"
+	BetaAssistantUpdateParamsModelGPT4_1Nano2025_04_14 BetaAssistantUpdateParamsModel = "gpt-4.1-nano-2025-04-14"
+	BetaAssistantUpdateParamsModelO3Mini               BetaAssistantUpdateParamsModel = "o3-mini"
+	BetaAssistantUpdateParamsModelO3Mini2025_01_31     BetaAssistantUpdateParamsModel = "o3-mini-2025-01-31"
+	BetaAssistantUpdateParamsModelO1                   BetaAssistantUpdateParamsModel = "o1"
+	BetaAssistantUpdateParamsModelO1_2024_12_17        BetaAssistantUpdateParamsModel = "o1-2024-12-17"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaAssistantUpdateParamsModelGPT4o           BetaAssistantUpdateParamsModel = "gpt-4o"
+	BetaAssistantUpdateParamsModelGPT4o2024_11_20 BetaAssistantUpdateParamsModel = "gpt-4o-2024-11-20"
+	BetaAssistantUpdateParamsModelGPT4o2024_08_06 BetaAssistantUpdateParamsModel = "gpt-4o-2024-08-06"
+	BetaAssistantUpdateParamsModelGPT4o2024_05_13 BetaAssistantUpdateParamsModel = "gpt-4o-2024-05-13"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaAssistantUpdateParamsModelGPT4oMini               BetaAssistantUpdateParamsModel = "gpt-4o-mini"
 	BetaAssistantUpdateParamsModelGPT4oMini2024_07_18     BetaAssistantUpdateParamsModel = "gpt-4o-mini-2024-07-18"
 	BetaAssistantUpdateParamsModelGPT4_5Preview           BetaAssistantUpdateParamsModel = "gpt-4.5-preview"
