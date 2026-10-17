@@ -267,7 +267,7 @@
     },
     "aliases.go": {
       "mode": "100644",
-      "sha256": "ad1d4db52fee8fc0ac4cd474713114353c634a08ebc58c96c93e456e4f048cfc"
+      "sha256": "a511b2cc9d764de06809fb59b28e489ed9908955c1af07f3fac7bdbf680864af"
     },
     "api.md": {
       "mode": "100644",
@@ -463,7 +463,7 @@
     },
     "betaassistant_test.go": {
       "mode": "100644",
-      "sha256": "6834acbe3455e461b3d98be13ed7039ae737b901181c3236316b63c83850222e"
+      "sha256": "bea6a8880d405d388c062736612ed467045c0975e277853d64537eb012c91aff"
     },
     "betachatkit.go": {
       "mode": "100644",
@@ -487,7 +487,7 @@
     },
     "betaresponse.go": {
       "mode": "100644",
-      "sha256": "db92e196864f5d0ba08a1cb9c14565042ae512d3e67a8a25001e3ac519fba14b"
+      "sha256": "cdccfa537d5f5522dbd70c45da1c79bc4e3123c6b8b402f47e8c7e13a28f02d1"
     },
     "betaresponse_test.go": {
       "mode": "100644",
@@ -515,7 +515,7 @@
     },
     "betathread_test.go": {
       "mode": "100644",
-      "sha256": "f4af57787e0f7e0baa97c5814cf596c6c2f83e858b25681517a626677c020a3d"
+      "sha256": "5e8279ac6c72489a6413c9a4b0b45979cfcfa941445101354979f6e1921d22e2"
     },
     "betathreadmessage.go": {
       "mode": "100644",
@@ -531,7 +531,7 @@
     },
     "betathreadrun_test.go": {
       "mode": "100644",
-      "sha256": "cad84e35c3cfb834940b4004f06bac8464a0c4315ef6ab7ad2358fb0d0bb16fb"
+      "sha256": "135a126445fddc3c772d4f7af356b78694bb877cd51ced1b27988a1fac0049c1"
     },
     "betathreadrunstep.go": {
       "mode": "100644",
@@ -567,7 +567,7 @@
     },
     "client_test.go": {
       "mode": "100644",
-      "sha256": "5315950d7e6005c9f4bbada981faabe30cad6860b744b85d046885c1d994eaf5"
+      "sha256": "3010728d5242b1fa1374a1bc977327adc16a1756b00e7bdca2d179e723db61f3"
     },
     "completion.go": {
       "mode": "100644",
@@ -611,7 +611,7 @@
     },
     "conversations/aliases.go": {
       "mode": "100644",
-      "sha256": "ad5e54a09e690aff6151e1f2b78c206bb350d2697f696c2c6f2511409af691f6"
+      "sha256": "c034a85440aeca21a8e1dfc90f01490ea75562633b3e145b09f7221dbbc463bf"
     },
     "conversations/api.md": {
       "mode": "100644",
@@ -739,7 +739,7 @@
     },
     "live/aliases.go": {
       "mode": "100644",
-      "sha256": "485db3bd42446361dcce4e8adca153d88a0761988350a53d3d4bb03b33aa09e2"
+      "sha256": "5f4d6e17c259c7ffb769ebc05916276e2bcd3ee1915d019b8c43fe5b680ba941"
     },
     "live/api.md": {
       "mode": "100644",
@@ -823,7 +823,7 @@
     },
     "realtime/aliases.go": {
       "mode": "100644",
-      "sha256": "40a39ca82ec1a598fbb3dafa2e80b77f10e1ccbecf7ac3b445b56676f9b72e4d"
+      "sha256": "8f749a5e63c8180dedb8a59ca89801dbea4121750c444dc90bd50a2f600fe521"
     },
     "realtime/api.md": {
       "mode": "100644",
@@ -867,7 +867,7 @@
     },
     "responses/aliases.go": {
       "mode": "100644",
-      "sha256": "b06a0d19a493e8600d4d11899ffcecad95624c7a002ede07fd4d5d0cb096e263"
+      "sha256": "ebbbcae3cdefd1f1452b7302c65621f708662e7425a1d567984d465a35d14105"
     },
     "responses/api.md": {
       "mode": "100644",
@@ -891,7 +891,7 @@
     },
     "responses/response.go": {
       "mode": "100644",
-      "sha256": "fcb99e1bc76b959f78c679eb925f304353a29a6e1e9b6b9e4167b2ded8349a84"
+      "sha256": "e7a28546b9c946d9ee74f95973b9c25396c78be40ce06d8e1262a03e92d2e696"
     },
     "responses/response_test.go": {
       "mode": "100644",
@@ -979,7 +979,7 @@
     },
     "shared/shared.go": {
       "mode": "100644",
-      "sha256": "7752cab2689749b57c1b96490d53eae05920e5c96f4d48840a955bd3ff6cd7af"
+      "sha256": "d2e68169e4dfb1f0c6cb3f0fedd2fcbe170e1bf9eee1de1a5587b3b1728b5cc4"
     },
     "skill.go": {
       "mode": "100644",
@@ -1035,7 +1035,7 @@
     },
     "usage_test.go": {
       "mode": "100644",
-      "sha256": "9996ee8b91422fb7f0e7bba7e38b18dba29f6a96fee7676b733732939df3e76d"
+      "sha256": "3ec9af4430e5ef912003af7e8127502bc527737778e1f371d12a652bec86a01e"
     },
     "vectorstore.go": {
       "mode": "100644",
@@ -1071,7 +1071,7 @@
     },
     "webhooks/aliases.go": {
       "mode": "100644",
-      "sha256": "f1d1d291cf10753edb94c55d2f18cf7c85f14893c976484a5a022e620d2f88d9"
+      "sha256": "085fde433a6e519bf4cbffdf6ca88b9327045ef98a955c28821770beb03cb05d"
     },
     "webhooks/api.md": {
       "mode": "100644",

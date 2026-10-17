@@ -36695,8 +36695,14 @@ const (
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
 	ResponseCompactParamsModelGPT5ChatLatest ResponseCompactParamsModel = "gpt-5-chat-latest"
-	ResponseCompactParamsModelGPT4_1         ResponseCompactParamsModel = "gpt-4.1"
-	ResponseCompactParamsModelGPT4_1Mini     ResponseCompactParamsModel = "gpt-4.1-mini"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4_1 ResponseCompactParamsModel = "gpt-4.1"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4_1Mini ResponseCompactParamsModel = "gpt-4.1-mini"
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -36761,7 +36767,10 @@ const (
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
 	ResponseCompactParamsModelO1Mini2024_09_12 ResponseCompactParamsModel = "o1-mini-2024-09-12"
-	ResponseCompactParamsModelGPT4o            ResponseCompactParamsModel = "gpt-4o"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4o ResponseCompactParamsModel = "gpt-4o"
 	// Deprecated: Announced shutdown date: 2027-01-14. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -36830,7 +36839,10 @@ const (
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
 	ResponseCompactParamsModelCodexMiniLatest ResponseCompactParamsModel = "codex-mini-latest"
-	ResponseCompactParamsModelGPT4oMini       ResponseCompactParamsModel = "gpt-4o-mini"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ResponseCompactParamsModelGPT4oMini ResponseCompactParamsModel = "gpt-4o-mini"
 	// Deprecated: Announced shutdown date: 2027-01-14. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
