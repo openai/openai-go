@@ -23,7 +23,7 @@ func main() {
 			openai.UserMessage(question),
 		},
 		Seed:  openai.Int(0),
-		Model: openai.ChatModelGPT4o,
+		Model: openai.ChatModelGPT5_2,
 	})
 	defer func() { _ = stream.Close() }()
 

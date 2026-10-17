@@ -68,7 +68,7 @@ func TestRetryAfterExceedingConfiguredMaximumDoesNotRetry(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4o,
+		Model: shared.ChatModel("gpt-4o"),
 	})
 	if err == nil {
 		t.Fatal("expected retry response to return an error")
@@ -254,7 +254,7 @@ func TestRetryAfterDelayEdgeCases(t *testing.T) {
 						},
 					},
 				}},
-				Model: shared.ChatModelGPT4o,
+				Model: shared.ChatModel("gpt-4o"),
 			})
 			if attempts != test.wantAttempts {
 				t.Fatalf("attempts = %d, want %d", attempts, test.wantAttempts)

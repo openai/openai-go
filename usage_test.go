@@ -35,7 +35,7 @@ func TestUsage(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4o,
+		Model: shared.ChatModel("gpt-4o"),
 	})
 	if err != nil {
 		t.Fatalf("err should be nil: %s", err.Error())

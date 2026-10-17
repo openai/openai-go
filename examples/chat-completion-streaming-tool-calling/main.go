@@ -43,7 +43,7 @@ func main() {
 		},
 		ParallelToolCalls: openai.Bool(false), // JustFinishedToolCall is only safe with parallel calls disabled
 		Seed:              openai.Int(0),
-		Model:             openai.ChatModelGPT4o,
+		Model:             openai.ChatModelGPT5_2,
 	}
 
 	stream := client.Chat.Completions.NewStreaming(ctx, params)

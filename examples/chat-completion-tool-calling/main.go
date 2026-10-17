@@ -39,7 +39,7 @@ func main() {
 			}),
 		},
 		Seed:  openai.Int(0),
-		Model: openai.ChatModelGPT4o,
+		Model: openai.ChatModelGPT5_2,
 	}
 
 	// Make initial chat completion request

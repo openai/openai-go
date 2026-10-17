@@ -161,8 +161,14 @@ const (
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
 	ChatModelGPT5ChatLatest ChatModel = "gpt-5-chat-latest"
-	ChatModelGPT4_1         ChatModel = "gpt-4.1"
-	ChatModelGPT4_1Mini     ChatModel = "gpt-4.1-mini"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4_1 ChatModel = "gpt-4.1"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4_1Mini ChatModel = "gpt-4.1-mini"
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -227,7 +233,10 @@ const (
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
 	ChatModelO1Mini2024_09_12 ChatModel = "o1-mini-2024-09-12"
-	ChatModelGPT4o            ChatModel = "gpt-4o"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4o ChatModel = "gpt-4o"
 	// Deprecated: Announced shutdown date: 2027-01-14. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -296,7 +305,10 @@ const (
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
 	ChatModelCodexMiniLatest ChatModel = "codex-mini-latest"
-	ChatModelGPT4oMini       ChatModel = "gpt-4o-mini"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	ChatModelGPT4oMini ChatModel = "gpt-4o-mini"
 	// Deprecated: Announced shutdown date: 2027-01-14. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.

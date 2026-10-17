@@ -27,7 +27,7 @@ func main() {
 	params := openai.ChatCompletionNewParams{
 		Messages: messages,
 		Seed:     openai.Int(0),
-		Model:    openai.ChatModelGPT4o,
+		Model:    openai.ChatModelGPT5_2,
 		Tools:    tools,
 		StreamOptions: openai.ChatCompletionStreamOptionsParam{
 			IncludeUsage: openai.Bool(true),

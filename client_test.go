@@ -49,7 +49,7 @@ func TestUserAgentHeader(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4o,
+		Model: shared.ChatModel("gpt-4o"),
 	})
 	if userAgent != fmt.Sprintf("OpenAI/Go %s", internal.PackageVersion) {
 		t.Errorf("Expected User-Agent to be correct, but got: %#v", userAgent)
@@ -83,7 +83,7 @@ func TestRetryAfter(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4o,
+		Model: shared.ChatModel("gpt-4o"),
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -128,7 +128,7 @@ func TestDeleteRetryCountHeader(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4o,
+		Model: shared.ChatModel("gpt-4o"),
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -168,7 +168,7 @@ func TestOverwriteRetryCountHeader(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4o,
+		Model: shared.ChatModel("gpt-4o"),
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -207,7 +207,7 @@ func TestRetryAfterMs(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4o,
+		Model: shared.ChatModel("gpt-4o"),
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -240,7 +240,7 @@ func TestContextCancel(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4o,
+		Model: shared.ChatModel("gpt-4o"),
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -270,7 +270,7 @@ func TestContextCancelDelay(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4o,
+		Model: shared.ChatModel("gpt-4o"),
 	})
 	if err == nil {
 		t.Error("expected there to be a cancel error")
@@ -306,7 +306,7 @@ func TestContextDeadline(t *testing.T) {
 					},
 				},
 			}},
-			Model: shared.ChatModelGPT4o,
+			Model: shared.ChatModel("gpt-4o"),
 		})
 		if err == nil {
 			t.Error("expected there to be a deadline error")

@@ -472,7 +472,7 @@ input := responses.ResponseInputParam{
     responses.ResponseInputItemParamOfMessage("Explain the result.", responses.EasyInputMessageRoleUser),
 }
 err := connection.Create(ctx, responses.ResponsesClientEventResponseCreateParam{
-    Model: "gpt-4o-mini",
+    Model: openai.ChatModelGPT5_2,
     PreviousResponseID: openai.String(previous.ID),
     Input: responses.ResponsesClientEventResponseCreateInputUnionParam{OfResponse: &input},
 })
@@ -502,7 +502,7 @@ fork, err := connection.Lane("fork")
 if err != nil { return err }
 defer fork.Close()
 if err := connection.Create(ctx, responses.ResponsesClientEventResponseCreateParam{
-    Model: "gpt-4o-mini", Store: openai.Bool(false),
+    Model: openai.ChatModelGPT5_2, Store: openai.Bool(false),
     StreamID: openai.String("fork"), PreviousResponseID: openai.String(previous.ID),
     Input: responses.ResponsesClientEventResponseCreateInputUnionParam{OfString: openai.String("Explore another approach.")},
 }); err != nil { return err }
@@ -539,7 +539,7 @@ for _, item := range compacted.Output {
     input = append(input, param.Override[responses.ResponseInputItemUnionParam](json.RawMessage(item.RawJSON())))
 }
 err := connection.Create(ctx, responses.ResponsesClientEventResponseCreateParam{
-    Model: "gpt-4o-mini",
+    Model: openai.ChatModelGPT5_2,
     Input: responses.ResponsesClientEventResponseCreateInputUnionParam{OfResponse: &input},
 })
 ```

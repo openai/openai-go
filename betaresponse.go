@@ -4832,8 +4832,14 @@ const (
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
 	BetaResponseModelGPT5ChatLatest BetaResponseModel = "gpt-5-chat-latest"
-	BetaResponseModelGPT4_1         BetaResponseModel = "gpt-4.1"
-	BetaResponseModelGPT4_1Mini     BetaResponseModel = "gpt-4.1-mini"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_1 BetaResponseModel = "gpt-4.1"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_1Mini BetaResponseModel = "gpt-4.1-mini"
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -4898,7 +4904,10 @@ const (
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
 	BetaResponseModelO1Mini2024_09_12 BetaResponseModel = "o1-mini-2024-09-12"
-	BetaResponseModelGPT4o            BetaResponseModel = "gpt-4o"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4o BetaResponseModel = "gpt-4o"
 	// Deprecated: Announced shutdown date: 2027-01-14. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -4967,7 +4976,10 @@ const (
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
 	BetaResponseModelCodexMiniLatest BetaResponseModel = "codex-mini-latest"
-	BetaResponseModelGPT4oMini       BetaResponseModel = "gpt-4o-mini"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oMini BetaResponseModel = "gpt-4o-mini"
 	// Deprecated: Announced shutdown date: 2027-01-14. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -37089,8 +37101,14 @@ const (
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
 	BetaResponseNewParamsModelGPT5ChatLatest BetaResponseNewParamsModel = "gpt-5-chat-latest"
-	BetaResponseNewParamsModelGPT4_1         BetaResponseNewParamsModel = "gpt-4.1"
-	BetaResponseNewParamsModelGPT4_1Mini     BetaResponseNewParamsModel = "gpt-4.1-mini"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_1 BetaResponseNewParamsModel = "gpt-4.1"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_1Mini BetaResponseNewParamsModel = "gpt-4.1-mini"
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -37155,7 +37173,10 @@ const (
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
 	BetaResponseNewParamsModelO1Mini2024_09_12 BetaResponseNewParamsModel = "o1-mini-2024-09-12"
-	BetaResponseNewParamsModelGPT4o            BetaResponseNewParamsModel = "gpt-4o"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4o BetaResponseNewParamsModel = "gpt-4o"
 	// Deprecated: Announced shutdown date: 2027-01-14. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -37224,7 +37245,10 @@ const (
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
 	BetaResponseNewParamsModelCodexMiniLatest BetaResponseNewParamsModel = "codex-mini-latest"
-	BetaResponseNewParamsModelGPT4oMini       BetaResponseNewParamsModel = "gpt-4o-mini"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oMini BetaResponseNewParamsModel = "gpt-4o-mini"
 	// Deprecated: Announced shutdown date: 2027-01-14. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -37990,8 +38014,14 @@ const (
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
 	BetaResponseCompactParamsModelGPT5ChatLatest BetaResponseCompactParamsModel = "gpt-5-chat-latest"
-	BetaResponseCompactParamsModelGPT4_1         BetaResponseCompactParamsModel = "gpt-4.1"
-	BetaResponseCompactParamsModelGPT4_1Mini     BetaResponseCompactParamsModel = "gpt-4.1-mini"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_1 BetaResponseCompactParamsModel = "gpt-4.1"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_1Mini BetaResponseCompactParamsModel = "gpt-4.1-mini"
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -38056,7 +38086,10 @@ const (
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
 	BetaResponseCompactParamsModelO1Mini2024_09_12 BetaResponseCompactParamsModel = "o1-mini-2024-09-12"
-	BetaResponseCompactParamsModelGPT4o            BetaResponseCompactParamsModel = "gpt-4o"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4o BetaResponseCompactParamsModel = "gpt-4o"
 	// Deprecated: Announced shutdown date: 2027-01-14. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -38125,7 +38158,10 @@ const (
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
 	BetaResponseCompactParamsModelCodexMiniLatest BetaResponseCompactParamsModel = "codex-mini-latest"
-	BetaResponseCompactParamsModelGPT4oMini       BetaResponseCompactParamsModel = "gpt-4o-mini"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oMini BetaResponseCompactParamsModel = "gpt-4o-mini"
 	// Deprecated: Announced shutdown date: 2027-01-14. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
