@@ -65,6 +65,17 @@ func TestLiveNewWithOptionalParams(t *testing.T) {
 			}},
 			Instructions: openai.String("instructions"),
 			Store:        openai.Bool(true),
+			Triggers: []live.DecisionTriggerParam{{
+				Decisions: live.DecisionTriggerDecisionsParam{
+					Questions: []live.DecisionTriggerDecisionsQuestionUnionParam{{
+						OfPredicate: &live.DecisionTriggerDecisionsQuestionPredicateParam{
+							Instructions: "instructions",
+							Name:         openai.String("name"),
+						},
+					}},
+				},
+				EventType: live.DecisionTriggerEventTypeSessionInputTranscriptDelta,
+			}},
 		},
 		Transport: live.LiveNewParamsTransport{
 			Sdp: "x",
