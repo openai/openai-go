@@ -16,7 +16,7 @@ func main() {
 
 	stream := client.Responses.NewStreaming(ctx, responses.ResponseNewParams{
 		Input: responses.ResponseNewParamsInputUnion{OfString: openai.String(question)},
-		Model: openai.ChatModelGPT4_1,
+		Model: openai.ChatModelGPT5_2,
 	})
 	defer func() { _ = stream.Close() }()
 

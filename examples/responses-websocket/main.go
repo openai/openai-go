@@ -32,7 +32,7 @@ func run() error {
 	// Custom headers are sent on the opening handshake. Reconnect preserves
 	// these options and reruns any configured authentication middleware.
 	first := responses.ResponsesClientEventResponseCreateParam{
-		Model: "gpt-4o-mini",
+		Model: openai.ChatModelGPT5_2,
 		Input: responses.ResponsesClientEventResponseCreateInputUnionParam{OfString: openai.String("Say hello.")},
 	}
 	if err = connection.Create(ctx, first); err != nil {
@@ -44,7 +44,7 @@ func run() error {
 	}
 	// Every turn is response.create. Send only new input with the previous ID.
 	if err = connection.Create(ctx, responses.ResponsesClientEventResponseCreateParam{
-		Model:              "gpt-4o-mini",
+		Model:              openai.ChatModelGPT5_2,
 		PreviousResponseID: openai.String(response.ID),
 		Input:              responses.ResponsesClientEventResponseCreateInputUnionParam{OfString: openai.String("Now say it in French.")},
 	}); err != nil {

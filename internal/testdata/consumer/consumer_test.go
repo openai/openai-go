@@ -26,6 +26,7 @@ const (
 )
 
 func TestCorePackageCompiles(t *testing.T) {
+	//nolint:staticcheck // SA1019: This fixture verifies that the deprecated public alias remains source-compatible.
 	if openai.ChatModelGPT4o == "" {
 		t.Error("ChatModelGPT4o = empty, want a model identifier")
 	}
