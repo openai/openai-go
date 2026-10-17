@@ -747,15 +747,15 @@
     },
     "live/fork.go": {
       "mode": "100644",
-      "sha256": "82c031095b8f5ee2e735c7a33659d9559a278ed5b30a0d4334154ecfa3f4681c"
+      "sha256": "ceebb1b8dc2ac59c892fed4c0ef01e42c7e2b8817a33fb164381d2a1a1c4a6cc"
     },
     "live/live.go": {
       "mode": "100644",
-      "sha256": "b963e8979fea98d864d7472982e4be2c4efc0f2939e0ce41635cd0e00da79506"
+      "sha256": "da968e172bf72f50d2c48b238b140e22e3ff72623fe546a7f198c66ca500343f"
     },
     "live/live_forks_websocket.go": {
       "mode": "100644",
-      "sha256": "bab9360cbeb230fc19f71e8311c6a636ecb3457026ba15bab2f7fd0624b9ecc1"
+      "sha256": "dc281259a14a721b2077b38fa38a53a3c710130ba62c47e2697c4e9e7b339507"
     },
     "live/live_forks_websocket_binding.go": {
       "mode": "100644",
@@ -763,7 +763,7 @@
     },
     "live/live_sideband_websocket.go": {
       "mode": "100644",
-      "sha256": "92a7a9832d1e4fb7f1abf3d30d34a2062074f3c398720af749b5a4190a9f8299"
+      "sha256": "23067d1c86315ec6f9c06b84c22a5027269291c9c74525a05dab903bb130c913"
     },
     "live/live_sideband_websocket_binding.go": {
       "mode": "100644",
@@ -775,7 +775,7 @@
     },
     "live/live_websocket.go": {
       "mode": "100644",
-      "sha256": "4d91b4f23557dcb8a4693cc132ada9ac3ac2740f025d236dc2f208cef1a44365"
+      "sha256": "17486a3da91053802d50c0fc74ad3641bf019d8398ed7e0edbf1dc84147d8f0f"
     },
     "live/live_websocket_binding.go": {
       "mode": "100644",
@@ -783,7 +783,7 @@
     },
     "live/session.go": {
       "mode": "100644",
-      "sha256": "731bd543a4a541bbd4d2f9063292e153c2278afbba2bc006ec68c22b0261ffbf"
+      "sha256": "7dfe0c79e66556c663d1bee72e4e208ccf23af7df626f7918787eaa6ce1a1929"
     },
     "live/session_test.go": {
       "mode": "100644",
@@ -791,7 +791,7 @@
     },
     "live/sideband.go": {
       "mode": "100644",
-      "sha256": "0d5c62cb5ca1fe0b67e5365212e363182fe141c8af4114f8e5170e09d1489951"
+      "sha256": "92924ca52db9d7c3e14b14d07d43d0f65ba5b8d22eda4ce86cf469e0d1c60253"
     },
     "model.go": {
       "mode": "100644",
@@ -891,7 +891,7 @@
     },
     "responses/response.go": {
       "mode": "100644",
-      "sha256": "246abb04b5697a457a06d9e2013f88be55893eb0caef2e6fdcfeeb4384105312"
+      "sha256": "fcb99e1bc76b959f78c679eb925f304353a29a6e1e9b6b9e4167b2ded8349a84"
     },
     "responses/response_test.go": {
       "mode": "100644",
@@ -899,7 +899,7 @@
     },
     "responses/responses_websocket.go": {
       "mode": "100644",
-      "sha256": "30ef94d44f4c51c3e14e46401c288b880814ac74683658ea9f660805f23191a5"
+      "sha256": "bd556a5276735894045460e7c0edbf7415ad5067d01bfac71532db71a69d049d"
     },
     "responses/responses_websocket_binding.go": {
       "mode": "100644",
@@ -939,7 +939,7 @@
     },
     "scripts/castiron/custom_code_budget.py": {
       "mode": "100644",
-      "sha256": "e6f19706c26f9b996f7d6d5f8a654e54fbc8c49a5d2fce045c1996b119feee33"
+      "sha256": "31b47b2c85fc7ef483c18a94f0725e4f6bae50164c427330af6d081d5d3f31f2"
     },
     "scripts/castiron/custom_code_report.py": {
       "mode": "100644",
@@ -971,7 +971,7 @@
     },
     "scripts/castiron/test_custom_code_report.py": {
       "mode": "100644",
-      "sha256": "5c17ac9b5596e7f69aaefe3f29615cdac425323594854a91e1759c88d92a68bb"
+      "sha256": "56a748c56ccf137aee0e5997dd29484157d5566bf844cc4969270dd26fa38cbd"
     },
     "shared/constant/constants.go": {
       "mode": "100644",

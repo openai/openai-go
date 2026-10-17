@@ -734,18 +734,18 @@ func (r *ForkServerEventUnion) UnmarshalJSON(data []byte) error {
 // UnmarshalJSON keeps the existing general-purpose union decoding behavior.
 func (r *ForkServerEventUnion) unmarshalWebsocketEvent(data []byte) error {
 	var envelope struct {
-		Type json.RawMessage `json:"type"`
+		Type string `json:"type"`
+		JSON struct {
+			Type respjson.Field
+		} `json:"-"`
 	}
-	if err := json.Unmarshal(data, &envelope); err != nil {
+	if err := apijson.UnmarshalRoot(data, &envelope); err != nil {
 		return err
 	}
-	var eventType string
-	if err := json.Unmarshal(envelope.Type, &eventType); err != nil {
-		return err
-	}
+	eventType := envelope.Type
 	*r = ForkServerEventUnion{Type: eventType}
 	r.JSON.raw = string(data)
-	r.JSON.Type = respjson.NewField(string(envelope.Type))
+	r.JSON.Type = envelope.JSON.Type
 	switch eventType {
 	case "session.started":
 		if err := apijson.UnmarshalRoot(data, &r.OfSessionStartedEvent); err != nil {

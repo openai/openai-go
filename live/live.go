@@ -2473,8 +2473,8 @@ type MediaSessionConfigParam struct {
 	// session. Trusted sideband connections are unaffected.
 	Client ClientConfigParam `json:"client,omitzero"`
 	// Ordered text-only history supplied before startup. Supports developer, user, and
-	// assistant messages with one text part each; at most 128 messages and 8,192
-	// rendered tokens in total.
+	// assistant messages with one text part each; at most 128 messages and a
+	// configured rendered-token limit (8,192 by default).
 	Input []InitialItemUnionParam `json:"input,omitzero"`
 	paramObj
 }
@@ -4027,18 +4027,18 @@ func (r *ServerEventUnion) UnmarshalJSON(data []byte) error {
 // UnmarshalJSON keeps the existing general-purpose union decoding behavior.
 func (r *ServerEventUnion) unmarshalWebsocketEvent(data []byte) error {
 	var envelope struct {
-		Type json.RawMessage `json:"type"`
+		Type string `json:"type"`
+		JSON struct {
+			Type respjson.Field
+		} `json:"-"`
 	}
-	if err := json.Unmarshal(data, &envelope); err != nil {
+	if err := apijson.UnmarshalRoot(data, &envelope); err != nil {
 		return err
 	}
-	var eventType string
-	if err := json.Unmarshal(envelope.Type, &eventType); err != nil {
-		return err
-	}
+	eventType := envelope.Type
 	*r = ServerEventUnion{Type: eventType}
 	r.JSON.raw = string(data)
-	r.JSON.Type = respjson.NewField(string(envelope.Type))
+	r.JSON.Type = envelope.JSON.Type
 	switch eventType {
 	case "session.started":
 		if err := apijson.UnmarshalRoot(data, &r.OfSessionStartedEvent); err != nil {
@@ -4479,8 +4479,8 @@ type SessionConfigParam struct {
 	// session. Trusted sideband connections are unaffected.
 	Client ClientConfigParam `json:"client,omitzero"`
 	// Ordered text-only history supplied before startup. Supports developer, user, and
-	// assistant messages with one text part each; at most 128 messages and 8,192
-	// rendered tokens in total.
+	// assistant messages with one text part each; at most 128 messages and a
+	// configured rendered-token limit (8,192 by default).
 	Input []InitialItemUnionParam `json:"input,omitzero"`
 	paramObj
 }
@@ -4653,8 +4653,8 @@ type SessionResource struct {
 	// application; use `responses` to let the API manage a Responses backend.
 	Delegation SessionResourceDelegationUnion `json:"delegation" api:"nullable"`
 	// Ordered text-only history supplied before startup. Supports developer, user, and
-	// assistant messages with one text part each; at most 128 messages and 8,192
-	// rendered tokens in total.
+	// assistant messages with one text part each; at most 128 messages and a
+	// configured rendered-token limit (8,192 by default).
 	Input []InitialItemUnion `json:"input"`
 	// Frontend instructions for voice, conversation, interruptions, and when to
 	// delegate. Start with the

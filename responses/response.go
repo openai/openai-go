@@ -30101,18 +30101,18 @@ func (r *ResponsesServerEventUnion) UnmarshalJSON(data []byte) error {
 // UnmarshalJSON keeps the existing general-purpose union decoding behavior.
 func (r *ResponsesServerEventUnion) unmarshalWebsocketEvent(data []byte) error {
 	var envelope struct {
-		Type json.RawMessage `json:"type"`
+		Type string `json:"type"`
+		JSON struct {
+			Type respjson.Field
+		} `json:"-"`
 	}
-	if err := json.Unmarshal(data, &envelope); err != nil {
+	if err := apijson.UnmarshalRoot(data, &envelope); err != nil {
 		return err
 	}
-	var eventType string
-	if err := json.Unmarshal(envelope.Type, &eventType); err != nil {
-		return err
-	}
+	eventType := envelope.Type
 	*r = ResponsesServerEventUnion{Type: eventType}
 	r.JSON.raw = string(data)
-	r.JSON.Type = respjson.NewField(string(envelope.Type))
+	r.JSON.Type = envelope.JSON.Type
 	switch eventType {
 	case "response.audio.delta":
 		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseAudioWsDelta); err != nil {
