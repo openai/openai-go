@@ -8,6 +8,7 @@ import (
 	"errors"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/websocket"
+	"github.com/tidwall/gjson"
 )
 
 // LiveConnectionOptions configures a WebSocket connection.
@@ -61,7 +62,9 @@ func decodeLiveWebsocketEvent(data []byte) (liveWebsocketEvent, error) {
 	if err := json.Unmarshal(data, &envelope); err != nil {
 		return liveWebsocketEvent{}, err
 	}
-	if envelope.Type == "" {
+	// Typed decoding uses the first exact key; keep legacy envelope validation too.
+	kind := gjson.GetBytes(data, "type")
+	if envelope.Type == "" || (kind.Exists() && (kind.Type != gjson.String || kind.Str == "")) {
 		return liveWebsocketEvent{}, errors.New("websocket event is missing type")
 	}
 	return liveWebsocketEvent{data: data}, nil

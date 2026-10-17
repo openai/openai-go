@@ -1977,9 +1977,6 @@ func (r *DecisionItemCreatedEventItemContentUnion) UnmarshalJSON(data []byte) er
 // properties and values from [DecisionItemCreatedEventItemContentPartInputText],
 // [DecisionItemCreatedEventItemContentPartInputImage].
 //
-// Use the [DecisionItemCreatedEventItemContentPartsItemUnion.AsAny] method to
-// switch on the variant.
-//
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type DecisionItemCreatedEventItemContentPartsItemUnion struct {
 	OfDecisionItemCreatedEventItemContentPartInputText  DecisionItemCreatedEventItemContentPartInputText  `json:",inline"`
@@ -3603,8 +3600,6 @@ func (r *InfoEvent) UnmarshalJSON(data []byte) error {
 
 // InitialItemUnion contains all possible properties and values from
 // [InitialItemDeveloper], [InitialItemUser], [InitialItemAssistant].
-//
-// Use the [InitialItemUnion.AsAny] method to switch on the variant.
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type InitialItemUnion struct {

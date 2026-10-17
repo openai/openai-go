@@ -25913,9 +25913,6 @@ func (r ResponseToolSearchOutputItemParamResp) ToParam() ResponseToolSearchOutpu
 // [CustomTool], [ToolSearchOutputNamespaceTool], [ToolSearchTool],
 // [WebSearchPreviewTool], [ApplyPatchTool].
 //
-// Use the [ResponseToolSearchOutputItemParamToolUnionResp.AsAny] method to switch
-// on the variant.
-//
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ResponseToolSearchOutputItemParamToolUnionResp struct {
 	Name       string `json:"name"`
@@ -32525,8 +32522,6 @@ func (r *SkillReferenceParam) UnmarshalJSON(data []byte) error {
 // [ToolMcp], [ToolCodeInterpreter], [ToolProgrammaticToolCalling],
 // [ToolImageGeneration], [ToolLocalShell], [FunctionShellTool], [CustomTool],
 // [NamespaceTool], [ToolSearchTool], [WebSearchPreviewTool], [ApplyPatchTool].
-//
-// Use the [ToolUnion.AsAny] method to switch on the variant.
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ToolUnion struct {
