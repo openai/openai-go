@@ -345,7 +345,7 @@ func init() {
 // [OutputTranscriptDeltaEvent], [DelegationCreatedEvent], [DecisionEvent],
 // [DecisionItemCreatedEvent], [DecisionItemDeletedEvent], [ResponseEvent],
 // [SessionUsageUpdatedEvent], [SessionClosedEvent], [ErrorEvent], [InfoEvent],
-// [ConnectServerEventSessionInputAudioAppend],
+// [ConnectServerEventSessionInputAudioAppend], [OutputAudioDeltaEvent],
 // [ConnectServerEventTransportDtmfReceived],
 // [ConnectServerEventTransportDtmfSend], [ConnectServerEventTransportRinging],
 // [ConnectServerEventTransportAnswered], [ConnectServerEventTransportFailed].
@@ -375,6 +375,7 @@ type ConnectServerEventUnion struct {
 	OfErrorEvent                                ErrorEvent                                `json:",inline"`
 	OfInfoEvent                                 InfoEvent                                 `json:",inline"`
 	OfConnectServerEventSessionInputAudioAppend ConnectServerEventSessionInputAudioAppend `json:",inline"`
+	OfOutputAudioDeltaEvent                     OutputAudioDeltaEvent                     `json:",inline"`
 	OfConnectServerEventTransportDtmfReceived   ConnectServerEventTransportDtmfReceived   `json:",inline"`
 	OfConnectServerEventTransportDtmfSend       ConnectServerEventTransportDtmfSend       `json:",inline"`
 	OfConnectServerEventTransportRinging        ConnectServerEventTransportRinging        `json:",inline"`
@@ -403,6 +404,7 @@ type ConnectServerEventUnion struct {
 		OfErrorEvent                                respjson.Field
 		OfInfoEvent                                 respjson.Field
 		OfConnectServerEventSessionInputAudioAppend respjson.Field
+		OfOutputAudioDeltaEvent                     respjson.Field
 		OfConnectServerEventTransportDtmfReceived   respjson.Field
 		OfConnectServerEventTransportDtmfSend       respjson.Field
 		OfConnectServerEventTransportRinging        respjson.Field
@@ -441,6 +443,7 @@ func (SessionClosedEvent) implConnectServerEventUnion()                        {
 func (ErrorEvent) implConnectServerEventUnion()                                {}
 func (InfoEvent) implConnectServerEventUnion()                                 {}
 func (ConnectServerEventSessionInputAudioAppend) implConnectServerEventUnion() {}
+func (OutputAudioDeltaEvent) implConnectServerEventUnion()                     {}
 func (ConnectServerEventTransportDtmfReceived) implConnectServerEventUnion()   {}
 func (ConnectServerEventTransportDtmfSend) implConnectServerEventUnion()       {}
 func (ConnectServerEventTransportRinging) implConnectServerEventUnion()        {}
@@ -471,6 +474,7 @@ func (ConnectServerEventTransportFailed) implConnectServerEventUnion()         {
 //	case live.ErrorEvent:
 //	case live.InfoEvent:
 //	case live.ConnectServerEventSessionInputAudioAppend:
+//	case live.OutputAudioDeltaEvent:
 //	case live.ConnectServerEventTransportDtmfReceived:
 //	case live.ConnectServerEventTransportDtmfSend:
 //	case live.ConnectServerEventTransportRinging:
@@ -523,6 +527,8 @@ func (u ConnectServerEventUnion) AsAny() anyConnectServerEvent {
 		return u.AsInfoEvent()
 	case "session.input_audio.append":
 		return u.AsConnectServerEventSessionInputAudioAppend()
+	case "session.output_audio.delta":
+		return u.AsOutputAudioDeltaEvent()
 	case "transport.dtmf.received":
 		return u.AsConnectServerEventTransportDtmfReceived()
 	case "transport.dtmf.send":
@@ -638,6 +644,11 @@ func (u ConnectServerEventUnion) AsInfoEvent() (v InfoEvent) {
 }
 
 func (u ConnectServerEventUnion) AsConnectServerEventSessionInputAudioAppend() (v ConnectServerEventSessionInputAudioAppend) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConnectServerEventUnion) AsOutputAudioDeltaEvent() (v OutputAudioDeltaEvent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -796,6 +807,11 @@ func (r *ConnectServerEventUnion) unmarshalWebsocketEvent(data []byte) error {
 			return err
 		}
 		r.JSON.OfConnectServerEventSessionInputAudioAppend = respjson.NewField(r.JSON.raw)
+	case "session.output_audio.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfOutputAudioDeltaEvent); err != nil {
+			return err
+		}
+		r.JSON.OfOutputAudioDeltaEvent = respjson.NewField(r.JSON.raw)
 	case "transport.dtmf.received":
 		if err := apijson.UnmarshalRoot(data, &r.OfConnectServerEventTransportDtmfReceived); err != nil {
 			return err

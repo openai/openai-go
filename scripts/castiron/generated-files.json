@@ -751,7 +751,7 @@
     },
     "live/api.md": {
       "mode": "100644",
-      "sha256": "55e14a21a60ab77a1a9bb933fecfeca10bd5f00b5f95b54e7f1ec83f3d8b8ff2"
+      "sha256": "f33ce27755cbf3f7d652140cd64b6311c9893104fabe95e5a606f0ae111cd872"
     },
     "live/fork.go": {
       "mode": "100644",
@@ -799,7 +799,7 @@
     },
     "live/sideband.go": {
       "mode": "100644",
-      "sha256": "0a8030bdc1e1f6d0acaa296567996b7b47e9b4a72e9ec439f747b26ca48dc9b6"
+      "sha256": "7859eba83ef8c87f54c9ca73979f77f027b2b13d5aabc4f7dc93d6edbc6f45c6"
     },
     "model.go": {
       "mode": "100644",

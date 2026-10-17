@@ -35,7 +35,6 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#LiveError">LiveError</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#FunctionTool">FunctionTool</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#InitialItemUnion">InitialItemUnion</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#OutputAudioDeltaEvent">OutputAudioDeltaEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#ResponsesDelegationConfig">ResponsesDelegationConfig</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#ServerEventSelector">ServerEventSelector</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#SessionResource">SessionResource</a>
