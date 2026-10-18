@@ -117,7 +117,10 @@ func (b *upgradeBody) Close() error {
 
 // dialError omits URL-bearing wrappers from its display while retaining the
 // original error chain for errors.Is/As and structured diagnostics.
-type dialError struct{ cause error }
+type dialError struct {
+	cause      error
+	statusCode int
+}
 
 func (e *dialError) Error() string {
 	cause := e.cause
@@ -182,7 +185,11 @@ func Dial[T any](ctx context.Context, request *http.Request, client *http.Client
 		if response != nil && response.Body != nil {
 			_ = response.Body.Close()
 		}
-		return nil, &dialError{cause: err}
+		status := 0
+		if response != nil {
+			status = response.StatusCode
+		}
+		return nil, &dialError{cause: err, statusCode: status}
 	}
 	if options.MaxMessageBytes == 0 {
 		socket.SetReadLimit(-1)
@@ -222,7 +229,7 @@ func (c *Connection[T]) read(ctx context.Context, decode func([]byte) (T, error)
 	for {
 		kind, data, err := c.socket.Read(ctx)
 		if err != nil {
-			c.fail(safeCloseError(err))
+			c.fail(&readError{cause: safeCloseError(err)})
 			return
 		}
 		if kind != wire.MessageText {

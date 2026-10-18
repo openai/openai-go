@@ -1,6 +1,10 @@
 package option
 
-import "net/http"
+import (
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/packages/websocket"
+	"net/http"
+)
 
 // WebSocketHTTPClient is an optional capability for a custom HTTPClient used
 // with Responses WebSockets. Its returned client must preserve the custom
@@ -15,4 +19,23 @@ import "net/http"
 type WebSocketHTTPClient interface {
 	HTTPClient
 	WebSocketHTTPClient() *http.Client
+}
+
+// WithWebSocketReconnect enables optional transport recovery for bindings that
+// support it. The default is false. Recovery never restores server state or
+// replays a command whose delivery is uncertain. Other request types ignore it.
+func WithWebSocketReconnect(enabled bool) RequestOption {
+	return requestconfig.RequestOptionFunc(func(cfg *requestconfig.RequestConfig) error {
+		cfg.WebSocketRecovery.Enabled = enabled
+		return nil
+	})
+}
+
+// WithWebSocketRecovery configures supported bindings' recovery and pending-write
+// limits. Set Enabled to opt in. Later request options override earlier ones.
+func WithWebSocketRecovery(options websocket.RecoveryOptions) RequestOption {
+	return requestconfig.RequestOptionFunc(func(cfg *requestconfig.RequestConfig) error {
+		cfg.WebSocketRecovery = options
+		return nil
+	})
 }
