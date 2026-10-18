@@ -20,6 +20,10 @@ type sessionPeer struct {
 }
 
 func sessionFixture(t *testing.T, options RecoveryOptions, beforeOpen func(context.Context, int32) error) (*Session[testEvent], <-chan sessionPeer, <-chan string, *atomic.Int32) {
+	return sessionFixtureContext(t, context.Background(), options, beforeOpen)
+}
+
+func sessionFixtureContext(t *testing.T, ctx context.Context, options RecoveryOptions, beforeOpen func(context.Context, int32) error) (*Session[testEvent], <-chan sessionPeer, <-chan string, *atomic.Int32) {
 	t.Helper()
 	peers := make(chan sessionPeer, 8)
 	writes := make(chan string, 16)
@@ -55,7 +59,7 @@ func sessionFixture(t *testing.T, options RecoveryOptions, beforeOpen func(conte
 			return event, err
 		}, func(testEvent) string { return "" })
 	}
-	s, err := OpenSession(context.Background(), open, options)
+	s, err := OpenSession(ctx, open, options)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,10 +95,16 @@ func waitPending(t *testing.T, s *Session[testEvent], count int) {
 }
 
 func TestSessionRecoveryRequiresExplicitFlushAndRefreshesCredentials(t *testing.T) {
+	type contextKey struct{}
+	openingCtx, cancelOpening := context.WithCancel(context.WithValue(context.Background(), contextKey{}, "original"))
+	defer cancelOpening()
 	opening, allow := make(chan struct{}), make(chan struct{})
 	recovered := make(chan struct{}, 1)
-	s, peers, writes, attempts := sessionFixture(t, RecoveryOptions{Enabled: true, MaxAttempts: 1, InitialDelay: time.Millisecond, MaxPendingBytes: 256, OnReconnected: func() { recovered <- struct{}{} }}, func(ctx context.Context, attempt int32) error {
+	s, peers, writes, attempts := sessionFixtureContext(t, openingCtx, RecoveryOptions{Enabled: true, MaxAttempts: 1, InitialDelay: time.Millisecond, MaxPendingBytes: 256, OnReconnected: func() { recovered <- struct{}{} }}, func(ctx context.Context, attempt int32) error {
 		if attempt == 2 {
+			if got := ctx.Value(contextKey{}); got != "original" {
+				t.Errorf("recovery context value = %v", got)
+			}
 			close(opening)
 			select {
 			case <-allow:
@@ -105,6 +115,7 @@ func TestSessionRecoveryRequiresExplicitFlushAndRefreshesCredentials(t *testing.
 		return nil
 	})
 	first := receiveWithin(t, peers)
+	cancelOpening()
 	if first.authorization != "Bearer synthetic-1" {
 		t.Fatal(first.authorization)
 	}
@@ -171,6 +182,28 @@ func (e blockingSessionEvent) MarshalJSON() ([]byte, error) {
 	return []byte(`{"type":"held"}`), nil
 }
 
+type panickingSessionEvent struct{}
+
+func (panickingSessionEvent) MarshalJSON() ([]byte, error) { panic("serialization") }
+
+func sendPanickingEvent(t *testing.T, s *Session[testEvent]) {
+	t.Helper()
+	defer func() {
+		if got := recover(); got != "serialization" {
+			t.Fatalf("serialization panic = %v", got)
+		}
+	}()
+	_ = s.SendJSON(context.Background(), panickingSessionEvent{})
+}
+
+func TestSessionPanicDoesNotBlockFlush(t *testing.T) {
+	s, _, _, _ := sessionFixture(t, RecoveryOptions{Enabled: true}, nil)
+	sendPanickingEvent(t, s)
+	if err := s.FlushPending(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestSessionSerializationCannotBypassRestoration(t *testing.T) {
 	opening, allow := make(chan struct{}), make(chan struct{})
 	recovered := make(chan struct{}, 1)
@@ -190,6 +223,19 @@ func TestSessionSerializationCannotBypassRestoration(t *testing.T) {
 	go func() { _, err := s.Recv(context.Background()); read <- err }()
 	_ = first.socket.Close(wire.StatusServiceRestart, "restart")
 	receiveWithin(t, opening)
+	sendPanickingEvent(t, s)
+	canceled, cancel := context.WithCancel(context.Background())
+	cancel()
+	never := blockingSessionEvent{make(chan struct{}), make(chan struct{})}
+	close(never.release)
+	if err := s.SendJSON(canceled, never); !errors.Is(err, context.Canceled) {
+		t.Errorf("canceled send = %v", err)
+	}
+	select {
+	case <-never.started:
+		t.Error("canceled send invoked serialization")
+	default:
+	}
 	event := blockingSessionEvent{make(chan struct{}), make(chan struct{})}
 	sent := make(chan error, 1)
 	go func() { sent <- s.SendJSON(context.Background(), event) }()
@@ -197,6 +243,9 @@ func TestSessionSerializationCannotBypassRestoration(t *testing.T) {
 	close(allow)
 	receiveWithin(t, peers)
 	receiveWithin(t, recovered)
+	if err := s.FlushPending(context.Background()); !errors.Is(err, ErrPendingLimit) {
+		t.Errorf("flush while recovery-admitted serialization is running = %v", err)
+	}
 	close(event.release)
 	waitPending(t, s, 1)
 	select {
@@ -209,6 +258,9 @@ func TestSessionSerializationCannotBypassRestoration(t *testing.T) {
 		t.Fatalf("pending = %s", pending)
 	}
 	if err := receiveWithin(t, sent); !errors.Is(err, ErrPendingTaken) {
+		t.Fatal(err)
+	}
+	if err := s.FlushPending(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 	s.Abort()
@@ -415,5 +467,83 @@ func TestSessionOverflowAndCancellationPreserveOtherPendingCommands(t *testing.T
 	s.Abort()
 	if err := receiveWithin(t, reading); !errors.Is(err, ErrClosed) {
 		t.Fatal(err)
+	}
+}
+
+func TestSessionCanceledFlushBeforeWriteIsDefinitelyUnsent(t *testing.T) {
+	opening, allow, recovered := make(chan struct{}), make(chan struct{}), make(chan struct{})
+	s, peers, _, _ := sessionFixture(t, RecoveryOptions{Enabled: true, InitialDelay: time.Millisecond, MaxPendingBytes: 256, OnReconnected: func() { close(recovered) }}, func(ctx context.Context, attempt int32) error {
+		if attempt == 2 {
+			close(opening)
+			select {
+			case <-allow:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+		}
+		return nil
+	})
+	first := receiveWithin(t, peers)
+	go func() { _, _ = s.Recv(context.Background()) }()
+	_ = first.socket.CloseNow()
+	receiveWithin(t, opening)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	sent := make(chan error, 1)
+	go func() { sent <- s.Send(ctx, json.RawMessage(`{}`)) }()
+	waitPending(t, s, 1)
+	close(allow)
+	receiveWithin(t, recovered)
+	s.active.writer <- struct{}{}
+	defer func() { <-s.active.writer }()
+	flushed := make(chan error, 1)
+	go func() { flushed <- s.FlushPending(context.Background()) }()
+	waitPending(t, s, 0)
+	cancel()
+	var delivery *DeliveryError
+	if err := receiveWithin(t, sent); !errors.Is(err, context.Canceled) || !errors.As(err, &delivery) || delivery.MayHaveBeenSent {
+		t.Fatalf("canceled send = %v", err)
+	}
+	if err := receiveWithin(t, flushed); !errors.Is(err, context.Canceled) {
+		t.Fatalf("flush = %v", err)
+	}
+}
+
+type cancelOnSecondCheck struct {
+	context.Context
+	cancel context.CancelFunc
+	checks atomic.Int32
+}
+
+func (c *cancelOnSecondCheck) Err() error {
+	if c.checks.Add(1) == 2 {
+		c.cancel()
+	}
+	return c.Context.Err()
+}
+
+func TestSessionCanceledReconnectRetiresSocketAndCanRetry(t *testing.T) {
+	for _, enabled := range []bool{false, true} {
+		t.Run(fmt.Sprintf("recovery=%t", enabled), func(t *testing.T) {
+			s, peers, writes, _ := sessionFixture(t, RecoveryOptions{Enabled: enabled}, nil)
+			receiveWithin(t, peers)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			if _, err := s.Reconnect(&cancelOnSecondCheck{Context: ctx, cancel: cancel}); !errors.Is(err, context.Canceled) {
+				t.Fatalf("reconnect = %v", err)
+			}
+			receiveWithin(t, s.active.readerDone)
+			next, err := s.Reconnect(context.Background())
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Cleanup(next.Abort)
+			if err := next.Send(context.Background(), json.RawMessage(`{"type":"new"}`)); err != nil {
+				t.Fatal(err)
+			}
+			if got := receiveWithin(t, writes); got != `{"type":"new"}` {
+				t.Fatal(got)
+			}
+		})
 	}
 }

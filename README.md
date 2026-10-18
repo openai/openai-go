@@ -1731,10 +1731,13 @@ The SDK keeps the same session object and allows five reconnect attempts in tota
 by default. Retry delays grow to eight seconds by default. `Close` or `Abort`
 cancels pending retries. Reopening does not restore server state. For a Realtime
 model session, restore any session settings and conversation state your application needs.
+Pause other application sends while restoring state; the callback does not block them.
 
 By default, sends while reconnecting fail without writing. Set `MaxPendingBytes`
 to hold unsent commands up to that size in bytes. After restoring session state,
 call `FlushPending` to send them, or `TakePending` to remove them without sending.
+`FlushPending` returns `ErrPendingLimit` while the connection is recovering or
+another send, serialization, or flush is in progress. Retry the flush when it is ready.
 A waiting `Send` still respects its context. It returns nil only after a local
 write succeeds. This does not confirm that the server received the command.
 The SDK does not resend commands it already tried to send.

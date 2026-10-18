@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io"
 	"net"
+	"slices"
 	"sync"
 	"time"
 
@@ -68,10 +69,9 @@ func retryable(err error) bool {
 }
 
 type pendingWrite struct {
-	data      json.RawMessage
-	ctx       context.Context
-	result    chan error
-	attempted bool
+	data   json.RawMessage
+	ctx    context.Context
+	result chan error
 }
 
 // Session retains one logical receiver while replacing failed physical connections.
@@ -123,7 +123,7 @@ func OpenSession[T any](ctx context.Context, open func(context.Context) (*Connec
 	if first == nil {
 		return nil, errors.New("websocket: session opener returned no connection")
 	}
-	lifetime, cancel := context.WithCancel(context.Background())
+	lifetime, cancel := context.WithCancel(context.WithoutCancel(ctx))
 	ready := make(chan struct{})
 	close(ready)
 	return &Session[T]{active: first, open: open, options: options, ctx: lifetime, cancel: cancel, ready: ready}, nil
@@ -277,76 +277,6 @@ func (s *Session[T]) fail(err error) { s.stop(err).fail(err) }
 
 // SendJSON retains the existing local-write guarantee of Connection.SendJSON.
 func (s *Session[T]) SendJSON(ctx context.Context, event any) error {
-	if !s.options.Enabled {
-		return s.active.SendJSON(ctx, event)
-	}
-	s.mu.Lock()
-	if s.err != nil {
-		err := s.err
-		s.mu.Unlock()
-		return &DeliveryError{Cause: err}
-	}
-	if s.flushing != nil {
-		s.mu.Unlock()
-		return &DeliveryError{Cause: ErrPendingLimit}
-	}
-	if !s.recovering {
-		active := s.active
-		s.writing++
-		s.mu.Unlock()
-		return s.finishWrite(active, active.SendJSON(ctx, event))
-	}
-	// Reserve admission before calling user serialization. Recovery may finish while
-	// it runs, but this command must still wait for explicit restoration and flush.
-	if s.options.MaxPendingBytes == 0 || len(s.pending)+s.preparing >= cap(s.active.pending) {
-		s.mu.Unlock()
-		return &DeliveryError{Cause: ErrPendingLimit}
-	}
-	s.preparing++
-	s.mu.Unlock()
-	data, err := json.Marshal(event)
-	s.mu.Lock()
-	s.preparing--
-	if err != nil {
-		s.mu.Unlock()
-		return &DeliveryError{Cause: err}
-	}
-	p, err := s.enqueue(ctx, data)
-	s.mu.Unlock()
-	if err != nil {
-		return err
-	}
-	return s.wait(ctx, p)
-}
-
-func (s *Session[T]) finishWrite(active *Connection[T], err error) error {
-	s.failWrite(active, err)
-	s.mu.Lock()
-	if s.active == active {
-		s.writing--
-	}
-	s.mu.Unlock()
-	return err
-}
-
-func (s *Session[T]) failWrite(active *Connection[T], err error) {
-	var delivery *DeliveryError
-	if !errors.As(err, &delivery) || !delivery.MayHaveBeenSent {
-		return
-	}
-	s.mu.Lock()
-	if s.active == active {
-		s.stopLocked(err)
-	}
-	s.mu.Unlock()
-}
-
-// Send writes once, or waits for an explicitly flushed recovery queue entry.
-// Cancellation removes an unattempted entry; an uncertain write is never retried.
-func (s *Session[T]) Send(ctx context.Context, data json.RawMessage) error {
-	if !s.options.Enabled {
-		return s.active.Send(ctx, data)
-	}
 	if err := ctx.Err(); err != nil {
 		return &DeliveryError{Cause: err}
 	}
@@ -364,7 +294,85 @@ func (s *Session[T]) Send(ctx context.Context, data json.RawMessage) error {
 		active := s.active
 		s.writing++
 		s.mu.Unlock()
-		return s.finishWrite(active, active.Send(ctx, data))
+		return s.write(active, func() error { return active.SendJSON(ctx, event) })
+	}
+	// Reserve admission before calling user serialization. Recovery may finish while
+	// it runs, but this command must still wait for explicit restoration and flush.
+	if s.options.MaxPendingBytes == 0 || len(s.pending)+s.preparing >= cap(s.active.pending) {
+		s.mu.Unlock()
+		return &DeliveryError{Cause: ErrPendingLimit}
+	}
+	s.preparing++
+	s.mu.Unlock()
+	reserved := true
+	defer func() {
+		if reserved {
+			s.mu.Lock()
+			s.preparing--
+			s.mu.Unlock()
+		}
+	}()
+	data, err := json.Marshal(event)
+	s.mu.Lock()
+	s.preparing--
+	reserved = false
+	if err != nil {
+		s.mu.Unlock()
+		return &DeliveryError{Cause: err}
+	}
+	p, err := s.enqueue(ctx, data)
+	s.mu.Unlock()
+	if err != nil {
+		return err
+	}
+	return s.wait(ctx, p)
+}
+
+func (s *Session[T]) write(active *Connection[T], send func() error) (err error) {
+	defer func() {
+		s.failWrite(active, err)
+		s.mu.Lock()
+		if s.active == active {
+			s.writing--
+		}
+		s.mu.Unlock()
+	}()
+	return send()
+}
+
+func (s *Session[T]) failWrite(active *Connection[T], err error) {
+	var delivery *DeliveryError
+	if !errors.As(err, &delivery) || !delivery.MayHaveBeenSent {
+		return
+	}
+	s.mu.Lock()
+	if s.active == active {
+		s.stopLocked(err)
+	}
+	s.mu.Unlock()
+}
+
+// Send writes once, or waits for an explicitly flushed recovery queue entry.
+// Cancellation removes an unattempted entry; an uncertain write is never retried.
+func (s *Session[T]) Send(ctx context.Context, data json.RawMessage) error {
+	if err := ctx.Err(); err != nil {
+		return &DeliveryError{Cause: err}
+	}
+	s.mu.Lock()
+	if s.err != nil {
+		err := s.err
+		s.mu.Unlock()
+		return &DeliveryError{Cause: err}
+	}
+	if s.flushing != nil {
+		s.mu.Unlock()
+		return &DeliveryError{Cause: ErrPendingLimit}
+	}
+	if !s.recovering {
+		active := s.active
+		s.writing++
+		s.mu.Unlock()
+		return s.write(active, func() error { return active.Send(ctx, data) })
 	}
 	p, err := s.enqueue(ctx, data)
 	s.mu.Unlock()
@@ -402,14 +410,14 @@ func (s *Session[T]) wait(ctx context.Context, p *pendingWrite) error {
 		s.mu.Lock()
 		for i, item := range s.pending {
 			if item == p {
-				s.pending = append(s.pending[:i], s.pending[i+1:]...)
+				s.pending = slices.Delete(s.pending, i, i+1)
 				s.pendingBytes -= int64(len(p.data))
-				break
+				s.mu.Unlock()
+				return &DeliveryError{Cause: ctx.Err()}
 			}
 		}
-		attempted := p.attempted
 		s.mu.Unlock()
-		return &DeliveryError{Cause: ctx.Err(), MayHaveBeenSent: attempted}
+		return <-p.result
 	}
 }
 
@@ -442,7 +450,7 @@ func (s *Session[T]) FlushPending(ctx context.Context) error {
 		s.mu.Unlock()
 		return err
 	}
-	if s.recovering || s.flushing != nil || s.writing > 0 {
+	if s.recovering || s.flushing != nil || s.writing > 0 || s.preparing > 0 {
 		s.mu.Unlock()
 		return ErrPendingLimit
 	}
@@ -476,9 +484,9 @@ func (s *Session[T]) FlushPending(ctx context.Context) error {
 			return nil
 		}
 		p := s.pending[0]
+		s.pending[0] = nil
 		s.pending = s.pending[1:]
 		s.pendingBytes -= int64(len(p.data))
-		p.attempted = true
 		active := s.active
 		s.mu.Unlock()
 		writeCtx, cancel := context.WithCancel(ctx)
@@ -492,7 +500,6 @@ func (s *Session[T]) FlushPending(ctx context.Context) error {
 		var delivery *DeliveryError
 		if errors.As(err, &delivery) && !delivery.MayHaveBeenSent && p.ctx.Err() == nil {
 			s.mu.Lock()
-			p.attempted = false
 			if p.ctx.Err() != nil {
 				s.mu.Unlock()
 				p.result <- &DeliveryError{Cause: p.ctx.Err()}
@@ -532,18 +539,21 @@ func (s *Session[T]) Abort()       { s.stop(ErrClosed).Abort() }
 
 // Reconnect explicitly retires this logical connection and returns a new one.
 func (s *Session[T]) Reconnect(ctx context.Context) (*Session[T], error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	s.mu.Lock()
-	if s.recovering || s.flushing != nil || s.writing > 0 {
+	if s.recovering || s.flushing != nil || s.writing > 0 || s.preparing > 0 {
 		s.mu.Unlock()
 		return nil, ErrPendingLimit
 	}
-	active := s.active
+	active := s.stopLocked(ErrClosed)
 	s.mu.Unlock()
 	next, err := active.Reconnect(ctx, s.open)
 	if err != nil {
+		active.fail(ErrClosed)
 		return nil, err
 	}
-	s.fail(ErrClosed)
 	replacement, err := OpenSession(ctx, func(context.Context) (*Connection[T], error) { return next, nil }, s.options)
 	if replacement != nil {
 		replacement.open = s.open
