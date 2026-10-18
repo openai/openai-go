@@ -2,6 +2,8 @@ package websocket
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -461,6 +463,33 @@ func TestSessionRecoveryClassifiesHandshakeFailures(t *testing.T) {
 			}
 		})
 	}
+	t.Run("untrusted certificate", func(t *testing.T) {
+		server := httptest.NewTLSServer(http.NotFoundHandler())
+		defer server.Close()
+		client := &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: x509.NewCertPool()}}}
+		s, peers, _, attempts := sessionFixture(t, RecoveryOptions{Enabled: true, MaxAttempts: 2, InitialDelay: time.Millisecond}, func(ctx context.Context, attempt int32) error {
+			if attempt == 1 {
+				return nil
+			}
+			request, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL, nil)
+			if err != nil {
+				return err
+			}
+			_, err = Dial(ctx, request, client, Options{}, func([]byte) (testEvent, error) { return testEvent{}, nil }, func(testEvent) string { return "" })
+			return err
+		})
+		_ = receiveWithin(t, peers).socket.CloseNow()
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		_, err := s.Recv(ctx)
+		var certificate x509.UnknownAuthorityError
+		if !errors.As(err, &certificate) {
+			t.Fatalf("receive = %v, want untrusted certificate", err)
+		}
+		if got := attempts.Load(); got != 2 {
+			t.Fatalf("connection attempts = %d, want 2", got)
+		}
+	})
 }
 
 func TestSessionBoundsSerializationAndCancelsRecoveryWithoutWaitingForIt(t *testing.T) {
