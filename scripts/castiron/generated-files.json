@@ -815,7 +815,7 @@
     },
     "moderation_test.go": {
       "mode": "100644",
-      "sha256": "ce2872f08fab31b13330158277ffc71e825168b5454f539bccdfb3b17e78ea9a"
+      "sha256": "987c65dc8e7644495e7f4f6e9a3b17682f31492122f6e5180880c3d3174d1aad"
     },
     "option/data_residency.go": {
       "mode": "100644",
