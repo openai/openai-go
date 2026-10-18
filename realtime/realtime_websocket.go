@@ -42,7 +42,7 @@ func (r *RealtimeService) Connect(ctx context.Context, options RealtimeConnectio
 				return nil, err
 			}
 		}
-		request, client, err := cfg.PrepareWebSocket()
+		request, client, err := cfg.PrepareWebSocketWithRecovery(recovery.Enabled, "intent", "call_id")
 		if err != nil {
 			return nil, err
 		}
