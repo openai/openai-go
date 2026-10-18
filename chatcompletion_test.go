@@ -4,8 +4,10 @@ package openai_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/openai/openai-go/v3"
@@ -13,6 +15,19 @@ import (
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/shared"
 )
+
+func TestChatCompletionChunkChoiceDeltaMarshalOmitsEmptyRole(t *testing.T) {
+	data, err := json.Marshal(openai.ChatCompletionChunkChoiceDelta{
+		Content: "Hello",
+	})
+	if err != nil {
+		t.Fatalf("json.Marshal returned error: %s", err)
+	}
+
+	if strings.Contains(string(data), `"role"`) {
+		t.Fatalf("expected empty role to be omitted, got %s", data)
+	}
+}
 
 func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
