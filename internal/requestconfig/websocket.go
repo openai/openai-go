@@ -47,6 +47,12 @@ func (cfg *RequestConfig) RecordQueryChange(key string, replace bool) {
 // workload-identity handshake can retry, within its existing request retry scope.
 // Provider-specific clients require an independently tested adapter.
 func (cfg *RequestConfig) PrepareWebSocket() (*http.Request, *http.Client, error) {
+	return cfg.PrepareWebSocketWithRecovery(false)
+}
+
+// PrepareWebSocketWithRecovery rejects excluded session selectors on every
+// recovery-enabled upgrade before handing it to the configured transport.
+func (cfg *RequestConfig) PrepareWebSocketWithRecovery(recoveryEnabled bool, excludedQueryParams ...string) (*http.Request, *http.Client, error) {
 	if cfg.cloneError != nil {
 		return nil, nil, cfg.cloneError
 	}
@@ -110,6 +116,14 @@ func (cfg *RequestConfig) PrepareWebSocket() (*http.Request, *http.Client, error
 		transport = http.DefaultTransport
 	}
 	client.Transport = websocketRoundTripper(enforceRequestOrigin(&origin, func(req *http.Request) (*http.Response, error) {
+		if recoveryEnabled && len(excludedQueryParams) > 0 {
+			query := req.URL.Query()
+			for _, key := range excludedQueryParams {
+				if query.Has(key) {
+					return nil, errors.New("websocket: automatic recovery does not support this session selector")
+				}
+			}
+		}
 		return websockettransport.RoundTrip(transport, req)
 	}))
 	previousRedirect := client.CheckRedirect

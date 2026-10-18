@@ -630,6 +630,33 @@ func (c *cancelOnSecondCheck) Err() error {
 	return c.Context.Err()
 }
 
+func TestSessionReconnectDuringSendWithoutRecovery(t *testing.T) {
+	s, _, writes, _ := sessionFixture(t, RecoveryOptions{}, nil)
+	event := blockingSessionEvent{make(chan struct{}), make(chan struct{}, 1)}
+	defer close(event.release)
+	sent := make(chan error, 1)
+	go func() { sent <- s.SendJSON(context.Background(), event) }()
+	receiveWithin(t, event.started)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	next, err := s.Reconnect(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(next.Abort)
+	event.release <- struct{}{}
+	var delivery *DeliveryError
+	if err := receiveWithin(t, sent); !errors.Is(err, ErrClosed) || !errors.As(err, &delivery) || delivery.MayHaveBeenSent {
+		t.Fatalf("old send = %v, want definitely unsent ErrClosed", err)
+	}
+	if err := next.Send(ctx, json.RawMessage(`{"type":"new"}`)); err != nil {
+		t.Fatal(err)
+	}
+	if got := receiveWithin(t, writes); got != `{"type":"new"}` {
+		t.Fatal(got)
+	}
+}
+
 func TestSessionCanceledReconnectRetiresSocketAndCanRetry(t *testing.T) {
 	for _, enabled := range []bool{false, true} {
 		t.Run(fmt.Sprintf("recovery=%t", enabled), func(t *testing.T) {
