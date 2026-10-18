@@ -23,6 +23,20 @@ func sessionFixture(t *testing.T, options RecoveryOptions, beforeOpen func(conte
 	return sessionFixtureContext(t, context.Background(), options, beforeOpen)
 }
 
+func blockSecondOpen(opening chan struct{}, allow <-chan struct{}) func(context.Context, int32) error {
+	return func(ctx context.Context, attempt int32) error {
+		if attempt == 2 {
+			close(opening)
+			select {
+			case <-allow:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+		}
+		return nil
+	}
+}
+
 func sessionFixtureContext(t *testing.T, ctx context.Context, options RecoveryOptions, beforeOpen func(context.Context, int32) error) (*Session[testEvent], <-chan sessionPeer, <-chan string, *atomic.Int32) {
 	t.Helper()
 	peers := make(chan sessionPeer, 8)
@@ -100,19 +114,14 @@ func TestSessionRecoveryRequiresExplicitFlushAndRefreshesCredentials(t *testing.
 	defer cancelOpening()
 	opening, allow := make(chan struct{}), make(chan struct{})
 	recovered := make(chan struct{}, 1)
+	beforeOpen := blockSecondOpen(opening, allow)
 	s, peers, writes, attempts := sessionFixtureContext(t, openingCtx, RecoveryOptions{Enabled: true, MaxAttempts: 1, InitialDelay: time.Millisecond, MaxPendingBytes: 256, OnReconnected: func() { recovered <- struct{}{} }}, func(ctx context.Context, attempt int32) error {
 		if attempt == 2 {
 			if got := ctx.Value(contextKey{}); got != "original" {
 				t.Errorf("recovery context value = %v", got)
 			}
-			close(opening)
-			select {
-			case <-allow:
-			case <-ctx.Done():
-				return ctx.Err()
-			}
 		}
-		return nil
+		return beforeOpen(ctx, attempt)
 	})
 	first := receiveWithin(t, peers)
 	cancelOpening()
@@ -207,17 +216,7 @@ func TestSessionPanicDoesNotBlockFlush(t *testing.T) {
 func TestSessionSerializationCannotBypassRestoration(t *testing.T) {
 	opening, allow := make(chan struct{}), make(chan struct{})
 	recovered := make(chan struct{}, 1)
-	s, peers, writes, _ := sessionFixture(t, RecoveryOptions{Enabled: true, InitialDelay: time.Millisecond, MaxPendingBytes: 256, OnReconnected: func() { recovered <- struct{}{} }}, func(ctx context.Context, n int32) error {
-		if n == 2 {
-			close(opening)
-			select {
-			case <-allow:
-			case <-ctx.Done():
-				return ctx.Err()
-			}
-		}
-		return nil
-	})
+	s, peers, writes, _ := sessionFixture(t, RecoveryOptions{Enabled: true, InitialDelay: time.Millisecond, MaxPendingBytes: 256, OnReconnected: func() { recovered <- struct{}{} }}, blockSecondOpen(opening, allow))
 	first := receiveWithin(t, peers)
 	read := make(chan error, 1)
 	go func() { _, err := s.Recv(context.Background()); read <- err }()
@@ -272,17 +271,7 @@ func TestSessionSerializationCannotBypassRestoration(t *testing.T) {
 func TestSessionOldSerializerCannotBlockReplacementFlush(t *testing.T) {
 	opening, allow := make(chan struct{}), make(chan struct{})
 	recovered := make(chan struct{}, 1)
-	s, peers, writes, _ := sessionFixture(t, RecoveryOptions{Enabled: true, InitialDelay: time.Millisecond, MaxPendingBytes: 256, OnReconnected: func() { recovered <- struct{}{} }}, func(ctx context.Context, n int32) error {
-		if n == 2 {
-			close(opening)
-			select {
-			case <-allow:
-			case <-ctx.Done():
-				return ctx.Err()
-			}
-		}
-		return nil
-	})
+	s, peers, writes, _ := sessionFixture(t, RecoveryOptions{Enabled: true, InitialDelay: time.Millisecond, MaxPendingBytes: 256, OnReconnected: func() { recovered <- struct{}{} }}, blockSecondOpen(opening, allow))
 	first := receiveWithin(t, peers)
 	event := blockingSessionEvent{make(chan struct{}), make(chan struct{})}
 	oldSend := make(chan error, 1)
@@ -425,17 +414,7 @@ func TestSessionBoundsSerializationAndCancelsRecoveryWithoutWaitingForIt(t *test
 
 func TestSessionOverflowAndCancellationPreserveOtherPendingCommands(t *testing.T) {
 	opening, allow := make(chan struct{}), make(chan struct{})
-	s, peers, _, _ := sessionFixture(t, RecoveryOptions{Enabled: true, InitialDelay: time.Millisecond, MaxPendingBytes: 4}, func(ctx context.Context, n int32) error {
-		if n == 2 {
-			close(opening)
-			select {
-			case <-allow:
-			case <-ctx.Done():
-				return ctx.Err()
-			}
-		}
-		return nil
-	})
+	s, peers, _, _ := sessionFixture(t, RecoveryOptions{Enabled: true, InitialDelay: time.Millisecond, MaxPendingBytes: 4}, blockSecondOpen(opening, allow))
 	peer := receiveWithin(t, peers)
 	reading := make(chan error, 1)
 	go func() { _, err := s.Recv(context.Background()); reading <- err }()
@@ -472,17 +451,7 @@ func TestSessionOverflowAndCancellationPreserveOtherPendingCommands(t *testing.T
 
 func TestSessionCanceledFlushBeforeWriteIsDefinitelyUnsent(t *testing.T) {
 	opening, allow, recovered := make(chan struct{}), make(chan struct{}), make(chan struct{})
-	s, peers, _, _ := sessionFixture(t, RecoveryOptions{Enabled: true, InitialDelay: time.Millisecond, MaxPendingBytes: 256, OnReconnected: func() { close(recovered) }}, func(ctx context.Context, attempt int32) error {
-		if attempt == 2 {
-			close(opening)
-			select {
-			case <-allow:
-			case <-ctx.Done():
-				return ctx.Err()
-			}
-		}
-		return nil
-	})
+	s, peers, _, _ := sessionFixture(t, RecoveryOptions{Enabled: true, InitialDelay: time.Millisecond, MaxPendingBytes: 256, OnReconnected: func() { close(recovered) }}, blockSecondOpen(opening, allow))
 	first := receiveWithin(t, peers)
 	go func() { _, _ = s.Recv(context.Background()) }()
 	_ = first.socket.CloseNow()
