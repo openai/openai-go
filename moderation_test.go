@@ -29,7 +29,7 @@ func TestModerationNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Moderations.New(context.TODO(), openai.ModerationNewParams{
 		Input: openai.ModerationNewParamsInputUnion{
-			OfString: openai.String("I want to kill them."),
+			OfString: openai.String("...text to classify goes here..."),
 		},
 		Model: openai.ModerationModelOmniModeration2024_09_26,
 	})
