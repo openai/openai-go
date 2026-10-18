@@ -90,6 +90,7 @@ type Session[T any] struct {
 	err          error
 	pending      []*pendingWrite
 	pendingBytes int64
+	pendingEpoch uint64
 	flushing     *Connection[T]
 	preparing    int
 	writing      int
@@ -303,6 +304,7 @@ func (s *Session[T]) SendJSON(ctx context.Context, event any) error {
 		return &DeliveryError{Cause: ErrPendingLimit}
 	}
 	s.preparing++
+	epoch := s.pendingEpoch
 	s.mu.Unlock()
 	reserved := true
 	defer func() {
@@ -320,7 +322,7 @@ func (s *Session[T]) SendJSON(ctx context.Context, event any) error {
 		s.mu.Unlock()
 		return &DeliveryError{Cause: err}
 	}
-	p, err := s.enqueue(ctx, data)
+	p, err := s.enqueue(ctx, data, epoch)
 	s.mu.Unlock()
 	if err != nil {
 		return err
@@ -374,7 +376,7 @@ func (s *Session[T]) Send(ctx context.Context, data json.RawMessage) error {
 		s.mu.Unlock()
 		return s.write(active, func() error { return active.Send(ctx, data) })
 	}
-	p, err := s.enqueue(ctx, data)
+	p, err := s.enqueue(ctx, data, s.pendingEpoch)
 	s.mu.Unlock()
 	if err != nil {
 		return err
@@ -383,12 +385,15 @@ func (s *Session[T]) Send(ctx context.Context, data json.RawMessage) error {
 }
 
 // enqueue is called with mu held, including after serialization reserved admission.
-func (s *Session[T]) enqueue(ctx context.Context, data json.RawMessage) (*pendingWrite, error) {
+func (s *Session[T]) enqueue(ctx context.Context, data json.RawMessage, epoch uint64) (*pendingWrite, error) {
 	if s.err != nil {
 		return nil, &DeliveryError{Cause: s.err}
 	}
 	if err := ctx.Err(); err != nil {
 		return nil, &DeliveryError{Cause: err}
+	}
+	if epoch != s.pendingEpoch {
+		return nil, &DeliveryError{Cause: ErrPendingTaken}
 	}
 	if int64(len(data)) > s.options.MaxPendingBytes-s.pendingBytes || s.options.MaxPendingBytes == 0 || len(s.pending)+s.preparing >= cap(s.active.pending) {
 		return nil, &DeliveryError{Cause: ErrPendingLimit}
@@ -423,6 +428,7 @@ func (s *Session[T]) wait(ctx context.Context, p *pendingWrite) error {
 
 // TakePending removes never-attempted commands. Their waiting Send calls return
 // ErrPendingTaken with MayHaveBeenSent false. The returned bytes belong to the caller.
+// An in-progress serialization cannot be returned and will not be queued.
 func (s *Session[T]) TakePending() []json.RawMessage {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -436,10 +442,11 @@ func (s *Session[T]) TakePending() []json.RawMessage {
 	}
 	s.pending = nil
 	s.pendingBytes = 0
+	s.pendingEpoch++
 	return result
 }
 
-// ErrPendingTaken means the application removed a queued command without sending it.
+// ErrPendingTaken means TakePending removed or invalidated a never-attempted command.
 var ErrPendingTaken = errors.New("websocket: pending command taken by application")
 
 // FlushPending writes retained commands after the application restores server state.
@@ -488,6 +495,7 @@ func (s *Session[T]) FlushPending(ctx context.Context) error {
 		s.pending = s.pending[1:]
 		s.pendingBytes -= int64(len(p.data))
 		active := s.active
+		epoch := s.pendingEpoch
 		s.mu.Unlock()
 		writeCtx, cancel := context.WithCancel(ctx)
 		stop := context.AfterFunc(p.ctx, cancel)
@@ -503,6 +511,15 @@ func (s *Session[T]) FlushPending(ctx context.Context) error {
 			if p.ctx.Err() != nil {
 				s.mu.Unlock()
 				p.result <- &DeliveryError{Cause: p.ctx.Err()}
+				return err
+			}
+			if epoch != s.pendingEpoch {
+				cause := s.err
+				if cause == nil {
+					cause = ErrPendingTaken
+				}
+				s.mu.Unlock()
+				p.result <- &DeliveryError{Cause: cause}
 				return err
 			}
 			// Another recovery can admit commands while this old write finishes.

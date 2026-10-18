@@ -268,6 +268,44 @@ func TestSessionSerializationCannotBypassRestoration(t *testing.T) {
 	}
 }
 
+func TestSessionTakePendingRejectsInProgressSerialization(t *testing.T) {
+	opening, allow, recovered := make(chan struct{}), make(chan struct{}), make(chan struct{})
+	s, peers, writes, _ := sessionFixture(t, RecoveryOptions{Enabled: true, InitialDelay: time.Millisecond, MaxPendingBytes: 256, OnReconnected: func() { close(recovered) }}, blockSecondOpen(opening, allow))
+	first := receiveWithin(t, peers)
+	go func() { _, _ = s.Recv(context.Background()) }()
+	_ = first.socket.CloseNow()
+	receiveWithin(t, opening)
+	event := blockingSessionEvent{make(chan struct{}), make(chan struct{}, 1)}
+	defer close(event.release)
+	sent := make(chan error, 1)
+	go func() { sent <- s.SendJSON(context.Background(), event) }()
+	receiveWithin(t, event.started)
+	if pending := s.TakePending(); len(pending) != 0 {
+		t.Fatalf("pending before serialization finished = %s", pending)
+	}
+	close(allow)
+	receiveWithin(t, recovered)
+	if err := s.FlushPending(context.Background()); !errors.Is(err, ErrPendingLimit) {
+		t.Fatalf("flush during serialization = %v", err)
+	}
+	event.release <- struct{}{}
+	var delivery *DeliveryError
+	if err := receiveWithin(t, sent); !errors.Is(err, ErrPendingTaken) || !errors.As(err, &delivery) || delivery.MayHaveBeenSent {
+		t.Fatalf("send = %v", err)
+	}
+	if pending := s.TakePending(); len(pending) != 0 {
+		t.Fatalf("pending after serialization finished = %s", pending)
+	}
+	if err := s.FlushPending(context.Background()); err != nil {
+		t.Fatalf("flush after serialization = %v", err)
+	}
+	select {
+	case got := <-writes:
+		t.Fatalf("removed command was sent: %s", got)
+	default:
+	}
+}
+
 func TestSessionOldSerializerCannotBlockReplacementFlush(t *testing.T) {
 	opening, allow := make(chan struct{}), make(chan struct{})
 	recovered := make(chan struct{}, 1)
@@ -371,6 +409,60 @@ func TestSessionDoesNotRecoverNormalCloseOrDecodeErrors(t *testing.T) {
 	}
 }
 
+func TestSessionRecoveryClassifiesHandshakeFailures(t *testing.T) {
+	for _, tc := range []struct {
+		status       int
+		wantAttempts int32
+	}{{http.StatusUnauthorized, 2}, {http.StatusServiceUnavailable, 3}} {
+		t.Run(http.StatusText(tc.status), func(t *testing.T) {
+			var attempts atomic.Int32
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				attempt := attempts.Add(1)
+				if attempt == 2 {
+					w.WriteHeader(tc.status)
+					return
+				}
+				peer, err := wire.Accept(w, r, nil)
+				if err != nil {
+					t.Errorf("accept: %v", err)
+					return
+				}
+				defer func() { _ = peer.CloseNow() }()
+				if attempt == 3 {
+					if err := peer.Write(r.Context(), wire.MessageText, []byte("recovered")); err != nil {
+						t.Errorf("write recovered event: %v", err)
+					}
+				}
+			}))
+			defer server.Close()
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
+			s, err := OpenSession(ctx, func(ctx context.Context) (*Connection[string], error) {
+				request, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL, nil)
+				if err != nil {
+					return nil, err
+				}
+				return Dial(ctx, request, server.Client(), Options{}, func(data []byte) (string, error) { return string(data), nil }, func(string) string { return "" })
+			}, RecoveryOptions{Enabled: true, MaxAttempts: 2, InitialDelay: time.Millisecond})
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer s.Abort()
+			event, err := s.Recv(ctx)
+			if tc.wantAttempts == 3 {
+				if err != nil || event != "recovered" {
+					t.Fatalf("receive = %q, %v", event, err)
+				}
+			} else if err == nil || errors.Is(err, context.DeadlineExceeded) {
+				t.Fatalf("receive = %q, %v", event, err)
+			}
+			if got := attempts.Load(); got != tc.wantAttempts {
+				t.Fatalf("handshake attempts = %d, want %d", got, tc.wantAttempts)
+			}
+		})
+	}
+}
+
 func TestSessionBoundsSerializationAndCancelsRecoveryWithoutWaitingForIt(t *testing.T) {
 	opening := make(chan struct{})
 	canceled := make(chan struct{})
@@ -450,31 +542,49 @@ func TestSessionOverflowAndCancellationPreserveOtherPendingCommands(t *testing.T
 }
 
 func TestSessionCanceledFlushBeforeWriteIsDefinitelyUnsent(t *testing.T) {
-	opening, allow, recovered := make(chan struct{}), make(chan struct{}), make(chan struct{})
-	s, peers, _, _ := sessionFixture(t, RecoveryOptions{Enabled: true, InitialDelay: time.Millisecond, MaxPendingBytes: 256, OnReconnected: func() { close(recovered) }}, blockSecondOpen(opening, allow))
-	first := receiveWithin(t, peers)
-	go func() { _, _ = s.Recv(context.Background()) }()
-	_ = first.socket.CloseNow()
-	receiveWithin(t, opening)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	sent := make(chan error, 1)
-	go func() { sent <- s.Send(ctx, json.RawMessage(`{}`)) }()
-	waitPending(t, s, 1)
-	close(allow)
-	receiveWithin(t, recovered)
-	s.active.writer <- struct{}{}
-	defer func() { <-s.active.writer }()
-	flushed := make(chan error, 1)
-	go func() { flushed <- s.FlushPending(context.Background()) }()
-	waitPending(t, s, 0)
-	cancel()
-	var delivery *DeliveryError
-	if err := receiveWithin(t, sent); !errors.Is(err, context.Canceled) || !errors.As(err, &delivery) || delivery.MayHaveBeenSent {
-		t.Fatalf("canceled send = %v", err)
-	}
-	if err := receiveWithin(t, flushed); !errors.Is(err, context.Canceled) {
-		t.Fatalf("flush = %v", err)
+	for _, scenario := range []string{"send canceled", "taken then flush canceled"} {
+		t.Run(scenario, func(t *testing.T) {
+			opening, allow, recovered := make(chan struct{}), make(chan struct{}), make(chan struct{})
+			s, peers, _, _ := sessionFixture(t, RecoveryOptions{Enabled: true, InitialDelay: time.Millisecond, MaxPendingBytes: 256, OnReconnected: func() { close(recovered) }}, blockSecondOpen(opening, allow))
+			first := receiveWithin(t, peers)
+			go func() { _, _ = s.Recv(context.Background()) }()
+			_ = first.socket.CloseNow()
+			receiveWithin(t, opening)
+			sendCtx, cancelSend := context.WithCancel(context.Background())
+			defer cancelSend()
+			sent := make(chan error, 1)
+			go func() { sent <- s.Send(sendCtx, json.RawMessage(`{}`)) }()
+			waitPending(t, s, 1)
+			close(allow)
+			receiveWithin(t, recovered)
+			s.active.writer <- struct{}{}
+			defer func() { <-s.active.writer }()
+			flushCtx, cancelFlush := context.WithCancel(context.Background())
+			defer cancelFlush()
+			flushed := make(chan error, 1)
+			go func() { flushed <- s.FlushPending(flushCtx) }()
+			waitPending(t, s, 0)
+			want := context.Canceled
+			if scenario == "send canceled" {
+				cancelSend()
+			} else {
+				if pending := s.TakePending(); len(pending) != 0 {
+					t.Fatalf("in-flight command was taken: %s", pending)
+				}
+				cancelFlush()
+				want = ErrPendingTaken
+			}
+			if err := receiveWithin(t, flushed); !errors.Is(err, context.Canceled) {
+				t.Fatalf("flush = %v", err)
+			}
+			if pending := s.TakePending(); len(pending) != 0 {
+				t.Fatalf("command reappeared after take: %s", pending)
+			}
+			var delivery *DeliveryError
+			if err := receiveWithin(t, sent); !errors.Is(err, want) || !errors.As(err, &delivery) || delivery.MayHaveBeenSent {
+				t.Fatalf("send = %v, want definitely unsent %v", err, want)
+			}
+		})
 	}
 }
 
