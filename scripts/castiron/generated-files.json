@@ -867,7 +867,7 @@
     },
     "realtime/realtime_websocket.go": {
       "mode": "100644",
-      "sha256": "14ad3e50180cea8213d14b0aec42a1f5c1bfb3aa91f9f839ec7b772f87152722"
+      "sha256": "b2b802f6a86e97cf06a57dda8b9c02b80b2271a694d2a44268c860d3951b93cb"
     },
     "realtime/realtime_websocket_binding.go": {
       "mode": "100644",

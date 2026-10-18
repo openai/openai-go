@@ -26,9 +26,9 @@ type RealtimeConnection struct {
 // and option.WithQueryAdd for API query parameters.
 func (r *RealtimeService) Connect(ctx context.Context, options RealtimeConnectionOptions, opts ...option.RequestOption) (*RealtimeConnection, error) {
 	newRequest := r.newWebSocketRequest(opts...)
-	first, err := newRequest(ctx)
-	if err != nil {
-		return nil, err
+	first, firstErr := newRequest(ctx)
+	if firstErr != nil {
+		return nil, firstErr
 	}
 	recovery := first.WebSocketRecovery
 	open := func(ctx context.Context) (*websocket.Connection[realtimeWebsocketEvent], error) {
