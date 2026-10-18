@@ -560,7 +560,8 @@ func (s *Session[T]) Reconnect(ctx context.Context) (*Session[T], error) {
 		return nil, err
 	}
 	s.mu.Lock()
-	if s.recovering || s.flushing != nil || s.writing > 0 || s.preparing > 0 {
+	// Without recovery, preserve Connection.Reconnect's handling of active writes.
+	if s.recovering || s.flushing != nil || s.preparing > 0 || (s.options.Enabled && s.writing > 0) {
 		s.mu.Unlock()
 		return nil, ErrPendingLimit
 	}

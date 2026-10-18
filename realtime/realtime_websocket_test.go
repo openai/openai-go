@@ -87,6 +87,69 @@ func writeRealtime(t *testing.T, p *realtimePeer, ws *wire.Conn, text string) {
 	}
 }
 
+func TestRealtimeWebsocketRecoveryRejectsLateSessionSelector(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		reconnect bool
+	}{
+		{name: "middleware"},
+		{name: "same-origin redirect on reconnect", reconnect: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
+			var requests, selected atomic.Int32
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Query().Has("intent") || r.URL.Query().Has("call_id") {
+					selected.Add(1)
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
+				if requests.Add(1) == 1 {
+					socket, err := wire.Accept(w, r, nil)
+					if err != nil {
+						t.Errorf("accept: %v", err)
+						return
+					}
+					defer func() { _ = socket.CloseNow() }()
+					_, _, _ = socket.Read(ctx)
+					return
+				}
+				http.Redirect(w, r, "/realtime", http.StatusTemporaryRedirect)
+			}))
+			defer server.Close()
+			httpClient := server.Client()
+			opts := []option.RequestOption{option.WithBaseURL(server.URL), option.WithAPIKey("fake-key"), option.WithUnsafeAllowHTTP(), option.WithHTTPClient(httpClient), option.WithWebSocketRecovery(websocket.RecoveryOptions{Enabled: true})}
+			if tc.reconnect {
+				httpClient.CheckRedirect = func(r *http.Request, _ []*http.Request) error {
+					r.URL.RawQuery = "call_id=selected"
+					return nil
+				}
+			} else {
+				opts = append(opts, option.WithMiddleware(func(r *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+					r.URL.RawQuery = "intent=transcription"
+					return next(r)
+				}))
+			}
+			client := openai.NewClient(opts...)
+			conn, err := client.Realtime.Connect(ctx, realtime.RealtimeConnectionOptions{})
+			if tc.reconnect {
+				if err != nil {
+					t.Fatalf("initial connection: %v", err)
+				}
+				defer conn.Abort()
+				conn, err = conn.Reconnect(ctx)
+			}
+			if conn != nil {
+				conn.Abort()
+			}
+			if err == nil || !strings.Contains(err.Error(), "automatic recovery does not support this session selector") || selected.Load() != 0 {
+				t.Fatalf("connection error = %v, selected endpoint requests = %d", err, selected.Load())
+			}
+		})
+	}
+}
+
 func TestRealtimeWebsocketSelectedHandshakeAndTypedSession(t *testing.T) {
 	for _, mode := range []struct{ name, key, value string }{
 		{"model", "model", "gpt-realtime"},
