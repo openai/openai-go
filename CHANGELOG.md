@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.82.0](https://github.com/openai/openai-go/compare/v3.81.0...v3.82.0) (2026-10-18)
+
+
+### Features
+
+* **api:** add opt-in Realtime WebSocket recovery ([#1095](https://github.com/openai/openai-go/issues/1095)) ([83e189e](https://github.com/openai/openai-go/commit/83e189ecc43946163bb528f3efff526333cafefc))
+* **websocket:** add opt-in bounded session recovery ([#1092](https://github.com/openai/openai-go/issues/1092)) ([6bc55d1](https://github.com/openai/openai-go/commit/6bc55d187ebbe6ece508b4cdb9f9fcaa21807c24))
+
+
+### Chores
+
+* **api:** use neutral moderation examples ([#1093](https://github.com/openai/openai-go/issues/1093)) ([996bcd0](https://github.com/openai/openai-go/commit/996bcd009e53c403f76229f08b3021e66223825b))
+
 ## [3.81.0](https://github.com/openai/openai-go/compare/v3.80.0...v3.81.0) (2026-10-17)
 
 
