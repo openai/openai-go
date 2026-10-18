@@ -1725,3 +1725,27 @@ Please share bug reports and feature requests through [GitHub issues](https://gi
 Pull requests are limited to repository collaborators; we do not accept pull requests from non-collaborators.
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for the contribution policy and development guide.
 For security vulnerabilities, follow [SECURITY.md](SECURITY.md).
+
+
+### WebSocket recovery runtime
+
+`packages/websocket.OpenSession` wraps an existing connection opener with optional
+transport recovery. The opener must prepare a fresh authenticated request on each
+attempt. Recovery is disabled by default and never interprets API terminal events.
+
+With recovery enabled, keep calling `Recv` to detect transport failures. The same
+logical session can open a new socket after a retryable failure, with five additional
+attempts by default and backoff capped at eight seconds. `Close` or `Abort` cancels
+recovery. A new transport does not restore server-side session state.
+
+By default, sends during recovery fail without attempting a write. A positive
+`MaxPendingBytes` retains bounded, never-attempted commands until the application
+restores state and calls `FlushPending`, or retrieves them with `TakePending`.
+A queued `Send` still waits for a real local write and respects its context;
+returning nil never means merely queued. No delivery-uncertain command is replayed.
+
+Generated bindings opt into this runtime separately. For bindings that support it,
+`option.WithWebSocketReconnect(true)` enables recovery and
+`option.WithWebSocketRecovery` supplies limits and the optional `OnReconnected`
+callback. Other bindings ignore these options. Existing `websocket.Options` fields
+and their zero-value behavior remain unchanged.
