@@ -1719,33 +1719,35 @@ We take backwards-compatibility seriously and work hard to ensure you can rely o
 
 We are keen for your feedback; please open an [issue](https://www.github.com/openai/openai-go/issues) with questions, bugs, or suggestions.
 
+## Reconnecting a WebSocket session
+
+`packages/websocket.OpenSession` can reopen a failed connection. Pass it a
+function that opens a connection with a fresh authenticated request on each
+attempt. Reconnecting is off by default. When enabled, keep calling `Recv` so the
+SDK can detect connection failures. An event that ends a response or session does
+not itself trigger a reconnect.
+
+The SDK keeps the same session object and allows five reconnect attempts in total
+by default. Retry delays grow to eight seconds by default. `Close` or `Abort`
+cancels pending retries. Reopening does not restore server state. For a Realtime
+model session, restore any session settings and conversation state your application needs.
+
+By default, sends while reconnecting fail without writing. Set `MaxPendingBytes`
+to hold unsent commands up to that size in bytes. After restoring session state,
+call `FlushPending` to send them, or `TakePending` to remove them without sending.
+A waiting `Send` still respects its context. It returns nil only after a local
+write succeeds. This does not confirm that the server received the command.
+The SDK does not resend commands it already tried to send.
+
+Generated API methods must support this feature before you can enable it with
+`option.WithWebSocketReconnect(true)`. For methods that support it,
+`option.WithWebSocketRecovery` sets limits and an optional `OnReconnected`
+callback. Other methods ignore these options. Existing `websocket.Options` fields
+and defaults stay the same.
+
 ## Contributing
 
 Please share bug reports and feature requests through [GitHub issues](https://github.com/openai/openai-go/issues).
 Pull requests are limited to repository collaborators; we do not accept pull requests from non-collaborators.
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for the contribution policy and development guide.
 For security vulnerabilities, follow [SECURITY.md](SECURITY.md).
-
-
-### WebSocket recovery runtime
-
-`packages/websocket.OpenSession` wraps an existing connection opener with optional
-transport recovery. The opener must prepare a fresh authenticated request on each
-attempt. Recovery is disabled by default and never interprets API terminal events.
-
-With recovery enabled, keep calling `Recv` to detect transport failures. The same
-logical session can open a new socket after a retryable failure, with five additional
-attempts by default and backoff capped at eight seconds. `Close` or `Abort` cancels
-recovery. A new transport does not restore server-side session state.
-
-By default, sends during recovery fail without attempting a write. A positive
-`MaxPendingBytes` retains bounded, never-attempted commands until the application
-restores state and calls `FlushPending`, or retrieves them with `TakePending`.
-A queued `Send` still waits for a real local write and respects its context;
-returning nil never means merely queued. No delivery-uncertain command is replayed.
-
-Generated bindings opt into this runtime separately. For bindings that support it,
-`option.WithWebSocketReconnect(true)` enables recovery and
-`option.WithWebSocketRecovery` supplies limits and the optional `OnReconnected`
-callback. Other bindings ignore these options. Existing `websocket.Options` fields
-and their zero-value behavior remain unchanged.
