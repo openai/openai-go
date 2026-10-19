@@ -57,7 +57,7 @@ def read_policy(repo: Path, revision: str) -> dict[str, Any]:
         report.git(repo, "show", f"{revision}:{POLICY}"), object_pairs_hook=unique_keys
     )
     if not isinstance(value, dict):
-        raise ValueError("budget file must be an object")
+        raise ValueError("budget file must be an object")  # noqa: TRY004 - malformed policy is a value error
     value = cast(dict[str, Any], value)
     version = value.get("schema_version")
     if type(version) is not int or version not in (1, 2):
