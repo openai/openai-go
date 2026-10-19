@@ -109,7 +109,7 @@ func TestClientWorkloadIdentityInitialization(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4o,
+		Model: shared.ChatModel("gpt-4o"),
 	})
 
 	if err != nil {
@@ -193,7 +193,7 @@ func TestWorkloadIdentity401Retry(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4o,
+		Model: shared.ChatModel("gpt-4o"),
 	})
 
 	if err != nil {
@@ -267,7 +267,7 @@ func TestWorkloadIdentitySingleRetry(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4o,
+		Model: shared.ChatModel("gpt-4o"),
 	})
 
 	if err == nil {
@@ -335,7 +335,7 @@ func TestWorkloadIdentityTokenInjection(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4o,
+		Model: shared.ChatModel("gpt-4o"),
 	})
 
 	if err != nil {
@@ -683,7 +683,7 @@ func TestRequestAPIKeyOverridesClientAuthorizationHeader(t *testing.T) {
 					},
 				},
 			}},
-			Model: shared.ChatModelGPT4o,
+			Model: shared.ChatModel("gpt-4o"),
 		},
 		option.WithAPIKey("My Request API Key"),
 	)

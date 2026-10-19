@@ -3,13 +3,20 @@
 package webhooks
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
+	"net/url"
+	"slices"
 	"time"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/apiquery"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/pagination"
+	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/packages/respjson"
 	"github.com/openai/openai-go/v3/shared/constant"
 )
@@ -21,7 +28,8 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewWebhookService] method instead.
 type WebhookService struct {
-	Options []option.RequestOption
+	Options    []option.RequestOption
+	EventTypes EventTypeService
 }
 
 // NewWebhookService generates a new service that applies the given options to each
@@ -30,7 +38,106 @@ type WebhookService struct {
 func NewWebhookService(opts ...option.RequestOption) (r WebhookService) {
 	r = WebhookService{}
 	r.Options = requestconfig.InheritedOptions(opts...)
+	r.EventTypes = NewEventTypeService(opts...)
 	return
+}
+
+// Creates a webhook endpoint for the authenticated project.
+func (r *WebhookService) New(ctx context.Context, body WebhookNewParams, opts ...option.RequestOption) (res *WebhookEndpointWithSecret, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	path := "webhook_endpoints"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	return res, err
+}
+
+// Retrieves a webhook endpoint for the authenticated project.
+func (r *WebhookService) Get(ctx context.Context, webhookEndpointID string, opts ...option.RequestOption) (res *WebhookEndpoint, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if webhookEndpointID == "" {
+		err = errors.New("missing required webhook_endpoint_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("webhook_endpoints/%s", webhookEndpointID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	return res, err
+}
+
+// Updates a webhook endpoint for the authenticated project.
+func (r *WebhookService) Update(ctx context.Context, webhookEndpointID string, body WebhookUpdateParams, opts ...option.RequestOption) (res *WebhookEndpoint, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if webhookEndpointID == "" {
+		err = errors.New("missing required webhook_endpoint_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("webhook_endpoints/%s", webhookEndpointID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	return res, err
+}
+
+// Returns webhook endpoints for the authenticated project in newest-first order.
+func (r *WebhookService) List(ctx context.Context, query WebhookListParams, opts ...option.RequestOption) (res *pagination.CursorPage[WebhookEndpoint], err error) {
+	var raw *http.Response
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
+	path := "webhook_endpoints"
+	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
+	if err != nil {
+		return nil, err
+	}
+	err = cfg.Execute()
+	if err != nil {
+		return nil, err
+	}
+	res.SetPageConfig(cfg, raw)
+	return res, nil
+}
+
+// Returns webhook endpoints for the authenticated project in newest-first order.
+func (r *WebhookService) ListAutoPaging(ctx context.Context, query WebhookListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[WebhookEndpoint] {
+	return pagination.NewCursorPageAutoPager(r.List(ctx, query, opts...))
+}
+
+// Deletes a webhook endpoint for the authenticated project.
+func (r *WebhookService) Delete(ctx context.Context, webhookEndpointID string, opts ...option.RequestOption) (res *DeletedWebhookEndpoint, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if webhookEndpointID == "" {
+		err = errors.New("missing required webhook_endpoint_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("webhook_endpoints/%s", webhookEndpointID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
+	return res, err
+}
+
+// Rotates the signing secret for a webhook endpoint in the authenticated project.
+func (r *WebhookService) RotateSecret(ctx context.Context, webhookEndpointID string, body WebhookRotateSecretParams, opts ...option.RequestOption) (res *WebhookEndpointWithSecret, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if webhookEndpointID == "" {
+		err = errors.New("missing required webhook_endpoint_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("webhook_endpoints/%s/rotate_secret", webhookEndpointID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	return res, err
+}
+
+// Sends a sample event to a webhook endpoint for the authenticated project.
+func (r *WebhookService) Test(ctx context.Context, webhookEndpointID string, body WebhookTestParams, opts ...option.RequestOption) (res *WebhookEndpointTestResult, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if webhookEndpointID == "" {
+		err = errors.New("missing required webhook_endpoint_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("webhook_endpoints/%s/test", webhookEndpointID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	return res, err
 }
 
 // Validates that the given payload was sent by OpenAI and parses the payload.
@@ -71,6 +178,496 @@ func (r *WebhookService) VerifySignatureWithTolerance(body []byte, headers http.
 // now allows specifying the current time for testing purposes.
 func (r *WebhookService) VerifySignatureWithToleranceAndTime(body []byte, headers http.Header, tolerance time.Duration, now time.Time, opts ...option.RequestOption) error {
 	return verifyWebhookSignatureWithToleranceAndTime(r, body, headers, tolerance, now, opts...)
+}
+
+// Sent when an agent environment expires and can no longer resume from a snapshot.
+type AgentEnvironmentExpiredWebhookEvent struct {
+	// The unique ID of the event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp, in seconds, when the event was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// Identifies the environment whose lifecycle changed.
+	Data AgentEnvironmentExpiredWebhookEventData `json:"data" api:"required"`
+	// The object type. Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// The event type. Always `agent.environment.expired`.
+	Type constant.AgentEnvironmentExpired `json:"type" default:"agent.environment.expired"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentEnvironmentExpiredWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *AgentEnvironmentExpiredWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Identifies the environment whose lifecycle changed.
+type AgentEnvironmentExpiredWebhookEventData struct {
+	// The ID of the environment.
+	ID string `json:"id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentEnvironmentExpiredWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *AgentEnvironmentExpiredWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Sent when setup fails for a prewarmed OpenAI-hosted environment before it is
+// attached to a session.
+type AgentEnvironmentFailedWebhookEvent struct {
+	// The unique ID of the event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp, in seconds, when the event was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// Identifies the environment whose lifecycle changed.
+	Data AgentEnvironmentFailedWebhookEventData `json:"data" api:"required"`
+	// The object type. Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// The event type. Always `agent.environment.failed`.
+	Type constant.AgentEnvironmentFailed `json:"type" default:"agent.environment.failed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentEnvironmentFailedWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *AgentEnvironmentFailedWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Identifies the environment whose lifecycle changed.
+type AgentEnvironmentFailedWebhookEventData struct {
+	// The ID of the environment.
+	ID string `json:"id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentEnvironmentFailedWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *AgentEnvironmentFailedWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Sent when a prewarmed OpenAI-hosted environment finishes setup before being
+// attached to a session.
+type AgentEnvironmentReadyWebhookEvent struct {
+	// The unique ID of the event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp, in seconds, when the event was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// Identifies the environment whose lifecycle changed.
+	Data AgentEnvironmentReadyWebhookEventData `json:"data" api:"required"`
+	// The object type. Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// The event type. Always `agent.environment.ready`.
+	Type constant.AgentEnvironmentReady `json:"type" default:"agent.environment.ready"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentEnvironmentReadyWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *AgentEnvironmentReadyWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Identifies the environment whose lifecycle changed.
+type AgentEnvironmentReadyWebhookEventData struct {
+	// The ID of the environment.
+	ID string `json:"id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentEnvironmentReadyWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *AgentEnvironmentReadyWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Sent when an agent environment is suspended and can resume from a snapshot.
+type AgentEnvironmentSuspendedWebhookEvent struct {
+	// The unique ID of the event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp, in seconds, when the event was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// Identifies the environment whose lifecycle changed.
+	Data AgentEnvironmentSuspendedWebhookEventData `json:"data" api:"required"`
+	// The object type. Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// The event type. Always `agent.environment.suspended`.
+	Type constant.AgentEnvironmentSuspended `json:"type" default:"agent.environment.suspended"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentEnvironmentSuspendedWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *AgentEnvironmentSuspendedWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Identifies the environment whose lifecycle changed.
+type AgentEnvironmentSuspendedWebhookEventData struct {
+	// The ID of the environment.
+	ID string `json:"id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentEnvironmentSuspendedWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *AgentEnvironmentSuspendedWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Sent when an agent session requires an action. Retrieve the session for action
+// details.
+type AgentSessionActionRequiredWebhookEvent struct {
+	// The unique ID of the event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp, in seconds, when the event was created.
+	CreatedAt int64                                      `json:"created_at" api:"required" format:"unixtime"`
+	Data      AgentSessionActionRequiredWebhookEventData `json:"data" api:"required"`
+	// The object type. Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// The event type. Always `agent.session.action_required`.
+	Type constant.AgentSessionActionRequired `json:"type" default:"agent.session.action_required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionActionRequiredWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionActionRequiredWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type AgentSessionActionRequiredWebhookEventData struct {
+	// The ID of the session.
+	ID string `json:"id" api:"required"`
+	// The action type. Retrieve the session for action details.
+	RequiredAction AgentSessionActionRequiredWebhookEventDataRequiredAction `json:"required_action" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID             respjson.Field
+		RequiredAction respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionActionRequiredWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionActionRequiredWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The action type. Retrieve the session for action details.
+type AgentSessionActionRequiredWebhookEventDataRequiredAction struct {
+	// Any of "computer_use_approval_request", "function_call",
+	// "environment_connection".
+	Type string `json:"type" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionActionRequiredWebhookEventDataRequiredAction) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionActionRequiredWebhookEventDataRequiredAction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Sent when an agent session is created.
+type AgentSessionCreatedWebhookEvent struct {
+	// The unique ID of the event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp, in seconds, when the event was created.
+	CreatedAt int64                               `json:"created_at" api:"required" format:"unixtime"`
+	Data      AgentSessionCreatedWebhookEventData `json:"data" api:"required"`
+	// The object type. Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// The event type. Always `agent.session.created`.
+	Type constant.AgentSessionCreated `json:"type" default:"agent.session.created"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionCreatedWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionCreatedWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type AgentSessionCreatedWebhookEventData struct {
+	// The ID of the session.
+	ID string `json:"id" api:"required"`
+	// The environment type: `none`, `openai_hosted`, or `self_hosted`.
+	EnvironmentType string                                     `json:"environment_type" api:"required"`
+	Connect         AgentSessionCreatedWebhookEventDataConnect `json:"connect"`
+	// The ID of the environment, when one exists.
+	EnvironmentID string `json:"environment_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID              respjson.Field
+		EnvironmentType respjson.Field
+		Connect         respjson.Field
+		EnvironmentID   respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionCreatedWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionCreatedWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type AgentSessionCreatedWebhookEventDataConnect struct {
+	// The URL used to connect the self-hosted environment.
+	RemoteURL string `json:"remote_url" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		RemoteURL   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionCreatedWebhookEventDataConnect) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionCreatedWebhookEventDataConnect) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Sent when an agent session fails.
+type AgentSessionFailedWebhookEvent struct {
+	// The unique ID of the event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp, in seconds, when the event was created.
+	CreatedAt int64                              `json:"created_at" api:"required" format:"unixtime"`
+	Data      AgentSessionFailedWebhookEventData `json:"data" api:"required"`
+	// The object type. Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// The event type. Always `agent.session.failed`.
+	Type constant.AgentSessionFailed `json:"type" default:"agent.session.failed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionFailedWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionFailedWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type AgentSessionFailedWebhookEventData struct {
+	// The ID of the session.
+	ID string `json:"id" api:"required"`
+	// The environment type: `none`, `openai_hosted`, or `self_hosted`.
+	EnvironmentType string `json:"environment_type" api:"required"`
+	// The ID of the environment, when one exists.
+	EnvironmentID string `json:"environment_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID              respjson.Field
+		EnvironmentType respjson.Field
+		EnvironmentID   respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionFailedWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionFailedWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Sent when an agent session becomes idle.
+type AgentSessionIdleWebhookEvent struct {
+	// The unique ID of the event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp, in seconds, when the event was created.
+	CreatedAt int64                            `json:"created_at" api:"required" format:"unixtime"`
+	Data      AgentSessionIdleWebhookEventData `json:"data" api:"required"`
+	// The object type. Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// The event type. Always `agent.session.idle`.
+	Type constant.AgentSessionIdle `json:"type" default:"agent.session.idle"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionIdleWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionIdleWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type AgentSessionIdleWebhookEventData struct {
+	// The ID of the session.
+	ID string `json:"id" api:"required"`
+	// The environment type: `none`, `openai_hosted`, or `self_hosted`.
+	EnvironmentType string `json:"environment_type" api:"required"`
+	// The ID of the environment, when one exists.
+	EnvironmentID string `json:"environment_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID              respjson.Field
+		EnvironmentType respjson.Field
+		EnvironmentID   respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionIdleWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionIdleWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Sent when an agent session enters the in-progress state.
+type AgentSessionInProgressWebhookEvent struct {
+	// The unique ID of the event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp, in seconds, when the event was created.
+	CreatedAt int64                                  `json:"created_at" api:"required" format:"unixtime"`
+	Data      AgentSessionInProgressWebhookEventData `json:"data" api:"required"`
+	// The object type. Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// The event type. Always `agent.session.in_progress`.
+	Type constant.AgentSessionInProgress `json:"type" default:"agent.session.in_progress"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionInProgressWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionInProgressWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type AgentSessionInProgressWebhookEventData struct {
+	// The ID of the session.
+	ID string `json:"id" api:"required"`
+	// The environment type: `none`, `openai_hosted`, or `self_hosted`.
+	EnvironmentType string `json:"environment_type" api:"required"`
+	// The ID of the environment, when one exists.
+	EnvironmentID string `json:"environment_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID              respjson.Field
+		EnvironmentType respjson.Field
+		EnvironmentID   respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionInProgressWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionInProgressWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Sent when a batch API request has been cancelled.
@@ -300,6 +897,29 @@ type BatchFailedWebhookEventObject string
 const (
 	BatchFailedWebhookEventObjectEvent BatchFailedWebhookEventObject = "event"
 )
+
+type DeletedWebhookEndpoint struct {
+	// The ID of the deleted webhook endpoint.
+	ID string `json:"id" api:"required"`
+	// Whether the endpoint was deleted.
+	Deleted bool `json:"deleted" api:"required"`
+	// The object type, which is always webhook_endpoint.deleted.
+	Object constant.WebhookEndpointDeleted `json:"object" default:"webhook_endpoint.deleted"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Deleted     respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DeletedWebhookEndpoint) RawJSON() string { return r.JSON.raw }
+func (r *DeletedWebhookEndpoint) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Sent when an eval run has been canceled.
 type EvalRunCanceledWebhookEvent struct {
@@ -689,12 +1309,18 @@ type LiveCallIncomingWebhookEventData struct {
 	// names, values, repeated entries, and order are preserved. Treat these values as
 	// untrusted call metadata.
 	SipHeaders []LiveCallIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
+	// Media protection selected on the SIP leg during SDP negotiation. `srtp`
+	// indicates SRTP; `rtp` indicates unencrypted RTP. Omitted when unknown. This does
+	// not describe SIP signaling security or confirm that media has flowed. Clients
+	// should handle unrecognized values as unknown.
+	SipMediaSecurity string `json:"sip_media_security"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		SessionID   respjson.Field
-		SipHeaders  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		SessionID        respjson.Field
+		SipHeaders       respjson.Field
+		SipMediaSecurity respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 
@@ -777,13 +1403,19 @@ type LiveTransportIncomingWebhookEventData struct {
 	SipHeaders []LiveTransportIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
 	// The incoming transport type. Always `sip`.
 	Type constant.Sip `json:"type" default:"sip"`
+	// Media protection selected on the SIP leg during SDP negotiation. `srtp`
+	// indicates SRTP; `rtp` indicates unencrypted RTP. Omitted when unknown. This does
+	// not describe SIP signaling security or confirm that media has flowed. Clients
+	// should handle unrecognized values as unknown.
+	SipMediaSecurity string `json:"sip_media_security"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		SessionID   respjson.Field
-		SipHeaders  respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		SessionID        respjson.Field
+		SipHeaders       respjson.Field
+		Type             respjson.Field
+		SipMediaSecurity respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 
@@ -857,21 +1489,26 @@ func (r *RealtimeCallIncomingWebhookEvent) UnmarshalJSON(data []byte) error {
 
 // Event data payload.
 type RealtimeCallIncomingWebhookEventData struct {
-	// The Transceiver `rtc_...` ID of the pending SIP session. The paired
-	// `live.transport.incoming` event derives its `session_id` by replacing the `rtc_`
-	// prefix with `live_`. Use the ID returned by the event with the corresponding
-	// Realtime or Live API.
+	// The ID of the pending SIP call. Pass this value unchanged when accepting or
+	// rejecting the call through the Realtime API. For the Live API, use the
+	// `session_id` from `live.transport.incoming` instead.
 	CallID string `json:"call_id" api:"required"`
 	// Headers from the SIP INVITE, excluding SIP authorization headers. Retained
 	// names, values, repeated entries, and order are preserved. Treat these values as
 	// untrusted call metadata.
 	SipHeaders []RealtimeCallIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
+	// Media protection selected on the SIP leg during SDP negotiation. `srtp`
+	// indicates SRTP; `rtp` indicates unencrypted RTP. Omitted when unknown. This does
+	// not describe SIP signaling security or confirm that media has flowed. Clients
+	// should handle unrecognized values as unknown.
+	SipMediaSecurity string `json:"sip_media_security"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		CallID      respjson.Field
-		SipHeaders  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		CallID           respjson.Field
+		SipHeaders       respjson.Field
+		SipMediaSecurity respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 
@@ -1183,6 +1820,52 @@ func (r *SafetyAlertCreatedWebhookEventData) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Sent when a deactivation is issued for a safety identifier in your organization.
+type SafetyDeactivationIssuedWebhookEvent struct {
+	// The unique ID of the webhook event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp in seconds when the event was created.
+	CreatedAt int64                                    `json:"created_at" api:"required" format:"unixtime"`
+	Data      SafetyDeactivationIssuedWebhookEventData `json:"data" api:"required"`
+	// Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// Always `safety.deactivation_issued`.
+	Type constant.SafetyDeactivationIssued `json:"type" default:"safety.deactivation_issued"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SafetyDeactivationIssuedWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *SafetyDeactivationIssuedWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type SafetyDeactivationIssuedWebhookEventData struct {
+	// The safety case ID to pass to `GET /v1/safety/cases/{id}`.
+	ID string `json:"id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SafetyDeactivationIssuedWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *SafetyDeactivationIssuedWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Sent when an approved safety alert is available for an enterprise workspace.
 type SafetyOrgAlertCreatedWebhookEvent struct {
 	// The unique ID of the webhook event.
@@ -1229,17 +1912,68 @@ func (r *SafetyOrgAlertCreatedWebhookEventData) UnmarshalJSON(data []byte) error
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Sent when a warning is issued for a safety identifier in your organization.
+type SafetyWarningIssuedWebhookEvent struct {
+	// The unique ID of the webhook event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp in seconds when the event was created.
+	CreatedAt int64                               `json:"created_at" api:"required" format:"unixtime"`
+	Data      SafetyWarningIssuedWebhookEventData `json:"data" api:"required"`
+	// Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// Always `safety.warning_issued`.
+	Type constant.SafetyWarningIssued `json:"type" default:"safety.warning_issued"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SafetyWarningIssuedWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *SafetyWarningIssuedWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type SafetyWarningIssuedWebhookEventData struct {
+	// The safety case ID to pass to `GET /v1/safety/cases/{id}`.
+	ID string `json:"id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SafetyWarningIssuedWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *SafetyWarningIssuedWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // UnwrapWebhookEventUnion contains all possible properties and values from
-// [BatchCancelledWebhookEvent], [BatchCompletedWebhookEvent],
-// [BatchExpiredWebhookEvent], [BatchFailedWebhookEvent],
-// [EvalRunCanceledWebhookEvent], [EvalRunFailedWebhookEvent],
-// [EvalRunSucceededWebhookEvent], [FineTuningJobCancelledWebhookEvent],
-// [FineTuningJobFailedWebhookEvent], [FineTuningJobSucceededWebhookEvent],
-// [LiveCallIncomingWebhookEvent], [LiveTransportIncomingWebhookEvent],
-// [RealtimeCallIncomingWebhookEvent], [ResponseCancelledWebhookEvent],
-// [ResponseCompletedWebhookEvent], [ResponseFailedWebhookEvent],
-// [ResponseIncompleteWebhookEvent], [SafetyAlertCreatedWebhookEvent],
-// [SafetyOrgAlertCreatedWebhookEvent].
+// [AgentEnvironmentExpiredWebhookEvent], [AgentEnvironmentFailedWebhookEvent],
+// [AgentEnvironmentReadyWebhookEvent], [AgentEnvironmentSuspendedWebhookEvent],
+// [AgentSessionActionRequiredWebhookEvent], [AgentSessionCreatedWebhookEvent],
+// [AgentSessionFailedWebhookEvent], [AgentSessionIdleWebhookEvent],
+// [AgentSessionInProgressWebhookEvent], [BatchCancelledWebhookEvent],
+// [BatchCompletedWebhookEvent], [BatchExpiredWebhookEvent],
+// [BatchFailedWebhookEvent], [EvalRunCanceledWebhookEvent],
+// [EvalRunFailedWebhookEvent], [EvalRunSucceededWebhookEvent],
+// [FineTuningJobCancelledWebhookEvent], [FineTuningJobFailedWebhookEvent],
+// [FineTuningJobSucceededWebhookEvent], [LiveCallIncomingWebhookEvent],
+// [LiveTransportIncomingWebhookEvent], [RealtimeCallIncomingWebhookEvent],
+// [ResponseCancelledWebhookEvent], [ResponseCompletedWebhookEvent],
+// [ResponseFailedWebhookEvent], [ResponseIncompleteWebhookEvent],
+// [SafetyAlertCreatedWebhookEvent], [SafetyDeactivationIssuedWebhookEvent],
+// [SafetyOrgAlertCreatedWebhookEvent], [SafetyWarningIssuedWebhookEvent].
 //
 // Use the [UnwrapWebhookEventUnion.AsAny] method to switch on the variant.
 //
@@ -1247,24 +1981,37 @@ func (r *SafetyOrgAlertCreatedWebhookEventData) UnmarshalJSON(data []byte) error
 type UnwrapWebhookEventUnion struct {
 	ID        string `json:"id"`
 	CreatedAt int64  `json:"created_at"`
-	// This field is a union of [BatchCancelledWebhookEventData],
-	// [BatchCompletedWebhookEventData], [BatchExpiredWebhookEventData],
-	// [BatchFailedWebhookEventData], [EvalRunCanceledWebhookEventData],
-	// [EvalRunFailedWebhookEventData], [EvalRunSucceededWebhookEventData],
-	// [FineTuningJobCancelledWebhookEventData], [FineTuningJobFailedWebhookEventData],
-	// [FineTuningJobSucceededWebhookEventData], [LiveCallIncomingWebhookEventData],
-	// [LiveTransportIncomingWebhookEventData], [RealtimeCallIncomingWebhookEventData],
-	// [ResponseCancelledWebhookEventData], [ResponseCompletedWebhookEventData],
-	// [ResponseFailedWebhookEventData], [ResponseIncompleteWebhookEventData],
-	// [SafetyAlertCreatedWebhookEventData], [SafetyOrgAlertCreatedWebhookEventData]
+	// This field is a union of [AgentEnvironmentExpiredWebhookEventData],
+	// [AgentEnvironmentFailedWebhookEventData],
+	// [AgentEnvironmentReadyWebhookEventData],
+	// [AgentEnvironmentSuspendedWebhookEventData],
+	// [AgentSessionActionRequiredWebhookEventData],
+	// [AgentSessionCreatedWebhookEventData], [AgentSessionFailedWebhookEventData],
+	// [AgentSessionIdleWebhookEventData], [AgentSessionInProgressWebhookEventData],
+	// [BatchCancelledWebhookEventData], [BatchCompletedWebhookEventData],
+	// [BatchExpiredWebhookEventData], [BatchFailedWebhookEventData],
+	// [EvalRunCanceledWebhookEventData], [EvalRunFailedWebhookEventData],
+	// [EvalRunSucceededWebhookEventData], [FineTuningJobCancelledWebhookEventData],
+	// [FineTuningJobFailedWebhookEventData], [FineTuningJobSucceededWebhookEventData],
+	// [LiveCallIncomingWebhookEventData], [LiveTransportIncomingWebhookEventData],
+	// [RealtimeCallIncomingWebhookEventData], [ResponseCancelledWebhookEventData],
+	// [ResponseCompletedWebhookEventData], [ResponseFailedWebhookEventData],
+	// [ResponseIncompleteWebhookEventData], [SafetyAlertCreatedWebhookEventData],
+	// [SafetyDeactivationIssuedWebhookEventData],
+	// [SafetyOrgAlertCreatedWebhookEventData], [SafetyWarningIssuedWebhookEventData]
 	Data UnwrapWebhookEventUnionData `json:"data"`
-	// Any of "batch.cancelled", "batch.completed", "batch.expired", "batch.failed",
+	// Any of "agent.environment.expired", "agent.environment.failed",
+	// "agent.environment.ready", "agent.environment.suspended",
+	// "agent.session.action_required", "agent.session.created",
+	// "agent.session.failed", "agent.session.idle", "agent.session.in_progress",
+	// "batch.cancelled", "batch.completed", "batch.expired", "batch.failed",
 	// "eval.run.canceled", "eval.run.failed", "eval.run.succeeded",
 	// "fine_tuning.job.cancelled", "fine_tuning.job.failed",
 	// "fine_tuning.job.succeeded", "live.call.incoming", "live.transport.incoming",
 	// "realtime.call.incoming", "response.cancelled", "response.completed",
 	// "response.failed", "response.incomplete", "safety.alert.created",
-	// "safety.org_alert.created".
+	// "safety.deactivation_issued", "safety.org_alert.created",
+	// "safety.warning_issued".
 	Type   string `json:"type"`
 	Object string `json:"object"`
 	JSON   struct {
@@ -1284,29 +2031,49 @@ type anyUnwrapWebhookEvent interface {
 	implUnwrapWebhookEventUnion()
 }
 
-func (BatchCancelledWebhookEvent) implUnwrapWebhookEventUnion()         {}
-func (BatchCompletedWebhookEvent) implUnwrapWebhookEventUnion()         {}
-func (BatchExpiredWebhookEvent) implUnwrapWebhookEventUnion()           {}
-func (BatchFailedWebhookEvent) implUnwrapWebhookEventUnion()            {}
-func (EvalRunCanceledWebhookEvent) implUnwrapWebhookEventUnion()        {}
-func (EvalRunFailedWebhookEvent) implUnwrapWebhookEventUnion()          {}
-func (EvalRunSucceededWebhookEvent) implUnwrapWebhookEventUnion()       {}
-func (FineTuningJobCancelledWebhookEvent) implUnwrapWebhookEventUnion() {}
-func (FineTuningJobFailedWebhookEvent) implUnwrapWebhookEventUnion()    {}
-func (FineTuningJobSucceededWebhookEvent) implUnwrapWebhookEventUnion() {}
-func (LiveCallIncomingWebhookEvent) implUnwrapWebhookEventUnion()       {}
-func (LiveTransportIncomingWebhookEvent) implUnwrapWebhookEventUnion()  {}
-func (RealtimeCallIncomingWebhookEvent) implUnwrapWebhookEventUnion()   {}
-func (ResponseCancelledWebhookEvent) implUnwrapWebhookEventUnion()      {}
-func (ResponseCompletedWebhookEvent) implUnwrapWebhookEventUnion()      {}
-func (ResponseFailedWebhookEvent) implUnwrapWebhookEventUnion()         {}
-func (ResponseIncompleteWebhookEvent) implUnwrapWebhookEventUnion()     {}
-func (SafetyAlertCreatedWebhookEvent) implUnwrapWebhookEventUnion()     {}
-func (SafetyOrgAlertCreatedWebhookEvent) implUnwrapWebhookEventUnion()  {}
+func (AgentEnvironmentExpiredWebhookEvent) implUnwrapWebhookEventUnion()    {}
+func (AgentEnvironmentFailedWebhookEvent) implUnwrapWebhookEventUnion()     {}
+func (AgentEnvironmentReadyWebhookEvent) implUnwrapWebhookEventUnion()      {}
+func (AgentEnvironmentSuspendedWebhookEvent) implUnwrapWebhookEventUnion()  {}
+func (AgentSessionActionRequiredWebhookEvent) implUnwrapWebhookEventUnion() {}
+func (AgentSessionCreatedWebhookEvent) implUnwrapWebhookEventUnion()        {}
+func (AgentSessionFailedWebhookEvent) implUnwrapWebhookEventUnion()         {}
+func (AgentSessionIdleWebhookEvent) implUnwrapWebhookEventUnion()           {}
+func (AgentSessionInProgressWebhookEvent) implUnwrapWebhookEventUnion()     {}
+func (BatchCancelledWebhookEvent) implUnwrapWebhookEventUnion()             {}
+func (BatchCompletedWebhookEvent) implUnwrapWebhookEventUnion()             {}
+func (BatchExpiredWebhookEvent) implUnwrapWebhookEventUnion()               {}
+func (BatchFailedWebhookEvent) implUnwrapWebhookEventUnion()                {}
+func (EvalRunCanceledWebhookEvent) implUnwrapWebhookEventUnion()            {}
+func (EvalRunFailedWebhookEvent) implUnwrapWebhookEventUnion()              {}
+func (EvalRunSucceededWebhookEvent) implUnwrapWebhookEventUnion()           {}
+func (FineTuningJobCancelledWebhookEvent) implUnwrapWebhookEventUnion()     {}
+func (FineTuningJobFailedWebhookEvent) implUnwrapWebhookEventUnion()        {}
+func (FineTuningJobSucceededWebhookEvent) implUnwrapWebhookEventUnion()     {}
+func (LiveCallIncomingWebhookEvent) implUnwrapWebhookEventUnion()           {}
+func (LiveTransportIncomingWebhookEvent) implUnwrapWebhookEventUnion()      {}
+func (RealtimeCallIncomingWebhookEvent) implUnwrapWebhookEventUnion()       {}
+func (ResponseCancelledWebhookEvent) implUnwrapWebhookEventUnion()          {}
+func (ResponseCompletedWebhookEvent) implUnwrapWebhookEventUnion()          {}
+func (ResponseFailedWebhookEvent) implUnwrapWebhookEventUnion()             {}
+func (ResponseIncompleteWebhookEvent) implUnwrapWebhookEventUnion()         {}
+func (SafetyAlertCreatedWebhookEvent) implUnwrapWebhookEventUnion()         {}
+func (SafetyDeactivationIssuedWebhookEvent) implUnwrapWebhookEventUnion()   {}
+func (SafetyOrgAlertCreatedWebhookEvent) implUnwrapWebhookEventUnion()      {}
+func (SafetyWarningIssuedWebhookEvent) implUnwrapWebhookEventUnion()        {}
 
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := UnwrapWebhookEventUnion.AsAny().(type) {
+//	case webhooks.AgentEnvironmentExpiredWebhookEvent:
+//	case webhooks.AgentEnvironmentFailedWebhookEvent:
+//	case webhooks.AgentEnvironmentReadyWebhookEvent:
+//	case webhooks.AgentEnvironmentSuspendedWebhookEvent:
+//	case webhooks.AgentSessionActionRequiredWebhookEvent:
+//	case webhooks.AgentSessionCreatedWebhookEvent:
+//	case webhooks.AgentSessionFailedWebhookEvent:
+//	case webhooks.AgentSessionIdleWebhookEvent:
+//	case webhooks.AgentSessionInProgressWebhookEvent:
 //	case webhooks.BatchCancelledWebhookEvent:
 //	case webhooks.BatchCompletedWebhookEvent:
 //	case webhooks.BatchExpiredWebhookEvent:
@@ -1325,12 +2092,32 @@ func (SafetyOrgAlertCreatedWebhookEvent) implUnwrapWebhookEventUnion()  {}
 //	case webhooks.ResponseFailedWebhookEvent:
 //	case webhooks.ResponseIncompleteWebhookEvent:
 //	case webhooks.SafetyAlertCreatedWebhookEvent:
+//	case webhooks.SafetyDeactivationIssuedWebhookEvent:
 //	case webhooks.SafetyOrgAlertCreatedWebhookEvent:
+//	case webhooks.SafetyWarningIssuedWebhookEvent:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
 func (u UnwrapWebhookEventUnion) AsAny() anyUnwrapWebhookEvent {
 	switch u.Type {
+	case "agent.environment.expired":
+		return u.AsAgentEnvironmentExpired()
+	case "agent.environment.failed":
+		return u.AsAgentEnvironmentFailed()
+	case "agent.environment.ready":
+		return u.AsAgentEnvironmentReady()
+	case "agent.environment.suspended":
+		return u.AsAgentEnvironmentSuspended()
+	case "agent.session.action_required":
+		return u.AsAgentSessionActionRequired()
+	case "agent.session.created":
+		return u.AsAgentSessionCreated()
+	case "agent.session.failed":
+		return u.AsAgentSessionFailed()
+	case "agent.session.idle":
+		return u.AsAgentSessionIdle()
+	case "agent.session.in_progress":
+		return u.AsAgentSessionInProgress()
 	case "batch.cancelled":
 		return u.AsBatchCancelled()
 	case "batch.completed":
@@ -1367,10 +2154,59 @@ func (u UnwrapWebhookEventUnion) AsAny() anyUnwrapWebhookEvent {
 		return u.AsResponseIncomplete()
 	case "safety.alert.created":
 		return u.AsSafetyAlertCreated()
+	case "safety.deactivation_issued":
+		return u.AsSafetyDeactivationIssued()
 	case "safety.org_alert.created":
 		return u.AsSafetyOrgAlertCreated()
+	case "safety.warning_issued":
+		return u.AsSafetyWarningIssued()
 	}
 	return nil
+}
+
+func (u UnwrapWebhookEventUnion) AsAgentEnvironmentExpired() (v AgentEnvironmentExpiredWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsAgentEnvironmentFailed() (v AgentEnvironmentFailedWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsAgentEnvironmentReady() (v AgentEnvironmentReadyWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsAgentEnvironmentSuspended() (v AgentEnvironmentSuspendedWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsAgentSessionActionRequired() (v AgentSessionActionRequiredWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsAgentSessionCreated() (v AgentSessionCreatedWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsAgentSessionFailed() (v AgentSessionFailedWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsAgentSessionIdle() (v AgentSessionIdleWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsAgentSessionInProgress() (v AgentSessionInProgressWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
 func (u UnwrapWebhookEventUnion) AsBatchCancelled() (v BatchCancelledWebhookEvent) {
@@ -1463,7 +2299,17 @@ func (u UnwrapWebhookEventUnion) AsSafetyAlertCreated() (v SafetyAlertCreatedWeb
 	return
 }
 
+func (u UnwrapWebhookEventUnion) AsSafetyDeactivationIssued() (v SafetyDeactivationIssuedWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
 func (u UnwrapWebhookEventUnion) AsSafetyOrgAlertCreated() (v SafetyOrgAlertCreatedWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsSafetyWarningIssued() (v SafetyWarningIssuedWebhookEvent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -1482,23 +2328,35 @@ func (r *UnwrapWebhookEventUnion) UnmarshalJSON(data []byte) error {
 // For type safety it is recommended to directly use a variant of the
 // [UnwrapWebhookEventUnion].
 type UnwrapWebhookEventUnionData struct {
-	ID        string `json:"id"`
-	SessionID string `json:"session_id"`
+	ID string `json:"id"`
+	// This field is from variant [AgentSessionActionRequiredWebhookEventData].
+	RequiredAction  AgentSessionActionRequiredWebhookEventDataRequiredAction `json:"required_action"`
+	EnvironmentType string                                                   `json:"environment_type"`
+	// This field is from variant [AgentSessionCreatedWebhookEventData].
+	Connect       AgentSessionCreatedWebhookEventDataConnect `json:"connect"`
+	EnvironmentID string                                     `json:"environment_id"`
+	SessionID     string                                     `json:"session_id"`
 	// This field is a union of [[]LiveCallIncomingWebhookEventDataSipHeader],
 	// [[]LiveTransportIncomingWebhookEventDataSipHeader],
 	// [[]RealtimeCallIncomingWebhookEventDataSipHeader]
-	SipHeaders UnwrapWebhookEventUnionDataSipHeaders `json:"sip_headers"`
+	SipHeaders       UnwrapWebhookEventUnionDataSipHeaders `json:"sip_headers"`
+	SipMediaSecurity string                                `json:"sip_media_security"`
 	// This field is from variant [LiveTransportIncomingWebhookEventData].
 	Type constant.Sip `json:"type"`
 	// This field is from variant [RealtimeCallIncomingWebhookEventData].
 	CallID string `json:"call_id"`
 	JSON   struct {
-		ID         respjson.Field
-		SessionID  respjson.Field
-		SipHeaders respjson.Field
-		Type       respjson.Field
-		CallID     respjson.Field
-		raw        string
+		ID               respjson.Field
+		RequiredAction   respjson.Field
+		EnvironmentType  respjson.Field
+		Connect          respjson.Field
+		EnvironmentID    respjson.Field
+		SessionID        respjson.Field
+		SipHeaders       respjson.Field
+		SipMediaSecurity respjson.Field
+		Type             respjson.Field
+		CallID           respjson.Field
+		raw              string
 	} `json:"-"`
 }
 
@@ -1538,3 +2396,313 @@ type UnwrapWebhookEventUnionDataSipHeaders struct {
 func (r *UnwrapWebhookEventUnionDataSipHeaders) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+type WebhookEndpoint struct {
+	// The unique ID of the webhook endpoint.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp when the endpoint was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// The event types that trigger deliveries to this endpoint.
+	EventTypes []string `json:"event_types" api:"required"`
+	// The human-readable name of the endpoint.
+	Name string `json:"name" api:"required"`
+	// The object type, which is always webhook_endpoint.
+	Object constant.WebhookEndpoint `json:"object" default:"webhook_endpoint"`
+	// A masked hint for the endpoint's signing secret.
+	SigningSecretHint string `json:"signing_secret_hint" api:"required"`
+	// The HTTPS URL that receives webhook deliveries.
+	URL string `json:"url" api:"required"`
+	// The Unix timestamp of the last endpoint configuration or signing-secret change.
+	// Initialized at creation; tests and unchanged updates do not advance it.
+	UpdatedAt int64 `json:"updated_at" format:"unixtime"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                respjson.Field
+		CreatedAt         respjson.Field
+		EventTypes        respjson.Field
+		Name              respjson.Field
+		Object            respjson.Field
+		SigningSecretHint respjson.Field
+		URL               respjson.Field
+		UpdatedAt         respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookEndpoint) RawJSON() string { return r.JSON.raw }
+func (r *WebhookEndpoint) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type WebhookEndpointList struct {
+	// The webhook endpoints in this page.
+	Data []WebhookEndpoint `json:"data" api:"required"`
+	// The ID of the first endpoint in this page.
+	FirstID string `json:"first_id" api:"required"`
+	// Whether more webhook endpoints are available.
+	HasMore bool `json:"has_more" api:"required"`
+	// The ID of the last endpoint in this page.
+	LastID string `json:"last_id" api:"required"`
+	// The object type, which is always list.
+	Object constant.List `json:"object" default:"list"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		FirstID     respjson.Field
+		HasMore     respjson.Field
+		LastID      respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookEndpointList) RawJSON() string { return r.JSON.raw }
+func (r *WebhookEndpointList) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type WebhookEndpointTestResult struct {
+	// The event type sent in the test.
+	EventType string `json:"event_type" api:"required"`
+	// The object type, which is always webhook_endpoint.test.
+	Object constant.WebhookEndpointTest `json:"object" default:"webhook_endpoint.test"`
+	// The HTTP status code returned by the endpoint.
+	StatusCode int64 `json:"status_code" api:"required"`
+	// Whether the test request completed. Always true for returned results; use
+	// status_code to determine the endpoint response.
+	//
+	// Any of true.
+	Success bool `json:"success" api:"required"`
+	// The ID of the webhook endpoint that received the test.
+	WebhookEndpointID string `json:"webhook_endpoint_id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		EventType         respjson.Field
+		Object            respjson.Field
+		StatusCode        respjson.Field
+		Success           respjson.Field
+		WebhookEndpointID respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookEndpointTestResult) RawJSON() string { return r.JSON.raw }
+func (r *WebhookEndpointTestResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type WebhookEndpointWithSecret struct {
+	// The unique ID of the webhook endpoint.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp when the endpoint was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// The event types that trigger deliveries to this endpoint.
+	EventTypes []string `json:"event_types" api:"required"`
+	// The human-readable name of the endpoint.
+	Name string `json:"name" api:"required"`
+	// The object type, which is always webhook_endpoint.
+	Object constant.WebhookEndpoint `json:"object" default:"webhook_endpoint"`
+	// The endpoint's signing secret. This is returned only when the endpoint is
+	// created or the secret is rotated.
+	SigningSecret string `json:"signing_secret" api:"required"`
+	// A masked hint for the endpoint's signing secret.
+	SigningSecretHint string `json:"signing_secret_hint" api:"required"`
+	// The HTTPS URL that receives webhook deliveries.
+	URL string `json:"url" api:"required"`
+	// The Unix timestamp of the last endpoint configuration or signing-secret change.
+	// Initialized at creation; tests and unchanged updates do not advance it.
+	UpdatedAt int64 `json:"updated_at" format:"unixtime"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                respjson.Field
+		CreatedAt         respjson.Field
+		EventTypes        respjson.Field
+		Name              respjson.Field
+		Object            respjson.Field
+		SigningSecret     respjson.Field
+		SigningSecretHint respjson.Field
+		URL               respjson.Field
+		UpdatedAt         respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookEndpointWithSecret) RawJSON() string { return r.JSON.raw }
+func (r *WebhookEndpointWithSecret) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type WebhookEventTypeList struct {
+	// The webhook event types available to the authenticated project.
+	Data []string `json:"data" api:"required"`
+	// The object type, which is always list.
+	Object constant.List `json:"object" default:"list"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebhookEventTypeList) RawJSON() string { return r.JSON.raw }
+func (r *WebhookEventTypeList) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type WebhookNewParams struct {
+	// The event types that trigger deliveries to this endpoint.
+	//
+	// Any of "batch.completed", "batch.failed", "batch.expired", "batch.cancelled",
+	// "response.completed", "response.failed", "response.cancelled",
+	// "response.incomplete", "eval.run.succeeded", "eval.run.failed",
+	// "eval.run.canceled", "fine_tuning.job.succeeded", "fine_tuning.job.failed",
+	// "fine_tuning.job.cancelled", "realtime.call.incoming", "video.completed",
+	// "video.failed", "agent.environment.ready", "agent.environment.failed",
+	// "agent.environment.suspended", "agent.environment.expired",
+	// "agent.session.created", "agent.session.action_required",
+	// "agent.session.in_progress", "agent.session.idle", "agent.session.failed",
+	// "safety.alert.created".
+	EventTypes []string `json:"event_types,omitzero" api:"required"`
+	// A human-readable name for the webhook endpoint.
+	Name string `json:"name" api:"required"`
+	// The HTTPS URL that receives webhook deliveries.
+	URL string `json:"url" api:"required"`
+	paramObj
+}
+
+func (r WebhookNewParams) MarshalJSON() (data []byte, err error) {
+	type shadow WebhookNewParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *WebhookNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type WebhookUpdateParams struct {
+	// A new human-readable name for the webhook endpoint.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// A new HTTPS URL that receives webhook deliveries.
+	URL param.Opt[string] `json:"url,omitzero"`
+	// The complete set of event types that should trigger deliveries.
+	//
+	// Any of "batch.completed", "batch.failed", "batch.expired", "batch.cancelled",
+	// "response.completed", "response.failed", "response.cancelled",
+	// "response.incomplete", "eval.run.succeeded", "eval.run.failed",
+	// "eval.run.canceled", "fine_tuning.job.succeeded", "fine_tuning.job.failed",
+	// "fine_tuning.job.cancelled", "realtime.call.incoming", "video.completed",
+	// "video.failed", "agent.environment.ready", "agent.environment.failed",
+	// "agent.environment.suspended", "agent.environment.expired",
+	// "agent.session.created", "agent.session.action_required",
+	// "agent.session.in_progress", "agent.session.idle", "agent.session.failed",
+	// "safety.alert.created".
+	EventTypes []string `json:"event_types,omitzero"`
+	paramObj
+}
+
+func (r WebhookUpdateParams) MarshalJSON() (data []byte, err error) {
+	type shadow WebhookUpdateParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *WebhookUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type WebhookListParams struct {
+	// ID of the last webhook endpoint from the previous page.
+	After param.Opt[string] `query:"after,omitzero" json:"-"`
+	// Maximum number of webhook endpoints to return. Defaults to 20.
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
+	paramObj
+}
+
+// URLQuery serializes [WebhookListParams]'s query parameters as `url.Values`.
+func (r WebhookListParams) URLQuery() (v url.Values, err error) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
+}
+
+type WebhookRotateSecretParams struct {
+	// Whether to keep the previous signing secret valid for 24 hours after rotation.
+	// Defaults to false, which invalidates the previous secret immediately.
+	KeepOldSecretActiveFor24Hours param.Opt[bool] `json:"keep_old_secret_active_for_24_hours,omitzero"`
+	paramObj
+}
+
+func (r WebhookRotateSecretParams) MarshalJSON() (data []byte, err error) {
+	type shadow WebhookRotateSecretParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *WebhookRotateSecretParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type WebhookTestParams struct {
+	// The event type to send as a sample delivery.
+	//
+	// Any of "batch.completed", "batch.failed", "batch.expired", "batch.cancelled",
+	// "response.completed", "response.failed", "response.cancelled",
+	// "response.incomplete", "eval.run.succeeded", "eval.run.failed",
+	// "eval.run.canceled", "fine_tuning.job.succeeded", "fine_tuning.job.failed",
+	// "fine_tuning.job.cancelled", "realtime.call.incoming", "video.completed",
+	// "video.failed", "agent.environment.ready", "agent.environment.failed",
+	// "agent.environment.suspended", "agent.environment.expired",
+	// "agent.session.created", "agent.session.action_required",
+	// "agent.session.in_progress", "agent.session.idle", "agent.session.failed",
+	// "safety.alert.created".
+	EventType WebhookTestParamsEventType `json:"event_type,omitzero" api:"required"`
+	paramObj
+}
+
+func (r WebhookTestParams) MarshalJSON() (data []byte, err error) {
+	type shadow WebhookTestParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *WebhookTestParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The event type to send as a sample delivery.
+type WebhookTestParamsEventType string
+
+const (
+	WebhookTestParamsEventTypeBatchCompleted             WebhookTestParamsEventType = "batch.completed"
+	WebhookTestParamsEventTypeBatchFailed                WebhookTestParamsEventType = "batch.failed"
+	WebhookTestParamsEventTypeBatchExpired               WebhookTestParamsEventType = "batch.expired"
+	WebhookTestParamsEventTypeBatchCancelled             WebhookTestParamsEventType = "batch.cancelled"
+	WebhookTestParamsEventTypeResponseCompleted          WebhookTestParamsEventType = "response.completed"
+	WebhookTestParamsEventTypeResponseFailed             WebhookTestParamsEventType = "response.failed"
+	WebhookTestParamsEventTypeResponseCancelled          WebhookTestParamsEventType = "response.cancelled"
+	WebhookTestParamsEventTypeResponseIncomplete         WebhookTestParamsEventType = "response.incomplete"
+	WebhookTestParamsEventTypeEvalRunSucceeded           WebhookTestParamsEventType = "eval.run.succeeded"
+	WebhookTestParamsEventTypeEvalRunFailed              WebhookTestParamsEventType = "eval.run.failed"
+	WebhookTestParamsEventTypeEvalRunCanceled            WebhookTestParamsEventType = "eval.run.canceled"
+	WebhookTestParamsEventTypeFineTuningJobSucceeded     WebhookTestParamsEventType = "fine_tuning.job.succeeded"
+	WebhookTestParamsEventTypeFineTuningJobFailed        WebhookTestParamsEventType = "fine_tuning.job.failed"
+	WebhookTestParamsEventTypeFineTuningJobCancelled     WebhookTestParamsEventType = "fine_tuning.job.cancelled"
+	WebhookTestParamsEventTypeRealtimeCallIncoming       WebhookTestParamsEventType = "realtime.call.incoming"
+	WebhookTestParamsEventTypeVideoCompleted             WebhookTestParamsEventType = "video.completed"
+	WebhookTestParamsEventTypeVideoFailed                WebhookTestParamsEventType = "video.failed"
+	WebhookTestParamsEventTypeAgentEnvironmentReady      WebhookTestParamsEventType = "agent.environment.ready"
+	WebhookTestParamsEventTypeAgentEnvironmentFailed     WebhookTestParamsEventType = "agent.environment.failed"
+	WebhookTestParamsEventTypeAgentEnvironmentSuspended  WebhookTestParamsEventType = "agent.environment.suspended"
+	WebhookTestParamsEventTypeAgentEnvironmentExpired    WebhookTestParamsEventType = "agent.environment.expired"
+	WebhookTestParamsEventTypeAgentSessionCreated        WebhookTestParamsEventType = "agent.session.created"
+	WebhookTestParamsEventTypeAgentSessionActionRequired WebhookTestParamsEventType = "agent.session.action_required"
+	WebhookTestParamsEventTypeAgentSessionInProgress     WebhookTestParamsEventType = "agent.session.in_progress"
+	WebhookTestParamsEventTypeAgentSessionIdle           WebhookTestParamsEventType = "agent.session.idle"
+	WebhookTestParamsEventTypeAgentSessionFailed         WebhookTestParamsEventType = "agent.session.failed"
+	WebhookTestParamsEventTypeSafetyAlertCreated         WebhookTestParamsEventType = "safety.alert.created"
+)

@@ -72,7 +72,8 @@ func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
 			final.InstallRequestRetryScope(allowBodyReplay)
 			final.InstallRequestAttemptMiddleware()
 			return WithMiddleware(func(request *http.Request, next MiddlewareNext) (*http.Response, error) {
-				if !validX509WorkloadAPIRequest(request) || unsafeX509CredentialHeaders(request.Header) {
+				validation, validationErr := requestconfig.WebSocketValidationRequest(request)
+				if validationErr != nil || !validX509WorkloadAPIRequest(validation) || unsafeX509CredentialHeaders(request.Header) {
 					return nil, requestconfig.WithNoRetryError(
 						errors.New("X.509 workload identity rejected an unsafe final API request"),
 					)

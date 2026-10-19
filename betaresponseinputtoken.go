@@ -16,6 +16,8 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Create and manage model responses.
+//
 // BetaResponseInputTokenService contains methods and other services that help with
 // interacting with the openai API.
 //
@@ -40,6 +42,7 @@ func NewBetaResponseInputTokenService(opts ...option.RequestOption) (r BetaRespo
 // Returns an object with `object` set to `response.input_tokens` and an
 // `input_tokens` count.
 func (r *BetaResponseInputTokenService) Count(ctx context.Context, params BetaResponseInputTokenCountParams, opts ...option.RequestOption) (res *BetaResponseInputTokenCountResponse, err error) {
+	opts = slices.Clone(opts)
 	for _, v := range params.Betas {
 		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}

@@ -22,6 +22,7 @@ func TestBetaAgentVaultCredentialNewWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -48,6 +49,9 @@ func TestBetaAgentVaultCredentialNewWithOptionalParams(t *testing.T) {
 				},
 			},
 			Name: "x",
+			Metadata: map[string]string{
+				"foo": "string",
+			},
 		},
 	)
 	if err != nil {
@@ -68,6 +72,7 @@ func TestBetaAgentVaultCredentialGet(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -95,6 +100,7 @@ func TestBetaAgentVaultCredentialUpdateWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -119,6 +125,7 @@ func TestBetaAgentVaultCredentialUpdateWithOptionalParams(t *testing.T) {
 					},
 				},
 			},
+			Metadata: map[string]string{},
 		},
 	)
 	if err != nil {
@@ -139,6 +146,7 @@ func TestBetaAgentVaultCredentialListWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -148,7 +156,10 @@ func TestBetaAgentVaultCredentialListWithOptionalParams(t *testing.T) {
 		"vault_id",
 		openai.BetaAgentVaultCredentialListParams{
 			After: openai.String("after"),
-			Limit: openai.Int(0),
+			Limit: openai.Int(1),
+			Metadata: map[string]string{
+				"foo": "string",
+			},
 			Order: openai.BetaAgentVaultCredentialListParamsOrderAsc,
 			Status: openai.VaultStatusFilterUnionParam{
 				OfStatus: openai.Opt(openai.VaultStatusActive),
@@ -173,6 +184,7 @@ func TestBetaAgentVaultCredentialDelete(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),

@@ -32,6 +32,24 @@
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#ResponseFormatText">ResponseFormatText</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#ResponsesModel">ResponsesModel</a>
 
+# Decisions
+
+Params Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DecisionInputImageParam">DecisionInputImageParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DecisionInputMessageParam">DecisionInputMessageParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DecisionInputPartUnionParam">DecisionInputPartUnionParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DecisionInputTextParam">DecisionInputTextParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DecisionPromptCacheBreakpointParam">DecisionPromptCacheBreakpointParam</a>
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Decision">Decision</a>
+
+Methods:
+
+- <code title="post /decisions">client.Decisions.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DecisionService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DecisionNewParams">DecisionNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Decision">Decision</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
 # Completions
 
 Response Types:
@@ -223,6 +241,16 @@ Params Types:
 Methods:
 
 - <code title="post /audio/speech">client.Audio.Speech.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AudioSpeechService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AudioSpeechNewParams">AudioSpeechNewParams</a>) (\*http.Response, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+## Voices
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Voice">Voice</a>
+
+Methods:
+
+- <code title="post /audio/voices">client.Audio.Voices.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AudioVoiceService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AudioVoiceNewParams">AudioVoiceNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Voice">Voice</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 # Moderations
 
@@ -422,6 +450,16 @@ Methods:
 
 # Safety
 
+## Cases
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SafetyCase">SafetyCase</a>
+
+Methods:
+
+- <code title="get /safety/cases/{id}">client.Safety.Cases.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SafetyCaseService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, id <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SafetyCase">SafetyCase</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
 ## Alerts
 
 Response Types:
@@ -449,6 +487,9 @@ Methods:
 
 Params Types:
 
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentBrowserAuthenticationCancelParam">AgentBrowserAuthenticationCancelParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentBrowserAuthenticationSubmitParam">AgentBrowserAuthenticationSubmitParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentBrowserOriginAccessParam">AgentBrowserOriginAccessParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentFunctionCallOutputParamUnion">AgentFunctionCallOutputParamUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentReasoningParam">AgentReasoningParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionInputMessageParam">AgentSessionInputMessageParam</a>
@@ -494,10 +535,13 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionDeleted">AgentSessionDeleted</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEnvironmentConnectedEvent">AgentSessionEnvironmentConnectedEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEnvironmentDisconnectedEvent">AgentSessionEnvironmentDisconnectedEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEnvironmentExpiredEvent">AgentSessionEnvironmentExpiredEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEnvironmentFailedEvent">AgentSessionEnvironmentFailedEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEnvironmentPendingEvent">AgentSessionEnvironmentPendingEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEnvironmentReadyEvent">AgentSessionEnvironmentReadyEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEnvironmentResetEvent">AgentSessionEnvironmentResetEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEnvironmentState">AgentSessionEnvironmentState</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEnvironmentSuspendedEvent">AgentSessionEnvironmentSuspendedEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionErrorEvent">AgentSessionErrorEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEventUnion">AgentSessionEventUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionFailedEvent">AgentSessionFailedEvent</a>
@@ -565,7 +609,9 @@ Response Types:
 
 Methods:
 
+- <code title="post /agents/environments">client.Beta.Agents.Environments.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentEnvironmentService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentEnvironmentNewParams">BetaAgentEnvironmentNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#EnvironmentInfo">EnvironmentInfo</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /agents/environments/{environment_id}">client.Beta.Agents.Environments.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentEnvironmentService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, environmentID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#EnvironmentInfo">EnvironmentInfo</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /agents/environments">client.Beta.Agents.Environments.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentEnvironmentService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentEnvironmentListParams">BetaAgentEnvironmentListParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination#CursorPage">CursorPage</a>[<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#EnvironmentInfo">EnvironmentInfo</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 #### Files
 
@@ -609,6 +655,7 @@ Methods:
 
 - <code title="post /vaults">client.Beta.Agents.Vaults.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentVaultService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentVaultNewParams">BetaAgentVaultNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Vault">Vault</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /vaults/{vault_id}">client.Beta.Agents.Vaults.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentVaultService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, vaultID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Vault">Vault</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="post /vaults/{vault_id}">client.Beta.Agents.Vaults.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentVaultService.Update">Update</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, vaultID <a href="https://pkg.go.dev/builtin#string">string</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentVaultUpdateParams">BetaAgentVaultUpdateParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Vault">Vault</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /vaults">client.Beta.Agents.Vaults.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentVaultService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentVaultListParams">BetaAgentVaultListParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination#CursorPage">CursorPage</a>[<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Vault">Vault</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="delete /vaults/{vault_id}">client.Beta.Agents.Vaults.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentVaultService.Delete">Delete</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, vaultID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VaultDeleted">VaultDeleted</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
@@ -618,6 +665,7 @@ Params Types:
 
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#CredentialAuthCreateParamUnion">CredentialAuthCreateParamUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#CredentialAuthRotateParamUnion">CredentialAuthRotateParamUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#CredentialNetworkingParamUnion">CredentialNetworkingParamUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#McpOAuthTokenEndpointAuthCreateParamUnion">McpOAuthTokenEndpointAuthCreateParamUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#McpOAuthTokenEndpointAuthRotateParamUnion">McpOAuthTokenEndpointAuthRotateParamUnion</a>
 
@@ -626,6 +674,7 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Credential">Credential</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#CredentialAuthUnion">CredentialAuthUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#CredentialDeleted">CredentialDeleted</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#CredentialNetworkingUnion">CredentialNetworkingUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#McpOAuthTokenEndpointAuthUnion">McpOAuthTokenEndpointAuthUnion</a>
 
 Methods:
@@ -699,6 +748,16 @@ Methods:
 - <code title="post /agents/sessions/{session_id}/events">client.Beta.Agents.Sessions.Events.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentSessionEventService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, sessionID <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentSessionEventNewParams">BetaAgentSessionEventNewParams</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
 - <code title="get /agents/sessions/{session_id}/events">client.Beta.Agents.Sessions.Events.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentSessionEventService.Stream">Stream</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, sessionID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionEventUnion">AgentSessionEventUnion</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
+#### Traces
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SessionTrace">SessionTrace</a>
+
+Methods:
+
+- <code title="get /agents/sessions/{session_id}/traces">client.Beta.Agents.Sessions.Traces.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentSessionTraceService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, sessionID <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentSessionTraceListParams">BetaAgentSessionTraceListParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination#CursorPage">CursorPage</a>[<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SessionTrace">SessionTrace</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
 #### Turns
 
 Response Types:
@@ -709,6 +768,12 @@ Methods:
 
 - <code title="get /agents/sessions/{session_id}/turns/{turn_id}">client.Beta.Agents.Sessions.Turns.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentSessionTurnService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, sessionID <a href="https://pkg.go.dev/builtin#string">string</a>, turnID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Turn">Turn</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /agents/sessions/{session_id}/turns">client.Beta.Agents.Sessions.Turns.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentSessionTurnService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, sessionID <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentSessionTurnListParams">BetaAgentSessionTurnListParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination#CursorPage">CursorPage</a>[<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Turn">Turn</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+##### Items
+
+Methods:
+
+- <code title="get /agents/sessions/{session_id}/turns/{turn_id}/items">client.Beta.Agents.Sessions.Turns.Items.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentSessionTurnItemService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, sessionID <a href="https://pkg.go.dev/builtin#string">string</a>, turnID <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaAgentSessionTurnItemListParams">BetaAgentSessionTurnItemListParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination#ConversationCursorPage">ConversationCursorPage</a>[<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AgentSessionItemUnion">AgentSessionItemUnion</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 ## Responses
 
@@ -767,6 +832,8 @@ Params Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseOutputTextParam">BetaResponseOutputTextParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponsePromptParam">BetaResponsePromptParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseReasoningItemParam">BetaResponseReasoningItemParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseSteerInputUnionParam">BetaResponseSteerInputUnionParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseSteerInputContentUnionParam">BetaResponseSteerInputContentUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseTextConfigParam">BetaResponseTextConfigParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseToolSearchOutputItemParam">BetaResponseToolSearchOutputItemParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaSkillReferenceParam">BetaSkillReferenceParam</a>
@@ -779,6 +846,7 @@ Params Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaToolChoiceOptions">BetaToolChoiceOptions</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaToolChoiceShellParam">BetaToolChoiceShellParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaToolChoiceTypesParam">BetaToolChoiceTypesParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaToolSearchOutputNamespaceToolParam">BetaToolSearchOutputNamespaceToolParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaToolSearchToolParam">BetaToolSearchToolParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaWebSearchPreviewToolParam">BetaWebSearchPreviewToolParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaWebSearchToolParam">BetaWebSearchToolParam</a>
@@ -820,6 +888,7 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseCodeInterpreterCallInProgressEvent">BetaResponseCodeInterpreterCallInProgressEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseCodeInterpreterCallInterpretingEvent">BetaResponseCodeInterpreterCallInterpretingEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseCodeInterpreterToolCall">BetaResponseCodeInterpreterToolCall</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseCompactionCompactingEvent">BetaResponseCompactionCompactingEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseCompactionItem">BetaResponseCompactionItem</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseCompactionItemParamResp">BetaResponseCompactionItemParamResp</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseCompletedEvent">BetaResponseCompletedEvent</a>
@@ -909,7 +978,10 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseShellCallOutputContentDoneEvent">BetaResponseShellCallOutputContentDoneEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseStatus">BetaResponseStatus</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseSteerErrorCode">BetaResponseSteerErrorCode</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseSteerInputUnion">BetaResponseSteerInputUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseSteerInputContentUnion">BetaResponseSteerInputContentUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseSteerPendingReason">BetaResponseSteerPendingReason</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseSteerRequiredInputUnion">BetaResponseSteerRequiredInputUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseStreamEventUnion">BetaResponseStreamEventUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseTextConfig">BetaResponseTextConfig</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseTextDeltaEvent">BetaResponseTextDeltaEvent</a>
@@ -931,6 +1003,7 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaToolChoiceOptions">BetaToolChoiceOptions</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaToolChoiceShell">BetaToolChoiceShell</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaToolChoiceTypes">BetaToolChoiceTypes</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaToolSearchOutputNamespaceTool">BetaToolSearchOutputNamespaceTool</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaToolSearchTool">BetaToolSearchTool</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaWebSearchPreviewTool">BetaWebSearchPreviewTool</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaWebSearchTool">BetaWebSearchTool</a>
@@ -1236,6 +1309,7 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageCodeInterpreterSessionsResponse">AdminOrganizationUsageCodeInterpreterSessionsResponse</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageCompletionsResponse">AdminOrganizationUsageCompletionsResponse</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageCostsResponse">AdminOrganizationUsageCostsResponse</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageDecisionsResponse">AdminOrganizationUsageDecisionsResponse</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageEmbeddingsResponse">AdminOrganizationUsageEmbeddingsResponse</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageFileSearchCallsResponse">AdminOrganizationUsageFileSearchCallsResponse</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageImagesResponse">AdminOrganizationUsageImagesResponse</a>
@@ -1250,6 +1324,7 @@ Methods:
 - <code title="get /organization/usage/code_interpreter_sessions">client.Admin.Organization.Usage.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageService.CodeInterpreterSessions">CodeInterpreterSessions</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageCodeInterpreterSessionsParams">AdminOrganizationUsageCodeInterpreterSessionsParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageCodeInterpreterSessionsResponse">AdminOrganizationUsageCodeInterpreterSessionsResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /organization/usage/completions">client.Admin.Organization.Usage.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageService.Completions">Completions</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageCompletionsParams">AdminOrganizationUsageCompletionsParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageCompletionsResponse">AdminOrganizationUsageCompletionsResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /organization/costs">client.Admin.Organization.Usage.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageService.Costs">Costs</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageCostsParams">AdminOrganizationUsageCostsParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageCostsResponse">AdminOrganizationUsageCostsResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /organization/usage/decisions">client.Admin.Organization.Usage.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageService.Decisions">Decisions</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageDecisionsParams">AdminOrganizationUsageDecisionsParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageDecisionsResponse">AdminOrganizationUsageDecisionsResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /organization/usage/embeddings">client.Admin.Organization.Usage.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageService.Embeddings">Embeddings</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageEmbeddingsParams">AdminOrganizationUsageEmbeddingsParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageEmbeddingsResponse">AdminOrganizationUsageEmbeddingsResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /organization/usage/file_search_calls">client.Admin.Organization.Usage.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageService.FileSearchCalls">FileSearchCalls</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageFileSearchCallsParams">AdminOrganizationUsageFileSearchCallsParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageFileSearchCallsResponse">AdminOrganizationUsageFileSearchCallsResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /organization/usage/images">client.Admin.Organization.Usage.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageService.Images">Images</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageImagesParams">AdminOrganizationUsageImagesParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageImagesResponse">AdminOrganizationUsageImagesResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
@@ -1374,6 +1449,25 @@ Methods:
 
 - <code title="get /organization/data_retention">client.Admin.Organization.DataRetention.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationDataRetentionService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#OrganizationDataRetention">OrganizationDataRetention</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="post /organization/data_retention">client.Admin.Organization.DataRetention.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationDataRetentionService.Update">Update</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationDataRetentionUpdateParams">AdminOrganizationDataRetentionUpdateParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#OrganizationDataRetention">OrganizationDataRetention</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+### ExternalStorage
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AwsExternalStorageProvider">AwsExternalStorageProvider</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AzureExternalStorageProvider">AzureExternalStorageProvider</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ExternalStorageConfiguration">ExternalStorageConfiguration</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ExternalStorageDeleted">ExternalStorageDeleted</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#GcpExternalStorageProvider">GcpExternalStorageProvider</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#OciExternalStorageProvider">OciExternalStorageProvider</a>
+
+Methods:
+
+- <code title="post /organization/external_storage">client.Admin.Organization.ExternalStorage.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationExternalStorageService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationExternalStorageNewParams">AdminOrganizationExternalStorageNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ExternalStorageConfiguration">ExternalStorageConfiguration</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /organization/external_storage/{external_storage_id}">client.Admin.Organization.ExternalStorage.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationExternalStorageService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, externalStorageID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ExternalStorageConfiguration">ExternalStorageConfiguration</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /organization/external_storage">client.Admin.Organization.ExternalStorage.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationExternalStorageService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationExternalStorageListParams">AdminOrganizationExternalStorageListParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination#CursorPage">CursorPage</a>[<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ExternalStorageConfiguration">ExternalStorageConfiguration</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="delete /organization/external_storage/{external_storage_id}">client.Admin.Organization.ExternalStorage.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationExternalStorageService.Delete">Delete</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, externalStorageID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ExternalStorageDeleted">ExternalStorageDeleted</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="post /organization/external_storage/{external_storage_id}/validate">client.Admin.Organization.ExternalStorage.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationExternalStorageService.Validate">Validate</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, externalStorageID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ExternalStorageConfiguration">ExternalStorageConfiguration</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 ### SpendLimit
 
@@ -1509,6 +1603,7 @@ Response Types:
 Methods:
 
 - <code title="get /organization/projects/{project_id}/api_keys/{api_key_id}">client.Admin.Organization.Projects.APIKeys.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationProjectAPIKeyService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, projectID <a href="https://pkg.go.dev/builtin#string">string</a>, apiKeyID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ProjectAPIKey">ProjectAPIKey</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="post /organization/projects/{project_id}/api_keys/{api_key_id}">client.Admin.Organization.Projects.APIKeys.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationProjectAPIKeyService.Update">Update</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, projectID <a href="https://pkg.go.dev/builtin#string">string</a>, apiKeyID <a href="https://pkg.go.dev/builtin#string">string</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationProjectAPIKeyUpdateParams">AdminOrganizationProjectAPIKeyUpdateParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ProjectAPIKey">ProjectAPIKey</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /organization/projects/{project_id}/api_keys">client.Admin.Organization.Projects.APIKeys.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationProjectAPIKeyService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, projectID <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationProjectAPIKeyListParams">AdminOrganizationProjectAPIKeyListParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination#ConversationCursorPage">ConversationCursorPage</a>[<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ProjectAPIKey">ProjectAPIKey</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="delete /organization/projects/{project_id}/api_keys/{api_key_id}">client.Admin.Organization.Projects.APIKeys.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationProjectAPIKeyService.Delete">Delete</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, projectID <a href="https://pkg.go.dev/builtin#string">string</a>, apiKeyID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationProjectAPIKeyDeleteResponse">AdminOrganizationProjectAPIKeyDeleteResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 

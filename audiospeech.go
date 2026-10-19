@@ -68,6 +68,8 @@ type AudioSpeechNewParams struct {
 	// object with an `id`, for example `{ "id": "voice_1234" }`. Previews of the
 	// voices are available in the
 	// [Text to speech guide](https://developers.openai.com/api/docs/guides/text-to-speech#voice-options).
+	// Custom voices must be created from audio samples. Voices created from text
+	// prompts are supported only in Live.
 	Voice AudioSpeechNewParamsVoiceUnion `json:"voice,omitzero" api:"required"`
 	// Control the voice of your generated audio with additional instructions. Does not
 	// work with `tts-1` or `tts-1-hd`.
@@ -115,6 +117,14 @@ func (u *AudioSpeechNewParamsVoiceUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
+// The voice to use when generating the audio. Supported built-in voices are
+// `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `onyx`, `nova`, `sage`,
+// `shimmer`, `verse`, `marin`, and `cedar`. You may also provide a custom voice
+// object with an `id`, for example `{ "id": "voice_1234" }`. Previews of the
+// voices are available in the
+// [Text to speech guide](https://developers.openai.com/api/docs/guides/text-to-speech#voice-options).
+// Custom voices must be created from audio samples. Voices created from text
+// prompts are supported only in Live.
 type AudioSpeechNewParamsVoiceString2 string
 
 const (
@@ -128,6 +138,9 @@ const (
 	AudioSpeechNewParamsVoiceString2Verse   AudioSpeechNewParamsVoiceString2 = "verse"
 	AudioSpeechNewParamsVoiceString2Marin   AudioSpeechNewParamsVoiceString2 = "marin"
 	AudioSpeechNewParamsVoiceString2Cedar   AudioSpeechNewParamsVoiceString2 = "cedar"
+	AudioSpeechNewParamsVoiceString2Fable   AudioSpeechNewParamsVoiceString2 = "fable"
+	AudioSpeechNewParamsVoiceString2Onyx    AudioSpeechNewParamsVoiceString2 = "onyx"
+	AudioSpeechNewParamsVoiceString2Nova    AudioSpeechNewParamsVoiceString2 = "nova"
 )
 
 // Custom voice reference.

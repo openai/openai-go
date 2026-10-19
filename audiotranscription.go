@@ -44,20 +44,22 @@ func NewAudioTranscriptionService(opts ...option.RequestOption) (r AudioTranscri
 
 // Transcribes audio into the input language.
 //
-// Returns a transcription object in `json`, `diarized_json`, or `verbose_json`
-// format, or a stream of transcript events.
+// Returns a transcription object decoded from `json`, `diarized_json`, or
+// `verbose_json`. For `text`, `srt`, or `vtt`, use [Client.Post] with a
+// *string response destination. Supported formats depend on the model.
 func (r *AudioTranscriptionService) New(ctx context.Context, body AudioTranscriptionNewParams, opts ...option.RequestOption) (res *AudioTranscriptionNewResponseUnion, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "audio/transcriptions"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &res, opts...)
 	return res, err
 }
 
 // Transcribes audio into the input language.
 //
-// Returns a transcription object in `json`, `diarized_json`, or `verbose_json`
-// format, or a stream of transcript events.
+// Returns a stream of transcript events. For non-streaming JSON, use
+// [AudioTranscriptionService.New]. For `text`, `srt`, or `vtt`, use
+// [Client.Post] with a *string response destination.
 func (r *AudioTranscriptionService) NewStreaming(ctx context.Context, body AudioTranscriptionNewParams, opts ...option.RequestOption) (stream *ssestream.Stream[TranscriptionStreamEventUnion]) {
 	var (
 		raw *http.Response
@@ -69,7 +71,7 @@ func (r *AudioTranscriptionService) NewStreaming(ctx context.Context, body Audio
 		"stream": "true",
 	})
 	path := "audio/transcriptions"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &raw, opts...)
 	return ssestream.NewStream[TranscriptionStreamEventUnion](ssestream.NewDecoder(raw), err)
 }
 
@@ -931,6 +933,15 @@ func (r AudioTranscriptionNewParams) MarshalMultipart() (data []byte, contentTyp
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
+}
+
+// MarshalMultipartTo writes multipart fields without buffering file contents.
+// The caller owns writer and must close it to finish the multipart body.
+func (r AudioTranscriptionNewParams) MarshalMultipartTo(writer *multipart.Writer) error {
+	if err := apiform.MarshalRoot(r, writer); err != nil {
+		return err
+	}
+	return apiform.WriteExtras(writer, r.ExtraFields())
 }
 
 // Only one field can be non-zero.

@@ -1,3 +1,22 @@
+# Contributing
+
+## Contribution policy
+
+We welcome bug reports, feature requests, minimal reproductions, and root-cause
+analysis through [GitHub issues](https://github.com/openai/openai-go/issues).
+
+**Pull requests are limited to repository collaborators. We do not accept pull
+requests from non-collaborators**, including documentation or example changes.
+If you are not a collaborator, please open an issue instead of preparing a pull
+request. Include the affected version, expected and actual behavior, and a small,
+sanitized reproduction when applicable.
+
+Report suspected security vulnerabilities privately as described in
+[SECURITY.md](SECURITY.md), rather than in issues or pull requests.
+
+The development and pull request instructions below are for maintainers and
+repository collaborators.
+
 ## Setting up the environment
 
 Before running any setup commands, review dependency origins, installation
@@ -13,7 +32,7 @@ $ ./scripts/lint
 
 This will install all the required dependencies and build the SDK.
 
-Contributors need [Go 1.25 or later](https://go.dev/doc/install) and
+Contributors need [Go 1.26 or later](https://go.dev/doc/install) and
 [Node.js 14 or later](https://nodejs.org/). Homebrew can install both from
 the repository's `Brewfile`; they can also be installed manually.
 CI tests every supported Go release line with `GOTOOLCHAIN=local`, so
@@ -54,11 +73,14 @@ local checks, trusted CI, and activation instructions.
   metadata, including `Authorization`, `Cookie`, `Set-Cookie`, `Api-Key`,
   `X-Api-Key`, and `X-Amz-Security-Token`; credentials in URLs or query
   parameters; webhook secrets; and sensitive request or response bodies before
-  logging, recording, forwarding, or disclosure. `Error.DumpRequest`,
-  `Error.DumpResponse`, and `Error.Error` are intentionally raw, opt-in
-  diagnostics and may include credentials, URLs, headers, or bodies; sanitize
-  them before sharing or sending them to an untrusted sink. Preserve safe
-  synthetic payloads and intentional public API error or debug diagnostics.
+  logging, recording, forwarding, or disclosure. SDK error formatting methods
+  return a status-only summary. Go's invalid-format diagnostics may bypass those
+  methods and expose raw fields; use valid directives as documented in README.md.
+  `Error.DumpRequest`,
+  `Error.DumpResponse`, `Error.RawJSON`, and exported error fields still expose
+  raw diagnostics that may include credentials, URLs, headers, or bodies;
+  sanitize them before sharing or sending them to an untrusted sink. Preserve
+  safe synthetic payloads and intentional public API error or debug diagnostics.
 - Review direct and transitive dependency changes in `go.mod` and `go.sum`
   across the root, `examples`, `api_reference`, `internal/testdata/consumer`,
   and `tools` modules. Review new `replace` directives, dependency origins,

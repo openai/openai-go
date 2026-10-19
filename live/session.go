@@ -223,16 +223,22 @@ type SessionAcceptParamsSession struct {
 	// to false for new sessions.
 	Store param.Opt[bool] `json:"store,omitzero"`
 	// Who handles tasks delegated by the Live model. Omitted or null selects your
-	// application; use `responses` to let the API manage a Responses backend.
+	// application; use `responses` or `decisions` to delegate to the corresponding
+	// API.
 	Delegation SessionAcceptParamsSessionDelegationUnion `json:"delegation,omitzero"`
 	// Startup audio output configuration. SIP negotiates the media format;
 	// audio.format is only accepted for primary WebSockets. Voice cannot change after
 	// startup.
 	Audio SessionAcceptParamsSessionAudio `json:"audio,omitzero"`
 	// Ordered text-only history supplied before startup. Supports developer, user, and
-	// assistant messages with one text part each; at most 128 messages and 8,192
-	// rendered tokens in total.
+	// assistant messages with one text part each; at most 128 messages and a
+	// configured rendered-token limit (8,192 by default).
 	Input []InitialItemUnionParam `json:"input,omitzero"`
+	// At most one Decisions trigger per transcript event type. Triggers run
+	// independently of delegation. On update, omit triggers to keep the current
+	// configuration, send a list to replace it, or send an empty list to disable
+	// triggers.
+	Triggers []DecisionTriggerParam `json:"triggers,omitzero"`
 	// The session type. Always `live`.
 	//
 	// This field can be elided, and will marshal its zero value as "live".
@@ -315,11 +321,12 @@ func (u *SessionAcceptParamsSessionAudioOutputVoiceUnion) UnmarshalJSON(data []b
 type SessionAcceptParamsSessionDelegationUnion struct {
 	OfClient    *ClientDelegationParam                         `json:",omitzero,inline"`
 	OfResponses *SessionAcceptParamsSessionDelegationResponses `json:",omitzero,inline"`
+	OfDecisions *SessionAcceptParamsSessionDelegationDecisions `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u SessionAcceptParamsSessionDelegationUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfClient, u.OfResponses)
+	return param.MarshalUnion(u, u.OfClient, u.OfResponses, u.OfDecisions)
 }
 func (u *SessionAcceptParamsSessionDelegationUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -334,10 +341,20 @@ func (u SessionAcceptParamsSessionDelegationUnion) GetResponses() *ResponsesDele
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u SessionAcceptParamsSessionDelegationUnion) GetDecisions() *DecisionsDelegationConfigParam {
+	if vt := u.OfDecisions; vt != nil {
+		return &vt.Decisions
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u SessionAcceptParamsSessionDelegationUnion) GetType() *string {
 	if vt := u.OfClient; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfResponses; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfDecisions; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -348,6 +365,7 @@ func init() {
 		"type",
 		apijson.Discriminator[ClientDelegationParam]("client"),
 		apijson.Discriminator[SessionAcceptParamsSessionDelegationResponses]("responses"),
+		apijson.Discriminator[SessionAcceptParamsSessionDelegationDecisions]("decisions"),
 	)
 }
 
@@ -370,6 +388,22 @@ func (r SessionAcceptParamsSessionDelegationResponses) MarshalJSON() (data []byt
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *SessionAcceptParamsSessionDelegationResponses) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Decisions, Type are required.
+type SessionAcceptParamsSessionDelegationDecisions struct {
+	Decisions DecisionsDelegationConfigParam `json:"decisions" api:"required"`
+	// This field can be elided, and will marshal its zero value as "decisions".
+	Type constant.Decisions `json:"type" default:"decisions"`
+	paramObj
+}
+
+func (r SessionAcceptParamsSessionDelegationDecisions) MarshalJSON() (data []byte, err error) {
+	type shadow SessionAcceptParamsSessionDelegationDecisions
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *SessionAcceptParamsSessionDelegationDecisions) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

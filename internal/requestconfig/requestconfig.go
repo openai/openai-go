@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/openai/openai-go/v3/packages/websocket"
 	"io"
 	"math"
 	"math/rand"
@@ -25,9 +26,12 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// DefaultMaxServerDelay bounds server-directed retry and polling waits unless
-// the caller explicitly opts into a different retry limit.
+// DefaultMaxServerDelay bounds fallback backoff, token exchange, and polling waits.
 const DefaultMaxServerDelay = 8 * time.Second
+
+// defaultMaxRetryAfterDelay is the maximum server-directed retry delay.
+// Delays above this limit stop automatic retries.
+const defaultMaxRetryAfterDelay = 2 * time.Minute
 
 func getDefaultHeaders() map[string]string {
 	return map[string]string{
@@ -279,12 +283,11 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 		req.Header.Add(k, v)
 	}
 	cfg := RequestConfig{
-		MaxRetries:    2,
-		MaxRetryDelay: DefaultMaxServerDelay,
-		Context:       ctx,
-		Request:       req,
-		HTTPClient:    http.DefaultClient,
-		Body:          reader,
+		MaxRetries: 2,
+		Context:    ctx,
+		Request:    req,
+		HTTPClient: http.DefaultClient,
+		Body:       reader,
 	}
 	cfg.ResponseBodyInto = dst
 	cfg.Security = Security{
@@ -332,6 +335,7 @@ type HTTPDoer interface {
 // Editing the variables inside RequestConfig directly is unstable api. Prefer
 // composing the RequestOption instead if possible.
 type RequestConfig struct {
+	WebSocketRecovery          websocket.RecoveryOptions
 	MaxRetries                 int
 	MaxRetryDelay              time.Duration
 	RequestTimeout             time.Duration
@@ -344,6 +348,7 @@ type RequestConfig struct {
 	dataResidencyEndpoint      bool
 	authentication             authenticationState
 	cloneError                 error
+	queryChanges               map[string]bool
 	// DefaultBaseURL will be used if BaseURL is not explicitly overridden using
 	// WithBaseURL.
 	DefaultBaseURL *url.URL
@@ -418,12 +423,12 @@ func requestBodyReplayable(request *http.Request) bool {
 	return request.Body == nil || request.Body == http.NoBody || request.GetBody != nil
 }
 
-func parseRetryAfterHeader(resp *http.Response, maxDelay time.Duration) (time.Duration, bool) {
+func parseRetryAfterHeader(resp *http.Response, maxDelay time.Duration) (delay time.Duration, ok bool, exceedsLimit bool) {
 	if resp == nil {
-		return 0, false
+		return 0, false, false
 	}
 	if maxDelay <= 0 {
-		maxDelay = DefaultMaxServerDelay
+		maxDelay = defaultMaxRetryAfterDelay
 	}
 
 	type retryData struct {
@@ -465,24 +470,37 @@ func parseRetryAfterHeader(resp *http.Response, maxDelay time.Duration) (time.Du
 		if v == "" {
 			continue
 		}
-		if retryAfter, err := strconv.ParseFloat(v, 64); err == nil {
+		retryAfter, err := strconv.ParseFloat(v, 64)
+		if errors.Is(err, strconv.ErrRange) && math.IsInf(retryAfter, 1) {
+			// Numeric overflow is an excessive delay, not a missing header.
+			return 0, true, true
+		}
+		if err == nil {
 			if math.IsNaN(retryAfter) || math.IsInf(retryAfter, 0) || retryAfter < 0 {
 				continue
 			}
-			if retryAfter >= float64(maxDelay)/float64(retry.units) {
-				return maxDelay, true
+			maximum := float64(maxDelay) / float64(retry.units)
+			if retryAfter > maximum {
+				return 0, true, true
 			}
-			return time.Duration(retryAfter * float64(retry.units)), true
+			if retryAfter == maximum {
+				// Avoid overflowing time.Duration when maxDelay is its largest value.
+				return maxDelay, true, false
+			}
+			return time.Duration(retryAfter * float64(retry.units)), true, false
 		}
 		if d, ok := retry.custom(v); ok {
 			if d <= 0 {
-				return 0, true
+				return 0, true, false
 			}
-			return min(d, maxDelay), true
+			if d > maxDelay {
+				return 0, true, true
+			}
+			return d, true, false
 		}
 	}
 
-	return 0, false
+	return 0, false, false
 }
 
 // isBeforeContextDeadline reports whether the non-zero Time t is
@@ -536,14 +554,14 @@ func (b *closeOnceReadCloser) Close() error {
 	return b.err
 }
 
-func retryDelay(res *http.Response, retryCount int, maxDelay time.Duration) time.Duration {
-	if maxDelay <= 0 {
-		maxDelay = DefaultMaxServerDelay
+// retryDelay returns the retry wait and whether another attempt is allowed.
+func retryDelay(res *http.Response, retryCount int, maxDelay time.Duration) (time.Duration, bool) {
+	if retryAfterDelay, ok, exceedsLimit := parseRetryAfterHeader(res, maxDelay); ok {
+		return retryAfterDelay, !exceedsLimit
 	}
 
-	// If the backend tells us to wait a certain amount of time, use that value
-	if retryAfterDelay, ok := parseRetryAfterHeader(res, maxDelay); ok {
-		return retryAfterDelay
+	if maxDelay <= 0 {
+		maxDelay = DefaultMaxServerDelay
 	}
 
 	backoff := 0.5 * float64(time.Second) * math.Pow(2, float64(retryCount))
@@ -557,7 +575,7 @@ func retryDelay(res *http.Response, retryCount int, maxDelay time.Duration) time
 	if jitterRange := int64(delay / 4); jitterRange > 0 {
 		delay -= time.Duration(rand.Int63n(jitterRange))
 	}
-	return delay
+	return delay, true
 }
 
 // WaitForDelay waits for delay to elapse or for ctx to be cancelled, whichever
@@ -675,10 +693,17 @@ func (cfg *RequestConfig) Execute() (err error) {
 			}
 		}
 		if ctx != nil && ctx.Err() != nil {
+			if res != nil && res.Body != nil {
+				_ = res.Body.Close()
+			}
 			return ctx.Err()
 		}
 		if !shouldRetry(cfg.Request, res, err) || retryCount >= cfg.MaxRetries {
 			break
+		}
+		delay, retry := retryDelay(res, retryCount, cfg.MaxRetryDelay)
+		if !retry {
+			break // Preserve the original response when its minimum wait is too long.
 		}
 
 		// Prepare next request and wait for the retry delay
@@ -699,7 +724,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 			_ = res.Body.Close()
 		}
 
-		if waitErr := WaitForDelay(ctx, retryDelay(res, retryCount, cfg.MaxRetryDelay)); waitErr != nil {
+		if waitErr := WaitForDelay(ctx, delay); waitErr != nil {
 			return waitErr
 		}
 	}
@@ -739,6 +764,16 @@ func (cfg *RequestConfig) Execute() (err error) {
 			return err
 		}
 		return &aerr
+	}
+
+	if cfg.ResponseBodyInto == nil && cfg.ResponseInto == nil {
+		// No caller owns this body. Close without reading so an unexpected body
+		// cannot delay a successful no-result operation. The deferred cancel
+		// releases the request timeout in this scope.
+		if res.Body != nil {
+			_ = res.Body.Close()
+		}
+		return nil
 	}
 
 	_, intoCustomResponseBody := cfg.ResponseBodyInto.(**http.Response)
@@ -801,16 +836,19 @@ func ExecuteNewRequest(ctx context.Context, method string, u string, body any, d
 }
 
 func (cfg *RequestConfig) SetHeader(key, value string) {
+	cfg.recordOptionHeader(key, value, headerSet)
 	cfg.Request.Header.Set(key, value)
 	cfg.authentication.recordHeader(key)
 }
 
 func (cfg *RequestConfig) AddHeader(key, value string) {
+	cfg.recordOptionHeader(key, value, headerAdd)
 	cfg.Request.Header.Add(key, value)
 	cfg.authentication.recordHeader(key)
 }
 
 func (cfg *RequestConfig) DelHeader(key string) {
+	cfg.recordOptionHeader(key, "", headerDelete)
 	cfg.Request.Header.Del(key)
 	cfg.authentication.recordHeader(key)
 }

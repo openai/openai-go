@@ -24,14 +24,18 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Responses.New(context.TODO(), responses.ResponseNewParams{
+		AccessPrograms: responses.ResponseNewParamsAccessPrograms{
+			Cyber: "standard",
+		},
 		Background: openai.Bool(true),
 		ContextManagement: []responses.ResponseNewParamsContextManagement{{
-			Type:             "type",
+			Type:             "compaction",
 			CompactThreshold: openai.Int(1000),
 		}},
 		Conversation: responses.ResponseNewParamsConversationUnion{
@@ -74,6 +78,7 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		PromptCacheOptions: responses.ResponseNewParamsPromptCacheOptions{
 			ComparisonResponseID: openai.String("resp_123"),
 			Mode:                 "implicit",
+			Prewarm:              openai.Bool(true),
 			Ttl:                  "30m",
 		},
 		PromptCacheRetention: responses.ResponseNewParamsPromptCacheRetentionInMemory,
@@ -139,6 +144,7 @@ func TestResponseGetWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -170,6 +176,7 @@ func TestResponseDelete(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -193,6 +200,7 @@ func TestResponseCancel(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -216,6 +224,7 @@ func TestResponseCompactWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),

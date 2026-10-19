@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  REPORTER_SHA256: b971c18701081ff47e7a5f935fd1fe9cd5f58b3d8f570a4daede62c5611e3fc9
+  REPORTER_SHA256: 157ed30ac9d54d20fe5f7e625dc8ee5958beb91cc7e30aaa97cfba8fb3e06e21
 
 jobs:
   queue-signal:
@@ -47,7 +47,7 @@ jobs:
             > "$RUNNER_TEMP/castiron-custom-code/context.json"
 
       - name: Check out the pull request
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0

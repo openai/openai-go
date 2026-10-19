@@ -24,6 +24,7 @@ func TestLiveNewWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -64,6 +65,17 @@ func TestLiveNewWithOptionalParams(t *testing.T) {
 			}},
 			Instructions: openai.String("instructions"),
 			Store:        openai.Bool(true),
+			Triggers: []live.DecisionTriggerParam{{
+				Decisions: live.DecisionTriggerDecisionsParam{
+					Questions: []live.DecisionTriggerDecisionsQuestionUnionParam{{
+						OfPredicate: &live.DecisionTriggerDecisionsQuestionPredicateParam{
+							Instructions: "instructions",
+							Name:         openai.String("name"),
+						},
+					}},
+				},
+				EventType: live.DecisionTriggerEventTypeSessionInputTranscriptDelta,
+			}},
 		},
 		Transport: live.LiveNewParamsTransport{
 			Sdp: "x",

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 )
 
@@ -26,7 +27,7 @@ func main() {
 	params := openai.ChatCompletionNewParams{
 		Messages: messages,
 		Seed:     openai.Int(0),
-		Model:    openai.ChatModelGPT4o,
+		Model:    openai.ChatModelGPT5_2,
 		Tools:    tools,
 		StreamOptions: openai.ChatCompletionStreamOptionsParam{
 			IncludeUsage: openai.Bool(true),
@@ -68,7 +69,7 @@ func main() {
 	}
 
 	if err := stream.Err(); err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	if acc.Usage.TotalTokens > 0 {

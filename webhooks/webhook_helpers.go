@@ -95,7 +95,7 @@ func verifyWebhookSignatureWithToleranceAndTime(r *WebhookService, body []byte, 
 		return errors.New("missing required webhook-id header")
 	}
 
-	// Validate timestamp to prevent replay attacks
+	// Bound timestamp freshness; callers must deduplicate authenticated deliveries.
 	timestampSeconds, err := strconv.ParseInt(timestampHeader, 10, 64)
 	if err != nil {
 		return errors.New("invalid webhook timestamp format")

@@ -153,8 +153,9 @@ type Project struct {
 	// The residency configuration for the project.
 	//
 	// Any of "GLOBAL", "US_STORAGE_PROCESSING", "EU_STORAGE_PROCESSING", "JP_STORAGE",
-	// "KR_STORAGE", "CA_STORAGE", "SG_STORAGE", "IN_STORAGE", "AU_STORAGE",
-	// "GB_STORAGE", "AE_STORAGE", "AE_STORAGE_PROCESSING".
+	// "JP_STORAGE_PROCESSING", "KR_STORAGE", "CA_STORAGE", "SG_STORAGE", "IN_STORAGE",
+	// "IN_STORAGE_PROCESSING", "AU_STORAGE", "AU_STORAGE_PROCESSING", "GB_STORAGE",
+	// "AE_STORAGE", "AE_STORAGE_PROCESSING".
 	Residency ProjectResidency `json:"residency"`
 	// `active` or `archived`
 	Status string `json:"status" api:"nullable"`
@@ -186,11 +187,14 @@ const (
 	ProjectResidencyUsStorageProcessing ProjectResidency = "US_STORAGE_PROCESSING"
 	ProjectResidencyEuStorageProcessing ProjectResidency = "EU_STORAGE_PROCESSING"
 	ProjectResidencyJpStorage           ProjectResidency = "JP_STORAGE"
+	ProjectResidencyJpStorageProcessing ProjectResidency = "JP_STORAGE_PROCESSING"
 	ProjectResidencyKrStorage           ProjectResidency = "KR_STORAGE"
 	ProjectResidencyCaStorage           ProjectResidency = "CA_STORAGE"
 	ProjectResidencySgStorage           ProjectResidency = "SG_STORAGE"
 	ProjectResidencyInStorage           ProjectResidency = "IN_STORAGE"
+	ProjectResidencyInStorageProcessing ProjectResidency = "IN_STORAGE_PROCESSING"
 	ProjectResidencyAuStorage           ProjectResidency = "AU_STORAGE"
+	ProjectResidencyAuStorageProcessing ProjectResidency = "AU_STORAGE_PROCESSING"
 	ProjectResidencyGBStorage           ProjectResidency = "GB_STORAGE"
 	ProjectResidencyAeStorage           ProjectResidency = "AE_STORAGE"
 	ProjectResidencyAeStorageProcessing ProjectResidency = "AE_STORAGE_PROCESSING"
@@ -214,8 +218,9 @@ type AdminOrganizationProjectNewParams struct {
 	// to review the functionality and limitations of setting this field.
 	//
 	// Any of "GLOBAL", "US_STORAGE_PROCESSING", "EU_STORAGE_PROCESSING", "JP_STORAGE",
-	// "KR_STORAGE", "CA_STORAGE", "SG_STORAGE", "IN_STORAGE", "AU_STORAGE",
-	// "GB_STORAGE", "AE_STORAGE", "AE_STORAGE_PROCESSING".
+	// "JP_STORAGE_PROCESSING", "KR_STORAGE", "CA_STORAGE", "SG_STORAGE", "IN_STORAGE",
+	// "IN_STORAGE_PROCESSING", "AU_STORAGE", "AU_STORAGE_PROCESSING", "GB_STORAGE",
+	// "AE_STORAGE", "AE_STORAGE_PROCESSING".
 	Residency ProjectResidency `json:"residency,omitzero"`
 	paramObj
 }

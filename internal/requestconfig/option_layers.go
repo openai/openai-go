@@ -12,9 +12,12 @@ import (
 // concatenate inherited and request options. Its contents remain immutable.
 type optionLayer []RequestOption
 
-type optionLayerIdentity byte
+type optionLayerIdentity struct {
+	parent *optionLayerIdentity
+}
 
 type authenticationState struct {
+	optionHeaders            map[string]optionHeader
 	currentLayer             *optionLayerIdentity
 	providerInCurrentLayer   *ProviderAuthOption
 	selectedProvider         *ProviderAuthOption
@@ -32,7 +35,7 @@ type authenticationState struct {
 func (state *authenticationState) enterLayer() func() {
 	previousLayer := state.currentLayer
 	previousProvider := state.providerInCurrentLayer
-	state.currentLayer = new(optionLayerIdentity)
+	state.currentLayer = &optionLayerIdentity{parent: previousLayer}
 	state.providerInCurrentLayer = nil
 	return func() {
 		state.currentLayer = previousLayer
@@ -251,6 +254,7 @@ func (state *authenticationState) recordAdminAPIKey() {
 }
 
 func (state authenticationState) cloneAsInherited(cfg *RequestConfig) authenticationState {
+	state.optionHeaders = inheritedOptionHeaders(state.optionHeaders)
 	state.currentLayer = nil
 	state.providerInCurrentLayer = nil
 	state.apiKeyLayer = nil

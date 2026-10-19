@@ -23,6 +23,8 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Create and manage model responses.
+//
 // BetaResponseService contains methods and other services that help with
 // interacting with the openai API.
 //
@@ -30,8 +32,10 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewBetaResponseService] method instead.
 type BetaResponseService struct {
-	Options     []option.RequestOption
-	InputItems  BetaResponseInputItemService
+	Options []option.RequestOption
+	// Create and manage model responses.
+	InputItems BetaResponseInputItemService
+	// Create and manage model responses.
 	InputTokens BetaResponseInputTokenService
 }
 
@@ -58,6 +62,7 @@ func NewBetaResponseService(opts ...option.RequestOption) (r BetaResponseService
 // [file search](https://developers.openai.com/api/docs/guides/tools-file-search)
 // to use your own data as input for the model's response.
 func (r *BetaResponseService) New(ctx context.Context, params BetaResponseNewParams, opts ...option.RequestOption) (res *BetaResponse, err error) {
+	opts = slices.Clone(opts)
 	for _, v := range params.Betas {
 		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
@@ -84,6 +89,7 @@ func (r *BetaResponseService) NewStreaming(ctx context.Context, params BetaRespo
 		raw *http.Response
 		err error
 	)
+	opts = slices.Clone(opts)
 	for _, v := range params.Betas {
 		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
@@ -97,6 +103,7 @@ func (r *BetaResponseService) NewStreaming(ctx context.Context, params BetaRespo
 
 // Retrieves a model response with the given ID.
 func (r *BetaResponseService) Get(ctx context.Context, responseID string, params BetaResponseGetParams, opts ...option.RequestOption) (res *BetaResponse, err error) {
+	opts = slices.Clone(opts)
 	for _, v := range params.Betas {
 		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
@@ -117,6 +124,7 @@ func (r *BetaResponseService) GetStreaming(ctx context.Context, responseID strin
 		raw *http.Response
 		err error
 	)
+	opts = slices.Clone(opts)
 	for _, v := range params.Betas {
 		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
@@ -134,6 +142,7 @@ func (r *BetaResponseService) GetStreaming(ctx context.Context, responseID strin
 
 // Deletes a model response with the given ID.
 func (r *BetaResponseService) Delete(ctx context.Context, responseID string, body BetaResponseDeleteParams, opts ...option.RequestOption) (err error) {
+	opts = slices.Clone(opts)
 	for _, v := range body.Betas {
 		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
@@ -153,6 +162,7 @@ func (r *BetaResponseService) Delete(ctx context.Context, responseID string, bod
 // `background` parameter set to `true` can be cancelled.
 // [Learn more](https://developers.openai.com/api/docs/guides/background).
 func (r *BetaResponseService) Cancel(ctx context.Context, responseID string, body BetaResponseCancelParams, opts ...option.RequestOption) (res *BetaResponse, err error) {
+	opts = slices.Clone(opts)
 	for _, v := range body.Betas {
 		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
@@ -174,6 +184,7 @@ func (r *BetaResponseService) Cancel(ctx context.Context, responseID string, bod
 // For ZDR-compatible compaction details, see
 // [Compaction (advanced)](https://developers.openai.com/api/docs/guides/conversation-state#compaction-advanced).
 func (r *BetaResponseService) Compact(ctx context.Context, params BetaResponseCompactParams, opts ...option.RequestOption) (res *BetaCompactedResponse, err error) {
+	opts = slices.Clone(opts)
 	for _, v := range params.Betas {
 		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
@@ -4403,7 +4414,8 @@ func (r *BetaNamespaceToolToolFunctionParam) UnmarshalJSON(data []byte) error {
 
 type BetaResponse struct {
 	// Unique identifier for this Response.
-	ID string `json:"id" api:"required"`
+	ID             string                     `json:"id" api:"required"`
+	AccessPrograms BetaResponseAccessPrograms `json:"access_programs" api:"required"`
 	// Unix timestamp (in seconds) of when this Response was created.
 	CreatedAt float64 `json:"created_at" api:"required" format:"unixtime"`
 	// An error object returned when the model fails to generate a Response.
@@ -4542,7 +4554,7 @@ type BetaResponse struct {
 	Reasoning BetaResponseReasoning `json:"reasoning" api:"nullable"`
 	// A stable identifier used to help detect users of your application that may be
 	// violating OpenAI's usage policies. The IDs should be a string that uniquely
-	// identifies each user, with a maximum length of 64 characters. We recommend
+	// identifies each user, with a maximum length of 128 characters. We recommend
 	// hashing their username or email address, in order to avoid sending us any
 	// identifying information.
 	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
@@ -4616,6 +4628,7 @@ type BetaResponse struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                     respjson.Field
+		AccessPrograms         respjson.Field
 		CreatedAt              respjson.Field
 		Error                  respjson.Field
 		IncompleteDetails      respjson.Field
@@ -4658,6 +4671,25 @@ type BetaResponse struct {
 // Returns the unmodified JSON received from the API
 func (r BetaResponse) RawJSON() string { return r.JSON.raw }
 func (r *BetaResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponseAccessPrograms struct {
+	// The effective Cyber access program used for this response.
+	//
+	// Any of "standard", "daybreak_blue", "daybreak_red".
+	Cyber string `json:"cyber" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Cyber       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseAccessPrograms) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseAccessPrograms) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -4728,109 +4760,368 @@ func (r *BetaResponseInstructionsUnion) UnmarshalJSON(data []byte) error {
 type BetaResponseModel string
 
 const (
-	BetaResponseModelGPT6Astra                        BetaResponseModel = "gpt-6-astra"
-	BetaResponseModelGPT5_6Sol                        BetaResponseModel = "gpt-5.6-sol"
-	BetaResponseModelGPT5_6Terra                      BetaResponseModel = "gpt-5.6-terra"
-	BetaResponseModelGPT5_6Luna                       BetaResponseModel = "gpt-5.6-luna"
-	BetaResponseModelGPT5_5                           BetaResponseModel = "gpt-5.5"
-	BetaResponseModelGPT5_5_2026_04_23                BetaResponseModel = "gpt-5.5-2026-04-23"
-	BetaResponseModelGPT5_4                           BetaResponseModel = "gpt-5.4"
-	BetaResponseModelGPT5_4Mini                       BetaResponseModel = "gpt-5.4-mini"
-	BetaResponseModelGPT5_4Nano                       BetaResponseModel = "gpt-5.4-nano"
-	BetaResponseModelGPT5_4Mini2026_03_17             BetaResponseModel = "gpt-5.4-mini-2026-03-17"
-	BetaResponseModelGPT5_4Nano2026_03_17             BetaResponseModel = "gpt-5.4-nano-2026-03-17"
-	BetaResponseModelGPT5_3ChatLatest                 BetaResponseModel = "gpt-5.3-chat-latest"
-	BetaResponseModelGPT5_2                           BetaResponseModel = "gpt-5.2"
-	BetaResponseModelGPT5_2_2025_12_11                BetaResponseModel = "gpt-5.2-2025-12-11"
-	BetaResponseModelGPT5_2ChatLatest                 BetaResponseModel = "gpt-5.2-chat-latest"
-	BetaResponseModelGPT5_2Pro                        BetaResponseModel = "gpt-5.2-pro"
-	BetaResponseModelGPT5_2Pro2025_12_11              BetaResponseModel = "gpt-5.2-pro-2025-12-11"
-	BetaResponseModelGPT5_1                           BetaResponseModel = "gpt-5.1"
-	BetaResponseModelGPT5_1_2025_11_13                BetaResponseModel = "gpt-5.1-2025-11-13"
-	BetaResponseModelGPT5_1Codex                      BetaResponseModel = "gpt-5.1-codex"
-	BetaResponseModelGPT5_1Mini                       BetaResponseModel = "gpt-5.1-mini"
-	BetaResponseModelGPT5_1ChatLatest                 BetaResponseModel = "gpt-5.1-chat-latest"
-	BetaResponseModelGPT5                             BetaResponseModel = "gpt-5"
-	BetaResponseModelGPT5Mini                         BetaResponseModel = "gpt-5-mini"
-	BetaResponseModelGPT5Nano                         BetaResponseModel = "gpt-5-nano"
-	BetaResponseModelGPT5_2025_08_07                  BetaResponseModel = "gpt-5-2025-08-07"
-	BetaResponseModelGPT5Mini2025_08_07               BetaResponseModel = "gpt-5-mini-2025-08-07"
-	BetaResponseModelGPT5Nano2025_08_07               BetaResponseModel = "gpt-5-nano-2025-08-07"
-	BetaResponseModelGPT5ChatLatest                   BetaResponseModel = "gpt-5-chat-latest"
-	BetaResponseModelGPT4_1                           BetaResponseModel = "gpt-4.1"
-	BetaResponseModelGPT4_1Mini                       BetaResponseModel = "gpt-4.1-mini"
-	BetaResponseModelGPT4_1Nano                       BetaResponseModel = "gpt-4.1-nano"
-	BetaResponseModelGPT4_1_2025_04_14                BetaResponseModel = "gpt-4.1-2025-04-14"
-	BetaResponseModelGPT4_1Mini2025_04_14             BetaResponseModel = "gpt-4.1-mini-2025-04-14"
-	BetaResponseModelGPT4_1Nano2025_04_14             BetaResponseModel = "gpt-4.1-nano-2025-04-14"
-	BetaResponseModelO4Mini                           BetaResponseModel = "o4-mini"
-	BetaResponseModelO4Mini2025_04_16                 BetaResponseModel = "o4-mini-2025-04-16"
-	BetaResponseModelO3                               BetaResponseModel = "o3"
-	BetaResponseModelO3_2025_04_16                    BetaResponseModel = "o3-2025-04-16"
-	BetaResponseModelO3Mini                           BetaResponseModel = "o3-mini"
-	BetaResponseModelO3Mini2025_01_31                 BetaResponseModel = "o3-mini-2025-01-31"
-	BetaResponseModelO1                               BetaResponseModel = "o1"
-	BetaResponseModelO1_2024_12_17                    BetaResponseModel = "o1-2024-12-17"
-	BetaResponseModelO1Preview                        BetaResponseModel = "o1-preview"
-	BetaResponseModelO1Preview2024_09_12              BetaResponseModel = "o1-preview-2024-09-12"
-	BetaResponseModelO1Mini                           BetaResponseModel = "o1-mini"
-	BetaResponseModelO1Mini2024_09_12                 BetaResponseModel = "o1-mini-2024-09-12"
-	BetaResponseModelGPT4o                            BetaResponseModel = "gpt-4o"
-	BetaResponseModelGPT4o2024_11_20                  BetaResponseModel = "gpt-4o-2024-11-20"
-	BetaResponseModelGPT4o2024_08_06                  BetaResponseModel = "gpt-4o-2024-08-06"
-	BetaResponseModelGPT4o2024_05_13                  BetaResponseModel = "gpt-4o-2024-05-13"
-	BetaResponseModelGPT4oAudioPreview                BetaResponseModel = "gpt-4o-audio-preview"
-	BetaResponseModelGPT4oAudioPreview2024_10_01      BetaResponseModel = "gpt-4o-audio-preview-2024-10-01"
-	BetaResponseModelGPT4oAudioPreview2024_12_17      BetaResponseModel = "gpt-4o-audio-preview-2024-12-17"
-	BetaResponseModelGPT4oAudioPreview2025_06_03      BetaResponseModel = "gpt-4o-audio-preview-2025-06-03"
-	BetaResponseModelGPT4oMiniAudioPreview            BetaResponseModel = "gpt-4o-mini-audio-preview"
-	BetaResponseModelGPT4oMiniAudioPreview2024_12_17  BetaResponseModel = "gpt-4o-mini-audio-preview-2024-12-17"
-	BetaResponseModelGPT4oSearchPreview               BetaResponseModel = "gpt-4o-search-preview"
-	BetaResponseModelGPT4oMiniSearchPreview           BetaResponseModel = "gpt-4o-mini-search-preview"
-	BetaResponseModelGPT4oSearchPreview2025_03_11     BetaResponseModel = "gpt-4o-search-preview-2025-03-11"
+	BetaResponseModelGPT6Astra         BetaResponseModel = "gpt-6-astra"
+	BetaResponseModelGPT6_1Sol         BetaResponseModel = "gpt-6.1-sol"
+	BetaResponseModelGPT6Sol           BetaResponseModel = "gpt-6-sol"
+	BetaResponseModelGPT6Luna          BetaResponseModel = "gpt-6-luna"
+	BetaResponseModelGPT5_6Sol         BetaResponseModel = "gpt-5.6-sol"
+	BetaResponseModelGPT5_6Terra       BetaResponseModel = "gpt-5.6-terra"
+	BetaResponseModelGPT5_6Luna        BetaResponseModel = "gpt-5.6-luna"
+	BetaResponseModelGPT5_5            BetaResponseModel = "gpt-5.5"
+	BetaResponseModelGPT5_5_2026_04_23 BetaResponseModel = "gpt-5.5-2026-04-23"
+	BetaResponseModelGPT5_4            BetaResponseModel = "gpt-5.4"
+	BetaResponseModelGPT5_4Mini        BetaResponseModel = "gpt-5.4-mini"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5_4Nano           BetaResponseModel = "gpt-5.4-nano"
+	BetaResponseModelGPT5_4Mini2026_03_17 BetaResponseModel = "gpt-5.4-mini-2026-03-17"
+	BetaResponseModelGPT5_4Nano2026_03_17 BetaResponseModel = "gpt-5.4-nano-2026-03-17"
+	// Deprecated: Announced shutdown date: 2026-08-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5_3ChatLatest  BetaResponseModel = "gpt-5.3-chat-latest"
+	BetaResponseModelGPT5_2            BetaResponseModel = "gpt-5.2"
+	BetaResponseModelGPT5_2_2025_12_11 BetaResponseModel = "gpt-5.2-2025-12-11"
+	// Deprecated: Announced shutdown date: 2026-08-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5_2ChatLatest    BetaResponseModel = "gpt-5.2-chat-latest"
+	BetaResponseModelGPT5_2Pro           BetaResponseModel = "gpt-5.2-pro"
+	BetaResponseModelGPT5_2Pro2025_12_11 BetaResponseModel = "gpt-5.2-pro-2025-12-11"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5_1            BetaResponseModel = "gpt-5.1"
+	BetaResponseModelGPT5_1_2025_11_13 BetaResponseModel = "gpt-5.1-2025-11-13"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5_1Codex BetaResponseModel = "gpt-5.1-codex"
+	// Deprecated: Not a supported model ID. Retained for SDK compatibility.
+	BetaResponseModelGPT5_1Mini BetaResponseModel = "gpt-5.1-mini"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5_1ChatLatest BetaResponseModel = "gpt-5.1-chat-latest"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5 BetaResponseModel = "gpt-5"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5Mini BetaResponseModel = "gpt-5-mini"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5Nano BetaResponseModel = "gpt-5-nano"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5_2025_08_07 BetaResponseModel = "gpt-5-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5Mini2025_08_07 BetaResponseModel = "gpt-5-mini-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5Nano2025_08_07 BetaResponseModel = "gpt-5-nano-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5ChatLatest BetaResponseModel = "gpt-5-chat-latest"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_1 BetaResponseModel = "gpt-4.1"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_1Mini BetaResponseModel = "gpt-4.1-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_1Nano BetaResponseModel = "gpt-4.1-nano"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_1_2025_04_14 BetaResponseModel = "gpt-4.1-2025-04-14"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_1Mini2025_04_14 BetaResponseModel = "gpt-4.1-mini-2025-04-14"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_1Nano2025_04_14 BetaResponseModel = "gpt-4.1-nano-2025-04-14"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO4Mini BetaResponseModel = "o4-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO4Mini2025_04_16 BetaResponseModel = "o4-mini-2025-04-16"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO3 BetaResponseModel = "o3"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO3_2025_04_16 BetaResponseModel = "o3-2025-04-16"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO3Mini BetaResponseModel = "o3-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO3Mini2025_01_31 BetaResponseModel = "o3-mini-2025-01-31"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO1 BetaResponseModel = "o1"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO1_2024_12_17 BetaResponseModel = "o1-2024-12-17"
+	// Deprecated: Announced shutdown date: 2025-07-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO1Preview BetaResponseModel = "o1-preview"
+	// Deprecated: Announced shutdown date: 2025-07-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO1Preview2024_09_12 BetaResponseModel = "o1-preview-2024-09-12"
+	// Deprecated: Announced shutdown date: 2025-10-27. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO1Mini BetaResponseModel = "o1-mini"
+	// Deprecated: Announced shutdown date: 2025-10-27. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO1Mini2024_09_12 BetaResponseModel = "o1-mini-2024-09-12"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4o BetaResponseModel = "gpt-4o"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4o2024_11_20 BetaResponseModel = "gpt-4o-2024-11-20"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4o2024_08_06 BetaResponseModel = "gpt-4o-2024-08-06"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4o2024_05_13 BetaResponseModel = "gpt-4o-2024-05-13"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPTAudioMini BetaResponseModel = "gpt-audio-mini"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPTAudioMini2025_12_15 BetaResponseModel = "gpt-audio-mini-2025-12-15"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oAudioPreview BetaResponseModel = "gpt-4o-audio-preview"
+	// Deprecated: Announced shutdown date: 2025-10-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oAudioPreview2024_10_01 BetaResponseModel = "gpt-4o-audio-preview-2024-10-01"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oAudioPreview2024_12_17 BetaResponseModel = "gpt-4o-audio-preview-2024-12-17"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oAudioPreview2025_06_03 BetaResponseModel = "gpt-4o-audio-preview-2025-06-03"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oMiniAudioPreview BetaResponseModel = "gpt-4o-mini-audio-preview"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oMiniAudioPreview2024_12_17 BetaResponseModel = "gpt-4o-mini-audio-preview-2024-12-17"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oSearchPreview BetaResponseModel = "gpt-4o-search-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oMiniSearchPreview BetaResponseModel = "gpt-4o-mini-search-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oSearchPreview2025_03_11 BetaResponseModel = "gpt-4o-search-preview-2025-03-11"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponseModelGPT4oMiniSearchPreview2025_03_11 BetaResponseModel = "gpt-4o-mini-search-preview-2025-03-11"
-	BetaResponseModelChatgpt4oLatest                  BetaResponseModel = "chatgpt-4o-latest"
-	BetaResponseModelCodexMiniLatest                  BetaResponseModel = "codex-mini-latest"
-	BetaResponseModelGPT4oMini                        BetaResponseModel = "gpt-4o-mini"
-	BetaResponseModelGPT4oMini2024_07_18              BetaResponseModel = "gpt-4o-mini-2024-07-18"
-	BetaResponseModelGPT4Turbo                        BetaResponseModel = "gpt-4-turbo"
-	BetaResponseModelGPT4Turbo2024_04_09              BetaResponseModel = "gpt-4-turbo-2024-04-09"
-	BetaResponseModelGPT4_0125Preview                 BetaResponseModel = "gpt-4-0125-preview"
-	BetaResponseModelGPT4TurboPreview                 BetaResponseModel = "gpt-4-turbo-preview"
-	BetaResponseModelGPT4_1106Preview                 BetaResponseModel = "gpt-4-1106-preview"
-	BetaResponseModelGPT4VisionPreview                BetaResponseModel = "gpt-4-vision-preview"
-	BetaResponseModelGPT4                             BetaResponseModel = "gpt-4"
-	BetaResponseModelGPT4_0314                        BetaResponseModel = "gpt-4-0314"
-	BetaResponseModelGPT4_0613                        BetaResponseModel = "gpt-4-0613"
-	BetaResponseModelGPT4_32k                         BetaResponseModel = "gpt-4-32k"
-	BetaResponseModelGPT4_32k0314                     BetaResponseModel = "gpt-4-32k-0314"
-	BetaResponseModelGPT4_32k0613                     BetaResponseModel = "gpt-4-32k-0613"
-	BetaResponseModelGPT3_5Turbo                      BetaResponseModel = "gpt-3.5-turbo"
-	BetaResponseModelGPT3_5Turbo16k                   BetaResponseModel = "gpt-3.5-turbo-16k"
-	BetaResponseModelGPT3_5Turbo0301                  BetaResponseModel = "gpt-3.5-turbo-0301"
-	BetaResponseModelGPT3_5Turbo0613                  BetaResponseModel = "gpt-3.5-turbo-0613"
-	BetaResponseModelGPT3_5Turbo1106                  BetaResponseModel = "gpt-3.5-turbo-1106"
-	BetaResponseModelGPT3_5Turbo0125                  BetaResponseModel = "gpt-3.5-turbo-0125"
-	BetaResponseModelGPT3_5Turbo16k0613               BetaResponseModel = "gpt-3.5-turbo-16k-0613"
-	BetaResponseModelO1Pro                            BetaResponseModel = "o1-pro"
-	BetaResponseModelO1Pro2025_03_19                  BetaResponseModel = "o1-pro-2025-03-19"
-	BetaResponseModelO3Pro                            BetaResponseModel = "o3-pro"
-	BetaResponseModelO3Pro2025_06_10                  BetaResponseModel = "o3-pro-2025-06-10"
-	BetaResponseModelO3DeepResearch                   BetaResponseModel = "o3-deep-research"
-	BetaResponseModelO3DeepResearch2025_06_26         BetaResponseModel = "o3-deep-research-2025-06-26"
-	BetaResponseModelO4MiniDeepResearch               BetaResponseModel = "o4-mini-deep-research"
-	BetaResponseModelO4MiniDeepResearch2025_06_26     BetaResponseModel = "o4-mini-deep-research-2025-06-26"
-	BetaResponseModelComputerUsePreview               BetaResponseModel = "computer-use-preview"
-	BetaResponseModelComputerUsePreview2025_03_11     BetaResponseModel = "computer-use-preview-2025-03-11"
-	BetaResponseModelGPT5_5Pro                        BetaResponseModel = "gpt-5.5-pro"
-	BetaResponseModelGPT5_5Pro2026_04_23              BetaResponseModel = "gpt-5.5-pro-2026-04-23"
-	BetaResponseModelGPT5Codex                        BetaResponseModel = "gpt-5-codex"
-	BetaResponseModelGPT5Pro                          BetaResponseModel = "gpt-5-pro"
-	BetaResponseModelGPT5Pro2025_10_06                BetaResponseModel = "gpt-5-pro-2025-10-06"
-	BetaResponseModelGPT5_1CodexMax                   BetaResponseModel = "gpt-5.1-codex-max"
-	BetaResponseModelGPTDaybreakBlueLatest            BetaResponseModel = "gpt-daybreak-blue-latest"
-	BetaResponseModelGPTDaybreakRedLatest             BetaResponseModel = "gpt-daybreak-red-latest"
-	BetaResponseModelGPT5_6Cyber                      BetaResponseModel = "gpt-5.6-cyber"
+	// Deprecated: Announced shutdown date: 2026-02-17. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelChatgpt4oLatest BetaResponseModel = "chatgpt-4o-latest"
+	// Deprecated: Announced shutdown date: 2026-02-12. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelCodexMiniLatest BetaResponseModel = "codex-mini-latest"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oMini BetaResponseModel = "gpt-4o-mini"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4oMini2024_07_18 BetaResponseModel = "gpt-4o-mini-2024-07-18"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4Turbo BetaResponseModel = "gpt-4-turbo"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4Turbo2024_04_09 BetaResponseModel = "gpt-4-turbo-2024-04-09"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_0125Preview BetaResponseModel = "gpt-4-0125-preview"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4TurboPreview BetaResponseModel = "gpt-4-turbo-preview"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_1106Preview BetaResponseModel = "gpt-4-1106-preview"
+	// Deprecated: Announced shutdown date: 2024-12-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4VisionPreview BetaResponseModel = "gpt-4-vision-preview"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4 BetaResponseModel = "gpt-4"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_0314 BetaResponseModel = "gpt-4-0314"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_0613 BetaResponseModel = "gpt-4-0613"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_32k BetaResponseModel = "gpt-4-32k"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_32k0314 BetaResponseModel = "gpt-4-32k-0314"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT4_32k0613 BetaResponseModel = "gpt-4-32k-0613"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT3_5Turbo BetaResponseModel = "gpt-3.5-turbo"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT3_5Turbo16k BetaResponseModel = "gpt-3.5-turbo-16k"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT3_5Turbo0301 BetaResponseModel = "gpt-3.5-turbo-0301"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT3_5Turbo0613 BetaResponseModel = "gpt-3.5-turbo-0613"
+	// Deprecated: Announced shutdown date: 2026-09-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT3_5Turbo1106 BetaResponseModel = "gpt-3.5-turbo-1106"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT3_5Turbo0125 BetaResponseModel = "gpt-3.5-turbo-0125"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT3_5Turbo16k0613 BetaResponseModel = "gpt-3.5-turbo-16k-0613"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO1Pro BetaResponseModel = "o1-pro"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO1Pro2025_03_19 BetaResponseModel = "o1-pro-2025-03-19"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO3Pro BetaResponseModel = "o3-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO3Pro2025_06_10 BetaResponseModel = "o3-pro-2025-06-10"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO3DeepResearch BetaResponseModel = "o3-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO3DeepResearch2025_06_26 BetaResponseModel = "o3-deep-research-2025-06-26"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO4MiniDeepResearch BetaResponseModel = "o4-mini-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelO4MiniDeepResearch2025_06_26 BetaResponseModel = "o4-mini-deep-research-2025-06-26"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelComputerUsePreview BetaResponseModel = "computer-use-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelComputerUsePreview2025_03_11 BetaResponseModel = "computer-use-preview-2025-03-11"
+	BetaResponseModelGPT5_5Pro                    BetaResponseModel = "gpt-5.5-pro"
+	BetaResponseModelGPT5_5Pro2026_04_23          BetaResponseModel = "gpt-5.5-pro-2026-04-23"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5Codex BetaResponseModel = "gpt-5-codex"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5Pro BetaResponseModel = "gpt-5-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5Pro2025_10_06 BetaResponseModel = "gpt-5-pro-2025-10-06"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseModelGPT5_1CodexMax        BetaResponseModel = "gpt-5.1-codex-max"
+	BetaResponseModelGPTDaybreakBlueLatest BetaResponseModel = "gpt-daybreak-blue-latest"
+	BetaResponseModelGPTDaybreakRedLatest  BetaResponseModel = "gpt-daybreak-red-latest"
+	BetaResponseModelGPT5_6Cyber           BetaResponseModel = "gpt-5.6-cyber"
+	BetaResponseModelGPTRosalindResearch   BetaResponseModel = "gpt-rosalind-research"
 )
 
 // BetaResponseToolChoiceUnion contains all possible properties and values from
@@ -6850,6 +7141,55 @@ func (r *BetaResponseCodeInterpreterToolCallAgentParam) UnmarshalJSON(data []byt
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Emitted when new summary content is sampled for a compaction trigger. Contains
+// no summary content.
+type BetaResponseCompactionCompactingEvent struct {
+	// The ID of the compaction output item.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the compaction output item.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the event that was emitted.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The type of the event, always `response.compaction.compacting`.
+	Type constant.ResponseCompactionCompacting `json:"type" default:"response.compaction.compacting"`
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseCompactionCompactingEventAgent `json:"agent"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		Agent          respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseCompactionCompactingEvent) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseCompactionCompactingEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The agent that owns this multi-agent streaming event.
+type BetaResponseCompactionCompactingEventAgent struct {
+	// The canonical name of the agent that produced this item.
+	AgentName string `json:"agent_name" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AgentName   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseCompactionCompactingEventAgent) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseCompactionCompactingEventAgent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // A compaction item generated by the
 // [`v1/responses/compact` API](https://developers.openai.com/api/reference/resources/responses/methods/compact).
 type BetaResponseCompactionItem struct {
@@ -7237,7 +7577,7 @@ func (r *BetaResponseComputerToolCallAgentParam) UnmarshalJSON(data []byte) erro
 }
 
 type BetaResponseComputerToolCallOutputItem struct {
-	// The unique ID of the computer call tool output.
+	// The ID of the computer tool call output.
 	ID string `json:"id" api:"required"`
 	// The ID of the computer tool call that produced the output.
 	CallID string `json:"call_id" api:"required"`
@@ -9123,11 +9463,17 @@ type BetaResponseError struct {
 	// A human-readable description of the error.
 	Message      string                        `json:"message" api:"required"`
 	Misalignment BetaResponseErrorMisalignment `json:"misalignment"`
+	// The request parameter associated with the error, or null if none was recorded.
+	Param string `json:"param" api:"nullable"`
+	// The original error type, or null if it was not recorded.
+	Type string `json:"type" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Code         respjson.Field
 		Message      respjson.Field
 		Misalignment respjson.Field
+		Param        respjson.Field
+		Type         respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -9171,12 +9517,16 @@ type BetaResponseErrorMisalignment struct {
 	DetailedExplanation string `json:"detailed_explanation"`
 	// An optional classification; clients must accept additional values.
 	ErrorType string `json:"error_type"`
+	// An opaque target for explicitly continuing this review, or null when
+	// unavailable.
+	ReviewTarget string `json:"review_target" api:"nullable"`
 	// An optional public continuation instruction.
 	Steer BetaResponseErrorMisalignmentSteer `json:"steer"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		DetailedExplanation respjson.Field
 		ErrorType           respjson.Field
+		ReviewTarget        respjson.Field
 		Steer               respjson.Field
 		ExtraFields         map[string]respjson.Field
 		raw                 string
@@ -12790,6 +13140,119 @@ func (r *BetaResponseIncompleteEventAgent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Emitted when all injected input items were validated and committed to the active
+// response.
+type BetaResponseInjectCreatedEvent struct {
+	// The ID of the response that accepted the input.
+	ResponseID string `json:"response_id" api:"required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The event discriminator. Always `response.inject.created`.
+	Type constant.ResponseInjectCreated `json:"type" default:"response.inject.created"`
+	// The multiplexed WebSocket stream that emitted the event. This field is present
+	// only when WebSocket multiplexing is enabled separately.
+	StreamID string `json:"stream_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ResponseID     respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		StreamID       respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseInjectCreatedEvent) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseInjectCreatedEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Injects input items into an active response over a WebSocket connection. The
+// items are validated and committed atomically. Currently, the server accepts
+// client-owned tool outputs that resume a waiting agent.
+//
+// The properties Input, ResponseID, Type are required.
+type BetaResponseInjectEventParam struct {
+	// Input items to inject into the active response.
+	Input []BetaResponseInputItemUnionParam `json:"input,omitzero" api:"required"`
+	// The ID of the active response that should receive the input.
+	ResponseID string `json:"response_id" api:"required"`
+	// The event discriminator. Always `response.inject`.
+	//
+	// This field can be elided, and will marshal its zero value as "response.inject".
+	Type constant.ResponseInject `json:"type" default:"response.inject"`
+	paramObj
+}
+
+func (r BetaResponseInjectEventParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseInjectEventParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseInjectEventParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when injected input could not be committed to a response. The event
+// returns the uncommitted raw input so the client can retry it in another response
+// when appropriate.
+type BetaResponseInjectFailedEvent struct {
+	// Information about why the input was not committed.
+	Error BetaResponseInjectFailedEventError `json:"error" api:"required"`
+	// The raw input items that were not committed.
+	Input []BetaResponseInputItemUnion `json:"input" api:"required"`
+	// The ID of the response that rejected the input.
+	ResponseID string `json:"response_id" api:"required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The event discriminator. Always `response.inject.failed`.
+	Type constant.ResponseInjectFailed `json:"type" default:"response.inject.failed"`
+	// The multiplexed WebSocket stream that emitted the event. This field is present
+	// only when WebSocket multiplexing is enabled separately.
+	StreamID string `json:"stream_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Error          respjson.Field
+		Input          respjson.Field
+		ResponseID     respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		StreamID       respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseInjectFailedEvent) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseInjectFailedEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Information about why the input was not committed.
+type BetaResponseInjectFailedEventError struct {
+	// A machine-readable error code.
+	//
+	// Any of "response_already_completed", "response_not_found".
+	Code string `json:"code" api:"required"`
+	// A human-readable description of the error.
+	Message string `json:"message" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseInjectFailedEventError) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseInjectFailedEventError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type BetaResponseInputParam []BetaResponseInputItemUnionParam
 
 // BetaResponseInputContentUnion contains all possible properties and values from
@@ -13768,8 +14231,8 @@ type BetaResponseInputItemUnion struct {
 	// This field is from variant [BetaResponseInputItemAgentMessage].
 	Recipient string `json:"recipient"`
 	Execution string `json:"execution"`
-	// This field is a union of [[]BetaToolUnion], [[]BetaToolUnion],
-	// [[]BetaResponseInputItemMcpListToolsTool]
+	// This field is a union of [[]BetaResponseToolSearchOutputItemParamToolUnionResp],
+	// [[]BetaToolUnion], [[]BetaResponseInputItemMcpListToolsTool]
 	Tools BetaResponseInputItemUnionTools `json:"tools"`
 	// This field is from variant [BetaResponseConfigurationUpdateItemParamResp].
 	Reasoning BetaResponseConfigurationUpdateItemParamReasoningResp `json:"reasoning"`
@@ -14479,8 +14942,12 @@ func (r *BetaResponseInputItemUnionCaller) UnmarshalJSON(data []byte) error {
 // [BetaResponseInputItemUnion].
 //
 // If the underlying value is not a json object, one of the following properties
-// will be valid: OfBetaToolArray OfBetaResponseInputItemMcpListToolsTools]
+// will be valid: OfBetaResponseToolSearchOutputItemToolArray OfBetaToolArray
+// OfBetaResponseInputItemMcpListToolsTools]
 type BetaResponseInputItemUnionTools struct {
+	// This field will be present if the value is a
+	// [[]BetaResponseToolSearchOutputItemParamToolUnionResp] instead of an object.
+	OfBetaResponseToolSearchOutputItemToolArray []BetaResponseToolSearchOutputItemParamToolUnionResp `json:",inline"`
 	// This field will be present if the value is a [[]BetaToolUnion] instead of an
 	// object.
 	OfBetaToolArray []BetaToolUnion `json:",inline"`
@@ -14488,9 +14955,10 @@ type BetaResponseInputItemUnionTools struct {
 	// [[]BetaResponseInputItemMcpListToolsTool] instead of an object.
 	OfBetaResponseInputItemMcpListToolsTools []BetaResponseInputItemMcpListToolsTool `json:",inline"`
 	JSON                                     struct {
-		OfBetaToolArray                          respjson.Field
-		OfBetaResponseInputItemMcpListToolsTools respjson.Field
-		raw                                      string
+		OfBetaResponseToolSearchOutputItemToolArray respjson.Field
+		OfBetaToolArray                             respjson.Field
+		OfBetaResponseInputItemMcpListToolsTools    respjson.Field
+		raw                                         string
 	} `json:"-"`
 }
 
@@ -15537,6 +16005,8 @@ type BetaResponseInputItemImageGenerationCall struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background" api:"nullable"`
+	// Details of a moderation failure, when available.
+	Error BetaResponseInputItemImageGenerationCallError `json:"error"`
 	// The output format used for generation.
 	//
 	// Any of "png", "webp", "jpeg".
@@ -15559,6 +16029,7 @@ type BetaResponseInputItemImageGenerationCall struct {
 		Action        respjson.Field
 		Agent         respjson.Field
 		Background    respjson.Field
+		Error         respjson.Field
 		OutputFormat  respjson.Field
 		Quality       respjson.Field
 		RevisedPrompt respjson.Field
@@ -15589,6 +16060,61 @@ type BetaResponseInputItemImageGenerationCallAgent struct {
 // Returns the unmodified JSON received from the API
 func (r BetaResponseInputItemImageGenerationCallAgent) RawJSON() string { return r.JSON.raw }
 func (r *BetaResponseInputItemImageGenerationCallAgent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Details of a moderation failure, when available.
+type BetaResponseInputItemImageGenerationCallError struct {
+	// The error code.
+	Code string `json:"code" api:"required"`
+	// A description of the error.
+	Message string `json:"message" api:"required"`
+	// The related request parameter.
+	Param string `json:"param" api:"required"`
+	// The error type.
+	Type string `json:"type" api:"required"`
+	// Public details for a `moderation_blocked` error, when available.
+	ModerationDetails BetaResponseInputItemImageGenerationCallErrorModerationDetails `json:"moderation_details"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code              respjson.Field
+		Message           respjson.Field
+		Param             respjson.Field
+		Type              respjson.Field
+		ModerationDetails respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseInputItemImageGenerationCallError) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseInputItemImageGenerationCallError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Public details for a `moderation_blocked` error, when available.
+type BetaResponseInputItemImageGenerationCallErrorModerationDetails struct {
+	// Public moderation categories. New category values may be added over time.
+	Categories []string `json:"categories" api:"required"`
+	// The stage where moderation blocked the image generation call.
+	//
+	// Any of "input", "output", "unknown".
+	ModerationStage string `json:"moderation_stage" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Categories      respjson.Field
+		ModerationStage respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseInputItemImageGenerationCallErrorModerationDetails) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseInputItemImageGenerationCallErrorModerationDetails) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -17171,7 +17697,7 @@ func BetaResponseInputItemParamOfToolSearchCall(arguments any) BetaResponseInput
 	return BetaResponseInputItemUnionParam{OfToolSearchCall: &toolSearchCall}
 }
 
-func BetaResponseInputItemParamOfToolSearchOutput(tools []BetaToolUnionParam) BetaResponseInputItemUnionParam {
+func BetaResponseInputItemParamOfToolSearchOutput(tools []BetaResponseToolSearchOutputItemParamToolUnion) BetaResponseInputItemUnionParam {
 	var toolSearchOutput BetaResponseToolSearchOutputItemParam
 	toolSearchOutput.Tools = tools
 	return BetaResponseInputItemUnionParam{OfToolSearchOutput: &toolSearchOutput}
@@ -18255,8 +18781,8 @@ func (u betaResponseInputItemUnionParamAction) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetButton() *string {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetButton()
+	case *BetaComputerActionClickParam:
+		return &vt.Button
 	}
 	return nil
 }
@@ -18264,8 +18790,8 @@ func (u betaResponseInputItemUnionParamAction) GetButton() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetPath() []BetaComputerActionDragPathParam {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetPath()
+	case *BetaComputerActionDragParam:
+		return vt.Path
 	}
 	return nil
 }
@@ -18273,8 +18799,8 @@ func (u betaResponseInputItemUnionParamAction) GetPath() []BetaComputerActionDra
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetScrollX() *int64 {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetScrollX()
+	case *BetaComputerActionScrollParam:
+		return &vt.ScrollX
 	}
 	return nil
 }
@@ -18282,8 +18808,8 @@ func (u betaResponseInputItemUnionParamAction) GetScrollX() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetScrollY() *int64 {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetScrollY()
+	case *BetaComputerActionScrollParam:
+		return &vt.ScrollY
 	}
 	return nil
 }
@@ -18291,8 +18817,8 @@ func (u betaResponseInputItemUnionParamAction) GetScrollY() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetText() *string {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetText()
+	case *BetaComputerActionTypeParam:
+		return &vt.Text
 	}
 	return nil
 }
@@ -18300,8 +18826,8 @@ func (u betaResponseInputItemUnionParamAction) GetText() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetQueries() []string {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionWebSearchActionUnionParam:
-		return vt.GetQueries()
+	case *BetaResponseFunctionWebSearchActionSearchParam:
+		return vt.Queries
 	}
 	return nil
 }
@@ -18309,8 +18835,8 @@ func (u betaResponseInputItemUnionParamAction) GetQueries() []string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetQuery() *string {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionWebSearchActionUnionParam:
-		return vt.GetQuery()
+	case *BetaResponseFunctionWebSearchActionSearchParam:
+		return paramutil.AddrIfPresent(vt.Query)
 	}
 	return nil
 }
@@ -18318,8 +18844,8 @@ func (u betaResponseInputItemUnionParamAction) GetQuery() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetSources() []BetaResponseFunctionWebSearchActionSearchSourceParam {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionWebSearchActionUnionParam:
-		return vt.GetSources()
+	case *BetaResponseFunctionWebSearchActionSearchParam:
+		return vt.Sources
 	}
 	return nil
 }
@@ -18327,8 +18853,8 @@ func (u betaResponseInputItemUnionParamAction) GetSources() []BetaResponseFuncti
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetPattern() *string {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionWebSearchActionUnionParam:
-		return vt.GetPattern()
+	case *BetaResponseFunctionWebSearchActionFindInPageParam:
+		return &vt.Pattern
 	}
 	return nil
 }
@@ -18390,10 +18916,30 @@ func (u betaResponseInputItemUnionParamAction) GetMaxOutputLength() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetType() *string {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetType()
-	case *BetaResponseFunctionWebSearchActionUnionParam:
-		return vt.GetType()
+	case *BetaComputerActionClickParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionDoubleClickParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionDragParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionKeypressParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionMoveParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionScreenshotParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionScrollParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionTypeParam:
+		return (*string)(&vt.Type)
+	case *BetaComputerActionWaitParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseFunctionWebSearchActionSearchParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseFunctionWebSearchActionOpenPageParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseFunctionWebSearchActionFindInPageParam:
+		return (*string)(&vt.Type)
 	case *BetaResponseInputItemLocalShellCallActionParam:
 		return (*string)(&vt.Type)
 	}
@@ -18403,8 +18949,14 @@ func (u betaResponseInputItemUnionParamAction) GetType() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetX() *int64 {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetX()
+	case *BetaComputerActionClickParam:
+		return (*int64)(&vt.X)
+	case *BetaComputerActionDoubleClickParam:
+		return (*int64)(&vt.X)
+	case *BetaComputerActionMoveParam:
+		return (*int64)(&vt.X)
+	case *BetaComputerActionScrollParam:
+		return (*int64)(&vt.X)
 	}
 	return nil
 }
@@ -18412,8 +18964,14 @@ func (u betaResponseInputItemUnionParamAction) GetX() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetY() *int64 {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetY()
+	case *BetaComputerActionClickParam:
+		return (*int64)(&vt.Y)
+	case *BetaComputerActionDoubleClickParam:
+		return (*int64)(&vt.Y)
+	case *BetaComputerActionMoveParam:
+		return (*int64)(&vt.Y)
+	case *BetaComputerActionScrollParam:
+		return (*int64)(&vt.Y)
 	}
 	return nil
 }
@@ -18421,8 +18979,10 @@ func (u betaResponseInputItemUnionParamAction) GetY() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamAction) GetURL() *string {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionWebSearchActionUnionParam:
-		return vt.GetURL()
+	case *BetaResponseFunctionWebSearchActionOpenPageParam:
+		return paramutil.AddrIfPresent(vt.URL)
+	case *BetaResponseFunctionWebSearchActionFindInPageParam:
+		return (*string)(&vt.URL)
 	}
 	return nil
 }
@@ -18441,8 +19001,18 @@ func (u betaResponseInputItemUnionParamAction) GetTimeoutMs() *int64 {
 // Returns a pointer to the underlying variant's Keys property, if present.
 func (u betaResponseInputItemUnionParamAction) GetKeys() []string {
 	switch vt := u.any.(type) {
-	case *BetaComputerActionUnionParam:
-		return vt.GetKeys()
+	case *BetaComputerActionClickParam:
+		return vt.Keys
+	case *BetaComputerActionDoubleClickParam:
+		return vt.Keys
+	case *BetaComputerActionDragParam:
+		return vt.Keys
+	case *BetaComputerActionKeypressParam:
+		return vt.Keys
+	case *BetaComputerActionMoveParam:
+		return vt.Keys
+	case *BetaComputerActionScrollParam:
+		return vt.Keys
 	}
 	return nil
 }
@@ -18592,22 +19162,38 @@ func (u betaResponseInputItemUnionParamCaller) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamCaller) GetType() *string {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionToolCallCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseInputItemFunctionCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseInputItemShellCallCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseInputItemShellCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseInputItemApplyPatchCallCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseInputItemApplyPatchCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseCustomToolCallOutputCallerUnionParam:
-		return vt.GetType()
-	case *BetaResponseCustomToolCallCallerUnionParam:
-		return vt.GetType()
+	case *BetaResponseFunctionToolCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseFunctionToolCallCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemFunctionCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemFunctionCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemShellCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemShellCallCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemShellCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemShellCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemApplyPatchCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemApplyPatchCallCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemApplyPatchCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseInputItemApplyPatchCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseCustomToolCallOutputCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseCustomToolCallOutputCallerProgramParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseCustomToolCallCallerDirectParam:
+		return (*string)(&vt.Type)
+	case *BetaResponseCustomToolCallCallerProgramParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -18615,22 +19201,22 @@ func (u betaResponseInputItemUnionParamCaller) GetType() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamCaller) GetCallerID() *string {
 	switch vt := u.any.(type) {
-	case *BetaResponseFunctionToolCallCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseInputItemFunctionCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseInputItemShellCallCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseInputItemShellCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseInputItemApplyPatchCallCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseInputItemApplyPatchCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseCustomToolCallOutputCallerUnionParam:
-		return vt.GetCallerID()
-	case *BetaResponseCustomToolCallCallerUnionParam:
-		return vt.GetCallerID()
+	case *BetaResponseFunctionToolCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseInputItemFunctionCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseInputItemShellCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseInputItemShellCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseInputItemApplyPatchCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseInputItemApplyPatchCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseCustomToolCallOutputCallerProgramParam:
+		return (*string)(&vt.CallerID)
+	case *BetaResponseCustomToolCallCallerProgramParam:
+		return (*string)(&vt.CallerID)
 	}
 	return nil
 }
@@ -18649,13 +19235,14 @@ func (u BetaResponseInputItemUnionParam) GetTools() (res betaResponseInputItemUn
 	return
 }
 
-// Can have the runtime types [_[]BetaToolUnionParam],
-// [_[]BetaResponseInputItemMcpListToolsToolParam]
+// Can have the runtime types [_[]BetaResponseToolSearchOutputItemParamToolUnion],
+// [_[]BetaToolUnionParam], [\*[]BetaResponseInputItemMcpListToolsToolParam]
 type betaResponseInputItemUnionParamTools struct{ any }
 
 // Use the following switch statement to get the type of the union:
 //
 //	switch u.AsAny().(type) {
+//	case *[]openai.BetaResponseToolSearchOutputItemParamToolUnion:
 //	case *[]openai.BetaToolUnionParam:
 //	case *[]openai.BetaResponseInputItemMcpListToolsToolParam:
 //	default:
@@ -18696,8 +19283,10 @@ func (u betaResponseInputItemUnionParamError) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamError) GetCode() *int64 {
 	switch vt := u.any.(type) {
-	case *BetaMcpToolCallErrorUnionParam:
-		return vt.GetCode()
+	case *BetaMcpToolCallErrorMcpProtocolErrorParam:
+		return (*int64)(&vt.Code)
+	case *BetaMcpToolCallErrorHTTPErrorParam:
+		return (*int64)(&vt.Code)
 	}
 	return nil
 }
@@ -18705,8 +19294,10 @@ func (u betaResponseInputItemUnionParamError) GetCode() *int64 {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamError) GetMessage() *string {
 	switch vt := u.any.(type) {
-	case *BetaMcpToolCallErrorUnionParam:
-		return vt.GetMessage()
+	case *BetaMcpToolCallErrorMcpProtocolErrorParam:
+		return (*string)(&vt.Message)
+	case *BetaMcpToolCallErrorHTTPErrorParam:
+		return (*string)(&vt.Message)
 	}
 	return nil
 }
@@ -18714,8 +19305,12 @@ func (u betaResponseInputItemUnionParamError) GetMessage() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamError) GetType() *string {
 	switch vt := u.any.(type) {
-	case *BetaMcpToolCallErrorUnionParam:
-		return vt.GetType()
+	case *BetaMcpToolCallErrorMcpProtocolErrorParam:
+		return (*string)(&vt.Type)
+	case *BetaMcpToolCallErrorMcpToolExecutionErrorParam:
+		return (*string)(&vt.Type)
+	case *BetaMcpToolCallErrorHTTPErrorParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -18723,8 +19318,8 @@ func (u betaResponseInputItemUnionParamError) GetType() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaResponseInputItemUnionParamError) GetContent() *any {
 	switch vt := u.any.(type) {
-	case *BetaMcpToolCallErrorUnionParam:
-		return vt.GetContent()
+	case *BetaMcpToolCallErrorMcpToolExecutionErrorParam:
+		return &vt.Content
 	}
 	return nil
 }
@@ -19735,6 +20330,8 @@ type BetaResponseInputItemImageGenerationCallParam struct {
 	Quality string `json:"quality,omitzero"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size param.Opt[string] `json:"size,omitzero"`
+	// Details of a moderation failure, when available.
+	Error BetaResponseInputItemImageGenerationCallErrorParam `json:"error,omitzero"`
 	// The type of the image generation call. Always `image_generation_call`.
 	//
 	// This field can be elided, and will marshal its zero value as
@@ -19775,6 +20372,58 @@ func (r BetaResponseInputItemImageGenerationCallAgentParam) MarshalJSON() (data 
 }
 func (r *BetaResponseInputItemImageGenerationCallAgentParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// Details of a moderation failure, when available.
+//
+// The properties Code, Message, Param, Type are required.
+type BetaResponseInputItemImageGenerationCallErrorParam struct {
+	// The error code.
+	Code param.Opt[string] `json:"code,omitzero" api:"required"`
+	// The related request parameter.
+	Param param.Opt[string] `json:"param,omitzero" api:"required"`
+	// A description of the error.
+	Message string `json:"message" api:"required"`
+	// The error type.
+	Type string `json:"type" api:"required"`
+	// Public details for a `moderation_blocked` error, when available.
+	ModerationDetails BetaResponseInputItemImageGenerationCallErrorModerationDetailsParam `json:"moderation_details,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseInputItemImageGenerationCallErrorParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseInputItemImageGenerationCallErrorParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseInputItemImageGenerationCallErrorParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Public details for a `moderation_blocked` error, when available.
+//
+// The properties Categories, ModerationStage are required.
+type BetaResponseInputItemImageGenerationCallErrorModerationDetailsParam struct {
+	// Public moderation categories. New category values may be added over time.
+	Categories []string `json:"categories,omitzero" api:"required"`
+	// The stage where moderation blocked the image generation call.
+	//
+	// Any of "input", "output", "unknown".
+	ModerationStage string `json:"moderation_stage,omitzero" api:"required"`
+	paramObj
+}
+
+func (r BetaResponseInputItemImageGenerationCallErrorModerationDetailsParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseInputItemImageGenerationCallErrorModerationDetailsParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseInputItemImageGenerationCallErrorModerationDetailsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseInputItemImageGenerationCallErrorModerationDetailsParam](
+		"moderation_stage", "input", "output", "unknown",
+	)
 }
 
 // A tool call to run a command on the local shell.
@@ -22941,6 +23590,8 @@ type BetaResponseItemImageGenerationCall struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background" api:"nullable"`
+	// Details of a moderation failure, when available.
+	Error BetaResponseItemImageGenerationCallError `json:"error"`
 	// The output format used for generation.
 	//
 	// Any of "png", "webp", "jpeg".
@@ -22963,6 +23614,7 @@ type BetaResponseItemImageGenerationCall struct {
 		Action        respjson.Field
 		Agent         respjson.Field
 		Background    respjson.Field
+		Error         respjson.Field
 		OutputFormat  respjson.Field
 		Quality       respjson.Field
 		RevisedPrompt respjson.Field
@@ -22993,6 +23645,61 @@ type BetaResponseItemImageGenerationCallAgent struct {
 // Returns the unmodified JSON received from the API
 func (r BetaResponseItemImageGenerationCallAgent) RawJSON() string { return r.JSON.raw }
 func (r *BetaResponseItemImageGenerationCallAgent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Details of a moderation failure, when available.
+type BetaResponseItemImageGenerationCallError struct {
+	// The error code.
+	Code string `json:"code" api:"required"`
+	// A description of the error.
+	Message string `json:"message" api:"required"`
+	// The related request parameter.
+	Param string `json:"param" api:"required"`
+	// The error type.
+	Type string `json:"type" api:"required"`
+	// Public details for a `moderation_blocked` error, when available.
+	ModerationDetails BetaResponseItemImageGenerationCallErrorModerationDetails `json:"moderation_details"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code              respjson.Field
+		Message           respjson.Field
+		Param             respjson.Field
+		Type              respjson.Field
+		ModerationDetails respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseItemImageGenerationCallError) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseItemImageGenerationCallError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Public details for a `moderation_blocked` error, when available.
+type BetaResponseItemImageGenerationCallErrorModerationDetails struct {
+	// Public moderation categories. New category values may be added over time.
+	Categories []string `json:"categories" api:"required"`
+	// The stage where moderation blocked the image generation call.
+	//
+	// Any of "input", "output", "unknown".
+	ModerationStage string `json:"moderation_stage" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Categories      respjson.Field
+		ModerationStage respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseItemImageGenerationCallErrorModerationDetails) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseItemImageGenerationCallErrorModerationDetails) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -25294,6 +26001,8 @@ type BetaResponseOutputItemImageGenerationCall struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background" api:"nullable"`
+	// Details of a moderation failure, when available.
+	Error BetaResponseOutputItemImageGenerationCallError `json:"error"`
 	// The output format used for generation.
 	//
 	// Any of "png", "webp", "jpeg".
@@ -25316,6 +26025,7 @@ type BetaResponseOutputItemImageGenerationCall struct {
 		Action        respjson.Field
 		Agent         respjson.Field
 		Background    respjson.Field
+		Error         respjson.Field
 		OutputFormat  respjson.Field
 		Quality       respjson.Field
 		RevisedPrompt respjson.Field
@@ -25346,6 +26056,61 @@ type BetaResponseOutputItemImageGenerationCallAgent struct {
 // Returns the unmodified JSON received from the API
 func (r BetaResponseOutputItemImageGenerationCallAgent) RawJSON() string { return r.JSON.raw }
 func (r *BetaResponseOutputItemImageGenerationCallAgent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Details of a moderation failure, when available.
+type BetaResponseOutputItemImageGenerationCallError struct {
+	// The error code.
+	Code string `json:"code" api:"required"`
+	// A description of the error.
+	Message string `json:"message" api:"required"`
+	// The related request parameter.
+	Param string `json:"param" api:"required"`
+	// The error type.
+	Type string `json:"type" api:"required"`
+	// Public details for a `moderation_blocked` error, when available.
+	ModerationDetails BetaResponseOutputItemImageGenerationCallErrorModerationDetails `json:"moderation_details"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code              respjson.Field
+		Message           respjson.Field
+		Param             respjson.Field
+		Type              respjson.Field
+		ModerationDetails respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseOutputItemImageGenerationCallError) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseOutputItemImageGenerationCallError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Public details for a `moderation_blocked` error, when available.
+type BetaResponseOutputItemImageGenerationCallErrorModerationDetails struct {
+	// Public moderation categories. New category values may be added over time.
+	Categories []string `json:"categories" api:"required"`
+	// The stage where moderation blocked the image generation call.
+	//
+	// Any of "input", "output", "unknown".
+	ModerationStage string `json:"moderation_stage" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Categories      respjson.Field
+		ModerationStage respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseOutputItemImageGenerationCallErrorModerationDetails) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseOutputItemImageGenerationCallErrorModerationDetails) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -26318,7 +27083,7 @@ type BetaResponseOutputTextAnnotationFileCitation struct {
 	FileID string `json:"file_id" api:"required"`
 	// The filename of the file cited.
 	Filename string `json:"filename" api:"required"`
-	// The index of the file in the list of files.
+	// The index in the output text at which to insert the file citation.
 	Index int64 `json:"index" api:"required"`
 	// The type of the file citation. Always `file_citation`.
 	Type constant.FileCitation `json:"type" default:"file_citation"`
@@ -26620,7 +27385,7 @@ type BetaResponseOutputTextAnnotationFileCitationParam struct {
 	FileID string `json:"file_id" api:"required"`
 	// The filename of the file cited.
 	Filename string `json:"filename" api:"required"`
-	// The index of the file in the list of files.
+	// The index in the output text at which to insert the file citation.
 	Index int64 `json:"index" api:"required"`
 	// The type of the file citation. Always `file_citation`.
 	//
@@ -26757,7 +27522,7 @@ func (r *BetaResponseOutputTextLogprobTopLogprobParam) UnmarshalJSON(data []byte
 
 // Emitted when an annotation is added to output text content.
 type BetaResponseOutputTextAnnotationAddedEvent struct {
-	// An annotation that applies to a span of output text.
+	// The annotation object being added. (See annotation schema for details.)
 	Annotation BetaResponseOutputTextAnnotationAddedEventAnnotationUnion `json:"annotation" api:"required"`
 	// The index of the annotation within the content part.
 	AnnotationIndex int64 `json:"annotation_index" api:"required"`
@@ -26912,7 +27677,7 @@ type BetaResponseOutputTextAnnotationAddedEventAnnotationFileCitation struct {
 	FileID string `json:"file_id" api:"required"`
 	// The filename of the file cited.
 	Filename string `json:"filename" api:"required"`
-	// The index of the file in the list of files.
+	// The index in the output text at which to insert the file citation.
 	Index int64 `json:"index" api:"required"`
 	// The type of the file citation. Always `file_citation`.
 	Type constant.FileCitation `json:"type" default:"file_citation"`
@@ -28535,6 +29300,64 @@ const (
 	BetaResponseStatusIncomplete BetaResponseStatus = "incomplete"
 )
 
+// Emitted when steering input has been validated and queued. Acceptance means the
+// server owns the input, not that it has been applied. The successor's
+// `response.created` event is the commit point. If accepted input cannot be
+// committed, `response.steer.failed` returns it with the same steering ID.
+//
+// When the response stops for client-owned tool output or approval, the input
+// remains queued and `response.steer.pending` is emitted after
+// `response.completed`. Fill the pending event's `required_input` stubs with saved
+// results and send one matching explicit `response.create` per parent. Do not
+// resend accepted input while it is still queued.
+type BetaResponseSteerAcceptedEvent struct {
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The accepted steering submission.
+	Steer BetaResponseSteerAcceptedEventSteer `json:"steer" api:"required"`
+	// The event discriminator. Always `response.steer.accepted`.
+	Type constant.ResponseSteerAccepted `json:"type" default:"response.steer.accepted"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// target response's `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		SequenceNumber respjson.Field
+		Steer          respjson.Field
+		Type           respjson.Field
+		StreamID       respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerAcceptedEvent) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseSteerAcceptedEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The accepted steering submission.
+type BetaResponseSteerAcceptedEventSteer struct {
+	// The ID assigned to the steering submission.
+	ID string `json:"id" api:"required"`
+	// The ID of the response being steered.
+	PreviousResponseID string `json:"previous_response_id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                 respjson.Field
+		PreviousResponseID respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerAcceptedEventSteer) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseSteerAcceptedEventSteer) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // A machine-readable steering error code. Clients should handle unknown values
 // because additional codes may be introduced. Known values include:
 //
@@ -28560,6 +29383,1330 @@ const (
 	BetaResponseSteerErrorCodeSuccessorCreationFailed  BetaResponseSteerErrorCode = "successor_creation_failed"
 )
 
+// Queues user input to steer a response on this WebSocket connection. Input can
+// contain text, images, and files. Steering is supported only for single-agent
+// responses on models and execution modes that support steering. Responses bound
+// to a conversation or using automatic compaction do not support steering.
+//
+// A `response.steer.accepted` event acknowledges that the server owns the queued
+// input, not that it has been applied. The successor's `response.created` event is
+// the commit point. Input that cannot be committed is returned in
+// `response.steer.failed`.
+//
+// Steering may cause the active response to finish at a safe output boundary with
+// `response.incomplete` and `incomplete_details.reason` set to `steered`, followed
+// automatically by a successor `response.created`. Normal completion can also be
+// followed by an automatic successor. Automatic successors inherit the previous
+// response's settings and continue from it with the queued input.
+//
+// If the response stops for client-owned tool output or approval, accepted
+// steering input remains queued and `response.steer.pending` is emitted after
+// `response.completed`. Fill the `required_input` stubs from that event with saved
+// tool results or approval decisions, and send one explicit `response.create` per
+// parent with the same `previous_response_id` and WebSocket lane. Do not rerun
+// tools or resend accepted steering input. The queued input is prepended in
+// submission order to that request's input, and the explicit request retains its
+// own settings.
+//
+// This event accepts only `type`, `previous_response_id`, and `input`. Do not send
+// `stream_id`; the target response determines the WebSocket lane.
+//
+// The properties Input, PreviousResponseID, Type are required.
+type BetaResponseSteerEventParam struct {
+	// Input to queue for a continuation of the response. Uses the same string or
+	// input-item shape as `response.create.input`, with a non-empty array when
+	// supplying input items.
+	//
+	// Steering accepts only messages with the `user` role. Each message may contain
+	// only `type`, `role`, and `content`, with `content` as a string or an array of
+	// `input_text`, `input_image`, and `input_file` parts. The optional `type` must be
+	// `message`. Other roles, tool outputs, and item types are not supported for
+	// steering.
+	Input BetaResponseSteerInputUnionParam `json:"input,omitzero" api:"required"`
+	// The ID of the response to steer on this WebSocket connection.
+	PreviousResponseID string `json:"previous_response_id" api:"required"`
+	// The event discriminator. Always `response.steer`.
+	//
+	// This field can be elided, and will marshal its zero value as "response.steer".
+	Type constant.ResponseSteer `json:"type" default:"response.steer"`
+	paramObj
+}
+
+func (r BetaResponseSteerEventParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseSteerEventParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseSteerEventParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when steering input is rejected or cannot be committed to a successor
+// response. Returns the original, uncommitted input so the client can carry it
+// into `response.create` when appropriate. Invalid input must be corrected before
+// retrying.
+//
+// Failures after acceptance include the same steering ID. Failures before an ID is
+// allocated omit `steer.id`. A lost connection or missing acknowledgement leaves
+// the outcome unknown; it is not proof that the input was rejected.
+type BetaResponseSteerFailedEvent struct {
+	// Information about why the input could not be committed.
+	Error BetaResponseSteerFailedEventError `json:"error" api:"required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The steering submission that could not be committed.
+	Steer BetaResponseSteerFailedEventSteer `json:"steer" api:"required"`
+	// The event discriminator. Always `response.steer.failed`.
+	Type constant.ResponseSteerFailed `json:"type" default:"response.steer.failed"`
+	// The WebSocket lane that emitted this event, when the target response is
+	// available and its `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Error          respjson.Field
+		SequenceNumber respjson.Field
+		Steer          respjson.Field
+		Type           respjson.Field
+		StreamID       respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerFailedEvent) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseSteerFailedEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Information about why the input could not be committed.
+type BetaResponseSteerFailedEventError struct {
+	// A machine-readable steering error code. Clients should handle unknown values
+	// because additional codes may be introduced. Known values include:
+	//
+	//   - `response_not_found`: The target response is not available on this connection.
+	//   - `invalid_input`: The event or input failed validation.
+	//   - `steering_not_supported`: The model or response execution mode does not
+	//     support steering.
+	//   - `too_many_pending_steers`: Too much steering input is pending for the
+	//     response.
+	//   - `response_already_completed`: The response completed and is no longer
+	//     accepting steering input.
+	//   - `response_not_active`: The response is no longer accepting steering input.
+	//   - `successor_creation_failed`: The successor response could not be created.
+	Code BetaResponseSteerErrorCode `json:"code" api:"required"`
+	// A human-readable description of the error.
+	Message string `json:"message" api:"required"`
+	// The error type. Always `invalid_request_error`.
+	Type constant.InvalidRequestError `json:"type" default:"invalid_request_error"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Message     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerFailedEventError) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseSteerFailedEventError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The steering submission that could not be committed.
+type BetaResponseSteerFailedEventSteer struct {
+	// Input to queue for a continuation of the response. Uses the same string or
+	// input-item shape as `response.create.input`, with a non-empty array when
+	// supplying input items.
+	//
+	// Steering accepts only messages with the `user` role. Each message may contain
+	// only `type`, `role`, and `content`, with `content` as a string or an array of
+	// `input_text`, `input_image`, and `input_file` parts. The optional `type` must be
+	// `message`. Other roles, tool outputs, and item types are not supported for
+	// steering.
+	Input BetaResponseSteerInputUnion `json:"input" api:"required"`
+	// The ID of the response that was targeted for steering.
+	PreviousResponseID string `json:"previous_response_id" api:"required"`
+	// The ID assigned to the steering submission, if one was allocated.
+	ID string `json:"id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Input              respjson.Field
+		PreviousResponseID respjson.Field
+		ID                 respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerFailedEventSteer) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseSteerFailedEventSteer) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseSteerInputUnion contains all possible properties and values from
+// [string], [[]BetaResponseSteerInputResponseSteerInputItemListUnion].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfResponseSteerInputItemList]
+type BetaResponseSteerInputUnion struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a
+	// [[]BetaResponseSteerInputResponseSteerInputItemListUnion] instead of an object.
+	OfResponseSteerInputItemList []BetaResponseSteerInputResponseSteerInputItemListUnion `json:",inline"`
+	JSON                         struct {
+		OfString                     respjson.Field
+		OfResponseSteerInputItemList respjson.Field
+		raw                          string
+	} `json:"-"`
+}
+
+func (u BetaResponseSteerInputUnion) AsString() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseSteerInputUnion) AsResponseSteerInputItemList() (v []BetaResponseSteerInputResponseSteerInputItemListUnion) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseSteerInputUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *BetaResponseSteerInputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this BetaResponseSteerInputUnion to a
+// BetaResponseSteerInputUnionParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// BetaResponseSteerInputUnionParam.Overrides()
+func (r BetaResponseSteerInputUnion) ToParam() BetaResponseSteerInputUnionParam {
+	return param.Override[BetaResponseSteerInputUnionParam](json.RawMessage(r.RawJSON()))
+}
+
+// BetaResponseSteerInputResponseSteerInputItemListUnion contains all possible
+// properties and values from
+// [BetaResponseSteerInputResponseSteerInputItemListMessage],
+// [BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutput].
+//
+// Use the [BetaResponseSteerInputResponseSteerInputItemListUnion.AsAny] method to
+// switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaResponseSteerInputResponseSteerInputItemListUnion struct {
+	OfBetaResponseSteerInputResponseSteerInputItemListMessage            BetaResponseSteerInputResponseSteerInputItemListMessage            `json:",inline"`
+	OfBetaResponseSteerInputResponseSteerInputItemListFunctionCallOutput BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutput `json:",inline"`
+	Type                                                                 string                                                             `json:"type"`
+	JSON                                                                 struct {
+		OfBetaResponseSteerInputResponseSteerInputItemListMessage            respjson.Field
+		OfBetaResponseSteerInputResponseSteerInputItemListFunctionCallOutput respjson.Field
+		Type                                                                 respjson.Field
+		raw                                                                  string
+	} `json:"-"`
+}
+
+// anyBetaResponseSteerInputResponseSteerInputItemList is implemented by each
+// variant of [BetaResponseSteerInputResponseSteerInputItemListUnion] to add type
+// safety for the return type of
+// [BetaResponseSteerInputResponseSteerInputItemListUnion.AsAny]
+type anyBetaResponseSteerInputResponseSteerInputItemList interface {
+	implBetaResponseSteerInputResponseSteerInputItemListUnion()
+}
+
+func (BetaResponseSteerInputResponseSteerInputItemListMessage) implBetaResponseSteerInputResponseSteerInputItemListUnion() {
+}
+func (BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutput) implBetaResponseSteerInputResponseSteerInputItemListUnion() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := BetaResponseSteerInputResponseSteerInputItemListUnion.AsAny().(type) {
+//	case openai.BetaResponseSteerInputResponseSteerInputItemListMessage:
+//	case openai.BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutput:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u BetaResponseSteerInputResponseSteerInputItemListUnion) AsAny() anyBetaResponseSteerInputResponseSteerInputItemList {
+	switch u.Type {
+	case "message":
+		return u.AsBetaResponseSteerInputResponseSteerInputItemListMessage()
+	case "function_call_output":
+		return u.AsBetaResponseSteerInputResponseSteerInputItemListFunctionCallOutput()
+	}
+	return nil
+}
+
+func (u BetaResponseSteerInputResponseSteerInputItemListUnion) AsBetaResponseSteerInputResponseSteerInputItemListMessage() (v BetaResponseSteerInputResponseSteerInputItemListMessage) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseSteerInputResponseSteerInputItemListUnion) AsBetaResponseSteerInputResponseSteerInputItemListFunctionCallOutput() (v BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutput) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseSteerInputResponseSteerInputItemListUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *BetaResponseSteerInputResponseSteerInputItemListUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponseSteerInputResponseSteerInputItemListMessage struct {
+	// The agent that produced this item.
+	Agent BetaResponseSteerInputResponseSteerInputItemListItemMessageAgent `json:"agent" api:"nullable"`
+	// The message content, as an array of content parts.
+	Content BetaResponseSteerInputResponseSteerInputItemListItemMessageContentUnion `json:"content" api:"required"`
+	// The unique ID of this message item.
+	ID string `json:"id" api:"nullable"`
+	// The message role. Always `user`.
+	Role constant.User `json:"role" default:"user"`
+	// The status of the message item.
+	Status string `json:"status" api:"nullable"`
+	// The item type. Always `message`.
+	Type constant.Message `json:"type" default:"message"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent       respjson.Field
+		Content     respjson.Field
+		ID          respjson.Field
+		Role        respjson.Field
+		Status      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerInputResponseSteerInputItemListMessage) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseSteerInputResponseSteerInputItemListMessage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseSteerInputResponseSteerInputItemListItemMessageContentUnion contains
+// all possible properties and values from [[]BetaResponseSteerInputContentUnion],
+// [string].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfArrayOfBetaResponseSteerInputContentUnion OfString]
+type BetaResponseSteerInputResponseSteerInputItemListItemMessageContentUnion struct {
+	// This field will be present if the value is a
+	// [[]BetaResponseSteerInputContentUnion] instead of an object.
+	OfArrayOfBetaResponseSteerInputContentUnion []BetaResponseSteerInputContentUnion `json:",inline"`
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	JSON     struct {
+		OfArrayOfBetaResponseSteerInputContentUnion respjson.Field
+		OfString                                    respjson.Field
+		raw                                         string
+	} `json:"-"`
+}
+
+func (u BetaResponseSteerInputResponseSteerInputItemListItemMessageContentUnion) AsArrayOfBetaResponseSteerInputContentUnion() (v []BetaResponseSteerInputContentUnion) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseSteerInputResponseSteerInputItemListItemMessageContentUnion) AsString() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseSteerInputResponseSteerInputItemListItemMessageContentUnion) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *BetaResponseSteerInputResponseSteerInputItemListItemMessageContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The agent that produced this item.
+type BetaResponseSteerInputResponseSteerInputItemListItemMessageAgent struct {
+	// The canonical name of the agent that produced this item.
+	AgentName string `json:"agent_name" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AgentName   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerInputResponseSteerInputItemListItemMessageAgent) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseSteerInputResponseSteerInputItemListItemMessageAgent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The output of a function tool call.
+type BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutput struct {
+	// The agent that produced this item.
+	Agent BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputAgent `json:"agent" api:"nullable"`
+	// The unique ID of the function tool call generated by the model.
+	CallID string `json:"call_id" api:"nullable"`
+	// The execution context that produced this tool call.
+	Caller BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion `json:"caller" api:"nullable"`
+	// The unique ID of the function tool call output. Populated when this item is
+	// returned via API.
+	ID string `json:"id" api:"nullable"`
+	// The name of the tool that produced the output.
+	Name string `json:"name" api:"nullable"`
+	// The namespace of the tool that produced the output.
+	Namespace string `json:"namespace" api:"nullable"`
+	// Text, image, or file output of the function tool call.
+	Output BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnion `json:"output" api:"required"`
+	// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
+	// Populated when items are returned via API.
+	//
+	// Any of "in_progress", "completed", "incomplete".
+	Status string `json:"status" api:"nullable"`
+	// The type of the function tool call output. Always `function_call_output`.
+	Type constant.FunctionCallOutput `json:"type" default:"function_call_output"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent       respjson.Field
+		CallID      respjson.Field
+		Caller      respjson.Field
+		ID          respjson.Field
+		Name        respjson.Field
+		Namespace   respjson.Field
+		Output      respjson.Field
+		Status      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutput) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnion
+// contains all possible properties and values from [string],
+// [BetaResponseFunctionCallOutputItemList].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfBetaResponseFunctionCallOutputItemArray]
+type BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnion struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a
+	// [BetaResponseFunctionCallOutputItemList] instead of an object.
+	OfBetaResponseFunctionCallOutputItemArray BetaResponseFunctionCallOutputItemList `json:",inline"`
+	JSON                                      struct {
+		OfString                                  respjson.Field
+		OfBetaResponseFunctionCallOutputItemArray respjson.Field
+		raw                                       string
+	} `json:"-"`
+}
+
+func (u BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnion) AsString() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnion) AsBetaResponseFunctionCallOutputItemArray() (v BetaResponseFunctionCallOutputItemList) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnion) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The agent that produced this item.
+type BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputAgent struct {
+	// The canonical name of the agent that produced this item.
+	AgentName string `json:"agent_name" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AgentName   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputAgent) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputAgent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion
+// contains all possible properties and values from
+// [BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect],
+// [BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram].
+//
+// Use the
+// [BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion.AsAny]
+// method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion struct {
+	OfBetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect  BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect  `json:",inline"`
+	OfBetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram `json:",inline"`
+	Type                                                                              string                                                                          `json:"type"`
+	JSON                                                                              struct {
+		OfBetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect  respjson.Field
+		OfBetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram respjson.Field
+		Type                                                                              respjson.Field
+		raw                                                                               string
+	} `json:"-"`
+}
+
+// anyBetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCaller
+// is implemented by each variant of
+// [BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion]
+// to add type safety for the return type of
+// [BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion.AsAny]
+type anyBetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCaller interface {
+	implBetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion()
+}
+
+func (BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect) implBetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion() {
+}
+func (BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram) implBetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion.AsAny().(type) {
+//	case openai.BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect:
+//	case openai.BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion) AsAny() anyBetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCaller {
+	switch u.Type {
+	case "direct":
+		return u.AsBetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect()
+	case "program":
+		return u.AsBetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram()
+	}
+	return nil
+}
+
+func (u BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion) AsBetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect() (v BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion) AsBetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram() (v BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The execution context that produced this tool call.
+type BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect struct {
+	// The caller type. Always `direct`.
+	Type constant.Direct `json:"type" default:"direct"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram struct {
+	// The call ID of the program item that produced this tool call.
+	CallerID string `json:"caller_id" api:"required"`
+	// The caller type. Always `program`.
+	Type constant.Program `json:"type" default:"program"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CallerID    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponseSteerInputUnionParam struct {
+	OfString                     param.Opt[string]                                                `json:",omitzero,inline"`
+	OfResponseSteerInputItemList []BetaResponseSteerInputResponseSteerInputItemListItemUnionParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponseSteerInputUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfResponseSteerInputItemList)
+}
+func (u *BetaResponseSteerInputUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *BetaResponseSteerInputUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfResponseSteerInputItemList) {
+		return &u.OfResponseSteerInputItemList
+	}
+	return nil
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponseSteerInputResponseSteerInputItemListItemUnionParam struct {
+	OfMessage            *BetaResponseSteerInputResponseSteerInputItemListItemMessageParam            `json:",omitzero,inline"`
+	OfFunctionCallOutput *BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponseSteerInputResponseSteerInputItemListItemUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfMessage, u.OfFunctionCallOutput)
+}
+func (u *BetaResponseSteerInputResponseSteerInputItemListItemUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputResponseSteerInputItemListItemUnionParam) GetContent() *BetaResponseSteerInputResponseSteerInputItemListItemMessageContentUnionParam {
+	if vt := u.OfMessage; vt != nil {
+		return &vt.Content
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputResponseSteerInputItemListItemUnionParam) GetOutput() *BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnionParam {
+	if vt := u.OfFunctionCallOutput; vt != nil {
+		return &vt.Output
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputResponseSteerInputItemListItemUnionParam) GetCallID() *string {
+	if vt := u.OfFunctionCallOutput; vt != nil && vt.CallID.Valid() {
+		return &vt.CallID.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputResponseSteerInputItemListItemUnionParam) GetCaller() *BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnionParam {
+	if vt := u.OfFunctionCallOutput; vt != nil {
+		return &vt.Caller
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputResponseSteerInputItemListItemUnionParam) GetName() *string {
+	if vt := u.OfFunctionCallOutput; vt != nil && vt.Name.Valid() {
+		return &vt.Name.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputResponseSteerInputItemListItemUnionParam) GetNamespace() *string {
+	if vt := u.OfFunctionCallOutput; vt != nil && vt.Namespace.Valid() {
+		return &vt.Namespace.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputResponseSteerInputItemListItemUnionParam) GetRole() *string {
+	if vt := u.OfMessage; vt != nil {
+		return (*string)(&vt.Role)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputResponseSteerInputItemListItemUnionParam) GetType() *string {
+	if vt := u.OfMessage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFunctionCallOutput; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputResponseSteerInputItemListItemUnionParam) GetID() *string {
+	if vt := u.OfMessage; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
+	} else if vt := u.OfFunctionCallOutput; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputResponseSteerInputItemListItemUnionParam) GetStatus() *string {
+	if vt := u.OfMessage; vt != nil && vt.Status.Valid() {
+		return &vt.Status.Value
+	} else if vt := u.OfFunctionCallOutput; vt != nil {
+		return (*string)(&vt.Status)
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u BetaResponseSteerInputResponseSteerInputItemListItemUnionParam) GetAgent() (res betaResponseSteerInputResponseSteerInputItemListItemUnionParamAgent) {
+	if vt := u.OfMessage; vt != nil {
+		res.any = &vt.Agent
+	} else if vt := u.OfFunctionCallOutput; vt != nil {
+		res.any = &vt.Agent
+	}
+	return
+}
+
+// Can have the runtime types
+// [*BetaResponseSteerInputResponseSteerInputItemListItemMessageAgentParam],
+// [*BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputAgentParam]
+type betaResponseSteerInputResponseSteerInputItemListItemUnionParamAgent struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *openai.BetaResponseSteerInputResponseSteerInputItemListItemMessageAgentParam:
+//	case *openai.BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputAgentParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u betaResponseSteerInputResponseSteerInputItemListItemUnionParamAgent) AsAny() any {
+	return u.any
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseSteerInputResponseSteerInputItemListItemUnionParamAgent) GetAgentName() *string {
+	switch vt := u.any.(type) {
+	case *BetaResponseSteerInputResponseSteerInputItemListItemMessageAgentParam:
+		return (*string)(&vt.AgentName)
+	case *BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputAgentParam:
+		return (*string)(&vt.AgentName)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[BetaResponseSteerInputResponseSteerInputItemListItemUnionParam](
+		"type",
+		apijson.Discriminator[BetaResponseSteerInputResponseSteerInputItemListItemMessageParam]("message"),
+		apijson.Discriminator[BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputParam]("function_call_output"),
+	)
+}
+
+// The properties Content, Role, Type are required.
+type BetaResponseSteerInputResponseSteerInputItemListItemMessageParam struct {
+	// The message content, as an array of content parts.
+	Content BetaResponseSteerInputResponseSteerInputItemListItemMessageContentUnionParam `json:"content,omitzero" api:"required"`
+	// The unique ID of this message item.
+	ID param.Opt[string] `json:"id,omitzero"`
+	// The status of the message item.
+	Status param.Opt[string] `json:"status,omitzero"`
+	// The agent that produced this item.
+	Agent BetaResponseSteerInputResponseSteerInputItemListItemMessageAgentParam `json:"agent,omitzero"`
+	// The message role. Always `user`.
+	//
+	// This field can be elided, and will marshal its zero value as "user".
+	Role constant.User `json:"role" default:"user"`
+	// The item type. Always `message`.
+	//
+	// This field can be elided, and will marshal its zero value as "message".
+	Type constant.Message `json:"type" default:"message"`
+	paramObj
+}
+
+func (r BetaResponseSteerInputResponseSteerInputItemListItemMessageParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseSteerInputResponseSteerInputItemListItemMessageParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseSteerInputResponseSteerInputItemListItemMessageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponseSteerInputResponseSteerInputItemListItemMessageContentUnionParam struct {
+	OfArrayOfResponseSteerInputs []BetaResponseSteerInputContentUnionParam `json:",omitzero,inline"`
+	OfString                     param.Opt[string]                         `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponseSteerInputResponseSteerInputItemListItemMessageContentUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfArrayOfResponseSteerInputs, u.OfString)
+}
+func (u *BetaResponseSteerInputResponseSteerInputItemListItemMessageContentUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// The agent that produced this item.
+//
+// The property AgentName is required.
+type BetaResponseSteerInputResponseSteerInputItemListItemMessageAgentParam struct {
+	// The canonical name of the agent that produced this item.
+	AgentName string `json:"agent_name" api:"required"`
+	paramObj
+}
+
+func (r BetaResponseSteerInputResponseSteerInputItemListItemMessageAgentParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseSteerInputResponseSteerInputItemListItemMessageAgentParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseSteerInputResponseSteerInputItemListItemMessageAgentParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The output of a function tool call.
+//
+// The properties Output, Type are required.
+type BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputParam struct {
+	// Text, image, or file output of the function tool call.
+	Output BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnionParam `json:"output,omitzero" api:"required"`
+	// The unique ID of the function tool call output. Populated when this item is
+	// returned via API.
+	ID param.Opt[string] `json:"id,omitzero"`
+	// The unique ID of the function tool call generated by the model.
+	CallID param.Opt[string] `json:"call_id,omitzero"`
+	// The name of the tool that produced the output.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// The namespace of the tool that produced the output.
+	Namespace param.Opt[string] `json:"namespace,omitzero"`
+	// The agent that produced this item.
+	Agent BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputAgentParam `json:"agent,omitzero"`
+	// The execution context that produced this tool call.
+	Caller BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnionParam `json:"caller,omitzero"`
+	// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
+	// Populated when items are returned via API.
+	//
+	// Any of "in_progress", "completed", "incomplete".
+	Status string `json:"status,omitzero"`
+	// The type of the function tool call output. Always `function_call_output`.
+	//
+	// This field can be elided, and will marshal its zero value as
+	// "function_call_output".
+	Type constant.FunctionCallOutput `json:"type" default:"function_call_output"`
+	paramObj
+}
+
+func (r BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnionParam struct {
+	OfString                                  param.Opt[string]                           `json:",omitzero,inline"`
+	OfBetaResponseFunctionCallOutputItemArray BetaResponseFunctionCallOutputItemListParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfBetaResponseFunctionCallOutputItemArray)
+}
+func (u *BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutputUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// The agent that produced this item.
+//
+// The property AgentName is required.
+type BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputAgentParam struct {
+	// The canonical name of the agent that produced this item.
+	AgentName string `json:"agent_name" api:"required"`
+	paramObj
+}
+
+func (r BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputAgentParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputAgentParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputAgentParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnionParam struct {
+	OfDirect  *BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam  `json:",omitzero,inline"`
+	OfProgram *BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerProgramParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfDirect, u.OfProgram)
+}
+func (u *BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnionParam) GetCallerID() *string {
+	if vt := u.OfProgram; vt != nil {
+		return &vt.CallerID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnionParam) GetType() *string {
+	if vt := u.OfDirect; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfProgram; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnionParam](
+		"type",
+		apijson.Discriminator[BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam]("direct"),
+		apijson.Discriminator[BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerProgramParam]("program"),
+	)
+}
+
+func NewBetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam() BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam {
+	return BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam{
+		Type: "direct",
+	}
+}
+
+// The execution context that produced this tool call.
+//
+// This struct has a constant value, construct it with
+// [NewBetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam].
+type BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam struct {
+	// The caller type. Always `direct`.
+	Type constant.Direct `json:"type" default:"direct"`
+	paramObj
+}
+
+func (r BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerDirectParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties CallerID, Type are required.
+type BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerProgramParam struct {
+	// The call ID of the program item that produced this tool call.
+	CallerID string `json:"caller_id" api:"required"`
+	// The caller type. Always `program`.
+	//
+	// This field can be elided, and will marshal its zero value as "program".
+	Type constant.Program `json:"type" default:"program"`
+	paramObj
+}
+
+func (r BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerProgramParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerProgramParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerProgramParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseSteerInputContentUnion contains all possible properties and values
+// from [BetaResponseInputTextContent], [BetaResponseInputImageContent],
+// [BetaResponseInputFileContent].
+//
+// Use the [BetaResponseSteerInputContentUnion.AsAny] method to switch on the
+// variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaResponseSteerInputContentUnion struct {
+	// This field is from variant [BetaResponseInputTextContent].
+	Text string `json:"text"`
+	// Any of "input_text", "input_image", "input_file".
+	Type string `json:"type"`
+	// This field is a union of [BetaResponseInputTextContentPromptCacheBreakpoint],
+	// [BetaResponseInputImageContentPromptCacheBreakpoint],
+	// [BetaResponseInputFileContentPromptCacheBreakpoint]
+	PromptCacheBreakpoint BetaResponseSteerInputContentUnionPromptCacheBreakpoint `json:"prompt_cache_breakpoint"`
+	Detail                string                                                  `json:"detail"`
+	FileID                string                                                  `json:"file_id"`
+	// This field is from variant [BetaResponseInputImageContent].
+	ImageURL string `json:"image_url"`
+	// This field is from variant [BetaResponseInputFileContent].
+	FileData string `json:"file_data"`
+	// This field is from variant [BetaResponseInputFileContent].
+	FileURL string `json:"file_url"`
+	// This field is from variant [BetaResponseInputFileContent].
+	Filename string `json:"filename"`
+	JSON     struct {
+		Text                  respjson.Field
+		Type                  respjson.Field
+		PromptCacheBreakpoint respjson.Field
+		Detail                respjson.Field
+		FileID                respjson.Field
+		ImageURL              respjson.Field
+		FileData              respjson.Field
+		FileURL               respjson.Field
+		Filename              respjson.Field
+		raw                   string
+	} `json:"-"`
+}
+
+// anyBetaResponseSteerInputContent is implemented by each variant of
+// [BetaResponseSteerInputContentUnion] to add type safety for the return type of
+// [BetaResponseSteerInputContentUnion.AsAny]
+type anyBetaResponseSteerInputContent interface {
+	implBetaResponseSteerInputContentUnion()
+}
+
+func (BetaResponseInputTextContent) implBetaResponseSteerInputContentUnion()  {}
+func (BetaResponseInputImageContent) implBetaResponseSteerInputContentUnion() {}
+func (BetaResponseInputFileContent) implBetaResponseSteerInputContentUnion()  {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := BetaResponseSteerInputContentUnion.AsAny().(type) {
+//	case openai.BetaResponseInputTextContent:
+//	case openai.BetaResponseInputImageContent:
+//	case openai.BetaResponseInputFileContent:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u BetaResponseSteerInputContentUnion) AsAny() anyBetaResponseSteerInputContent {
+	switch u.Type {
+	case "input_text":
+		return u.AsInputText()
+	case "input_image":
+		return u.AsInputImage()
+	case "input_file":
+		return u.AsInputFile()
+	}
+	return nil
+}
+
+func (u BetaResponseSteerInputContentUnion) AsInputText() (v BetaResponseInputTextContent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseSteerInputContentUnion) AsInputImage() (v BetaResponseInputImageContent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseSteerInputContentUnion) AsInputFile() (v BetaResponseInputFileContent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseSteerInputContentUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *BetaResponseSteerInputContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseSteerInputContentUnionPromptCacheBreakpoint is an implicit subunion
+// of [BetaResponseSteerInputContentUnion].
+// BetaResponseSteerInputContentUnionPromptCacheBreakpoint provides convenient
+// access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [BetaResponseSteerInputContentUnion].
+type BetaResponseSteerInputContentUnionPromptCacheBreakpoint struct {
+	// This field is from variant [BetaResponseInputTextContentPromptCacheBreakpoint].
+	Mode constant.Explicit `json:"mode"`
+	JSON struct {
+		Mode respjson.Field
+		raw  string
+	} `json:"-"`
+}
+
+func (r *BetaResponseSteerInputContentUnionPromptCacheBreakpoint) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this BetaResponseSteerInputContentUnion to a
+// BetaResponseSteerInputContentUnionParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// BetaResponseSteerInputContentUnionParam.Overrides()
+func (r BetaResponseSteerInputContentUnion) ToParam() BetaResponseSteerInputContentUnionParam {
+	return param.Override[BetaResponseSteerInputContentUnionParam](json.RawMessage(r.RawJSON()))
+}
+
+func BetaResponseSteerInputContentParamOfInputText(text string) BetaResponseSteerInputContentUnionParam {
+	var inputText BetaResponseInputTextContentParam
+	inputText.Text = text
+	return BetaResponseSteerInputContentUnionParam{OfInputText: &inputText}
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponseSteerInputContentUnionParam struct {
+	OfInputText  *BetaResponseInputTextContentParam  `json:",omitzero,inline"`
+	OfInputImage *BetaResponseInputImageContentParam `json:",omitzero,inline"`
+	OfInputFile  *BetaResponseInputFileContentParam  `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponseSteerInputContentUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfInputText, u.OfInputImage, u.OfInputFile)
+}
+func (u *BetaResponseSteerInputContentUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputContentUnionParam) GetText() *string {
+	if vt := u.OfInputText; vt != nil {
+		return &vt.Text
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputContentUnionParam) GetImageURL() *string {
+	if vt := u.OfInputImage; vt != nil && vt.ImageURL.Valid() {
+		return &vt.ImageURL.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputContentUnionParam) GetFileData() *string {
+	if vt := u.OfInputFile; vt != nil && vt.FileData.Valid() {
+		return &vt.FileData.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputContentUnionParam) GetFileURL() *string {
+	if vt := u.OfInputFile; vt != nil && vt.FileURL.Valid() {
+		return &vt.FileURL.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputContentUnionParam) GetFilename() *string {
+	if vt := u.OfInputFile; vt != nil && vt.Filename.Valid() {
+		return &vt.Filename.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputContentUnionParam) GetType() *string {
+	if vt := u.OfInputText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfInputImage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfInputFile; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputContentUnionParam) GetDetail() *string {
+	if vt := u.OfInputImage; vt != nil {
+		return (*string)(&vt.Detail)
+	} else if vt := u.OfInputFile; vt != nil {
+		return (*string)(&vt.Detail)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseSteerInputContentUnionParam) GetFileID() *string {
+	if vt := u.OfInputImage; vt != nil && vt.FileID.Valid() {
+		return &vt.FileID.Value
+	} else if vt := u.OfInputFile; vt != nil && vt.FileID.Valid() {
+		return &vt.FileID.Value
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u BetaResponseSteerInputContentUnionParam) GetPromptCacheBreakpoint() (res betaResponseSteerInputContentUnionParamPromptCacheBreakpoint) {
+	if vt := u.OfInputText; vt != nil {
+		res.any = &vt.PromptCacheBreakpoint
+	} else if vt := u.OfInputImage; vt != nil {
+		res.any = &vt.PromptCacheBreakpoint
+	} else if vt := u.OfInputFile; vt != nil {
+		res.any = &vt.PromptCacheBreakpoint
+	}
+	return
+}
+
+// Can have the runtime types
+// [*BetaResponseInputTextContentPromptCacheBreakpointParam],
+// [*BetaResponseInputImageContentPromptCacheBreakpointParam],
+// [*BetaResponseInputFileContentPromptCacheBreakpointParam]
+type betaResponseSteerInputContentUnionParamPromptCacheBreakpoint struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *openai.BetaResponseInputTextContentPromptCacheBreakpointParam:
+//	case *openai.BetaResponseInputImageContentPromptCacheBreakpointParam:
+//	case *openai.BetaResponseInputFileContentPromptCacheBreakpointParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u betaResponseSteerInputContentUnionParamPromptCacheBreakpoint) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseSteerInputContentUnionParamPromptCacheBreakpoint) GetMode() *string {
+	switch vt := u.any.(type) {
+	case *BetaResponseInputTextContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Mode)
+	case *BetaResponseInputImageContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Mode)
+	case *BetaResponseInputFileContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Mode)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[BetaResponseSteerInputContentUnionParam](
+		"type",
+		apijson.Discriminator[BetaResponseInputTextContentParam]("input_text"),
+		apijson.Discriminator[BetaResponseInputImageContentParam]("input_image"),
+		apijson.Discriminator[BetaResponseInputFileContentParam]("input_file"),
+	)
+}
+
+// Emitted when accepted steering input remains queued after the target response
+// completes. The server still owns the input. Do not resend it. The successor's
+// `response.created` event is the commit point.
+//
+// When `reason` is `waiting_for_required_input`, this event follows
+// `response.completed` while the response waits for the tool results or approval
+// decisions identified by `required_input`. Copy those stubs, fill their result
+// fields using the ordinary `response.create` input schemas, and submit one
+// continuation per parent with the same `previous_response_id` and WebSocket lane.
+// Use saved results without rerunning tools. The queued steering input is
+// prepended in submission order to the continuation's input. That explicit request
+// retains its own settings.
+//
+// This notification is emitted at most once per steering submission. Multiple
+// submissions for the same parent can report the same required inputs; they do not
+// each require a separate continuation.
+type BetaResponseSteerPendingEvent struct {
+	// An extensible enum describing why accepted steering input is still queued.
+	// Clients should handle unknown values because additional reasons may be
+	// introduced. Known values include:
+	//
+	//   - `waiting_for_required_input`: The response is waiting for the tool results or
+	//     approval decisions identified by `required_input`.
+	Reason BetaResponseSteerPendingReason `json:"reason" api:"required"`
+	// Input stubs identifying outstanding client-owned tool results or approval
+	// decisions. Each stub contains identifying fields only; the client supplies the
+	// result before including it in `response.create`.
+	RequiredInput []BetaResponseSteerRequiredInputUnion `json:"required_input" api:"required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The steering submission that remains queued.
+	Steer BetaResponseSteerPendingEventSteer `json:"steer" api:"required"`
+	// The event discriminator. Always `response.steer.pending`.
+	Type constant.ResponseSteerPending `json:"type" default:"response.steer.pending"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// target response's `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Reason         respjson.Field
+		RequiredInput  respjson.Field
+		SequenceNumber respjson.Field
+		Steer          respjson.Field
+		Type           respjson.Field
+		StreamID       respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerPendingEvent) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseSteerPendingEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // An extensible enum describing why accepted steering input is still queued.
 // Clients should handle unknown values because additional reasons may be
 // introduced. Known values include:
@@ -28572,6 +30719,296 @@ const (
 	BetaResponseSteerPendingReasonWaitingForRequiredInput BetaResponseSteerPendingReason = "waiting_for_required_input"
 )
 
+// The steering submission that remains queued.
+type BetaResponseSteerPendingEventSteer struct {
+	// The ID assigned to the steering submission.
+	ID string `json:"id" api:"required"`
+	// The ID of the response being steered.
+	PreviousResponseID string `json:"previous_response_id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                 respjson.Field
+		PreviousResponseID respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerPendingEventSteer) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseSteerPendingEventSteer) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseSteerRequiredInputUnion contains all possible properties and values
+// from [BetaResponseSteerRequiredInputFunctionCallOutput],
+// [BetaResponseSteerRequiredInputCustomToolCallOutput],
+// [BetaResponseSteerRequiredInputComputerCallOutput],
+// [BetaResponseSteerRequiredInputShellCallOutput],
+// [BetaResponseSteerRequiredInputApplyPatchCallOutput],
+// [BetaResponseSteerRequiredInputToolSearchOutput],
+// [BetaResponseSteerRequiredInputMcpApprovalResponse].
+//
+// Use the [BetaResponseSteerRequiredInputUnion.AsAny] method to switch on the
+// variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaResponseSteerRequiredInputUnion struct {
+	OfBetaResponseSteerRequiredInputFunctionCallOutput   BetaResponseSteerRequiredInputFunctionCallOutput   `json:",inline"`
+	OfBetaResponseSteerRequiredInputCustomToolCallOutput BetaResponseSteerRequiredInputCustomToolCallOutput `json:",inline"`
+	OfBetaResponseSteerRequiredInputComputerCallOutput   BetaResponseSteerRequiredInputComputerCallOutput   `json:",inline"`
+	OfBetaResponseSteerRequiredInputShellCallOutput      BetaResponseSteerRequiredInputShellCallOutput      `json:",inline"`
+	OfBetaResponseSteerRequiredInputApplyPatchCallOutput BetaResponseSteerRequiredInputApplyPatchCallOutput `json:",inline"`
+	OfBetaResponseSteerRequiredInputToolSearchOutput     BetaResponseSteerRequiredInputToolSearchOutput     `json:",inline"`
+	OfBetaResponseSteerRequiredInputMcpApprovalResponse  BetaResponseSteerRequiredInputMcpApprovalResponse  `json:",inline"`
+	Type                                                 string                                             `json:"type"`
+	JSON                                                 struct {
+		OfBetaResponseSteerRequiredInputFunctionCallOutput   respjson.Field
+		OfBetaResponseSteerRequiredInputCustomToolCallOutput respjson.Field
+		OfBetaResponseSteerRequiredInputComputerCallOutput   respjson.Field
+		OfBetaResponseSteerRequiredInputShellCallOutput      respjson.Field
+		OfBetaResponseSteerRequiredInputApplyPatchCallOutput respjson.Field
+		OfBetaResponseSteerRequiredInputToolSearchOutput     respjson.Field
+		OfBetaResponseSteerRequiredInputMcpApprovalResponse  respjson.Field
+		Type                                                 respjson.Field
+		raw                                                  string
+	} `json:"-"`
+}
+
+// anyBetaResponseSteerRequiredInput is implemented by each variant of
+// [BetaResponseSteerRequiredInputUnion] to add type safety for the return type of
+// [BetaResponseSteerRequiredInputUnion.AsAny]
+type anyBetaResponseSteerRequiredInput interface {
+	implBetaResponseSteerRequiredInputUnion()
+}
+
+func (BetaResponseSteerRequiredInputFunctionCallOutput) implBetaResponseSteerRequiredInputUnion()   {}
+func (BetaResponseSteerRequiredInputCustomToolCallOutput) implBetaResponseSteerRequiredInputUnion() {}
+func (BetaResponseSteerRequiredInputComputerCallOutput) implBetaResponseSteerRequiredInputUnion()   {}
+func (BetaResponseSteerRequiredInputShellCallOutput) implBetaResponseSteerRequiredInputUnion()      {}
+func (BetaResponseSteerRequiredInputApplyPatchCallOutput) implBetaResponseSteerRequiredInputUnion() {}
+func (BetaResponseSteerRequiredInputToolSearchOutput) implBetaResponseSteerRequiredInputUnion()     {}
+func (BetaResponseSteerRequiredInputMcpApprovalResponse) implBetaResponseSteerRequiredInputUnion()  {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := BetaResponseSteerRequiredInputUnion.AsAny().(type) {
+//	case openai.BetaResponseSteerRequiredInputFunctionCallOutput:
+//	case openai.BetaResponseSteerRequiredInputCustomToolCallOutput:
+//	case openai.BetaResponseSteerRequiredInputComputerCallOutput:
+//	case openai.BetaResponseSteerRequiredInputShellCallOutput:
+//	case openai.BetaResponseSteerRequiredInputApplyPatchCallOutput:
+//	case openai.BetaResponseSteerRequiredInputToolSearchOutput:
+//	case openai.BetaResponseSteerRequiredInputMcpApprovalResponse:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u BetaResponseSteerRequiredInputUnion) AsAny() anyBetaResponseSteerRequiredInput {
+	switch u.Type {
+	case "function_call_output":
+		return u.AsBetaResponseSteerRequiredInputFunctionCallOutput()
+	case "custom_tool_call_output":
+		return u.AsBetaResponseSteerRequiredInputCustomToolCallOutput()
+	case "computer_call_output":
+		return u.AsBetaResponseSteerRequiredInputComputerCallOutput()
+	case "shell_call_output":
+		return u.AsBetaResponseSteerRequiredInputShellCallOutput()
+	case "apply_patch_call_output":
+		return u.AsBetaResponseSteerRequiredInputApplyPatchCallOutput()
+	case "tool_search_output":
+		return u.AsBetaResponseSteerRequiredInputToolSearchOutput()
+	case "mcp_approval_response":
+		return u.AsBetaResponseSteerRequiredInputMcpApprovalResponse()
+	}
+	return nil
+}
+
+func (u BetaResponseSteerRequiredInputUnion) AsBetaResponseSteerRequiredInputFunctionCallOutput() (v BetaResponseSteerRequiredInputFunctionCallOutput) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseSteerRequiredInputUnion) AsBetaResponseSteerRequiredInputCustomToolCallOutput() (v BetaResponseSteerRequiredInputCustomToolCallOutput) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseSteerRequiredInputUnion) AsBetaResponseSteerRequiredInputComputerCallOutput() (v BetaResponseSteerRequiredInputComputerCallOutput) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseSteerRequiredInputUnion) AsBetaResponseSteerRequiredInputShellCallOutput() (v BetaResponseSteerRequiredInputShellCallOutput) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseSteerRequiredInputUnion) AsBetaResponseSteerRequiredInputApplyPatchCallOutput() (v BetaResponseSteerRequiredInputApplyPatchCallOutput) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseSteerRequiredInputUnion) AsBetaResponseSteerRequiredInputToolSearchOutput() (v BetaResponseSteerRequiredInputToolSearchOutput) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseSteerRequiredInputUnion) AsBetaResponseSteerRequiredInputMcpApprovalResponse() (v BetaResponseSteerRequiredInputMcpApprovalResponse) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseSteerRequiredInputUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *BetaResponseSteerRequiredInputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Supply `output` using the function tool call output input schema.
+type BetaResponseSteerRequiredInputFunctionCallOutput struct {
+	CallID string                      `json:"call_id" api:"required"`
+	Name   string                      `json:"name" api:"required"`
+	Type   constant.FunctionCallOutput `json:"type" default:"function_call_output"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CallID      respjson.Field
+		Name        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerRequiredInputFunctionCallOutput) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseSteerRequiredInputFunctionCallOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Supply `output` using the custom tool call output input schema. The original
+// custom tool call supplies the tool's name.
+type BetaResponseSteerRequiredInputCustomToolCallOutput struct {
+	CallID string                        `json:"call_id" api:"required"`
+	Type   constant.CustomToolCallOutput `json:"type" default:"custom_tool_call_output"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CallID      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerRequiredInputCustomToolCallOutput) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseSteerRequiredInputCustomToolCallOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Supply `output` using the computer tool call output input schema, including any
+// required `acknowledged_safety_checks`.
+type BetaResponseSteerRequiredInputComputerCallOutput struct {
+	CallID string                      `json:"call_id" api:"required"`
+	Type   constant.ComputerCallOutput `json:"type" default:"computer_call_output"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CallID      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerRequiredInputComputerCallOutput) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseSteerRequiredInputComputerCallOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Supply `output` using the shell tool call output input schema. Each output entry
+// includes `stdout`, `stderr`, and `outcome`.
+type BetaResponseSteerRequiredInputShellCallOutput struct {
+	CallID string                   `json:"call_id" api:"required"`
+	Type   constant.ShellCallOutput `json:"type" default:"shell_call_output"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CallID      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerRequiredInputShellCallOutput) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseSteerRequiredInputShellCallOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Supply `status` and optional `output` using the apply patch tool call output
+// input schema.
+type BetaResponseSteerRequiredInputApplyPatchCallOutput struct {
+	CallID string                        `json:"call_id" api:"required"`
+	Type   constant.ApplyPatchCallOutput `json:"type" default:"apply_patch_call_output"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CallID      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerRequiredInputApplyPatchCallOutput) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseSteerRequiredInputApplyPatchCallOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Supply `tools` using the tool search output input schema, retaining
+// `execution: "client"`.
+type BetaResponseSteerRequiredInputToolSearchOutput struct {
+	CallID    string                    `json:"call_id" api:"required"`
+	Execution constant.Client           `json:"execution" default:"client"`
+	Type      constant.ToolSearchOutput `json:"type" default:"tool_search_output"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CallID      respjson.Field
+		Execution   respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerRequiredInputToolSearchOutput) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseSteerRequiredInputToolSearchOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Supply `approve` using the MCP approval response input schema. An optional
+// `reason` can be supplied when denying the request. The original approval request
+// identifies the tool and server.
+type BetaResponseSteerRequiredInputMcpApprovalResponse struct {
+	ApprovalRequestID string                       `json:"approval_request_id" api:"required"`
+	Type              constant.McpApprovalResponse `json:"type" default:"mcp_approval_response"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ApprovalRequestID respjson.Field
+		Type              respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseSteerRequiredInputMcpApprovalResponse) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseSteerRequiredInputMcpApprovalResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // BetaResponseStreamEventUnion contains all possible properties and values from
 // [BetaResponseAudioDeltaEvent], [BetaResponseAudioDoneEvent],
 // [BetaResponseAudioTranscriptDeltaEvent], [BetaResponseAudioTranscriptDoneEvent],
@@ -28580,9 +31017,10 @@ const (
 // [BetaResponseCodeInterpreterCallCompletedEvent],
 // [BetaResponseCodeInterpreterCallInProgressEvent],
 // [BetaResponseCodeInterpreterCallInterpretingEvent],
-// [BetaResponseCompletedEvent], [BetaResponseContentPartAddedEvent],
-// [BetaResponseContentPartDoneEvent], [BetaResponseCreatedEvent],
-// [BetaResponseErrorEvent], [BetaResponseFileSearchCallCompletedEvent],
+// [BetaResponseCompactionCompactingEvent], [BetaResponseCompletedEvent],
+// [BetaResponseContentPartAddedEvent], [BetaResponseContentPartDoneEvent],
+// [BetaResponseCreatedEvent], [BetaResponseErrorEvent],
+// [BetaResponseFileSearchCallCompletedEvent],
 // [BetaResponseFileSearchCallInProgressEvent],
 // [BetaResponseFileSearchCallSearchingEvent],
 // [BetaResponseFunctionCallArgumentsDeltaEvent],
@@ -28629,11 +31067,11 @@ type BetaResponseStreamEventUnion struct {
 	// "response.code_interpreter_call_code.done",
 	// "response.code_interpreter_call.completed",
 	// "response.code_interpreter_call.in_progress",
-	// "response.code_interpreter_call.interpreting", "response.completed",
-	// "response.content_part.added", "response.content_part.done", "response.created",
-	// "error", "response.file_search_call.completed",
-	// "response.file_search_call.in_progress", "response.file_search_call.searching",
-	// "response.function_call_arguments.delta",
+	// "response.code_interpreter_call.interpreting", "response.compaction.compacting",
+	// "response.completed", "response.content_part.added",
+	// "response.content_part.done", "response.created", "error",
+	// "response.file_search_call.completed", "response.file_search_call.in_progress",
+	// "response.file_search_call.searching", "response.function_call_arguments.delta",
 	// "response.function_call_arguments.done", "response.shell_call_command.added",
 	// "response.shell_call_command.delta", "response.shell_call_command.done",
 	// "response.shell_call_output_content.done", "response.in_progress",
@@ -28664,7 +31102,8 @@ type BetaResponseStreamEventUnion struct {
 	// [BetaResponseCodeInterpreterCallCompletedEventAgent],
 	// [BetaResponseCodeInterpreterCallInProgressEventAgent],
 	// [BetaResponseCodeInterpreterCallInterpretingEventAgent],
-	// [BetaResponseCompletedEventAgent], [BetaResponseContentPartAddedEventAgent],
+	// [BetaResponseCompactionCompactingEventAgent], [BetaResponseCompletedEventAgent],
+	// [BetaResponseContentPartAddedEventAgent],
 	// [BetaResponseContentPartDoneEventAgent], [BetaResponseCreatedEventAgent],
 	// [BetaResponseErrorEventAgent], [BetaResponseFileSearchCallCompletedEventAgent],
 	// [BetaResponseFileSearchCallInProgressEventAgent],
@@ -28809,6 +31248,7 @@ func (BetaResponseCodeInterpreterCallCodeDoneEvent) implBetaResponseStreamEventU
 func (BetaResponseCodeInterpreterCallCompletedEvent) implBetaResponseStreamEventUnion()    {}
 func (BetaResponseCodeInterpreterCallInProgressEvent) implBetaResponseStreamEventUnion()   {}
 func (BetaResponseCodeInterpreterCallInterpretingEvent) implBetaResponseStreamEventUnion() {}
+func (BetaResponseCompactionCompactingEvent) implBetaResponseStreamEventUnion()            {}
 func (BetaResponseCompletedEvent) implBetaResponseStreamEventUnion()                       {}
 func (BetaResponseContentPartAddedEvent) implBetaResponseStreamEventUnion()                {}
 func (BetaResponseContentPartDoneEvent) implBetaResponseStreamEventUnion()                 {}
@@ -28871,6 +31311,7 @@ func (BetaResponseCustomToolCallInputDoneEvent) implBetaResponseStreamEventUnion
 //	case openai.BetaResponseCodeInterpreterCallCompletedEvent:
 //	case openai.BetaResponseCodeInterpreterCallInProgressEvent:
 //	case openai.BetaResponseCodeInterpreterCallInterpretingEvent:
+//	case openai.BetaResponseCompactionCompactingEvent:
 //	case openai.BetaResponseCompletedEvent:
 //	case openai.BetaResponseContentPartAddedEvent:
 //	case openai.BetaResponseContentPartDoneEvent:
@@ -28943,6 +31384,8 @@ func (u BetaResponseStreamEventUnion) AsAny() anyBetaResponseStreamEvent {
 		return u.AsResponseCodeInterpreterCallInProgress()
 	case "response.code_interpreter_call.interpreting":
 		return u.AsResponseCodeInterpreterCallInterpreting()
+	case "response.compaction.compacting":
+		return u.AsResponseCompactionCompacting()
 	case "response.completed":
 		return u.AsResponseCompleted()
 	case "response.content_part.added":
@@ -29086,6 +31529,11 @@ func (u BetaResponseStreamEventUnion) AsResponseCodeInterpreterCallInProgress() 
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseCodeInterpreterCallInterpreting() (v BetaResponseCodeInterpreterCallInterpretingEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseStreamEventUnion) AsResponseCompactionCompacting() (v BetaResponseCompactionCompactingEvent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -29883,7 +32331,7 @@ func (r *BetaResponseToolSearchOutputItemAgent) UnmarshalJSON(data []byte) error
 
 type BetaResponseToolSearchOutputItemParamResp struct {
 	// The loaded tool definitions returned by the tool search output.
-	Tools []BetaToolUnion `json:"tools" api:"required"`
+	Tools []BetaResponseToolSearchOutputItemParamToolUnionResp `json:"tools" api:"required"`
 	// The item type. Always `tool_search_output`.
 	Type constant.ToolSearchOutput `json:"type" default:"tool_search_output"`
 	// The unique ID of this tool search output.
@@ -29930,6 +32378,1007 @@ func (r BetaResponseToolSearchOutputItemParamResp) ToParam() BetaResponseToolSea
 	return param.Override[BetaResponseToolSearchOutputItemParam](json.RawMessage(r.RawJSON()))
 }
 
+// BetaResponseToolSearchOutputItemParamToolUnionResp contains all possible
+// properties and values from [BetaFunctionTool], [BetaFileSearchTool],
+// [BetaComputerTool], [BetaComputerUsePreviewTool], [BetaWebSearchTool],
+// [BetaResponseToolSearchOutputItemParamToolMcp],
+// [BetaResponseToolSearchOutputItemParamToolCodeInterpreter],
+// [BetaResponseToolSearchOutputItemParamToolProgrammaticToolCalling],
+// [BetaResponseToolSearchOutputItemParamToolImageGeneration],
+// [BetaResponseToolSearchOutputItemParamToolLocalShell], [BetaFunctionShellTool],
+// [BetaCustomTool], [BetaToolSearchOutputNamespaceTool], [BetaToolSearchTool],
+// [BetaWebSearchPreviewTool], [BetaApplyPatchTool].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaResponseToolSearchOutputItemParamToolUnionResp struct {
+	Name       string `json:"name"`
+	Parameters any    `json:"parameters"`
+	// This field is from variant [BetaFunctionTool].
+	Strict bool `json:"strict"`
+	// Any of "function", "file_search", "computer", "computer_use_preview", nil,
+	// "mcp", "code_interpreter", "programmatic_tool_calling", "image_generation",
+	// "local_shell", "shell", "custom", "namespace", "tool_search", nil,
+	// "apply_patch".
+	Type           string   `json:"type"`
+	AllowedCallers []string `json:"allowed_callers"`
+	Async          bool     `json:"async"`
+	DeferLoading   bool     `json:"defer_loading"`
+	Description    string   `json:"description"`
+	// This field is from variant [BetaFunctionTool].
+	OutputSchema map[string]any `json:"output_schema"`
+	// This field is from variant [BetaFileSearchTool].
+	VectorStoreIDs []string `json:"vector_store_ids"`
+	// This field is a union of [BetaFileSearchToolFiltersUnion],
+	// [BetaWebSearchToolFilters]
+	Filters BetaResponseToolSearchOutputItemParamToolUnionRespFilters `json:"filters"`
+	// This field is from variant [BetaFileSearchTool].
+	MaxNumResults int64 `json:"max_num_results"`
+	// This field is from variant [BetaFileSearchTool].
+	RankingOptions BetaFileSearchToolRankingOptions `json:"ranking_options"`
+	// This field is from variant [BetaComputerUsePreviewTool].
+	DisplayHeight int64 `json:"display_height"`
+	// This field is from variant [BetaComputerUsePreviewTool].
+	DisplayWidth int64 `json:"display_width"`
+	// This field is a union of [BetaComputerUsePreviewToolEnvironment],
+	// [BetaFunctionShellToolEnvironmentUnion]
+	Environment BetaResponseToolSearchOutputItemParamToolUnionRespEnvironment `json:"environment"`
+	// This field is from variant [BetaWebSearchTool].
+	ExternalWebAccess bool   `json:"external_web_access"`
+	SearchContextSize string `json:"search_context_size"`
+	// This field is a union of [BetaWebSearchToolUserLocation],
+	// [BetaWebSearchPreviewToolUserLocation]
+	UserLocation BetaResponseToolSearchOutputItemParamToolUnionRespUserLocation `json:"user_location"`
+	// This field is from variant [BetaResponseToolSearchOutputItemParamToolMcp].
+	ServerLabel string `json:"server_label"`
+	// This field is from variant [BetaResponseToolSearchOutputItemParamToolMcp].
+	AllowedTools BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnionResp `json:"allowed_tools"`
+	// This field is from variant [BetaResponseToolSearchOutputItemParamToolMcp].
+	Authorization string `json:"authorization"`
+	// This field is from variant [BetaResponseToolSearchOutputItemParamToolMcp].
+	ConnectorID string `json:"connector_id"`
+	// This field is from variant [BetaResponseToolSearchOutputItemParamToolMcp].
+	Headers map[string]string `json:"headers"`
+	// This field is from variant [BetaResponseToolSearchOutputItemParamToolMcp].
+	RequireApproval BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnionResp `json:"require_approval"`
+	// This field is from variant [BetaResponseToolSearchOutputItemParamToolMcp].
+	ServerDescription string `json:"server_description"`
+	// This field is from variant [BetaResponseToolSearchOutputItemParamToolMcp].
+	ServerURL string `json:"server_url"`
+	// This field is from variant [BetaResponseToolSearchOutputItemParamToolMcp].
+	TunnelID string `json:"tunnel_id"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolCodeInterpreter].
+	Container BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnionResp `json:"container"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	Action string `json:"action"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	Background string `json:"background"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	InputFidelity string `json:"input_fidelity"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	InputImageMask BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMaskResp `json:"input_image_mask"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	Model string `json:"model"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	Moderation string `json:"moderation"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	OutputCompression int64 `json:"output_compression"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	OutputFormat string `json:"output_format"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	PartialImages int64 `json:"partial_images"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	Quality string `json:"quality"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	Size string `json:"size"`
+	// This field is from variant [BetaCustomTool].
+	Format BetaCustomToolFormatUnion `json:"format"`
+	// This field is from variant [BetaToolSearchOutputNamespaceTool].
+	Tools []BetaToolSearchOutputNamespaceToolToolUnion `json:"tools"`
+	// This field is from variant [BetaToolSearchTool].
+	Execution BetaToolSearchToolExecution `json:"execution"`
+	// This field is from variant [BetaWebSearchPreviewTool].
+	SearchContentTypes []string `json:"search_content_types"`
+	JSON               struct {
+		Name               respjson.Field
+		Parameters         respjson.Field
+		Strict             respjson.Field
+		Type               respjson.Field
+		AllowedCallers     respjson.Field
+		Async              respjson.Field
+		DeferLoading       respjson.Field
+		Description        respjson.Field
+		OutputSchema       respjson.Field
+		VectorStoreIDs     respjson.Field
+		Filters            respjson.Field
+		MaxNumResults      respjson.Field
+		RankingOptions     respjson.Field
+		DisplayHeight      respjson.Field
+		DisplayWidth       respjson.Field
+		Environment        respjson.Field
+		ExternalWebAccess  respjson.Field
+		SearchContextSize  respjson.Field
+		UserLocation       respjson.Field
+		ServerLabel        respjson.Field
+		AllowedTools       respjson.Field
+		Authorization      respjson.Field
+		ConnectorID        respjson.Field
+		Headers            respjson.Field
+		RequireApproval    respjson.Field
+		ServerDescription  respjson.Field
+		ServerURL          respjson.Field
+		TunnelID           respjson.Field
+		Container          respjson.Field
+		Action             respjson.Field
+		Background         respjson.Field
+		InputFidelity      respjson.Field
+		InputImageMask     respjson.Field
+		Model              respjson.Field
+		Moderation         respjson.Field
+		OutputCompression  respjson.Field
+		OutputFormat       respjson.Field
+		PartialImages      respjson.Field
+		Quality            respjson.Field
+		Size               respjson.Field
+		Format             respjson.Field
+		Tools              respjson.Field
+		Execution          respjson.Field
+		SearchContentTypes respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsFunction() (v BetaFunctionTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsFileSearch() (v BetaFileSearchTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsComputer() (v BetaComputerTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsComputerUsePreview() (v BetaComputerUsePreviewTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsWebSearch() (v BetaWebSearchTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsMcp() (v BetaResponseToolSearchOutputItemParamToolMcp) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsCodeInterpreter() (v BetaResponseToolSearchOutputItemParamToolCodeInterpreter) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsProgrammaticToolCalling() (v BetaResponseToolSearchOutputItemParamToolProgrammaticToolCalling) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsImageGeneration() (v BetaResponseToolSearchOutputItemParamToolImageGeneration) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsLocalShell() (v BetaResponseToolSearchOutputItemParamToolLocalShell) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsShell() (v BetaFunctionShellTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsCustom() (v BetaCustomTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsNamespace() (v BetaToolSearchOutputNamespaceTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsToolSearch() (v BetaToolSearchTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsWebSearchPreview() (v BetaWebSearchPreviewTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) AsApplyPatch() (v BetaApplyPatchTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseToolSearchOutputItemParamToolUnionResp) RawJSON() string { return u.JSON.raw }
+
+func (r *BetaResponseToolSearchOutputItemParamToolUnionResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseToolSearchOutputItemParamToolUnionRespFilters is an implicit
+// subunion of [BetaResponseToolSearchOutputItemParamToolUnionResp].
+// BetaResponseToolSearchOutputItemParamToolUnionRespFilters provides convenient
+// access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [BetaResponseToolSearchOutputItemParamToolUnionResp].
+type BetaResponseToolSearchOutputItemParamToolUnionRespFilters struct {
+	// This field is from variant [BetaFileSearchToolFiltersUnion].
+	Key  string `json:"key"`
+	Type string `json:"type"`
+	// This field is from variant [BetaFileSearchToolFiltersUnion].
+	Value BetaFileSearchToolFiltersComparisonFilterValueUnion `json:"value"`
+	// This field is from variant [BetaFileSearchToolFiltersUnion].
+	Filters []BetaFileSearchToolFiltersCompoundFilterFilterUnion `json:"filters"`
+	// This field is from variant [BetaWebSearchToolFilters].
+	AllowedDomains []string `json:"allowed_domains"`
+	JSON           struct {
+		Key            respjson.Field
+		Type           respjson.Field
+		Value          respjson.Field
+		Filters        respjson.Field
+		AllowedDomains respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+func (r *BetaResponseToolSearchOutputItemParamToolUnionRespFilters) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseToolSearchOutputItemParamToolUnionRespEnvironment is an implicit
+// subunion of [BetaResponseToolSearchOutputItemParamToolUnionResp].
+// BetaResponseToolSearchOutputItemParamToolUnionRespEnvironment provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [BetaResponseToolSearchOutputItemParamToolUnionResp].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfBetaComputerUsePreviewToolEnvironment]
+type BetaResponseToolSearchOutputItemParamToolUnionRespEnvironment struct {
+	// This field will be present if the value is a
+	// [BetaComputerUsePreviewToolEnvironment] instead of an object.
+	OfBetaComputerUsePreviewToolEnvironment BetaComputerUsePreviewToolEnvironment `json:",inline"`
+	Type                                    string                                `json:"type"`
+	// This field is from variant [BetaFunctionShellToolEnvironmentUnion].
+	FileIDs []string `json:"file_ids"`
+	// This field is from variant [BetaFunctionShellToolEnvironmentUnion].
+	MemoryLimit BetaContainerAutoMemoryLimit `json:"memory_limit"`
+	// This field is from variant [BetaFunctionShellToolEnvironmentUnion].
+	NetworkPolicy BetaContainerAutoNetworkPolicyUnion `json:"network_policy"`
+	// This field is a union of [[]BetaContainerAutoSkillUnion], [[]BetaLocalSkill]
+	Skills BetaResponseToolSearchOutputItemParamToolUnionRespEnvironmentSkills `json:"skills"`
+	// This field is from variant [BetaFunctionShellToolEnvironmentUnion].
+	ContainerID string `json:"container_id"`
+	JSON        struct {
+		OfBetaComputerUsePreviewToolEnvironment respjson.Field
+		Type                                    respjson.Field
+		FileIDs                                 respjson.Field
+		MemoryLimit                             respjson.Field
+		NetworkPolicy                           respjson.Field
+		Skills                                  respjson.Field
+		ContainerID                             respjson.Field
+		raw                                     string
+	} `json:"-"`
+}
+
+func (r *BetaResponseToolSearchOutputItemParamToolUnionRespEnvironment) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseToolSearchOutputItemParamToolUnionRespEnvironmentSkills is an
+// implicit subunion of [BetaResponseToolSearchOutputItemParamToolUnionResp].
+// BetaResponseToolSearchOutputItemParamToolUnionRespEnvironmentSkills provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [BetaResponseToolSearchOutputItemParamToolUnionResp].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfBetaContainerAutoSkills OfBetaLocalSkillArray]
+type BetaResponseToolSearchOutputItemParamToolUnionRespEnvironmentSkills struct {
+	// This field will be present if the value is a [[]BetaContainerAutoSkillUnion]
+	// instead of an object.
+	OfBetaContainerAutoSkills []BetaContainerAutoSkillUnion `json:",inline"`
+	// This field will be present if the value is a [[]BetaLocalSkill] instead of an
+	// object.
+	OfBetaLocalSkillArray []BetaLocalSkill `json:",inline"`
+	JSON                  struct {
+		OfBetaContainerAutoSkills respjson.Field
+		OfBetaLocalSkillArray     respjson.Field
+		raw                       string
+	} `json:"-"`
+}
+
+func (r *BetaResponseToolSearchOutputItemParamToolUnionRespEnvironmentSkills) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseToolSearchOutputItemParamToolUnionRespUserLocation is an implicit
+// subunion of [BetaResponseToolSearchOutputItemParamToolUnionResp].
+// BetaResponseToolSearchOutputItemParamToolUnionRespUserLocation provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [BetaResponseToolSearchOutputItemParamToolUnionResp].
+type BetaResponseToolSearchOutputItemParamToolUnionRespUserLocation struct {
+	City     string `json:"city"`
+	Country  string `json:"country"`
+	Region   string `json:"region"`
+	Timezone string `json:"timezone"`
+	Type     string `json:"type"`
+	JSON     struct {
+		City     respjson.Field
+		Country  respjson.Field
+		Region   respjson.Field
+		Timezone respjson.Field
+		Type     respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (r *BetaResponseToolSearchOutputItemParamToolUnionRespUserLocation) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Give the model access to additional tools via remote Model Context Protocol
+// (MCP) servers.
+// [Learn more about MCP](https://developers.openai.com/api/docs/guides/tools-connectors-mcp).
+type BetaResponseToolSearchOutputItemParamToolMcp struct {
+	// A label for this MCP server, used to identify it in tool calls.
+	ServerLabel string `json:"server_label" api:"required"`
+	// The type of the MCP tool. Always `mcp`.
+	Type constant.Mcp `json:"type" default:"mcp"`
+	// The tool invocation context(s).
+	//
+	// Any of "direct", "programmatic".
+	AllowedCallers []string `json:"allowed_callers" api:"nullable"`
+	// List of allowed tool names or a filter object.
+	AllowedTools BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnionResp `json:"allowed_tools" api:"nullable"`
+	// An OAuth access token that can be used with a remote MCP server, either with a
+	// custom MCP server URL or a service connector. Your application must handle the
+	// OAuth authorization flow and provide the token here.
+	Authorization string `json:"authorization"`
+	// Identifier for service connectors, like those available in ChatGPT. One of
+	// `server_url`, `connector_id`, or `tunnel_id` must be provided. Learn more about
+	// service connectors
+	// [here](https://developers.openai.com/api/docs/guides/tools-connectors-mcp#connectors).
+	//
+	// This field is deprecated for models released after September 1, 2026. Use
+	// `server_url` to connect to a remote MCP server, or `tunnel_id` to connect
+	// through a Secure MCP Tunnel.
+	//
+	// Currently supported `connector_id` values are:
+	//
+	// - Dropbox: `connector_dropbox`
+	// - Gmail: `connector_gmail`
+	// - Google Calendar: `connector_googlecalendar`
+	// - Google Drive: `connector_googledrive`
+	// - Microsoft Teams: `connector_microsoftteams`
+	// - Outlook Calendar: `connector_outlookcalendar`
+	// - Outlook Email: `connector_outlookemail`
+	// - SharePoint: `connector_sharepoint`
+	//
+	// Any of "connector_dropbox", "connector_gmail", "connector_googlecalendar",
+	// "connector_googledrive", "connector_microsoftteams",
+	// "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint".
+	//
+	// Deprecated: deprecated
+	ConnectorID string `json:"connector_id"`
+	// Whether this MCP tool is deferred and discovered via tool search.
+	DeferLoading bool `json:"defer_loading"`
+	// Optional HTTP headers to send to the MCP server. Use for authentication or other
+	// purposes.
+	Headers map[string]string `json:"headers" api:"nullable"`
+	// Specify which of the MCP server's tools require approval.
+	RequireApproval BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnionResp `json:"require_approval" api:"nullable"`
+	// Optional description of the MCP server, used to provide more context.
+	ServerDescription string `json:"server_description"`
+	// The URL for the MCP server. One of `server_url`, `connector_id`, or `tunnel_id`
+	// must be provided.
+	ServerURL string `json:"server_url" format:"uri"`
+	// The Secure MCP Tunnel ID to use instead of a direct server URL. One of
+	// `server_url`, `connector_id`, or `tunnel_id` must be provided.
+	TunnelID string `json:"tunnel_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ServerLabel       respjson.Field
+		Type              respjson.Field
+		AllowedCallers    respjson.Field
+		AllowedTools      respjson.Field
+		Authorization     respjson.Field
+		ConnectorID       respjson.Field
+		DeferLoading      respjson.Field
+		Headers           respjson.Field
+		RequireApproval   respjson.Field
+		ServerDescription respjson.Field
+		ServerURL         respjson.Field
+		TunnelID          respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolMcp) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseToolSearchOutputItemParamToolMcp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnionResp contains all
+// possible properties and values from [[]string],
+// [BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilter].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfMcpAllowedTools]
+type BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnionResp struct {
+	// This field will be present if the value is a [[]string] instead of an object.
+	OfMcpAllowedTools []string `json:",inline"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilter].
+	ReadOnly bool `json:"read_only"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilter].
+	ToolNames []string `json:"tool_names"`
+	JSON      struct {
+		OfMcpAllowedTools respjson.Field
+		ReadOnly          respjson.Field
+		ToolNames         respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnionResp) AsMcpAllowedTools() (v []string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnionResp) AsMcpToolFilter() (v BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilter) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnionResp) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnionResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A filter object to specify which tools are allowed.
+type BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilter struct {
+	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
+	// is
+	// [annotated with `readOnlyHint`](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations-readonlyhint),
+	// it will match this filter.
+	ReadOnly bool `json:"read_only"`
+	// List of allowed tool names.
+	ToolNames []string `json:"tool_names"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ReadOnly    respjson.Field
+		ToolNames   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilter) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnionResp contains
+// all possible properties and values from
+// [BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilter],
+// [string].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfMcpToolApprovalSetting]
+type BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnionResp struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfMcpToolApprovalSetting string `json:",inline"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilter].
+	Always BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlwaysResp `json:"always"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilter].
+	Never BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNeverResp `json:"never"`
+	JSON  struct {
+		OfMcpToolApprovalSetting respjson.Field
+		Always                   respjson.Field
+		Never                    respjson.Field
+		raw                      string
+	} `json:"-"`
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnionResp) AsMcpToolApprovalFilter() (v BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilter) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnionResp) AsMcpToolApprovalSetting() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnionResp) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnionResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Specify which of the MCP server's tools require approval. Can be `always`,
+// `never`, or a filter object associated with tools that require approval.
+type BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilter struct {
+	// A filter object to specify which tools are allowed.
+	Always BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlwaysResp `json:"always"`
+	// A filter object to specify which tools are allowed.
+	Never BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNeverResp `json:"never"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Always      respjson.Field
+		Never       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilter) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A filter object to specify which tools are allowed.
+type BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlwaysResp struct {
+	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
+	// is
+	// [annotated with `readOnlyHint`](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations-readonlyhint),
+	// it will match this filter.
+	ReadOnly bool `json:"read_only"`
+	// List of allowed tool names.
+	ToolNames []string `json:"tool_names"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ReadOnly    respjson.Field
+		ToolNames   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlwaysResp) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlwaysResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A filter object to specify which tools are allowed.
+type BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNeverResp struct {
+	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
+	// is
+	// [annotated with `readOnlyHint`](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations-readonlyhint),
+	// it will match this filter.
+	ReadOnly bool `json:"read_only"`
+	// List of allowed tool names.
+	ToolNames []string `json:"tool_names"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ReadOnly    respjson.Field
+		ToolNames   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNeverResp) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNeverResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Specify a single approval policy for all tools. One of `always` or `never`. When
+// set to `always`, all tools will require approval. When set to `never`, all tools
+// will not require approval.
+type BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalSetting string
+
+const (
+	BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalSettingAlways BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalSetting = "always"
+	BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalSettingNever  BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalSetting = "never"
+)
+
+// A tool that runs Python code to help generate a response to a prompt.
+type BetaResponseToolSearchOutputItemParamToolCodeInterpreter struct {
+	// The code interpreter container. Can be a container ID or an object that
+	// specifies uploaded file IDs to make available to your code, along with an
+	// optional `memory_limit` setting.
+	Container BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnionResp `json:"container" api:"required"`
+	// The type of the code interpreter tool. Always `code_interpreter`.
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
+	// The tool invocation context(s).
+	//
+	// Any of "direct", "programmatic".
+	AllowedCallers []string `json:"allowed_callers" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Container      respjson.Field
+		Type           respjson.Field
+		AllowedCallers respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolCodeInterpreter) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseToolSearchOutputItemParamToolCodeInterpreter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnionResp
+// contains all possible properties and values from [string],
+// [BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAuto].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString]
+type BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnionResp struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAuto].
+	Type constant.Auto `json:"type"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAuto].
+	FileIDs []string `json:"file_ids"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAuto].
+	MemoryLimit string `json:"memory_limit"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAuto].
+	NetworkPolicy BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp `json:"network_policy"`
+	JSON          struct {
+		OfString      respjson.Field
+		Type          respjson.Field
+		FileIDs       respjson.Field
+		MemoryLimit   respjson.Field
+		NetworkPolicy respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnionResp) AsString() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnionResp) AsCodeInterpreterToolAuto() (v BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAuto) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnionResp) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnionResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Configuration for a code interpreter container. Optionally specify the IDs of
+// the files to run the code on.
+type BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAuto struct {
+	// Always `auto`.
+	Type constant.Auto `json:"type" default:"auto"`
+	// An optional list of uploaded files to make available to your code.
+	FileIDs []string `json:"file_ids"`
+	// The memory limit for the code interpreter container.
+	//
+	// Any of "1g", "4g", "16g", "64g".
+	MemoryLimit string `json:"memory_limit" api:"nullable"`
+	// Network access policy for the container.
+	NetworkPolicy BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp `json:"network_policy"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type          respjson.Field
+		FileIDs       respjson.Field
+		MemoryLimit   respjson.Field
+		NetworkPolicy respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAuto) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAuto) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp
+// contains all possible properties and values from
+// [BetaContainerNetworkPolicyDisabled], [BetaContainerNetworkPolicyAllowlist].
+//
+// Use the
+// [BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp.AsAny]
+// method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp struct {
+	// Any of "disabled", "allowlist".
+	Type string `json:"type"`
+	// This field is from variant [BetaContainerNetworkPolicyAllowlist].
+	AllowedDomains []string `json:"allowed_domains"`
+	// This field is from variant [BetaContainerNetworkPolicyAllowlist].
+	DomainSecrets []BetaContainerNetworkPolicyDomainSecret `json:"domain_secrets"`
+	JSON          struct {
+		Type           respjson.Field
+		AllowedDomains respjson.Field
+		DomainSecrets  respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// anyBetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyResp
+// is implemented by each variant of
+// [BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp]
+// to add type safety for the return type of
+// [BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp.AsAny]
+type anyBetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyResp interface {
+	implBetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp()
+}
+
+func (BetaContainerNetworkPolicyDisabled) implBetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp() {
+}
+func (BetaContainerNetworkPolicyAllowlist) implBetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp.AsAny().(type) {
+//	case openai.BetaContainerNetworkPolicyDisabled:
+//	case openai.BetaContainerNetworkPolicyAllowlist:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp) AsAny() anyBetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyResp {
+	switch u.Type {
+	case "disabled":
+		return u.AsDisabled()
+	case "allowlist":
+		return u.AsAllowlist()
+	}
+	return nil
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp) AsDisabled() (v BetaContainerNetworkPolicyDisabled) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp) AsAllowlist() (v BetaContainerNetworkPolicyAllowlist) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponseToolSearchOutputItemParamToolProgrammaticToolCalling struct {
+	// The type of the tool. Always `programmatic_tool_calling`.
+	Type constant.ProgrammaticToolCalling `json:"type" default:"programmatic_tool_calling"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolProgrammaticToolCalling) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseToolSearchOutputItemParamToolProgrammaticToolCalling) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A tool that generates images using the GPT image models.
+type BetaResponseToolSearchOutputItemParamToolImageGeneration struct {
+	// The type of the image generation tool. Always `image_generation`.
+	Type constant.ImageGeneration `json:"type" default:"image_generation"`
+	// Whether to generate a new image or edit an existing image. Default: `auto`.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action"`
+	// Allows to set transparency for the background of the generated image(s). Must be
+	// one of `transparent`, `opaque`, or `auto` (default value). When `auto` is used,
+	// the model will automatically determine the best background for the image.
+	//
+	// `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`, including their `2026-09-08`
+	// snapshots, support `opaque` and `transparent` backgrounds. Transparent
+	// backgrounds are available for supported GPT Image models. For `gpt-image-2` and
+	// `gpt-image-2-2026-04-21`, this support is in preview. When using `transparent`,
+	// set the output format to `png` or `webp`.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background string `json:"background"`
+	// Control how much effort the model will exert to match the style and features,
+	// especially facial features, of input images. Supports `high` and `low` on
+	// `gpt-image-1` and `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For
+	// `gpt-image-2`, omit this parameter. Defaults to `low` on supported models.
+	//
+	// Any of "high", "low".
+	InputFidelity string `json:"input_fidelity" api:"nullable"`
+	// Optional mask for inpainting. Contains `image_url` (string, optional) and
+	// `file_id` (string, optional).
+	InputImageMask BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMaskResp `json:"input_image_mask"`
+	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
+	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`,
+	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
+	// `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, or
+	// `chatgpt-image-latest`. Default: `gpt-image-1`.
+	Model string `json:"model"`
+	// Moderation level for the generated image. Default: `auto`.
+	//
+	// Any of "auto", "low".
+	Moderation string `json:"moderation"`
+	// Compression level for the output image. Default: 100.
+	OutputCompression int64 `json:"output_compression"`
+	// The output format of the generated image. One of `png`, `webp`, or `jpeg`.
+	// Default: `png`.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat string `json:"output_format"`
+	// Number of partial images to generate in streaming mode, from 0 (default value)
+	// to 3.
+	PartialImages int64 `json:"partial_images"`
+	// The quality of the generated image. The GPT image models support `low`,
+	// `medium`, and `high`. `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`,
+	// including their `2026-09-08` snapshots, also support `xhigh` and `max`. Default:
+	// `auto`.
+	//
+	// Any of "low", "medium", "high", "xhigh", "max", "auto".
+	Quality string `json:"quality"`
+	// The size of the generated images. For `gpt-image-2`, `gpt-image-2-2026-04-21`,
+	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
+	// `gpt-image-2.5-flare`, and `gpt-image-2.5-flare-2026-09-08`, arbitrary
+	// resolutions are supported as `WIDTHxHEIGHT` strings, for example `1536x864`.
+	// Width and height must both be divisible by 16 and the requested aspect ratio
+	// must be between 1:3 and 3:1. Resolutions above `2560x1440` are experimental, and
+	// the maximum supported resolution is `3840x2160`. The requested size must also
+	// satisfy the model's current pixel and edge limits. The standard sizes
+	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
+	// `auto` is supported for models that allow automatic sizing.
+	Size string `json:"size"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type              respjson.Field
+		Action            respjson.Field
+		Background        respjson.Field
+		InputFidelity     respjson.Field
+		InputImageMask    respjson.Field
+		Model             respjson.Field
+		Moderation        respjson.Field
+		OutputCompression respjson.Field
+		OutputFormat      respjson.Field
+		PartialImages     respjson.Field
+		Quality           respjson.Field
+		Size              respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolImageGeneration) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseToolSearchOutputItemParamToolImageGeneration) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Optional mask for inpainting. Contains `image_url` (string, optional) and
+// `file_id` (string, optional).
+type BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMaskResp struct {
+	// File ID for the mask image.
+	FileID string `json:"file_id"`
+	// Base64-encoded mask image.
+	ImageURL string `json:"image_url"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		FileID      respjson.Field
+		ImageURL    respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMaskResp) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMaskResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A tool that allows the model to execute shell commands in a local environment.
+type BetaResponseToolSearchOutputItemParamToolLocalShell struct {
+	// The type of the local shell tool. Always `local_shell`.
+	Type constant.LocalShell `json:"type" default:"local_shell"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolLocalShell) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseToolSearchOutputItemParamToolLocalShell) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The agent that produced this item.
 type BetaResponseToolSearchOutputItemParamAgentResp struct {
 	// The canonical name of the agent that produced this item.
@@ -29968,7 +33417,7 @@ const (
 // The properties Tools, Type are required.
 type BetaResponseToolSearchOutputItemParam struct {
 	// The loaded tool definitions returned by the tool search output.
-	Tools []BetaToolUnionParam `json:"tools,omitzero" api:"required"`
+	Tools []BetaResponseToolSearchOutputItemParamToolUnion `json:"tools,omitzero" api:"required"`
 	// The unique ID of this tool search output.
 	ID param.Opt[string] `json:"id,omitzero"`
 	// The unique ID of the tool search call generated by the model.
@@ -29996,6 +33445,1226 @@ func (r BetaResponseToolSearchOutputItemParam) MarshalJSON() (data []byte, err e
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *BetaResponseToolSearchOutputItemParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponseToolSearchOutputItemParamToolUnion struct {
+	OfFunction                *BetaFunctionToolParam                                                 `json:",omitzero,inline"`
+	OfFileSearch              *BetaFileSearchToolParam                                               `json:",omitzero,inline"`
+	OfComputer                *BetaComputerToolParam                                                 `json:",omitzero,inline"`
+	OfComputerUsePreview      *BetaComputerUsePreviewToolParam                                       `json:",omitzero,inline"`
+	OfWebSearch               *BetaWebSearchToolParam                                                `json:",omitzero,inline"`
+	OfMcp                     *BetaResponseToolSearchOutputItemParamToolMcpParam                     `json:",omitzero,inline"`
+	OfCodeInterpreter         *BetaResponseToolSearchOutputItemParamToolCodeInterpreterParam         `json:",omitzero,inline"`
+	OfProgrammaticToolCalling *BetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam `json:",omitzero,inline"`
+	OfImageGeneration         *BetaResponseToolSearchOutputItemParamToolImageGenerationParam         `json:",omitzero,inline"`
+	OfLocalShell              *BetaResponseToolSearchOutputItemParamToolLocalShellParam              `json:",omitzero,inline"`
+	OfShell                   *BetaFunctionShellToolParam                                            `json:",omitzero,inline"`
+	OfCustom                  *BetaCustomToolParam                                                   `json:",omitzero,inline"`
+	OfNamespace               *BetaToolSearchOutputNamespaceToolParam                                `json:",omitzero,inline"`
+	OfToolSearch              *BetaToolSearchToolParam                                               `json:",omitzero,inline"`
+	OfWebSearchPreview        *BetaWebSearchPreviewToolParam                                         `json:",omitzero,inline"`
+	OfApplyPatch              *BetaApplyPatchToolParam                                               `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfFunction,
+		u.OfFileSearch,
+		u.OfComputer,
+		u.OfComputerUsePreview,
+		u.OfWebSearch,
+		u.OfMcp,
+		u.OfCodeInterpreter,
+		u.OfProgrammaticToolCalling,
+		u.OfImageGeneration,
+		u.OfLocalShell,
+		u.OfShell,
+		u.OfCustom,
+		u.OfNamespace,
+		u.OfToolSearch,
+		u.OfWebSearchPreview,
+		u.OfApplyPatch)
+}
+func (u *BetaResponseToolSearchOutputItemParamToolUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetStrict() *bool {
+	if vt := u.OfFunction; vt != nil && vt.Strict.Valid() {
+		return &vt.Strict.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetOutputSchema() map[string]any {
+	if vt := u.OfFunction; vt != nil {
+		return vt.OutputSchema
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetVectorStoreIDs() []string {
+	if vt := u.OfFileSearch; vt != nil {
+		return vt.VectorStoreIDs
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetMaxNumResults() *int64 {
+	if vt := u.OfFileSearch; vt != nil && vt.MaxNumResults.Valid() {
+		return &vt.MaxNumResults.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetRankingOptions() *BetaFileSearchToolRankingOptionsParam {
+	if vt := u.OfFileSearch; vt != nil {
+		return &vt.RankingOptions
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetDisplayHeight() *int64 {
+	if vt := u.OfComputerUsePreview; vt != nil {
+		return &vt.DisplayHeight
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetDisplayWidth() *int64 {
+	if vt := u.OfComputerUsePreview; vt != nil {
+		return &vt.DisplayWidth
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetExternalWebAccess() *bool {
+	if vt := u.OfWebSearch; vt != nil && vt.ExternalWebAccess.Valid() {
+		return &vt.ExternalWebAccess.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetServerLabel() *string {
+	if vt := u.OfMcp; vt != nil {
+		return &vt.ServerLabel
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetAllowedTools() *BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnion {
+	if vt := u.OfMcp; vt != nil {
+		return &vt.AllowedTools
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetAuthorization() *string {
+	if vt := u.OfMcp; vt != nil && vt.Authorization.Valid() {
+		return &vt.Authorization.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetConnectorID() *string {
+	if vt := u.OfMcp; vt != nil {
+		return &vt.ConnectorID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetHeaders() map[string]string {
+	if vt := u.OfMcp; vt != nil {
+		return vt.Headers
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetRequireApproval() *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnion {
+	if vt := u.OfMcp; vt != nil {
+		return &vt.RequireApproval
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetServerDescription() *string {
+	if vt := u.OfMcp; vt != nil && vt.ServerDescription.Valid() {
+		return &vt.ServerDescription.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetServerURL() *string {
+	if vt := u.OfMcp; vt != nil && vt.ServerURL.Valid() {
+		return &vt.ServerURL.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetTunnelID() *string {
+	if vt := u.OfMcp; vt != nil && vt.TunnelID.Valid() {
+		return &vt.TunnelID.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetContainer() *BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnion {
+	if vt := u.OfCodeInterpreter; vt != nil {
+		return &vt.Container
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetAction() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Action
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetBackground() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Background
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetInputFidelity() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.InputFidelity
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetInputImageMask() *BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMask {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.InputImageMask
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetModel() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Model
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetModeration() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Moderation
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetOutputCompression() *int64 {
+	if vt := u.OfImageGeneration; vt != nil && vt.OutputCompression.Valid() {
+		return &vt.OutputCompression.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetOutputFormat() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.OutputFormat
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetPartialImages() *int64 {
+	if vt := u.OfImageGeneration; vt != nil && vt.PartialImages.Valid() {
+		return &vt.PartialImages.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetQuality() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Quality
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetSize() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Size
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetFormat() *BetaCustomToolFormatUnionParam {
+	if vt := u.OfCustom; vt != nil {
+		return &vt.Format
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetTools() []BetaToolSearchOutputNamespaceToolToolUnionParam {
+	if vt := u.OfNamespace; vt != nil {
+		return vt.Tools
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetExecution() *string {
+	if vt := u.OfToolSearch; vt != nil {
+		return (*string)(&vt.Execution)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetSearchContentTypes() []string {
+	if vt := u.OfWebSearchPreview; vt != nil {
+		return vt.SearchContentTypes
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetName() *string {
+	if vt := u.OfFunction; vt != nil {
+		return (*string)(&vt.Name)
+	} else if vt := u.OfCustom; vt != nil {
+		return (*string)(&vt.Name)
+	} else if vt := u.OfNamespace; vt != nil {
+		return (*string)(&vt.Name)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetType() *string {
+	if vt := u.OfFunction; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFileSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfComputer; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfComputerUsePreview; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfWebSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfMcp; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCodeInterpreter; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfProgrammaticToolCalling; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfImageGeneration; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfLocalShell; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfShell; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCustom; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfNamespace; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfToolSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfWebSearchPreview; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfApplyPatch; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetAsync() *bool {
+	if vt := u.OfFunction; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
+	} else if vt := u.OfCustom; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetDeferLoading() *bool {
+	if vt := u.OfFunction; vt != nil && vt.DeferLoading.Valid() {
+		return &vt.DeferLoading.Value
+	} else if vt := u.OfMcp; vt != nil && vt.DeferLoading.Valid() {
+		return &vt.DeferLoading.Value
+	} else if vt := u.OfCustom; vt != nil && vt.DeferLoading.Valid() {
+		return &vt.DeferLoading.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetDescription() *string {
+	if vt := u.OfFunction; vt != nil && vt.Description.Valid() {
+		return &vt.Description.Value
+	} else if vt := u.OfCustom; vt != nil && vt.Description.Valid() {
+		return &vt.Description.Value
+	} else if vt := u.OfNamespace; vt != nil {
+		return (*string)(&vt.Description)
+	} else if vt := u.OfToolSearch; vt != nil && vt.Description.Valid() {
+		return &vt.Description.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetSearchContextSize() *string {
+	if vt := u.OfWebSearch; vt != nil {
+		return (*string)(&vt.SearchContextSize)
+	} else if vt := u.OfWebSearchPreview; vt != nil {
+		return (*string)(&vt.SearchContextSize)
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetParameters() (res betaResponseToolSearchOutputItemParamToolUnionParameters) {
+	if vt := u.OfFunction; vt != nil {
+		res.any = &vt.Parameters
+	} else if vt := u.OfToolSearch; vt != nil {
+		res.any = &vt.Parameters
+	}
+	return
+}
+
+// Can have the runtime types [*map[string]any], [*any]
+type betaResponseToolSearchOutputItemParamToolUnionParameters struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *map[string]any:
+//	case *any:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u betaResponseToolSearchOutputItemParamToolUnionParameters) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's AllowedCallers property, if
+// present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetAllowedCallers() []string {
+	if vt := u.OfFunction; vt != nil {
+		return vt.AllowedCallers
+	} else if vt := u.OfMcp; vt != nil {
+		return vt.AllowedCallers
+	} else if vt := u.OfCodeInterpreter; vt != nil {
+		return vt.AllowedCallers
+	} else if vt := u.OfShell; vt != nil {
+		return vt.AllowedCallers
+	} else if vt := u.OfCustom; vt != nil {
+		return vt.AllowedCallers
+	} else if vt := u.OfApplyPatch; vt != nil {
+		return vt.AllowedCallers
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetFilters() (res betaResponseToolSearchOutputItemParamToolUnionFilters) {
+	if vt := u.OfFileSearch; vt != nil {
+		res.any = vt.Filters.asAny()
+	} else if vt := u.OfWebSearch; vt != nil {
+		res.any = &vt.Filters
+	}
+	return
+}
+
+// Can have the runtime types [*BetaFileSearchToolFiltersComparisonFilterParam],
+// [*BetaFileSearchToolFiltersCompoundFilterParam],
+// [*BetaWebSearchToolFiltersParam]
+type betaResponseToolSearchOutputItemParamToolUnionFilters struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *openai.BetaFileSearchToolFiltersComparisonFilterParam:
+//	case *openai.BetaFileSearchToolFiltersCompoundFilterParam:
+//	case *openai.BetaWebSearchToolFiltersParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u betaResponseToolSearchOutputItemParamToolUnionFilters) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetKey() *string {
+	switch vt := u.any.(type) {
+	case *BetaFileSearchToolFiltersComparisonFilterParam:
+		return &vt.Key
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetValue() *BetaFileSearchToolFiltersComparisonFilterValueUnionParam {
+	switch vt := u.any.(type) {
+	case *BetaFileSearchToolFiltersComparisonFilterParam:
+		return &vt.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetFilters() []BetaFileSearchToolFiltersCompoundFilterFilterUnionParam {
+	switch vt := u.any.(type) {
+	case *BetaFileSearchToolFiltersCompoundFilterParam:
+		return vt.Filters
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetAllowedDomains() []string {
+	switch vt := u.any.(type) {
+	case *BetaWebSearchToolFiltersParam:
+		return vt.AllowedDomains
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetType() *string {
+	switch vt := u.any.(type) {
+	case *BetaFileSearchToolFiltersComparisonFilterParam:
+		return (*string)(&vt.Type)
+	case *BetaFileSearchToolFiltersCompoundFilterParam:
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetEnvironment() (res betaResponseToolSearchOutputItemParamToolUnionEnvironment) {
+	if vt := u.OfComputerUsePreview; vt != nil {
+		res.any = (*string)(&vt.Environment)
+	} else if vt := u.OfShell; vt != nil {
+		res.any = vt.Environment.asAny()
+	}
+	return
+}
+
+// Can have the runtime types [*string], [*BetaContainerAutoParam],
+// [*BetaLocalEnvironmentParam], [*BetaContainerReferenceParam]
+type betaResponseToolSearchOutputItemParamToolUnionEnvironment struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *string:
+//	case *openai.BetaContainerAutoParam:
+//	case *openai.BetaLocalEnvironmentParam:
+//	case *openai.BetaContainerReferenceParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetFileIDs() []string {
+	switch vt := u.any.(type) {
+	case *BetaContainerAutoParam:
+		return vt.FileIDs
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetMemoryLimit() *string {
+	switch vt := u.any.(type) {
+	case *BetaContainerAutoParam:
+		return (*string)(&vt.MemoryLimit)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetNetworkPolicy() *BetaContainerAutoNetworkPolicyUnionParam {
+	switch vt := u.any.(type) {
+	case *BetaContainerAutoParam:
+		return &vt.NetworkPolicy
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetContainerID() *string {
+	switch vt := u.any.(type) {
+	case *BetaContainerReferenceParam:
+		return &vt.ContainerID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetType() *string {
+	switch vt := u.any.(type) {
+	case *BetaContainerAutoParam:
+		return (*string)(&vt.Type)
+	case *BetaLocalEnvironmentParam:
+		return (*string)(&vt.Type)
+	case *BetaContainerReferenceParam:
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u betaResponseToolSearchOutputItemParamToolUnionEnvironment) GetSkills() (res betaResponseToolSearchOutputItemParamToolUnionEnvironmentSkills) {
+	switch vt := u.any.(type) {
+	case *BetaContainerAutoParam:
+		res.any = &vt.Skills
+	case *BetaLocalEnvironmentParam:
+		res.any = &vt.Skills
+	}
+	return res
+}
+
+// Can have the runtime types [_[]BetaContainerAutoSkillUnionParam],
+// [_[]BetaLocalSkillParam]
+type betaResponseToolSearchOutputItemParamToolUnionEnvironmentSkills struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *[]openai.BetaContainerAutoSkillUnionParam:
+//	case *[]openai.BetaLocalSkillParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u betaResponseToolSearchOutputItemParamToolUnionEnvironmentSkills) AsAny() any { return u.any }
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetUserLocation() (res betaResponseToolSearchOutputItemParamToolUnionUserLocation) {
+	if vt := u.OfWebSearch; vt != nil {
+		res.any = &vt.UserLocation
+	} else if vt := u.OfWebSearchPreview; vt != nil {
+		res.any = &vt.UserLocation
+	}
+	return
+}
+
+// Can have the runtime types [*BetaWebSearchToolUserLocationParam],
+// [*BetaWebSearchPreviewToolUserLocationParam]
+type betaResponseToolSearchOutputItemParamToolUnionUserLocation struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *openai.BetaWebSearchToolUserLocationParam:
+//	case *openai.BetaWebSearchPreviewToolUserLocationParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetCity() *string {
+	switch vt := u.any.(type) {
+	case *BetaWebSearchToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.City)
+	case *BetaWebSearchPreviewToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.City)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetCountry() *string {
+	switch vt := u.any.(type) {
+	case *BetaWebSearchToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Country)
+	case *BetaWebSearchPreviewToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Country)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetRegion() *string {
+	switch vt := u.any.(type) {
+	case *BetaWebSearchToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Region)
+	case *BetaWebSearchPreviewToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Region)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetTimezone() *string {
+	switch vt := u.any.(type) {
+	case *BetaWebSearchToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Timezone)
+	case *BetaWebSearchPreviewToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Timezone)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetType() *string {
+	switch vt := u.any.(type) {
+	case *BetaWebSearchToolUserLocationParam:
+		return (*string)(&vt.Type)
+	case *BetaWebSearchPreviewToolUserLocationParam:
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[BetaResponseToolSearchOutputItemParamToolUnion](
+		"type",
+		apijson.Discriminator[BetaFunctionToolParam]("function"),
+		apijson.Discriminator[BetaFileSearchToolParam]("file_search"),
+		apijson.Discriminator[BetaComputerToolParam]("computer"),
+		apijson.Discriminator[BetaComputerUsePreviewToolParam]("computer_use_preview"),
+		apijson.Discriminator[BetaWebSearchToolParam]("web_search"),
+		apijson.Discriminator[BetaWebSearchToolParam]("web_search_2025_08_26"),
+		apijson.Discriminator[BetaResponseToolSearchOutputItemParamToolMcpParam]("mcp"),
+		apijson.Discriminator[BetaResponseToolSearchOutputItemParamToolCodeInterpreterParam]("code_interpreter"),
+		apijson.Discriminator[BetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam]("programmatic_tool_calling"),
+		apijson.Discriminator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam]("image_generation"),
+		apijson.Discriminator[BetaResponseToolSearchOutputItemParamToolLocalShellParam]("local_shell"),
+		apijson.Discriminator[BetaFunctionShellToolParam]("shell"),
+		apijson.Discriminator[BetaCustomToolParam]("custom"),
+		apijson.Discriminator[BetaToolSearchOutputNamespaceToolParam]("namespace"),
+		apijson.Discriminator[BetaToolSearchToolParam]("tool_search"),
+		apijson.Discriminator[BetaWebSearchPreviewToolParam]("web_search_preview"),
+		apijson.Discriminator[BetaWebSearchPreviewToolParam]("web_search_preview_2025_03_11"),
+		apijson.Discriminator[BetaApplyPatchToolParam]("apply_patch"),
+	)
+}
+
+// Give the model access to additional tools via remote Model Context Protocol
+// (MCP) servers.
+// [Learn more about MCP](https://developers.openai.com/api/docs/guides/tools-connectors-mcp).
+//
+// The properties ServerLabel, Type are required.
+type BetaResponseToolSearchOutputItemParamToolMcpParam struct {
+	// A label for this MCP server, used to identify it in tool calls.
+	ServerLabel string `json:"server_label" api:"required"`
+	// An OAuth access token that can be used with a remote MCP server, either with a
+	// custom MCP server URL or a service connector. Your application must handle the
+	// OAuth authorization flow and provide the token here.
+	Authorization param.Opt[string] `json:"authorization,omitzero"`
+	// Whether this MCP tool is deferred and discovered via tool search.
+	DeferLoading param.Opt[bool] `json:"defer_loading,omitzero"`
+	// Optional description of the MCP server, used to provide more context.
+	ServerDescription param.Opt[string] `json:"server_description,omitzero"`
+	// The URL for the MCP server. One of `server_url`, `connector_id`, or `tunnel_id`
+	// must be provided.
+	ServerURL param.Opt[string] `json:"server_url,omitzero" format:"uri"`
+	// The Secure MCP Tunnel ID to use instead of a direct server URL. One of
+	// `server_url`, `connector_id`, or `tunnel_id` must be provided.
+	TunnelID param.Opt[string] `json:"tunnel_id,omitzero"`
+	// The tool invocation context(s).
+	//
+	// Any of "direct", "programmatic".
+	AllowedCallers []string `json:"allowed_callers,omitzero"`
+	// List of allowed tool names or a filter object.
+	AllowedTools BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnion `json:"allowed_tools,omitzero"`
+	// Optional HTTP headers to send to the MCP server. Use for authentication or other
+	// purposes.
+	Headers map[string]string `json:"headers,omitzero"`
+	// Specify which of the MCP server's tools require approval.
+	RequireApproval BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnion `json:"require_approval,omitzero"`
+	// Identifier for service connectors, like those available in ChatGPT. One of
+	// `server_url`, `connector_id`, or `tunnel_id` must be provided. Learn more about
+	// service connectors
+	// [here](https://developers.openai.com/api/docs/guides/tools-connectors-mcp#connectors).
+	//
+	// This field is deprecated for models released after September 1, 2026. Use
+	// `server_url` to connect to a remote MCP server, or `tunnel_id` to connect
+	// through a Secure MCP Tunnel.
+	//
+	// Currently supported `connector_id` values are:
+	//
+	// - Dropbox: `connector_dropbox`
+	// - Gmail: `connector_gmail`
+	// - Google Calendar: `connector_googlecalendar`
+	// - Google Drive: `connector_googledrive`
+	// - Microsoft Teams: `connector_microsoftteams`
+	// - Outlook Calendar: `connector_outlookcalendar`
+	// - Outlook Email: `connector_outlookemail`
+	// - SharePoint: `connector_sharepoint`
+	//
+	// Any of "connector_dropbox", "connector_gmail", "connector_googlecalendar",
+	// "connector_googledrive", "connector_microsoftteams",
+	// "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint".
+	//
+	// Deprecated: deprecated
+	ConnectorID string `json:"connector_id,omitzero"`
+	// The type of the MCP tool. Always `mcp`.
+	//
+	// This field can be elided, and will marshal its zero value as "mcp".
+	Type constant.Mcp `json:"type" default:"mcp"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolMcpParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolMcpParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolMcpParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolMcpParam](
+		"connector_id", "connector_dropbox", "connector_gmail", "connector_googlecalendar", "connector_googledrive", "connector_microsoftteams", "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnion struct {
+	OfMcpAllowedTools []string                                                                    `json:",omitzero,inline"`
+	OfMcpToolFilter   *BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilterParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfMcpAllowedTools, u.OfMcpToolFilter)
+}
+func (u *BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// A filter object to specify which tools are allowed.
+type BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilterParam struct {
+	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
+	// is
+	// [annotated with `readOnlyHint`](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations-readonlyhint),
+	// it will match this filter.
+	ReadOnly param.Opt[bool] `json:"read_only,omitzero"`
+	// List of allowed tool names.
+	ToolNames []string `json:"tool_names,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilterParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolMcpAllowedToolsMcpToolFilterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnion struct {
+	OfMcpToolApprovalFilter *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterParam `json:",omitzero,inline"`
+	// Check if union is this variant with
+	// !param.IsOmitted(union.OfMcpToolApprovalSetting)
+	OfMcpToolApprovalSetting param.Opt[string] `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfMcpToolApprovalFilter, u.OfMcpToolApprovalSetting)
+}
+func (u *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Specify which of the MCP server's tools require approval. Can be `always`,
+// `never`, or a filter object associated with tools that require approval.
+type BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterParam struct {
+	// A filter object to specify which tools are allowed.
+	Always BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlways `json:"always,omitzero"`
+	// A filter object to specify which tools are allowed.
+	Never BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNever `json:"never,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A filter object to specify which tools are allowed.
+type BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlways struct {
+	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
+	// is
+	// [annotated with `readOnlyHint`](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations-readonlyhint),
+	// it will match this filter.
+	ReadOnly param.Opt[bool] `json:"read_only,omitzero"`
+	// List of allowed tool names.
+	ToolNames []string `json:"tool_names,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlways) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlways
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterAlways) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A filter object to specify which tools are allowed.
+type BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNever struct {
+	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
+	// is
+	// [annotated with `readOnlyHint`](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations-readonlyhint),
+	// it will match this filter.
+	ReadOnly param.Opt[bool] `json:"read_only,omitzero"`
+	// List of allowed tool names.
+	ToolNames []string `json:"tool_names,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNever) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNever
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolMcpRequireApprovalMcpToolApprovalFilterNever) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A tool that runs Python code to help generate a response to a prompt.
+//
+// The properties Container, Type are required.
+type BetaResponseToolSearchOutputItemParamToolCodeInterpreterParam struct {
+	// The code interpreter container. Can be a container ID or an object that
+	// specifies uploaded file IDs to make available to your code, along with an
+	// optional `memory_limit` setting.
+	Container BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnion `json:"container,omitzero" api:"required"`
+	// The tool invocation context(s).
+	//
+	// Any of "direct", "programmatic".
+	AllowedCallers []string `json:"allowed_callers,omitzero"`
+	// The type of the code interpreter tool. Always `code_interpreter`.
+	//
+	// This field can be elided, and will marshal its zero value as "code_interpreter".
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolCodeInterpreterParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolCodeInterpreterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolCodeInterpreterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnion struct {
+	OfString                  param.Opt[string]                                                                              `json:",omitzero,inline"`
+	OfCodeInterpreterToolAuto *BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfCodeInterpreterToolAuto)
+}
+func (u *BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Configuration for a code interpreter container. Optionally specify the IDs of
+// the files to run the code on.
+//
+// The property Type is required.
+type BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoParam struct {
+	// The memory limit for the code interpreter container.
+	//
+	// Any of "1g", "4g", "16g", "64g".
+	MemoryLimit string `json:"memory_limit,omitzero"`
+	// An optional list of uploaded files to make available to your code.
+	FileIDs []string `json:"file_ids,omitzero"`
+	// Network access policy for the container.
+	NetworkPolicy BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion `json:"network_policy,omitzero"`
+	// Always `auto`.
+	//
+	// This field can be elided, and will marshal its zero value as "auto".
+	Type constant.Auto `json:"type" default:"auto"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoParam](
+		"memory_limit", "1g", "4g", "16g", "64g",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion struct {
+	OfDisabled  *BetaContainerNetworkPolicyDisabledParam  `json:",omitzero,inline"`
+	OfAllowlist *BetaContainerNetworkPolicyAllowlistParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfDisabled, u.OfAllowlist)
+}
+func (u *BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion) GetAllowedDomains() []string {
+	if vt := u.OfAllowlist; vt != nil {
+		return vt.AllowedDomains
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion) GetDomainSecrets() []BetaContainerNetworkPolicyDomainSecretParam {
+	if vt := u.OfAllowlist; vt != nil {
+		return vt.DomainSecrets
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion) GetType() *string {
+	if vt := u.OfDisabled; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfAllowlist; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[BetaResponseToolSearchOutputItemParamToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion](
+		"type",
+		apijson.Discriminator[BetaContainerNetworkPolicyDisabledParam]("disabled"),
+		apijson.Discriminator[BetaContainerNetworkPolicyAllowlistParam]("allowlist"),
+	)
+}
+
+func NewBetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam() BetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam {
+	return BetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam{
+		Type: "programmatic_tool_calling",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewBetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam].
+type BetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam struct {
+	// The type of the tool. Always `programmatic_tool_calling`.
+	Type constant.ProgrammaticToolCalling `json:"type" default:"programmatic_tool_calling"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A tool that generates images using the GPT image models.
+//
+// The property Type is required.
+type BetaResponseToolSearchOutputItemParamToolImageGenerationParam struct {
+	// Compression level for the output image. Default: 100.
+	OutputCompression param.Opt[int64] `json:"output_compression,omitzero"`
+	// Number of partial images to generate in streaming mode, from 0 (default value)
+	// to 3.
+	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
+	// Control how much effort the model will exert to match the style and features,
+	// especially facial features, of input images. Supports `high` and `low` on
+	// `gpt-image-1` and `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For
+	// `gpt-image-2`, omit this parameter. Defaults to `low` on supported models.
+	//
+	// Any of "high", "low".
+	InputFidelity string `json:"input_fidelity,omitzero"`
+	// Whether to generate a new image or edit an existing image. Default: `auto`.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action,omitzero"`
+	// Allows to set transparency for the background of the generated image(s). Must be
+	// one of `transparent`, `opaque`, or `auto` (default value). When `auto` is used,
+	// the model will automatically determine the best background for the image.
+	//
+	// `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`, including their `2026-09-08`
+	// snapshots, support `opaque` and `transparent` backgrounds. Transparent
+	// backgrounds are available for supported GPT Image models. For `gpt-image-2` and
+	// `gpt-image-2-2026-04-21`, this support is in preview. When using `transparent`,
+	// set the output format to `png` or `webp`.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background string `json:"background,omitzero"`
+	// Optional mask for inpainting. Contains `image_url` (string, optional) and
+	// `file_id` (string, optional).
+	InputImageMask BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMask `json:"input_image_mask,omitzero"`
+	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
+	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`,
+	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
+	// `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, or
+	// `chatgpt-image-latest`. Default: `gpt-image-1`.
+	Model string `json:"model,omitzero"`
+	// Moderation level for the generated image. Default: `auto`.
+	//
+	// Any of "auto", "low".
+	Moderation string `json:"moderation,omitzero"`
+	// The output format of the generated image. One of `png`, `webp`, or `jpeg`.
+	// Default: `png`.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat string `json:"output_format,omitzero"`
+	// The quality of the generated image. The GPT image models support `low`,
+	// `medium`, and `high`. `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`,
+	// including their `2026-09-08` snapshots, also support `xhigh` and `max`. Default:
+	// `auto`.
+	//
+	// Any of "low", "medium", "high", "xhigh", "max", "auto".
+	Quality string `json:"quality,omitzero"`
+	// The size of the generated images. For `gpt-image-2`, `gpt-image-2-2026-04-21`,
+	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
+	// `gpt-image-2.5-flare`, and `gpt-image-2.5-flare-2026-09-08`, arbitrary
+	// resolutions are supported as `WIDTHxHEIGHT` strings, for example `1536x864`.
+	// Width and height must both be divisible by 16 and the requested aspect ratio
+	// must be between 1:3 and 3:1. Resolutions above `2560x1440` are experimental, and
+	// the maximum supported resolution is `3840x2160`. The requested size must also
+	// satisfy the model's current pixel and edge limits. The standard sizes
+	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
+	// `auto` is supported for models that allow automatic sizing.
+	Size string `json:"size,omitzero"`
+	// The type of the image generation tool. Always `image_generation`.
+	//
+	// This field can be elided, and will marshal its zero value as "image_generation".
+	Type constant.ImageGeneration `json:"type" default:"image_generation"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolImageGenerationParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolImageGenerationParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolImageGenerationParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
+		"action", "generate", "edit", "auto",
+	)
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
+		"background", "transparent", "opaque", "auto",
+	)
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
+		"input_fidelity", "high", "low",
+	)
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
+		"moderation", "auto", "low",
+	)
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
+		"output_format", "png", "webp", "jpeg",
+	)
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
+		"quality", "low", "medium", "high", "xhigh", "max", "auto",
+	)
+}
+
+// Optional mask for inpainting. Contains `image_url` (string, optional) and
+// `file_id` (string, optional).
+type BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMask struct {
+	// File ID for the mask image.
+	FileID param.Opt[string] `json:"file_id,omitzero"`
+	// Base64-encoded mask image.
+	ImageURL param.Opt[string] `json:"image_url,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMask) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMask
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMask) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewBetaResponseToolSearchOutputItemParamToolLocalShellParam() BetaResponseToolSearchOutputItemParamToolLocalShellParam {
+	return BetaResponseToolSearchOutputItemParamToolLocalShellParam{
+		Type: "local_shell",
+	}
+}
+
+// A tool that allows the model to execute shell commands in a local environment.
+//
+// This struct has a constant value, construct it with
+// [NewBetaResponseToolSearchOutputItemParamToolLocalShellParam].
+type BetaResponseToolSearchOutputItemParamToolLocalShellParam struct {
+	// The type of the local shell tool. Always `local_shell`.
+	Type constant.LocalShell `json:"type" default:"local_shell"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolLocalShellParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolLocalShellParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolLocalShellParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -30231,6 +34900,4974 @@ func (r *BetaResponseWebSearchCallSearchingEventAgent) UnmarshalJSON(data []byte
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func BetaResponsesClientEventParamOfResponseSteer[
+	T string | []BetaResponseSteerInputResponseSteerInputItemListItemUnionParam,
+](input T, previousResponseID string) BetaResponsesClientEventUnionParam {
+	var responseSteer BetaResponseSteerEventParam
+	switch v := any(input).(type) {
+	case string:
+		responseSteer.Input.OfString = param.NewOpt(v)
+	case []BetaResponseSteerInputResponseSteerInputItemListItemUnionParam:
+		responseSteer.Input.OfResponseSteerInputItemList = v
+	}
+	responseSteer.PreviousResponseID = previousResponseID
+	return BetaResponsesClientEventUnionParam{OfResponseSteer: &responseSteer}
+}
+
+func BetaResponsesClientEventParamOfResponseInject(input []BetaResponseInputItemUnionParam, responseID string) BetaResponsesClientEventUnionParam {
+	var responseInject BetaResponseInjectEventParam
+	responseInject.Input = input
+	responseInject.ResponseID = responseID
+	return BetaResponsesClientEventUnionParam{OfResponseInject: &responseInject}
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponsesClientEventUnionParam struct {
+	OfResponseCreate *BetaResponsesClientEventResponseCreateParam `json:",omitzero,inline"`
+	OfResponseSteer  *BetaResponseSteerEventParam                 `json:",omitzero,inline"`
+	OfResponseInject *BetaResponseInjectEventParam                `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponsesClientEventUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfResponseCreate, u.OfResponseSteer, u.OfResponseInject)
+}
+func (u *BetaResponsesClientEventUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetAccessPrograms() *BetaResponsesClientEventResponseCreateAccessProgramsParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.AccessPrograms
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetBackground() *bool {
+	if vt := u.OfResponseCreate; vt != nil && vt.Background.Valid() {
+		return &vt.Background.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetContextManagement() []BetaResponsesClientEventResponseCreateContextManagementParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return vt.ContextManagement
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetConversation() *BetaResponsesClientEventResponseCreateConversationUnionParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.Conversation
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetInclude() []BetaResponseIncludable {
+	if vt := u.OfResponseCreate; vt != nil {
+		return vt.Include
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetInstructions() *string {
+	if vt := u.OfResponseCreate; vt != nil && vt.Instructions.Valid() {
+		return &vt.Instructions.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetMaxOutputTokens() *int64 {
+	if vt := u.OfResponseCreate; vt != nil && vt.MaxOutputTokens.Valid() {
+		return &vt.MaxOutputTokens.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetMaxToolCalls() *int64 {
+	if vt := u.OfResponseCreate; vt != nil && vt.MaxToolCalls.Valid() {
+		return &vt.MaxToolCalls.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetMetadata() map[string]string {
+	if vt := u.OfResponseCreate; vt != nil {
+		return vt.Metadata
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetModel() *BetaResponsesClientEventResponseCreateModel {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.Model
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetModeration() *BetaResponsesClientEventResponseCreateModerationParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.Moderation
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetMultiAgent() *BetaResponsesClientEventResponseCreateMultiAgentParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.MultiAgent
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetParallelToolCalls() *bool {
+	if vt := u.OfResponseCreate; vt != nil && vt.ParallelToolCalls.Valid() {
+		return &vt.ParallelToolCalls.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetPrompt() *BetaResponsePromptParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.Prompt
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetPromptCacheKey() *string {
+	if vt := u.OfResponseCreate; vt != nil && vt.PromptCacheKey.Valid() {
+		return &vt.PromptCacheKey.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetPromptCacheOptions() *BetaResponsesClientEventResponseCreatePromptCacheOptionsParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.PromptCacheOptions
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetPromptCacheRetention() *string {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.PromptCacheRetention
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetReasoning() *BetaResponsesClientEventResponseCreateReasoningParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.Reasoning
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetSafetyIdentifier() *string {
+	if vt := u.OfResponseCreate; vt != nil && vt.SafetyIdentifier.Valid() {
+		return &vt.SafetyIdentifier.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetServiceTier() *string {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.ServiceTier
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetStore() *bool {
+	if vt := u.OfResponseCreate; vt != nil && vt.Store.Valid() {
+		return &vt.Store.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetStream() *bool {
+	if vt := u.OfResponseCreate; vt != nil && vt.Stream.Valid() {
+		return &vt.Stream.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetStreamID() *string {
+	if vt := u.OfResponseCreate; vt != nil && vt.StreamID.Valid() {
+		return &vt.StreamID.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetStreamOptions() *BetaResponsesClientEventResponseCreateStreamOptionsParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.StreamOptions
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetTemperature() *float64 {
+	if vt := u.OfResponseCreate; vt != nil && vt.Temperature.Valid() {
+		return &vt.Temperature.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetText() *BetaResponseTextConfigParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.Text
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetToolChoice() *BetaResponsesClientEventResponseCreateToolChoiceUnionParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.ToolChoice
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetTools() []BetaToolUnionParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return vt.Tools
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetTopLogprobs() *int64 {
+	if vt := u.OfResponseCreate; vt != nil && vt.TopLogprobs.Valid() {
+		return &vt.TopLogprobs.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetTopP() *float64 {
+	if vt := u.OfResponseCreate; vt != nil && vt.TopP.Valid() {
+		return &vt.TopP.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetTruncation() *string {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.Truncation
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetUser() *string {
+	if vt := u.OfResponseCreate; vt != nil && vt.User.Valid() {
+		return &vt.User.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetResponseID() *string {
+	if vt := u.OfResponseInject; vt != nil {
+		return &vt.ResponseID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetType() *string {
+	if vt := u.OfResponseCreate; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponseSteer; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponseInject; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetPreviousResponseID() *string {
+	if vt := u.OfResponseCreate; vt != nil && vt.PreviousResponseID.Valid() {
+		return &vt.PreviousResponseID.Value
+	} else if vt := u.OfResponseSteer; vt != nil {
+		return (*string)(&vt.PreviousResponseID)
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u BetaResponsesClientEventUnionParam) GetInput() (res betaResponsesClientEventUnionParamInput) {
+	if vt := u.OfResponseCreate; vt != nil {
+		res.any = vt.Input.asAny()
+	} else if vt := u.OfResponseSteer; vt != nil {
+		res.any = vt.Input.asAny()
+	} else if vt := u.OfResponseInject; vt != nil {
+		res.any = &vt.Input
+	}
+	return
+}
+
+// Can have the runtime types [*string], [*BetaResponseInputParam],
+// [_[]BetaResponseSteerInputResponseSteerInputItemListItemUnionParam],
+// [_[]BetaResponseInputItemUnionParam]
+type betaResponsesClientEventUnionParamInput struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *string:
+//	case *openai.BetaResponseInputParam:
+//	case *[]openai.BetaResponseSteerInputResponseSteerInputItemListItemUnionParam:
+//	case *[]openai.BetaResponseInputItemUnionParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u betaResponsesClientEventUnionParamInput) AsAny() any { return u.any }
+
+func init() {
+	apijson.RegisterUnion[BetaResponsesClientEventUnionParam](
+		"type",
+		apijson.Discriminator[BetaResponsesClientEventResponseCreateParam]("response.create"),
+		apijson.Discriminator[BetaResponseSteerEventParam]("response.steer"),
+		apijson.Discriminator[BetaResponseInjectEventParam]("response.inject"),
+	)
+}
+
+// Client event for creating a response over a persistent WebSocket connection.
+// This payload uses the same top-level fields as `POST /v1/responses`, plus
+// WebSocket-only envelope metadata.
+//
+// Notes:
+//
+// - `stream` is implicit over WebSocket and should not be sent.
+// - `background` is not supported over WebSocket.
+// - `stream_id` is WebSocket-only and is not part of `POST /v1/responses`.
+//
+// The property Type is required.
+type BetaResponsesClientEventResponseCreateParam struct {
+	// A system (or developer) message inserted into the model's context.
+	//
+	// When using along with `previous_response_id`, the instructions from a previous
+	// response will not be carried over to the next response. This makes it simple to
+	// swap out system (or developer) messages in new responses.
+	Instructions param.Opt[string] `json:"instructions,omitzero"`
+	// An upper bound for the number of tokens that can be generated for a response,
+	// including visible output tokens and
+	// [reasoning tokens](https://developers.openai.com/api/docs/guides/reasoning).
+	MaxOutputTokens param.Opt[int64] `json:"max_output_tokens,omitzero"`
+	// The maximum number of total calls to built-in tools that can be processed in a
+	// response. This maximum number applies across all built-in tool calls, not per
+	// individual tool. Any further attempts to call a tool by the model will be
+	// ignored.
+	MaxToolCalls param.Opt[int64] `json:"max_tool_calls,omitzero"`
+	// Whether to allow the model to run tool calls in parallel.
+	ParallelToolCalls param.Opt[bool] `json:"parallel_tool_calls,omitzero"`
+	// The unique ID of the previous response to the model. Use this to create
+	// multi-turn conversations. Learn more about
+	// [conversation state](https://developers.openai.com/api/docs/guides/conversation-state).
+	// Cannot be used in conjunction with `conversation`.
+	PreviousResponseID param.Opt[string] `json:"previous_response_id,omitzero"`
+	// Used by OpenAI to cache responses for similar requests to optimize your cache
+	// hit rates. Replaces the `user` field.
+	// [Learn more](https://developers.openai.com/api/docs/guides/prompt-caching).
+	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
+	// A stable identifier used to help detect users of your application that may be
+	// violating OpenAI's usage policies. The IDs should be a string that uniquely
+	// identifies each user, with a maximum length of 128 characters. We recommend
+	// hashing their username or email address, in order to avoid sending us any
+	// identifying information.
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
+	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
+	// Whether to store the generated model response for later retrieval via API.
+	// Defaults to true when omitted. If set to true, response data will be stored for
+	// at least 30 days, subject to the
+	// [data retention exceptions](https://developers.openai.com/api/docs/guides/your-data#v1responses).
+	Store param.Opt[bool] `json:"store,omitzero"`
+	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
+	// make the output more random, while lower values like 0.2 will make it more
+	// focused and deterministic. We generally recommend altering this or `top_p` but
+	// not both.
+	Temperature param.Opt[float64] `json:"temperature,omitzero"`
+	// An integer between 0 and 20 specifying the maximum number of most likely tokens
+	// to return at each token position, each with an associated log probability. In
+	// some cases, the number of returned tokens may be fewer than requested.
+	TopLogprobs param.Opt[int64] `json:"top_logprobs,omitzero"`
+	// An alternative to sampling with temperature, called nucleus sampling, where the
+	// model considers the results of the tokens with top_p probability mass. So 0.1
+	// means only the tokens comprising the top 10% probability mass are considered.
+	//
+	// We generally recommend altering this or `temperature` but not both.
+	TopP param.Opt[float64] `json:"top_p,omitzero"`
+	// Whether to run the model response in the background.
+	// [Learn more](https://developers.openai.com/api/docs/guides/background).
+	Background param.Opt[bool] `json:"background,omitzero"`
+	// If set to true, the model response data will be streamed to the client as it is
+	// generated using
+	// [server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#Event_stream_format).
+	// See the
+	// [Streaming section below](https://developers.openai.com/api/reference/resources/responses/streaming-events)
+	// for more information.
+	Stream param.Opt[bool] `json:"stream,omitzero"`
+	// Specify additional output data to include in the model response. Currently
+	// supported values are:
+	//
+	//   - `web_search_call.action.sources`: Include the sources of the web search tool
+	//     call.
+	//   - `code_interpreter_call.outputs`: Includes the outputs of python code execution
+	//     in code interpreter tool call items.
+	//   - `computer_call_output.output.image_url`: Include image urls from the computer
+	//     call output.
+	//   - `file_search_call.results`: Include the search results of the file search tool
+	//     call.
+	//   - `message.input_image.image_url`: Include image urls from the input message.
+	//   - `message.output_text.logprobs`: Include logprobs with assistant messages.
+	//   - `reasoning.encrypted_content`: Includes an encrypted version of reasoning
+	//     tokens in reasoning item outputs. This enables reasoning items to be used in
+	//     multi-turn conversations when using the Responses API statelessly (like when
+	//     the `store` parameter is set to `false`, or when an organization is enrolled
+	//     in the zero data retention program).
+	Include []BetaResponseIncludable `json:"include,omitzero"`
+	// The WebSocket lane for this response. Requests with the same `stream_id` are
+	// processed FIFO, and events for the response echo the same `stream_id`.
+	//
+	// `stream_id` controls routing; `previous_response_id` controls conversation
+	// lineage, so a new lane can fork from a response created on another lane.
+	StreamID param.Opt[string] `json:"stream_id,omitzero"`
+	// This field is being replaced by `safety_identifier` and `prompt_cache_key`. Use
+	// `prompt_cache_key` instead to maintain caching optimizations. A stable
+	// identifier for your end-users. Used to boost cache hit rates by better bucketing
+	// similar requests and to help OpenAI detect and prevent abuse.
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
+	//
+	// Deprecated: deprecated
+	User param.Opt[string] `json:"user,omitzero"`
+	// Context management configuration for this request.
+	ContextManagement []BetaResponsesClientEventResponseCreateContextManagementParam `json:"context_management,omitzero"`
+	// The conversation that this response belongs to. Items from this conversation are
+	// prepended to `input_items` for this response request. Input items and output
+	// items from this response are automatically added to this conversation after this
+	// response completes.
+	Conversation BetaResponsesClientEventResponseCreateConversationUnionParam `json:"conversation,omitzero"`
+	// Set of 16 key-value pairs that can be attached to an object. This can be useful
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata map[string]string `json:"metadata,omitzero"`
+	// Configuration for running moderation on the input and output of this response.
+	Moderation BetaResponsesClientEventResponseCreateModerationParam `json:"moderation,omitzero"`
+	// Configuration for server-hosted multi-agent execution.
+	MultiAgent BetaResponsesClientEventResponseCreateMultiAgentParam `json:"multi_agent,omitzero"`
+	// Reference to a prompt template and its variables.
+	// [Learn more](https://developers.openai.com/api/docs/guides/text?api-mode=responses#version-prompts-in-code).
+	Prompt BetaResponsePromptParam `json:"prompt,omitzero"`
+	// Deprecated. Use `prompt_cache_options.ttl` instead.
+	//
+	// The retention policy for the prompt cache. Set to `24h` to enable extended
+	// prompt caching, which keeps cached prefixes active for longer, up to a maximum
+	// of 24 hours.
+	// [Learn more](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-retention).
+	// This field expresses a maximum retention policy, while
+	// `prompt_cache_options.ttl` expresses a minimum cache lifetime. The two fields
+	// are independent and do not interact. For `gpt-5.5`, `gpt-5.5-pro`, and future
+	// models, only `24h` is supported.
+	//
+	// For older models that support both `in_memory` and `24h`, the default depends on
+	// your organization's data retention policy:
+	//
+	//   - Organizations without ZDR enabled default to `24h`.
+	//   - Organizations with ZDR enabled default to `in_memory` when
+	//     `prompt_cache_retention` is not specified.
+	//
+	// Any of "in_memory", "24h".
+	//
+	// Deprecated: deprecated
+	PromptCacheRetention string `json:"prompt_cache_retention,omitzero"`
+	// Configuration options for
+	// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
+	Reasoning BetaResponsesClientEventResponseCreateReasoningParam `json:"reasoning,omitzero"`
+	// Specifies the processing type used for serving the request.
+	//
+	//   - If set to 'auto', then the request will be processed with the service tier
+	//     configured in the Project settings. Unless otherwise configured, the Project
+	//     will use 'default'.
+	//   - If set to 'default', then the request will be processed with the standard
+	//     pricing and performance for the selected model.
+	//   - If set to
+	//     '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+	//     the request will be processed with the Flex Processing service tier.
+	//   - To opt-in to
+	//     [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+	//     request level, include the `service_tier=fast` or `service_tier=priority`
+	//     parameter for Responses or Chat Completions. The response will show
+	//     `service_tier=priority` regardless of if you specify `service_tier=fast` or
+	//     `priority` in your request.
+	//   - If set to 'ultrafast', then the request will be processed with the
+	//     access-controlled Ultrafast Processing service tier. This tier is currently
+	//     available for `gpt-5.6-sol`; a response served through it will show
+	//     `service_tier=ultrafast`.
+	//   - When not set, the default behavior is 'auto'.
+	//
+	// When the `service_tier` parameter is set, the response body will include the
+	// `service_tier` value based on the processing mode actually used to serve the
+	// request. This response value may be different from the value set in the
+	// parameter.
+	//
+	// Any of "auto", "default", "flex", "scale", "priority", "fast", "ultrafast".
+	ServiceTier string `json:"service_tier,omitzero"`
+	// Options for streaming responses. Only set this when you set `stream: true`.
+	StreamOptions BetaResponsesClientEventResponseCreateStreamOptionsParam `json:"stream_options,omitzero"`
+	// The truncation strategy to use for the model response.
+	//
+	//   - `auto`: If the input to this Response exceeds the model's context window size,
+	//     the model will truncate the response to fit the context window by dropping
+	//     items from the beginning of the conversation.
+	//   - `disabled` (default): If the input size will exceed the context window size
+	//     for a model, the request will fail with a 400 error.
+	//
+	// Any of "auto", "disabled".
+	//
+	// Deprecated: deprecated
+	Truncation string `json:"truncation,omitzero"`
+	// Domain-specific access programs to use for this request.
+	AccessPrograms BetaResponsesClientEventResponseCreateAccessProgramsParam `json:"access_programs,omitzero"`
+	// Text, image, or file inputs to the model, used to generate a response.
+	//
+	// Learn more:
+	//
+	//   - [Text inputs and outputs](https://developers.openai.com/api/docs/guides/text)
+	//   - [Image inputs](https://developers.openai.com/api/docs/guides/images-vision)
+	//   - [File inputs](https://developers.openai.com/api/docs/guides/file-inputs)
+	//   - [Conversation state](https://developers.openai.com/api/docs/guides/conversation-state)
+	//   - [Function calling](https://developers.openai.com/api/docs/guides/function-calling)
+	Input BetaResponsesClientEventResponseCreateInputUnionParam `json:"input,omitzero"`
+	// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
+	// range of models with different capabilities, performance characteristics, and
+	// price points. Refer to the
+	// [model guide](https://developers.openai.com/api/docs/models) to browse and
+	// compare available models.
+	Model BetaResponsesClientEventResponseCreateModel `json:"model,omitzero"`
+	// Options for prompt caching. Supported for `gpt-5.6` and later models. By
+	// default, OpenAI automatically chooses one implicit cache breakpoint. You can add
+	// explicit breakpoints to content blocks with `prompt_cache_breakpoint`. Each
+	// request can write up to four breakpoints. For cache matching, OpenAI considers
+	// up to the latest 80 breakpoints in the conversation, without a content-block
+	// lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
+	// `ttl` defaults to `30m`, which is currently the only supported value. See the
+	// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
+	// for current details.
+	PromptCacheOptions BetaResponsesClientEventResponseCreatePromptCacheOptionsParam `json:"prompt_cache_options,omitzero"`
+	// Configuration options for a text response from the model. Can be plain text or
+	// structured JSON data. Learn more:
+	//
+	//   - [Text inputs and outputs](https://developers.openai.com/api/docs/guides/text)
+	//   - [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
+	Text BetaResponseTextConfigParam `json:"text,omitzero"`
+	// How the model should select which tool (or tools) to use when generating a
+	// response. See the `tools` parameter to see how to specify which tools the model
+	// can call.
+	ToolChoice BetaResponsesClientEventResponseCreateToolChoiceUnionParam `json:"tool_choice,omitzero"`
+	// An array of tools the model may call while generating a response. You can
+	// specify which tool to use by setting the `tool_choice` parameter.
+	//
+	// We support the following categories of tools:
+	//
+	//   - **Built-in tools**: Tools that are provided by OpenAI that extend the model's
+	//     capabilities, like
+	//     [web search](https://developers.openai.com/api/docs/guides/tools-web-search)
+	//     or
+	//     [file search](https://developers.openai.com/api/docs/guides/tools-file-search).
+	//     Learn more about
+	//     [built-in tools](https://developers.openai.com/api/docs/guides/tools).
+	//   - **MCP Tools**: Integrations with third-party systems via custom MCP servers or
+	//     predefined connectors such as Google Drive and SharePoint. Learn more about
+	//     [MCP Tools](https://developers.openai.com/api/docs/guides/tools-connectors-mcp).
+	//   - **Function calls (custom tools)**: Functions that are defined by you, enabling
+	//     the model to call your own code with strongly typed arguments and outputs.
+	//     Learn more about
+	//     [function calling](https://developers.openai.com/api/docs/guides/function-calling).
+	//     You can also use custom tools to call your own code.
+	Tools []BetaToolUnionParam `json:"tools,omitzero"`
+	// The type of the client event. Always `response.create`.
+	//
+	// This field can be elided, and will marshal its zero value as "response.create".
+	Type constant.ResponseCreate `json:"type" default:"response.create"`
+	paramObj
+}
+
+func (r BetaResponsesClientEventResponseCreateParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponsesClientEventResponseCreateParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponsesClientEventResponseCreateParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponsesClientEventResponseCreateParam](
+		"prompt_cache_retention", "in_memory", "24h",
+	)
+	apijson.RegisterFieldValidator[BetaResponsesClientEventResponseCreateParam](
+		"service_tier", "auto", "default", "flex", "scale", "priority", "fast", "ultrafast",
+	)
+	apijson.RegisterFieldValidator[BetaResponsesClientEventResponseCreateParam](
+		"truncation", "auto", "disabled",
+	)
+}
+
+// Domain-specific access programs to use for this request.
+type BetaResponsesClientEventResponseCreateAccessProgramsParam struct {
+	// The Cyber access program to use for this request. Supported values are
+	// `standard`, `daybreak_blue`, and `daybreak_red`. If omitted, the API resolves
+	// the program from the model's Cyber tier and your organization and project
+	// access, subject to model-specific eligibility restrictions. By default, models
+	// without a Cyber tier use Standard. Blue-tier models use Daybreak Blue when
+	// authorized; otherwise they fall back to Standard unless the model requires
+	// Daybreak access. Red-tier models use Daybreak Red and require authorization.
+	// Requests that require unavailable Daybreak access return 403. An implicit
+	// Standard fallback is represented by null in the response's access_programs
+	// field, rather than an explicit Standard selection.
+	//
+	// Any of "standard", "daybreak_blue", "daybreak_red".
+	Cyber string `json:"cyber,omitzero"`
+	paramObj
+}
+
+func (r BetaResponsesClientEventResponseCreateAccessProgramsParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponsesClientEventResponseCreateAccessProgramsParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponsesClientEventResponseCreateAccessProgramsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponsesClientEventResponseCreateAccessProgramsParam](
+		"cyber", "standard", "daybreak_blue", "daybreak_red",
+	)
+}
+
+// The property Type is required.
+type BetaResponsesClientEventResponseCreateContextManagementParam struct {
+	// The context management entry type. Currently only 'compaction' is supported.
+	Type string `json:"type" api:"required"`
+	// Token threshold at which compaction should be triggered for this entry.
+	CompactThreshold param.Opt[int64] `json:"compact_threshold,omitzero"`
+	paramObj
+}
+
+func (r BetaResponsesClientEventResponseCreateContextManagementParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponsesClientEventResponseCreateContextManagementParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponsesClientEventResponseCreateContextManagementParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponsesClientEventResponseCreateConversationUnionParam struct {
+	OfString                   param.Opt[string]              `json:",omitzero,inline"`
+	OfBetaResponseConversation *BetaResponseConversationParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponsesClientEventResponseCreateConversationUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfBetaResponseConversation)
+}
+func (u *BetaResponsesClientEventResponseCreateConversationUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponsesClientEventResponseCreateInputUnionParam struct {
+	OfString   param.Opt[string]       `json:",omitzero,inline"`
+	OfResponse *BetaResponseInputParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponsesClientEventResponseCreateInputUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfResponse)
+}
+func (u *BetaResponsesClientEventResponseCreateInputUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *BetaResponsesClientEventResponseCreateInputUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfResponse) {
+		return u.OfResponse
+	}
+	return nil
+}
+
+// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
+// range of models with different capabilities, performance characteristics, and
+// price points. Refer to the
+// [model guide](https://developers.openai.com/api/docs/models) to browse and
+// compare available models.
+type BetaResponsesClientEventResponseCreateModel = string
+
+const (
+	BetaResponsesClientEventResponseCreateModelGPT6Astra         BetaResponsesClientEventResponseCreateModel = "gpt-6-astra"
+	BetaResponsesClientEventResponseCreateModelGPT6_1Sol         BetaResponsesClientEventResponseCreateModel = "gpt-6.1-sol"
+	BetaResponsesClientEventResponseCreateModelGPT6Sol           BetaResponsesClientEventResponseCreateModel = "gpt-6-sol"
+	BetaResponsesClientEventResponseCreateModelGPT6Luna          BetaResponsesClientEventResponseCreateModel = "gpt-6-luna"
+	BetaResponsesClientEventResponseCreateModelGPT5_6Sol         BetaResponsesClientEventResponseCreateModel = "gpt-5.6-sol"
+	BetaResponsesClientEventResponseCreateModelGPT5_6Terra       BetaResponsesClientEventResponseCreateModel = "gpt-5.6-terra"
+	BetaResponsesClientEventResponseCreateModelGPT5_6Luna        BetaResponsesClientEventResponseCreateModel = "gpt-5.6-luna"
+	BetaResponsesClientEventResponseCreateModelGPT5_5            BetaResponsesClientEventResponseCreateModel = "gpt-5.5"
+	BetaResponsesClientEventResponseCreateModelGPT5_5_2026_04_23 BetaResponsesClientEventResponseCreateModel = "gpt-5.5-2026-04-23"
+	BetaResponsesClientEventResponseCreateModelGPT5_4            BetaResponsesClientEventResponseCreateModel = "gpt-5.4"
+	BetaResponsesClientEventResponseCreateModelGPT5_4Mini        BetaResponsesClientEventResponseCreateModel = "gpt-5.4-mini"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT5_4Nano           BetaResponsesClientEventResponseCreateModel = "gpt-5.4-nano"
+	BetaResponsesClientEventResponseCreateModelGPT5_4Mini2026_03_17 BetaResponsesClientEventResponseCreateModel = "gpt-5.4-mini-2026-03-17"
+	BetaResponsesClientEventResponseCreateModelGPT5_4Nano2026_03_17 BetaResponsesClientEventResponseCreateModel = "gpt-5.4-nano-2026-03-17"
+	// Deprecated: Announced shutdown date: 2026-08-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT5_3ChatLatest  BetaResponsesClientEventResponseCreateModel = "gpt-5.3-chat-latest"
+	BetaResponsesClientEventResponseCreateModelGPT5_2            BetaResponsesClientEventResponseCreateModel = "gpt-5.2"
+	BetaResponsesClientEventResponseCreateModelGPT5_2_2025_12_11 BetaResponsesClientEventResponseCreateModel = "gpt-5.2-2025-12-11"
+	// Deprecated: Announced shutdown date: 2026-08-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT5_2ChatLatest    BetaResponsesClientEventResponseCreateModel = "gpt-5.2-chat-latest"
+	BetaResponsesClientEventResponseCreateModelGPT5_2Pro           BetaResponsesClientEventResponseCreateModel = "gpt-5.2-pro"
+	BetaResponsesClientEventResponseCreateModelGPT5_2Pro2025_12_11 BetaResponsesClientEventResponseCreateModel = "gpt-5.2-pro-2025-12-11"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT5_1            BetaResponsesClientEventResponseCreateModel = "gpt-5.1"
+	BetaResponsesClientEventResponseCreateModelGPT5_1_2025_11_13 BetaResponsesClientEventResponseCreateModel = "gpt-5.1-2025-11-13"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT5_1Codex BetaResponsesClientEventResponseCreateModel = "gpt-5.1-codex"
+	// Deprecated: Not a supported model ID. Retained for SDK compatibility.
+	BetaResponsesClientEventResponseCreateModelGPT5_1Mini BetaResponsesClientEventResponseCreateModel = "gpt-5.1-mini"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT5_1ChatLatest BetaResponsesClientEventResponseCreateModel = "gpt-5.1-chat-latest"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT5 BetaResponsesClientEventResponseCreateModel = "gpt-5"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT5Mini BetaResponsesClientEventResponseCreateModel = "gpt-5-mini"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT5Nano BetaResponsesClientEventResponseCreateModel = "gpt-5-nano"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT5_2025_08_07 BetaResponsesClientEventResponseCreateModel = "gpt-5-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT5Mini2025_08_07 BetaResponsesClientEventResponseCreateModel = "gpt-5-mini-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT5Nano2025_08_07 BetaResponsesClientEventResponseCreateModel = "gpt-5-nano-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT5ChatLatest BetaResponsesClientEventResponseCreateModel = "gpt-5-chat-latest"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4_1 BetaResponsesClientEventResponseCreateModel = "gpt-4.1"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4_1Mini BetaResponsesClientEventResponseCreateModel = "gpt-4.1-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4_1Nano BetaResponsesClientEventResponseCreateModel = "gpt-4.1-nano"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4_1_2025_04_14 BetaResponsesClientEventResponseCreateModel = "gpt-4.1-2025-04-14"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4_1Mini2025_04_14 BetaResponsesClientEventResponseCreateModel = "gpt-4.1-mini-2025-04-14"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4_1Nano2025_04_14 BetaResponsesClientEventResponseCreateModel = "gpt-4.1-nano-2025-04-14"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO4Mini BetaResponsesClientEventResponseCreateModel = "o4-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO4Mini2025_04_16 BetaResponsesClientEventResponseCreateModel = "o4-mini-2025-04-16"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO3 BetaResponsesClientEventResponseCreateModel = "o3"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO3_2025_04_16 BetaResponsesClientEventResponseCreateModel = "o3-2025-04-16"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO3Mini BetaResponsesClientEventResponseCreateModel = "o3-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO3Mini2025_01_31 BetaResponsesClientEventResponseCreateModel = "o3-mini-2025-01-31"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO1 BetaResponsesClientEventResponseCreateModel = "o1"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO1_2024_12_17 BetaResponsesClientEventResponseCreateModel = "o1-2024-12-17"
+	// Deprecated: Announced shutdown date: 2025-07-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO1Preview BetaResponsesClientEventResponseCreateModel = "o1-preview"
+	// Deprecated: Announced shutdown date: 2025-07-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO1Preview2024_09_12 BetaResponsesClientEventResponseCreateModel = "o1-preview-2024-09-12"
+	// Deprecated: Announced shutdown date: 2025-10-27. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO1Mini BetaResponsesClientEventResponseCreateModel = "o1-mini"
+	// Deprecated: Announced shutdown date: 2025-10-27. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO1Mini2024_09_12 BetaResponsesClientEventResponseCreateModel = "o1-mini-2024-09-12"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4o BetaResponsesClientEventResponseCreateModel = "gpt-4o"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4o2024_11_20 BetaResponsesClientEventResponseCreateModel = "gpt-4o-2024-11-20"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4o2024_08_06 BetaResponsesClientEventResponseCreateModel = "gpt-4o-2024-08-06"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4o2024_05_13 BetaResponsesClientEventResponseCreateModel = "gpt-4o-2024-05-13"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPTAudioMini BetaResponsesClientEventResponseCreateModel = "gpt-audio-mini"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPTAudioMini2025_12_15 BetaResponsesClientEventResponseCreateModel = "gpt-audio-mini-2025-12-15"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4oAudioPreview BetaResponsesClientEventResponseCreateModel = "gpt-4o-audio-preview"
+	// Deprecated: Announced shutdown date: 2025-10-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4oAudioPreview2024_10_01 BetaResponsesClientEventResponseCreateModel = "gpt-4o-audio-preview-2024-10-01"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4oAudioPreview2024_12_17 BetaResponsesClientEventResponseCreateModel = "gpt-4o-audio-preview-2024-12-17"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4oAudioPreview2025_06_03 BetaResponsesClientEventResponseCreateModel = "gpt-4o-audio-preview-2025-06-03"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4oMiniAudioPreview BetaResponsesClientEventResponseCreateModel = "gpt-4o-mini-audio-preview"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4oMiniAudioPreview2024_12_17 BetaResponsesClientEventResponseCreateModel = "gpt-4o-mini-audio-preview-2024-12-17"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4oSearchPreview BetaResponsesClientEventResponseCreateModel = "gpt-4o-search-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4oMiniSearchPreview BetaResponsesClientEventResponseCreateModel = "gpt-4o-mini-search-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4oSearchPreview2025_03_11 BetaResponsesClientEventResponseCreateModel = "gpt-4o-search-preview-2025-03-11"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4oMiniSearchPreview2025_03_11 BetaResponsesClientEventResponseCreateModel = "gpt-4o-mini-search-preview-2025-03-11"
+	// Deprecated: Announced shutdown date: 2026-02-17. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelChatgpt4oLatest BetaResponsesClientEventResponseCreateModel = "chatgpt-4o-latest"
+	// Deprecated: Announced shutdown date: 2026-02-12. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelCodexMiniLatest BetaResponsesClientEventResponseCreateModel = "codex-mini-latest"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4oMini BetaResponsesClientEventResponseCreateModel = "gpt-4o-mini"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4oMini2024_07_18 BetaResponsesClientEventResponseCreateModel = "gpt-4o-mini-2024-07-18"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4Turbo BetaResponsesClientEventResponseCreateModel = "gpt-4-turbo"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4Turbo2024_04_09 BetaResponsesClientEventResponseCreateModel = "gpt-4-turbo-2024-04-09"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4_0125Preview BetaResponsesClientEventResponseCreateModel = "gpt-4-0125-preview"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4TurboPreview BetaResponsesClientEventResponseCreateModel = "gpt-4-turbo-preview"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4_1106Preview BetaResponsesClientEventResponseCreateModel = "gpt-4-1106-preview"
+	// Deprecated: Announced shutdown date: 2024-12-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4VisionPreview BetaResponsesClientEventResponseCreateModel = "gpt-4-vision-preview"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4 BetaResponsesClientEventResponseCreateModel = "gpt-4"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4_0314 BetaResponsesClientEventResponseCreateModel = "gpt-4-0314"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4_0613 BetaResponsesClientEventResponseCreateModel = "gpt-4-0613"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4_32k BetaResponsesClientEventResponseCreateModel = "gpt-4-32k"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4_32k0314 BetaResponsesClientEventResponseCreateModel = "gpt-4-32k-0314"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT4_32k0613 BetaResponsesClientEventResponseCreateModel = "gpt-4-32k-0613"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT3_5Turbo BetaResponsesClientEventResponseCreateModel = "gpt-3.5-turbo"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT3_5Turbo16k BetaResponsesClientEventResponseCreateModel = "gpt-3.5-turbo-16k"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT3_5Turbo0301 BetaResponsesClientEventResponseCreateModel = "gpt-3.5-turbo-0301"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT3_5Turbo0613 BetaResponsesClientEventResponseCreateModel = "gpt-3.5-turbo-0613"
+	// Deprecated: Announced shutdown date: 2026-09-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT3_5Turbo1106 BetaResponsesClientEventResponseCreateModel = "gpt-3.5-turbo-1106"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT3_5Turbo0125 BetaResponsesClientEventResponseCreateModel = "gpt-3.5-turbo-0125"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT3_5Turbo16k0613 BetaResponsesClientEventResponseCreateModel = "gpt-3.5-turbo-16k-0613"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO1Pro BetaResponsesClientEventResponseCreateModel = "o1-pro"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO1Pro2025_03_19 BetaResponsesClientEventResponseCreateModel = "o1-pro-2025-03-19"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO3Pro BetaResponsesClientEventResponseCreateModel = "o3-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO3Pro2025_06_10 BetaResponsesClientEventResponseCreateModel = "o3-pro-2025-06-10"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO3DeepResearch BetaResponsesClientEventResponseCreateModel = "o3-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO3DeepResearch2025_06_26 BetaResponsesClientEventResponseCreateModel = "o3-deep-research-2025-06-26"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO4MiniDeepResearch BetaResponsesClientEventResponseCreateModel = "o4-mini-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelO4MiniDeepResearch2025_06_26 BetaResponsesClientEventResponseCreateModel = "o4-mini-deep-research-2025-06-26"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelComputerUsePreview BetaResponsesClientEventResponseCreateModel = "computer-use-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelComputerUsePreview2025_03_11 BetaResponsesClientEventResponseCreateModel = "computer-use-preview-2025-03-11"
+	BetaResponsesClientEventResponseCreateModelGPT5_5Pro                    BetaResponsesClientEventResponseCreateModel = "gpt-5.5-pro"
+	BetaResponsesClientEventResponseCreateModelGPT5_5Pro2026_04_23          BetaResponsesClientEventResponseCreateModel = "gpt-5.5-pro-2026-04-23"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT5Codex BetaResponsesClientEventResponseCreateModel = "gpt-5-codex"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT5Pro BetaResponsesClientEventResponseCreateModel = "gpt-5-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT5Pro2025_10_06 BetaResponsesClientEventResponseCreateModel = "gpt-5-pro-2025-10-06"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponsesClientEventResponseCreateModelGPT5_1CodexMax        BetaResponsesClientEventResponseCreateModel = "gpt-5.1-codex-max"
+	BetaResponsesClientEventResponseCreateModelGPTDaybreakBlueLatest BetaResponsesClientEventResponseCreateModel = "gpt-daybreak-blue-latest"
+	BetaResponsesClientEventResponseCreateModelGPTDaybreakRedLatest  BetaResponsesClientEventResponseCreateModel = "gpt-daybreak-red-latest"
+	BetaResponsesClientEventResponseCreateModelGPT5_6Cyber           BetaResponsesClientEventResponseCreateModel = "gpt-5.6-cyber"
+	BetaResponsesClientEventResponseCreateModelGPTRosalindResearch   BetaResponsesClientEventResponseCreateModel = "gpt-rosalind-research"
+)
+
+// Configuration for running moderation on the input and output of this response.
+//
+// The property Model is required.
+type BetaResponsesClientEventResponseCreateModerationParam struct {
+	// The moderation model to use for moderated completions, e.g.
+	// 'omni-moderation-latest'.
+	Model string `json:"model" api:"required"`
+	// The policy to apply to moderated response input and output.
+	Policy BetaResponsesClientEventResponseCreateModerationPolicyParam `json:"policy,omitzero"`
+	paramObj
+}
+
+func (r BetaResponsesClientEventResponseCreateModerationParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponsesClientEventResponseCreateModerationParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponsesClientEventResponseCreateModerationParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The policy to apply to moderated response input and output.
+type BetaResponsesClientEventResponseCreateModerationPolicyParam struct {
+	// The moderation policy for the response input.
+	Input BetaResponsesClientEventResponseCreateModerationPolicyInputParam `json:"input,omitzero"`
+	// The moderation policy for the response output.
+	Output BetaResponsesClientEventResponseCreateModerationPolicyOutputParam `json:"output,omitzero"`
+	paramObj
+}
+
+func (r BetaResponsesClientEventResponseCreateModerationPolicyParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponsesClientEventResponseCreateModerationPolicyParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponsesClientEventResponseCreateModerationPolicyParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The moderation policy for the response input.
+//
+// The property Mode is required.
+type BetaResponsesClientEventResponseCreateModerationPolicyInputParam struct {
+	// Any of "score", "block".
+	Mode string `json:"mode,omitzero" api:"required"`
+	paramObj
+}
+
+func (r BetaResponsesClientEventResponseCreateModerationPolicyInputParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponsesClientEventResponseCreateModerationPolicyInputParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponsesClientEventResponseCreateModerationPolicyInputParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponsesClientEventResponseCreateModerationPolicyInputParam](
+		"mode", "score", "block",
+	)
+}
+
+// The moderation policy for the response output.
+//
+// The property Mode is required.
+type BetaResponsesClientEventResponseCreateModerationPolicyOutputParam struct {
+	// Any of "score", "block".
+	Mode string `json:"mode,omitzero" api:"required"`
+	paramObj
+}
+
+func (r BetaResponsesClientEventResponseCreateModerationPolicyOutputParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponsesClientEventResponseCreateModerationPolicyOutputParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponsesClientEventResponseCreateModerationPolicyOutputParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponsesClientEventResponseCreateModerationPolicyOutputParam](
+		"mode", "score", "block",
+	)
+}
+
+// Configuration for server-hosted multi-agent execution.
+//
+// The property Enabled is required.
+type BetaResponsesClientEventResponseCreateMultiAgentParam struct {
+	// Whether to enable server-hosted multi-agent execution for this response.
+	Enabled bool `json:"enabled" api:"required"`
+	// `max_concurrent_subagents` sets the maximum number of subagents that can be
+	// active simultaneously across the entire agent tree. It includes all
+	// descendants—children, grandchildren, and deeper subagents—but excludes the root
+	// agent. The API does not impose a fixed upper bound on this setting. The default
+	// is `3`, which is recommended for most workloads. Multi-agent runs also have no
+	// fixed limit on tree depth or the total number of subagents created during a run.
+	MaxConcurrentSubagents param.Opt[int64] `json:"max_concurrent_subagents,omitzero"`
+	paramObj
+}
+
+func (r BetaResponsesClientEventResponseCreateMultiAgentParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponsesClientEventResponseCreateMultiAgentParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponsesClientEventResponseCreateMultiAgentParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Options for prompt caching. Supported for `gpt-5.6` and later models. By
+// default, OpenAI automatically chooses one implicit cache breakpoint. You can add
+// explicit breakpoints to content blocks with `prompt_cache_breakpoint`. Each
+// request can write up to four breakpoints. For cache matching, OpenAI considers
+// up to the latest 80 breakpoints in the conversation, without a content-block
+// lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
+// `ttl` defaults to `30m`, which is currently the only supported value. See the
+// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
+// for current details.
+type BetaResponsesClientEventResponseCreatePromptCacheOptionsParam struct {
+	// The ID of a response to compare when diagnosing prompt cache reuse. Supplying
+	// this field requests prompt cache diagnostics when the feature is enabled.
+	ComparisonResponseID param.Opt[string] `json:"comparison_response_id,omitzero"`
+	// Prepares the prompt cache without generating output. Defaults to `false`. When
+	// set to `true`, overrides the `generate` field to `false`.
+	Prewarm param.Opt[bool] `json:"prewarm,omitzero"`
+	// Controls whether OpenAI automatically creates an implicit cache breakpoint.
+	// Defaults to `implicit`. With `implicit`, OpenAI creates one implicit breakpoint
+	// and writes up to the latest three explicit breakpoints in the request. With
+	// `explicit`, OpenAI does not create an implicit breakpoint and writes up to the
+	// latest four explicit breakpoints. If there are no explicit breakpoints, the
+	// request does not use prompt caching.
+	//
+	// Any of "implicit", "explicit".
+	Mode string `json:"mode,omitzero"`
+	// The minimum lifetime applied to every implicit and explicit cache breakpoint
+	// written by the request. Defaults to `30m`, which is currently the only supported
+	// value. The backend may retain cache entries for longer.
+	//
+	// Any of "30m".
+	Ttl string `json:"ttl,omitzero"`
+	paramObj
+}
+
+func (r BetaResponsesClientEventResponseCreatePromptCacheOptionsParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponsesClientEventResponseCreatePromptCacheOptionsParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponsesClientEventResponseCreatePromptCacheOptionsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponsesClientEventResponseCreatePromptCacheOptionsParam](
+		"mode", "implicit", "explicit",
+	)
+	apijson.RegisterFieldValidator[BetaResponsesClientEventResponseCreatePromptCacheOptionsParam](
+		"ttl", "30m",
+	)
+}
+
+// Configuration options for
+// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
+type BetaResponsesClientEventResponseCreateReasoningParam struct {
+	// Controls which reasoning items are rendered back to the model on later turns. If
+	// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
+	// model family defaults to `all_turns`; earlier models default to `current_turn`.
+	//
+	// When returned on a response, this is the effective reasoning context mode used
+	// for the response.
+	//
+	// Any of "auto", "current_turn", "all_turns".
+	Context string `json:"context,omitzero"`
+	// Constrains effort on reasoning for reasoning models. Currently supported values
+	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
+	// reasoning effort can result in faster responses and fewer tokens used on
+	// reasoning in a response. Not all reasoning models support every value. See the
+	// [reasoning guide](https://developers.openai.com/api/docs/guides/reasoning) for
+	// model-specific support.
+	//
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
+	Effort string `json:"effort,omitzero"`
+	// **Deprecated:** use `summary` instead.
+	//
+	// A summary of the reasoning performed by the model. This can be useful for
+	// debugging and understanding the model's reasoning process. One of `auto`,
+	// `concise`, or `detailed`.
+	//
+	// Any of "auto", "concise", "detailed".
+	//
+	// Deprecated: deprecated
+	GenerateSummary string `json:"generate_summary,omitzero"`
+	// A summary of the reasoning performed by the model. This can be useful for
+	// debugging and understanding the model's reasoning process. One of `auto`,
+	// `concise`, or `detailed`.
+	//
+	// `concise` is supported for `computer-use-preview` models and all reasoning
+	// models after `gpt-5`.
+	//
+	// Any of "auto", "concise", "detailed".
+	Summary string `json:"summary,omitzero"`
+	// Controls the reasoning execution mode for the request.
+	//
+	// When returned on a response, this is the effective execution mode.
+	Mode string `json:"mode,omitzero"`
+	paramObj
+}
+
+func (r BetaResponsesClientEventResponseCreateReasoningParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponsesClientEventResponseCreateReasoningParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponsesClientEventResponseCreateReasoningParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponsesClientEventResponseCreateReasoningParam](
+		"context", "auto", "current_turn", "all_turns",
+	)
+	apijson.RegisterFieldValidator[BetaResponsesClientEventResponseCreateReasoningParam](
+		"effort", "none", "minimal", "low", "medium", "high", "xhigh", "max",
+	)
+	apijson.RegisterFieldValidator[BetaResponsesClientEventResponseCreateReasoningParam](
+		"generate_summary", "auto", "concise", "detailed",
+	)
+	apijson.RegisterFieldValidator[BetaResponsesClientEventResponseCreateReasoningParam](
+		"summary", "auto", "concise", "detailed",
+	)
+}
+
+// Options for streaming responses. Only set this when you set `stream: true`.
+type BetaResponsesClientEventResponseCreateStreamOptionsParam struct {
+	// When true, stream obfuscation will be enabled. Stream obfuscation adds random
+	// characters to an `obfuscation` field on streaming delta events to normalize
+	// payload sizes as a mitigation to certain side-channel attacks. These obfuscation
+	// fields are included by default, but add a small amount of overhead to the data
+	// stream. You can set `include_obfuscation` to false to optimize for bandwidth if
+	// you trust the network links between your application and the OpenAI API.
+	IncludeObfuscation param.Opt[bool] `json:"include_obfuscation,omitzero"`
+	paramObj
+}
+
+func (r BetaResponsesClientEventResponseCreateStreamOptionsParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponsesClientEventResponseCreateStreamOptionsParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponsesClientEventResponseCreateStreamOptionsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponsesClientEventResponseCreateToolChoiceUnionParam struct {
+	// Check if union is this variant with !param.IsOmitted(union.OfToolChoiceMode)
+	OfToolChoiceMode                           param.Opt[BetaToolChoiceOptions]                                                          `json:",omitzero,inline"`
+	OfAllowedTools                             *BetaToolChoiceAllowedParam                                                               `json:",omitzero,inline"`
+	OfHostedTool                               *BetaToolChoiceTypesParam                                                                 `json:",omitzero,inline"`
+	OfFunctionTool                             *BetaToolChoiceFunctionParam                                                              `json:",omitzero,inline"`
+	OfMcpTool                                  *BetaToolChoiceMcpParam                                                                   `json:",omitzero,inline"`
+	OfCustomTool                               *BetaToolChoiceCustomParam                                                                `json:",omitzero,inline"`
+	OfBetaSpecificProgrammaticToolCallingParam *BetaResponsesClientEventResponseCreateToolChoiceBetaSpecificProgrammaticToolCallingParam `json:",omitzero,inline"`
+	OfSpecificApplyPatchToolChoice             *BetaToolChoiceApplyPatchParam                                                            `json:",omitzero,inline"`
+	OfSpecificShellToolChoice                  *BetaToolChoiceShellParam                                                                 `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponsesClientEventResponseCreateToolChoiceUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfToolChoiceMode,
+		u.OfAllowedTools,
+		u.OfHostedTool,
+		u.OfFunctionTool,
+		u.OfMcpTool,
+		u.OfCustomTool,
+		u.OfBetaSpecificProgrammaticToolCallingParam,
+		u.OfSpecificApplyPatchToolChoice,
+		u.OfSpecificShellToolChoice)
+}
+func (u *BetaResponsesClientEventResponseCreateToolChoiceUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventResponseCreateToolChoiceUnionParam) GetMode() *string {
+	if vt := u.OfAllowedTools; vt != nil {
+		return (*string)(&vt.Mode)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventResponseCreateToolChoiceUnionParam) GetTools() []map[string]any {
+	if vt := u.OfAllowedTools; vt != nil {
+		return vt.Tools
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventResponseCreateToolChoiceUnionParam) GetServerLabel() *string {
+	if vt := u.OfMcpTool; vt != nil {
+		return &vt.ServerLabel
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventResponseCreateToolChoiceUnionParam) GetType() *string {
+	if vt := u.OfAllowedTools; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfHostedTool; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFunctionTool; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfMcpTool; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCustomTool; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfBetaSpecificProgrammaticToolCallingParam; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfSpecificApplyPatchToolChoice; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfSpecificShellToolChoice; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventResponseCreateToolChoiceUnionParam) GetName() *string {
+	if vt := u.OfFunctionTool; vt != nil {
+		return (*string)(&vt.Name)
+	} else if vt := u.OfMcpTool; vt != nil && vt.Name.Valid() {
+		return &vt.Name.Value
+	} else if vt := u.OfCustomTool; vt != nil {
+		return (*string)(&vt.Name)
+	}
+	return nil
+}
+
+func NewBetaResponsesClientEventResponseCreateToolChoiceBetaSpecificProgrammaticToolCallingParam() BetaResponsesClientEventResponseCreateToolChoiceBetaSpecificProgrammaticToolCallingParam {
+	return BetaResponsesClientEventResponseCreateToolChoiceBetaSpecificProgrammaticToolCallingParam{
+		Type: "programmatic_tool_calling",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewBetaResponsesClientEventResponseCreateToolChoiceBetaSpecificProgrammaticToolCallingParam].
+type BetaResponsesClientEventResponseCreateToolChoiceBetaSpecificProgrammaticToolCallingParam struct {
+	// The tool to call. Always `programmatic_tool_calling`.
+	Type constant.ProgrammaticToolCalling `json:"type" default:"programmatic_tool_calling"`
+	paramObj
+}
+
+func (r BetaResponsesClientEventResponseCreateToolChoiceBetaSpecificProgrammaticToolCallingParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponsesClientEventResponseCreateToolChoiceBetaSpecificProgrammaticToolCallingParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponsesClientEventResponseCreateToolChoiceBetaSpecificProgrammaticToolCallingParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponsesServerEventUnion contains all possible properties and values from
+// [BetaResponsesServerEventBetaResponseAudioWsDelta],
+// [BetaResponsesServerEventBetaResponseAudioWsDone],
+// [BetaResponsesServerEventBetaResponseAudioTranscriptWsDelta],
+// [BetaResponsesServerEventBetaResponseAudioTranscriptWsDone],
+// [BetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDelta],
+// [BetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDone],
+// [BetaResponsesServerEventBetaResponseCodeInterpreterCallWsCompleted],
+// [BetaResponsesServerEventBetaResponseCodeInterpreterCallInWsProgress],
+// [BetaResponsesServerEventBetaResponseCodeInterpreterCallWsInterpreting],
+// [BetaResponsesServerEventBetaResponseCompactionWsCompacting],
+// [BetaResponsesServerEventBetaResponseWsCompleted],
+// [BetaResponsesServerEventBetaResponseContentPartWsAdded],
+// [BetaResponsesServerEventBetaResponseContentPartWsDone],
+// [BetaResponsesServerEventBetaResponseWsCreated],
+// [BetaResponsesServerEventBetaResponseFileSearchCallWsCompleted],
+// [BetaResponsesServerEventBetaResponseFileSearchCallInWsProgress],
+// [BetaResponsesServerEventBetaResponseFileSearchCallWsSearching],
+// [BetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDelta],
+// [BetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDone],
+// [BetaResponsesServerEventBetaResponseShellCallCommandWsAdded],
+// [BetaResponsesServerEventBetaResponseShellCallCommandWsDelta],
+// [BetaResponsesServerEventBetaResponseShellCallCommandWsDone],
+// [BetaResponsesServerEventBetaResponseShellCallOutputContentWsDelta],
+// [BetaResponsesServerEventBetaResponseShellCallOutputContentWsDone],
+// [BetaResponsesServerEventBetaResponseInWsProgress],
+// [BetaResponsesServerEventBetaResponseWsFailed],
+// [BetaResponsesServerEventBetaResponseWsIncomplete],
+// [BetaResponsesServerEventBetaResponseOutputItemWsAdded],
+// [BetaResponsesServerEventBetaResponseOutputItemWsDone],
+// [BetaResponsesServerEventBetaResponseReasoningSummaryPartWsAdded],
+// [BetaResponsesServerEventBetaResponseReasoningSummaryPartWsDone],
+// [BetaResponsesServerEventBetaResponseReasoningSummaryTextWsDelta],
+// [BetaResponsesServerEventBetaResponseReasoningSummaryTextWsDone],
+// [BetaResponsesServerEventBetaResponseReasoningTextWsDelta],
+// [BetaResponsesServerEventBetaResponseReasoningTextWsDone],
+// [BetaResponsesServerEventBetaResponseRefusalWsDelta],
+// [BetaResponsesServerEventBetaResponseRefusalWsDone],
+// [BetaResponsesServerEventBetaResponseTextWsDelta],
+// [BetaResponsesServerEventBetaResponseTextWsDone],
+// [BetaResponsesServerEventBetaResponseWebSearchCallWsCompleted],
+// [BetaResponsesServerEventBetaResponseWebSearchCallInWsProgress],
+// [BetaResponsesServerEventBetaResponseWebSearchCallWsSearching],
+// [BetaResponsesServerEventBetaResponseImageGenCallWsCompleted],
+// [BetaResponsesServerEventBetaResponseImageGenCallWsGenerating],
+// [BetaResponsesServerEventBetaResponseImageGenCallInWsProgress],
+// [BetaResponsesServerEventBetaResponseImageGenCallPartialWsImage],
+// [BetaResponsesServerEventBetaResponseMcpCallArgumentsWsDelta],
+// [BetaResponsesServerEventBetaResponseMcpCallArgumentsWsDone],
+// [BetaResponsesServerEventBetaResponseMcpCallWsCompleted],
+// [BetaResponsesServerEventBetaResponseMcpCallWsFailed],
+// [BetaResponsesServerEventBetaResponseMcpCallInWsProgress],
+// [BetaResponsesServerEventBetaResponseMcpListToolsWsCompleted],
+// [BetaResponsesServerEventBetaResponseMcpListToolsWsFailed],
+// [BetaResponsesServerEventBetaResponseMcpListToolsInWsProgress],
+// [BetaResponsesServerEventBetaResponseOutputTextAnnotationWsAdded],
+// [BetaResponsesServerEventBetaResponseWsQueued],
+// [BetaResponsesServerEventBetaResponseCustomToolCallInputWsDelta],
+// [BetaResponsesServerEventBetaResponseCustomToolCallInputWsDone],
+// [BetaResponsesServerEventBetaResponseWsError], [BetaResponseSteerAcceptedEvent],
+// [BetaResponseSteerPendingEvent], [BetaResponseSteerFailedEvent],
+// [BetaResponseInjectCreatedEvent], [BetaResponseInjectFailedEvent].
+//
+// Use the [BetaResponsesServerEventUnion.AsAny] method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaResponsesServerEventUnion struct {
+	OfBetaResponsesServerEventBetaResponseAudioWsDelta                      BetaResponsesServerEventBetaResponseAudioWsDelta                      `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseAudioWsDone                       BetaResponsesServerEventBetaResponseAudioWsDone                       `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseAudioTranscriptWsDelta            BetaResponsesServerEventBetaResponseAudioTranscriptWsDelta            `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseAudioTranscriptWsDone             BetaResponsesServerEventBetaResponseAudioTranscriptWsDone             `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDelta    BetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDelta    `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDone     BetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDone     `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseCodeInterpreterCallWsCompleted    BetaResponsesServerEventBetaResponseCodeInterpreterCallWsCompleted    `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseCodeInterpreterCallInWsProgress   BetaResponsesServerEventBetaResponseCodeInterpreterCallInWsProgress   `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseCodeInterpreterCallWsInterpreting BetaResponsesServerEventBetaResponseCodeInterpreterCallWsInterpreting `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseCompactionWsCompacting            BetaResponsesServerEventBetaResponseCompactionWsCompacting            `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseWsCompleted                       BetaResponsesServerEventBetaResponseWsCompleted                       `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseContentPartWsAdded                BetaResponsesServerEventBetaResponseContentPartWsAdded                `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseContentPartWsDone                 BetaResponsesServerEventBetaResponseContentPartWsDone                 `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseWsCreated                         BetaResponsesServerEventBetaResponseWsCreated                         `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseFileSearchCallWsCompleted         BetaResponsesServerEventBetaResponseFileSearchCallWsCompleted         `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseFileSearchCallInWsProgress        BetaResponsesServerEventBetaResponseFileSearchCallInWsProgress        `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseFileSearchCallWsSearching         BetaResponsesServerEventBetaResponseFileSearchCallWsSearching         `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDelta      BetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDelta      `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDone       BetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDone       `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseShellCallCommandWsAdded           BetaResponsesServerEventBetaResponseShellCallCommandWsAdded           `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseShellCallCommandWsDelta           BetaResponsesServerEventBetaResponseShellCallCommandWsDelta           `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseShellCallCommandWsDone            BetaResponsesServerEventBetaResponseShellCallCommandWsDone            `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseShellCallOutputContentWsDelta     BetaResponsesServerEventBetaResponseShellCallOutputContentWsDelta     `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseShellCallOutputContentWsDone      BetaResponsesServerEventBetaResponseShellCallOutputContentWsDone      `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseInWsProgress                      BetaResponsesServerEventBetaResponseInWsProgress                      `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseWsFailed                          BetaResponsesServerEventBetaResponseWsFailed                          `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseWsIncomplete                      BetaResponsesServerEventBetaResponseWsIncomplete                      `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseOutputItemWsAdded                 BetaResponsesServerEventBetaResponseOutputItemWsAdded                 `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseOutputItemWsDone                  BetaResponsesServerEventBetaResponseOutputItemWsDone                  `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseReasoningSummaryPartWsAdded       BetaResponsesServerEventBetaResponseReasoningSummaryPartWsAdded       `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseReasoningSummaryPartWsDone        BetaResponsesServerEventBetaResponseReasoningSummaryPartWsDone        `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseReasoningSummaryTextWsDelta       BetaResponsesServerEventBetaResponseReasoningSummaryTextWsDelta       `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseReasoningSummaryTextWsDone        BetaResponsesServerEventBetaResponseReasoningSummaryTextWsDone        `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseReasoningTextWsDelta              BetaResponsesServerEventBetaResponseReasoningTextWsDelta              `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseReasoningTextWsDone               BetaResponsesServerEventBetaResponseReasoningTextWsDone               `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseRefusalWsDelta                    BetaResponsesServerEventBetaResponseRefusalWsDelta                    `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseRefusalWsDone                     BetaResponsesServerEventBetaResponseRefusalWsDone                     `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseTextWsDelta                       BetaResponsesServerEventBetaResponseTextWsDelta                       `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseTextWsDone                        BetaResponsesServerEventBetaResponseTextWsDone                        `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseWebSearchCallWsCompleted          BetaResponsesServerEventBetaResponseWebSearchCallWsCompleted          `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseWebSearchCallInWsProgress         BetaResponsesServerEventBetaResponseWebSearchCallInWsProgress         `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseWebSearchCallWsSearching          BetaResponsesServerEventBetaResponseWebSearchCallWsSearching          `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseImageGenCallWsCompleted           BetaResponsesServerEventBetaResponseImageGenCallWsCompleted           `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseImageGenCallWsGenerating          BetaResponsesServerEventBetaResponseImageGenCallWsGenerating          `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseImageGenCallInWsProgress          BetaResponsesServerEventBetaResponseImageGenCallInWsProgress          `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseImageGenCallPartialWsImage        BetaResponsesServerEventBetaResponseImageGenCallPartialWsImage        `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseMcpCallArgumentsWsDelta           BetaResponsesServerEventBetaResponseMcpCallArgumentsWsDelta           `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseMcpCallArgumentsWsDone            BetaResponsesServerEventBetaResponseMcpCallArgumentsWsDone            `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseMcpCallWsCompleted                BetaResponsesServerEventBetaResponseMcpCallWsCompleted                `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseMcpCallWsFailed                   BetaResponsesServerEventBetaResponseMcpCallWsFailed                   `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseMcpCallInWsProgress               BetaResponsesServerEventBetaResponseMcpCallInWsProgress               `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseMcpListToolsWsCompleted           BetaResponsesServerEventBetaResponseMcpListToolsWsCompleted           `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseMcpListToolsWsFailed              BetaResponsesServerEventBetaResponseMcpListToolsWsFailed              `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseMcpListToolsInWsProgress          BetaResponsesServerEventBetaResponseMcpListToolsInWsProgress          `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseOutputTextAnnotationWsAdded       BetaResponsesServerEventBetaResponseOutputTextAnnotationWsAdded       `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseWsQueued                          BetaResponsesServerEventBetaResponseWsQueued                          `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseCustomToolCallInputWsDelta        BetaResponsesServerEventBetaResponseCustomToolCallInputWsDelta        `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseCustomToolCallInputWsDone         BetaResponsesServerEventBetaResponseCustomToolCallInputWsDone         `json:",inline"`
+	OfBetaResponsesServerEventBetaResponseWsError                           BetaResponsesServerEventBetaResponseWsError                           `json:",inline"`
+	OfBetaResponseSteerAcceptedEvent                                        BetaResponseSteerAcceptedEvent                                        `json:",inline"`
+	OfBetaResponseSteerPendingEvent                                         BetaResponseSteerPendingEvent                                         `json:",inline"`
+	OfBetaResponseSteerFailedEvent                                          BetaResponseSteerFailedEvent                                          `json:",inline"`
+	OfBetaResponseInjectCreatedEvent                                        BetaResponseInjectCreatedEvent                                        `json:",inline"`
+	OfBetaResponseInjectFailedEvent                                         BetaResponseInjectFailedEvent                                         `json:",inline"`
+	Type                                                                    string                                                                `json:"type"`
+	JSON                                                                    struct {
+		OfBetaResponsesServerEventBetaResponseAudioWsDelta                      respjson.Field
+		OfBetaResponsesServerEventBetaResponseAudioWsDone                       respjson.Field
+		OfBetaResponsesServerEventBetaResponseAudioTranscriptWsDelta            respjson.Field
+		OfBetaResponsesServerEventBetaResponseAudioTranscriptWsDone             respjson.Field
+		OfBetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDelta    respjson.Field
+		OfBetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDone     respjson.Field
+		OfBetaResponsesServerEventBetaResponseCodeInterpreterCallWsCompleted    respjson.Field
+		OfBetaResponsesServerEventBetaResponseCodeInterpreterCallInWsProgress   respjson.Field
+		OfBetaResponsesServerEventBetaResponseCodeInterpreterCallWsInterpreting respjson.Field
+		OfBetaResponsesServerEventBetaResponseCompactionWsCompacting            respjson.Field
+		OfBetaResponsesServerEventBetaResponseWsCompleted                       respjson.Field
+		OfBetaResponsesServerEventBetaResponseContentPartWsAdded                respjson.Field
+		OfBetaResponsesServerEventBetaResponseContentPartWsDone                 respjson.Field
+		OfBetaResponsesServerEventBetaResponseWsCreated                         respjson.Field
+		OfBetaResponsesServerEventBetaResponseFileSearchCallWsCompleted         respjson.Field
+		OfBetaResponsesServerEventBetaResponseFileSearchCallInWsProgress        respjson.Field
+		OfBetaResponsesServerEventBetaResponseFileSearchCallWsSearching         respjson.Field
+		OfBetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDelta      respjson.Field
+		OfBetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDone       respjson.Field
+		OfBetaResponsesServerEventBetaResponseShellCallCommandWsAdded           respjson.Field
+		OfBetaResponsesServerEventBetaResponseShellCallCommandWsDelta           respjson.Field
+		OfBetaResponsesServerEventBetaResponseShellCallCommandWsDone            respjson.Field
+		OfBetaResponsesServerEventBetaResponseShellCallOutputContentWsDelta     respjson.Field
+		OfBetaResponsesServerEventBetaResponseShellCallOutputContentWsDone      respjson.Field
+		OfBetaResponsesServerEventBetaResponseInWsProgress                      respjson.Field
+		OfBetaResponsesServerEventBetaResponseWsFailed                          respjson.Field
+		OfBetaResponsesServerEventBetaResponseWsIncomplete                      respjson.Field
+		OfBetaResponsesServerEventBetaResponseOutputItemWsAdded                 respjson.Field
+		OfBetaResponsesServerEventBetaResponseOutputItemWsDone                  respjson.Field
+		OfBetaResponsesServerEventBetaResponseReasoningSummaryPartWsAdded       respjson.Field
+		OfBetaResponsesServerEventBetaResponseReasoningSummaryPartWsDone        respjson.Field
+		OfBetaResponsesServerEventBetaResponseReasoningSummaryTextWsDelta       respjson.Field
+		OfBetaResponsesServerEventBetaResponseReasoningSummaryTextWsDone        respjson.Field
+		OfBetaResponsesServerEventBetaResponseReasoningTextWsDelta              respjson.Field
+		OfBetaResponsesServerEventBetaResponseReasoningTextWsDone               respjson.Field
+		OfBetaResponsesServerEventBetaResponseRefusalWsDelta                    respjson.Field
+		OfBetaResponsesServerEventBetaResponseRefusalWsDone                     respjson.Field
+		OfBetaResponsesServerEventBetaResponseTextWsDelta                       respjson.Field
+		OfBetaResponsesServerEventBetaResponseTextWsDone                        respjson.Field
+		OfBetaResponsesServerEventBetaResponseWebSearchCallWsCompleted          respjson.Field
+		OfBetaResponsesServerEventBetaResponseWebSearchCallInWsProgress         respjson.Field
+		OfBetaResponsesServerEventBetaResponseWebSearchCallWsSearching          respjson.Field
+		OfBetaResponsesServerEventBetaResponseImageGenCallWsCompleted           respjson.Field
+		OfBetaResponsesServerEventBetaResponseImageGenCallWsGenerating          respjson.Field
+		OfBetaResponsesServerEventBetaResponseImageGenCallInWsProgress          respjson.Field
+		OfBetaResponsesServerEventBetaResponseImageGenCallPartialWsImage        respjson.Field
+		OfBetaResponsesServerEventBetaResponseMcpCallArgumentsWsDelta           respjson.Field
+		OfBetaResponsesServerEventBetaResponseMcpCallArgumentsWsDone            respjson.Field
+		OfBetaResponsesServerEventBetaResponseMcpCallWsCompleted                respjson.Field
+		OfBetaResponsesServerEventBetaResponseMcpCallWsFailed                   respjson.Field
+		OfBetaResponsesServerEventBetaResponseMcpCallInWsProgress               respjson.Field
+		OfBetaResponsesServerEventBetaResponseMcpListToolsWsCompleted           respjson.Field
+		OfBetaResponsesServerEventBetaResponseMcpListToolsWsFailed              respjson.Field
+		OfBetaResponsesServerEventBetaResponseMcpListToolsInWsProgress          respjson.Field
+		OfBetaResponsesServerEventBetaResponseOutputTextAnnotationWsAdded       respjson.Field
+		OfBetaResponsesServerEventBetaResponseWsQueued                          respjson.Field
+		OfBetaResponsesServerEventBetaResponseCustomToolCallInputWsDelta        respjson.Field
+		OfBetaResponsesServerEventBetaResponseCustomToolCallInputWsDone         respjson.Field
+		OfBetaResponsesServerEventBetaResponseWsError                           respjson.Field
+		OfBetaResponseSteerAcceptedEvent                                        respjson.Field
+		OfBetaResponseSteerPendingEvent                                         respjson.Field
+		OfBetaResponseSteerFailedEvent                                          respjson.Field
+		OfBetaResponseInjectCreatedEvent                                        respjson.Field
+		OfBetaResponseInjectFailedEvent                                         respjson.Field
+		Type                                                                    respjson.Field
+		raw                                                                     string
+	} `json:"-"`
+}
+
+// anyBetaResponsesServerEvent is implemented by each variant of
+// [BetaResponsesServerEventUnion] to add type safety for the return type of
+// [BetaResponsesServerEventUnion.AsAny]
+type anyBetaResponsesServerEvent interface {
+	implBetaResponsesServerEventUnion()
+}
+
+func (BetaResponsesServerEventBetaResponseAudioWsDelta) implBetaResponsesServerEventUnion() {}
+func (BetaResponsesServerEventBetaResponseAudioWsDone) implBetaResponsesServerEventUnion()  {}
+func (BetaResponsesServerEventBetaResponseAudioTranscriptWsDelta) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseAudioTranscriptWsDone) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDelta) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDone) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseCodeInterpreterCallWsCompleted) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseCodeInterpreterCallInWsProgress) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseCodeInterpreterCallWsInterpreting) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseCompactionWsCompacting) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseWsCompleted) implBetaResponsesServerEventUnion()        {}
+func (BetaResponsesServerEventBetaResponseContentPartWsAdded) implBetaResponsesServerEventUnion() {}
+func (BetaResponsesServerEventBetaResponseContentPartWsDone) implBetaResponsesServerEventUnion()  {}
+func (BetaResponsesServerEventBetaResponseWsCreated) implBetaResponsesServerEventUnion()          {}
+func (BetaResponsesServerEventBetaResponseFileSearchCallWsCompleted) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseFileSearchCallInWsProgress) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseFileSearchCallWsSearching) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDelta) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDone) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseShellCallCommandWsAdded) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseShellCallCommandWsDelta) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseShellCallCommandWsDone) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseShellCallOutputContentWsDelta) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseShellCallOutputContentWsDone) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseInWsProgress) implBetaResponsesServerEventUnion()      {}
+func (BetaResponsesServerEventBetaResponseWsFailed) implBetaResponsesServerEventUnion()          {}
+func (BetaResponsesServerEventBetaResponseWsIncomplete) implBetaResponsesServerEventUnion()      {}
+func (BetaResponsesServerEventBetaResponseOutputItemWsAdded) implBetaResponsesServerEventUnion() {}
+func (BetaResponsesServerEventBetaResponseOutputItemWsDone) implBetaResponsesServerEventUnion()  {}
+func (BetaResponsesServerEventBetaResponseReasoningSummaryPartWsAdded) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseReasoningSummaryPartWsDone) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseReasoningSummaryTextWsDelta) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseReasoningSummaryTextWsDone) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseReasoningTextWsDelta) implBetaResponsesServerEventUnion() {}
+func (BetaResponsesServerEventBetaResponseReasoningTextWsDone) implBetaResponsesServerEventUnion()  {}
+func (BetaResponsesServerEventBetaResponseRefusalWsDelta) implBetaResponsesServerEventUnion()       {}
+func (BetaResponsesServerEventBetaResponseRefusalWsDone) implBetaResponsesServerEventUnion()        {}
+func (BetaResponsesServerEventBetaResponseTextWsDelta) implBetaResponsesServerEventUnion()          {}
+func (BetaResponsesServerEventBetaResponseTextWsDone) implBetaResponsesServerEventUnion()           {}
+func (BetaResponsesServerEventBetaResponseWebSearchCallWsCompleted) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseWebSearchCallInWsProgress) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseWebSearchCallWsSearching) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseImageGenCallWsCompleted) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseImageGenCallWsGenerating) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseImageGenCallInWsProgress) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseImageGenCallPartialWsImage) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseMcpCallArgumentsWsDelta) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseMcpCallArgumentsWsDone) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseMcpCallWsCompleted) implBetaResponsesServerEventUnion()  {}
+func (BetaResponsesServerEventBetaResponseMcpCallWsFailed) implBetaResponsesServerEventUnion()     {}
+func (BetaResponsesServerEventBetaResponseMcpCallInWsProgress) implBetaResponsesServerEventUnion() {}
+func (BetaResponsesServerEventBetaResponseMcpListToolsWsCompleted) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseMcpListToolsWsFailed) implBetaResponsesServerEventUnion() {}
+func (BetaResponsesServerEventBetaResponseMcpListToolsInWsProgress) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseOutputTextAnnotationWsAdded) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseWsQueued) implBetaResponsesServerEventUnion() {}
+func (BetaResponsesServerEventBetaResponseCustomToolCallInputWsDelta) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseCustomToolCallInputWsDone) implBetaResponsesServerEventUnion() {
+}
+func (BetaResponsesServerEventBetaResponseWsError) implBetaResponsesServerEventUnion() {}
+func (BetaResponseSteerAcceptedEvent) implBetaResponsesServerEventUnion()              {}
+func (BetaResponseSteerPendingEvent) implBetaResponsesServerEventUnion()               {}
+func (BetaResponseSteerFailedEvent) implBetaResponsesServerEventUnion()                {}
+func (BetaResponseInjectCreatedEvent) implBetaResponsesServerEventUnion()              {}
+func (BetaResponseInjectFailedEvent) implBetaResponsesServerEventUnion()               {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := BetaResponsesServerEventUnion.AsAny().(type) {
+//	case openai.BetaResponsesServerEventBetaResponseAudioWsDelta:
+//	case openai.BetaResponsesServerEventBetaResponseAudioWsDone:
+//	case openai.BetaResponsesServerEventBetaResponseAudioTranscriptWsDelta:
+//	case openai.BetaResponsesServerEventBetaResponseAudioTranscriptWsDone:
+//	case openai.BetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDelta:
+//	case openai.BetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDone:
+//	case openai.BetaResponsesServerEventBetaResponseCodeInterpreterCallWsCompleted:
+//	case openai.BetaResponsesServerEventBetaResponseCodeInterpreterCallInWsProgress:
+//	case openai.BetaResponsesServerEventBetaResponseCodeInterpreterCallWsInterpreting:
+//	case openai.BetaResponsesServerEventBetaResponseCompactionWsCompacting:
+//	case openai.BetaResponsesServerEventBetaResponseWsCompleted:
+//	case openai.BetaResponsesServerEventBetaResponseContentPartWsAdded:
+//	case openai.BetaResponsesServerEventBetaResponseContentPartWsDone:
+//	case openai.BetaResponsesServerEventBetaResponseWsCreated:
+//	case openai.BetaResponsesServerEventBetaResponseFileSearchCallWsCompleted:
+//	case openai.BetaResponsesServerEventBetaResponseFileSearchCallInWsProgress:
+//	case openai.BetaResponsesServerEventBetaResponseFileSearchCallWsSearching:
+//	case openai.BetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDelta:
+//	case openai.BetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDone:
+//	case openai.BetaResponsesServerEventBetaResponseShellCallCommandWsAdded:
+//	case openai.BetaResponsesServerEventBetaResponseShellCallCommandWsDelta:
+//	case openai.BetaResponsesServerEventBetaResponseShellCallCommandWsDone:
+//	case openai.BetaResponsesServerEventBetaResponseShellCallOutputContentWsDelta:
+//	case openai.BetaResponsesServerEventBetaResponseShellCallOutputContentWsDone:
+//	case openai.BetaResponsesServerEventBetaResponseInWsProgress:
+//	case openai.BetaResponsesServerEventBetaResponseWsFailed:
+//	case openai.BetaResponsesServerEventBetaResponseWsIncomplete:
+//	case openai.BetaResponsesServerEventBetaResponseOutputItemWsAdded:
+//	case openai.BetaResponsesServerEventBetaResponseOutputItemWsDone:
+//	case openai.BetaResponsesServerEventBetaResponseReasoningSummaryPartWsAdded:
+//	case openai.BetaResponsesServerEventBetaResponseReasoningSummaryPartWsDone:
+//	case openai.BetaResponsesServerEventBetaResponseReasoningSummaryTextWsDelta:
+//	case openai.BetaResponsesServerEventBetaResponseReasoningSummaryTextWsDone:
+//	case openai.BetaResponsesServerEventBetaResponseReasoningTextWsDelta:
+//	case openai.BetaResponsesServerEventBetaResponseReasoningTextWsDone:
+//	case openai.BetaResponsesServerEventBetaResponseRefusalWsDelta:
+//	case openai.BetaResponsesServerEventBetaResponseRefusalWsDone:
+//	case openai.BetaResponsesServerEventBetaResponseTextWsDelta:
+//	case openai.BetaResponsesServerEventBetaResponseTextWsDone:
+//	case openai.BetaResponsesServerEventBetaResponseWebSearchCallWsCompleted:
+//	case openai.BetaResponsesServerEventBetaResponseWebSearchCallInWsProgress:
+//	case openai.BetaResponsesServerEventBetaResponseWebSearchCallWsSearching:
+//	case openai.BetaResponsesServerEventBetaResponseImageGenCallWsCompleted:
+//	case openai.BetaResponsesServerEventBetaResponseImageGenCallWsGenerating:
+//	case openai.BetaResponsesServerEventBetaResponseImageGenCallInWsProgress:
+//	case openai.BetaResponsesServerEventBetaResponseImageGenCallPartialWsImage:
+//	case openai.BetaResponsesServerEventBetaResponseMcpCallArgumentsWsDelta:
+//	case openai.BetaResponsesServerEventBetaResponseMcpCallArgumentsWsDone:
+//	case openai.BetaResponsesServerEventBetaResponseMcpCallWsCompleted:
+//	case openai.BetaResponsesServerEventBetaResponseMcpCallWsFailed:
+//	case openai.BetaResponsesServerEventBetaResponseMcpCallInWsProgress:
+//	case openai.BetaResponsesServerEventBetaResponseMcpListToolsWsCompleted:
+//	case openai.BetaResponsesServerEventBetaResponseMcpListToolsWsFailed:
+//	case openai.BetaResponsesServerEventBetaResponseMcpListToolsInWsProgress:
+//	case openai.BetaResponsesServerEventBetaResponseOutputTextAnnotationWsAdded:
+//	case openai.BetaResponsesServerEventBetaResponseWsQueued:
+//	case openai.BetaResponsesServerEventBetaResponseCustomToolCallInputWsDelta:
+//	case openai.BetaResponsesServerEventBetaResponseCustomToolCallInputWsDone:
+//	case openai.BetaResponsesServerEventBetaResponseWsError:
+//	case openai.BetaResponseSteerAcceptedEvent:
+//	case openai.BetaResponseSteerPendingEvent:
+//	case openai.BetaResponseSteerFailedEvent:
+//	case openai.BetaResponseInjectCreatedEvent:
+//	case openai.BetaResponseInjectFailedEvent:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u BetaResponsesServerEventUnion) AsAny() anyBetaResponsesServerEvent {
+	switch u.Type {
+	case "response.audio.delta":
+		return u.AsResponseAudioDelta()
+	case "response.audio.done":
+		return u.AsResponseAudioDone()
+	case "response.audio.transcript.delta":
+		return u.AsResponseAudioTranscriptDelta()
+	case "response.audio.transcript.done":
+		return u.AsResponseAudioTranscriptDone()
+	case "response.code_interpreter_call_code.delta":
+		return u.AsResponseCodeInterpreterCallCodeDelta()
+	case "response.code_interpreter_call_code.done":
+		return u.AsResponseCodeInterpreterCallCodeDone()
+	case "response.code_interpreter_call.completed":
+		return u.AsResponseCodeInterpreterCallCompleted()
+	case "response.code_interpreter_call.in_progress":
+		return u.AsResponseCodeInterpreterCallInProgress()
+	case "response.code_interpreter_call.interpreting":
+		return u.AsResponseCodeInterpreterCallInterpreting()
+	case "response.compaction.compacting":
+		return u.AsResponseCompactionCompacting()
+	case "response.completed":
+		return u.AsResponseCompleted()
+	case "response.content_part.added":
+		return u.AsResponseContentPartAdded()
+	case "response.content_part.done":
+		return u.AsResponseContentPartDone()
+	case "response.created":
+		return u.AsResponseCreated()
+	case "response.file_search_call.completed":
+		return u.AsResponseFileSearchCallCompleted()
+	case "response.file_search_call.in_progress":
+		return u.AsResponseFileSearchCallInProgress()
+	case "response.file_search_call.searching":
+		return u.AsResponseFileSearchCallSearching()
+	case "response.function_call_arguments.delta":
+		return u.AsResponseFunctionCallArgumentsDelta()
+	case "response.function_call_arguments.done":
+		return u.AsResponseFunctionCallArgumentsDone()
+	case "response.shell_call_command.added":
+		return u.AsResponseShellCallCommandAdded()
+	case "response.shell_call_command.delta":
+		return u.AsResponseShellCallCommandDelta()
+	case "response.shell_call_command.done":
+		return u.AsResponseShellCallCommandDone()
+	case "response.shell_call_output_content.delta":
+		return u.AsResponseShellCallOutputContentDelta()
+	case "response.shell_call_output_content.done":
+		return u.AsResponseShellCallOutputContentDone()
+	case "response.in_progress":
+		return u.AsResponseInProgress()
+	case "response.failed":
+		return u.AsResponseFailed()
+	case "response.incomplete":
+		return u.AsResponseIncomplete()
+	case "response.output_item.added":
+		return u.AsResponseOutputItemAdded()
+	case "response.output_item.done":
+		return u.AsResponseOutputItemDone()
+	case "response.reasoning_summary_part.added":
+		return u.AsResponseReasoningSummaryPartAdded()
+	case "response.reasoning_summary_part.done":
+		return u.AsResponseReasoningSummaryPartDone()
+	case "response.reasoning_summary_text.delta":
+		return u.AsResponseReasoningSummaryTextDelta()
+	case "response.reasoning_summary_text.done":
+		return u.AsResponseReasoningSummaryTextDone()
+	case "response.reasoning_text.delta":
+		return u.AsResponseReasoningTextDelta()
+	case "response.reasoning_text.done":
+		return u.AsResponseReasoningTextDone()
+	case "response.refusal.delta":
+		return u.AsResponseRefusalDelta()
+	case "response.refusal.done":
+		return u.AsResponseRefusalDone()
+	case "response.output_text.delta":
+		return u.AsResponseOutputTextDelta()
+	case "response.output_text.done":
+		return u.AsResponseOutputTextDone()
+	case "response.web_search_call.completed":
+		return u.AsResponseWebSearchCallCompleted()
+	case "response.web_search_call.in_progress":
+		return u.AsResponseWebSearchCallInProgress()
+	case "response.web_search_call.searching":
+		return u.AsResponseWebSearchCallSearching()
+	case "response.image_generation_call.completed":
+		return u.AsResponseImageGenerationCallCompleted()
+	case "response.image_generation_call.generating":
+		return u.AsResponseImageGenerationCallGenerating()
+	case "response.image_generation_call.in_progress":
+		return u.AsResponseImageGenerationCallInProgress()
+	case "response.image_generation_call.partial_image":
+		return u.AsResponseImageGenerationCallPartialImage()
+	case "response.mcp_call_arguments.delta":
+		return u.AsResponseMcpCallArgumentsDelta()
+	case "response.mcp_call_arguments.done":
+		return u.AsResponseMcpCallArgumentsDone()
+	case "response.mcp_call.completed":
+		return u.AsResponseMcpCallCompleted()
+	case "response.mcp_call.failed":
+		return u.AsResponseMcpCallFailed()
+	case "response.mcp_call.in_progress":
+		return u.AsResponseMcpCallInProgress()
+	case "response.mcp_list_tools.completed":
+		return u.AsResponseMcpListToolsCompleted()
+	case "response.mcp_list_tools.failed":
+		return u.AsResponseMcpListToolsFailed()
+	case "response.mcp_list_tools.in_progress":
+		return u.AsResponseMcpListToolsInProgress()
+	case "response.output_text.annotation.added":
+		return u.AsResponseOutputTextAnnotationAdded()
+	case "response.queued":
+		return u.AsResponseQueued()
+	case "response.custom_tool_call_input.delta":
+		return u.AsResponseCustomToolCallInputDelta()
+	case "response.custom_tool_call_input.done":
+		return u.AsResponseCustomToolCallInputDone()
+	case "error":
+		return u.AsBetaResponsesServerEventBetaResponseWsError()
+	case "response.steer.accepted":
+		return u.AsBetaResponseSteerAcceptedEvent()
+	case "response.steer.pending":
+		return u.AsBetaResponseSteerPendingEvent()
+	case "response.steer.failed":
+		return u.AsBetaResponseSteerFailedEvent()
+	case "response.inject.created":
+		return u.AsBetaResponseInjectCreatedEvent()
+	case "response.inject.failed":
+		return u.AsBetaResponseInjectFailedEvent()
+	}
+	return nil
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseAudioDelta() (v BetaResponsesServerEventBetaResponseAudioWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseAudioDone() (v BetaResponsesServerEventBetaResponseAudioWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseAudioTranscriptDelta() (v BetaResponsesServerEventBetaResponseAudioTranscriptWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseAudioTranscriptDone() (v BetaResponsesServerEventBetaResponseAudioTranscriptWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseCodeInterpreterCallCodeDelta() (v BetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseCodeInterpreterCallCodeDone() (v BetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseCodeInterpreterCallCompleted() (v BetaResponsesServerEventBetaResponseCodeInterpreterCallWsCompleted) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseCodeInterpreterCallInProgress() (v BetaResponsesServerEventBetaResponseCodeInterpreterCallInWsProgress) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseCodeInterpreterCallInterpreting() (v BetaResponsesServerEventBetaResponseCodeInterpreterCallWsInterpreting) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseCompactionCompacting() (v BetaResponsesServerEventBetaResponseCompactionWsCompacting) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseCompleted() (v BetaResponsesServerEventBetaResponseWsCompleted) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseContentPartAdded() (v BetaResponsesServerEventBetaResponseContentPartWsAdded) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseContentPartDone() (v BetaResponsesServerEventBetaResponseContentPartWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseCreated() (v BetaResponsesServerEventBetaResponseWsCreated) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseFileSearchCallCompleted() (v BetaResponsesServerEventBetaResponseFileSearchCallWsCompleted) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseFileSearchCallInProgress() (v BetaResponsesServerEventBetaResponseFileSearchCallInWsProgress) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseFileSearchCallSearching() (v BetaResponsesServerEventBetaResponseFileSearchCallWsSearching) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseFunctionCallArgumentsDelta() (v BetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseFunctionCallArgumentsDone() (v BetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseShellCallCommandAdded() (v BetaResponsesServerEventBetaResponseShellCallCommandWsAdded) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseShellCallCommandDelta() (v BetaResponsesServerEventBetaResponseShellCallCommandWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseShellCallCommandDone() (v BetaResponsesServerEventBetaResponseShellCallCommandWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseShellCallOutputContentDelta() (v BetaResponsesServerEventBetaResponseShellCallOutputContentWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseShellCallOutputContentDone() (v BetaResponsesServerEventBetaResponseShellCallOutputContentWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseInProgress() (v BetaResponsesServerEventBetaResponseInWsProgress) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseFailed() (v BetaResponsesServerEventBetaResponseWsFailed) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseIncomplete() (v BetaResponsesServerEventBetaResponseWsIncomplete) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseOutputItemAdded() (v BetaResponsesServerEventBetaResponseOutputItemWsAdded) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseOutputItemDone() (v BetaResponsesServerEventBetaResponseOutputItemWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseReasoningSummaryPartAdded() (v BetaResponsesServerEventBetaResponseReasoningSummaryPartWsAdded) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseReasoningSummaryPartDone() (v BetaResponsesServerEventBetaResponseReasoningSummaryPartWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseReasoningSummaryTextDelta() (v BetaResponsesServerEventBetaResponseReasoningSummaryTextWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseReasoningSummaryTextDone() (v BetaResponsesServerEventBetaResponseReasoningSummaryTextWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseReasoningTextDelta() (v BetaResponsesServerEventBetaResponseReasoningTextWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseReasoningTextDone() (v BetaResponsesServerEventBetaResponseReasoningTextWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseRefusalDelta() (v BetaResponsesServerEventBetaResponseRefusalWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseRefusalDone() (v BetaResponsesServerEventBetaResponseRefusalWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseOutputTextDelta() (v BetaResponsesServerEventBetaResponseTextWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseOutputTextDone() (v BetaResponsesServerEventBetaResponseTextWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseWebSearchCallCompleted() (v BetaResponsesServerEventBetaResponseWebSearchCallWsCompleted) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseWebSearchCallInProgress() (v BetaResponsesServerEventBetaResponseWebSearchCallInWsProgress) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseWebSearchCallSearching() (v BetaResponsesServerEventBetaResponseWebSearchCallWsSearching) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseImageGenerationCallCompleted() (v BetaResponsesServerEventBetaResponseImageGenCallWsCompleted) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseImageGenerationCallGenerating() (v BetaResponsesServerEventBetaResponseImageGenCallWsGenerating) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseImageGenerationCallInProgress() (v BetaResponsesServerEventBetaResponseImageGenCallInWsProgress) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseImageGenerationCallPartialImage() (v BetaResponsesServerEventBetaResponseImageGenCallPartialWsImage) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseMcpCallArgumentsDelta() (v BetaResponsesServerEventBetaResponseMcpCallArgumentsWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseMcpCallArgumentsDone() (v BetaResponsesServerEventBetaResponseMcpCallArgumentsWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseMcpCallCompleted() (v BetaResponsesServerEventBetaResponseMcpCallWsCompleted) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseMcpCallFailed() (v BetaResponsesServerEventBetaResponseMcpCallWsFailed) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseMcpCallInProgress() (v BetaResponsesServerEventBetaResponseMcpCallInWsProgress) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseMcpListToolsCompleted() (v BetaResponsesServerEventBetaResponseMcpListToolsWsCompleted) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseMcpListToolsFailed() (v BetaResponsesServerEventBetaResponseMcpListToolsWsFailed) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseMcpListToolsInProgress() (v BetaResponsesServerEventBetaResponseMcpListToolsInWsProgress) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseOutputTextAnnotationAdded() (v BetaResponsesServerEventBetaResponseOutputTextAnnotationWsAdded) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseQueued() (v BetaResponsesServerEventBetaResponseWsQueued) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseCustomToolCallInputDelta() (v BetaResponsesServerEventBetaResponseCustomToolCallInputWsDelta) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsResponseCustomToolCallInputDone() (v BetaResponsesServerEventBetaResponseCustomToolCallInputWsDone) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsBetaResponsesServerEventBetaResponseWsError() (v BetaResponsesServerEventBetaResponseWsError) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsBetaResponseSteerAcceptedEvent() (v BetaResponseSteerAcceptedEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsBetaResponseSteerPendingEvent() (v BetaResponseSteerPendingEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsBetaResponseSteerFailedEvent() (v BetaResponseSteerFailedEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsBetaResponseInjectCreatedEvent() (v BetaResponseInjectCreatedEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsesServerEventUnion) AsBetaResponseInjectFailedEvent() (v BetaResponseInjectFailedEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponsesServerEventUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *BetaResponsesServerEventUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// unmarshalWebsocketEvent decodes only the event selected by its type. Public
+// UnmarshalJSON keeps the existing general-purpose union decoding behavior.
+func (r *BetaResponsesServerEventUnion) unmarshalWebsocketEvent(data []byte) error {
+	var envelope struct {
+		Type string `json:"type"`
+		JSON struct {
+			Type respjson.Field
+		} `json:"-"`
+	}
+	if err := apijson.UnmarshalRoot(data, &envelope); err != nil {
+		return err
+	}
+	eventType := envelope.Type
+	*r = BetaResponsesServerEventUnion{Type: eventType}
+	r.JSON.raw = string(data)
+	r.JSON.Type = envelope.JSON.Type
+	switch eventType {
+	case "response.audio.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseAudioWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseAudioWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.audio.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseAudioWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseAudioWsDone = respjson.NewField(r.JSON.raw)
+	case "response.audio.transcript.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseAudioTranscriptWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseAudioTranscriptWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.audio.transcript.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseAudioTranscriptWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseAudioTranscriptWsDone = respjson.NewField(r.JSON.raw)
+	case "response.code_interpreter_call_code.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.code_interpreter_call_code.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDone = respjson.NewField(r.JSON.raw)
+	case "response.code_interpreter_call.completed":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseCodeInterpreterCallWsCompleted); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseCodeInterpreterCallWsCompleted = respjson.NewField(r.JSON.raw)
+	case "response.code_interpreter_call.in_progress":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseCodeInterpreterCallInWsProgress); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseCodeInterpreterCallInWsProgress = respjson.NewField(r.JSON.raw)
+	case "response.code_interpreter_call.interpreting":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseCodeInterpreterCallWsInterpreting); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseCodeInterpreterCallWsInterpreting = respjson.NewField(r.JSON.raw)
+	case "response.compaction.compacting":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseCompactionWsCompacting); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseCompactionWsCompacting = respjson.NewField(r.JSON.raw)
+	case "response.completed":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseWsCompleted); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseWsCompleted = respjson.NewField(r.JSON.raw)
+	case "response.content_part.added":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseContentPartWsAdded); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseContentPartWsAdded = respjson.NewField(r.JSON.raw)
+	case "response.content_part.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseContentPartWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseContentPartWsDone = respjson.NewField(r.JSON.raw)
+	case "response.created":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseWsCreated); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseWsCreated = respjson.NewField(r.JSON.raw)
+	case "response.file_search_call.completed":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseFileSearchCallWsCompleted); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseFileSearchCallWsCompleted = respjson.NewField(r.JSON.raw)
+	case "response.file_search_call.in_progress":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseFileSearchCallInWsProgress); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseFileSearchCallInWsProgress = respjson.NewField(r.JSON.raw)
+	case "response.file_search_call.searching":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseFileSearchCallWsSearching); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseFileSearchCallWsSearching = respjson.NewField(r.JSON.raw)
+	case "response.function_call_arguments.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.function_call_arguments.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDone = respjson.NewField(r.JSON.raw)
+	case "response.shell_call_command.added":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseShellCallCommandWsAdded); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseShellCallCommandWsAdded = respjson.NewField(r.JSON.raw)
+	case "response.shell_call_command.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseShellCallCommandWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseShellCallCommandWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.shell_call_command.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseShellCallCommandWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseShellCallCommandWsDone = respjson.NewField(r.JSON.raw)
+	case "response.shell_call_output_content.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseShellCallOutputContentWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseShellCallOutputContentWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.shell_call_output_content.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseShellCallOutputContentWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseShellCallOutputContentWsDone = respjson.NewField(r.JSON.raw)
+	case "response.in_progress":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseInWsProgress); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseInWsProgress = respjson.NewField(r.JSON.raw)
+	case "response.failed":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseWsFailed); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseWsFailed = respjson.NewField(r.JSON.raw)
+	case "response.incomplete":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseWsIncomplete); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseWsIncomplete = respjson.NewField(r.JSON.raw)
+	case "response.output_item.added":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseOutputItemWsAdded); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseOutputItemWsAdded = respjson.NewField(r.JSON.raw)
+	case "response.output_item.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseOutputItemWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseOutputItemWsDone = respjson.NewField(r.JSON.raw)
+	case "response.reasoning_summary_part.added":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseReasoningSummaryPartWsAdded); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseReasoningSummaryPartWsAdded = respjson.NewField(r.JSON.raw)
+	case "response.reasoning_summary_part.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseReasoningSummaryPartWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseReasoningSummaryPartWsDone = respjson.NewField(r.JSON.raw)
+	case "response.reasoning_summary_text.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseReasoningSummaryTextWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseReasoningSummaryTextWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.reasoning_summary_text.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseReasoningSummaryTextWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseReasoningSummaryTextWsDone = respjson.NewField(r.JSON.raw)
+	case "response.reasoning_text.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseReasoningTextWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseReasoningTextWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.reasoning_text.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseReasoningTextWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseReasoningTextWsDone = respjson.NewField(r.JSON.raw)
+	case "response.refusal.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseRefusalWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseRefusalWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.refusal.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseRefusalWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseRefusalWsDone = respjson.NewField(r.JSON.raw)
+	case "response.output_text.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseTextWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseTextWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.output_text.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseTextWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseTextWsDone = respjson.NewField(r.JSON.raw)
+	case "response.web_search_call.completed":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseWebSearchCallWsCompleted); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseWebSearchCallWsCompleted = respjson.NewField(r.JSON.raw)
+	case "response.web_search_call.in_progress":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseWebSearchCallInWsProgress); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseWebSearchCallInWsProgress = respjson.NewField(r.JSON.raw)
+	case "response.web_search_call.searching":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseWebSearchCallWsSearching); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseWebSearchCallWsSearching = respjson.NewField(r.JSON.raw)
+	case "response.image_generation_call.completed":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseImageGenCallWsCompleted); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseImageGenCallWsCompleted = respjson.NewField(r.JSON.raw)
+	case "response.image_generation_call.generating":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseImageGenCallWsGenerating); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseImageGenCallWsGenerating = respjson.NewField(r.JSON.raw)
+	case "response.image_generation_call.in_progress":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseImageGenCallInWsProgress); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseImageGenCallInWsProgress = respjson.NewField(r.JSON.raw)
+	case "response.image_generation_call.partial_image":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseImageGenCallPartialWsImage); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseImageGenCallPartialWsImage = respjson.NewField(r.JSON.raw)
+	case "response.mcp_call_arguments.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseMcpCallArgumentsWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseMcpCallArgumentsWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.mcp_call_arguments.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseMcpCallArgumentsWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseMcpCallArgumentsWsDone = respjson.NewField(r.JSON.raw)
+	case "response.mcp_call.completed":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseMcpCallWsCompleted); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseMcpCallWsCompleted = respjson.NewField(r.JSON.raw)
+	case "response.mcp_call.failed":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseMcpCallWsFailed); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseMcpCallWsFailed = respjson.NewField(r.JSON.raw)
+	case "response.mcp_call.in_progress":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseMcpCallInWsProgress); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseMcpCallInWsProgress = respjson.NewField(r.JSON.raw)
+	case "response.mcp_list_tools.completed":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseMcpListToolsWsCompleted); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseMcpListToolsWsCompleted = respjson.NewField(r.JSON.raw)
+	case "response.mcp_list_tools.failed":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseMcpListToolsWsFailed); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseMcpListToolsWsFailed = respjson.NewField(r.JSON.raw)
+	case "response.mcp_list_tools.in_progress":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseMcpListToolsInWsProgress); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseMcpListToolsInWsProgress = respjson.NewField(r.JSON.raw)
+	case "response.output_text.annotation.added":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseOutputTextAnnotationWsAdded); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseOutputTextAnnotationWsAdded = respjson.NewField(r.JSON.raw)
+	case "response.queued":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseWsQueued); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseWsQueued = respjson.NewField(r.JSON.raw)
+	case "response.custom_tool_call_input.delta":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseCustomToolCallInputWsDelta); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseCustomToolCallInputWsDelta = respjson.NewField(r.JSON.raw)
+	case "response.custom_tool_call_input.done":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseCustomToolCallInputWsDone); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseCustomToolCallInputWsDone = respjson.NewField(r.JSON.raw)
+	case "error":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponsesServerEventBetaResponseWsError); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponsesServerEventBetaResponseWsError = respjson.NewField(r.JSON.raw)
+	case "response.steer.accepted":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponseSteerAcceptedEvent); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponseSteerAcceptedEvent = respjson.NewField(r.JSON.raw)
+	case "response.steer.pending":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponseSteerPendingEvent); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponseSteerPendingEvent = respjson.NewField(r.JSON.raw)
+	case "response.steer.failed":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponseSteerFailedEvent); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponseSteerFailedEvent = respjson.NewField(r.JSON.raw)
+	case "response.inject.created":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponseInjectCreatedEvent); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponseInjectCreatedEvent = respjson.NewField(r.JSON.raw)
+	case "response.inject.failed":
+		if err := apijson.UnmarshalRoot(data, &r.OfBetaResponseInjectFailedEvent); err != nil {
+			return err
+		}
+		r.JSON.OfBetaResponseInjectFailedEvent = respjson.NewField(r.JSON.raw)
+	}
+	return nil
+}
+
+// Emitted when there is a partial audio response.
+type BetaResponsesServerEventBetaResponseAudioWsDelta struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseAudioDeltaEventAgent `json:"agent" api:"nullable"`
+	// A chunk of Base64 encoded response audio bytes.
+	Delta string `json:"delta" api:"required"`
+	// A sequence number for this chunk of the stream response.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.audio.delta`.
+	Type constant.ResponseAudioDelta `json:"type" default:"response.audio.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Delta          respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseAudioWsDelta) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseAudioWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the audio response is complete.
+type BetaResponsesServerEventBetaResponseAudioWsDone struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseAudioDoneEventAgent `json:"agent" api:"nullable"`
+	// The sequence number of the delta.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.audio.done`.
+	Type constant.ResponseAudioDone `json:"type" default:"response.audio.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseAudioWsDone) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseAudioWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when there is a partial transcript of audio.
+type BetaResponsesServerEventBetaResponseAudioTranscriptWsDelta struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseAudioTranscriptDeltaEventAgent `json:"agent" api:"nullable"`
+	// The partial transcript of the audio response.
+	Delta string `json:"delta" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.audio.transcript.delta`.
+	Type constant.ResponseAudioTranscriptDelta `json:"type" default:"response.audio.transcript.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Delta          respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseAudioTranscriptWsDelta) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseAudioTranscriptWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the full audio transcript is completed.
+type BetaResponsesServerEventBetaResponseAudioTranscriptWsDone struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseAudioTranscriptDoneEventAgent `json:"agent" api:"nullable"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.audio.transcript.done`.
+	Type constant.ResponseAudioTranscriptDone `json:"type" default:"response.audio.transcript.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseAudioTranscriptWsDone) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseAudioTranscriptWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a partial code snippet is streamed by the code interpreter.
+type BetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDelta struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseCodeInterpreterCallCodeDeltaEventAgent `json:"agent" api:"nullable"`
+	// The partial code snippet being streamed by the code interpreter.
+	Delta string `json:"delta" api:"required"`
+	// The unique identifier of the code interpreter tool call item.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response for which the code is being
+	// streamed.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event, used to order streaming events.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.code_interpreter_call_code.delta`.
+	Type constant.ResponseCodeInterpreterCallCodeDelta `json:"type" default:"response.code_interpreter_call_code.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDelta) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the code snippet is finalized by the code interpreter.
+type BetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDone struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseCodeInterpreterCallCodeDoneEventAgent `json:"agent" api:"nullable"`
+	// The final code snippet output by the code interpreter.
+	Code string `json:"code" api:"required"`
+	// The unique identifier of the code interpreter tool call item.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response for which the code is finalized.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event, used to order streaming events.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.code_interpreter_call_code.done`.
+	Type constant.ResponseCodeInterpreterCallCodeDone `json:"type" default:"response.code_interpreter_call_code.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Code           respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDone) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseCodeInterpreterCallCodeWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the code interpreter call is completed.
+type BetaResponsesServerEventBetaResponseCodeInterpreterCallWsCompleted struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseCodeInterpreterCallCompletedEventAgent `json:"agent" api:"nullable"`
+	// The unique identifier of the code interpreter tool call item.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response for which the code interpreter call
+	// is completed.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event, used to order streaming events.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.code_interpreter_call.completed`.
+	Type constant.ResponseCodeInterpreterCallCompleted `json:"type" default:"response.code_interpreter_call.completed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseCodeInterpreterCallWsCompleted) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseCodeInterpreterCallWsCompleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a code interpreter call is in progress.
+type BetaResponsesServerEventBetaResponseCodeInterpreterCallInWsProgress struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseCodeInterpreterCallInProgressEventAgent `json:"agent" api:"nullable"`
+	// The unique identifier of the code interpreter tool call item.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response for which the code interpreter call
+	// is in progress.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event, used to order streaming events.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.code_interpreter_call.in_progress`.
+	Type constant.ResponseCodeInterpreterCallInProgress `json:"type" default:"response.code_interpreter_call.in_progress"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseCodeInterpreterCallInWsProgress) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseCodeInterpreterCallInWsProgress) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the code interpreter is actively interpreting the code snippet.
+type BetaResponsesServerEventBetaResponseCodeInterpreterCallWsInterpreting struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseCodeInterpreterCallInterpretingEventAgent `json:"agent" api:"nullable"`
+	// The unique identifier of the code interpreter tool call item.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response for which the code interpreter is
+	// interpreting code.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event, used to order streaming events.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.code_interpreter_call.interpreting`.
+	Type constant.ResponseCodeInterpreterCallInterpreting `json:"type" default:"response.code_interpreter_call.interpreting"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseCodeInterpreterCallWsInterpreting) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseCodeInterpreterCallWsInterpreting) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when new summary content is sampled for a compaction trigger. Contains
+// no summary content.
+type BetaResponsesServerEventBetaResponseCompactionWsCompacting struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseCompactionCompactingEventAgent `json:"agent"`
+	// The ID of the compaction output item.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the compaction output item.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the event that was emitted.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event, always `response.compaction.compacting`.
+	Type constant.ResponseCompactionCompacting `json:"type" default:"response.compaction.compacting"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseCompactionWsCompacting) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseCompactionWsCompacting) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the model response is complete.
+type BetaResponsesServerEventBetaResponseWsCompleted struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseCompletedEventAgent `json:"agent" api:"nullable"`
+	// Properties of the completed response.
+	Response BetaResponse `json:"response" api:"required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.completed`.
+	Type constant.ResponseCompleted `json:"type" default:"response.completed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Response       respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseWsCompleted) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseWsCompleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a new content part is added.
+type BetaResponsesServerEventBetaResponseContentPartWsAdded struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseContentPartAddedEventAgent `json:"agent" api:"nullable"`
+	// The index of the content part that was added.
+	ContentIndex int64 `json:"content_index" api:"required"`
+	// The ID of the output item that the content part was added to.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the content part was added to.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The content part that was added.
+	Part BetaResponseContentPartAddedEventPartUnion `json:"part" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.content_part.added`.
+	Type constant.ResponseContentPartAdded `json:"type" default:"response.content_part.added"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ContentIndex   respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		Part           respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseContentPartWsAdded) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseContentPartWsAdded) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a content part is done.
+type BetaResponsesServerEventBetaResponseContentPartWsDone struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseContentPartDoneEventAgent `json:"agent" api:"nullable"`
+	// The index of the content part that is done.
+	ContentIndex int64 `json:"content_index" api:"required"`
+	// The ID of the output item that the content part was added to.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the content part was added to.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The content part that is done.
+	Part BetaResponseContentPartDoneEventPartUnion `json:"part" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.content_part.done`.
+	Type constant.ResponseContentPartDone `json:"type" default:"response.content_part.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ContentIndex   respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		Part           respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseContentPartWsDone) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseContentPartWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An event that is emitted when a response is created.
+type BetaResponsesServerEventBetaResponseWsCreated struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseCreatedEventAgent `json:"agent" api:"nullable"`
+	// The response that was created.
+	Response BetaResponse `json:"response" api:"required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.created`.
+	Type constant.ResponseCreated `json:"type" default:"response.created"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Response       respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseWsCreated) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseWsCreated) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a file search call is completed (results found).
+type BetaResponsesServerEventBetaResponseFileSearchCallWsCompleted struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseFileSearchCallCompletedEventAgent `json:"agent" api:"nullable"`
+	// The ID of the output item that the file search call is initiated.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the file search call is initiated.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.file_search_call.completed`.
+	Type constant.ResponseFileSearchCallCompleted `json:"type" default:"response.file_search_call.completed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseFileSearchCallWsCompleted) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseFileSearchCallWsCompleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a file search call is initiated.
+type BetaResponsesServerEventBetaResponseFileSearchCallInWsProgress struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseFileSearchCallInProgressEventAgent `json:"agent" api:"nullable"`
+	// The ID of the output item that the file search call is initiated.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the file search call is initiated.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.file_search_call.in_progress`.
+	Type constant.ResponseFileSearchCallInProgress `json:"type" default:"response.file_search_call.in_progress"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseFileSearchCallInWsProgress) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseFileSearchCallInWsProgress) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a file search is currently searching.
+type BetaResponsesServerEventBetaResponseFileSearchCallWsSearching struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseFileSearchCallSearchingEventAgent `json:"agent" api:"nullable"`
+	// The ID of the output item that the file search call is initiated.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the file search call is searching.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.file_search_call.searching`.
+	Type constant.ResponseFileSearchCallSearching `json:"type" default:"response.file_search_call.searching"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseFileSearchCallWsSearching) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseFileSearchCallWsSearching) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when there is a partial function-call arguments delta.
+type BetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDelta struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseFunctionCallArgumentsDeltaEventAgent `json:"agent" api:"nullable"`
+	// The function-call arguments delta that is added.
+	Delta string `json:"delta" api:"required"`
+	// The ID of the output item that the function-call arguments delta is added to.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the function-call arguments delta is added to.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.function_call_arguments.delta`.
+	Type constant.ResponseFunctionCallArgumentsDelta `json:"type" default:"response.function_call_arguments.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDelta) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when function-call arguments are finalized.
+type BetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDone struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseFunctionCallArgumentsDoneEventAgent `json:"agent" api:"nullable"`
+	// The function-call arguments.
+	Arguments string `json:"arguments" api:"required"`
+	// The ID of the item.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string                                     `json:"stream_id"`
+	Type     constant.ResponseFunctionCallArgumentsDone `json:"type" default:"response.function_call_arguments.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Arguments      respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDone) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseFunctionCallArgumentsWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A streaming event that indicated a shell command was added to a tool call.
+type BetaResponsesServerEventBetaResponseShellCallCommandWsAdded struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseShellCallCommandAddedEventAgent `json:"agent"`
+	// The shell command that was added.
+	Command string `json:"command" api:"required"`
+	// The index of the shell command that was added.
+	CommandIndex int64 `json:"command_index" api:"required"`
+	// The index of the output item that was updated.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the event that was emitted.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event, always `response.shell_call_command.added`.
+	Type constant.ResponseShellCallCommandAdded `json:"type" default:"response.shell_call_command.added"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Command        respjson.Field
+		CommandIndex   respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseShellCallCommandWsAdded) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseShellCallCommandWsAdded) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A streaming event that indicated a shell command was incrementally updated.
+type BetaResponsesServerEventBetaResponseShellCallCommandWsDelta struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseShellCallCommandDeltaEventAgent `json:"agent"`
+	// The index of the shell command that was updated.
+	CommandIndex int64 `json:"command_index" api:"required"`
+	// The shell command delta that was appended.
+	Delta string `json:"delta" api:"required"`
+	// An obfuscation string that was added to pad the event payload.
+	Obfuscation string `json:"obfuscation"`
+	// The index of the output item that was updated.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the event that was emitted.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event, always `response.shell_call_command.delta`.
+	Type constant.ResponseShellCallCommandDelta `json:"type" default:"response.shell_call_command.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		CommandIndex   respjson.Field
+		Delta          respjson.Field
+		Obfuscation    respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseShellCallCommandWsDelta) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseShellCallCommandWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A streaming event that indicated a shell command was completed.
+type BetaResponsesServerEventBetaResponseShellCallCommandWsDone struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseShellCallCommandDoneEventAgent `json:"agent"`
+	// The final shell command that was emitted.
+	Command string `json:"command" api:"required"`
+	// The index of the shell command that was completed.
+	CommandIndex int64 `json:"command_index" api:"required"`
+	// The index of the output item that was updated.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the event that was emitted.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event, always `response.shell_call_command.done`.
+	Type constant.ResponseShellCallCommandDone `json:"type" default:"response.shell_call_command.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Command        respjson.Field
+		CommandIndex   respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseShellCallCommandWsDone) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseShellCallCommandWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A streaming event that indicated shell call output was incrementally added.
+type BetaResponsesServerEventBetaResponseShellCallOutputContentWsDelta struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseShellCallOutputContentDeltaEventAgent `json:"agent"`
+	// The index of the shell command that produced output.
+	CommandIndex int64 `json:"command_index" api:"required"`
+	// The stdout/stderr delta that was emitted.
+	Delta BetaResponseShellCallOutputContentDeltaEventDelta `json:"delta" api:"required"`
+	// The ID of the output item that was updated.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that was updated.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the event that was emitted.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event, always `response.shell_call_output_content.delta`.
+	Type constant.ResponseShellCallOutputContentDelta `json:"type" default:"response.shell_call_output_content.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		CommandIndex   respjson.Field
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseShellCallOutputContentWsDelta) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseShellCallOutputContentWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A streaming event that indicated shell call output was completed.
+type BetaResponsesServerEventBetaResponseShellCallOutputContentWsDone struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseShellCallOutputContentDoneEventAgent `json:"agent"`
+	// The index of the shell command that produced output.
+	CommandIndex int64 `json:"command_index" api:"required"`
+	// The ID of the output item that was updated.
+	ItemID string `json:"item_id" api:"required"`
+	// The output contents emitted for the shell command.
+	Output []BetaResponseShellCallOutputContentDoneEventOutput `json:"output" api:"required"`
+	// The index of the output item that was updated.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the event that was emitted.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event, always `response.shell_call_output_content.done`.
+	Type constant.ResponseShellCallOutputContentDone `json:"type" default:"response.shell_call_output_content.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		CommandIndex   respjson.Field
+		ItemID         respjson.Field
+		Output         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseShellCallOutputContentWsDone) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseShellCallOutputContentWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the response is in progress.
+type BetaResponsesServerEventBetaResponseInWsProgress struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseInProgressEventAgent `json:"agent" api:"nullable"`
+	// The response that is in progress.
+	Response BetaResponse `json:"response" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.in_progress`.
+	Type constant.ResponseInProgress `json:"type" default:"response.in_progress"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Response       respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseInWsProgress) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseInWsProgress) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An event that is emitted when a response fails.
+type BetaResponsesServerEventBetaResponseWsFailed struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseFailedEventAgent `json:"agent" api:"nullable"`
+	// The response that failed.
+	Response BetaResponse `json:"response" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.failed`.
+	Type constant.ResponseFailed `json:"type" default:"response.failed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Response       respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseWsFailed) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseWsFailed) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An event that is emitted when a response finishes as incomplete.
+//
+// Over WebSocket, steering can finish a response with
+// `response.incomplete_details.reason` set to `steered`, followed automatically by
+// a successor `response.created` that commits the queued steering input.
+type BetaResponsesServerEventBetaResponseWsIncomplete struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseIncompleteEventAgent `json:"agent" api:"nullable"`
+	// The response that was incomplete.
+	Response BetaResponse `json:"response" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.incomplete`.
+	Type constant.ResponseIncomplete `json:"type" default:"response.incomplete"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Response       respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseWsIncomplete) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseWsIncomplete) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a new output item is added.
+type BetaResponsesServerEventBetaResponseOutputItemWsAdded struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseOutputItemAddedEventAgent `json:"agent" api:"nullable"`
+	// The output item that was added. For reasoning items, `encrypted_content` may be
+	// incomplete while the item is in progress. Use the reasoning item from the
+	// corresponding `response.output_item.done` event when passing it as input to a
+	// subsequent request.
+	Item BetaResponseOutputItemUnion `json:"item" api:"required"`
+	// The index of the output item that was added.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.output_item.added`.
+	Type constant.ResponseOutputItemAdded `json:"type" default:"response.output_item.added"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Item           respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseOutputItemWsAdded) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseOutputItemWsAdded) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when an output item is marked done.
+type BetaResponsesServerEventBetaResponseOutputItemWsDone struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseOutputItemDoneEventAgent `json:"agent" api:"nullable"`
+	// The output item that was marked done.
+	Item BetaResponseOutputItemUnion `json:"item" api:"required"`
+	// The index of the output item that was marked done.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.output_item.done`.
+	Type constant.ResponseOutputItemDone `json:"type" default:"response.output_item.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Item           respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseOutputItemWsDone) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseOutputItemWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a new reasoning summary part is added.
+type BetaResponsesServerEventBetaResponseReasoningSummaryPartWsAdded struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseReasoningSummaryPartAddedEventAgent `json:"agent" api:"nullable"`
+	// The ID of the item this summary part is associated with.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item this summary part is associated with.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The summary part that was added.
+	Part BetaResponseReasoningSummaryPartAddedEventPart `json:"part" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The index of the summary part within the reasoning summary.
+	SummaryIndex int64 `json:"summary_index" api:"required"`
+	// The type of the event. Always `response.reasoning_summary_part.added`.
+	Type constant.ResponseReasoningSummaryPartAdded `json:"type" default:"response.reasoning_summary_part.added"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		Part           respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		SummaryIndex   respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseReasoningSummaryPartWsAdded) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseReasoningSummaryPartWsAdded) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a reasoning summary part is completed.
+type BetaResponsesServerEventBetaResponseReasoningSummaryPartWsDone struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseReasoningSummaryPartDoneEventAgent `json:"agent" api:"nullable"`
+	// The ID of the item this summary part is associated with.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item this summary part is associated with.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The completed summary part.
+	Part BetaResponseReasoningSummaryPartDoneEventPart `json:"part" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The completion status of the summary part. Omitted when the part completed
+	// normally and set to `incomplete` when generation was interrupted.
+	//
+	// Any of "incomplete".
+	Status BetaResponseReasoningSummaryPartDoneEventStatus `json:"status"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The index of the summary part within the reasoning summary.
+	SummaryIndex int64 `json:"summary_index" api:"required"`
+	// The type of the event. Always `response.reasoning_summary_part.done`.
+	Type constant.ResponseReasoningSummaryPartDone `json:"type" default:"response.reasoning_summary_part.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		Part           respjson.Field
+		SequenceNumber respjson.Field
+		Status         respjson.Field
+		StreamID       respjson.Field
+		SummaryIndex   respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseReasoningSummaryPartWsDone) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseReasoningSummaryPartWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a delta is added to a reasoning summary text.
+type BetaResponsesServerEventBetaResponseReasoningSummaryTextWsDelta struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseReasoningSummaryTextDeltaEventAgent `json:"agent" api:"nullable"`
+	// The text delta that was added to the summary.
+	Delta string `json:"delta" api:"required"`
+	// The ID of the item this summary text delta is associated with.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item this summary text delta is associated with.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The index of the summary part within the reasoning summary.
+	SummaryIndex int64 `json:"summary_index" api:"required"`
+	// The type of the event. Always `response.reasoning_summary_text.delta`.
+	Type constant.ResponseReasoningSummaryTextDelta `json:"type" default:"response.reasoning_summary_text.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		SummaryIndex   respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseReasoningSummaryTextWsDelta) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseReasoningSummaryTextWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a reasoning summary text is completed.
+type BetaResponsesServerEventBetaResponseReasoningSummaryTextWsDone struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseReasoningSummaryTextDoneEventAgent `json:"agent" api:"nullable"`
+	// The ID of the item this summary text is associated with.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item this summary text is associated with.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The index of the summary part within the reasoning summary.
+	SummaryIndex int64 `json:"summary_index" api:"required"`
+	// The full text of the completed reasoning summary.
+	Text string `json:"text" api:"required"`
+	// The type of the event. Always `response.reasoning_summary_text.done`.
+	Type constant.ResponseReasoningSummaryTextDone `json:"type" default:"response.reasoning_summary_text.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		SummaryIndex   respjson.Field
+		Text           respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseReasoningSummaryTextWsDone) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseReasoningSummaryTextWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a delta is added to a reasoning text.
+type BetaResponsesServerEventBetaResponseReasoningTextWsDelta struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseReasoningTextDeltaEventAgent `json:"agent" api:"nullable"`
+	// The index of the reasoning content part this delta is associated with.
+	ContentIndex int64 `json:"content_index" api:"required"`
+	// The text delta that was added to the reasoning content.
+	Delta string `json:"delta" api:"required"`
+	// The ID of the item this reasoning text delta is associated with.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item this reasoning text delta is associated with.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.reasoning_text.delta`.
+	Type constant.ResponseReasoningTextDelta `json:"type" default:"response.reasoning_text.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ContentIndex   respjson.Field
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseReasoningTextWsDelta) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseReasoningTextWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a reasoning text is completed.
+type BetaResponsesServerEventBetaResponseReasoningTextWsDone struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseReasoningTextDoneEventAgent `json:"agent" api:"nullable"`
+	// The index of the reasoning content part.
+	ContentIndex int64 `json:"content_index" api:"required"`
+	// The ID of the item this reasoning text is associated with.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item this reasoning text is associated with.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The full text of the completed reasoning content.
+	Text string `json:"text" api:"required"`
+	// The type of the event. Always `response.reasoning_text.done`.
+	Type constant.ResponseReasoningTextDone `json:"type" default:"response.reasoning_text.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ContentIndex   respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Text           respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseReasoningTextWsDone) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseReasoningTextWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when there is a partial refusal text.
+type BetaResponsesServerEventBetaResponseRefusalWsDelta struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseRefusalDeltaEventAgent `json:"agent" api:"nullable"`
+	// The index of the content part that the refusal text is added to.
+	ContentIndex int64 `json:"content_index" api:"required"`
+	// The refusal text that is added.
+	Delta string `json:"delta" api:"required"`
+	// The ID of the output item that the refusal text is added to.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the refusal text is added to.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.refusal.delta`.
+	Type constant.ResponseRefusalDelta `json:"type" default:"response.refusal.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ContentIndex   respjson.Field
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseRefusalWsDelta) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseRefusalWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when refusal text is finalized.
+type BetaResponsesServerEventBetaResponseRefusalWsDone struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseRefusalDoneEventAgent `json:"agent" api:"nullable"`
+	// The index of the content part that the refusal text is finalized.
+	ContentIndex int64 `json:"content_index" api:"required"`
+	// The ID of the output item that the refusal text is finalized.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the refusal text is finalized.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The refusal text that is finalized.
+	Refusal string `json:"refusal" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.refusal.done`.
+	Type constant.ResponseRefusalDone `json:"type" default:"response.refusal.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ContentIndex   respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		Refusal        respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseRefusalWsDone) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseRefusalWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when there is an additional text delta.
+type BetaResponsesServerEventBetaResponseTextWsDelta struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseTextDeltaEventAgent `json:"agent" api:"nullable"`
+	// The index of the content part that the text delta was added to.
+	ContentIndex int64 `json:"content_index" api:"required"`
+	// The text delta that was added.
+	Delta string `json:"delta" api:"required"`
+	// The ID of the output item that the text delta was added to.
+	ItemID string `json:"item_id" api:"required"`
+	// The log probabilities of the tokens in the delta.
+	Logprobs []BetaResponseTextDeltaEventLogprob `json:"logprobs" api:"required"`
+	// The index of the output item that the text delta was added to.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.output_text.delta`.
+	Type constant.ResponseOutputTextDelta `json:"type" default:"response.output_text.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ContentIndex   respjson.Field
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		Logprobs       respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseTextWsDelta) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseTextWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when text content is finalized.
+type BetaResponsesServerEventBetaResponseTextWsDone struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseTextDoneEventAgent `json:"agent" api:"nullable"`
+	// The index of the content part that the text content is finalized.
+	ContentIndex int64 `json:"content_index" api:"required"`
+	// The ID of the output item that the text content is finalized.
+	ItemID string `json:"item_id" api:"required"`
+	// The log probabilities of the tokens in the delta.
+	Logprobs []BetaResponseTextDoneEventLogprob `json:"logprobs" api:"required"`
+	// The index of the output item that the text content is finalized.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The text content that is finalized.
+	Text string `json:"text" api:"required"`
+	// The type of the event. Always `response.output_text.done`.
+	Type constant.ResponseOutputTextDone `json:"type" default:"response.output_text.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ContentIndex   respjson.Field
+		ItemID         respjson.Field
+		Logprobs       respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Text           respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseTextWsDone) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseTextWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a web search call is completed.
+type BetaResponsesServerEventBetaResponseWebSearchCallWsCompleted struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseWebSearchCallCompletedEventAgent `json:"agent" api:"nullable"`
+	// Unique ID for the output item associated with the web search call.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the web search call is associated with.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the web search call being processed.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.web_search_call.completed`.
+	Type constant.ResponseWebSearchCallCompleted `json:"type" default:"response.web_search_call.completed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseWebSearchCallWsCompleted) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseWebSearchCallWsCompleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a web search call is initiated.
+type BetaResponsesServerEventBetaResponseWebSearchCallInWsProgress struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseWebSearchCallInProgressEventAgent `json:"agent" api:"nullable"`
+	// Unique ID for the output item associated with the web search call.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the web search call is associated with.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the web search call being processed.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.web_search_call.in_progress`.
+	Type constant.ResponseWebSearchCallInProgress `json:"type" default:"response.web_search_call.in_progress"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseWebSearchCallInWsProgress) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseWebSearchCallInWsProgress) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a web search call is executing.
+type BetaResponsesServerEventBetaResponseWebSearchCallWsSearching struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseWebSearchCallSearchingEventAgent `json:"agent" api:"nullable"`
+	// Unique ID for the output item associated with the web search call.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the web search call is associated with.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the web search call being processed.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `response.web_search_call.searching`.
+	Type constant.ResponseWebSearchCallSearching `json:"type" default:"response.web_search_call.searching"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseWebSearchCallWsSearching) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseWebSearchCallWsSearching) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when an image generation tool call has completed and the final image is
+// available.
+type BetaResponsesServerEventBetaResponseImageGenCallWsCompleted struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseImageGenCallCompletedEventAgent `json:"agent" api:"nullable"`
+	// The unique identifier of the image generation item being processed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response's output array.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.image_generation_call.completed'.
+	Type constant.ResponseImageGenerationCallCompleted `json:"type" default:"response.image_generation_call.completed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseImageGenCallWsCompleted) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseImageGenCallWsCompleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when an image generation tool call is actively generating an image
+// (intermediate state).
+type BetaResponsesServerEventBetaResponseImageGenCallWsGenerating struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseImageGenCallGeneratingEventAgent `json:"agent" api:"nullable"`
+	// The unique identifier of the image generation item being processed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response's output array.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the image generation item being processed.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.image_generation_call.generating'.
+	Type constant.ResponseImageGenerationCallGenerating `json:"type" default:"response.image_generation_call.generating"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseImageGenCallWsGenerating) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseImageGenCallWsGenerating) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when an image generation tool call is in progress.
+type BetaResponsesServerEventBetaResponseImageGenCallInWsProgress struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseImageGenCallInProgressEventAgent `json:"agent" api:"nullable"`
+	// The unique identifier of the image generation item being processed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response's output array.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the image generation item being processed.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.image_generation_call.in_progress'.
+	Type constant.ResponseImageGenerationCallInProgress `json:"type" default:"response.image_generation_call.in_progress"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseImageGenCallInWsProgress) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseImageGenCallInWsProgress) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a partial image is available during image generation streaming.
+type BetaResponsesServerEventBetaResponseImageGenCallPartialWsImage struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseImageGenCallPartialImageEventAgent `json:"agent" api:"nullable"`
+	// The background setting that was used.
+	Background string `json:"background"`
+	// The unique identifier of the image generation item being processed.
+	ItemID string `json:"item_id" api:"required"`
+	// The output format that was used.
+	OutputFormat string `json:"output_format"`
+	// The index of the output item in the response's output array.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// Base64-encoded partial image data, suitable for rendering as an image.
+	PartialImageB64 string `json:"partial_image_b64" api:"required"`
+	// 0-based index for the partial image (backend is 1-based, but this is 0-based for
+	// the user).
+	PartialImageIndex int64 `json:"partial_image_index" api:"required"`
+	// The image quality that was used.
+	Quality string `json:"quality"`
+	// The sequence number of the image generation item being processed.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The image size that was used.
+	Size string `json:"size"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.image_generation_call.partial_image'.
+	Type constant.ResponseImageGenerationCallPartialImage `json:"type" default:"response.image_generation_call.partial_image"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent             respjson.Field
+		Background        respjson.Field
+		ItemID            respjson.Field
+		OutputFormat      respjson.Field
+		OutputIndex       respjson.Field
+		PartialImageB64   respjson.Field
+		PartialImageIndex respjson.Field
+		Quality           respjson.Field
+		SequenceNumber    respjson.Field
+		Size              respjson.Field
+		StreamID          respjson.Field
+		Type              respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseImageGenCallPartialWsImage) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseImageGenCallPartialWsImage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when there is a delta (partial update) to the arguments of an MCP tool
+// call.
+type BetaResponsesServerEventBetaResponseMcpCallArgumentsWsDelta struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseMcpCallArgumentsDeltaEventAgent `json:"agent" api:"nullable"`
+	// A JSON string containing the partial update to the arguments for the MCP tool
+	// call.
+	Delta string `json:"delta" api:"required"`
+	// The unique identifier of the MCP tool call item being processed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response's output array.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.mcp_call_arguments.delta'.
+	Type constant.ResponseMcpCallArgumentsDelta `json:"type" default:"response.mcp_call_arguments.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseMcpCallArgumentsWsDelta) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseMcpCallArgumentsWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the arguments for an MCP tool call are finalized.
+type BetaResponsesServerEventBetaResponseMcpCallArgumentsWsDone struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseMcpCallArgumentsDoneEventAgent `json:"agent" api:"nullable"`
+	// A JSON string containing the finalized arguments for the MCP tool call.
+	Arguments string `json:"arguments" api:"required"`
+	// The unique identifier of the MCP tool call item being processed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response's output array.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.mcp_call_arguments.done'.
+	Type constant.ResponseMcpCallArgumentsDone `json:"type" default:"response.mcp_call_arguments.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Arguments      respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseMcpCallArgumentsWsDone) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseMcpCallArgumentsWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when an MCP tool call has completed successfully.
+type BetaResponsesServerEventBetaResponseMcpCallWsCompleted struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseMcpCallCompletedEventAgent `json:"agent" api:"nullable"`
+	// The ID of the MCP tool call item that completed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that completed.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.mcp_call.completed'.
+	Type constant.ResponseMcpCallCompleted `json:"type" default:"response.mcp_call.completed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseMcpCallWsCompleted) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseMcpCallWsCompleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when an MCP tool call has failed.
+type BetaResponsesServerEventBetaResponseMcpCallWsFailed struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseMcpCallFailedEventAgent `json:"agent" api:"nullable"`
+	// The ID of the MCP tool call item that failed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that failed.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.mcp_call.failed'.
+	Type constant.ResponseMcpCallFailed `json:"type" default:"response.mcp_call.failed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseMcpCallWsFailed) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseMcpCallWsFailed) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when an MCP tool call is in progress.
+type BetaResponsesServerEventBetaResponseMcpCallInWsProgress struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseMcpCallInProgressEventAgent `json:"agent" api:"nullable"`
+	// The unique identifier of the MCP tool call item being processed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response's output array.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.mcp_call.in_progress'.
+	Type constant.ResponseMcpCallInProgress `json:"type" default:"response.mcp_call.in_progress"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseMcpCallInWsProgress) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseMcpCallInWsProgress) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the list of available MCP tools has been successfully retrieved.
+type BetaResponsesServerEventBetaResponseMcpListToolsWsCompleted struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseMcpListToolsCompletedEventAgent `json:"agent" api:"nullable"`
+	// The ID of the MCP tool call item that produced this output.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that was processed.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.mcp_list_tools.completed'.
+	Type constant.ResponseMcpListToolsCompleted `json:"type" default:"response.mcp_list_tools.completed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseMcpListToolsWsCompleted) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseMcpListToolsWsCompleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the attempt to list available MCP tools has failed.
+type BetaResponsesServerEventBetaResponseMcpListToolsWsFailed struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseMcpListToolsFailedEventAgent `json:"agent" api:"nullable"`
+	// The ID of the MCP tool call item that failed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that failed.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.mcp_list_tools.failed'.
+	Type constant.ResponseMcpListToolsFailed `json:"type" default:"response.mcp_list_tools.failed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseMcpListToolsWsFailed) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseMcpListToolsWsFailed) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when the system is in the process of retrieving the list of available
+// MCP tools.
+type BetaResponsesServerEventBetaResponseMcpListToolsInWsProgress struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseMcpListToolsInProgressEventAgent `json:"agent" api:"nullable"`
+	// The ID of the MCP tool call item that is being processed.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that is being processed.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.mcp_list_tools.in_progress'.
+	Type constant.ResponseMcpListToolsInProgress `json:"type" default:"response.mcp_list_tools.in_progress"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseMcpListToolsInWsProgress) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseMcpListToolsInWsProgress) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when an annotation is added to output text content.
+type BetaResponsesServerEventBetaResponseOutputTextAnnotationWsAdded struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseOutputTextAnnotationAddedEventAgent `json:"agent" api:"nullable"`
+	// The annotation object being added. (See annotation schema for details.)
+	Annotation BetaResponseOutputTextAnnotationAddedEventAnnotationUnion `json:"annotation" api:"required"`
+	// The index of the annotation within the content part.
+	AnnotationIndex int64 `json:"annotation_index" api:"required"`
+	// The index of the content part within the output item.
+	ContentIndex int64 `json:"content_index" api:"required"`
+	// The unique identifier of the item to which the annotation is being added.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item in the response's output array.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.output_text.annotation.added'.
+	Type constant.ResponseOutputTextAnnotationAdded `json:"type" default:"response.output_text.annotation.added"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent           respjson.Field
+		Annotation      respjson.Field
+		AnnotationIndex respjson.Field
+		ContentIndex    respjson.Field
+		ItemID          respjson.Field
+		OutputIndex     respjson.Field
+		SequenceNumber  respjson.Field
+		StreamID        respjson.Field
+		Type            respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseOutputTextAnnotationWsAdded) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseOutputTextAnnotationWsAdded) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a response is queued and waiting to be processed.
+type BetaResponsesServerEventBetaResponseWsQueued struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseQueuedEventAgent `json:"agent" api:"nullable"`
+	// The full response object that is queued.
+	Response BetaResponse `json:"response" api:"required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always 'response.queued'.
+	Type constant.ResponseQueued `json:"type" default:"response.queued"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Response       respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseWsQueued) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseWsQueued) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Event representing a delta (partial update) to the input of a custom tool call.
+type BetaResponsesServerEventBetaResponseCustomToolCallInputWsDelta struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseCustomToolCallInputDeltaEventAgent `json:"agent" api:"nullable"`
+	// The incremental input data (delta) for the custom tool call.
+	Delta string `json:"delta" api:"required"`
+	// Unique identifier for the API item associated with this event.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output this delta applies to.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The event type identifier.
+	Type constant.ResponseCustomToolCallInputDelta `json:"type" default:"response.custom_tool_call_input.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseCustomToolCallInputWsDelta) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseCustomToolCallInputWsDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Event indicating that input for a custom tool call is complete.
+type BetaResponsesServerEventBetaResponseCustomToolCallInputWsDone struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponseCustomToolCallInputDoneEventAgent `json:"agent" api:"nullable"`
+	// The complete input data for the custom tool call.
+	Input string `json:"input" api:"required"`
+	// Unique identifier for the API item associated with this event.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output this event applies to.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The event type identifier.
+	Type constant.ResponseCustomToolCallInputDone `json:"type" default:"response.custom_tool_call_input.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Input          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseCustomToolCallInputWsDone) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseCustomToolCallInputWsDone) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when an error occurs while processing a Responses WebSocket request.
+type BetaResponsesServerEventBetaResponseWsError struct {
+	// The agent that owns this multi-agent streaming event.
+	Agent BetaResponsesServerEventBetaResponseWsErrorAgent `json:"agent" api:"nullable"`
+	// Details about the error.
+	Error BetaResponsesServerEventBetaResponseWsErrorError `json:"error" api:"required"`
+	// The sequence number of an error emitted by the response stream.
+	SequenceNumber int64 `json:"sequence_number"`
+	// The HTTP status code associated with a WebSocket protocol error.
+	Status int64 `json:"status"`
+	// The WebSocket lane that emitted this event. This field is present when the
+	// originating `response.create` event supplied a `stream_id`.
+	StreamID string `json:"stream_id"`
+	// The type of the event. Always `error`.
+	Type constant.Error `json:"type" default:"error"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Agent          respjson.Field
+		Error          respjson.Field
+		SequenceNumber respjson.Field
+		Status         respjson.Field
+		StreamID       respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseWsError) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseWsError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Details about the error.
+type BetaResponsesServerEventBetaResponseWsErrorError struct {
+	// The error code that was emitted, if any.
+	Code string `json:"code" api:"required"`
+	// The human-readable error message that was emitted.
+	Message string `json:"message" api:"required"`
+	// The parameter name that was associated with the error, if any.
+	Param string `json:"param" api:"required"`
+	// The error type that was emitted.
+	Type string `json:"type" api:"required"`
+	// The response headers that were emitted with the error, if any.
+	Headers      map[string]string                                            `json:"headers"`
+	Misalignment BetaResponsesServerEventBetaResponseWsErrorErrorMisalignment `json:"misalignment"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code         respjson.Field
+		Message      respjson.Field
+		Param        respjson.Field
+		Type         respjson.Field
+		Headers      respjson.Field
+		Misalignment respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseWsErrorError) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseWsErrorError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponsesServerEventBetaResponseWsErrorErrorMisalignment struct {
+	// The public explanation for this block.
+	DetailedExplanation string `json:"detailed_explanation"`
+	// An optional classification; clients must accept additional values.
+	ErrorType string `json:"error_type"`
+	// An opaque target for explicitly continuing this review, or null when
+	// unavailable.
+	ReviewTarget string `json:"review_target" api:"nullable"`
+	// An optional public continuation instruction.
+	Steer BetaResponsesServerEventBetaResponseWsErrorErrorMisalignmentSteer `json:"steer"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		DetailedExplanation respjson.Field
+		ErrorType           respjson.Field
+		ReviewTarget        respjson.Field
+		Steer               respjson.Field
+		ExtraFields         map[string]respjson.Field
+		raw                 string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseWsErrorErrorMisalignment) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseWsErrorErrorMisalignment) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An optional public continuation instruction.
+type BetaResponsesServerEventBetaResponseWsErrorErrorMisalignmentSteer struct {
+	// The public continuation instruction.
+	Message string `json:"message" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseWsErrorErrorMisalignmentSteer) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsesServerEventBetaResponseWsErrorErrorMisalignmentSteer) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The agent that owns this multi-agent streaming event.
+type BetaResponsesServerEventBetaResponseWsErrorAgent struct {
+	// The canonical name of the agent that produced this item.
+	AgentName string `json:"agent_name" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AgentName   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsesServerEventBetaResponseWsErrorAgent) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsesServerEventBetaResponseWsErrorAgent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type BetaSkillReference struct {
 	// The ID of the referenced skill.
 	SkillID string `json:"skill_id" api:"required"`
@@ -30291,8 +39928,6 @@ func (r *BetaSkillReferenceParam) UnmarshalJSON(data []byte) error {
 // [BetaToolImageGeneration], [BetaToolLocalShell], [BetaFunctionShellTool],
 // [BetaCustomTool], [BetaNamespaceTool], [BetaToolSearchTool],
 // [BetaWebSearchPreviewTool], [BetaApplyPatchTool].
-//
-// Use the [BetaToolUnion.AsAny] method to switch on the variant.
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type BetaToolUnion struct {
@@ -30674,6 +40309,10 @@ type BetaToolMcp struct {
 	// service connectors
 	// [here](https://developers.openai.com/api/docs/guides/tools-connectors-mcp#connectors).
 	//
+	// This field is deprecated for models released after September 1, 2026. Use
+	// `server_url` to connect to a remote MCP server, or `tunnel_id` to connect
+	// through a Secure MCP Tunnel.
+	//
 	// Currently supported `connector_id` values are:
 	//
 	// - Dropbox: `connector_dropbox`
@@ -30688,6 +40327,8 @@ type BetaToolMcp struct {
 	// Any of "connector_dropbox", "connector_gmail", "connector_googlecalendar",
 	// "connector_googledrive", "connector_microsoftteams",
 	// "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint".
+	//
+	// Deprecated: deprecated
 	ConnectorID string `json:"connector_id"`
 	// Whether this MCP tool is deferred and discovered via tool search.
 	DeferLoading bool `json:"defer_loading"`
@@ -31131,9 +40772,9 @@ type BetaToolImageGeneration struct {
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background"`
 	// Control how much effort the model will exert to match the style and features,
-	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1` and `gpt-image-1.5` and later models, unsupported for
-	// `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
+	// especially facial features, of input images. Supports `high` and `low` on
+	// `gpt-image-1` and `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For
+	// `gpt-image-2`, omit this parameter. Defaults to `low` on supported models.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity" api:"nullable"`
@@ -31176,9 +40817,7 @@ type BetaToolImageGeneration struct {
 	// the maximum supported resolution is `3840x2160`. The requested size must also
 	// satisfy the model's current pixel and edge limits. The standard sizes
 	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
-	// `auto` is supported for models that allow automatic sizing. For `dall-e-2`, use
-	// one of `256x256`, `512x512`, or `1024x1024`. For `dall-e-3`, use one of
-	// `1024x1024`, `1792x1024`, or `1024x1792`.
+	// `auto` is supported for models that allow automatic sizing.
 	Size string `json:"size"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -31792,8 +41431,8 @@ func (u betaToolUnionParamFilters) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamFilters) GetKey() *string {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetKey()
+	case *BetaFileSearchToolFiltersComparisonFilterParam:
+		return &vt.Key
 	}
 	return nil
 }
@@ -31801,8 +41440,8 @@ func (u betaToolUnionParamFilters) GetKey() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamFilters) GetValue() *BetaFileSearchToolFiltersComparisonFilterValueUnionParam {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetValue()
+	case *BetaFileSearchToolFiltersComparisonFilterParam:
+		return &vt.Value
 	}
 	return nil
 }
@@ -31810,8 +41449,8 @@ func (u betaToolUnionParamFilters) GetValue() *BetaFileSearchToolFiltersComparis
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamFilters) GetFilters() []BetaFileSearchToolFiltersCompoundFilterFilterUnionParam {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetFilters()
+	case *BetaFileSearchToolFiltersCompoundFilterParam:
+		return vt.Filters
 	}
 	return nil
 }
@@ -31828,8 +41467,10 @@ func (u betaToolUnionParamFilters) GetAllowedDomains() []string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamFilters) GetType() *string {
 	switch vt := u.any.(type) {
-	case *BetaFileSearchToolFiltersUnionParam:
-		return vt.GetType()
+	case *BetaFileSearchToolFiltersComparisonFilterParam:
+		return (*string)(&vt.Type)
+	case *BetaFileSearchToolFiltersCompoundFilterParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -31865,8 +41506,8 @@ func (u betaToolUnionParamEnvironment) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamEnvironment) GetFileIDs() []string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetFileIDs()
+	case *BetaContainerAutoParam:
+		return vt.FileIDs
 	}
 	return nil
 }
@@ -31874,8 +41515,8 @@ func (u betaToolUnionParamEnvironment) GetFileIDs() []string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamEnvironment) GetMemoryLimit() *string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetMemoryLimit()
+	case *BetaContainerAutoParam:
+		return (*string)(&vt.MemoryLimit)
 	}
 	return nil
 }
@@ -31883,8 +41524,8 @@ func (u betaToolUnionParamEnvironment) GetMemoryLimit() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamEnvironment) GetNetworkPolicy() *BetaContainerAutoNetworkPolicyUnionParam {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetNetworkPolicy()
+	case *BetaContainerAutoParam:
+		return &vt.NetworkPolicy
 	}
 	return nil
 }
@@ -31892,8 +41533,8 @@ func (u betaToolUnionParamEnvironment) GetNetworkPolicy() *BetaContainerAutoNetw
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamEnvironment) GetContainerID() *string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetContainerID()
+	case *BetaContainerReferenceParam:
+		return &vt.ContainerID
 	}
 	return nil
 }
@@ -31901,8 +41542,12 @@ func (u betaToolUnionParamEnvironment) GetContainerID() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u betaToolUnionParamEnvironment) GetType() *string {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		return vt.GetType()
+	case *BetaContainerAutoParam:
+		return (*string)(&vt.Type)
+	case *BetaLocalEnvironmentParam:
+		return (*string)(&vt.Type)
+	case *BetaContainerReferenceParam:
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -31912,8 +41557,10 @@ func (u betaToolUnionParamEnvironment) GetType() *string {
 // Or use AsAny() to get the underlying value
 func (u betaToolUnionParamEnvironment) GetSkills() (res betaToolUnionParamEnvironmentSkills) {
 	switch vt := u.any.(type) {
-	case *BetaFunctionShellToolEnvironmentUnionParam:
-		res.any = vt.GetSkills()
+	case *BetaContainerAutoParam:
+		res.any = &vt.Skills
+	case *BetaLocalEnvironmentParam:
+		res.any = &vt.Skills
 	}
 	return res
 }
@@ -32075,6 +41722,10 @@ type BetaToolMcpParam struct {
 	// service connectors
 	// [here](https://developers.openai.com/api/docs/guides/tools-connectors-mcp#connectors).
 	//
+	// This field is deprecated for models released after September 1, 2026. Use
+	// `server_url` to connect to a remote MCP server, or `tunnel_id` to connect
+	// through a Secure MCP Tunnel.
+	//
 	// Currently supported `connector_id` values are:
 	//
 	// - Dropbox: `connector_dropbox`
@@ -32089,6 +41740,8 @@ type BetaToolMcpParam struct {
 	// Any of "connector_dropbox", "connector_gmail", "connector_googlecalendar",
 	// "connector_googledrive", "connector_microsoftteams",
 	// "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint".
+	//
+	// Deprecated: deprecated
 	ConnectorID string `json:"connector_id,omitzero"`
 	// The type of the MCP tool. Always `mcp`.
 	//
@@ -32382,9 +42035,9 @@ type BetaToolImageGenerationParam struct {
 	// to 3.
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
 	// Control how much effort the model will exert to match the style and features,
-	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1` and `gpt-image-1.5` and later models, unsupported for
-	// `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
+	// especially facial features, of input images. Supports `high` and `low` on
+	// `gpt-image-1` and `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For
+	// `gpt-image-2`, omit this parameter. Defaults to `low` on supported models.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,omitzero"`
@@ -32438,9 +42091,7 @@ type BetaToolImageGenerationParam struct {
 	// the maximum supported resolution is `3840x2160`. The requested size must also
 	// satisfy the model's current pixel and edge limits. The standard sizes
 	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
-	// `auto` is supported for models that allow automatic sizing. For `dall-e-2`, use
-	// one of `256x256`, `512x512`, or `1024x1024`. For `dall-e-3`, use one of
-	// `1024x1024`, `1792x1024`, or `1024x1792`.
+	// `auto` is supported for models that allow automatic sizing.
 	Size string `json:"size,omitzero"`
 	// The type of the image generation tool. Always `image_generation`.
 	//
@@ -33007,6 +42658,348 @@ func (r *BetaToolChoiceTypesParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Groups function/custom tools under a shared namespace.
+type BetaToolSearchOutputNamespaceTool struct {
+	// A description of the namespace shown to the model.
+	Description string `json:"description" api:"required"`
+	// The namespace name used in tool calls (for example, `crm`).
+	Name string `json:"name" api:"required"`
+	// The function/custom tools loaded inside this namespace.
+	Tools []BetaToolSearchOutputNamespaceToolToolUnion `json:"tools" api:"required"`
+	// The type of the tool. Always `namespace`.
+	Type constant.Namespace `json:"type" default:"namespace"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Description respjson.Field
+		Name        respjson.Field
+		Tools       respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaToolSearchOutputNamespaceTool) RawJSON() string { return r.JSON.raw }
+func (r *BetaToolSearchOutputNamespaceTool) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this BetaToolSearchOutputNamespaceTool to a
+// BetaToolSearchOutputNamespaceToolParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// BetaToolSearchOutputNamespaceToolParam.Overrides()
+func (r BetaToolSearchOutputNamespaceTool) ToParam() BetaToolSearchOutputNamespaceToolParam {
+	return param.Override[BetaToolSearchOutputNamespaceToolParam](json.RawMessage(r.RawJSON()))
+}
+
+// BetaToolSearchOutputNamespaceToolToolUnion contains all possible properties and
+// values from [BetaToolSearchOutputNamespaceToolToolFunction], [BetaCustomTool].
+//
+// Use the [BetaToolSearchOutputNamespaceToolToolUnion.AsAny] method to switch on
+// the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaToolSearchOutputNamespaceToolToolUnion struct {
+	Name string `json:"name"`
+	// Any of "function", "custom".
+	Type           string   `json:"type"`
+	AllowedCallers []string `json:"allowed_callers"`
+	Async          bool     `json:"async"`
+	DeferLoading   bool     `json:"defer_loading"`
+	Description    string   `json:"description"`
+	// This field is from variant [BetaToolSearchOutputNamespaceToolToolFunction].
+	OutputSchema map[string]any `json:"output_schema"`
+	// This field is from variant [BetaToolSearchOutputNamespaceToolToolFunction].
+	Parameters any `json:"parameters"`
+	// This field is from variant [BetaToolSearchOutputNamespaceToolToolFunction].
+	Strict bool `json:"strict"`
+	// This field is from variant [BetaCustomTool].
+	Format BetaCustomToolFormatUnion `json:"format"`
+	JSON   struct {
+		Name           respjson.Field
+		Type           respjson.Field
+		AllowedCallers respjson.Field
+		Async          respjson.Field
+		DeferLoading   respjson.Field
+		Description    respjson.Field
+		OutputSchema   respjson.Field
+		Parameters     respjson.Field
+		Strict         respjson.Field
+		Format         respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// anyBetaToolSearchOutputNamespaceToolTool is implemented by each variant of
+// [BetaToolSearchOutputNamespaceToolToolUnion] to add type safety for the return
+// type of [BetaToolSearchOutputNamespaceToolToolUnion.AsAny]
+type anyBetaToolSearchOutputNamespaceToolTool interface {
+	implBetaToolSearchOutputNamespaceToolToolUnion()
+}
+
+func (BetaToolSearchOutputNamespaceToolToolFunction) implBetaToolSearchOutputNamespaceToolToolUnion() {
+}
+func (BetaCustomTool) implBetaToolSearchOutputNamespaceToolToolUnion() {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := BetaToolSearchOutputNamespaceToolToolUnion.AsAny().(type) {
+//	case openai.BetaToolSearchOutputNamespaceToolToolFunction:
+//	case openai.BetaCustomTool:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u BetaToolSearchOutputNamespaceToolToolUnion) AsAny() anyBetaToolSearchOutputNamespaceToolTool {
+	switch u.Type {
+	case "function":
+		return u.AsFunction()
+	case "custom":
+		return u.AsCustom()
+	}
+	return nil
+}
+
+func (u BetaToolSearchOutputNamespaceToolToolUnion) AsFunction() (v BetaToolSearchOutputNamespaceToolToolFunction) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaToolSearchOutputNamespaceToolToolUnion) AsCustom() (v BetaCustomTool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaToolSearchOutputNamespaceToolToolUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *BetaToolSearchOutputNamespaceToolToolUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaToolSearchOutputNamespaceToolToolFunction struct {
+	// The name of the loaded function tool.
+	Name string            `json:"name" api:"required"`
+	Type constant.Function `json:"type" default:"function"`
+	// The tool invocation context(s).
+	//
+	// Any of "direct", "programmatic".
+	AllowedCallers []string `json:"allowed_callers" api:"nullable"`
+	// Whether the tool response can be returned asynchronously versus immediately
+	// returned on next response creation.
+	Async bool `json:"async"`
+	// Whether this function should be deferred and discovered via tool search.
+	DeferLoading bool   `json:"defer_loading"`
+	Description  string `json:"description" api:"nullable"`
+	// A JSON Schema describing the JSON value encoded in string outputs for this
+	// function tool. This does not describe content-array outputs.
+	OutputSchema map[string]any `json:"output_schema" api:"nullable"`
+	Parameters   any            `json:"parameters" api:"nullable"`
+	// Whether to enforce strict parameter validation. If omitted, Responses attempts
+	// to use strict validation when the schema is compatible, and falls back to
+	// non-strict validation otherwise.
+	Strict bool `json:"strict" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Name           respjson.Field
+		Type           respjson.Field
+		AllowedCallers respjson.Field
+		Async          respjson.Field
+		DeferLoading   respjson.Field
+		Description    respjson.Field
+		OutputSchema   respjson.Field
+		Parameters     respjson.Field
+		Strict         respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaToolSearchOutputNamespaceToolToolFunction) RawJSON() string { return r.JSON.raw }
+func (r *BetaToolSearchOutputNamespaceToolToolFunction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Groups function/custom tools under a shared namespace.
+//
+// The properties Description, Name, Tools, Type are required.
+type BetaToolSearchOutputNamespaceToolParam struct {
+	// A description of the namespace shown to the model.
+	Description string `json:"description" api:"required"`
+	// The namespace name used in tool calls (for example, `crm`).
+	Name string `json:"name" api:"required"`
+	// The function/custom tools loaded inside this namespace.
+	Tools []BetaToolSearchOutputNamespaceToolToolUnionParam `json:"tools,omitzero" api:"required"`
+	// The type of the tool. Always `namespace`.
+	//
+	// This field can be elided, and will marshal its zero value as "namespace".
+	Type constant.Namespace `json:"type" default:"namespace"`
+	paramObj
+}
+
+func (r BetaToolSearchOutputNamespaceToolParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaToolSearchOutputNamespaceToolParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaToolSearchOutputNamespaceToolParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaToolSearchOutputNamespaceToolToolUnionParam struct {
+	OfFunction *BetaToolSearchOutputNamespaceToolToolFunctionParam `json:",omitzero,inline"`
+	OfCustom   *BetaCustomToolParam                                `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfFunction, u.OfCustom)
+}
+func (u *BetaToolSearchOutputNamespaceToolToolUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetOutputSchema() map[string]any {
+	if vt := u.OfFunction; vt != nil {
+		return vt.OutputSchema
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetParameters() *any {
+	if vt := u.OfFunction; vt != nil {
+		return &vt.Parameters
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetStrict() *bool {
+	if vt := u.OfFunction; vt != nil && vt.Strict.Valid() {
+		return &vt.Strict.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetFormat() *BetaCustomToolFormatUnionParam {
+	if vt := u.OfCustom; vt != nil {
+		return &vt.Format
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetName() *string {
+	if vt := u.OfFunction; vt != nil {
+		return (*string)(&vt.Name)
+	} else if vt := u.OfCustom; vt != nil {
+		return (*string)(&vt.Name)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetType() *string {
+	if vt := u.OfFunction; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCustom; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetAsync() *bool {
+	if vt := u.OfFunction; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
+	} else if vt := u.OfCustom; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetDeferLoading() *bool {
+	if vt := u.OfFunction; vt != nil && vt.DeferLoading.Valid() {
+		return &vt.DeferLoading.Value
+	} else if vt := u.OfCustom; vt != nil && vt.DeferLoading.Valid() {
+		return &vt.DeferLoading.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetDescription() *string {
+	if vt := u.OfFunction; vt != nil && vt.Description.Valid() {
+		return &vt.Description.Value
+	} else if vt := u.OfCustom; vt != nil && vt.Description.Valid() {
+		return &vt.Description.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's AllowedCallers property, if
+// present.
+func (u BetaToolSearchOutputNamespaceToolToolUnionParam) GetAllowedCallers() []string {
+	if vt := u.OfFunction; vt != nil {
+		return vt.AllowedCallers
+	} else if vt := u.OfCustom; vt != nil {
+		return vt.AllowedCallers
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[BetaToolSearchOutputNamespaceToolToolUnionParam](
+		"type",
+		apijson.Discriminator[BetaToolSearchOutputNamespaceToolToolFunctionParam]("function"),
+		apijson.Discriminator[BetaCustomToolParam]("custom"),
+	)
+}
+
+// The properties Name, Type are required.
+type BetaToolSearchOutputNamespaceToolToolFunctionParam struct {
+	// The name of the loaded function tool.
+	Name        string            `json:"name" api:"required"`
+	Description param.Opt[string] `json:"description,omitzero"`
+	// Whether to enforce strict parameter validation. If omitted, Responses attempts
+	// to use strict validation when the schema is compatible, and falls back to
+	// non-strict validation otherwise.
+	Strict param.Opt[bool] `json:"strict,omitzero"`
+	// Whether the tool response can be returned asynchronously versus immediately
+	// returned on next response creation.
+	Async param.Opt[bool] `json:"async,omitzero"`
+	// Whether this function should be deferred and discovered via tool search.
+	DeferLoading param.Opt[bool] `json:"defer_loading,omitzero"`
+	// The tool invocation context(s).
+	//
+	// Any of "direct", "programmatic".
+	AllowedCallers []string `json:"allowed_callers,omitzero"`
+	// A JSON Schema describing the JSON value encoded in string outputs for this
+	// function tool. This does not describe content-array outputs.
+	OutputSchema map[string]any `json:"output_schema,omitzero"`
+	Parameters   any            `json:"parameters,omitzero"`
+	// This field can be elided, and will marshal its zero value as "function".
+	Type constant.Function `json:"type" default:"function"`
+	paramObj
+}
+
+func (r BetaToolSearchOutputNamespaceToolToolFunctionParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaToolSearchOutputNamespaceToolToolFunctionParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaToolSearchOutputNamespaceToolToolFunctionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Hosted or BYOT tool search configuration for deferred tools.
 type BetaToolSearchTool struct {
 	// The type of the tool. Always `tool_search`.
@@ -33096,7 +43089,9 @@ type BetaWebSearchPreviewTool struct {
 	//
 	// Any of "low", "medium", "high".
 	SearchContextSize BetaWebSearchPreviewToolSearchContextSize `json:"search_context_size"`
-	// The user's location.
+	// The approximate location of the user. If omitted or null, defaults to the United
+	// States. To avoid this fallback, pass `{"type": "approximate"}` without location
+	// fields. To localize results, provide the relevant location fields.
 	UserLocation BetaWebSearchPreviewToolUserLocation `json:"user_location" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -33144,7 +43139,9 @@ const (
 	BetaWebSearchPreviewToolSearchContextSizeHigh   BetaWebSearchPreviewToolSearchContextSize = "high"
 )
 
-// The user's location.
+// The approximate location of the user. If omitted or null, defaults to the United
+// States. To avoid this fallback, pass `{"type": "approximate"}` without location
+// fields. To localize results, provide the relevant location fields.
 type BetaWebSearchPreviewToolUserLocation struct {
 	// The type of location approximation. Always `approximate`.
 	Type constant.Approximate `json:"type" default:"approximate"`
@@ -33187,7 +43184,9 @@ type BetaWebSearchPreviewToolParam struct {
 	//
 	// Any of "web_search_preview", "web_search_preview_2025_03_11".
 	Type BetaWebSearchPreviewToolType `json:"type,omitzero" api:"required"`
-	// The user's location.
+	// The approximate location of the user. If omitted or null, defaults to the United
+	// States. To avoid this fallback, pass `{"type": "approximate"}` without location
+	// fields. To localize results, provide the relevant location fields.
 	UserLocation BetaWebSearchPreviewToolUserLocationParam `json:"user_location,omitzero"`
 	// Any of "text", "image".
 	SearchContentTypes []string `json:"search_content_types,omitzero"`
@@ -33207,7 +43206,9 @@ func (r *BetaWebSearchPreviewToolParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The user's location.
+// The approximate location of the user. If omitted or null, defaults to the United
+// States. To avoid this fallback, pass `{"type": "approximate"}` without location
+// fields. To localize results, provide the relevant location fields.
 //
 // The property Type is required.
 type BetaWebSearchPreviewToolUserLocationParam struct {
@@ -33254,7 +43255,9 @@ type BetaWebSearchTool struct {
 	//
 	// Any of "low", "medium", "high".
 	SearchContextSize BetaWebSearchToolSearchContextSize `json:"search_context_size"`
-	// The approximate location of the user.
+	// The approximate location of the user. If omitted or null, defaults to the United
+	// States. To avoid this fallback, pass `{"type": "approximate"}` without location
+	// fields. To localize results, provide the relevant location fields.
 	UserLocation BetaWebSearchToolUserLocation `json:"user_location" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -33322,7 +43325,9 @@ const (
 	BetaWebSearchToolSearchContextSizeHigh   BetaWebSearchToolSearchContextSize = "high"
 )
 
-// The approximate location of the user.
+// The approximate location of the user. If omitted or null, defaults to the United
+// States. To avoid this fallback, pass `{"type": "approximate"}` without location
+// fields. To localize results, provide the relevant location fields.
 type BetaWebSearchToolUserLocation struct {
 	// Free text input for the city of the user, e.g. `San Francisco`.
 	City string `json:"city" api:"nullable"`
@@ -33371,7 +43376,9 @@ type BetaWebSearchToolParam struct {
 	ExternalWebAccess param.Opt[bool] `json:"external_web_access,omitzero"`
 	// Filters for the search.
 	Filters BetaWebSearchToolFiltersParam `json:"filters,omitzero"`
-	// The approximate location of the user.
+	// The approximate location of the user. If omitted or null, defaults to the United
+	// States. To avoid this fallback, pass `{"type": "approximate"}` without location
+	// fields. To localize results, provide the relevant location fields.
 	UserLocation BetaWebSearchToolUserLocationParam `json:"user_location,omitzero"`
 	// High level guidance for the amount of context window space to use for the
 	// search. One of `low`, `medium`, or `high`. `medium` is the default.
@@ -33407,7 +43414,9 @@ func (r *BetaWebSearchToolFiltersParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The approximate location of the user.
+// The approximate location of the user. If omitted or null, defaults to the United
+// States. To avoid this fallback, pass `{"type": "approximate"}` without location
+// fields. To localize results, provide the relevant location fields.
 type BetaWebSearchToolUserLocationParam struct {
 	// Free text input for the city of the user, e.g. `San Francisco`.
 	City param.Opt[string] `json:"city,omitzero"`
@@ -33472,7 +43481,7 @@ type BetaResponseNewParams struct {
 	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
 	// A stable identifier used to help detect users of your application that may be
 	// violating OpenAI's usage policies. The IDs should be a string that uniquely
-	// identifies each user, with a maximum length of 64 characters. We recommend
+	// identifies each user, with a maximum length of 128 characters. We recommend
 	// hashing their username or email address, in order to avoid sending us any
 	// identifying information.
 	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
@@ -33607,6 +43616,8 @@ type BetaResponseNewParams struct {
 	//
 	// Any of "auto", "disabled".
 	Truncation BetaResponseNewParamsTruncation `json:"truncation,omitzero"`
+	// Domain-specific access programs to use for this request.
+	AccessPrograms BetaResponseNewParamsAccessPrograms `json:"access_programs,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
 	//
 	// Learn more:
@@ -33677,6 +43688,38 @@ func (r *BetaResponseNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Domain-specific access programs to use for this request.
+type BetaResponseNewParamsAccessPrograms struct {
+	// The Cyber access program to use for this request. Supported values are
+	// `standard`, `daybreak_blue`, and `daybreak_red`. If omitted, the API resolves
+	// the program from the model's Cyber tier and your organization and project
+	// access, subject to model-specific eligibility restrictions. By default, models
+	// without a Cyber tier use Standard. Blue-tier models use Daybreak Blue when
+	// authorized; otherwise they fall back to Standard unless the model requires
+	// Daybreak access. Red-tier models use Daybreak Red and require authorization.
+	// Requests that require unavailable Daybreak access return 403. An implicit
+	// Standard fallback is represented by null in the response's access_programs
+	// field, rather than an explicit Standard selection.
+	//
+	// Any of "standard", "daybreak_blue", "daybreak_red".
+	Cyber string `json:"cyber,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseNewParamsAccessPrograms) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseNewParamsAccessPrograms
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseNewParamsAccessPrograms) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseNewParamsAccessPrograms](
+		"cyber", "standard", "daybreak_blue", "daybreak_red",
+	)
+}
+
 // The property Type is required.
 type BetaResponseNewParamsContextManagement struct {
 	// The context management entry type. Currently only 'compaction' is supported.
@@ -33734,109 +43777,368 @@ func (u *BetaResponseNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 type BetaResponseNewParamsModel string
 
 const (
-	BetaResponseNewParamsModelGPT6Astra                        BetaResponseNewParamsModel = "gpt-6-astra"
-	BetaResponseNewParamsModelGPT5_6Sol                        BetaResponseNewParamsModel = "gpt-5.6-sol"
-	BetaResponseNewParamsModelGPT5_6Terra                      BetaResponseNewParamsModel = "gpt-5.6-terra"
-	BetaResponseNewParamsModelGPT5_6Luna                       BetaResponseNewParamsModel = "gpt-5.6-luna"
-	BetaResponseNewParamsModelGPT5_5                           BetaResponseNewParamsModel = "gpt-5.5"
-	BetaResponseNewParamsModelGPT5_5_2026_04_23                BetaResponseNewParamsModel = "gpt-5.5-2026-04-23"
-	BetaResponseNewParamsModelGPT5_4                           BetaResponseNewParamsModel = "gpt-5.4"
-	BetaResponseNewParamsModelGPT5_4Mini                       BetaResponseNewParamsModel = "gpt-5.4-mini"
-	BetaResponseNewParamsModelGPT5_4Nano                       BetaResponseNewParamsModel = "gpt-5.4-nano"
-	BetaResponseNewParamsModelGPT5_4Mini2026_03_17             BetaResponseNewParamsModel = "gpt-5.4-mini-2026-03-17"
-	BetaResponseNewParamsModelGPT5_4Nano2026_03_17             BetaResponseNewParamsModel = "gpt-5.4-nano-2026-03-17"
-	BetaResponseNewParamsModelGPT5_3ChatLatest                 BetaResponseNewParamsModel = "gpt-5.3-chat-latest"
-	BetaResponseNewParamsModelGPT5_2                           BetaResponseNewParamsModel = "gpt-5.2"
-	BetaResponseNewParamsModelGPT5_2_2025_12_11                BetaResponseNewParamsModel = "gpt-5.2-2025-12-11"
-	BetaResponseNewParamsModelGPT5_2ChatLatest                 BetaResponseNewParamsModel = "gpt-5.2-chat-latest"
-	BetaResponseNewParamsModelGPT5_2Pro                        BetaResponseNewParamsModel = "gpt-5.2-pro"
-	BetaResponseNewParamsModelGPT5_2Pro2025_12_11              BetaResponseNewParamsModel = "gpt-5.2-pro-2025-12-11"
-	BetaResponseNewParamsModelGPT5_1                           BetaResponseNewParamsModel = "gpt-5.1"
-	BetaResponseNewParamsModelGPT5_1_2025_11_13                BetaResponseNewParamsModel = "gpt-5.1-2025-11-13"
-	BetaResponseNewParamsModelGPT5_1Codex                      BetaResponseNewParamsModel = "gpt-5.1-codex"
-	BetaResponseNewParamsModelGPT5_1Mini                       BetaResponseNewParamsModel = "gpt-5.1-mini"
-	BetaResponseNewParamsModelGPT5_1ChatLatest                 BetaResponseNewParamsModel = "gpt-5.1-chat-latest"
-	BetaResponseNewParamsModelGPT5                             BetaResponseNewParamsModel = "gpt-5"
-	BetaResponseNewParamsModelGPT5Mini                         BetaResponseNewParamsModel = "gpt-5-mini"
-	BetaResponseNewParamsModelGPT5Nano                         BetaResponseNewParamsModel = "gpt-5-nano"
-	BetaResponseNewParamsModelGPT5_2025_08_07                  BetaResponseNewParamsModel = "gpt-5-2025-08-07"
-	BetaResponseNewParamsModelGPT5Mini2025_08_07               BetaResponseNewParamsModel = "gpt-5-mini-2025-08-07"
-	BetaResponseNewParamsModelGPT5Nano2025_08_07               BetaResponseNewParamsModel = "gpt-5-nano-2025-08-07"
-	BetaResponseNewParamsModelGPT5ChatLatest                   BetaResponseNewParamsModel = "gpt-5-chat-latest"
-	BetaResponseNewParamsModelGPT4_1                           BetaResponseNewParamsModel = "gpt-4.1"
-	BetaResponseNewParamsModelGPT4_1Mini                       BetaResponseNewParamsModel = "gpt-4.1-mini"
-	BetaResponseNewParamsModelGPT4_1Nano                       BetaResponseNewParamsModel = "gpt-4.1-nano"
-	BetaResponseNewParamsModelGPT4_1_2025_04_14                BetaResponseNewParamsModel = "gpt-4.1-2025-04-14"
-	BetaResponseNewParamsModelGPT4_1Mini2025_04_14             BetaResponseNewParamsModel = "gpt-4.1-mini-2025-04-14"
-	BetaResponseNewParamsModelGPT4_1Nano2025_04_14             BetaResponseNewParamsModel = "gpt-4.1-nano-2025-04-14"
-	BetaResponseNewParamsModelO4Mini                           BetaResponseNewParamsModel = "o4-mini"
-	BetaResponseNewParamsModelO4Mini2025_04_16                 BetaResponseNewParamsModel = "o4-mini-2025-04-16"
-	BetaResponseNewParamsModelO3                               BetaResponseNewParamsModel = "o3"
-	BetaResponseNewParamsModelO3_2025_04_16                    BetaResponseNewParamsModel = "o3-2025-04-16"
-	BetaResponseNewParamsModelO3Mini                           BetaResponseNewParamsModel = "o3-mini"
-	BetaResponseNewParamsModelO3Mini2025_01_31                 BetaResponseNewParamsModel = "o3-mini-2025-01-31"
-	BetaResponseNewParamsModelO1                               BetaResponseNewParamsModel = "o1"
-	BetaResponseNewParamsModelO1_2024_12_17                    BetaResponseNewParamsModel = "o1-2024-12-17"
-	BetaResponseNewParamsModelO1Preview                        BetaResponseNewParamsModel = "o1-preview"
-	BetaResponseNewParamsModelO1Preview2024_09_12              BetaResponseNewParamsModel = "o1-preview-2024-09-12"
-	BetaResponseNewParamsModelO1Mini                           BetaResponseNewParamsModel = "o1-mini"
-	BetaResponseNewParamsModelO1Mini2024_09_12                 BetaResponseNewParamsModel = "o1-mini-2024-09-12"
-	BetaResponseNewParamsModelGPT4o                            BetaResponseNewParamsModel = "gpt-4o"
-	BetaResponseNewParamsModelGPT4o2024_11_20                  BetaResponseNewParamsModel = "gpt-4o-2024-11-20"
-	BetaResponseNewParamsModelGPT4o2024_08_06                  BetaResponseNewParamsModel = "gpt-4o-2024-08-06"
-	BetaResponseNewParamsModelGPT4o2024_05_13                  BetaResponseNewParamsModel = "gpt-4o-2024-05-13"
-	BetaResponseNewParamsModelGPT4oAudioPreview                BetaResponseNewParamsModel = "gpt-4o-audio-preview"
-	BetaResponseNewParamsModelGPT4oAudioPreview2024_10_01      BetaResponseNewParamsModel = "gpt-4o-audio-preview-2024-10-01"
-	BetaResponseNewParamsModelGPT4oAudioPreview2024_12_17      BetaResponseNewParamsModel = "gpt-4o-audio-preview-2024-12-17"
-	BetaResponseNewParamsModelGPT4oAudioPreview2025_06_03      BetaResponseNewParamsModel = "gpt-4o-audio-preview-2025-06-03"
-	BetaResponseNewParamsModelGPT4oMiniAudioPreview            BetaResponseNewParamsModel = "gpt-4o-mini-audio-preview"
-	BetaResponseNewParamsModelGPT4oMiniAudioPreview2024_12_17  BetaResponseNewParamsModel = "gpt-4o-mini-audio-preview-2024-12-17"
-	BetaResponseNewParamsModelGPT4oSearchPreview               BetaResponseNewParamsModel = "gpt-4o-search-preview"
-	BetaResponseNewParamsModelGPT4oMiniSearchPreview           BetaResponseNewParamsModel = "gpt-4o-mini-search-preview"
-	BetaResponseNewParamsModelGPT4oSearchPreview2025_03_11     BetaResponseNewParamsModel = "gpt-4o-search-preview-2025-03-11"
+	BetaResponseNewParamsModelGPT6Astra         BetaResponseNewParamsModel = "gpt-6-astra"
+	BetaResponseNewParamsModelGPT6_1Sol         BetaResponseNewParamsModel = "gpt-6.1-sol"
+	BetaResponseNewParamsModelGPT6Sol           BetaResponseNewParamsModel = "gpt-6-sol"
+	BetaResponseNewParamsModelGPT6Luna          BetaResponseNewParamsModel = "gpt-6-luna"
+	BetaResponseNewParamsModelGPT5_6Sol         BetaResponseNewParamsModel = "gpt-5.6-sol"
+	BetaResponseNewParamsModelGPT5_6Terra       BetaResponseNewParamsModel = "gpt-5.6-terra"
+	BetaResponseNewParamsModelGPT5_6Luna        BetaResponseNewParamsModel = "gpt-5.6-luna"
+	BetaResponseNewParamsModelGPT5_5            BetaResponseNewParamsModel = "gpt-5.5"
+	BetaResponseNewParamsModelGPT5_5_2026_04_23 BetaResponseNewParamsModel = "gpt-5.5-2026-04-23"
+	BetaResponseNewParamsModelGPT5_4            BetaResponseNewParamsModel = "gpt-5.4"
+	BetaResponseNewParamsModelGPT5_4Mini        BetaResponseNewParamsModel = "gpt-5.4-mini"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5_4Nano           BetaResponseNewParamsModel = "gpt-5.4-nano"
+	BetaResponseNewParamsModelGPT5_4Mini2026_03_17 BetaResponseNewParamsModel = "gpt-5.4-mini-2026-03-17"
+	BetaResponseNewParamsModelGPT5_4Nano2026_03_17 BetaResponseNewParamsModel = "gpt-5.4-nano-2026-03-17"
+	// Deprecated: Announced shutdown date: 2026-08-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5_3ChatLatest  BetaResponseNewParamsModel = "gpt-5.3-chat-latest"
+	BetaResponseNewParamsModelGPT5_2            BetaResponseNewParamsModel = "gpt-5.2"
+	BetaResponseNewParamsModelGPT5_2_2025_12_11 BetaResponseNewParamsModel = "gpt-5.2-2025-12-11"
+	// Deprecated: Announced shutdown date: 2026-08-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5_2ChatLatest    BetaResponseNewParamsModel = "gpt-5.2-chat-latest"
+	BetaResponseNewParamsModelGPT5_2Pro           BetaResponseNewParamsModel = "gpt-5.2-pro"
+	BetaResponseNewParamsModelGPT5_2Pro2025_12_11 BetaResponseNewParamsModel = "gpt-5.2-pro-2025-12-11"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5_1            BetaResponseNewParamsModel = "gpt-5.1"
+	BetaResponseNewParamsModelGPT5_1_2025_11_13 BetaResponseNewParamsModel = "gpt-5.1-2025-11-13"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5_1Codex BetaResponseNewParamsModel = "gpt-5.1-codex"
+	// Deprecated: Not a supported model ID. Retained for SDK compatibility.
+	BetaResponseNewParamsModelGPT5_1Mini BetaResponseNewParamsModel = "gpt-5.1-mini"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5_1ChatLatest BetaResponseNewParamsModel = "gpt-5.1-chat-latest"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5 BetaResponseNewParamsModel = "gpt-5"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5Mini BetaResponseNewParamsModel = "gpt-5-mini"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5Nano BetaResponseNewParamsModel = "gpt-5-nano"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5_2025_08_07 BetaResponseNewParamsModel = "gpt-5-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5Mini2025_08_07 BetaResponseNewParamsModel = "gpt-5-mini-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5Nano2025_08_07 BetaResponseNewParamsModel = "gpt-5-nano-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5ChatLatest BetaResponseNewParamsModel = "gpt-5-chat-latest"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_1 BetaResponseNewParamsModel = "gpt-4.1"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_1Mini BetaResponseNewParamsModel = "gpt-4.1-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_1Nano BetaResponseNewParamsModel = "gpt-4.1-nano"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_1_2025_04_14 BetaResponseNewParamsModel = "gpt-4.1-2025-04-14"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_1Mini2025_04_14 BetaResponseNewParamsModel = "gpt-4.1-mini-2025-04-14"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_1Nano2025_04_14 BetaResponseNewParamsModel = "gpt-4.1-nano-2025-04-14"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO4Mini BetaResponseNewParamsModel = "o4-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO4Mini2025_04_16 BetaResponseNewParamsModel = "o4-mini-2025-04-16"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO3 BetaResponseNewParamsModel = "o3"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO3_2025_04_16 BetaResponseNewParamsModel = "o3-2025-04-16"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO3Mini BetaResponseNewParamsModel = "o3-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO3Mini2025_01_31 BetaResponseNewParamsModel = "o3-mini-2025-01-31"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO1 BetaResponseNewParamsModel = "o1"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO1_2024_12_17 BetaResponseNewParamsModel = "o1-2024-12-17"
+	// Deprecated: Announced shutdown date: 2025-07-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO1Preview BetaResponseNewParamsModel = "o1-preview"
+	// Deprecated: Announced shutdown date: 2025-07-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO1Preview2024_09_12 BetaResponseNewParamsModel = "o1-preview-2024-09-12"
+	// Deprecated: Announced shutdown date: 2025-10-27. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO1Mini BetaResponseNewParamsModel = "o1-mini"
+	// Deprecated: Announced shutdown date: 2025-10-27. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO1Mini2024_09_12 BetaResponseNewParamsModel = "o1-mini-2024-09-12"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4o BetaResponseNewParamsModel = "gpt-4o"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4o2024_11_20 BetaResponseNewParamsModel = "gpt-4o-2024-11-20"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4o2024_08_06 BetaResponseNewParamsModel = "gpt-4o-2024-08-06"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4o2024_05_13 BetaResponseNewParamsModel = "gpt-4o-2024-05-13"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPTAudioMini BetaResponseNewParamsModel = "gpt-audio-mini"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPTAudioMini2025_12_15 BetaResponseNewParamsModel = "gpt-audio-mini-2025-12-15"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oAudioPreview BetaResponseNewParamsModel = "gpt-4o-audio-preview"
+	// Deprecated: Announced shutdown date: 2025-10-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oAudioPreview2024_10_01 BetaResponseNewParamsModel = "gpt-4o-audio-preview-2024-10-01"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oAudioPreview2024_12_17 BetaResponseNewParamsModel = "gpt-4o-audio-preview-2024-12-17"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oAudioPreview2025_06_03 BetaResponseNewParamsModel = "gpt-4o-audio-preview-2025-06-03"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oMiniAudioPreview BetaResponseNewParamsModel = "gpt-4o-mini-audio-preview"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oMiniAudioPreview2024_12_17 BetaResponseNewParamsModel = "gpt-4o-mini-audio-preview-2024-12-17"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oSearchPreview BetaResponseNewParamsModel = "gpt-4o-search-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oMiniSearchPreview BetaResponseNewParamsModel = "gpt-4o-mini-search-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oSearchPreview2025_03_11 BetaResponseNewParamsModel = "gpt-4o-search-preview-2025-03-11"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponseNewParamsModelGPT4oMiniSearchPreview2025_03_11 BetaResponseNewParamsModel = "gpt-4o-mini-search-preview-2025-03-11"
-	BetaResponseNewParamsModelChatgpt4oLatest                  BetaResponseNewParamsModel = "chatgpt-4o-latest"
-	BetaResponseNewParamsModelCodexMiniLatest                  BetaResponseNewParamsModel = "codex-mini-latest"
-	BetaResponseNewParamsModelGPT4oMini                        BetaResponseNewParamsModel = "gpt-4o-mini"
-	BetaResponseNewParamsModelGPT4oMini2024_07_18              BetaResponseNewParamsModel = "gpt-4o-mini-2024-07-18"
-	BetaResponseNewParamsModelGPT4Turbo                        BetaResponseNewParamsModel = "gpt-4-turbo"
-	BetaResponseNewParamsModelGPT4Turbo2024_04_09              BetaResponseNewParamsModel = "gpt-4-turbo-2024-04-09"
-	BetaResponseNewParamsModelGPT4_0125Preview                 BetaResponseNewParamsModel = "gpt-4-0125-preview"
-	BetaResponseNewParamsModelGPT4TurboPreview                 BetaResponseNewParamsModel = "gpt-4-turbo-preview"
-	BetaResponseNewParamsModelGPT4_1106Preview                 BetaResponseNewParamsModel = "gpt-4-1106-preview"
-	BetaResponseNewParamsModelGPT4VisionPreview                BetaResponseNewParamsModel = "gpt-4-vision-preview"
-	BetaResponseNewParamsModelGPT4                             BetaResponseNewParamsModel = "gpt-4"
-	BetaResponseNewParamsModelGPT4_0314                        BetaResponseNewParamsModel = "gpt-4-0314"
-	BetaResponseNewParamsModelGPT4_0613                        BetaResponseNewParamsModel = "gpt-4-0613"
-	BetaResponseNewParamsModelGPT4_32k                         BetaResponseNewParamsModel = "gpt-4-32k"
-	BetaResponseNewParamsModelGPT4_32k0314                     BetaResponseNewParamsModel = "gpt-4-32k-0314"
-	BetaResponseNewParamsModelGPT4_32k0613                     BetaResponseNewParamsModel = "gpt-4-32k-0613"
-	BetaResponseNewParamsModelGPT3_5Turbo                      BetaResponseNewParamsModel = "gpt-3.5-turbo"
-	BetaResponseNewParamsModelGPT3_5Turbo16k                   BetaResponseNewParamsModel = "gpt-3.5-turbo-16k"
-	BetaResponseNewParamsModelGPT3_5Turbo0301                  BetaResponseNewParamsModel = "gpt-3.5-turbo-0301"
-	BetaResponseNewParamsModelGPT3_5Turbo0613                  BetaResponseNewParamsModel = "gpt-3.5-turbo-0613"
-	BetaResponseNewParamsModelGPT3_5Turbo1106                  BetaResponseNewParamsModel = "gpt-3.5-turbo-1106"
-	BetaResponseNewParamsModelGPT3_5Turbo0125                  BetaResponseNewParamsModel = "gpt-3.5-turbo-0125"
-	BetaResponseNewParamsModelGPT3_5Turbo16k0613               BetaResponseNewParamsModel = "gpt-3.5-turbo-16k-0613"
-	BetaResponseNewParamsModelO1Pro                            BetaResponseNewParamsModel = "o1-pro"
-	BetaResponseNewParamsModelO1Pro2025_03_19                  BetaResponseNewParamsModel = "o1-pro-2025-03-19"
-	BetaResponseNewParamsModelO3Pro                            BetaResponseNewParamsModel = "o3-pro"
-	BetaResponseNewParamsModelO3Pro2025_06_10                  BetaResponseNewParamsModel = "o3-pro-2025-06-10"
-	BetaResponseNewParamsModelO3DeepResearch                   BetaResponseNewParamsModel = "o3-deep-research"
-	BetaResponseNewParamsModelO3DeepResearch2025_06_26         BetaResponseNewParamsModel = "o3-deep-research-2025-06-26"
-	BetaResponseNewParamsModelO4MiniDeepResearch               BetaResponseNewParamsModel = "o4-mini-deep-research"
-	BetaResponseNewParamsModelO4MiniDeepResearch2025_06_26     BetaResponseNewParamsModel = "o4-mini-deep-research-2025-06-26"
-	BetaResponseNewParamsModelComputerUsePreview               BetaResponseNewParamsModel = "computer-use-preview"
-	BetaResponseNewParamsModelComputerUsePreview2025_03_11     BetaResponseNewParamsModel = "computer-use-preview-2025-03-11"
-	BetaResponseNewParamsModelGPT5_5Pro                        BetaResponseNewParamsModel = "gpt-5.5-pro"
-	BetaResponseNewParamsModelGPT5_5Pro2026_04_23              BetaResponseNewParamsModel = "gpt-5.5-pro-2026-04-23"
-	BetaResponseNewParamsModelGPT5Codex                        BetaResponseNewParamsModel = "gpt-5-codex"
-	BetaResponseNewParamsModelGPT5Pro                          BetaResponseNewParamsModel = "gpt-5-pro"
-	BetaResponseNewParamsModelGPT5Pro2025_10_06                BetaResponseNewParamsModel = "gpt-5-pro-2025-10-06"
-	BetaResponseNewParamsModelGPT5_1CodexMax                   BetaResponseNewParamsModel = "gpt-5.1-codex-max"
-	BetaResponseNewParamsModelGPTDaybreakBlueLatest            BetaResponseNewParamsModel = "gpt-daybreak-blue-latest"
-	BetaResponseNewParamsModelGPTDaybreakRedLatest             BetaResponseNewParamsModel = "gpt-daybreak-red-latest"
-	BetaResponseNewParamsModelGPT5_6Cyber                      BetaResponseNewParamsModel = "gpt-5.6-cyber"
+	// Deprecated: Announced shutdown date: 2026-02-17. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelChatgpt4oLatest BetaResponseNewParamsModel = "chatgpt-4o-latest"
+	// Deprecated: Announced shutdown date: 2026-02-12. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelCodexMiniLatest BetaResponseNewParamsModel = "codex-mini-latest"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oMini BetaResponseNewParamsModel = "gpt-4o-mini"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4oMini2024_07_18 BetaResponseNewParamsModel = "gpt-4o-mini-2024-07-18"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4Turbo BetaResponseNewParamsModel = "gpt-4-turbo"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4Turbo2024_04_09 BetaResponseNewParamsModel = "gpt-4-turbo-2024-04-09"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_0125Preview BetaResponseNewParamsModel = "gpt-4-0125-preview"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4TurboPreview BetaResponseNewParamsModel = "gpt-4-turbo-preview"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_1106Preview BetaResponseNewParamsModel = "gpt-4-1106-preview"
+	// Deprecated: Announced shutdown date: 2024-12-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4VisionPreview BetaResponseNewParamsModel = "gpt-4-vision-preview"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4 BetaResponseNewParamsModel = "gpt-4"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_0314 BetaResponseNewParamsModel = "gpt-4-0314"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_0613 BetaResponseNewParamsModel = "gpt-4-0613"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_32k BetaResponseNewParamsModel = "gpt-4-32k"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_32k0314 BetaResponseNewParamsModel = "gpt-4-32k-0314"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT4_32k0613 BetaResponseNewParamsModel = "gpt-4-32k-0613"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT3_5Turbo BetaResponseNewParamsModel = "gpt-3.5-turbo"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT3_5Turbo16k BetaResponseNewParamsModel = "gpt-3.5-turbo-16k"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT3_5Turbo0301 BetaResponseNewParamsModel = "gpt-3.5-turbo-0301"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT3_5Turbo0613 BetaResponseNewParamsModel = "gpt-3.5-turbo-0613"
+	// Deprecated: Announced shutdown date: 2026-09-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT3_5Turbo1106 BetaResponseNewParamsModel = "gpt-3.5-turbo-1106"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT3_5Turbo0125 BetaResponseNewParamsModel = "gpt-3.5-turbo-0125"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT3_5Turbo16k0613 BetaResponseNewParamsModel = "gpt-3.5-turbo-16k-0613"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO1Pro BetaResponseNewParamsModel = "o1-pro"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO1Pro2025_03_19 BetaResponseNewParamsModel = "o1-pro-2025-03-19"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO3Pro BetaResponseNewParamsModel = "o3-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO3Pro2025_06_10 BetaResponseNewParamsModel = "o3-pro-2025-06-10"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO3DeepResearch BetaResponseNewParamsModel = "o3-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO3DeepResearch2025_06_26 BetaResponseNewParamsModel = "o3-deep-research-2025-06-26"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO4MiniDeepResearch BetaResponseNewParamsModel = "o4-mini-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelO4MiniDeepResearch2025_06_26 BetaResponseNewParamsModel = "o4-mini-deep-research-2025-06-26"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelComputerUsePreview BetaResponseNewParamsModel = "computer-use-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelComputerUsePreview2025_03_11 BetaResponseNewParamsModel = "computer-use-preview-2025-03-11"
+	BetaResponseNewParamsModelGPT5_5Pro                    BetaResponseNewParamsModel = "gpt-5.5-pro"
+	BetaResponseNewParamsModelGPT5_5Pro2026_04_23          BetaResponseNewParamsModel = "gpt-5.5-pro-2026-04-23"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5Codex BetaResponseNewParamsModel = "gpt-5-codex"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5Pro BetaResponseNewParamsModel = "gpt-5-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5Pro2025_10_06 BetaResponseNewParamsModel = "gpt-5-pro-2025-10-06"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseNewParamsModelGPT5_1CodexMax        BetaResponseNewParamsModel = "gpt-5.1-codex-max"
+	BetaResponseNewParamsModelGPTDaybreakBlueLatest BetaResponseNewParamsModel = "gpt-daybreak-blue-latest"
+	BetaResponseNewParamsModelGPTDaybreakRedLatest  BetaResponseNewParamsModel = "gpt-daybreak-red-latest"
+	BetaResponseNewParamsModelGPT5_6Cyber           BetaResponseNewParamsModel = "gpt-5.6-cyber"
+	BetaResponseNewParamsModelGPTRosalindResearch   BetaResponseNewParamsModel = "gpt-rosalind-research"
 )
 
 // Configuration for running moderation on the input and output of this response.
@@ -33959,6 +44261,9 @@ type BetaResponseNewParamsPromptCacheOptions struct {
 	// The ID of a response to compare when diagnosing prompt cache reuse. Supplying
 	// this field requests prompt cache diagnostics when the feature is enabled.
 	ComparisonResponseID param.Opt[string] `json:"comparison_response_id,omitzero"`
+	// Prepares the prompt cache without generating output. Defaults to `false`. When
+	// set to `true`, overrides the `generate` field to `false`.
+	Prewarm param.Opt[bool] `json:"prewarm,omitzero"`
 	// Controls whether OpenAI automatically creates an implicit cache breakpoint.
 	// Defaults to `implicit`. With `implicit`, OpenAI creates one implicit breakpoint
 	// and writes up to the latest three explicit breakpoints in the request. With
@@ -34385,109 +44690,368 @@ func (r *BetaResponseCompactParams) UnmarshalJSON(data []byte) error {
 type BetaResponseCompactParamsModel string
 
 const (
-	BetaResponseCompactParamsModelGPT6Astra                        BetaResponseCompactParamsModel = "gpt-6-astra"
-	BetaResponseCompactParamsModelGPT5_6Sol                        BetaResponseCompactParamsModel = "gpt-5.6-sol"
-	BetaResponseCompactParamsModelGPT5_6Terra                      BetaResponseCompactParamsModel = "gpt-5.6-terra"
-	BetaResponseCompactParamsModelGPT5_6Luna                       BetaResponseCompactParamsModel = "gpt-5.6-luna"
-	BetaResponseCompactParamsModelGPT5_5                           BetaResponseCompactParamsModel = "gpt-5.5"
-	BetaResponseCompactParamsModelGPT5_5_2026_04_23                BetaResponseCompactParamsModel = "gpt-5.5-2026-04-23"
-	BetaResponseCompactParamsModelGPT5_4                           BetaResponseCompactParamsModel = "gpt-5.4"
-	BetaResponseCompactParamsModelGPT5_4Mini                       BetaResponseCompactParamsModel = "gpt-5.4-mini"
-	BetaResponseCompactParamsModelGPT5_4Nano                       BetaResponseCompactParamsModel = "gpt-5.4-nano"
-	BetaResponseCompactParamsModelGPT5_4Mini2026_03_17             BetaResponseCompactParamsModel = "gpt-5.4-mini-2026-03-17"
-	BetaResponseCompactParamsModelGPT5_4Nano2026_03_17             BetaResponseCompactParamsModel = "gpt-5.4-nano-2026-03-17"
-	BetaResponseCompactParamsModelGPT5_3ChatLatest                 BetaResponseCompactParamsModel = "gpt-5.3-chat-latest"
-	BetaResponseCompactParamsModelGPT5_2                           BetaResponseCompactParamsModel = "gpt-5.2"
-	BetaResponseCompactParamsModelGPT5_2_2025_12_11                BetaResponseCompactParamsModel = "gpt-5.2-2025-12-11"
-	BetaResponseCompactParamsModelGPT5_2ChatLatest                 BetaResponseCompactParamsModel = "gpt-5.2-chat-latest"
-	BetaResponseCompactParamsModelGPT5_2Pro                        BetaResponseCompactParamsModel = "gpt-5.2-pro"
-	BetaResponseCompactParamsModelGPT5_2Pro2025_12_11              BetaResponseCompactParamsModel = "gpt-5.2-pro-2025-12-11"
-	BetaResponseCompactParamsModelGPT5_1                           BetaResponseCompactParamsModel = "gpt-5.1"
-	BetaResponseCompactParamsModelGPT5_1_2025_11_13                BetaResponseCompactParamsModel = "gpt-5.1-2025-11-13"
-	BetaResponseCompactParamsModelGPT5_1Codex                      BetaResponseCompactParamsModel = "gpt-5.1-codex"
-	BetaResponseCompactParamsModelGPT5_1Mini                       BetaResponseCompactParamsModel = "gpt-5.1-mini"
-	BetaResponseCompactParamsModelGPT5_1ChatLatest                 BetaResponseCompactParamsModel = "gpt-5.1-chat-latest"
-	BetaResponseCompactParamsModelGPT5                             BetaResponseCompactParamsModel = "gpt-5"
-	BetaResponseCompactParamsModelGPT5Mini                         BetaResponseCompactParamsModel = "gpt-5-mini"
-	BetaResponseCompactParamsModelGPT5Nano                         BetaResponseCompactParamsModel = "gpt-5-nano"
-	BetaResponseCompactParamsModelGPT5_2025_08_07                  BetaResponseCompactParamsModel = "gpt-5-2025-08-07"
-	BetaResponseCompactParamsModelGPT5Mini2025_08_07               BetaResponseCompactParamsModel = "gpt-5-mini-2025-08-07"
-	BetaResponseCompactParamsModelGPT5Nano2025_08_07               BetaResponseCompactParamsModel = "gpt-5-nano-2025-08-07"
-	BetaResponseCompactParamsModelGPT5ChatLatest                   BetaResponseCompactParamsModel = "gpt-5-chat-latest"
-	BetaResponseCompactParamsModelGPT4_1                           BetaResponseCompactParamsModel = "gpt-4.1"
-	BetaResponseCompactParamsModelGPT4_1Mini                       BetaResponseCompactParamsModel = "gpt-4.1-mini"
-	BetaResponseCompactParamsModelGPT4_1Nano                       BetaResponseCompactParamsModel = "gpt-4.1-nano"
-	BetaResponseCompactParamsModelGPT4_1_2025_04_14                BetaResponseCompactParamsModel = "gpt-4.1-2025-04-14"
-	BetaResponseCompactParamsModelGPT4_1Mini2025_04_14             BetaResponseCompactParamsModel = "gpt-4.1-mini-2025-04-14"
-	BetaResponseCompactParamsModelGPT4_1Nano2025_04_14             BetaResponseCompactParamsModel = "gpt-4.1-nano-2025-04-14"
-	BetaResponseCompactParamsModelO4Mini                           BetaResponseCompactParamsModel = "o4-mini"
-	BetaResponseCompactParamsModelO4Mini2025_04_16                 BetaResponseCompactParamsModel = "o4-mini-2025-04-16"
-	BetaResponseCompactParamsModelO3                               BetaResponseCompactParamsModel = "o3"
-	BetaResponseCompactParamsModelO3_2025_04_16                    BetaResponseCompactParamsModel = "o3-2025-04-16"
-	BetaResponseCompactParamsModelO3Mini                           BetaResponseCompactParamsModel = "o3-mini"
-	BetaResponseCompactParamsModelO3Mini2025_01_31                 BetaResponseCompactParamsModel = "o3-mini-2025-01-31"
-	BetaResponseCompactParamsModelO1                               BetaResponseCompactParamsModel = "o1"
-	BetaResponseCompactParamsModelO1_2024_12_17                    BetaResponseCompactParamsModel = "o1-2024-12-17"
-	BetaResponseCompactParamsModelO1Preview                        BetaResponseCompactParamsModel = "o1-preview"
-	BetaResponseCompactParamsModelO1Preview2024_09_12              BetaResponseCompactParamsModel = "o1-preview-2024-09-12"
-	BetaResponseCompactParamsModelO1Mini                           BetaResponseCompactParamsModel = "o1-mini"
-	BetaResponseCompactParamsModelO1Mini2024_09_12                 BetaResponseCompactParamsModel = "o1-mini-2024-09-12"
-	BetaResponseCompactParamsModelGPT4o                            BetaResponseCompactParamsModel = "gpt-4o"
-	BetaResponseCompactParamsModelGPT4o2024_11_20                  BetaResponseCompactParamsModel = "gpt-4o-2024-11-20"
-	BetaResponseCompactParamsModelGPT4o2024_08_06                  BetaResponseCompactParamsModel = "gpt-4o-2024-08-06"
-	BetaResponseCompactParamsModelGPT4o2024_05_13                  BetaResponseCompactParamsModel = "gpt-4o-2024-05-13"
-	BetaResponseCompactParamsModelGPT4oAudioPreview                BetaResponseCompactParamsModel = "gpt-4o-audio-preview"
-	BetaResponseCompactParamsModelGPT4oAudioPreview2024_10_01      BetaResponseCompactParamsModel = "gpt-4o-audio-preview-2024-10-01"
-	BetaResponseCompactParamsModelGPT4oAudioPreview2024_12_17      BetaResponseCompactParamsModel = "gpt-4o-audio-preview-2024-12-17"
-	BetaResponseCompactParamsModelGPT4oAudioPreview2025_06_03      BetaResponseCompactParamsModel = "gpt-4o-audio-preview-2025-06-03"
-	BetaResponseCompactParamsModelGPT4oMiniAudioPreview            BetaResponseCompactParamsModel = "gpt-4o-mini-audio-preview"
-	BetaResponseCompactParamsModelGPT4oMiniAudioPreview2024_12_17  BetaResponseCompactParamsModel = "gpt-4o-mini-audio-preview-2024-12-17"
-	BetaResponseCompactParamsModelGPT4oSearchPreview               BetaResponseCompactParamsModel = "gpt-4o-search-preview"
-	BetaResponseCompactParamsModelGPT4oMiniSearchPreview           BetaResponseCompactParamsModel = "gpt-4o-mini-search-preview"
-	BetaResponseCompactParamsModelGPT4oSearchPreview2025_03_11     BetaResponseCompactParamsModel = "gpt-4o-search-preview-2025-03-11"
+	BetaResponseCompactParamsModelGPT6Astra         BetaResponseCompactParamsModel = "gpt-6-astra"
+	BetaResponseCompactParamsModelGPT6_1Sol         BetaResponseCompactParamsModel = "gpt-6.1-sol"
+	BetaResponseCompactParamsModelGPT6Sol           BetaResponseCompactParamsModel = "gpt-6-sol"
+	BetaResponseCompactParamsModelGPT6Luna          BetaResponseCompactParamsModel = "gpt-6-luna"
+	BetaResponseCompactParamsModelGPT5_6Sol         BetaResponseCompactParamsModel = "gpt-5.6-sol"
+	BetaResponseCompactParamsModelGPT5_6Terra       BetaResponseCompactParamsModel = "gpt-5.6-terra"
+	BetaResponseCompactParamsModelGPT5_6Luna        BetaResponseCompactParamsModel = "gpt-5.6-luna"
+	BetaResponseCompactParamsModelGPT5_5            BetaResponseCompactParamsModel = "gpt-5.5"
+	BetaResponseCompactParamsModelGPT5_5_2026_04_23 BetaResponseCompactParamsModel = "gpt-5.5-2026-04-23"
+	BetaResponseCompactParamsModelGPT5_4            BetaResponseCompactParamsModel = "gpt-5.4"
+	BetaResponseCompactParamsModelGPT5_4Mini        BetaResponseCompactParamsModel = "gpt-5.4-mini"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5_4Nano           BetaResponseCompactParamsModel = "gpt-5.4-nano"
+	BetaResponseCompactParamsModelGPT5_4Mini2026_03_17 BetaResponseCompactParamsModel = "gpt-5.4-mini-2026-03-17"
+	BetaResponseCompactParamsModelGPT5_4Nano2026_03_17 BetaResponseCompactParamsModel = "gpt-5.4-nano-2026-03-17"
+	// Deprecated: Announced shutdown date: 2026-08-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5_3ChatLatest  BetaResponseCompactParamsModel = "gpt-5.3-chat-latest"
+	BetaResponseCompactParamsModelGPT5_2            BetaResponseCompactParamsModel = "gpt-5.2"
+	BetaResponseCompactParamsModelGPT5_2_2025_12_11 BetaResponseCompactParamsModel = "gpt-5.2-2025-12-11"
+	// Deprecated: Announced shutdown date: 2026-08-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5_2ChatLatest    BetaResponseCompactParamsModel = "gpt-5.2-chat-latest"
+	BetaResponseCompactParamsModelGPT5_2Pro           BetaResponseCompactParamsModel = "gpt-5.2-pro"
+	BetaResponseCompactParamsModelGPT5_2Pro2025_12_11 BetaResponseCompactParamsModel = "gpt-5.2-pro-2025-12-11"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5_1            BetaResponseCompactParamsModel = "gpt-5.1"
+	BetaResponseCompactParamsModelGPT5_1_2025_11_13 BetaResponseCompactParamsModel = "gpt-5.1-2025-11-13"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5_1Codex BetaResponseCompactParamsModel = "gpt-5.1-codex"
+	// Deprecated: Not a supported model ID. Retained for SDK compatibility.
+	BetaResponseCompactParamsModelGPT5_1Mini BetaResponseCompactParamsModel = "gpt-5.1-mini"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5_1ChatLatest BetaResponseCompactParamsModel = "gpt-5.1-chat-latest"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5 BetaResponseCompactParamsModel = "gpt-5"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5Mini BetaResponseCompactParamsModel = "gpt-5-mini"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5Nano BetaResponseCompactParamsModel = "gpt-5-nano"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5_2025_08_07 BetaResponseCompactParamsModel = "gpt-5-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5Mini2025_08_07 BetaResponseCompactParamsModel = "gpt-5-mini-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5Nano2025_08_07 BetaResponseCompactParamsModel = "gpt-5-nano-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5ChatLatest BetaResponseCompactParamsModel = "gpt-5-chat-latest"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_1 BetaResponseCompactParamsModel = "gpt-4.1"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_1Mini BetaResponseCompactParamsModel = "gpt-4.1-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_1Nano BetaResponseCompactParamsModel = "gpt-4.1-nano"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_1_2025_04_14 BetaResponseCompactParamsModel = "gpt-4.1-2025-04-14"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_1Mini2025_04_14 BetaResponseCompactParamsModel = "gpt-4.1-mini-2025-04-14"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_1Nano2025_04_14 BetaResponseCompactParamsModel = "gpt-4.1-nano-2025-04-14"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO4Mini BetaResponseCompactParamsModel = "o4-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO4Mini2025_04_16 BetaResponseCompactParamsModel = "o4-mini-2025-04-16"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO3 BetaResponseCompactParamsModel = "o3"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO3_2025_04_16 BetaResponseCompactParamsModel = "o3-2025-04-16"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO3Mini BetaResponseCompactParamsModel = "o3-mini"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO3Mini2025_01_31 BetaResponseCompactParamsModel = "o3-mini-2025-01-31"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO1 BetaResponseCompactParamsModel = "o1"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO1_2024_12_17 BetaResponseCompactParamsModel = "o1-2024-12-17"
+	// Deprecated: Announced shutdown date: 2025-07-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO1Preview BetaResponseCompactParamsModel = "o1-preview"
+	// Deprecated: Announced shutdown date: 2025-07-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO1Preview2024_09_12 BetaResponseCompactParamsModel = "o1-preview-2024-09-12"
+	// Deprecated: Announced shutdown date: 2025-10-27. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO1Mini BetaResponseCompactParamsModel = "o1-mini"
+	// Deprecated: Announced shutdown date: 2025-10-27. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO1Mini2024_09_12 BetaResponseCompactParamsModel = "o1-mini-2024-09-12"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4o BetaResponseCompactParamsModel = "gpt-4o"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4o2024_11_20 BetaResponseCompactParamsModel = "gpt-4o-2024-11-20"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4o2024_08_06 BetaResponseCompactParamsModel = "gpt-4o-2024-08-06"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4o2024_05_13 BetaResponseCompactParamsModel = "gpt-4o-2024-05-13"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPTAudioMini BetaResponseCompactParamsModel = "gpt-audio-mini"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPTAudioMini2025_12_15 BetaResponseCompactParamsModel = "gpt-audio-mini-2025-12-15"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oAudioPreview BetaResponseCompactParamsModel = "gpt-4o-audio-preview"
+	// Deprecated: Announced shutdown date: 2025-10-10. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oAudioPreview2024_10_01 BetaResponseCompactParamsModel = "gpt-4o-audio-preview-2024-10-01"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oAudioPreview2024_12_17 BetaResponseCompactParamsModel = "gpt-4o-audio-preview-2024-12-17"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oAudioPreview2025_06_03 BetaResponseCompactParamsModel = "gpt-4o-audio-preview-2025-06-03"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oMiniAudioPreview BetaResponseCompactParamsModel = "gpt-4o-mini-audio-preview"
+	// Deprecated: Announced shutdown date: 2026-05-07. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oMiniAudioPreview2024_12_17 BetaResponseCompactParamsModel = "gpt-4o-mini-audio-preview-2024-12-17"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oSearchPreview BetaResponseCompactParamsModel = "gpt-4o-search-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oMiniSearchPreview BetaResponseCompactParamsModel = "gpt-4o-mini-search-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oSearchPreview2025_03_11 BetaResponseCompactParamsModel = "gpt-4o-search-preview-2025-03-11"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponseCompactParamsModelGPT4oMiniSearchPreview2025_03_11 BetaResponseCompactParamsModel = "gpt-4o-mini-search-preview-2025-03-11"
-	BetaResponseCompactParamsModelChatgpt4oLatest                  BetaResponseCompactParamsModel = "chatgpt-4o-latest"
-	BetaResponseCompactParamsModelCodexMiniLatest                  BetaResponseCompactParamsModel = "codex-mini-latest"
-	BetaResponseCompactParamsModelGPT4oMini                        BetaResponseCompactParamsModel = "gpt-4o-mini"
-	BetaResponseCompactParamsModelGPT4oMini2024_07_18              BetaResponseCompactParamsModel = "gpt-4o-mini-2024-07-18"
-	BetaResponseCompactParamsModelGPT4Turbo                        BetaResponseCompactParamsModel = "gpt-4-turbo"
-	BetaResponseCompactParamsModelGPT4Turbo2024_04_09              BetaResponseCompactParamsModel = "gpt-4-turbo-2024-04-09"
-	BetaResponseCompactParamsModelGPT4_0125Preview                 BetaResponseCompactParamsModel = "gpt-4-0125-preview"
-	BetaResponseCompactParamsModelGPT4TurboPreview                 BetaResponseCompactParamsModel = "gpt-4-turbo-preview"
-	BetaResponseCompactParamsModelGPT4_1106Preview                 BetaResponseCompactParamsModel = "gpt-4-1106-preview"
-	BetaResponseCompactParamsModelGPT4VisionPreview                BetaResponseCompactParamsModel = "gpt-4-vision-preview"
-	BetaResponseCompactParamsModelGPT4                             BetaResponseCompactParamsModel = "gpt-4"
-	BetaResponseCompactParamsModelGPT4_0314                        BetaResponseCompactParamsModel = "gpt-4-0314"
-	BetaResponseCompactParamsModelGPT4_0613                        BetaResponseCompactParamsModel = "gpt-4-0613"
-	BetaResponseCompactParamsModelGPT4_32k                         BetaResponseCompactParamsModel = "gpt-4-32k"
-	BetaResponseCompactParamsModelGPT4_32k0314                     BetaResponseCompactParamsModel = "gpt-4-32k-0314"
-	BetaResponseCompactParamsModelGPT4_32k0613                     BetaResponseCompactParamsModel = "gpt-4-32k-0613"
-	BetaResponseCompactParamsModelGPT3_5Turbo                      BetaResponseCompactParamsModel = "gpt-3.5-turbo"
-	BetaResponseCompactParamsModelGPT3_5Turbo16k                   BetaResponseCompactParamsModel = "gpt-3.5-turbo-16k"
-	BetaResponseCompactParamsModelGPT3_5Turbo0301                  BetaResponseCompactParamsModel = "gpt-3.5-turbo-0301"
-	BetaResponseCompactParamsModelGPT3_5Turbo0613                  BetaResponseCompactParamsModel = "gpt-3.5-turbo-0613"
-	BetaResponseCompactParamsModelGPT3_5Turbo1106                  BetaResponseCompactParamsModel = "gpt-3.5-turbo-1106"
-	BetaResponseCompactParamsModelGPT3_5Turbo0125                  BetaResponseCompactParamsModel = "gpt-3.5-turbo-0125"
-	BetaResponseCompactParamsModelGPT3_5Turbo16k0613               BetaResponseCompactParamsModel = "gpt-3.5-turbo-16k-0613"
-	BetaResponseCompactParamsModelO1Pro                            BetaResponseCompactParamsModel = "o1-pro"
-	BetaResponseCompactParamsModelO1Pro2025_03_19                  BetaResponseCompactParamsModel = "o1-pro-2025-03-19"
-	BetaResponseCompactParamsModelO3Pro                            BetaResponseCompactParamsModel = "o3-pro"
-	BetaResponseCompactParamsModelO3Pro2025_06_10                  BetaResponseCompactParamsModel = "o3-pro-2025-06-10"
-	BetaResponseCompactParamsModelO3DeepResearch                   BetaResponseCompactParamsModel = "o3-deep-research"
-	BetaResponseCompactParamsModelO3DeepResearch2025_06_26         BetaResponseCompactParamsModel = "o3-deep-research-2025-06-26"
-	BetaResponseCompactParamsModelO4MiniDeepResearch               BetaResponseCompactParamsModel = "o4-mini-deep-research"
-	BetaResponseCompactParamsModelO4MiniDeepResearch2025_06_26     BetaResponseCompactParamsModel = "o4-mini-deep-research-2025-06-26"
-	BetaResponseCompactParamsModelComputerUsePreview               BetaResponseCompactParamsModel = "computer-use-preview"
-	BetaResponseCompactParamsModelComputerUsePreview2025_03_11     BetaResponseCompactParamsModel = "computer-use-preview-2025-03-11"
-	BetaResponseCompactParamsModelGPT5_5Pro                        BetaResponseCompactParamsModel = "gpt-5.5-pro"
-	BetaResponseCompactParamsModelGPT5_5Pro2026_04_23              BetaResponseCompactParamsModel = "gpt-5.5-pro-2026-04-23"
-	BetaResponseCompactParamsModelGPT5Codex                        BetaResponseCompactParamsModel = "gpt-5-codex"
-	BetaResponseCompactParamsModelGPT5Pro                          BetaResponseCompactParamsModel = "gpt-5-pro"
-	BetaResponseCompactParamsModelGPT5Pro2025_10_06                BetaResponseCompactParamsModel = "gpt-5-pro-2025-10-06"
-	BetaResponseCompactParamsModelGPT5_1CodexMax                   BetaResponseCompactParamsModel = "gpt-5.1-codex-max"
-	BetaResponseCompactParamsModelGPTDaybreakBlueLatest            BetaResponseCompactParamsModel = "gpt-daybreak-blue-latest"
-	BetaResponseCompactParamsModelGPTDaybreakRedLatest             BetaResponseCompactParamsModel = "gpt-daybreak-red-latest"
-	BetaResponseCompactParamsModelGPT5_6Cyber                      BetaResponseCompactParamsModel = "gpt-5.6-cyber"
+	// Deprecated: Announced shutdown date: 2026-02-17. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelChatgpt4oLatest BetaResponseCompactParamsModel = "chatgpt-4o-latest"
+	// Deprecated: Announced shutdown date: 2026-02-12. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelCodexMiniLatest BetaResponseCompactParamsModel = "codex-mini-latest"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oMini BetaResponseCompactParamsModel = "gpt-4o-mini"
+	// Deprecated: Announced shutdown date: 2027-01-14. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4oMini2024_07_18 BetaResponseCompactParamsModel = "gpt-4o-mini-2024-07-18"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4Turbo BetaResponseCompactParamsModel = "gpt-4-turbo"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4Turbo2024_04_09 BetaResponseCompactParamsModel = "gpt-4-turbo-2024-04-09"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_0125Preview BetaResponseCompactParamsModel = "gpt-4-0125-preview"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4TurboPreview BetaResponseCompactParamsModel = "gpt-4-turbo-preview"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_1106Preview BetaResponseCompactParamsModel = "gpt-4-1106-preview"
+	// Deprecated: Announced shutdown date: 2024-12-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4VisionPreview BetaResponseCompactParamsModel = "gpt-4-vision-preview"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4 BetaResponseCompactParamsModel = "gpt-4"
+	// Deprecated: Announced shutdown date: 2026-03-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_0314 BetaResponseCompactParamsModel = "gpt-4-0314"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_0613 BetaResponseCompactParamsModel = "gpt-4-0613"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_32k BetaResponseCompactParamsModel = "gpt-4-32k"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_32k0314 BetaResponseCompactParamsModel = "gpt-4-32k-0314"
+	// Deprecated: Announced shutdown date: 2025-06-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT4_32k0613 BetaResponseCompactParamsModel = "gpt-4-32k-0613"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT3_5Turbo BetaResponseCompactParamsModel = "gpt-3.5-turbo"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT3_5Turbo16k BetaResponseCompactParamsModel = "gpt-3.5-turbo-16k"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT3_5Turbo0301 BetaResponseCompactParamsModel = "gpt-3.5-turbo-0301"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT3_5Turbo0613 BetaResponseCompactParamsModel = "gpt-3.5-turbo-0613"
+	// Deprecated: Announced shutdown date: 2026-09-28. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT3_5Turbo1106 BetaResponseCompactParamsModel = "gpt-3.5-turbo-1106"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT3_5Turbo0125 BetaResponseCompactParamsModel = "gpt-3.5-turbo-0125"
+	// Deprecated: Announced shutdown date: 2024-09-13. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT3_5Turbo16k0613 BetaResponseCompactParamsModel = "gpt-3.5-turbo-16k-0613"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO1Pro BetaResponseCompactParamsModel = "o1-pro"
+	// Deprecated: Announced shutdown date: 2026-10-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO1Pro2025_03_19 BetaResponseCompactParamsModel = "o1-pro-2025-03-19"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO3Pro BetaResponseCompactParamsModel = "o3-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO3Pro2025_06_10 BetaResponseCompactParamsModel = "o3-pro-2025-06-10"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO3DeepResearch BetaResponseCompactParamsModel = "o3-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO3DeepResearch2025_06_26 BetaResponseCompactParamsModel = "o3-deep-research-2025-06-26"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO4MiniDeepResearch BetaResponseCompactParamsModel = "o4-mini-deep-research"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelO4MiniDeepResearch2025_06_26 BetaResponseCompactParamsModel = "o4-mini-deep-research-2025-06-26"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelComputerUsePreview BetaResponseCompactParamsModel = "computer-use-preview"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelComputerUsePreview2025_03_11 BetaResponseCompactParamsModel = "computer-use-preview-2025-03-11"
+	BetaResponseCompactParamsModelGPT5_5Pro                    BetaResponseCompactParamsModel = "gpt-5.5-pro"
+	BetaResponseCompactParamsModelGPT5_5Pro2026_04_23          BetaResponseCompactParamsModel = "gpt-5.5-pro-2026-04-23"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5Codex BetaResponseCompactParamsModel = "gpt-5-codex"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5Pro BetaResponseCompactParamsModel = "gpt-5-pro"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5Pro2025_10_06 BetaResponseCompactParamsModel = "gpt-5-pro-2025-10-06"
+	// Deprecated: Announced shutdown date: 2026-07-23. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaResponseCompactParamsModelGPT5_1CodexMax        BetaResponseCompactParamsModel = "gpt-5.1-codex-max"
+	BetaResponseCompactParamsModelGPTDaybreakBlueLatest BetaResponseCompactParamsModel = "gpt-daybreak-blue-latest"
+	BetaResponseCompactParamsModelGPTDaybreakRedLatest  BetaResponseCompactParamsModel = "gpt-daybreak-red-latest"
+	BetaResponseCompactParamsModelGPT5_6Cyber           BetaResponseCompactParamsModel = "gpt-5.6-cyber"
+	BetaResponseCompactParamsModelGPTRosalindResearch   BetaResponseCompactParamsModel = "gpt-rosalind-research"
 )
 
 // Only one field can be non-zero.

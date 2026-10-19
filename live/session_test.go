@@ -28,6 +28,7 @@ func TestSessionAcceptWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -61,6 +62,17 @@ func TestSessionAcceptWithOptionalParams(t *testing.T) {
 				}},
 				Instructions: openai.String("instructions"),
 				Store:        openai.Bool(true),
+				Triggers: []live.DecisionTriggerParam{{
+					Decisions: live.DecisionTriggerDecisionsParam{
+						Questions: []live.DecisionTriggerDecisionsQuestionUnionParam{{
+							OfPredicate: &live.DecisionTriggerDecisionsQuestionPredicateParam{
+								Instructions: "instructions",
+								Name:         openai.String("name"),
+							},
+						}},
+					},
+					EventType: live.DecisionTriggerEventTypeSessionInputTranscriptDelta,
+				}},
 			},
 		},
 	)
@@ -83,6 +95,7 @@ func TestSessionDownloadRecording(t *testing.T) {
 	defer server.Close()
 	baseURL := server.URL
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -123,6 +136,7 @@ func TestSessionForkWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -196,6 +210,7 @@ func TestSessionHangup(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -219,6 +234,7 @@ func TestSessionRefer(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -248,6 +264,7 @@ func TestSessionReject(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
