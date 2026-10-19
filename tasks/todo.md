@@ -8,12 +8,12 @@ counts on Conductor state changes; do not mark a task done until merged and veri
 
 | Task | Scope | Status | Depends on |
 |---|---|---|---|
-| Audit | Hash-verified inventory and transition plan | Complete; plan PR being prepared | None |
+| Audit | Hash-verified inventory and transition plan | [Ready PR #1106](https://github.com/openai/openai-go/pull/1106); independent evidence review passed | None |
 | A1 | Vector-store file helper moves | [Ready PR #1104](https://github.com/openai/openai-go/pull/1104); local checks/review pass; CI/approval pending | None |
 | A2 | Chat/Responses/video helper moves | [Ready PR #1105](https://github.com/openai/openai-go/pull/1105); source identity/tests/review pass; CI/approval pending | None |
-| A3 | Vector-store batch helper moves | Queued | None |
+| A3 | Vector-store batch helper moves | Implemented; existing focused/race/consumer checks running | None |
 | B | Multipart union metadata generation | Implementing compiler change | None |
-| C1 | Constructor deprecation generation | Implementing compiler change | None |
+| C1 | Constructor deprecation generation | Ready compiler change; nine focused tests and independent review pass; awaiting merge | None |
 | C2 | Transcription method docs | Queued | None |
 | D1 | API-key expiry representation/sample | Queued | None |
 | D2 | Model alias and arbitrary schema representation | Queued | None |
@@ -27,7 +27,7 @@ counts on Conductor state changes; do not mark a task done until merged and veri
 | G1 | Generic Execute and admin-operation auth facts | Queued | Security review |
 | G2 | Webhook delegate and convenience helper/API docs | Queued | Typed verified helper contract; D4; security review |
 | G3 | Image multipart null normalization | Queued | Focused wire tests; security review |
-| H1 | Websocket discriminator generation | Investigate existing compiler change before duplicating | Exact upstream status |
+| H1 | Websocket discriminator generation | Referenced voice-generation change is merged; decoder remains absent in inspected master; investigate later history before new change | Exact upstream status |
 | H2 | Routing and raw-method surface facts | Queued | Typed binding contract; security review |
 | H3 | Responses websocket helper boundary | Queued | H2 |
 | I1 | Budget script comment reconciliation | Queued | Shared template/lint validation |
