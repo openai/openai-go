@@ -17404,11 +17404,14 @@ func (r *BetaResponseInputItemMcpCallAgent) UnmarshalJSON(data []byte) error {
 type BetaResponseInputItemCompactionTrigger struct {
 	// The type of the item. Always `compaction_trigger`.
 	Type constant.CompactionTrigger `json:"type" default:"compaction_trigger"`
+	// The unique ID of this compaction trigger.
+	ID string `json:"id" api:"nullable"`
 	// The agent that produced this item.
 	Agent BetaResponseInputItemCompactionTriggerAgent `json:"agent" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
+		ID          respjson.Field
 		Agent       respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -18298,6 +18301,8 @@ func (u BetaResponseInputItemUnionParam) GetID() *string {
 	} else if vt := u.OfCustomToolCallOutput; vt != nil && vt.ID.Valid() {
 		return &vt.ID.Value
 	} else if vt := u.OfCustomToolCall; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
+	} else if vt := u.OfCompactionTrigger; vt != nil && vt.ID.Valid() {
 		return &vt.ID.Value
 	} else if vt := u.OfItemReference; vt != nil {
 		return (*string)(&vt.ID)
@@ -21601,6 +21606,8 @@ func (r *BetaResponseInputItemMcpCallAgentParam) UnmarshalJSON(data []byte) erro
 //
 // The property Type is required.
 type BetaResponseInputItemCompactionTriggerParam struct {
+	// The unique ID of this compaction trigger.
+	ID param.Opt[string] `json:"id,omitzero"`
 	// The agent that produced this item.
 	Agent BetaResponseInputItemCompactionTriggerAgentParam `json:"agent,omitzero"`
 	// The type of the item. Always `compaction_trigger`.

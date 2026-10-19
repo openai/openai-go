@@ -14765,9 +14765,12 @@ func (r *ResponseInputItemMcpCall) UnmarshalJSON(data []byte) error {
 type ResponseInputItemCompactionTrigger struct {
 	// The type of the item. Always `compaction_trigger`.
 	Type constant.CompactionTrigger `json:"type" default:"compaction_trigger"`
+	// The unique ID of this compaction trigger.
+	ID string `json:"id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
+		ID          respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -15513,6 +15516,8 @@ func (u ResponseInputItemUnionParam) GetID() *string {
 	} else if vt := u.OfCustomToolCallOutput; vt != nil && vt.ID.Valid() {
 		return &vt.ID.Value
 	} else if vt := u.OfCustomToolCall; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
+	} else if vt := u.OfCompactionTrigger; vt != nil && vt.ID.Valid() {
 		return &vt.ID.Value
 	} else if vt := u.OfItemReference; vt != nil {
 		return (*string)(&vt.ID)
@@ -17760,9 +17765,11 @@ func NewResponseInputItemCompactionTriggerParam() ResponseInputItemCompactionTri
 
 // Compacts the current context. Must be the final input item.
 //
-// This struct has a constant value, construct it with
-// [NewResponseInputItemCompactionTriggerParam].
+// Use [NewResponseInputItemCompactionTriggerParam] to initialize the constant
+// fields.
 type ResponseInputItemCompactionTriggerParam struct {
+	// The unique ID of this compaction trigger.
+	ID param.Opt[string] `json:"id,omitzero"`
 	// The type of the item. Always `compaction_trigger`.
 	Type constant.CompactionTrigger `json:"type" default:"compaction_trigger"`
 	paramObj
