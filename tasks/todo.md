@@ -12,7 +12,7 @@ counts on Conductor state changes; do not mark a task done until merged and veri
 | A1 | Vector-store file helper moves | [Ready PR #1104](https://github.com/openai/openai-go/pull/1104); local checks/review pass; CI green at `2ba8f08d`; approval pending | None |
 | A2 | Chat/Responses/video helper moves | [Ready PR #1105](https://github.com/openai/openai-go/pull/1105); source identity/tests/review pass; CI green at `1d1a4184`; approval pending | None |
 | A3 | Vector-store batch helper moves | [Ready PR #1107](https://github.com/openai/openai-go/pull/1107); source identity, focused/race/consumer/lint checks and independent review pass; CI green at `0a1e8398`; approval pending | None |
-| B | Multipart union metadata generation | Ready compiler change; 851 renderer tests, generated Go race tests, and independent review pass; formal security scan unavailable (tool transport); awaiting required reviews/CI/merge | None |
+| B | Multipart union metadata generation | Ready compiler change; 851 renderer tests, generated Go race tests, and independent review pass; formal security connection recovered and scan running; awaiting required reviews/CI/merge | None |
 | C1 | Constructor deprecation generation | Ready compiler change; nine focused tests and independent review pass; awaiting merge | None |
 | C2 | Transcription method docs | Queued | None |
 | D1 | API-key expiry representation/sample | Queued | None |
@@ -24,7 +24,7 @@ counts on Conductor state changes; do not mark a task done until merged and veri
 | E2 | Shell delta variant membership | Queued | None |
 | F1 | Batch concurrency field/default | Queued | A3 before final SDK integration |
 | F2 | Agent helper field and delegate seams | Queued | Define typed helper contract |
-| G1a | Public-entrypoint admin-auth coverage for New/Get/List/Delete | [Ready test-only PR #1109](https://github.com/openai/openai-go/pull/1109); focused/race checks and four independent negative controls pass; independent review clear; security scan running; CI/approval pending | None |
+| G1a | Public-entrypoint admin-auth coverage for New/Get/List/Delete | [Ready test-only PR #1109](https://github.com/openai/openai-go/pull/1109); focused/race checks and four independent negative controls pass; independent review clear; complete security diff scan found no findings; CI/approval pending | None |
 | G1 | Generic Execute and admin-operation auth facts | Queued | G1a; security review |
 | G2 | Webhook delegate and convenience helper/API docs | Queued | Typed verified helper contract; D4; security review |
 | G3 | Image multipart null normalization | Queued | Focused wire tests; security review |
