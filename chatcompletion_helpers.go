@@ -47,3 +47,16 @@ func chatCompletionMessageToAssistantParam(r ChatCompletionMessage) ChatCompleti
 	}
 	return p
 }
+
+func (r ChatCompletionMessage) ToParam() ChatCompletionMessageParamUnion {
+	asst := r.ToAssistantMessageParam()
+	return ChatCompletionMessageParamUnion{OfAssistant: &asst}
+}
+
+func (r ChatCompletionMessage) ToAssistantMessageParam() ChatCompletionAssistantMessageParam {
+	return chatCompletionMessageToAssistantParam(r)
+}
+
+func AssistantMessage[T string | []ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion](content T) ChatCompletionMessageParamUnion {
+	return ChatCompletionMessageParamOfAssistant(content)
+}

@@ -2566,15 +2566,6 @@ func (r *ChatCompletionMessage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r ChatCompletionMessage) ToParam() ChatCompletionMessageParamUnion {
-	asst := r.ToAssistantMessageParam()
-	return ChatCompletionMessageParamUnion{OfAssistant: &asst}
-}
-
-func (r ChatCompletionMessage) ToAssistantMessageParam() ChatCompletionAssistantMessageParam {
-	return chatCompletionMessageToAssistantParam(r)
-}
-
 // A URL citation when using web search.
 type ChatCompletionMessageAnnotation struct {
 	// The type of the URL citation. Always `url_citation`.
@@ -2848,10 +2839,6 @@ func (r ChatCompletionMessageFunctionToolCallFunctionParam) MarshalJSON() (data 
 }
 func (r *ChatCompletionMessageFunctionToolCallFunctionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func AssistantMessage[T string | []ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion](content T) ChatCompletionMessageParamUnion {
-	return ChatCompletionMessageParamOfAssistant(content)
 }
 
 func DeveloperMessage[T string | []ChatCompletionContentPartTextParam](content T) ChatCompletionMessageParamUnion {

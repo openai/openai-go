@@ -13,3 +13,7 @@ func responseOutputText(r Response) string {
 	}
 	return outputText.String()
 }
+
+func (r Response) OutputText() string {
+	return responseOutputText(r)
+}
