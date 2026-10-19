@@ -11,7 +11,7 @@ counts on Conductor state changes; do not mark a task done until merged and veri
 | Audit | Hash-verified inventory and transition plan | [Ready PR #1106](https://github.com/openai/openai-go/pull/1106); independent evidence review passed | None |
 | A1 | Vector-store file helper moves | [Ready PR #1104](https://github.com/openai/openai-go/pull/1104); local checks/review pass; CI/approval pending | None |
 | A2 | Chat/Responses/video helper moves | [Ready PR #1105](https://github.com/openai/openai-go/pull/1105); source identity/tests/review pass; CI/approval pending | None |
-| A3 | Vector-store batch helper moves | Implemented; existing focused/race/consumer checks running | None |
+| A3 | Vector-store batch helper moves | [Ready PR #1107](https://github.com/openai/openai-go/pull/1107); source identity, focused/race/consumer/lint checks and independent review pass; CI/approval pending | None |
 | B | Multipart union metadata generation | Ready compiler change; 851 renderer tests, generated Go race tests, and independent review pass; formal security scan unavailable (tool transport); awaiting required reviews/CI/merge | None |
 | C1 | Constructor deprecation generation | Ready compiler change; nine focused tests and independent review pass; awaiting merge | None |
 | C2 | Transcription method docs | Queued | None |
@@ -42,3 +42,8 @@ counts on Conductor state changes; do not mark a task done until merged and veri
 - [ ] Demonstrate no developer-facing breaking changes across all slices.
 - [ ] Reach zero mixed files/patch lines and reproduce with a second generation.
 - [ ] Propose any lower budget separately, retaining required protections.
+
+Initial A1/A2/A3 changes are independent PRs on the same baseline. Together they
+remove 74 patch lines: projected **27 mixed files / 641 patch lines** after all
+three merge, subject to remeasurement against current main. Neither compiler
+change has been promoted into the SDK; wait for its merge before regeneration.
