@@ -398,6 +398,13 @@ func TestExecuteNonAPIHTTPError(t *testing.T) {
 			wantType:    "http_error",
 		},
 		{
+			name:        "null API error envelope",
+			body:        `{"error":null}`,
+			wantCode:    "http_404",
+			wantMessage: "unexpected HTTP 404 Not Found response",
+			wantType:    "http_error",
+		},
+		{
 			name:        "API error envelope",
 			body:        `{"error":{"code":"invalid_request_error","message":"bad request","type":"invalid_request_error"}}`,
 			wantCode:    "invalid_request_error",
