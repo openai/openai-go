@@ -36,7 +36,10 @@ func IsValueNull(v reflect.Value) bool {
 }
 
 func IsNull[T any](v T) bool {
-	t := shims.TypeFor[T]()
+	t := reflect.TypeOf(v)
+	if t == nil {
+		return false
+	}
 	switch t.Kind() {
 	case reflect.Map, reflect.Slice:
 		null, ok := nullCache.Load(t)
