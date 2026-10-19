@@ -9,7 +9,7 @@ counts on Conductor state changes; do not mark a task done until merged and veri
 | Task | Scope | Status | Depends on |
 |---|---|---|---|
 | Audit | Hash-verified inventory and transition plan | Complete; plan PR being prepared | None |
-| A1 | Vector-store file helper moves | Implemented and verifying independently | None |
+| A1 | Vector-store file helper moves | [Ready PR #1104](https://github.com/openai/openai-go/pull/1104); local checks/review pass; CI/approval pending | None |
 | A2 | Chat/Responses/video helper moves | Implementing independently | None |
 | A3 | Vector-store batch helper moves | Queued | None |
 | B | Multipart union metadata generation | Implementing compiler change | None |
