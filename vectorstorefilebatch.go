@@ -58,24 +58,6 @@ func (r *VectorStoreFileBatchService) New(ctx context.Context, vectorStoreID str
 	return res, err
 }
 
-// Create a vector store file batch and polls the API until the task is complete.
-// Pass 0 for pollIntervalMs to enable default polling interval.
-func (r *VectorStoreFileBatchService) NewAndPoll(ctx context.Context, vectorStoreId string, body VectorStoreFileBatchNewParams, pollIntervalMs int, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
-	return newVectorStoreFileBatchAndPoll(r, ctx, vectorStoreId, body, pollIntervalMs, opts...)
-}
-
-// Uploads the given files concurrently and then creates a vector store file batch.
-//
-// If you've already uploaded certain files that you want to include in this batch
-// then you can pass their IDs through the file_ids argument.
-//
-// Pass 0 for pollIntervalMs to enable default polling interval.
-//
-// By default, if any file upload fails then an exception will be eagerly raised.
-func (r *VectorStoreFileBatchService) UploadAndPoll(ctx context.Context, vectorStoreID string, files []FileNewParams, fileIDs []string, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFileBatch, error) {
-	return uploadVectorStoreFileBatchAndPoll(r, ctx, vectorStoreID, files, fileIDs, pollIntervalMs, opts...)
-}
-
 // Retrieves a vector store file batch.
 func (r *VectorStoreFileBatchService) Get(ctx context.Context, vectorStoreID string, batchID string, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
