@@ -48,7 +48,7 @@ func TestTranslationEncodingFailureReleasesSendCapacity(t *testing.T) {
 			if tc.panicInstead {
 				func() {
 					defer func() {
-						if got := recover(); got != translationEncodingFailure {
+						if got := recover(); got != translationEncodingFailure { //nolint:errorlint // Assert exact panic identity, not wrapped-error equivalence.
 							t.Errorf("panic = %v; want original encoder panic", got)
 						}
 					}()
