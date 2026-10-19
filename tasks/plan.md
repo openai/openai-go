@@ -87,6 +87,22 @@ ledger to distinguish completed changes from remaining work. G1a's merged auth
 coverage unlocks G1; A3's merged helper move unlocks the batch field/default
 compiler slice F1. Neither permits unmerged compiler output to be promoted.
 
+The plan itself merged in PR #1106 at
+`85be4f59921fc04b44beb2c767ccfde5fad89bde`. This is a documentation-only
+change from the measured main above, so the source inventory remains 27 / 641;
+post-merge workflows for #1106 are tracked separately and are not yet declared
+complete here.
+
+The next wave contains a ready comment-only SDK PR #1110 and independent ready
+compiler changes for generic Execute auth preference and batch helper state.
+PR #1110 measures 26 mixed files / 639 patch lines on its candidate, not on main.
+Its only edit restores the exact verified generated Python comment; AST and
+compiled code are identical. The compiler slices preserve existing behavior and
+remain prerequisites for their dependent SDK regeneration. The multipart change
+also has its stale CLI integration assertions repaired, with exact-head review
+and security scanning repeated. None of these pending changes is counted as
+merged drawdown.
+
 ## Complete per-file inventory
 
 The action column describes what must be preserved and where it belongs. Counts
@@ -104,7 +120,7 @@ are the frozen baseline, not a forecast of generated output after future fixes.
 | `betathreadmessage.go` | 1,695 | 5 | 5 | 10 | Preserves MessageAttachmentToolFileSearchTool and AsFileSearchTool names. Compiler canonical public-name pin required. |
 | `chatcompletion.go` | 4,548 | 16 | 3 | 19 | Move complete ToParam, ToAssistantMessageParam, AssistantMessage helpers to chatcompletion_helpers.go. Compiler preserves ChatCompletionChunkChoice positional field and JSON metadata order. |
 | `client.go` | 219 | 1 | 1 | 2 | Execute injects bearer preference between client and per-call options. Compiler client template must preserve precedence. |
-| `finetuningcheckpointpermission.go` | 361 | 4 | 4 | 8 | Four methods select admin API-key auth rather than project bearer auth. Correct canonical operation security facts and regenerate. |
+| `finetuningcheckpointpermission.go` | 361 | 4 | 4 | 8 | Four methods select admin API-key auth rather than project bearer auth. Generate a typed Go-only auth binding; shared security changes break existing Python/Ruby credential options. |
 | `image.go` | 1,455 | 6 | 0 | 6 | Edit/EditStreaming omit explicit-null SafetyIdentifier using local body copy. Compiler parameter normalization fact/hook required; preserve all other null behavior. |
 | `live/fork.go` | 1,156 | 7 | 7 | 14 | encoding/json RawMessage envelope discriminator parsing, explicit field metadata. Shared compiler websocket decoder fix required. |
 | `live/live.go` | 7,608 | 7 | 7 | 14 | Same RawMessage discriminator fix as live/fork.go. Preserve metadata, unknown events, large payloads. |
@@ -237,7 +253,8 @@ A3 for a pure generated batch file, F2 requires parser/helper security review.
 ### G. Authentication, webhooks, and multipart null semantics (separate tracks)
 
 - G1: Generate generic `Execute` bearer preference at the current option layer;
-  correct the four checkpoint-permission operations' admin auth facts. Require
+  preserve the four checkpoint-permission operations' admin auth selection
+  through an explicit, typed Go-only method binding. Require
   table-driven public-entrypoint auth tests for `New`, `Get`, `List`, and
   `Delete`, with distinct synthetic project and admin API keys configured
   together. Assert that each operation sends the admin Authorization value;
@@ -245,6 +262,15 @@ A3 for a pure generated batch file, F2 requires parser/helper security review.
   operation's case must fail if its generated auth selection regresses to
   project-bearer authentication. Preserve the separate generic Execute
   preference and per-request override tests.
+  Do not change shared operation security as part of this cleanup. Current
+  Python and Ruby permission methods accept admin credentials through their
+  existing `api_key` option. Their runtimes select `api_key` and `admin_api_key`
+  using distinct enabled auth helpers, without fallback. Changing these shared
+  operations to admin-only would disable a previously working credential path.
+  A Go-only binding must preserve other language output, canonical operation
+  security, the public fine-tuning service hierarchy, and existing admin-route
+  classification/observability. Reject unknown bindings and missing configured
+  credential mappings; preserve StainlessParity and non-opted-in output.
 - G2: Emit the released webhook `Unwrap(body, headers, opts...)` delegate, then
   move extra convenience methods into handwritten companions where possible.
   A sibling cannot override the current generated parse-only `Unwrap` method.
