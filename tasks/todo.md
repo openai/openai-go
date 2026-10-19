@@ -9,8 +9,8 @@ counts on Conductor state changes; do not mark a task done until merged and veri
 | Task | Scope | Status | Depends on |
 |---|---|---|---|
 | Audit | Hash-verified inventory and transition plan | [Ready PR #1106](https://github.com/openai/openai-go/pull/1106); independent evidence review passed | None |
-| A1 | Vector-store file helper moves | [Ready PR #1104](https://github.com/openai/openai-go/pull/1104); local checks/review pass; CI/approval pending | None |
-| A2 | Chat/Responses/video helper moves | [Ready PR #1105](https://github.com/openai/openai-go/pull/1105); source identity/tests/review pass; CI/approval pending | None |
+| A1 | Vector-store file helper moves | [Ready PR #1104](https://github.com/openai/openai-go/pull/1104); local checks/review pass; CI green at `2ba8f08d`; approval pending | None |
+| A2 | Chat/Responses/video helper moves | [Ready PR #1105](https://github.com/openai/openai-go/pull/1105); source identity/tests/review pass; CI green at `1d1a4184`; approval pending | None |
 | A3 | Vector-store batch helper moves | [Ready PR #1107](https://github.com/openai/openai-go/pull/1107); source identity, focused/race/consumer/lint checks and independent review pass; CI/approval pending | None |
 | B | Multipart union metadata generation | Ready compiler change; 851 renderer tests, generated Go race tests, and independent review pass; formal security scan unavailable (tool transport); awaiting required reviews/CI/merge | None |
 | C1 | Constructor deprecation generation | Ready compiler change; nine focused tests and independent review pass; awaiting merge | None |
@@ -24,7 +24,8 @@ counts on Conductor state changes; do not mark a task done until merged and veri
 | E2 | Shell delta variant membership | Queued | None |
 | F1 | Batch concurrency field/default | Queued | A3 before final SDK integration |
 | F2 | Agent helper field and delegate seams | Queued | Define typed helper contract |
-| G1 | Generic Execute and admin-operation auth facts | Queued | Security review |
+| G1a | Public-entrypoint admin-auth coverage for New/Get/List/Delete | Implementing test-only prerequisite; each method needs an independent failing regression control | None |
+| G1 | Generic Execute and admin-operation auth facts | Queued | G1a; security review |
 | G2 | Webhook delegate and convenience helper/API docs | Queued | Typed verified helper contract; D4; security review |
 | G3 | Image multipart null normalization | Queued | Focused wire tests; security review |
 | H1 | Websocket discriminator generation | Referenced voice-generation change is merged; decoder remains absent in inspected master; investigate later history before new change | Exact upstream status |
@@ -47,3 +48,10 @@ Initial A1/A2/A3 changes are independent PRs on the same baseline. Together they
 remove 74 patch lines: projected **27 mixed files / 641 patch lines** after all
 three merge, subject to remeasurement against current main. Neither compiler
 change has been promoted into the SDK; wait for its merge before regeneration.
+
+Review-request policy: every PR and compiler Delta requires a deduplicated
+`#sdk-reviews` request. The current six changes (A1, A2, A3, Audit, B, C1) share
+one consolidated root request, posted 2026-10-19. Keep its internal Slack
+permalink in the owning conversation's execution record; do not publish
+internal communication URLs in this public repository. Add later PR requests
+in that same thread and retain required CODEOWNER approval gates.
