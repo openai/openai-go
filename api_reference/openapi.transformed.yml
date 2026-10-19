@@ -77084,6 +77084,18 @@ components:
       description: The streamed output emitted by an apply patch tool call.
     CompactionTriggerItemParam:
       properties:
+        id:
+          anyOf:
+          - type: string
+            description: The unique ID of this compaction trigger.
+            example: msg_123
+          - type: 'null'
+          x-stainless-skip:
+          - python
+          - typescript
+          - java
+          - ruby
+          - cli
         type:
           type: string
           enum:
@@ -77096,6 +77108,7 @@ components:
       - type
       title: Compaction trigger
       description: Compacts the current context. Must be the final input item.
+      x-stainless-go-constant-constructor: true
     ItemReferenceParam:
       properties:
         type:
@@ -95772,6 +95785,18 @@ components:
           - $ref: '#/components/schemas/Beta_AgentTagParam'
             description: The agent that produced this item.
           - type: 'null'
+        id:
+          anyOf:
+          - type: string
+            description: The unique ID of this compaction trigger.
+            example: msg_123
+          - type: 'null'
+          x-stainless-skip:
+          - python
+          - typescript
+          - java
+          - ruby
+          - cli
         type:
           type: string
           enum:
