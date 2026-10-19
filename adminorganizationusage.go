@@ -250,6 +250,9 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultUnion struct {
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
@@ -337,6 +340,7 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultUnion struct {
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -542,6 +546,9 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompl
 	// retention period.
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period. May be absent or null for older responses.
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
@@ -590,6 +597,7 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompl
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -1142,6 +1150,9 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion struct {
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
@@ -1229,6 +1240,7 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion struct {
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -1435,6 +1447,9 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsag
 	// retention period.
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period. May be absent or null for older responses.
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
@@ -1483,6 +1498,7 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsag
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -2038,6 +2054,9 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion struct
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
@@ -2125,6 +2144,7 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion struct
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -2331,6 +2351,9 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganization
 	// retention period.
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period. May be absent or null for older responses.
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
@@ -2379,6 +2402,7 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganization
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -2931,6 +2955,9 @@ type AdminOrganizationUsageCompletionsResponseDataResultUnion struct {
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
@@ -3018,6 +3045,7 @@ type AdminOrganizationUsageCompletionsResponseDataResultUnion struct {
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -3221,6 +3249,9 @@ type AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageComplet
 	// retention period.
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period. May be absent or null for older responses.
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
@@ -3269,6 +3300,7 @@ type AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageComplet
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -3821,6 +3853,9 @@ type AdminOrganizationUsageCostsResponseDataResultUnion struct {
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
@@ -3908,6 +3943,7 @@ type AdminOrganizationUsageCostsResponseDataResultUnion struct {
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -4110,6 +4146,9 @@ type AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsRe
 	// retention period.
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period. May be absent or null for older responses.
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
@@ -4158,6 +4197,7 @@ type AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsRe
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -4697,6 +4737,9 @@ type AdminOrganizationUsageDecisionsResponseDataResult struct {
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens" api:"nullable"`
 	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period.
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens" api:"nullable"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens" api:"nullable"`
@@ -4744,6 +4787,7 @@ type AdminOrganizationUsageDecisionsResponseDataResult struct {
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -4860,6 +4904,9 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultUnion struct {
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
@@ -4947,6 +4994,7 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultUnion struct {
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -5150,6 +5198,9 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompleti
 	// retention period.
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period. May be absent or null for older responses.
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
@@ -5198,6 +5249,7 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompleti
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -5750,6 +5802,9 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultUnion struct {
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
@@ -5837,6 +5892,7 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultUnion struct {
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -6042,6 +6098,9 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCom
 	// retention period.
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period. May be absent or null for older responses.
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
@@ -6090,6 +6149,7 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCom
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -6642,6 +6702,9 @@ type AdminOrganizationUsageImagesResponseDataResultUnion struct {
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
@@ -6729,6 +6792,7 @@ type AdminOrganizationUsageImagesResponseDataResultUnion struct {
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -6931,6 +6995,9 @@ type AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsR
 	// retention period.
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period. May be absent or null for older responses.
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
@@ -6979,6 +7046,7 @@ type AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsR
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -7531,6 +7599,9 @@ type AdminOrganizationUsageModerationsResponseDataResultUnion struct {
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
@@ -7618,6 +7689,7 @@ type AdminOrganizationUsageModerationsResponseDataResultUnion struct {
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -7821,6 +7893,9 @@ type AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageComplet
 	// retention period.
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period. May be absent or null for older responses.
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
@@ -7869,6 +7944,7 @@ type AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageComplet
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -8421,6 +8497,9 @@ type AdminOrganizationUsageVectorStoresResponseDataResultUnion struct {
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
@@ -8508,6 +8587,7 @@ type AdminOrganizationUsageVectorStoresResponseDataResultUnion struct {
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -8713,6 +8793,9 @@ type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageComple
 	// retention period.
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period. May be absent or null for older responses.
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
@@ -8761,6 +8844,7 @@ type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageComple
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -9313,6 +9397,9 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultUnion struct {
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// This field is from variant
 	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
@@ -9400,6 +9487,7 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultUnion struct {
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
@@ -9605,6 +9693,9 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageComp
 	// retention period.
 	InputCacheWrite12hTokens int64 `json:"input_cache_write_12h_tokens"`
 	// The aggregated number of input tokens written to the cache with a 30-minute
+	// retention period. May be absent or null for older responses.
+	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
+	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
@@ -9653,6 +9744,7 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageComp
 		Batch                    respjson.Field
 		InputAudioTokens         respjson.Field
 		InputCacheWrite12hTokens respjson.Field
+		InputCacheWrite30mTokens respjson.Field
 		InputCacheWriteTokens    respjson.Field
 		InputCachedAudioTokens   respjson.Field
 		InputCachedImageTokens   respjson.Field
