@@ -24,7 +24,7 @@ counts on Conductor state changes; do not mark a task done until merged and veri
 | E2 | Shell delta variant membership | Queued | None |
 | F1 | Batch concurrency field/default | Queued | A3 before final SDK integration |
 | F2 | Agent helper field and delegate seams | Queued | Define typed helper contract |
-| G1a | Public-entrypoint admin-auth coverage for New/Get/List/Delete | [Ready test-only PR #1109](https://github.com/openai/openai-go/pull/1109); focused/race checks and four independent negative controls pass; independent review clear; security diff scan complete with no findings; CI/approval pending | None |
+| G1a | Public-entrypoint admin-auth coverage for New/Get/List/Delete | [Ready test-only PR #1109](https://github.com/openai/openai-go/pull/1109); focused/race checks and four independent negative controls pass; independent review clear; security diff scan complete with no findings; CI green at `20b23d27`; approval pending | None |
 | G1 | Generic Execute and admin-operation auth facts | Queued | G1a; security review |
 | G2 | Webhook delegate and convenience helper/API docs | Queued | Typed verified helper contract; D4; security review |
 | G3 | Image multipart null normalization | Queued | Focused wire tests; security review |
@@ -50,12 +50,16 @@ three merge, subject to remeasurement against current main. Neither compiler
 change has been promoted into the SDK; wait for its merge before regeneration.
 
 Review-request policy: every PR and compiler Delta requires a deduplicated
-`#sdk-reviews` request. The current six changes (A1, A2, A3, Audit, B, C1) share
+root-channel `#sdk-reviews` request explicitly including its URL. Thread-only
+requests do not qualify. The current six changes (A1, A2, A3, Audit, B, C1) share
 one consolidated root request, posted 2026-10-19. Keep its internal Slack
 permalink in the owning conversation's execution record; do not publish
-internal communication URLs in this public repository. Add later PR requests
-in that same thread and retain required CODEOWNER approval gates.
+internal communication URLs in this public repository. Add later changes to a
+root request that explicitly includes their URLs, or create a new root request
+if none exists; use threads for status follow-ups. Retain required CODEOWNER
+approval gates.
 
-G1a (#1109) was requested for review in the existing consolidated internal
-review thread. The plan authorization and admin-coverage review findings were
-addressed; required PR approvals remain separate and outstanding.
+G1a (#1109) now has a separate root-channel review request, posted 2026-10-19,
+after deduplication confirmed its earlier mentions were thread replies only.
+The plan authorization and admin-coverage review findings were addressed;
+required PR approvals remain separate and outstanding.
