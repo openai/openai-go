@@ -171,7 +171,9 @@ func (s *Session[T]) Recv(ctx context.Context) (T, error) {
 		}
 		if !s.options.Enabled || !retryable(err) {
 			s.mu.Unlock()
-			s.fail(err)
+			// The failed connection already owns its cleanup. Retire the session
+			// without making this receive wait for the transport to close.
+			s.stop(err)
 			return zero, err
 		}
 		s.recovering = true
