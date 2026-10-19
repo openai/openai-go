@@ -3821,10 +3821,6 @@ type Response struct {
 	} `json:"-"`
 }
 
-func (r Response) OutputText() string {
-	return responseOutputText(r)
-}
-
 // Returns the unmodified JSON received from the API
 func (r Response) RawJSON() string { return r.JSON.raw }
 func (r *Response) UnmarshalJSON(data []byte) error {
