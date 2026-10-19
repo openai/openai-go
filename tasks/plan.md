@@ -53,6 +53,40 @@ regeneration, resolve its own recorded verified snapshot; never reuse an old
 snapshot as the new baseline or hand-edit checkpoint metadata. Read additions
 and deletions from every `custom_after` entry in `report.json`.
 
+## Verified progress after the first merged wave
+
+On 2026-10-19, main `f85ad491c1bc0c3d08d5f867262a06a53548f2ab`
+contains merged PRs #1104, #1105, #1107 and #1109. Conductor confirmed their
+post-merge workflows succeeded. Reverification against that main's own generated
+snapshot measures **27 mixed files / 641 custom patch lines**: 424 additions and
+217 deletions, exactly 74 fewer patch lines and one fewer mixed file than the
+frozen baseline. The remaining 25 Go files contain 630 patch lines; documentation
+and the Python comment still account for 11. Current mixed files contain 121,976
+physical lines. The unchanged 2,000-line ceiling has 1,359 lines of headroom.
+
+- Verified snapshot: `df728d2ea3e3466fecd4e645742b426fe0ab41e0`.
+- Generation: `e9ebf505-6d16-44a3-986b-2f0de33ceb4b`.
+- Generated content SHA-256:
+  `2f8bc6cb6dc8ffefa9001cb53d657ad32a0d82dc499a3f1c416ccedc5a50d5e3`.
+
+The intervening API cache-write generation adds usage declarations and updates a
+manifest hash; both exactly match integrated output and do not introduce any
+new residual patch or change generated ownership paths.
+
+| File | Baseline patch lines | Current patch lines |
+|---|---:|---:|
+| `vectorstorefile.go` | 24 | 0 |
+| `chatcompletion.go` | 19 | 6 |
+| `responses/response.go` | 97 | 93 |
+| `vectorstorefilebatch.go` | 26 | 8 |
+| `video.go` | 18 | 3 |
+
+All other residual patch counts are unchanged. The complete inventory below
+remains the original frozen baseline; use this progress section and the task
+ledger to distinguish completed changes from remaining work. G1a's merged auth
+coverage unlocks G1; A3's merged helper move unlocks the batch field/default
+compiler slice F1. Neither permits unmerged compiler output to be promoted.
+
 ## Complete per-file inventory
 
 The action column describes what must be preserved and where it belongs. Counts
