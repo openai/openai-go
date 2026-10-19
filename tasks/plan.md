@@ -90,8 +90,8 @@ compiler slice F1. Neither permits unmerged compiler output to be promoted.
 The plan itself merged in PR #1106 at
 `85be4f59921fc04b44beb2c767ccfde5fad89bde`. This is a documentation-only
 change from the measured main above, so the source inventory remains 27 / 641;
-post-merge workflows for #1106 are tracked separately and are not yet declared
-complete here.
+Conductor separately confirmed all post-merge push workflows for #1106
+succeeded, completing that watch.
 
 The next wave contains a ready comment-only SDK PR #1110 and independent ready
 compiler changes for generic Execute auth preference and batch helper state.

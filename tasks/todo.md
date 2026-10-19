@@ -10,7 +10,7 @@ counts on Conductor state changes; do not mark a task done until merged and veri
 
 | Task | Scope | Status | Depends on |
 |---|---|---|---|
-| Audit | Hash-verified inventory and transition plan | [Merged PR #1106](https://github.com/openai/openai-go/pull/1106) at `85be4f59921fc04b44beb2c767ccfde5fad89bde`; post-merge workflows pending separate confirmation | None |
+| Audit | Hash-verified inventory and transition plan | [Merged PR #1106](https://github.com/openai/openai-go/pull/1106) at `85be4f59921fc04b44beb2c767ccfde5fad89bde`; post-merge push workflows separately confirmed green/complete | None |
 | A1 | Vector-store file helper moves | [Merged PR #1104](https://github.com/openai/openai-go/pull/1104) at `4520c2dac8cbb2b0a6f94d559d34b10bb83019fa`; post-merge workflows green; local/independent verification retained | None |
 | A2 | Chat/Responses/video helper moves | [Merged PR #1105](https://github.com/openai/openai-go/pull/1105) at `d1a720d84da12a6855a42e9e9ae9cf5f034a541f`; post-merge workflows green; local/independent verification retained | None |
 | A3 | Vector-store batch helper moves | [Merged PR #1107](https://github.com/openai/openai-go/pull/1107) at `b5e9da2a994a8e2007863d906bf3d2642a4f4a37`; post-merge workflows green; local/independent verification retained | None |
@@ -93,7 +93,8 @@ remain authoritative.
 On 2026-10-19 at 12:23 PDT, Conductor confirmed #1106 actually merged at
 `85be4f59921fc04b44beb2c767ccfde5fad89bde`. Its refreshed head had green
 CI, renewed exact-head approval, clean reviews and resolved threads before
-protected queue completion. Post-merge workflows are tracked separately.
+protected queue completion. At 12:26 PDT, Conductor separately confirmed all
+post-merge push workflows succeeded; that watch is green/complete.
 
 Second-wave publication records (internal compiler links stay in the owning
 conversation): G1 generic Execute and F1 batch state are separate ready compiler
