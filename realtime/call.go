@@ -144,7 +144,10 @@ func (r CallAcceptParams) MarshalJSON() (data []byte, err error) {
 	return shimjson.Marshal(r.RealtimeSessionCreateRequest)
 }
 func (r *CallAcceptParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	if r == nil {
+		return apijson.UnmarshalRoot(data, r)
+	}
+	return apijson.UnmarshalWrappedObject(data, r, &r.RealtimeSessionCreateRequest)
 }
 
 type CallReferParams struct {

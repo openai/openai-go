@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/openai/openai-go/v3/packages/param"
 	"reflect"
 	"strconv"
 	"sync"
@@ -16,6 +15,9 @@ import (
 	"unsafe"
 
 	"github.com/tidwall/gjson"
+
+	"github.com/openai/openai-go/v3/internal/encoding/json/sentinel"
+	"github.com/openai/openai-go/v3/packages/param"
 )
 
 // decoders is a synchronized map with roughly the following type:
@@ -37,6 +39,19 @@ func UnmarshalRoot(raw []byte, to any) error {
 	return d.unmarshal(raw, to)
 }
 
+// UnmarshalWrappedObject decodes an object into body while preserving the
+// wrapper's root decoding behavior for null and non-object values.
+func UnmarshalWrappedObject(raw []byte, wrapper, body any) error {
+	result := gjson.ParseBytes(raw)
+	target := wrapper
+	d := &decoderBuilder{dateFormat: time.RFC3339, root: true}
+	if result.IsObject() {
+		target = body
+		d.preserveWrappedParamNulls = true
+	}
+	return d.unmarshalResult(result, target)
+}
+
 // decoderBuilder contains the 'compile-time' state of the decoder.
 type decoderBuilder struct {
 	// Whether or not this is the first element and called by [UnmarshalRoot], see
@@ -44,7 +59,8 @@ type decoderBuilder struct {
 	root bool
 	// The dateFormat (a format string for [time.Format]) which is chosen by the
 	// last struct tag that was seen.
-	dateFormat string
+	dateFormat                string
+	preserveWrappedParamNulls bool
 }
 
 // decoderState contains the 'run-time' state of the decoder.
@@ -82,18 +98,20 @@ type decoderField struct {
 }
 
 type decoderEntry struct {
-	typ        reflect.Type
-	dateFormat string
-	root       bool
+	typ     reflect.Type
+	builder decoderBuilder
 }
 
 func (d *decoderBuilder) unmarshal(raw []byte, to any) error {
+	return d.unmarshalResult(gjson.ParseBytes(raw), to)
+}
+
+func (d *decoderBuilder) unmarshalResult(result gjson.Result, to any) error {
 	value := reflect.ValueOf(to).Elem()
-	result := gjson.ParseBytes(raw)
 	if !value.IsValid() {
 		return fmt.Errorf("apijson: cannot marshal into invalid value")
 	}
-	return d.typeDecoder(value.Type())(result, value, &decoderState{strict: false, exactness: exact})
+	return d.typeDecoder(value.Type())(result, value, &decoderState{exactness: exact})
 }
 
 // unmarshalWithExactness is used for internal testing purposes.
@@ -109,11 +127,7 @@ func (d *decoderBuilder) unmarshalWithExactness(raw []byte, to any) (exactness, 
 }
 
 func (d *decoderBuilder) typeDecoder(t reflect.Type) decoderFunc {
-	entry := decoderEntry{
-		typ:        t,
-		dateFormat: d.dateFormat,
-		root:       d.root,
-	}
+	entry := decoderEntry{typ: t, builder: *d}
 
 	if fi, ok := decoders.Load(entry); ok {
 		return fi.(decoderFunc)
@@ -172,6 +186,18 @@ func unmarshalerDecoder(n gjson.Result, v reflect.Value, state *decoderState) er
 	return v.Interface().(json.Unmarshaler).UnmarshalJSON([]byte(n.Raw))
 }
 
+// Generated parameter unmarshallers delegate to UnmarshalRoot. Reuse its root
+// decoder with this builder's settings so nested fields retain wrapped nulls.
+func (d *decoderBuilder) preserveWrappedParamDecoder(t reflect.Type, fallback decoderFunc) decoderFunc {
+	if !d.preserveWrappedParamNulls || !t.Implements(reflect.TypeFor[param.ParamStruct]()) {
+		return fallback
+	}
+	nested := *d
+	nested.root = true
+	nested.dateFormat = time.RFC3339
+	return nested.typeDecoder(t)
+}
+
 func isRegisteredStructUnionSlice(t reflect.Type) bool {
 	if t.Kind() != reflect.Slice {
 		return false
@@ -199,11 +225,11 @@ func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
 	}
 
 	if !d.root && t.Implements(reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()) {
-		return unmarshalerDecoder
+		return d.preserveWrappedParamDecoder(t, unmarshalerDecoder)
 	}
 	if !d.root && reflect.PointerTo(t).Implements(reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()) {
 		if _, ok := unionVariants[t]; !ok {
-			return indirectUnmarshalerDecoder
+			return d.preserveWrappedParamDecoder(t, indirectUnmarshalerDecoder)
 		}
 	}
 	d.root = false
@@ -218,7 +244,8 @@ func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
 	switch t.Kind() {
 	case reflect.Pointer:
 		inner := t.Elem()
-		innerBuilder := decoderBuilder{root: isRoot, dateFormat: d.dateFormat}
+		innerBuilder := *d
+		innerBuilder.root = isRoot
 		innerDecoder := innerBuilder.typeDecoder(inner)
 
 		return func(n gjson.Result, v reflect.Value, state *decoderState) error {
@@ -345,6 +372,25 @@ func (d *decoderBuilder) newArrayTypeDecoder(t reflect.Type) decoderFunc {
 	}
 }
 
+// paramNullValue returns an explicit null assignable to t, if the field can
+// represent one.
+func paramNullValue(t reflect.Type) reflect.Value {
+	switch t.Kind() {
+	case reflect.Struct:
+		value := reflect.New(t).Elem()
+		if preserveParamJSON(value, "null") {
+			return value
+		}
+	case reflect.Map, reflect.Slice:
+		return sentinel.NullValue(t)
+	case reflect.Interface:
+		if t.NumMethod() == 0 {
+			return reflect.ValueOf(param.Null[any]())
+		}
+	}
+	return reflect.Value{}
+}
+
 func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type, isRoot bool) decoderFunc {
 	// map of json field name to struct field decoders
 	decoderFields := map[string]decoderField{}
@@ -420,6 +466,7 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type, isRoot bool) decod
 	}
 
 	selectInline := inlineUnionSelector(t, inlineDecoders)
+	preserveWrappedParamNulls := d.preserveWrappedParamNulls
 	return func(node gjson.Result, value reflect.Value, state *decoderState) (err error) {
 		// Plain structs represent JSON objects. Inline structs represent
 		// unions and may legitimately decode from scalar or array values.
@@ -493,6 +540,7 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type, isRoot bool) decod
 
 		for fieldName, itemNode := range node.Map() {
 			df, explicit := decoderFields[fieldName]
+			preserveParamNull := preserveWrappedParamNulls && explicit
 			var (
 				dest reflect.Value
 				fn   decoderFunc
@@ -509,6 +557,12 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type, isRoot bool) decod
 
 			isValid := false
 			if dest.IsValid() && itemNode.Type != gjson.Null {
+				if preserveParamNull {
+					// A new value replaces a previously decoded explicit null.
+					if p, ok := dest.Interface().(param.ParamStruct); ok && param.IsNull(p) {
+						dest.SetZero()
+					}
+				}
 				err = fn(itemNode, dest, state)
 				if err == nil {
 					isValid = true
@@ -519,6 +573,13 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type, isRoot bool) decod
 			if itemNode.Type == gjson.Null && dest.IsValid() && dest.Type().Implements(reflect.TypeOf((*param.Optional)(nil)).Elem()) {
 				_ = dest.Addr().Interface().(json.Unmarshaler).UnmarshalJSON([]byte(itemNode.Raw))
 				continue
+			}
+
+			if preserveParamNull && itemNode.Type == gjson.Null {
+				if nullValue := paramNullValue(dest.Type()); nullValue.IsValid() {
+					dest.Set(nullValue)
+					continue
+				}
 			}
 
 			if itemNode.Type == gjson.Null {
