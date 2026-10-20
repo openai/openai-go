@@ -224,3 +224,21 @@ func TestBetaAgentTypedOutputWithTypedToolHandler(t *testing.T) {
 		t.Fatalf("typed receipt not submitted: %s err=%v", wire, err)
 	}
 }
+
+func TestBetaAgentOutputDefinitionNamespaces(t *testing.T) {
+	for _, tt := range []struct {
+		name, schema string
+		valid        bool
+	}{
+		{"mixed namespaces", `{"type":"object","$defs":{"modern":{"type":"string"}},"definitions":{"legacy":{"type":"string"}},"properties":{"a":{"$ref":"#/$defs/modern"},"b":{"$ref":"#/definitions/legacy"}}}`, true},
+		{"legacy cannot use modern", `{"type":"object","$defs":{"name":{"type":"string"}},"properties":{"a":{"$ref":"#/definitions/name"}}}`, false},
+		{"modern cannot use legacy", `{"type":"object","definitions":{"name":{"type":"string"}},"properties":{"a":{"$ref":"#/$defs/name"}}}`, false},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := openai.NewBetaAgentOutput(json.RawMessage(tt.schema), betaReportParser)
+			if (err == nil) != tt.valid {
+				t.Fatalf("NewBetaAgentOutput() error = %v, want valid=%t", err, tt.valid)
+			}
+		})
+	}
+}

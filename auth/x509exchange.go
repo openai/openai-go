@@ -271,8 +271,8 @@ func x509ParseRetryAfter(headers http.Header, now time.Time) (time.Duration, boo
 			if math.IsNaN(parsed) || math.IsInf(parsed, 0) || parsed < 0 {
 				continue
 			}
-			if parsed >= float64(x509MaximumRetryAfter)/float64(header.unit) {
-				return x509MaximumRetryAfter, true
+			if parsed >= float64(time.Duration(1<<63-1))/float64(header.unit) {
+				return time.Duration(1<<63 - 1), true
 			}
 			return time.Duration(parsed * float64(header.unit)), true
 		}
@@ -284,7 +284,7 @@ func x509ParseRetryAfter(headers http.Header, now time.Time) (time.Duration, boo
 			if delay <= 0 {
 				return 0, true
 			}
-			return min(delay, x509MaximumRetryAfter), true
+			return delay, true
 		}
 	}
 	return 0, false
