@@ -461,7 +461,7 @@ def resolve_checkpoint(
             or not isinstance(metadata["record"], dict)
         ):
             raise ReportError("invalid versioned checkpoint envelope")
-        metadata = metadata["record"]
+        metadata = cast(dict[str, Any], metadata["record"])
         namespace = "castiron/next/"
     if {"release_target", "schema_version", "record"}.intersection(metadata):
         raise ReportError("checkpoint target metadata must use the versioned envelope")

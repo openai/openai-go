@@ -92,6 +92,23 @@ func (c *LiveConnection) Recv(ctx context.Context) (ServerEventUnion, error) {
 	return event.decode()
 }
 
+// SendRaw writes a JSON event once without changing its bytes. Success means a
+// local write, not acknowledgment. A websocket.DeliveryError reports uncertainty.
+func (c *LiveConnection) SendRaw(ctx context.Context, data json.RawMessage) error {
+	return c.connection.Send(ctx, data)
+}
+
+// RecvRaw receives the next event not claimed by an attached lane, preserving
+// its original JSON. Canceling ctx cancels only this wait. Typed and raw reads
+// consume the same ordered event queue.
+func (c *LiveConnection) RecvRaw(ctx context.Context) (json.RawMessage, error) {
+	event, err := c.connection.Recv(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return event.data, nil
+}
+
 // Close performs a bounded closing handshake and releases connection resources.
 func (c *LiveConnection) Close() error { return c.connection.Close() }
 

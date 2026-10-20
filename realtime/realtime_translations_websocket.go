@@ -98,8 +98,9 @@ func (c *TranslationConnection) SendRaw(ctx context.Context, data json.RawMessag
 	return c.connection.Send(ctx, data)
 }
 
-// RecvRaw receives the next event's original JSON. Canceling ctx cancels only
-// this wait. Typed and raw reads consume the same ordered event queue.
+// RecvRaw receives the next event not claimed by an attached lane, preserving
+// its original JSON. Canceling ctx cancels only this wait. Typed and raw reads
+// consume the same ordered event queue.
 func (c *TranslationConnection) RecvRaw(ctx context.Context) (json.RawMessage, error) {
 	event, err := c.connection.Recv(ctx)
 	if err != nil {
