@@ -13,6 +13,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/openai/openai-go/v3/internal/requestconfig"
@@ -886,6 +887,60 @@ func TestX509WorkloadIdentityRejectsExcessiveRetryAfter(t *testing.T) {
 			if got := attempts.Load(); got != 1 {
 				t.Fatalf("issuer attempts = %d, want 1", got)
 			}
+		})
+	}
+}
+
+func TestX509FollowerHonorsSharedRetryAfter(t *testing.T) {
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		t.Error("unexpected issuer request during shared backoff")
+		w.WriteHeader(http.StatusBadRequest)
+	}))
+	for _, cancelBackoff := range []bool{false, true} {
+		t.Run(strconv.FormatBool(cancelBackoff), func(t *testing.T) {
+			synctest.Test(t, func(t *testing.T) {
+				identity := newX509LifecycleIdentity(t, fixture)
+				refresh := &x509TokenRefresh{done: make(chan struct{})}
+				identity.inFlight = refresh
+				ctx, cancel := context.WithCancel(t.Context())
+				defer cancel()
+				scope := requestconfig.NewRequestRetryScope(2, 2*time.Second, true, nil)
+				if !scope.BeginAttempt() {
+					t.Fatal("initial attempt rejected")
+				}
+				ctx = requestconfig.WithRequestRetryScope(ctx, scope)
+				result := make(chan error, 1)
+				go func() { _, err := identity.GetToken(ctx, fixture.capability); result <- err }()
+				synctest.Wait() // The caller is durably blocked on this synthetic refresh.
+				identity.mu.Lock()
+				identity.inFlight = nil
+				identity.cached = x509ExchangedToken{value: x509ExchangeSyntheticToken, expiresAt: time.Now().Add(time.Minute)}
+				identity.refreshAfter = time.Now().Add(time.Minute)
+				refresh.err = &x509ExchangeHTTPError{statusCode: 429, retryAfter: time.Second, hasRetryAfter: true}
+				started := time.Now()
+				close(refresh.done)
+				identity.mu.Unlock()
+				if cancelBackoff {
+					synctest.Wait() // Waiting on the retry timer must remain cancellable.
+					cancel()
+				}
+				err := <-result
+				if cancelBackoff {
+					if !errors.Is(err, context.Canceled) {
+						t.Errorf("GetToken error = %v, want cancellation", err)
+					}
+					if elapsed := time.Since(started); elapsed != 0 {
+						t.Errorf("cancellation waited %s, want zero", elapsed)
+					}
+				} else {
+					if err != nil {
+						t.Errorf("GetToken error = %v, want nil", err)
+					}
+					if elapsed := time.Since(started); elapsed != time.Second {
+						t.Errorf("shared Retry-After waited %s, want 1s", elapsed)
+					}
+				}
+			})
 		})
 	}
 }
