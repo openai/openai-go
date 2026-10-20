@@ -134,7 +134,14 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 				}
 				if retryableX509ExchangeError(current.err) {
 					if scope := requestconfig.RequestRetryScopeFromContext(ctx); scope != nil {
-						if _, allowed := x509ExchangeRetryDelay(current.err, 0, scope); allowed && scope.TryRetry() {
+						if delay, allowed := x509ExchangeRetryDelay(current.err, 0, scope); allowed && scope.TryRetry() {
+							timer := time.NewTimer(delay)
+							select {
+							case <-ctx.Done():
+								timer.Stop()
+								return identity.tokenAfterExchangeContextDone(ctx, callerCtx)
+							case <-timer.C:
+							}
 							continue
 						}
 					}
