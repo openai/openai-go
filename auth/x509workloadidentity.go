@@ -135,6 +135,9 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 				if retryableX509ExchangeError(current.err) {
 					if scope := requestconfig.RequestRetryScopeFromContext(ctx); scope != nil {
 						if delay, allowed := x509ExchangeRetryDelay(current.err, 0, scope); allowed && scope.TryRetry() {
+							if errors.Is(current.err, errX509InvalidatedBearer) {
+								continue
+							}
 							timer := time.NewTimer(delay)
 							select {
 							case <-ctx.Done():
