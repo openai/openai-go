@@ -118,6 +118,12 @@ func (c *TranslationSession) send(ctx context.Context, value any) error {
 	}
 	c.sending++
 	c.mu.Unlock()
+	reserved := true
+	defer func() {
+		if reserved {
+			c.sent()
+		}
+	}()
 	var data []byte
 	var err error
 	if raw, ok := value.(json.RawMessage); ok {
@@ -129,14 +135,14 @@ func (c *TranslationSession) send(ctx context.Context, value any) error {
 	if err == nil {
 		event, err = decodeTranslationSessionEvent(data)
 	}
-	if err != nil || event.kind == "session.close" {
+	if err != nil {
+		return &websocket.DeliveryError{Cause: err}
+	}
+	if event.kind == "session.close" {
 		c.sent()
-		if err != nil {
-			return &websocket.DeliveryError{Cause: err}
-		}
+		reserved = false
 		return c.requestClose(ctx, data)
 	}
-	defer c.sent()
 	return c.connection.SendRaw(ctx, data)
 }
 
