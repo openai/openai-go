@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -33,7 +33,7 @@ type EmbeddingService struct {
 // there is one), and before any request-specific options.
 func NewEmbeddingService(opts ...option.RequestOption) (r EmbeddingService) {
 	r = EmbeddingService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
@@ -97,7 +97,7 @@ func (r *CreateEmbeddingResponseUsage) UnmarshalJSON(data []byte) error {
 type Embedding struct {
 	// The embedding vector, which is a list of floats. The length of vector depends on
 	// the model as listed in the
-	// [embedding guide](https://platform.openai.com/docs/guides/embeddings).
+	// [embedding guide](https://developers.openai.com/api/docs/guides/embeddings).
 	Embedding []float64 `json:"embedding" api:"required"`
 	// The index of the embedding in the list of embeddings.
 	Index int64 `json:"index" api:"required"`
@@ -139,17 +139,17 @@ type EmbeddingNewParams struct {
 	// request.
 	Input EmbeddingNewParamsInputUnion `json:"input,omitzero" api:"required"`
 	// ID of the model to use. You can use the
-	// [List models](https://platform.openai.com/docs/api-reference/models/list) API to
-	// see all of your available models, or see our
-	// [Model overview](https://platform.openai.com/docs/models) for descriptions of
-	// them.
+	// [List models](https://developers.openai.com/api/reference/resources/models/methods/list)
+	// API to see all of your available models, or see our
+	// [Model overview](https://developers.openai.com/api/docs/models) for descriptions
+	// of them.
 	Model EmbeddingModel `json:"model,omitzero" api:"required"`
 	// The number of dimensions the resulting output embeddings should have. Only
 	// supported in `text-embedding-3` and later models.
 	Dimensions param.Opt[int64] `json:"dimensions,omitzero"`
 	// A unique identifier representing your end-user, which can help OpenAI to monitor
 	// and detect abuse.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
 	User param.Opt[string] `json:"user,omitzero"`
 	// The format to return the embeddings in. Can be either `float` or
 	// [`base64`](https://pypi.org/project/pybase64/).
@@ -183,19 +183,6 @@ func (u EmbeddingNewParamsInputUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *EmbeddingNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *EmbeddingNewParamsInputUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfStrings) {
-		return &u.OfArrayOfStrings
-	} else if !param.IsOmitted(u.OfArrayOfTokens) {
-		return &u.OfArrayOfTokens
-	} else if !param.IsOmitted(u.OfArrayOfTokenArrays) {
-		return &u.OfArrayOfTokenArrays
-	}
-	return nil
 }
 
 // The format to return the embeddings in. Can be either `float` or

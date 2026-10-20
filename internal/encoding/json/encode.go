@@ -1172,11 +1172,11 @@ func typeFields(t reflect.Type) structFields {
 			for i := 0; i < f.typ.NumField(); i++ {
 				sf := f.typ.Field(i)
 				if sf.Anonymous {
-					t := sf.Type
-					if t.Kind() == reflect.Pointer {
-						t = t.Elem()
+					embeddedType := sf.Type
+					if embeddedType.Kind() == reflect.Pointer {
+						embeddedType = embeddedType.Elem()
 					}
-					if !sf.IsExported() && t.Kind() != reflect.Struct {
+					if !sf.IsExported() && embeddedType.Kind() != reflect.Struct {
 						// Ignore embedded fields of unexported non-struct types.
 						continue
 					}
@@ -1223,7 +1223,7 @@ func typeFields(t reflect.Type) structFields {
 					if name == "" {
 						name = sf.Name
 					}
-					field := field{
+					jsonField := field{
 						name:      name,
 						tag:       tagged,
 						index:     index,
@@ -1235,36 +1235,36 @@ func typeFields(t reflect.Type) structFields {
 						timefmt: sf.Tag.Get("format"),
 						// EDIT(end)
 					}
-					field.nameBytes = []byte(field.name)
+					jsonField.nameBytes = []byte(jsonField.name)
 
 					// Build nameEscHTML and nameNonEsc ahead of time.
-					nameEscBuf = appendHTMLEscape(nameEscBuf[:0], field.nameBytes)
-					field.nameEscHTML = `"` + string(nameEscBuf) + `":`
-					field.nameNonEsc = `"` + field.name + `":`
+					nameEscBuf = appendHTMLEscape(nameEscBuf[:0], jsonField.nameBytes)
+					jsonField.nameEscHTML = `"` + string(nameEscBuf) + `":`
+					jsonField.nameNonEsc = `"` + jsonField.name + `":`
 
-					if field.omitZero {
-						t := sf.Type
+					if jsonField.omitZero {
+						fieldType := sf.Type
 						// Provide a function that uses a type's IsZero method.
 						switch {
-						case t.Kind() == reflect.Interface && t.Implements(isZeroerType):
-							field.isZero = func(v reflect.Value) bool {
+						case fieldType.Kind() == reflect.Interface && fieldType.Implements(isZeroerType):
+							jsonField.isZero = func(v reflect.Value) bool {
 								// Avoid panics calling IsZero on a nil interface or
 								// non-nil interface with nil pointer.
 								return v.IsNil() ||
 									(v.Elem().Kind() == reflect.Pointer && v.Elem().IsNil()) ||
 									v.Interface().(isZeroer).IsZero()
 							}
-						case t.Kind() == reflect.Pointer && t.Implements(isZeroerType):
-							field.isZero = func(v reflect.Value) bool {
+						case fieldType.Kind() == reflect.Pointer && fieldType.Implements(isZeroerType):
+							jsonField.isZero = func(v reflect.Value) bool {
 								// Avoid panics calling IsZero on nil pointer.
 								return v.IsNil() || v.Interface().(isZeroer).IsZero()
 							}
-						case t.Implements(isZeroerType):
-							field.isZero = func(v reflect.Value) bool {
+						case fieldType.Implements(isZeroerType):
+							jsonField.isZero = func(v reflect.Value) bool {
 								return v.Interface().(isZeroer).IsZero()
 							}
-						case reflect.PointerTo(t).Implements(isZeroerType):
-							field.isZero = func(v reflect.Value) bool {
+						case reflect.PointerTo(fieldType).Implements(isZeroerType):
+							jsonField.isZero = func(v reflect.Value) bool {
 								if !v.CanAddr() {
 									// Temporarily box v so we can take the address.
 									v2 := reflect.New(v.Type()).Elem()
@@ -1276,7 +1276,7 @@ func typeFields(t reflect.Type) structFields {
 						}
 					}
 
-					fields = append(fields, field)
+					fields = append(fields, jsonField)
 					if count[f.typ] > 1 {
 						// If there were multiple instances, add a second,
 						// so that the annihilation code will see a duplicate.

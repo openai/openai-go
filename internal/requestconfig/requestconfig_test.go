@@ -7,7 +7,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"testing"
+	"time"
 )
 
 type closeTrackingReadCloser struct {
@@ -103,6 +105,43 @@ func TestFormatPathEscapesPathParams(t *testing.T) {
 	}
 }
 
+func TestSameOrigin(t *testing.T) {
+	tests := []struct {
+		name  string
+		left  string
+		right string
+		want  bool
+	}{
+		{name: "identical", left: "https://example.com/path", right: "https://example.com/other", want: true},
+		{name: "case insensitive scheme and host", left: "HTTPS://EXAMPLE.COM/path", right: "https://example.com/other", want: true},
+		{name: "default HTTP port", left: "http://example.com/path", right: "http://example.com:80/other", want: true},
+		{name: "default HTTPS port", left: "https://example.com/path", right: "https://example.com:443/other", want: true},
+		{name: "different scheme", left: "http://example.com/path", right: "https://example.com/path", want: false},
+		{name: "different host", left: "https://example.com/path", right: "https://other.example/path", want: false},
+		{name: "different port", left: "https://example.com:444/path", right: "https://example.com/path", want: false},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			left, err := url.Parse(test.left)
+			if err != nil {
+				t.Fatal(err)
+			}
+			right, err := url.Parse(test.right)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := SameOrigin(left, right); got != test.want {
+				t.Fatalf("SameOrigin(%q, %q) = %v, want %v", test.left, test.right, got, test.want)
+			}
+		})
+	}
+
+	if SameOrigin(nil, nil) {
+		t.Fatal("SameOrigin(nil, nil) = true, want false")
+	}
+}
+
 func TestNormalizeOS(t *testing.T) {
 	tests := map[string]string{
 		"android": "Android",
@@ -154,6 +193,128 @@ func TestRequestFinalizerComposesThroughApply(t *testing.T) {
 	}
 	if !finalized {
 		t.Fatal("request finalizer did not run")
+	}
+}
+
+func TestCloneDoesNotAliasMiddlewareSlice(t *testing.T) {
+	cfg, err := NewRequestConfig(context.Background(), http.MethodGet, "/models", nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg.Middlewares = []middleware{func(*http.Request, middlewareNext) (*http.Response, error) {
+		return nil, nil
+	}}
+
+	clone := cfg.Clone(context.Background())
+	if clone == nil {
+		t.Fatal("Clone() = nil")
+	}
+	if &clone.Middlewares[0] == &cfg.Middlewares[0] {
+		t.Fatal("clone middleware aliases the original configuration")
+	}
+}
+
+func TestParseRetryAfterHeaderBoundsRemoteDelays(t *testing.T) {
+	tests := map[string]struct {
+		header       http.Header
+		want         time.Duration
+		ok           bool
+		exceedsLimit bool
+	}{
+		"milliseconds": {
+			header: http.Header{"Retry-After-Ms": {"125"}},
+			want:   125 * time.Millisecond,
+			ok:     true,
+		},
+		"fractional seconds": {
+			header: http.Header{"Retry-After": {"0.25"}},
+			want:   250 * time.Millisecond,
+			ok:     true,
+		},
+		"huge value": {
+			header:       http.Header{"Retry-After": {"1e100"}},
+			ok:           true,
+			exceedsLimit: true,
+		},
+		"finite scaling overflow": {
+			header:       http.Header{"Retry-After": {"2" + strings.Repeat("0", 299)}},
+			ok:           true,
+			exceedsLimit: true,
+		},
+		"far future date": {
+			header:       http.Header{"Retry-After": {time.Now().Add(time.Hour).UTC().Format(time.RFC1123)}},
+			ok:           true,
+			exceedsLimit: true,
+		},
+		"invalid preferred header falls back": {
+			header: http.Header{"Retry-After-Ms": {"-1"}, "Retry-After": {"0.5"}},
+			want:   500 * time.Millisecond,
+			ok:     true,
+		},
+		"zero": {
+			header: http.Header{"Retry-After": {"0"}},
+			ok:     true,
+		},
+		"zero milliseconds": {
+			header: http.Header{"Retry-After-Ms": {"0"}},
+			ok:     true,
+		},
+		"negative": {
+			header: http.Header{"Retry-After-Ms": {"-100"}},
+		},
+		"not a number": {
+			header: http.Header{"Retry-After": {"NaN"}},
+		},
+		"infinite": {
+			header: http.Header{"Retry-After": {"+Inf"}},
+		},
+		"past date": {
+			header: http.Header{"Retry-After": {time.Now().Add(-time.Hour).UTC().Format(time.RFC1123)}},
+			ok:     true,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, ok, exceedsLimit := parseRetryAfterHeader(&http.Response{Header: test.header}, DefaultMaxServerDelay)
+			if ok != test.ok || got != test.want || exceedsLimit != test.exceedsLimit {
+				t.Fatalf("parseRetryAfterHeader() = (%s, %t, %t), want (%s, %t, %t)", got, ok, exceedsLimit, test.want, test.ok, test.exceedsLimit)
+			}
+		})
+	}
+}
+
+func TestRetryDelayFallback(t *testing.T) {
+	for _, header := range []string{"", "invalid", "NaN", "+Inf", "-1", "-1e1000"} {
+		t.Run(header, func(t *testing.T) {
+			for _, maximum := range []time.Duration{0, 20 * time.Millisecond, 20 * time.Second} {
+				wantMax := maximum
+				if wantMax == 0 {
+					wantMax = 8 * time.Second
+				}
+				delay, retry := retryDelay(&http.Response{Header: http.Header{"Retry-After": {header}}}, 1000, maximum)
+				if !retry || delay < wantMax*3/4 || delay > wantMax {
+					t.Fatalf("retryDelay(%q, %s) = (%s, %t), want jittered backoff capped at %s", header, maximum, delay, retry, wantMax)
+				}
+			}
+		})
+	}
+}
+
+func TestRetryAfterLargestConfiguredDelay(t *testing.T) {
+	const maximum = time.Duration(1<<63 - 1)
+	delay, ok, exceedsLimit := parseRetryAfterHeader(&http.Response{Header: http.Header{"Retry-After": {"9223372036.854776"}}}, maximum)
+	if delay != maximum || !ok || exceedsLimit {
+		t.Fatalf("parseRetryAfterHeader() = (%s, %t, %t), want (%s, true, false)", delay, ok, exceedsLimit, maximum)
+	}
+}
+
+func TestWaitForDelayObservesCancellation(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	if err := WaitForDelay(ctx, 0); !errors.Is(err, context.Canceled) {
+		t.Fatalf("WaitForDelay() error = %v, want %v", err, context.Canceled)
 	}
 }
 

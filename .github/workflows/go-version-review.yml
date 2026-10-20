@@ -140,7 +140,7 @@ jobs:
         # The built-in :workspace profile permits checkout and temp writes but
         # denies command network access by default. The job has read-only
         # repository permissions and checkout did not persist a credential.
-        uses: openai/codex-action@52fe01ec70a42f454c9d2ebd47598f9fd6893d56 # v1
+        uses: openai/codex-action@bdf19a4a223ec2549a3e2274a0cf61556bc07675 # v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           prompt-file: .github/codex/prompts/go-version-review.md
@@ -402,8 +402,8 @@ jobs:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          # GITHUB_TOKEN deliberately does not trigger pull_request workflows.
-          # workflow_dispatch is the documented exception.
+          # GITHUB_TOKEN-created pull requests require approval before their
+          # pull_request workflows run, so dispatch the required checks directly.
           gh workflow run ci.yml --ref "$BRANCH"
           gh workflow run detect-breaking-changes.yml \
             --ref "$BRANCH" \

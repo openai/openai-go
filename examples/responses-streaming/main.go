@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/responses"
 )
@@ -15,8 +16,9 @@ func main() {
 
 	stream := client.Responses.NewStreaming(ctx, responses.ResponseNewParams{
 		Input: responses.ResponseNewParamsInputUnion{OfString: openai.String(question)},
-		Model: openai.ChatModelGPT4,
+		Model: openai.ChatModelGPT5_2,
 	})
+	defer func() { _ = stream.Close() }()
 
 	var completeText string
 
@@ -32,7 +34,7 @@ func main() {
 	}
 
 	if stream.Err() != nil {
-		panic(stream.Err())
+		panic(errutil.Message(stream.Err()))
 	}
 
 	_ = completeText

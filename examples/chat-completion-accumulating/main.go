@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 )
 
@@ -26,7 +27,7 @@ func main() {
 	params := openai.ChatCompletionNewParams{
 		Messages: messages,
 		Seed:     openai.Int(0),
-		Model:    openai.ChatModelGPT4o,
+		Model:    openai.ChatModelGPT5_2,
 		Tools:    tools,
 		StreamOptions: openai.ChatCompletionStreamOptionsParam{
 			IncludeUsage: openai.Bool(true),
@@ -34,12 +35,15 @@ func main() {
 	}
 
 	stream := client.Chat.Completions.NewStreaming(ctx, params)
+	defer func() { _ = stream.Close() }()
 	acc := openai.ChatCompletionAccumulator{}
 
 	for stream.Next() {
 		chunk := stream.Current()
 
-		acc.AddChunk(chunk)
+		if !acc.AddChunk(chunk) {
+			panic("failed to accumulate stream chunk")
+		}
 
 		// When this fires, the current chunk value will not contain content data
 		if _, ok := acc.JustFinishedContent(); ok {
@@ -65,7 +69,7 @@ func main() {
 	}
 
 	if err := stream.Err(); err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	if acc.Usage.TotalTokens > 0 {
@@ -107,16 +111,4 @@ var tools = []openai.ChatCompletionToolUnionParam{
 			"required": []string{"town", "nation"},
 		},
 	}),
-}
-
-// Mock function to simulate weather data retrieval
-func getWeather(location string) string {
-	// In a real implementation, this function would call a weather API
-	return "Sunny, 25°C"
-}
-
-// Mock function to simulate population data retrieval
-func getPopulation(town, nation string, rounding int) string {
-	// In a real implementation, this function would call a population API
-	return "Athens, Greece: 664,046"
 }

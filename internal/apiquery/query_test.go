@@ -1,6 +1,7 @@
 package apiquery
 
 import (
+	"errors"
 	"net/url"
 	"testing"
 	"time"
@@ -112,6 +113,19 @@ type QueryOmitTest struct {
 	B string            `query:"b,omitzero"`
 }
 
+type firstErrorMarshaler struct {
+	calls *int
+	err   error
+}
+
+func (m firstErrorMarshaler) MarshalJSON() ([]byte, error) {
+	*m.calls++
+	if *m.calls == 1 {
+		return nil, m.err
+	}
+	return []byte(`"ok"`), nil
+}
+
 type NamedEnum string
 
 const NamedEnumFoo NamedEnum = "foo"
@@ -135,13 +149,13 @@ var tests = map[string]struct {
 	settings QuerySettings
 }{
 	"primitives": {
-		"a=false&b=237628372683&c=654&d=9999.43&e=43.7599983215332&f=1,2,3,4",
+		"a=false&b=237628372683&c=654&d=9999.43&e=43.76&f=1,2,3,4",
 		Primitives{A: false, B: 237628372683, C: uint(654), D: 9999.43, E: 43.76, F: []int{1, 2, 3, 4}},
 		QuerySettings{},
 	},
 
 	"slices_brackets": {
-		`mixed[]=1&mixed[]=2.3&mixed[]=hello&slices[][a]=false&slices[][a]=false&slices[][b]=237628372683&slices[][b]=237628372683&slices[][c]=654&slices[][c]=654&slices[][d]=9999.43&slices[][d]=9999.43&slices[][e]=43.7599983215332&slices[][e]=43.7599983215332&slices[][f][]=1&slices[][f][]=2&slices[][f][]=3&slices[][f][]=4&slices[][f][]=1&slices[][f][]=2&slices[][f][]=3&slices[][f][]=4`,
+		`mixed[]=1&mixed[]=2.3&mixed[]=hello&slices[][a]=false&slices[][a]=false&slices[][b]=237628372683&slices[][b]=237628372683&slices[][c]=654&slices[][c]=654&slices[][d]=9999.43&slices[][d]=9999.43&slices[][e]=43.76&slices[][e]=43.76&slices[][f][]=1&slices[][f][]=2&slices[][f][]=3&slices[][f][]=4&slices[][f][]=1&slices[][f][]=2&slices[][f][]=3&slices[][f][]=4`,
 		Slices{
 			Slice: []Primitives{
 				{A: false, B: 237628372683, C: uint(654), D: 9999.43, E: 43.76, F: []int{1, 2, 3, 4}},
@@ -161,7 +175,7 @@ var tests = map[string]struct {
 	},
 
 	"slices_repeat": {
-		`mixed=1&mixed=2.3&mixed=hello&slices[a]=false&slices[a]=false&slices[b]=237628372683&slices[b]=237628372683&slices[c]=654&slices[c]=654&slices[d]=9999.43&slices[d]=9999.43&slices[e]=43.7599983215332&slices[e]=43.7599983215332&slices[f]=1&slices[f]=2&slices[f]=3&slices[f]=4&slices[f]=1&slices[f]=2&slices[f]=3&slices[f]=4`,
+		`mixed=1&mixed=2.3&mixed=hello&slices[a]=false&slices[a]=false&slices[b]=237628372683&slices[b]=237628372683&slices[c]=654&slices[c]=654&slices[d]=9999.43&slices[d]=9999.43&slices[e]=43.76&slices[e]=43.76&slices[f]=1&slices[f]=2&slices[f]=3&slices[f]=4&slices[f]=1&slices[f]=2&slices[f]=3&slices[f]=4`,
 		Slices{
 			Slice: []Primitives{
 				{A: false, B: 237628372683, C: uint(654), D: 9999.43, E: 43.76, F: []int{1, 2, 3, 4}},
@@ -173,7 +187,7 @@ var tests = map[string]struct {
 	},
 
 	"primitive_pointer_struct": {
-		"a=false&b=237628372683&c=654&d=9999.43&e=43.7599983215332&f=1,2,3,4,5",
+		"a=false&b=237628372683&c=654&d=9999.43&e=43.76&f=1,2,3,4,5",
 		PrimitivePointers{
 			A: P(false),
 			B: P(237628372683),
@@ -432,5 +446,21 @@ func TestEncode(t *testing.T) {
 				t.Fatalf("expected %+#v to serialize to %s but got %s", test.val, test.enc, str)
 			}
 		})
+	}
+}
+
+func TestEncodeMapElementError(t *testing.T) {
+	calls := 0
+	wantErr := errors.New("marshal failed")
+	values := map[string]firstErrorMarshaler{
+		"first":  {calls: &calls, err: wantErr},
+		"second": {calls: &calls, err: wantErr},
+	}
+
+	if _, err := Marshal(values); err == nil {
+		t.Fatalf("Marshal(%v) error = nil, want non-nil", values)
+	}
+	if calls != 1 {
+		t.Fatalf("Marshal marshaler calls = %d, want 1", calls)
 	}
 }

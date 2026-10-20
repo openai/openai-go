@@ -1,8 +1,9 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
 import (
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 )
 
@@ -20,6 +21,8 @@ type AudioService struct {
 	Translations AudioTranslationService
 	// Turn audio into text or text into audio.
 	Speech AudioSpeechService
+	// Turn audio into text or text into audio.
+	Voices AudioVoiceService
 }
 
 // NewAudioService generates a new service that applies the given options to each
@@ -27,10 +30,11 @@ type AudioService struct {
 // is one), and before any request-specific options.
 func NewAudioService(opts ...option.RequestOption) (r AudioService) {
 	r = AudioService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Transcriptions = NewAudioTranscriptionService(opts...)
 	r.Translations = NewAudioTranslationService(opts...)
 	r.Speech = NewAudioSpeechService(opts...)
+	r.Voices = NewAudioVoiceService(opts...)
 	return
 }
 

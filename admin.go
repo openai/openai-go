@@ -1,8 +1,9 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
 import (
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 )
 
@@ -22,7 +23,7 @@ type AdminService struct {
 // is one), and before any request-specific options.
 func NewAdminService(opts ...option.RequestOption) (r AdminService) {
 	r = AdminService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Organization = NewAdminOrganizationService(opts...)
 	return
 }

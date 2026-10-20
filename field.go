@@ -3,6 +3,7 @@ package openai
 import (
 	"github.com/openai/openai-go/v3/packages/param"
 	"io"
+	"path/filepath"
 	"time"
 )
 
@@ -35,7 +36,7 @@ func (f file) Filename() string {
 	if f.name != "" {
 		return f.name
 	} else if named, ok := f.Reader.(interface{ Name() string }); ok {
-		return named.Name()
+		return filepath.Base(named.Name())
 	}
 	return ""
 }

@@ -4,11 +4,18 @@ on:
   push:
     branches:
       - main
+      - next
   pull_request:
+    types: [opened, synchronize, reopened, edited]
     branches:
       - main
-  # Repository automation explicitly dispatches CodeQL because pull requests
-  # created with GITHUB_TOKEN do not emit a pull_request event.
+      - next
+  merge_group:
+    types:
+      - checks_requested
+  # The monthly Go version review explicitly dispatches CodeQL because its
+  # GITHUB_TOKEN-created pull request requires approval before pull_request
+  # workflows run.
   workflow_dispatch:
 
 permissions:
@@ -39,12 +46,29 @@ jobs:
           persist-credentials: false
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
+        uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
+        uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
         with:
           category: /language:${{ matrix.language }}
+
+  codeql_required:
+    name: CodeQL analysis (all languages)
+    if: always()
+    needs: analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Require every CodeQL analysis
+        env:
+          ANALYSIS_RESULT: ${{ needs.analyze.result }}
+        run: |
+          if [[ "$ANALYSIS_RESULT" != "success" ]]; then
+            echo "CodeQL analysis ended with: $ANALYSIS_RESULT"
+            exit 1
+          fi

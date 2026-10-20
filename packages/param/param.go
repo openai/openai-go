@@ -80,13 +80,7 @@ func IsNull[T any](v T) bool {
 	if nullable, ok := any(v).(ParamNullable); ok {
 		return nullable.null()
 	}
-
-	switch reflect.TypeOf(v).Kind() {
-	case reflect.Slice, reflect.Map:
-		return sentinel.IsNull(v)
-	}
-
-	return false
+	return sentinel.IsNull(v)
 }
 
 // ParamNullable encapsulates all structs in parameters,
