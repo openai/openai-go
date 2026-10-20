@@ -200,6 +200,30 @@ func TestExtraFields(t *testing.T) {
 	}
 }
 
+// Extra fields are applied one at a time with sjson, so map iteration order
+// would otherwise show up as byte order in the output. Two or more keys are
+// needed to observe it: a single key cannot permute.
+func TestExtraFieldsSorted(t *testing.T) {
+	const expected = `{"a":"hello","b":123,"c":"third","d":true,"m":["second"],"z":1}`
+
+	for range 100 {
+		v := Struct{A: "hello", B: 123}
+		v.SetExtraFields(map[string]any{
+			"z": 1,
+			"c": "third",
+			"m": []string{"second"},
+			"d": true,
+		})
+		bytes, err := json.Marshal(v)
+		if err != nil {
+			t.Fatalf("failed to marshal: %v", err)
+		}
+		if string(bytes) != expected {
+			t.Fatalf("failed to marshal: got %v", string(bytes))
+		}
+	}
+}
+
 func TestExtraFieldsForceOmitted(t *testing.T) {
 	v := Struct{
 		// Testing with the zero value.
@@ -326,7 +350,8 @@ func TestOptionalInterfaceAssignability(t *testing.T) {
 		t.Fatalf("unexpected successful assignment")
 	}
 
-	notOpt.implOpt() // silence the warning
+	_ = notOpt.isZero()
+	notOpt.implOpt()
 }
 
 type PrimitiveUnion struct {

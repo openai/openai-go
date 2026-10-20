@@ -30,16 +30,22 @@ Or to pin an SDK version (see the Go compatibility note below):
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/openai/openai-go/v3@v3.49.0'
+go get -u 'github.com/openai/openai-go/v3@v3.82.0'
 ```
 
 <!-- x-release-please-end -->
 
 ## Requirements
 
-SDK v3.45.0 and later require Go 1.25 or later. If your application must
-remain on Go 1.22–1.24, pin SDK v3.44.0, the final compatible release. Older
-SDK releases receive no guaranteed fixes or security backports.
+This version requires Go 1.26 or later. Use the latest patch release of Go
+1.26 or Go 1.27; the HTTP/2 security fixes require Go 1.26.9 or Go 1.27.2
+or later patches in those release lines.
+
+If your application must remain on Go 1.25, pin SDK v3.74.0, the final
+compatible release. For Go 1.22–1.24, pin SDK v3.44.0. These older SDK
+releases receive no guaranteed fixes or security backports, and v3.74.0
+retains the affected HTTP/2 dependency. Upgrade your Go toolchain to use
+the security update.
 
 See the [Go version support policy](GO_VERSION_POLICY.md) for the supported
 release window and upgrade guidance.
@@ -176,6 +182,7 @@ stream := client.Responses.NewStreaming(ctx, responses.ResponseNewParams{
 		OfString: openai.String("Write a haiku about programming"),
 	},
 })
+defer func() { _ = stream.Close() }()
 
 for stream.Next() {
 	event := stream.Current()
@@ -282,7 +289,7 @@ type Origin struct {
 
 // Structured Outputs uses a subset of JSON schema
 // These flags are necessary to comply with the subset
-func GenerateSchema[T any]() map[string]any {
+func GenerateSchema[T any]() (map[string]any, error) {
 	reflector := jsonschema.Reflector{
 		AllowAdditionalProperties: false,
 		DoNotReference:            true,
@@ -290,18 +297,30 @@ func GenerateSchema[T any]() map[string]any {
 	var v T
 	schema := reflector.Reflect(v)
 
-	data, _ := json.Marshal(schema)
-	var result map[string]any
-	json.Unmarshal(data, &result)
-	return result
+	data, err := json.Marshal(schema)
+	if err != nil {
+		return nil, err
+	}
+	// Preserve schema values as raw JSON so integer constraints are not rounded
+	// through float64 before the SDK serializes the request.
+	var rawSchema map[string]json.RawMessage
+	if err := json.Unmarshal(data, &rawSchema); err != nil {
+		return nil, err
+	}
+	result := make(map[string]any, len(rawSchema))
+	for key, value := range rawSchema {
+		result[key] = value
+	}
+	return result, nil
 }
-
-// Generate the JSON schema at initialization time
-var HistoricalComputerSchema = GenerateSchema[HistoricalComputer]()
 
 func main() {
 	client := openai.NewClient()
 	ctx := context.Background()
+	schema, err := GenerateSchema[HistoricalComputer]()
+	if err != nil {
+		panic(err)
+	}
 
 	response, err := client.Responses.New(ctx, responses.ResponseNewParams{
 		Model: openai.ChatModelGPT5_2,
@@ -309,10 +328,14 @@ func main() {
 			OfString: openai.String("What computer ran the first neural network?"),
 		},
 		Text: responses.ResponseTextConfigParam{
-			Format: responses.ResponseFormatTextConfigParamOfJSONSchema(
-				"historical_computer",
-				HistoricalComputerSchema,
-			),
+			Format: responses.ResponseFormatTextConfigUnionParam{
+				OfJSONSchema: &responses.ResponseFormatTextJSONSchemaConfigParam{
+					Name:        "historical_computer",
+					Description: openai.String("Notable information about a computer"),
+					Schema:      schema,
+					Strict:      openai.Bool(true),
+				},
+			},
 		},
 	})
 	if err != nil {
@@ -321,7 +344,9 @@ func main() {
 
 	// extract into a well-typed struct
 	var historicalComputer HistoricalComputer
-	_ = json.Unmarshal([]byte(response.OutputText()), &historicalComputer)
+	if err := json.Unmarshal([]byte(response.OutputText()), &historicalComputer); err != nil {
+		panic(err)
+	}
 
 	historicalComputer.Name
 	historicalComputer.Origin.YearBuilt
@@ -332,9 +357,220 @@ func main() {
 }
 ```
 
-> See the [full structured outputs example](./examples/responses-structured-outputs/main.go)
+> See the [full structured outputs example](./examples/structured-outputs/main.go)
 
 </details>
+
+### Responses WebSockets
+
+Use `client.Responses.Connect(ctx, responses.ResponseConnectionOptions{}, opts...)`
+to open a reusable Responses connection. Client and per-connection request options,
+including `option.WithHeader`, apply to the opening handshake. See the
+[WebSocket example](examples/responses-websocket/main.go).
+`option.WithResponseInto` exposes the opening HTTP response. A rejected workload-identity
+handshake can refresh its token within the configured retry budget; application
+messages are never replayed. These connections require native HTTP transport
+support and are unavailable in `js/wasm`; other SDK APIs remain usable there.
+
+The default options do not cap message size or the receive buffer. Set
+`MaxMessageBytes`, `MaxBufferedBytes` or `MaxBufferedEvents` to a positive value
+to opt into a receive limit. Connections default to 16 pending sends and 64
+distinct lane IDs over the connection's lifetime, including closed lanes.
+Reuse an open lane for sequential responses. Exceeding an explicit receive bound
+fails the connection without silently dropping events. Consume incoming events promptly or configure a buffer
+limit appropriate for the application.
+`CloseTimeout` defaults to five seconds and tears down an unresponsive connection
+after that interval. Always call `Close` or `Abort` when finished.
+
+#### Turns, lanes, and recovery
+
+Responses WebSockets use `response.create` and the normal Responses events, not
+Realtime sessions. Leave `stream` and `background` unset. Use `Create` followed by
+`FinalResponse` for a complete terminal snapshot, including tool calls; failed and
+incomplete responses retain their status. `Recv` exposes individual typed events
+and their `RawJSON`. A terminal response ends a turn, not the socket.
+
+For opt-in incremental text and tool-input snapshots, feed the events you read
+to a `responses.ResponseAccumulator`. It consumes no events itself:
+
+```go
+var acc responses.ResponseAccumulator
+for {
+    event, err := connection.Recv(ctx) // Or lane.Recv(ctx) for a named lane.
+    if err != nil { return err }
+    // The original typed event and event.RawJSON() remain available here.
+    if err := acc.AddEvent(event); err != nil { return err }
+    if event.Type == "response.completed" || event.Type == "response.failed" || event.Type == "response.incomplete" {
+        snapshot := acc.Snapshot()
+        // Inspect TerminalEvent: completed, failed and incomplete all end a turn.
+        // Function arguments and custom-tool input in snapshot.Output are data;
+        // the application decides whether and when to act on them.
+        fmt.Println(snapshot.OutputText())
+        break
+    }
+}
+acc.Reset() // Ready for another turn; does not close the connection.
+```
+
+Use a separate accumulator for each lane. Snapshots remain unchanged as more
+events arrive or after `Reset`. Text is grouped by output and content index;
+function arguments and custom input retain their item and call IDs. Finalized
+fields replace earlier deltas. `OutputText()` is the entire current projection,
+not a delta: read a snapshot at a terminal or on explicit demand. Use the original
+typed events for a live UI; later done events can shorten or correct earlier text.
+A supplied final output, even an empty array,
+overrides prior items; if final output is absent or null, the opt-in projection
+retains collected fields. An item with a different nonempty ID starts fresh
+at its output index; it cannot inherit text or tool inputs from an earlier item.
+This projection is not a server `Response`. A missing or invalid terminal
+response, an API error, or EOF never becomes a completed result.
+`FinalResponse` keeps its original behavior and returns the server snapshot.
+
+Use `acc.DetailedSnapshot()` for a mutable copy of all observed response metadata,
+item, part and annotation fields, beyond the fields selected by `Snapshot()`.
+`Response` is the last observed lifecycle response metadata, without `output`
+(nil until one arrives). Output entries are sorted by `OutputIndex`;
+`Content` and `Annotations` use sparse int64 content and annotation indices.
+Fields are `json.RawMessage`: they preserve exact numbers, omitted versus null,
+and fields from unknown variants, rather than manufacturing a typed complete
+`Response`. Message content and list-valued annotations are extracted to those
+indexed maps; null annotations remain null in the part fields. Unknown item
+fields, including non-message content, remain in `Item`.
+
+```go
+details := acc.DetailedSnapshot() // At a terminal, or when explicitly requested.
+for _, item := range details.Output {
+    for contentIndex, part := range item.Content {
+        text := part["text"]                   // nil if never received
+        logprobs := part["logprobs"]           // provisional streamed form
+        annotations := item.Annotations[contentIndex]
+        _, _, _ = text, logprobs, annotations // Use in application-owned UI/state.
+    }
+}
+```
+
+Streamed logprobs accumulate with deltas. Supplied text-done logprobs replace them
+(including empty or null); whole part/item replacements discard prior fields
+and citations at those positions. Annotations and non-text parts enrich a
+matching known item; an annotation-only event never binds a lane, starts a
+turn or replaces an unrelated item. Standalone unsupported events and parts
+without a known item remain available on the original received event. Tools and
+unknown/partial data are never executed or promoted into final validated models.
+Every returned map and raw JSON byte slice is a separate caller-owned copy.
+Reading either snapshot joins/copies full accumulated output; reading one
+after every delta would repeatedly rebuild growing prefixes.
+
+Continue with `PreviousResponseID: openai.String(previous.ID)` and **only new input**.
+For example, return a function result using its original call ID, then add a new
+user message. The application executes tools and retains their results:
+
+```go
+output := responses.ResponseInputItemParamOfFunctionCallOutput("tool result")
+output.OfFunctionCallOutput.CallID = openai.String(callID)
+input := responses.ResponseInputParam{
+    output,
+    responses.ResponseInputItemParamOfMessage("Explain the result.", responses.EasyInputMessageRoleUser),
+}
+err := connection.Create(ctx, responses.ResponsesClientEventResponseCreateParam{
+    Model: openai.ChatModelGPT5_2,
+    PreviousResponseID: openai.String(previous.ID),
+    Input: responses.ResponsesClientEventResponseCreateInputUnionParam{OfResponse: &input},
+})
+```
+
+For an optional warmup, add `generate: false` to a create request using
+`request.SetExtraFields(map[string]any{"generate": false})`. Receive its terminal
+response and use its ID as the next `PreviousResponseID`; warmup produces no model
+output. Clear that extra field with `request.SetExtraFields(nil)` if reusing the
+request for a generated response. The
+[runnable example](examples/responses-websocket/main.go) shows a normal two-turn
+exchange on one connection.
+
+`StreamID` controls routing and server FIFO execution; `PreviousResponseID`
+controls lineage. Reusing a lane without a parent ID starts a new chain. Register
+`connection.Lane("fork")` before sending its create; Go lanes receive events, so
+set `StreamID` on commands sent through the connection. One physical reader routes
+interleaved events to their lanes. Sequential creates on one lane execute FIFO at
+the service; different lanes may run concurrently. Keep consuming the connection's
+unclaimed/default stream for connection-scoped errors too.
+
+To fork a `store=false`/ZDR response, use its parent ID on a different lane and wait
+for that lane's `response.in_progress` **before advancing the source lane**:
+
+```go
+fork, err := connection.Lane("fork")
+if err != nil { return err }
+defer fork.Close()
+if err := connection.Create(ctx, responses.ResponsesClientEventResponseCreateParam{
+    Model: openai.ChatModelGPT5_2, Store: openai.Bool(false),
+    StreamID: openai.String("fork"), PreviousResponseID: openai.String(previous.ID),
+    Input: responses.ResponsesClientEventResponseCreateInputUnionParam{OfString: openai.String("Explore another approach.")},
+}); err != nil { return err }
+for {
+    event, err := fork.Recv(ctx)
+    if err != nil { return err }
+    if event.Type == "error" { return &responses.ResponseProtocolError{Event: event} }
+    if event.Type == "response.in_progress" { break }
+    if event.Type == "response.completed" || event.Type == "response.failed" || event.Type == "response.incomplete" {
+        return fmt.Errorf("fork ended before becoming ready")
+    }
+}
+// The source lane may now advance; continue draining both lanes.
+```
+
+The service keeps recent parents in a connection-local cache. With `store=true`,
+older IDs may be hydrated from persisted state; with `store=false` or ZDR an
+uncached ID fails with `previous_response_not_found`. A same-lane continuation
+returning 4xx/5xx evicts its referenced parent; a failed cross-lane fork preserves
+the shared parent for the source lane. The SDK does not maintain this server cache.
+
+#### Compaction and service limits
+
+Server compaction uses `ContextManagement` entries with `Type: "compaction"` and
+`CompactThreshold: openai.Int(20000)`. Continue normally with the latest response
+ID and new input. Standalone `client.Responses.Compact` instead returns a compacted
+input window. Preserve **all** its output items, including unknown fields, and
+start a new chain with `PreviousResponseID` omitted or null. Its compaction resource
+ID is not a continuation response ID. Using `encoding/json` and `packages/param`:
+
+```go
+var input responses.ResponseInputParam
+for _, item := range compacted.Output {
+    input = append(input, param.Override[responses.ResponseInputItemUnionParam](json.RawMessage(item.RawJSON())))
+}
+err := connection.Create(ctx, responses.ResponsesClientEventResponseCreateParam{
+    Model: openai.ChatModelGPT5_2,
+    Input: responses.ResponsesClientEventResponseCreateInputUnionParam{OfResponse: &input},
+})
+```
+
+The [WebSocket mode guide](https://developers.openai.com/api/docs/guides/websocket-mode)
+defines service limits separately from SDK buffering: up to 16 active responses
+(additional creates queue), 32 distinct named streams per connection (the default
+lane does not count), and a 60-minute connection lifetime. Stream IDs contain
+1–256 letters, digits, underscores, hyphens or periods. Omit the ID for the default
+lane; an empty string is invalid. Closing a local lane does not free a distinct
+stream ID at the service. SDK `MaxLanes` bounds distinct lane IDs over the
+connection lifetime, including closed lanes; `MaxPendingSends` bounds local
+writes, not active server responses.
+
+`Recv` returns protocol errors as events; `FinalResponse` returns a
+`*responses.ResponseProtocolError` retaining the event. Inspect the nested code:
+`previous_response_not_found` requires a usable persisted parent or a fresh chain
+with saved full context; `invalid_stream_id` requires correcting the ID;
+`websocket_stream_limit_reached` requires reusing an existing stream or explicitly
+opening a new connection; `websocket_connection_limit_reached` requires a new
+connection. Named request errors route to their lane; no-ID errors route to the
+connection. Errors do not by themselves imply a successful turn.
+
+`Reconnect`/`Recover` are explicit and never replay old commands or ambiguous
+writes. Every lane's server cache is lost, even if the old ID was recently used.
+On the replacement, register needed lanes again and resume from a persisted ID
+when available, or send saved full context as a new chain without a parent ID.
+Retain tool results so recovery does not execute tools twice. A `Restore` callback
+may run for each explicitly configured recovery attempt; it owns any commands it
+sends and their replay/idempotency decisions. Do not automatically retry a
+`websocket.DeliveryError` whose `MayHaveBeenSent` is true.
 
 ### Chat Completions API
 
@@ -372,13 +608,13 @@ func main() {
 The openai library uses the [`omitzero`](https://tip.golang.org/doc/go1.24#encodingjsonpkgencodingjson)
 semantics from the Go 1.24+ `encoding/json` release for request fields.
 
-Required primitive fields (`int64`, `string`, etc.) feature the tag <code>\`api:"required"\`</code>. These
+Required primitive fields (`int64`, `string`, etc.) feature the tag `` `api:"required"` ``. These
 fields are always serialized, even their zero values.
 
 Optional primitive types are wrapped in a `param.Opt[T]`. These fields can be set with the provided constructors, `openai.String(string)`, `openai.Int(int64)`, etc.
 
 Any `param.Opt[T]`, map, slice, struct or string enum uses the
-tag <code>\`json:"...,omitzero"\`</code>. Its zero value is considered omitted.
+tag `` `json:"...,omitzero"` ``. Its zero value is considered omitted.
 
 The `param.IsOmitted(any)` function can confirm the presence of any `omitzero` field.
 
@@ -625,7 +861,24 @@ When the API returns a non-success status code, we return an error with type
 `*http.Response` values of the request, as well as the JSON of the error body
 (much like other response objects in the SDK).
 
+`Error.Error()` returns only the HTTP status code and its standard description.
+Routine formatting, wrapping, and logging of `*openai.Error` omit request URLs
+and provider response data. Use `StatusCode` and `errors.As` for programmatic
+handling instead of parsing the error string. Other error types, such as network
+errors, may still contain sensitive details.
+
+Use valid format directives. Go bypasses custom formatting for some invalid
+directives, including `%w` outside `fmt.Errorf` and `%p` on a copied `openai.Error`
+value, and its resulting diagnostics can expose raw fields. Explicit JSON
+serialization and reflection also retain raw diagnostic data.
+
 To handle errors, we recommend that you use the `errors.As` pattern:
+
+> [!WARNING]
+> `Error.RawJSON`, `Error.DumpRequest`, `Error.DumpResponse`, and the error
+> fields expose raw diagnostics that may include authorization headers,
+> credentials in URLs, and sensitive request or response bodies. The dump `body` option does not redact
+> headers. Sanitize this output before logging, sharing, or storing it.
 
 ```go
 _, err := client.FineTuning.Jobs.New(context.TODO(), openai.FineTuningJobNewParams{
@@ -635,10 +888,9 @@ _, err := client.FineTuning.Jobs.New(context.TODO(), openai.FineTuningJobNewPara
 if err != nil {
 	var apierr *openai.Error
 	if errors.As(err, &apierr) {
-		println(string(apierr.DumpRequest(true)))  // Prints the serialized HTTP request
-		println(string(apierr.DumpResponse(true))) // Prints the serialized HTTP response
+		fmt.Printf("OpenAI API error (status: %d)\n", apierr.StatusCode)
 	}
-	panic(err.Error()) // GET "/fine_tuning/jobs": 400 Bad Request { ... }
+	panic("OpenAI request failed")
 }
 ```
 
@@ -705,6 +957,36 @@ openai.FileNewParams{
 
 ## Webhook Verification
 
+Signature verification authenticates the delivery and checks timestamp freshness.
+It does not provide exactly-once processing: the same signed request can pass
+verification more than once within the accepted timestamp window. The handlers
+below show verification only; applications must deduplicate before side effects.
+
+After successful verification, use the authenticated `webhook-id` header as a
+deduplication key, scoped to your application or endpoint. Store it durably with
+a unique constraint shared by all workers. For database effects, claim the ID
+and apply the effect in the same transaction. For example, this PostgreSQL
+pseudocode assumes `processed_webhooks` has a unique `(endpoint, delivery_id)` key:
+
+```sql
+BEGIN;
+INSERT INTO processed_webhooks (endpoint, delivery_id)
+VALUES (:endpoint, :verified_webhook_id)
+ON CONFLICT (endpoint, delivery_id) DO NOTHING
+RETURNING delivery_id;
+-- If no row was returned, acknowledge the duplicate without applying effects.
+-- Otherwise, apply the application's database changes in this transaction.
+COMMIT;
+```
+
+Roll back the claim when processing fails so a retry can succeed. For external
+effects, write a transactional outbox entry and have its worker use a stable
+idempotency key with the destination. A separate "seen" check followed by an
+insert races between workers; an in-memory set does not survive restarts or
+coordinate replicas. Retain deduplication records for the application's retry
+and replay policy, not merely the SDK's default five-minute timestamp tolerance.
+Return a successful acknowledgement for an already completed delivery.
+
 Verifying webhook signatures is _optional but encouraged_.
 
 For more information about webhooks, see [the API docs](https://platform.openai.com/docs/guides/webhooks).
@@ -715,20 +997,29 @@ For most use cases, you will likely want to verify the webhook and parse the pay
 
 Note that the `body` parameter should be the raw JSON bytes sent from the server (do not parse it first). The `Unwrap()` method will parse this JSON for you into an event object after verifying the webhook was sent from OpenAI.
 
+Webhook payloads are unauthenticated until signature verification succeeds. The
+example below limits each request to 1 MiB before buffering it and configures
+server read timeouts. Enforce the same or a smaller limit at your reverse proxy
+as defense in depth.
+
 ```go
 package main
 
 import (
+	"errors"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/webhooks"
 )
+
+const maxWebhookBodySize = 1 << 20 // 1 MiB
 
 func main() {
 	client := openai.NewClient(
@@ -738,12 +1029,19 @@ func main() {
 	r := gin.Default()
 
 	r.POST("/webhook", func(c *gin.Context) {
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxWebhookBodySize)
+		defer func() { _ = c.Request.Body.Close() }()
+
 		body, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading request body"})
+			var maxBytesError *http.MaxBytesError
+			if errors.As(err, &maxBytesError) {
+				c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "request body too large"})
+				return
+			}
+			c.JSON(http.StatusBadRequest, gin.H{"error": "error reading request body"})
 			return
 		}
-		defer c.Request.Body.Close()
 
 		webhookEvent, err := client.Webhooks.Unwrap(body, c.Request.Header)
 		if err != nil {
@@ -764,7 +1062,15 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"message": "ok"})
 	})
 
-	r.Run(":8000")
+	server := &http.Server{
+		Addr:              ":8000",
+		Handler:           r,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+	log.Fatal(server.ListenAndServe())
 }
 ```
 
@@ -774,20 +1080,26 @@ In some cases, you may want to verify the webhook separately from parsing the pa
 
 Note that the `body` parameter should be the raw JSON bytes sent from the server (do not parse it first). You will then need to parse the body after verifying the signature.
 
+As above, bound the unauthenticated request body before reading it and configure
+server read timeouts. This example also uses a 1 MiB maximum.
+
 ```go
 package main
 
 import (
-	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
 )
+
+const maxWebhookBodySize = 1 << 20 // 1 MiB
 
 func main() {
 	client := openai.NewClient(
@@ -797,12 +1109,19 @@ func main() {
 	r := gin.Default()
 
 	r.POST("/webhook", func(c *gin.Context) {
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxWebhookBodySize)
+		defer func() { _ = c.Request.Body.Close() }()
+
 		body, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading request body"})
+			var maxBytesError *http.MaxBytesError
+			if errors.As(err, &maxBytesError) {
+				c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "request body too large"})
+				return
+			}
+			c.JSON(http.StatusBadRequest, gin.H{"error": "error reading request body"})
 			return
 		}
-		defer c.Request.Body.Close()
 
 		err = client.Webhooks.VerifySignature(body, c.Request.Header)
 		if err != nil {
@@ -814,7 +1133,15 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"message": "ok"})
 	})
 
-	r.Run(":8000")
+	server := &http.Server{
+		Addr:              ":8000",
+		Handler:           r,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+	log.Fatal(server.ListenAndServe())
 }
 ```
 
@@ -958,6 +1285,13 @@ You may also replace the default `http.Client` with
 accepted (this overwrites any previous client) and receives requests after any
 middleware has been applied.
 
+When `client` is a native `*http.Client`, the SDK keeps its credential-origin
+checks in the redirect path, including when the client uses a custom
+`http.RoundTripper`. A bespoke implementation of `option.HTTPClient` owns any
+redirects it performs inside `Do` and must keep credentialed requests on the
+configured origin. Prefer a native `*http.Client` with a custom transport when
+possible.
+
 ### Mutual TLS with a custom HTTP client
 
 For API-key authenticated HTTP requests that require mutual TLS, configure a
@@ -1083,6 +1417,14 @@ client := openai.NewClient(
 )
 ```
 
+The built-in Azure and GCP providers use their documented link-local IPv4 metadata
+endpoints with dedicated standard-library HTTP clients. They bypass API-client
+proxies, custom HTTP transports, and DNS resolution, and reject redirects.
+Metadata retrieval has a five-second total timeout, including reading the response,
+and honors earlier context deadlines. `option.WithHTTPClient` still controls token
+exchange and API requests. Tests or applications requiring a different metadata
+route can implement a custom subject token provider; they own that route's security.
+
 ### Custom Subject Token Provider
 
 You can implement your own subject token provider:
@@ -1129,6 +1471,134 @@ client := openai.NewClient(
 	}),
 )
 ```
+
+### X.509 Workload Identity
+
+An enrolled workload certificate can also be exchanged directly for a
+short-lived OpenAI bearer token. Load and own the certificate and private key in
+your application, configure one static certificate on a native transport, and
+attest that transport before creating the client:
+
+```go
+import (
+	"context"
+	"crypto/tls"
+	"net/http"
+	"time"
+
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/auth"
+	"github.com/openai/openai-go/v3/option"
+)
+
+certificate, err := tls.LoadX509KeyPair("workload.crt", "workload.key")
+if err != nil {
+	return err
+}
+
+transport, err := auth.NewX509Transport(&http.Transport{
+	TLSClientConfig: &tls.Config{
+		MinVersion:   tls.VersionTLS12,
+		Certificates: []tls.Certificate{certificate},
+	},
+})
+if err != nil {
+	return err
+}
+defer transport.Close()
+
+client := openai.NewClient(option.WithX509WorkloadIdentity(auth.X509WorkloadIdentity{
+	IdentityProviderID: "idp-123",
+	ServiceAccountID:   "sa-456",
+	RefreshBuffer:      5 * time.Minute, // Optional; five minutes is the default.
+	Transport:          transport,
+}))
+
+requestContext, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+defer cancel()
+
+if _, err := client.Models.List(requestContext); err != nil {
+	return err
+}
+```
+
+The application retains ownership of its certificate, private key, trust roots,
+and original transport. The attested capability creates its own isolated
+connection pool, so call `Close` when it is no longer needed. `Close` rejects
+new calls but does not cancel or wait for requests already in progress; an
+in-progress request may finish after `Close` returns. Rotating the certificate
+requires a newly attested transport and client.
+
+Transport attestation validates the native transport and TLS policy and
+snapshots the certificate bytes. It is not proof that the certificate is
+currently valid or enrolled, or that an arbitrary manually assembled private
+key matches it; the TLS handshake and issuer enforce those properties. The
+capability retains the `crypto.Signer` supplied at construction, so a
+hardware-backed or custom signer must remain usable and safe for concurrent
+TLS handshakes. Keep the original transport and its TLS configuration unchanged
+while the capability is in use; their attested policy is revalidated before
+requests.
+
+The capability always presents its one attested certificate, including when a
+server advertises unrelated acceptable certificate-authority hints. It does not
+accept caller-provided certificate-selection callbacks. When the transport
+template does not specify its own values, the isolated connection pool applies
+a 30-second TCP dial timeout, a 10-second TLS handshake timeout, and the SDK's
+10-minute response-header timeout. Each `GetToken` call without a caller
+deadline, including time spent waiting for a concurrent exchange and all issuer
+retries, uses a 30-second default. An explicit caller deadline is authoritative,
+even when later. Use `option.WithRequestTimeout` to bound each request attempt,
+including token acquisition and response handling, or a caller context deadline
+to bound the entire call across retries. The default exchange timeout does not
+add a deadline to API response bodies, so long-running streams remain supported.
+
+Token exchange is pinned to `https://mtls.auth.openai.com/oauth/token`; API
+requests use `https://mtls.api.openai.com/v1/`. Existing `OPENAI_BASE_URL` and
+explicit endpoint settings must match that global API endpoint; an explicit
+default `:443` port is equivalent. Azure, Amazon Bedrock, regional endpoints,
+HTTPS proxies, dynamic certificate selection, HTTP trace hooks, arbitrary protocol
+upgrades, and separate custom HTTP clients are not supported. Responses WebSocket
+connections use the same attested transport and bearer-token exchange, including
+custom request headers and the configured opening retry budget. Close each
+WebSocket connection to release its stream; capability `Close` retains its
+ordinary behavior of allowing already active requests to finish.
+X.509-authenticated WebSocket connections are limited to Responses. Live,
+fork, and sideband WebSocket connections do not support X.509 authentication.
+A legacy `http.Transport.Dial` remains supported for compatibility when
+`DialContext` is unset, but its in-progress
+dial call cannot itself be interrupted by context cancellation. The capability
+admits at most 32 concurrent dial calls; additional live requests wait for
+admission, while canceled or completed requests release their waiters. This
+prevents a non-cooperative custom dialer from growing without bound. The native
+transport still applies `MaxConnsPerHost` independently to each host.
+Organization and project metadata remain available on API requests but are not
+sent to the token issuer.
+
+Successful bearer tokens are cached per identity and transport generation.
+Concurrent refreshes share the requesting caller's context, and the effective
+refresh buffer is reduced automatically for short-lived tokens. Transient issuer
+failures receive at most three bounded, cancellable attempts; permanent OAuth
+failures are not retried. Issuer retries, ordinary API retries, and unauthorized
+recovery share the client's single request retry budget. A rejected API token is
+refreshed and replayed at most once, and only when the request body can be
+recreated; body-bearing requests with caller middleware are not replayed because
+that middleware may have transformed their bytes. During a temporary proactive
+refresh failure, an unexpired cached token remains usable for a bounded cooldown.
+Bearer generations rejected by the API remain tombstoned until their original
+expiry, including late rejections that arrive after a replacement is cached.
+An identity retains at most 1,024 simultaneously unexpired bearer generations
+and fails closed before publishing a bearer whose expiry cannot be tracked.
+The resulting access
+token is an ordinary bearer token; it is not cryptographically bound to a
+client certificate. Rotating or revoking a certificate does not by itself
+invalidate bearer tokens already minted from that certificate; server-side
+identity mapping, token revocation, and audit policy are outside the SDK. Treat
+both the private key and minted bearers as credentials.
+
+Issuer-provided OAuth error descriptions are intentionally redacted because
+they may contain sensitive details. Use `OAuthError.StatusCode` and
+`OAuthError.ErrorCode` for programmatic handling. `OAuthError.ErrorDescription`
+is retained for compatibility but is normally empty.
 
 ## Amazon Bedrock
 
@@ -1249,6 +1719,38 @@ We take backwards-compatibility seriously and work hard to ensure you can rely o
 
 We are keen for your feedback; please open an [issue](https://www.github.com/openai/openai-go/issues) with questions, bugs, or suggestions.
 
+## Reconnecting a WebSocket session
+
+`packages/websocket.OpenSession` can reopen a failed connection. Pass it a
+function that opens a connection with a fresh authenticated request on each
+attempt. Reconnecting is off by default. When enabled, keep calling `Recv` so the
+SDK can detect connection failures. An event that ends a response or session does
+not itself trigger a reconnect.
+
+The SDK keeps the same session object and allows five reconnect attempts in total
+by default. Retry delays grow to eight seconds by default. `Close` or `Abort`
+cancels pending retries. Reopening does not restore server state. For a Realtime
+model session, restore any session settings and conversation state your application needs.
+Pause other application sends while restoring state; the callback does not block them.
+
+By default, sends while reconnecting fail without writing. Set `MaxPendingBytes`
+to hold unsent commands up to that size in bytes. After restoring session state,
+call `FlushPending` to send them, or `TakePending` to remove them without sending.
+`FlushPending` returns `ErrPendingLimit` while the connection is recovering or
+another send, serialization, or flush is in progress. Retry the flush when it is ready.
+A waiting `Send` still respects its context. It returns nil only after a local
+write succeeds. This does not confirm that the server received the command.
+The SDK does not resend commands it already tried to send.
+
+Generated API methods must support this feature before you can enable it with
+`option.WithWebSocketReconnect(true)`. For methods that support it,
+`option.WithWebSocketRecovery` sets limits and an optional `OnReconnected`
+callback. Other methods ignore these options. Existing `websocket.Options` fields
+and defaults stay the same.
+
 ## Contributing
 
-See [the contributing documentation](./CONTRIBUTING.md).
+Please share bug reports and feature requests through [GitHub issues](https://github.com/openai/openai-go/issues).
+Pull requests are limited to repository collaborators; we do not accept pull requests from non-collaborators.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the contribution policy and development guide.
+For security vulnerabilities, follow [SECURITY.md](SECURITY.md).

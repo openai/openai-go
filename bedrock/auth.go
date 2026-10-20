@@ -23,7 +23,8 @@ import (
 )
 
 const (
-	bedrockService = "bedrock-mantle"
+	bedrockService        = "bedrock-mantle"
+	bedrockRuntimeService = "bedrock"
 
 	missingRegionMessage        = "bedrock: an AWS region is required; pass `AWSRegion` in `bedrock.Config`, or set `AWS_REGION` or `AWS_DEFAULT_REGION`"
 	missingCredentialsMessage   = "bedrock: credentials not found; pass a bearer credential or AWS credentials in `bedrock.Config`, set `AWS_BEARER_TOKEN_BEDROCK`, or configure the default AWS credential chain"
@@ -31,10 +32,7 @@ const (
 	nonReplayableBodyMessage    = "bedrock: SigV4 authentication requires a replayable request body; buffer the body before sending or use bearer authentication"
 )
 
-var (
-	canonicalBedrockHost = regexp.MustCompile(`(?i)^bedrock-mantle\.([a-z0-9-]+)\.api\.aws$`)
-	awsRegionPattern     = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)+$`)
-)
+var awsRegionPattern = regexp.MustCompile(`^[a-z]{2,8}(?:-[a-z0-9]+)+-[0-9]+$`)
 
 type authMode int
 
@@ -47,6 +45,7 @@ const (
 
 type resolvedConfig struct {
 	mode       authMode
+	endpoint   Endpoint
 	region     string
 	baseURL    *url.URL
 	middleware option.Middleware
@@ -70,6 +69,10 @@ func newClientOptions(
 		return nil, errors.New("bedrock: nil context")
 	}
 
+	if err := requestconfig.ValidateEndpointOptions("Bedrock", userOpts...); err != nil {
+		return nil, err
+	}
+
 	resolved, err := resolveConfig(ctx, cfg, now)
 	if err != nil {
 		return nil, err
@@ -77,6 +80,7 @@ func newClientOptions(
 
 	opts := []option.RequestOption{
 		requestconfig.WithEnvironmentDefaultsDisabled(),
+		requestconfig.WithEndpointProvider("Bedrock"),
 		option.WithBaseURL(resolved.baseURL.String()),
 	}
 	opts = append(opts, userOpts...)
@@ -120,8 +124,8 @@ func resolveConfig(ctx context.Context, cfg Config, now func() time.Time) (resol
 	if err != nil {
 		return resolvedConfig{}, err
 	}
-	if err := validateAWSRegion(region); err != nil {
-		return resolvedConfig{}, err
+	if regionErr := validateAWSRegion(region); regionErr != nil {
+		return resolvedConfig{}, regionErr
 	}
 	baseURLValue, err := resolveOptionalConfigValue("BaseURL", cfg.BaseURL, "AWS_BEDROCK_BASE_URL")
 	if err != nil {
@@ -132,17 +136,21 @@ func resolveConfig(ctx context.Context, cfg Config, now func() time.Time) (resol
 	if err != nil {
 		return resolvedConfig{}, err
 	}
+	endpoint, err := resolveEndpoint(cfg.Endpoint, baseURL)
+	if err != nil {
+		return resolvedConfig{}, err
+	}
 	if baseURL != nil {
 		region, err = reconcileEndpointRegion(baseURL, region)
 		if err != nil {
 			return resolvedConfig{}, err
 		}
-		if err := validateAWSRegion(region); err != nil {
-			return resolvedConfig{}, err
+		if regionErr := validateAWSRegion(region); regionErr != nil {
+			return resolvedConfig{}, regionErr
 		}
 	}
 
-	resolved := resolvedConfig{mode: mode, region: region, baseURL: baseURL}
+	resolved := resolvedConfig{mode: mode, endpoint: endpoint, region: region, baseURL: baseURL}
 	var awsCfg aws.Config
 	switch mode {
 	case authModeSkip:
@@ -158,17 +166,17 @@ func resolveConfig(ctx context.Context, cfg Config, now func() time.Time) (resol
 		if region == "" {
 			return resolvedConfig{}, errors.New(missingRegionMessage)
 		}
-		if err := validateAWSRegion(region); err != nil {
-			return resolvedConfig{}, err
+		if regionErr := validateAWSRegion(region); regionErr != nil {
+			return resolvedConfig{}, regionErr
 		}
 		if baseURL != nil {
-			if _, err := reconcileEndpointRegion(baseURL, region); err != nil {
-				return resolvedConfig{}, err
+			if _, endpointErr := reconcileEndpointRegion(baseURL, region); endpointErr != nil {
+				return resolvedConfig{}, endpointErr
 			}
 		}
 		awsCfg.Region = region
-		if err := verifyAWSCredentials(ctx, awsCfg, explicitAWS); err != nil {
-			return resolvedConfig{}, err
+		if credentialErr := verifyAWSCredentials(ctx, awsCfg, explicitAWS); credentialErr != nil {
+			return resolvedConfig{}, credentialErr
 		}
 		resolved.region = region
 	default:
@@ -179,9 +187,7 @@ func resolveConfig(ctx context.Context, cfg Config, now func() time.Time) (resol
 		if region == "" {
 			return resolvedConfig{}, errors.New(missingRegionMessage)
 		}
-		// /openai/v1 is the Bedrock OpenAI compatibility contract. The generic
-		// /v1 route is a different API surface and is not interchangeable.
-		resolved.baseURL, err = parseBaseURL(fmt.Sprintf("https://bedrock-mantle.%s.api.aws/openai/v1/", region))
+		resolved.baseURL, err = parseBaseURL(defaultEndpointURL(endpoint, region))
 		if err != nil {
 			return resolvedConfig{}, err
 		}
@@ -192,7 +198,7 @@ func resolveConfig(ctx context.Context, cfg Config, now func() time.Time) (resol
 		resolved.middleware = bearerMiddleware(resolved.baseURL, tokenProvider)
 	}
 	if mode == authModeSigV4 {
-		resolved.middleware = sigV4Middleware(resolved.baseURL, awsCfg, v4.NewSigner(), now)
+		resolved.middleware = endpointSigV4Middleware(resolved.baseURL, awsCfg, v4.NewSigner(), now, endpoint)
 	}
 
 	return resolved, nil
@@ -319,12 +325,80 @@ func normalizeBaseURL(value *url.URL) *url.URL {
 	return &copy
 }
 
+func resolveEndpoint(endpoint Endpoint, baseURL *url.URL) (Endpoint, error) {
+	if endpoint != "" && endpoint != EndpointMantle && endpoint != EndpointRuntime {
+		return "", errors.New("bedrock: `Endpoint` must be `EndpointMantle` or `EndpointRuntime`")
+	}
+	if baseURL != nil {
+		canonicalEndpoint, _, canonical := parseBedrockEndpointHostname(baseURL.Hostname())
+		if canonical {
+			if !strings.EqualFold(baseURL.Scheme, "https") {
+				return "", errors.New("bedrock: canonical AWS endpoints require HTTPS")
+			}
+			if endpoint != "" && endpoint != canonicalEndpoint {
+				return "", fmt.Errorf("bedrock: %s hostname does not match the selected %s endpoint", canonicalEndpoint, endpoint)
+			}
+			if endpoint == "" {
+				endpoint = canonicalEndpoint
+			}
+		}
+	}
+	if endpoint == "" {
+		return EndpointMantle, nil
+	}
+	return endpoint, nil
+}
+
+func defaultEndpointURL(endpoint Endpoint, region string) string {
+	if endpoint == EndpointRuntime {
+		standardSuffix, _ := runtimeDNSSuffixes(region)
+		return fmt.Sprintf("https://bedrock-runtime.%s.%s/openai/v1/", region, standardSuffix)
+	}
+	return fmt.Sprintf("https://bedrock-mantle.%s.api.aws/openai/v1/", region)
+}
+
+func runtimeDNSSuffixes(region string) (standard string, dualStack string) {
+	switch {
+	case strings.HasPrefix(region, "cn-"):
+		return "amazonaws.com.cn", "api.amazonwebservices.com.cn"
+	case strings.HasPrefix(region, "eusc-"):
+		return "amazonaws.eu", "api.amazonwebservices.eu"
+	case strings.HasPrefix(region, "us-iso-"):
+		return "c2s.ic.gov", "api.aws.ic.gov"
+	case strings.HasPrefix(region, "us-isob-"):
+		return "sc2s.sgov.gov", "api.aws.scloud"
+	case strings.HasPrefix(region, "eu-isoe-"):
+		return "cloud.adc-e.uk", "api.cloud-aws.adc-e.uk"
+	case strings.HasPrefix(region, "us-isof-"):
+		return "csp.hci.ic.gov", "api.aws.hci.ic.gov"
+	default:
+		return "amazonaws.com", "api.aws"
+	}
+}
+
+func parseBedrockEndpointHostname(hostname string) (Endpoint, string, bool) {
+	parts := strings.Split(strings.ToLower(strings.TrimSuffix(hostname, ".")), ".")
+	if len(parts) < 3 {
+		return "", "", false
+	}
+	service, region, suffix := parts[0], parts[1], strings.Join(parts[2:], ".")
+	if service == "bedrock-mantle" && region != "" && suffix == "api.aws" {
+		return EndpointMantle, region, true
+	}
+	if (service == "bedrock-runtime" || service == "bedrock-runtime-fips") && region != "" {
+		standard, dualStack := runtimeDNSSuffixes(region)
+		if suffix == standard || suffix == dualStack {
+			return EndpointRuntime, region, true
+		}
+	}
+	return "", "", false
+}
+
 func reconcileEndpointRegion(baseURL *url.URL, region string) (string, error) {
-	match := canonicalBedrockHost.FindStringSubmatch(baseURL.Hostname())
-	if len(match) != 2 {
+	_, endpointRegion, canonical := parseBedrockEndpointHostname(baseURL.Hostname())
+	if !canonical {
 		return region, nil
 	}
-	endpointRegion := strings.ToLower(match[1])
 	if region != "" && !strings.EqualFold(endpointRegion, region) {
 		return "", fmt.Errorf("bedrock: endpoint region %q does not match SigV4 region %q", endpointRegion, region)
 	}
@@ -421,6 +495,14 @@ type httpSigner interface {
 }
 
 func sigV4Middleware(baseURL *url.URL, cfg aws.Config, signer httpSigner, now func() time.Time) option.Middleware {
+	return endpointSigV4Middleware(baseURL, cfg, signer, now, EndpointMantle)
+}
+
+func endpointSigV4Middleware(baseURL *url.URL, cfg aws.Config, signer httpSigner, now func() time.Time, endpoint Endpoint) option.Middleware {
+	service := bedrockService
+	if endpoint == EndpointRuntime {
+		service = bedrockRuntimeService
+	}
 	return func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 		if err := validateProviderRequest(req, baseURL); err != nil {
 			return nil, requestconfig.WithNoRetryError(err)
@@ -457,7 +539,7 @@ func sigV4Middleware(baseURL *url.URL, cfg aws.Config, signer httpSigner, now fu
 		// wire length before the request is sent.
 		contentLength := req.ContentLength
 		req.ContentLength = -1
-		signErr := signer.SignHTTP(req.Context(), credentials, req, encodedHash, bedrockService, cfg.Region, now().UTC())
+		signErr := signer.SignHTTP(req.Context(), credentials, req, encodedHash, service, cfg.Region, now().UTC())
 		req.ContentLength = contentLength
 		if signErr != nil {
 			return nil, &safeError{message: "bedrock: failed to sign request", cause: signErr}
@@ -491,7 +573,7 @@ func materializeReplayableBody(req *http.Request) ([]byte, error) {
 }
 
 func validateProviderRequest(req *http.Request, baseURL *url.URL) error {
-	if req.URL == nil || !sameOrigin(req.URL, baseURL) {
+	if !requestconfig.RequestHasOrigin(req, baseURL) {
 		return errors.New("bedrock: provider authentication cannot send credentials to an origin other than the configured provider URL")
 	}
 	return nil
@@ -502,24 +584,4 @@ func sameBaseURL(left, right *url.URL) bool {
 		return left == right
 	}
 	return normalizeBaseURL(left).String() == normalizeBaseURL(right).String()
-}
-
-func sameOrigin(left, right *url.URL) bool {
-	if left == nil || right == nil || !strings.EqualFold(left.Scheme, right.Scheme) || !strings.EqualFold(left.Hostname(), right.Hostname()) {
-		return false
-	}
-	return effectivePort(left) == effectivePort(right)
-}
-
-func effectivePort(value *url.URL) string {
-	if port := value.Port(); port != "" {
-		return port
-	}
-	if strings.EqualFold(value.Scheme, "https") {
-		return "443"
-	}
-	if strings.EqualFold(value.Scheme, "http") {
-		return "80"
-	}
-	return ""
 }

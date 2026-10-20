@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -39,7 +39,7 @@ type ContainerFileService struct {
 // there is one), and before any request-specific options.
 func NewContainerFileService(opts ...option.RequestOption) (r ContainerFileService) {
 	r = ContainerFileService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Content = NewContainerFileContentService(opts...)
 	return
 }
@@ -56,7 +56,7 @@ func (r *ContainerFileService) New(ctx context.Context, containerID string, body
 		return nil, err
 	}
 	path := requestconfig.FormatPath("containers/%s/files", containerID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &res, opts...)
 	return res, err
 }
 
@@ -244,7 +244,7 @@ func (r ContainerFileNewParams) MarshalMultipart() (data []byte, contentType str
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()
@@ -252,6 +252,15 @@ func (r ContainerFileNewParams) MarshalMultipart() (data []byte, contentType str
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
+}
+
+// MarshalMultipartTo writes multipart fields without buffering file contents.
+// The caller owns writer and must close it to finish the multipart body.
+func (r ContainerFileNewParams) MarshalMultipartTo(writer *multipart.Writer) error {
+	if err := apiform.MarshalRoot(r, writer); err != nil {
+		return err
+	}
+	return apiform.WriteExtras(writer, r.ExtraFields())
 }
 
 type ContainerFileListParams struct {

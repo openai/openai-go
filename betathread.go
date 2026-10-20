@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -46,7 +46,7 @@ type BetaThreadService struct {
 // there is one), and before any request-specific options.
 func NewBetaThreadService(opts ...option.RequestOption) (r BetaThreadService) {
 	r = BetaThreadService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Runs = NewBetaThreadRunService(opts...)
 	r.Messages = NewBetaThreadMessageService(opts...)
 	return
@@ -165,22 +165,22 @@ type AssistantResponseFormatOptionUnion struct {
 }
 
 func (u AssistantResponseFormatOptionUnion) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AssistantResponseFormatOptionUnion) AsText() (v shared.ResponseFormatText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AssistantResponseFormatOptionUnion) AsJSONObject() (v shared.ResponseFormatJSONObject) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AssistantResponseFormatOptionUnion) AsJSONSchema() (v shared.ResponseFormatJSONSchema) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -228,19 +228,6 @@ func (u AssistantResponseFormatOptionUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *AssistantResponseFormatOptionUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *AssistantResponseFormatOptionUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfText) {
-		return u.OfText
-	} else if !param.IsOmitted(u.OfJSONObject) {
-		return u.OfJSONObject
-	} else if !param.IsOmitted(u.OfJSONSchema) {
-		return u.OfJSONSchema
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -390,12 +377,12 @@ type AssistantToolChoiceOptionUnion struct {
 }
 
 func (u AssistantToolChoiceOptionUnion) AsAuto() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AssistantToolChoiceOptionUnion) AsAssistantToolChoice() (v AssistantToolChoice) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -451,17 +438,8 @@ func (u *AssistantToolChoiceOptionUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *AssistantToolChoiceOptionUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfAssistantToolChoice) {
-		return u.OfAssistantToolChoice
-	}
-	return nil
-}
-
 // Represents a thread that contains
-// [messages](https://platform.openai.com/docs/api-reference/messages).
+// [messages](https://developers.openai.com/api/docs/assistants/migration).
 type Thread struct {
 	// The identifier, which can be referenced in API endpoints.
 	ID string `json:"id" api:"required"`
@@ -522,9 +500,9 @@ func (r *ThreadToolResources) UnmarshalJSON(data []byte) error {
 }
 
 type ThreadToolResourcesCodeInterpreter struct {
-	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs made
-	// available to the `code_interpreter` tool. There can be a maximum of 20 files
-	// associated with the tool.
+	// A list of [file](https://developers.openai.com/api/reference/resources/files)
+	// IDs made available to the `code_interpreter` tool. There can be a maximum of 20
+	// files associated with the tool.
 	FileIDs []string `json:"file_ids"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -542,7 +520,7 @@ func (r *ThreadToolResourcesCodeInterpreter) UnmarshalJSON(data []byte) error {
 
 type ThreadToolResourcesFileSearch struct {
 	// The
-	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
+	// [vector store](https://developers.openai.com/api/reference/resources/vector_stores)
 	// attached to this thread. There can be a maximum of 1 vector store attached to
 	// the thread.
 	VectorStoreIDs []string `json:"vector_store_ids"`
@@ -593,8 +571,9 @@ type BetaThreadNewParams struct {
 	// `code_interpreter` tool requires a list of file IDs, while the `file_search`
 	// tool requires a list of vector store IDs.
 	ToolResources BetaThreadNewParamsToolResources `json:"tool_resources,omitzero"`
-	// A list of [messages](https://platform.openai.com/docs/api-reference/messages) to
-	// start the thread with.
+	// A list of
+	// [messages](https://developers.openai.com/api/docs/assistants/migration) to start
+	// the thread with.
 	Messages []BetaThreadNewParamsMessage `json:"messages,omitzero"`
 	paramObj
 }
@@ -662,15 +641,6 @@ func (u *BetaThreadNewParamsMessageContentUnion) UnmarshalJSON(data []byte) erro
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *BetaThreadNewParamsMessageContentUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfContentParts) {
-		return &u.OfArrayOfContentParts
-	}
-	return nil
-}
-
 type BetaThreadNewParamsMessageAttachment struct {
 	// The ID of the file to attach to the message.
 	FileID param.Opt[string] `json:"file_id,omitzero"`
@@ -701,15 +671,6 @@ func (u BetaThreadNewParamsMessageAttachmentToolUnion) MarshalJSON() ([]byte, er
 }
 func (u *BetaThreadNewParamsMessageAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *BetaThreadNewParamsMessageAttachmentToolUnion) asAny() any {
-	if !param.IsOmitted(u.OfCodeInterpreter) {
-		return u.OfCodeInterpreter
-	} else if !param.IsOmitted(u.OfFileSearch) {
-		return u.OfFileSearch
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -771,9 +732,9 @@ func (r *BetaThreadNewParamsToolResources) UnmarshalJSON(data []byte) error {
 }
 
 type BetaThreadNewParamsToolResourcesCodeInterpreter struct {
-	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs made
-	// available to the `code_interpreter` tool. There can be a maximum of 20 files
-	// associated with the tool.
+	// A list of [file](https://developers.openai.com/api/reference/resources/files)
+	// IDs made available to the `code_interpreter` tool. There can be a maximum of 20
+	// files associated with the tool.
 	FileIDs []string `json:"file_ids,omitzero"`
 	paramObj
 }
@@ -788,12 +749,12 @@ func (r *BetaThreadNewParamsToolResourcesCodeInterpreter) UnmarshalJSON(data []b
 
 type BetaThreadNewParamsToolResourcesFileSearch struct {
 	// The
-	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
+	// [vector store](https://developers.openai.com/api/reference/resources/vector_stores)
 	// attached to this thread. There can be a maximum of 1 vector store attached to
 	// the thread.
 	VectorStoreIDs []string `json:"vector_store_ids,omitzero"`
 	// A helper to create a
-	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
+	// [vector store](https://developers.openai.com/api/reference/resources/vector_stores)
 	// with file_ids and attach it to this thread. There can be a maximum of 1 vector
 	// store attached to the thread.
 	VectorStores []BetaThreadNewParamsToolResourcesFileSearchVectorStore `json:"vector_stores,omitzero"`
@@ -819,10 +780,10 @@ type BetaThreadNewParamsToolResourcesFileSearchVectorStore struct {
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy.
 	ChunkingStrategy BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion `json:"chunking_strategy,omitzero"`
-	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs to
-	// add to the vector store. For vector stores created before Nov 2025, there can be
-	// a maximum of 10,000 files in a vector store. For vector stores created starting
-	// in Nov 2025, the limit is 100,000,000 files.
+	// A list of [file](https://developers.openai.com/api/reference/resources/files)
+	// IDs to add to the vector store. For vector stores created before Nov 2025, there
+	// can be a maximum of 10,000 files in a vector store. For vector stores created
+	// starting in Nov 2025, the limit is 100,000,000 files.
 	FileIDs []string `json:"file_ids,omitzero"`
 	paramObj
 }
@@ -849,15 +810,6 @@ func (u BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUni
 }
 func (u *BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return u.OfAuto
-	} else if !param.IsOmitted(u.OfStatic) {
-		return u.OfStatic
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -992,9 +944,9 @@ func (r *BetaThreadUpdateParamsToolResources) UnmarshalJSON(data []byte) error {
 }
 
 type BetaThreadUpdateParamsToolResourcesCodeInterpreter struct {
-	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs made
-	// available to the `code_interpreter` tool. There can be a maximum of 20 files
-	// associated with the tool.
+	// A list of [file](https://developers.openai.com/api/reference/resources/files)
+	// IDs made available to the `code_interpreter` tool. There can be a maximum of 20
+	// files associated with the tool.
 	FileIDs []string `json:"file_ids,omitzero"`
 	paramObj
 }
@@ -1009,7 +961,7 @@ func (r *BetaThreadUpdateParamsToolResourcesCodeInterpreter) UnmarshalJSON(data 
 
 type BetaThreadUpdateParamsToolResourcesFileSearch struct {
 	// The
-	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
+	// [vector store](https://developers.openai.com/api/reference/resources/vector_stores)
 	// attached to this thread. There can be a maximum of 1 vector store attached to
 	// the thread.
 	VectorStoreIDs []string `json:"vector_store_ids,omitzero"`
@@ -1026,8 +978,8 @@ func (r *BetaThreadUpdateParamsToolResourcesFileSearch) UnmarshalJSON(data []byt
 
 type BetaThreadNewAndRunParams struct {
 	// The ID of the
-	// [assistant](https://platform.openai.com/docs/api-reference/assistants) to use to
-	// execute this run.
+	// [assistant](https://developers.openai.com/api/docs/assistants/migration) to use
+	// to execute this run.
 	AssistantID string `json:"assistant_id" api:"required"`
 	// Override the default system message of the assistant. This is useful for
 	// modifying the behavior on a per-run basis.
@@ -1055,7 +1007,7 @@ type BetaThreadNewAndRunParams struct {
 	// We generally recommend altering this or temperature but not both.
 	TopP param.Opt[float64] `json:"top_p,omitzero"`
 	// Whether to enable
-	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
+	// [parallel function calling](https://developers.openai.com/api/docs/guides/function-calling#parallel-function-calling)
 	// during tool use.
 	ParallelToolCalls param.Opt[bool] `json:"parallel_tool_calls,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
@@ -1065,10 +1017,11 @@ type BetaThreadNewAndRunParams struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata,omitzero"`
-	// The ID of the [Model](https://platform.openai.com/docs/api-reference/models) to
-	// be used to execute this run. If a value is provided here, it will override the
-	// model associated with the assistant. If not, the model associated with the
-	// assistant will be used.
+	// The ID of the
+	// [Model](https://developers.openai.com/api/reference/resources/models) to be used
+	// to execute this run. If a value is provided here, it will override the model
+	// associated with the assistant. If not, the model associated with the assistant
+	// will be used.
 	Model shared.ChatModel `json:"model,omitzero"`
 	// A set of resources that are used by the assistant's tools. The resources are
 	// specific to the type of tool. For example, the `code_interpreter` tool requires
@@ -1082,14 +1035,14 @@ type BetaThreadNewAndRunParams struct {
 	// control the initial context window of the run.
 	TruncationStrategy BetaThreadNewAndRunParamsTruncationStrategy `json:"truncation_strategy,omitzero"`
 	// Specifies the format that the model must output. Compatible with
-	// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
-	// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
-	// and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
+	// [GPT-4o](https://developers.openai.com/api/docs/models/gpt-4o),
+	// [GPT-4 Turbo](https://developers.openai.com/api/docs/models/gpt-4-turbo), and
+	// all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
 	//
 	// Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
 	// Outputs which ensures the model will match your supplied JSON schema. Learn more
 	// in the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	//
 	// Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
 	// message the model generates is valid JSON.
@@ -1139,8 +1092,9 @@ type BetaThreadNewAndRunParamsThread struct {
 	// `code_interpreter` tool requires a list of file IDs, while the `file_search`
 	// tool requires a list of vector store IDs.
 	ToolResources BetaThreadNewAndRunParamsThreadToolResources `json:"tool_resources,omitzero"`
-	// A list of [messages](https://platform.openai.com/docs/api-reference/messages) to
-	// start the thread with.
+	// A list of
+	// [messages](https://developers.openai.com/api/docs/assistants/migration) to start
+	// the thread with.
 	Messages []BetaThreadNewAndRunParamsThreadMessage `json:"messages,omitzero"`
 	paramObj
 }
@@ -1208,15 +1162,6 @@ func (u *BetaThreadNewAndRunParamsThreadMessageContentUnion) UnmarshalJSON(data 
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *BetaThreadNewAndRunParamsThreadMessageContentUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfContentParts) {
-		return &u.OfArrayOfContentParts
-	}
-	return nil
-}
-
 type BetaThreadNewAndRunParamsThreadMessageAttachment struct {
 	// The ID of the file to attach to the message.
 	FileID param.Opt[string] `json:"file_id,omitzero"`
@@ -1247,15 +1192,6 @@ func (u BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion) MarshalJSON()
 }
 func (u *BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion) asAny() any {
-	if !param.IsOmitted(u.OfCodeInterpreter) {
-		return u.OfCodeInterpreter
-	} else if !param.IsOmitted(u.OfFileSearch) {
-		return u.OfFileSearch
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -1317,9 +1253,9 @@ func (r *BetaThreadNewAndRunParamsThreadToolResources) UnmarshalJSON(data []byte
 }
 
 type BetaThreadNewAndRunParamsThreadToolResourcesCodeInterpreter struct {
-	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs made
-	// available to the `code_interpreter` tool. There can be a maximum of 20 files
-	// associated with the tool.
+	// A list of [file](https://developers.openai.com/api/reference/resources/files)
+	// IDs made available to the `code_interpreter` tool. There can be a maximum of 20
+	// files associated with the tool.
 	FileIDs []string `json:"file_ids,omitzero"`
 	paramObj
 }
@@ -1334,12 +1270,12 @@ func (r *BetaThreadNewAndRunParamsThreadToolResourcesCodeInterpreter) UnmarshalJ
 
 type BetaThreadNewAndRunParamsThreadToolResourcesFileSearch struct {
 	// The
-	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
+	// [vector store](https://developers.openai.com/api/reference/resources/vector_stores)
 	// attached to this thread. There can be a maximum of 1 vector store attached to
 	// the thread.
 	VectorStoreIDs []string `json:"vector_store_ids,omitzero"`
 	// A helper to create a
-	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
+	// [vector store](https://developers.openai.com/api/reference/resources/vector_stores)
 	// with file_ids and attach it to this thread. There can be a maximum of 1 vector
 	// store attached to the thread.
 	VectorStores []BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore `json:"vector_stores,omitzero"`
@@ -1365,10 +1301,10 @@ type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore struct {
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy.
 	ChunkingStrategy BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion `json:"chunking_strategy,omitzero"`
-	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs to
-	// add to the vector store. For vector stores created before Nov 2025, there can be
-	// a maximum of 10,000 files in a vector store. For vector stores created starting
-	// in Nov 2025, the limit is 100,000,000 files.
+	// A list of [file](https://developers.openai.com/api/reference/resources/files)
+	// IDs to add to the vector store. For vector stores created before Nov 2025, there
+	// can be a maximum of 10,000 files in a vector store. For vector stores created
+	// starting in Nov 2025, the limit is 100,000,000 files.
 	FileIDs []string `json:"file_ids,omitzero"`
 	paramObj
 }
@@ -1395,15 +1331,6 @@ func (u BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkin
 }
 func (u *BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return u.OfAuto
-	} else if !param.IsOmitted(u.OfStatic) {
-		return u.OfStatic
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -1514,9 +1441,9 @@ func (r *BetaThreadNewAndRunParamsToolResources) UnmarshalJSON(data []byte) erro
 }
 
 type BetaThreadNewAndRunParamsToolResourcesCodeInterpreter struct {
-	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs made
-	// available to the `code_interpreter` tool. There can be a maximum of 20 files
-	// associated with the tool.
+	// A list of [file](https://developers.openai.com/api/reference/resources/files)
+	// IDs made available to the `code_interpreter` tool. There can be a maximum of 20
+	// files associated with the tool.
 	FileIDs []string `json:"file_ids,omitzero"`
 	paramObj
 }
@@ -1531,7 +1458,7 @@ func (r *BetaThreadNewAndRunParamsToolResourcesCodeInterpreter) UnmarshalJSON(da
 
 type BetaThreadNewAndRunParamsToolResourcesFileSearch struct {
 	// The ID of the
-	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
+	// [vector store](https://developers.openai.com/api/reference/resources/vector_stores)
 	// attached to this assistant. There can be a maximum of 1 vector store attached to
 	// the assistant.
 	VectorStoreIDs []string `json:"vector_store_ids,omitzero"`

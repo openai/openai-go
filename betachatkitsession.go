@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -29,7 +29,7 @@ type BetaChatKitSessionService struct {
 // options (if there is one), and before any request-specific options.
 func NewBetaChatKitSessionService(opts ...option.RequestOption) (r BetaChatKitSessionService) {
 	r = BetaChatKitSessionService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

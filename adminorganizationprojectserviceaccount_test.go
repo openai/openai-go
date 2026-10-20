@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -22,6 +22,7 @@ func TestAdminOrganizationProjectServiceAccountNewWithOptionalParams(t *testing.
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -32,6 +33,7 @@ func TestAdminOrganizationProjectServiceAccountNewWithOptionalParams(t *testing.
 		openai.AdminOrganizationProjectServiceAccountNewParams{
 			Name:                     "name",
 			CreateServiceAccountOnly: openai.Bool(true),
+			ExpiresInSeconds:         openai.Int(1),
 		},
 	)
 	if err != nil {
@@ -52,6 +54,7 @@ func TestAdminOrganizationProjectServiceAccountGet(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -79,6 +82,7 @@ func TestAdminOrganizationProjectServiceAccountUpdateWithOptionalParams(t *testi
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -110,6 +114,7 @@ func TestAdminOrganizationProjectServiceAccountListWithOptionalParams(t *testing
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -140,6 +145,7 @@ func TestAdminOrganizationProjectServiceAccountDelete(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),

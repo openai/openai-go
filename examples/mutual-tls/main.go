@@ -12,6 +12,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
 )
@@ -20,7 +21,7 @@ const responseHeaderTimeout = 10 * time.Minute
 
 func main() {
 	if err := run(context.Background()); err != nil {
-		slog.Error("mutual TLS example failed", "err", err)
+		slog.Error("mutual TLS example failed", "err", errutil.Message(err))
 		os.Exit(1)
 	}
 }
@@ -63,7 +64,7 @@ func newMutualTLSHTTPClient(certificate tls.Certificate) (*http.Client, error) {
 	}
 	transport := defaultTransport.Clone()
 	transport.Proxy = nil
-	transport.DialTLS = nil
+	transport.DialTLS = nil //nolint:staticcheck // SA1019: Clear an inherited legacy hook so TLSClientConfig remains authoritative.
 	transport.DialTLSContext = nil
 	transport.ResponseHeaderTimeout = responseHeaderTimeout
 

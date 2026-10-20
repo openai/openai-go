@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 )
 
@@ -38,13 +39,13 @@ func main() {
 			}),
 		},
 		Seed:  openai.Int(0),
-		Model: openai.ChatModelGPT4o,
+		Model: openai.ChatModelGPT5_2,
 	}
 
 	// Make initial chat completion request
 	completion, err := client.Chat.Completions.New(ctx, params)
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	toolCalls := completion.Choices[0].Message.ToolCalls
@@ -61,9 +62,9 @@ func main() {
 		if toolCall.Function.Name == "get_weather" {
 			// Extract the location from the function call arguments
 			var args map[string]interface{}
-			err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
-			if err != nil {
-				panic(err)
+			unmarshalErr := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
+			if unmarshalErr != nil {
+				panic(errutil.Message(unmarshalErr))
 			}
 			location := args["location"].(string)
 
@@ -79,7 +80,7 @@ func main() {
 
 	completion, err = client.Chat.Completions.New(ctx, params)
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	println(completion.Choices[0].Message.Content)

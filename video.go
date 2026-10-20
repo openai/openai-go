@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -29,6 +29,9 @@ import (
 // Note, unlike clients, this service does not read variables from the environment
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewVideoService] method instead.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 type VideoService struct {
 	Options []option.RequestOption
 }
@@ -36,34 +39,31 @@ type VideoService struct {
 // NewVideoService generates a new service that applies the given options to each
 // request. These options are applied after the parent client's options (if there
 // is one), and before any request-specific options.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func NewVideoService(opts ...option.RequestOption) (r VideoService) {
 	r = VideoService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
 // Create a new video generation job from a prompt and optional reference assets.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) New(ctx context.Context, body VideoNewParams, opts ...option.RequestOption) (res *Video, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "videos"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &res, opts...)
 	return res, err
 }
 
-// Create Video and Poll for Completion
-//
-// Polls the API and blocks until the task is complete.
-// Default polling interval is 1 second.
-func (r *VideoService) NewAndPoll(ctx context.Context, body VideoNewParams, pollIntervalMs int, opts ...option.RequestOption) (res *Video, err error) {
-	video, err := r.New(ctx, body, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return r.PollStatus(ctx, video.ID, pollIntervalMs, opts...)
-}
-
 // Fetch the latest metadata for a generated video.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) Get(ctx context.Context, videoID string, opts ...option.RequestOption) (res *Video, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -77,6 +77,9 @@ func (r *VideoService) Get(ctx context.Context, videoID string, opts ...option.R
 }
 
 // List recently generated videos for the current project.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) List(ctx context.Context, query VideoListParams, opts ...option.RequestOption) (res *pagination.ConversationCursorPage[Video], err error) {
 	var raw *http.Response
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
@@ -96,11 +99,17 @@ func (r *VideoService) List(ctx context.Context, query VideoListParams, opts ...
 }
 
 // List recently generated videos for the current project.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) ListAutoPaging(ctx context.Context, query VideoListParams, opts ...option.RequestOption) *pagination.ConversationCursorPageAutoPager[Video] {
 	return pagination.NewConversationCursorPageAutoPager(r.List(ctx, query, opts...))
 }
 
 // Permanently delete a completed or failed video and its stored assets.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) Delete(ctx context.Context, videoID string, opts ...option.RequestOption) (res *VideoDeleteResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -114,17 +123,23 @@ func (r *VideoService) Delete(ctx context.Context, videoID string, opts ...optio
 }
 
 // Create a character from an uploaded video.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) NewCharacter(ctx context.Context, body VideoNewCharacterParams, opts ...option.RequestOption) (res *VideoNewCharacterResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "videos/characters"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &res, opts...)
 	return res, err
 }
 
 // Download the generated video bytes or a derived preview asset.
 //
 // Streams the rendered video content for the specified video job.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) DownloadContent(ctx context.Context, videoID string, query VideoDownloadContentParams, opts ...option.RequestOption) (res *http.Response, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -140,24 +155,33 @@ func (r *VideoService) DownloadContent(ctx context.Context, videoID string, quer
 
 // Create a new video generation job by editing a source video or existing
 // generated video.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) Edit(ctx context.Context, body VideoEditParams, opts ...option.RequestOption) (res *Video, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "videos/edits"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &res, opts...)
 	return res, err
 }
 
 // Create an extension of a completed video.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) Extend(ctx context.Context, body VideoExtendParams, opts ...option.RequestOption) (res *Video, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "videos/extensions"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &res, opts...)
 	return res, err
 }
 
 // Fetch a character.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) GetCharacter(ctx context.Context, characterID string, opts ...option.RequestOption) (res *VideoGetCharacterResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -171,6 +195,9 @@ func (r *VideoService) GetCharacter(ctx context.Context, characterID string, opt
 }
 
 // Create a remix of a completed video using a refreshed prompt.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) Remix(ctx context.Context, videoID string, body VideoRemixParams, opts ...option.RequestOption) (res *Video, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -273,9 +300,66 @@ type VideoCreateError struct {
 	Code string `json:"code" api:"required"`
 	// A human-readable description of the error that was returned.
 	Message string `json:"message" api:"required"`
+	// The Retry-After and Retry-After-Ms headers returned with the original error, if
+	// any.
+	Headers      map[string]string            `json:"headers"`
+	Misalignment VideoCreateErrorMisalignment `json:"misalignment"`
+	// The request parameter associated with the error, or null if none was recorded.
+	Param string `json:"param" api:"nullable"`
+	// The original error type, or null if it was not recorded.
+	Type string `json:"type" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Code        respjson.Field
+		Code         respjson.Field
+		Message      respjson.Field
+		Headers      respjson.Field
+		Misalignment respjson.Field
+		Param        respjson.Field
+		Type         respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r VideoCreateError) RawJSON() string { return r.JSON.raw }
+func (r *VideoCreateError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type VideoCreateErrorMisalignment struct {
+	// The public explanation for this block.
+	DetailedExplanation string `json:"detailed_explanation"`
+	// An optional classification; clients must accept additional values.
+	ErrorType string `json:"error_type"`
+	// An opaque target for explicitly continuing this review, or null when
+	// unavailable.
+	ReviewTarget string `json:"review_target" api:"nullable"`
+	// An optional public continuation instruction.
+	Steer VideoCreateErrorMisalignmentSteer `json:"steer"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		DetailedExplanation respjson.Field
+		ErrorType           respjson.Field
+		ReviewTarget        respjson.Field
+		Steer               respjson.Field
+		ExtraFields         map[string]respjson.Field
+		raw                 string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r VideoCreateErrorMisalignment) RawJSON() string { return r.JSON.raw }
+func (r *VideoCreateErrorMisalignment) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An optional public continuation instruction.
+type VideoCreateErrorMisalignmentSteer struct {
+	// The public continuation instruction.
+	Message string `json:"message" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
 		Message     respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -283,8 +367,8 @@ type VideoCreateError struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r VideoCreateError) RawJSON() string { return r.JSON.raw }
-func (r *VideoCreateError) UnmarshalJSON(data []byte) error {
+func (r VideoCreateErrorMisalignmentSteer) RawJSON() string { return r.JSON.raw }
+func (r *VideoCreateErrorMisalignmentSteer) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -413,7 +497,7 @@ func (r VideoNewParams) MarshalMultipart() (data []byte, contentType string, err
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()
@@ -421,6 +505,15 @@ func (r VideoNewParams) MarshalMultipart() (data []byte, contentType string, err
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
+}
+
+// MarshalMultipartTo writes multipart fields without buffering file contents.
+// The caller owns writer and must close it to finish the multipart body.
+func (r VideoNewParams) MarshalMultipartTo(writer *multipart.Writer) error {
+	if err := apiform.MarshalRoot(r, writer); err != nil {
+		return err
+	}
+	return apiform.WriteExtras(writer, r.ExtraFields())
 }
 
 // Only one field can be non-zero.
@@ -437,15 +530,6 @@ func (u VideoNewParamsInputReferenceUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *VideoNewParamsInputReferenceUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *VideoNewParamsInputReferenceUnion) asAny() any {
-	if !param.IsOmitted(u.OfFile) {
-		return &u.OfFile
-	} else if !param.IsOmitted(u.OfImageInputReference) {
-		return u.OfImageInputReference
-	}
-	return nil
 }
 
 type VideoListParams struct {
@@ -494,7 +578,7 @@ func (r VideoNewCharacterParams) MarshalMultipart() (data []byte, contentType st
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()
@@ -502,6 +586,15 @@ func (r VideoNewCharacterParams) MarshalMultipart() (data []byte, contentType st
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
+}
+
+// MarshalMultipartTo writes multipart fields without buffering file contents.
+// The caller owns writer and must close it to finish the multipart body.
+func (r VideoNewCharacterParams) MarshalMultipartTo(writer *multipart.Writer) error {
+	if err := apiform.MarshalRoot(r, writer); err != nil {
+		return err
+	}
+	return apiform.WriteExtras(writer, r.ExtraFields())
 }
 
 type VideoDownloadContentParams struct {
@@ -546,7 +639,7 @@ func (r VideoEditParams) MarshalMultipart() (data []byte, contentType string, er
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()
@@ -554,6 +647,15 @@ func (r VideoEditParams) MarshalMultipart() (data []byte, contentType string, er
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
+}
+
+// MarshalMultipartTo writes multipart fields without buffering file contents.
+// The caller owns writer and must close it to finish the multipart body.
+func (r VideoEditParams) MarshalMultipartTo(writer *multipart.Writer) error {
+	if err := apiform.MarshalRoot(r, writer); err != nil {
+		return err
+	}
+	return apiform.WriteExtras(writer, r.ExtraFields())
 }
 
 // Only one field can be non-zero.
@@ -570,15 +672,6 @@ func (u VideoEditParamsVideoUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *VideoEditParamsVideoUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *VideoEditParamsVideoUnion) asAny() any {
-	if !param.IsOmitted(u.OfFile) {
-		return &u.OfFile
-	} else if !param.IsOmitted(u.OfVideoEditsVideoVideoReferenceInputParam) {
-		return u.OfVideoEditsVideoVideoReferenceInputParam
-	}
-	return nil
 }
 
 // Reference to the completed video to edit.
@@ -619,7 +712,7 @@ func (r VideoExtendParams) MarshalMultipart() (data []byte, contentType string, 
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()
@@ -627,6 +720,15 @@ func (r VideoExtendParams) MarshalMultipart() (data []byte, contentType string, 
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
+}
+
+// MarshalMultipartTo writes multipart fields without buffering file contents.
+// The caller owns writer and must close it to finish the multipart body.
+func (r VideoExtendParams) MarshalMultipartTo(writer *multipart.Writer) error {
+	if err := apiform.MarshalRoot(r, writer); err != nil {
+		return err
+	}
+	return apiform.WriteExtras(writer, r.ExtraFields())
 }
 
 // Only one field can be non-zero.
@@ -643,15 +745,6 @@ func (u VideoExtendParamsVideoUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *VideoExtendParamsVideoUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *VideoExtendParamsVideoUnion) asAny() any {
-	if !param.IsOmitted(u.OfFile) {
-		return &u.OfFile
-	} else if !param.IsOmitted(u.OfVideoExtendsVideoVideoReferenceInputParam) {
-		return u.OfVideoExtendsVideoVideoReferenceInputParam
-	}
-	return nil
 }
 
 // Reference to the completed video.

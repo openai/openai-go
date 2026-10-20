@@ -1,17 +1,20 @@
 package apiform
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"mime"
 	"mime/multipart"
 	"net/textproto"
-	"path"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"github.com/openai/openai-go/v3/packages/param"
 )
@@ -148,30 +151,30 @@ func (e *encoder) newPrimitiveTypeEncoder(t reflect.Type) encoderFunc {
 	// code more and this current code shouldn't cause any issues
 	case reflect.String:
 		return func(key string, v reflect.Value, writer *multipart.Writer) error {
-			return writer.WriteField(key, v.String())
+			return writeMultipartField(writer, key, v.String())
 		}
 	case reflect.Bool:
 		return func(key string, v reflect.Value, writer *multipart.Writer) error {
 			if v.Bool() {
-				return writer.WriteField(key, "true")
+				return writeMultipartField(writer, key, "true")
 			}
-			return writer.WriteField(key, "false")
+			return writeMultipartField(writer, key, "false")
 		}
 	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64:
 		return func(key string, v reflect.Value, writer *multipart.Writer) error {
-			return writer.WriteField(key, strconv.FormatInt(v.Int(), 10))
+			return writeMultipartField(writer, key, strconv.FormatInt(v.Int(), 10))
 		}
 	case reflect.Uint, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		return func(key string, v reflect.Value, writer *multipart.Writer) error {
-			return writer.WriteField(key, strconv.FormatUint(v.Uint(), 10))
+			return writeMultipartField(writer, key, strconv.FormatUint(v.Uint(), 10))
 		}
 	case reflect.Float32:
 		return func(key string, v reflect.Value, writer *multipart.Writer) error {
-			return writer.WriteField(key, strconv.FormatFloat(v.Float(), 'f', -1, 32))
+			return writeMultipartField(writer, key, strconv.FormatFloat(v.Float(), 'f', -1, 32))
 		}
 	case reflect.Float64:
 		return func(key string, v reflect.Value, writer *multipart.Writer) error {
-			return writer.WriteField(key, strconv.FormatFloat(v.Float(), 'f', -1, 64))
+			return writeMultipartField(writer, key, strconv.FormatFloat(v.Float(), 'f', -1, 64))
 		}
 	default:
 		return func(key string, v reflect.Value, writer *multipart.Writer) error {
@@ -192,7 +195,7 @@ func (e *encoder) newArrayTypeEncoder(t reflect.Type) encoderFunc {
 			for i := 0; i < v.Len(); i++ {
 				elements[i] = fmt.Sprint(v.Index(i).Interface())
 			}
-			return writer.WriteField(key, strings.Join(elements, ","))
+			return writeMultipartField(writer, key, strings.Join(elements, ","))
 		}
 	}
 	return func(key string, v reflect.Value, writer *multipart.Writer) error {
@@ -349,7 +352,7 @@ func (e *encoder) newStructUnionTypeEncoder(t reflect.Type) encoderFunc {
 func (e *encoder) newTimeTypeEncoder() encoderFunc {
 	format := e.dateFormat
 	return func(key string, value reflect.Value, writer *multipart.Writer) error {
-		return writer.WriteField(key, value.Convert(reflect.TypeOf(time.Time{})).Interface().(time.Time).Format(format))
+		return writeMultipartField(writer, key, value.Convert(reflect.TypeOf(time.Time{})).Interface().(time.Time).Format(format))
 	}
 }
 
@@ -363,10 +366,82 @@ func (e encoder) newInterfaceEncoder() encoderFunc {
 	}
 }
 
-var quoteEscaper = strings.NewReplacer("\\", "\\\\", `"`, "\\\"")
+func validateMultipartDispositionValue(kind, value string) error {
+	if strings.IndexFunc(value, func(r rune) bool {
+		// Quoted MIME parameters permit horizontal tab, and
+		// multipartDispositionEscaper safely percent-encodes CR and LF.
+		return unicode.IsControl(r) && r != '\t' && r != '\r' && r != '\n'
+	}) >= 0 {
+		return fmt.Errorf("apiform: invalid multipart %s: contains control character", kind)
+	}
+	return nil
+}
 
-func escapeQuotes(s string) string {
-	return quoteEscaper.Replace(s)
+var multipartDispositionEscaper = strings.NewReplacer(
+	"\\", "\\\\",
+	`"`, `\"`,
+	"\r", "%0D",
+	"\n", "%0A",
+)
+
+func writeMultipartField(writer *multipart.Writer, name, value string) error {
+	if err := validateMultipartDispositionValue("field name", name); err != nil {
+		return err
+	}
+	// WriteField does not escape CR/LF on every supported Go toolchain.
+	header := make(textproto.MIMEHeader)
+	header.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"`, multipartDispositionEscaper.Replace(name)))
+	part, err := writer.CreatePart(header)
+	if err != nil {
+		return err
+	}
+	_, err = io.WriteString(part, value)
+	return err
+}
+
+func multipartFileContentDisposition(fieldName, filename string) string {
+	// Mirror multipart.FileContentDisposition's hardened escaping consistently
+	// across all supported Go versions.
+	return fmt.Sprintf(
+		`form-data; name="%s"; filename="%s"`,
+		multipartDispositionEscaper.Replace(fieldName),
+		multipartDispositionEscaper.Replace(filename),
+	)
+}
+
+func validateMultipartContentType(contentType string) error {
+	if strings.IndexFunc(contentType, func(r rune) bool {
+		// MIME permits horizontal tab as whitespace. ParseMediaType validates
+		// whether it appears in a legal position.
+		return unicode.IsControl(r) && r != '\t'
+	}) >= 0 {
+		return errors.New("apiform: invalid content type: contains control character")
+	}
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return fmt.Errorf("apiform: invalid content type: %w", err)
+	}
+	if _, _, ok := strings.Cut(mediaType, "/"); !ok {
+		return errors.New("apiform: invalid content type: expected type/subtype")
+	}
+	return nil
+}
+
+func multipartFileHeader(fieldName, filename, contentType string) (textproto.MIMEHeader, error) {
+	if err := validateMultipartDispositionValue("field name", fieldName); err != nil {
+		return nil, err
+	}
+	if err := validateMultipartDispositionValue("filename", filename); err != nil {
+		return nil, err
+	}
+	if err := validateMultipartContentType(contentType); err != nil {
+		return nil, err
+	}
+
+	header := make(textproto.MIMEHeader)
+	header.Set("Content-Disposition", multipartFileContentDisposition(fieldName, filename))
+	header.Set("Content-Type", contentType)
+	return header, nil
 }
 
 func (e *encoder) newReaderTypeEncoder() encoderFunc {
@@ -380,17 +455,17 @@ func (e *encoder) newReaderTypeEncoder() encoderFunc {
 		if named, ok := reader.(interface{ Filename() string }); ok {
 			filename = named.Filename()
 		} else if named, ok := reader.(interface{ Name() string }); ok {
-			filename = path.Base(named.Name())
+			filename = filepath.Base(named.Name())
 		}
 		if typed, ok := reader.(interface{ ContentType() string }); ok {
 			contentType = typed.ContentType()
 		}
 
-		// Below is taken almost 1-for-1 from [multipart.CreateFormFile]
-		h := make(textproto.MIMEHeader)
-		h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, escapeQuotes(key), escapeQuotes(filename)))
-		h.Set("Content-Type", contentType)
-		filewriter, err := writer.CreatePart(h)
+		header, err := multipartFileHeader(key, filename, contentType)
+		if err != nil {
+			return err
+		}
+		filewriter, err := writer.CreatePart(header)
 		if err != nil {
 			return err
 		}
@@ -484,7 +559,7 @@ func WriteExtras(writer *multipart.Writer, extras map[string]any) (err error) {
 		if !ok {
 			break
 		}
-		err = writer.WriteField(k, str)
+		err = writeMultipartField(writer, k, str)
 		if err != nil {
 			break
 		}

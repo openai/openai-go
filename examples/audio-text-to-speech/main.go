@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ebitengine/oto/v3"
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 )
 
@@ -22,10 +23,10 @@ func main() {
 			OfAudioSpeechNewsVoiceString2: openai.String("alloy"),
 		},
 	})
-	defer res.Body.Close()
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
+	defer func() { _ = res.Body.Close() }()
 
 	op := &oto.NewContextOptions{}
 	op.SampleRate = 24000
@@ -34,7 +35,7 @@ func main() {
 
 	otoCtx, readyChan, err := oto.NewContext(op)
 	if err != nil {
-		panic("oto.NewContext failed: " + err.Error())
+		panic(errutil.Message(err))
 	}
 
 	<-readyChan
@@ -43,9 +44,5 @@ func main() {
 	player.Play()
 	for player.IsPlaying() {
 		time.Sleep(time.Millisecond)
-	}
-	err = player.Close()
-	if err != nil {
-		panic("player.Close failed: " + err.Error())
 	}
 }

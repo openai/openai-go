@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -22,6 +22,7 @@ func TestAdminOrganizationProjectServiceAccountAPIKeyNewWithOptionalParams(t *te
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -31,8 +32,9 @@ func TestAdminOrganizationProjectServiceAccountAPIKeyNewWithOptionalParams(t *te
 		"project_id",
 		"service_account_id",
 		openai.AdminOrganizationProjectServiceAccountAPIKeyNewParams{
-			Name:   openai.String("name"),
-			Scopes: []string{"string"},
+			ExpiresInSeconds: openai.Int(1),
+			Name:             openai.String("name"),
+			Scopes:           []string{"string"},
 		},
 	)
 	if err != nil {

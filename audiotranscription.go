@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -38,26 +38,28 @@ type AudioTranscriptionService struct {
 // options (if there is one), and before any request-specific options.
 func NewAudioTranscriptionService(opts ...option.RequestOption) (r AudioTranscriptionService) {
 	r = AudioTranscriptionService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
 // Transcribes audio into the input language.
 //
-// Returns a transcription object in `json`, `diarized_json`, or `verbose_json`
-// format, or a stream of transcript events.
+// Returns a transcription object decoded from `json`, `diarized_json`, or
+// `verbose_json`. For `text`, `srt`, or `vtt`, use [Client.Post] with a
+// *string response destination. Supported formats depend on the model.
 func (r *AudioTranscriptionService) New(ctx context.Context, body AudioTranscriptionNewParams, opts ...option.RequestOption) (res *AudioTranscriptionNewResponseUnion, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "audio/transcriptions"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &res, opts...)
 	return res, err
 }
 
 // Transcribes audio into the input language.
 //
-// Returns a transcription object in `json`, `diarized_json`, or `verbose_json`
-// format, or a stream of transcript events.
+// Returns a stream of transcript events. For non-streaming JSON, use
+// [AudioTranscriptionService.New]. For `text`, `srt`, or `vtt`, use
+// [Client.Post] with a *string response destination.
 func (r *AudioTranscriptionService) NewStreaming(ctx context.Context, body AudioTranscriptionNewParams, opts ...option.RequestOption) (stream *ssestream.Stream[TranscriptionStreamEventUnion]) {
 	var (
 		raw *http.Response
@@ -69,7 +71,7 @@ func (r *AudioTranscriptionService) NewStreaming(ctx context.Context, body Audio
 		"stream": "true",
 	})
 	path := "audio/transcriptions"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &raw, opts...)
 	return ssestream.NewStream[TranscriptionStreamEventUnion](ssestream.NewDecoder(raw), err)
 }
 
@@ -186,12 +188,12 @@ func (u TranscriptionUsageUnion) AsAny() anyTranscriptionUsage {
 }
 
 func (u TranscriptionUsageUnion) AsTokens() (v TranscriptionUsageTokens) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u TranscriptionUsageUnion) AsDuration() (v TranscriptionUsageDuration) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -425,17 +427,17 @@ func (u TranscriptionStreamEventUnion) AsAny() anyTranscriptionStreamEvent {
 }
 
 func (u TranscriptionStreamEventUnion) AsTranscriptTextSegment() (v TranscriptionTextSegmentEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u TranscriptionStreamEventUnion) AsTranscriptTextDelta() (v TranscriptionTextDeltaEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u TranscriptionStreamEventUnion) AsTranscriptTextDone() (v TranscriptionTextDoneEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -476,7 +478,7 @@ func (r *TranscriptionStreamEventUnionLogprobs) UnmarshalJSON(data []byte) error
 
 // Emitted when there is an additional text delta. This is also the first event
 // emitted when the transcription starts. Only emitted when you
-// [create a transcription](https://platform.openai.com/docs/api-reference/audio/create-transcription)
+// [create a transcription](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create)
 // with the `Stream` parameter set to `true`.
 type TranscriptionTextDeltaEvent struct {
 	// The text delta that was additionally transcribed.
@@ -484,7 +486,7 @@ type TranscriptionTextDeltaEvent struct {
 	// The type of the event. Always `transcript.text.delta`.
 	Type constant.TranscriptTextDelta `json:"type" default:"transcript.text.delta"`
 	// The log probabilities of the delta. Only included if you
-	// [create a transcription](https://platform.openai.com/docs/api-reference/audio/create-transcription)
+	// [create a transcription](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create)
 	// with the `include[]` parameter set to `logprobs`.
 	Logprobs []TranscriptionTextDeltaEventLogprob `json:"logprobs"`
 	// Identifier of the diarized segment that this delta belongs to. Only present when
@@ -532,7 +534,7 @@ func (r *TranscriptionTextDeltaEventLogprob) UnmarshalJSON(data []byte) error {
 
 // Emitted when the transcription is complete. Contains the complete transcription
 // text. Only emitted when you
-// [create a transcription](https://platform.openai.com/docs/api-reference/audio/create-transcription)
+// [create a transcription](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create)
 // with the `Stream` parameter set to `true`.
 type TranscriptionTextDoneEvent struct {
 	// The text that was transcribed.
@@ -544,7 +546,7 @@ type TranscriptionTextDoneEvent struct {
 	Languages []TranscriptionLanguage `json:"languages"`
 	// The log probabilities of the individual tokens in the transcription. Only
 	// included if you
-	// [create a transcription](https://platform.openai.com/docs/api-reference/audio/create-transcription)
+	// [create a transcription](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create)
 	// with the `include[]` parameter set to `logprobs`.
 	Logprobs []TranscriptionTextDoneEventLogprob `json:"logprobs"`
 	// Usage statistics for models billed by token usage.
@@ -643,7 +645,7 @@ func (r *TranscriptionTextDoneEventUsageInputTokenDetails) UnmarshalJSON(data []
 
 // Emitted when a diarized transcription returns a completed segment with speaker
 // information. Only emitted when you
-// [create a transcription](https://platform.openai.com/docs/api-reference/audio/create-transcription)
+// [create a transcription](https://developers.openai.com/api/reference/resources/audio/subresources/transcriptions/methods/create)
 // with `stream` set to `true` and `response_format` set to `diarized_json`.
 type TranscriptionTextSegmentEvent struct {
 	// Unique identifier for the segment.
@@ -789,12 +791,12 @@ type AudioTranscriptionNewResponseUnion struct {
 }
 
 func (u AudioTranscriptionNewResponseUnion) AsTranscription() (v Transcription) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AudioTranscriptionNewResponseUnion) AsTranscriptionVerbose() (v TranscriptionVerbose) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -839,7 +841,9 @@ func (r *AudioTranscriptionNewResponseUnionUsage) UnmarshalJSON(data []byte) err
 
 type AudioTranscriptionNewParams struct {
 	// The audio file object (not file name) to transcribe, in one of these formats:
-	// flac, mp3, mp4, mpeg, mpga, m4a, ogg, wav, or webm.
+	// flac, mp3, mp4, mpeg, mpga, m4a, ogg, wav, or webm. The request must include
+	// enough format metadata for the file to be identified. We recommend an
+	// extension-bearing filename and an appropriate content type.
 	File io.Reader `json:"file,omitzero" api:"required" format:"binary"`
 	// ID of the model to use. The options are `gpt-transcribe`, `gpt-4o-transcribe`,
 	// `gpt-4o-mini-transcribe`, `gpt-4o-mini-transcribe-2025-12-15`, `whisper-1`
@@ -852,7 +856,7 @@ type AudioTranscriptionNewParams struct {
 	Language param.Opt[string] `json:"language,omitzero"`
 	// An optional text to guide the model's style or continue a previous audio
 	// segment. The
-	// [prompt](https://platform.openai.com/docs/guides/speech-to-text#prompting)
+	// [prompt](https://developers.openai.com/api/docs/guides/speech-to-text#prompting)
 	// should match the audio language. This field is not supported when using
 	// `gpt-4o-transcribe-diarize`.
 	Prompt param.Opt[string] `json:"prompt,omitzero"`
@@ -921,7 +925,7 @@ func (r AudioTranscriptionNewParams) MarshalMultipart() (data []byte, contentTyp
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()
@@ -929,6 +933,15 @@ func (r AudioTranscriptionNewParams) MarshalMultipart() (data []byte, contentTyp
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
+}
+
+// MarshalMultipartTo writes multipart fields without buffering file contents.
+// The caller owns writer and must close it to finish the multipart body.
+func (r AudioTranscriptionNewParams) MarshalMultipartTo(writer *multipart.Writer) error {
+	if err := apiform.MarshalRoot(r, writer); err != nil {
+		return err
+	}
+	return apiform.WriteExtras(writer, r.ExtraFields())
 }
 
 // Only one field can be non-zero.
@@ -946,15 +959,6 @@ func (u AudioTranscriptionNewParamsChunkingStrategyUnion) MarshalJSON() ([]byte,
 }
 func (u *AudioTranscriptionNewParamsChunkingStrategyUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *AudioTranscriptionNewParamsChunkingStrategyUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfAudioTranscriptionNewsChunkingStrategyVadConfig) {
-		return u.OfAudioTranscriptionNewsChunkingStrategyVadConfig
-	}
-	return nil
 }
 
 // The property Type is required.

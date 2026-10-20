@@ -1,5 +1,617 @@
 # Changelog
 
+## [3.82.0](https://github.com/openai/openai-go/compare/v3.81.0...v3.82.0) (2026-10-18)
+
+
+### Features
+
+* **api:** add opt-in Realtime WebSocket recovery ([#1095](https://github.com/openai/openai-go/issues/1095)) ([83e189e](https://github.com/openai/openai-go/commit/83e189ecc43946163bb528f3efff526333cafefc))
+* **websocket:** add opt-in bounded session recovery ([#1092](https://github.com/openai/openai-go/issues/1092)) ([6bc55d1](https://github.com/openai/openai-go/commit/6bc55d187ebbe6ece508b4cdb9f9fcaa21807c24))
+
+
+### Chores
+
+* **api:** use neutral moderation examples ([#1093](https://github.com/openai/openai-go/issues/1093)) ([996bcd0](https://github.com/openai/openai-go/commit/996bcd009e53c403f76229f08b3021e66223825b))
+
+## [3.81.0](https://github.com/openai/openai-go/compare/v3.80.0...v3.81.0) (2026-10-17)
+
+
+### Features
+
+* **api:** add typed Live sideband events and beta connections ([#1088](https://github.com/openai/openai-go/issues/1088)) ([ae2075c](https://github.com/openai/openai-go/commit/ae2075ca3ccefc53f0e6821fbb34ff4f9bf70431))
+* **api:** add ultrafast service tier for Agents ([#1090](https://github.com/openai/openai-go/issues/1090)) ([e436eec](https://github.com/openai/openai-go/commit/e436eec03fe3e33b5e9caa5a4e972fc3e06606fc))
+
+## [3.80.0](https://github.com/openai/openai-go/compare/v3.79.0...v3.80.0) (2026-10-17)
+
+
+### Features
+
+* **api:** add Decisions delegation, triggers, and Live events ([#1085](https://github.com/openai/openai-go/issues/1085)) ([b2b5266](https://github.com/openai/openai-go/commit/b2b5266df322b9b04e1f94696c80e0346cbf7586))
+* **api:** add Decisions prompt caching options ([#1080](https://github.com/openai/openai-go/issues/1080)) ([f64d1d0](https://github.com/openai/openai-go/commit/f64d1d05b1df7c20d45e972e27d6a3d1787dd215))
+* **api:** add degraded external storage status ([#1087](https://github.com/openai/openai-go/issues/1087)) ([56aa836](https://github.com/openai/openai-go/commit/56aa83638fa54c1c080ea849d69ea4f0533c3251))
+* **api:** add Realtime and Translation WebSocket connections ([#1086](https://github.com/openai/openai-go/issues/1086)) ([a797c6b](https://github.com/openai/openai-go/commit/a797c6b157a16aeda5b469b5bf74c9dbcbb7172a))
+
+
+### Chores
+
+* **api:** add Assistants model shutdown notices ([#1084](https://github.com/openai/openai-go/issues/1084)) ([d417996](https://github.com/openai/openai-go/commit/d417996c970cd28e7e2cdc3ae11438c4425160c7))
+* **api:** add shutdown notices for GPT-4 model aliases ([#1082](https://github.com/openai/openai-go/issues/1082)) ([cbaf599](https://github.com/openai/openai-go/commit/cbaf5991a056186314e104f90d73fe0ed034f85b))
+* **api:** clarify the Live startup history token limit ([#1071](https://github.com/openai/openai-go/issues/1071)) ([b50536c](https://github.com/openai/openai-go/commit/b50536cfe66964cd0a168235e184799504509b68))
+
+## [3.79.0](https://github.com/openai/openai-go/compare/v3.78.0...v3.79.0) (2026-10-16)
+
+
+### Features
+
+* **api:** add Live audio fixture playback event constants ([#1068](https://github.com/openai/openai-go/issues/1068)) ([35c6598](https://github.com/openai/openai-go/commit/35c659814a66f7ae7a6cc99ed4ca30c8687f7ca7))
+* **api:** add prompt-based voice creation ([#1078](https://github.com/openai/openai-go/issues/1078)) ([5276983](https://github.com/openai/openai-go/commit/52769832c19273db16e2185479be11278a157dff))
+* **api:** add regional processing residency options ([#1065](https://github.com/openai/openai-go/issues/1065)) ([09aad65](https://github.com/openai/openai-go/commit/09aad65f35995809048a5f150dee40446922e34b))
+* **api:** add response error diagnostics and model notices ([#1069](https://github.com/openai/openai-go/issues/1069)) ([036df07](https://github.com/openai/openai-go/commit/036df078239cbc51259a7f4e4015e340d4790fb3))
+* **api:** add safety identifiers to image requests and responses ([#1079](https://github.com/openai/openai-go/issues/1079)) ([35b78d9](https://github.com/openai/openai-go/commit/35b78d9bcaf4358887b38dd877e015407efbe6fd))
+* **api:** expose image tool error and moderation details ([#1061](https://github.com/openai/openai-go/issues/1061)) ([32b409c](https://github.com/openai/openai-go/commit/32b409cf04fe993a03e9d83ae71a61634b8fa49d))
+* **api:** support project API key scope updates ([#1066](https://github.com/openai/openai-go/issues/1066)) ([b5aa5a0](https://github.com/openai/openai-go/commit/b5aa5a0c36d7741d47d0e03616e7a53b1107cb54))
+* configure vector batch uploads and cancel on failure ([#1034](https://github.com/openai/openai-go/issues/1034)) ([23625e1](https://github.com/openai/openai-go/commit/23625e1fed621c98bbcf54a187046a395254b7d8))
+* **live:** group transcript deltas without owning the connection ([#1077](https://github.com/openai/openai-go/issues/1077)) ([b56ecc0](https://github.com/openai/openai-go/commit/b56ecc0c84a4fd3b2b7f1b0d518889084245d871))
+
+
+### Bug Fixes
+
+* **api:** isolate request options when adding typed headers ([#1057](https://github.com/openai/openai-go/issues/1057)) ([2809c85](https://github.com/openai/openai-go/commit/2809c85d2a9f837f9be9571b151a1aff354ed7a2))
+* **streaming:** cache pending action handler checks ([#1064](https://github.com/openai/openai-go/issues/1064)) ([7f17b88](https://github.com/openai/openai-go/commit/7f17b88cf779caaad941cfb441b830da6aa8f875))
+* **uploads:** avoid repeated destination ancestor scans ([#1070](https://github.com/openai/openai-go/issues/1070)) ([427af28](https://github.com/openai/openai-go/commit/427af28a8426b0b72ed92ec28d52681bbe5cfcfa))
+* **uploads:** omit directories from inferred filenames ([#1063](https://github.com/openai/openai-go/issues/1063)) ([309877c](https://github.com/openai/openai-go/commit/309877cf0e31969c0b83630d25d906a0bdf93b1d))
+
+
+### Chores
+
+* **api:** clarify Decisions request and response fields ([#1062](https://github.com/openai/openai-go/issues/1062)) ([0d881ea](https://github.com/openai/openai-go/commit/0d881eaba87b012b203c903dbd8928f9f8153e3a))
+* **api:** document Realtime response error messages ([#1067](https://github.com/openai/openai-go/issues/1067)) ([5da8f6d](https://github.com/openai/openai-go/commit/5da8f6d96b829a20e207f9b6099515a99f7f17df))
+
+
+### Documentation
+
+* **webhooks:** explain durable delivery deduplication ([#1060](https://github.com/openai/openai-go/issues/1060)) ([0ac4189](https://github.com/openai/openai-go/commit/0ac4189b011b9095c8ba29448504cb519ba0ee28))
+
+
+### Refactors
+
+* use generated WebSocket request bindings ([#1076](https://github.com/openai/openai-go/issues/1076)) ([d0e67ec](https://github.com/openai/openai-go/commit/d0e67ec297429c72e79ae3e871fdd02a66b337c3))
+
+
+### Build System
+
+* **deps:** bump AWS SDK config to v1.33.6 ([#1059](https://github.com/openai/openai-go/issues/1059)) ([de698b0](https://github.com/openai/openai-go/commit/de698b0a5d08cedb27d814d73a0e43cdb2702654))
+
+## [3.78.0](https://github.com/openai/openai-go/compare/v3.77.0...v3.78.0) (2026-10-13)
+
+
+### Features
+
+* **api:** support updating project API key expiry ([#1051](https://github.com/openai/openai-go/issues/1051)) ([783537a](https://github.com/openai/openai-go/commit/783537ab2c9cb9481483cecdbac05eed5b6a9b12))
+
+
+### Build System
+
+* **deps:** bump github.com/aws/aws-sdk-go-v2 in / ([#1026](https://github.com/openai/openai-go/issues/1026)) ([8dfc8f1](https://github.com/openai/openai-go/commit/8dfc8f1abe9fdfe3f815f1eac11338790bb5c6d1))
+* **deps:** bump github.com/aws/aws-sdk-go-v2/config in / ([#983](https://github.com/openai/openai-go/issues/983)) ([8e06cf4](https://github.com/openai/openai-go/commit/8e06cf4a7294093952419bc9968a950357edbeab))
+* **deps:** bump github.com/Azure/azure-sdk-for-go/sdk/azcore in / ([#1052](https://github.com/openai/openai-go/issues/1052)) ([5f94bd8](https://github.com/openai/openai-go/commit/5f94bd8596b00fc5b6040e45075e0705d4d4a9ec))
+* **deps:** bump openai/codex-action from 1.12 to 1.13 ([#1055](https://github.com/openai/openai-go/issues/1055)) ([d62dfab](https://github.com/openai/openai-go/commit/d62dfababf8120c9ed84ebf75a77fcbc724bdfc0))
+* **deps:** bump the codeql group across 1 directory with 2 updates ([#984](https://github.com/openai/openai-go/issues/984)) ([432746c](https://github.com/openai/openai-go/commit/432746c956c3aed7b1b54b55bcfd99d8ab446df3))
+
+## [3.77.0](https://github.com/openai/openai-go/compare/v3.76.0...v3.77.0) (2026-10-12)
+
+
+### Features
+
+* **api:** add organization Decisions usage reporting ([#1050](https://github.com/openai/openai-go/issues/1050)) ([d4ada1a](https://github.com/openai/openai-go/commit/d4ada1a1a3df6d89e8d99b82282266cd8d293bc7))
+* **api:** add shida to named Live voices ([#1048](https://github.com/openai/openai-go/issues/1048)) ([2922f3e](https://github.com/openai/openai-go/commit/2922f3e8a846d561d85e4aabb90f017c2de10851))
+* **api:** share OCI external-storage response types ([#1049](https://github.com/openai/openai-go/issues/1049)) ([a60d6c9](https://github.com/openai/openai-go/commit/a60d6c927c43bd09879b262b0903eb0d4c1ddd4f))
+
+
+### Chores
+
+* **api:** retain existing vault update support ([#1046](https://github.com/openai/openai-go/issues/1046)) ([995b15b](https://github.com/openai/openai-go/commit/995b15be7b35005587c61f6d9f60c215cc5105ef))
+
+## [3.76.0](https://github.com/openai/openai-go/compare/v3.75.0...v3.76.0) (2026-10-09)
+
+
+### Features
+
+* **api:** add agent environment webhook events and vault updates ([#1045](https://github.com/openai/openai-go/issues/1045)) ([5e8959e](https://github.com/openai/openai-go/commit/5e8959e5e956c9a0f40a6bd805cff23db6b0c4af))
+
+
+### Build System
+
+* **deps:** bump actions/cache from 5.1.0 to 6.1.0 ([#1027](https://github.com/openai/openai-go/issues/1027)) ([59deac5](https://github.com/openai/openai-go/commit/59deac56fbf39695a29367e73f302646fdd2aa80))
+
+## [3.75.0](https://github.com/openai/openai-go/compare/v3.74.0...v3.75.0) (2026-10-09)
+
+
+### Features
+
+* **go:** require Go 1.26 and update HTTP/2 dependencies ([#1042](https://github.com/openai/openai-go/issues/1042)) ([9e036c6](https://github.com/openai/openai-go/commit/9e036c682db4acaca9ba6efb81b8e25128c19249))
+
+## [3.74.0](https://github.com/openai/openai-go/compare/v3.73.0...v3.74.0) (2026-10-08)
+
+
+### Features
+
+* **agents:** handle local tools during session creation streams ([#1030](https://github.com/openai/openai-go/issues/1030)) ([7e4e1b1](https://github.com/openai/openai-go/commit/7e4e1b19121941c2ea7298ce64011caf2ec11e2b))
+
+
+### Bug Fixes
+
+* **api:** correct custom voice creation parameters ([#1040](https://github.com/openai/openai-go/issues/1040)) ([6dbe457](https://github.com/openai/openai-go/commit/6dbe4579c1555e109cb00f83ea6e06cc192be990))
+
+## [3.73.0](https://github.com/openai/openai-go/compare/v3.72.0...v3.73.0) (2026-10-06)
+
+
+### Features
+
+* **api:** add standalone Decisions support ([#1036](https://github.com/openai/openai-go/issues/1036)) ([e57ff4a](https://github.com/openai/openai-go/commit/e57ff4aeb3a7260205ec4adba1812ba66d075f15))
+
+## [3.72.0](https://github.com/openai/openai-go/compare/v3.71.2...v3.72.0) (2026-10-06)
+
+
+### Features
+
+* **agents:** observe local tool failures ([#1028](https://github.com/openai/openai-go/issues/1028)) ([25cd67f](https://github.com/openai/openai-go/commit/25cd67f54499e37bd303ee2b8144fe322f2e5374))
+* **api:** add agent turn items and usage source grouping ([#1035](https://github.com/openai/openai-go/issues/1035)) ([473e093](https://github.com/openai/openai-go/commit/473e09306cbee3c7268f06dfff99dd1ceeb09b68))
+
+## [3.71.2](https://github.com/openai/openai-go/compare/v3.71.1...v3.71.2) (2026-10-05)
+
+
+### Bug Fixes
+
+* bound aggregate sparse tool-call growth per chunk ([#1014](https://github.com/openai/openai-go/issues/1014)) ([8b04b3c](https://github.com/openai/openai-go/commit/8b04b3cb2c861370f549df55cf9499ccdb108a4d))
+* escape multipart scalar field names consistently ([#1029](https://github.com/openai/openai-go/issues/1029)) ([a3d6415](https://github.com/openai/openai-go/commit/a3d641518728a7e09a0fdb2559035662f7b9476a))
+
+## [3.71.1](https://github.com/openai/openai-go/compare/v3.71.0...v3.71.1) (2026-10-02)
+
+
+### Bug Fixes
+
+* **client:** close unowned successful response bodies ([#1019](https://github.com/openai/openai-go/issues/1019)) ([122396e](https://github.com/openai/openai-go/commit/122396e1bce50b7b737c5a54fba3cdd37408def6))
+* **client:** restore configured HTTP endpoint compatibility ([#1022](https://github.com/openai/openai-go/issues/1022)) ([facbcce](https://github.com/openai/openai-go/commit/facbcce685ae7a3cf26ecba33d61458fb613c0c5))
+
+## [3.71.0](https://github.com/openai/openai-go/compare/v3.70.0...v3.71.0) (2026-10-02)
+
+
+### Features
+
+* **api:** add custom voices and agent session webhook events ([#1016](https://github.com/openai/openai-go/issues/1016)) ([0d0331b](https://github.com/openai/openai-go/commit/0d0331b0f49318db9a7c93ffac886d256f33d290))
+* **api:** use safe API error diagnostics by default ([#1013](https://github.com/openai/openai-go/issues/1013)) ([ef62324](https://github.com/openai/openai-go/commit/ef6232449f21ebe99229c5a3c39564b9af9c71ab))
+
+## [3.70.0](https://github.com/openai/openai-go/compare/v3.69.0...v3.70.0) (2026-10-01)
+
+
+### Features
+
+* **agents:** Prepare files and download turn artifacts ([#1010](https://github.com/openai/openai-go/issues/1010)) ([f7a562d](https://github.com/openai/openai-go/commit/f7a562d546b88b11f6ece214a21e144bffb5db66))
+
+
+### Bug Fixes
+
+* **auth:** isolate cloud metadata token requests ([#1006](https://github.com/openai/openai-go/issues/1006)) ([f4cb102](https://github.com/openai/openai-go/commit/f4cb1021b8e3d08a6044ef72a80e9e4fd98c8efc))
+
+## [3.69.0](https://github.com/openai/openai-go/compare/v3.68.0...v3.69.0) (2026-10-01)
+
+
+### Features
+
+* collect final output from beta Agents streams ([#1002](https://github.com/openai/openai-go/issues/1002)) ([a29869f](https://github.com/openai/openai-go/commit/a29869f5128192c1215cfa7485e817966e84db49))
+* **agents:** [1/n] Bind output schemas to typed results ([#1008](https://github.com/openai/openai-go/issues/1008)) ([0c0abaf](https://github.com/openai/openai-go/commit/0c0abaf8954b554ee6ebaf1c219909d49a632e91))
+* **api:** add translation and session trace APIs ([#995](https://github.com/openai/openai-go/issues/995)) ([5312099](https://github.com/openai/openai-go/commit/5312099ee06b17e5e9acbf05a8ef577e85ae02b3))
+* **api:** require secure credential transport ([#1011](https://github.com/openai/openai-go/issues/1011)) ([8f74dea](https://github.com/openai/openai-go/commit/8f74dea358e0a0c71f6f458ac8b5d9f934a751c5))
+
+
+### Bug Fixes
+
+* **api:** allow original image detail in Chat Completions ([#1003](https://github.com/openai/openai-go/issues/1003)) ([e4dc9a0](https://github.com/openai/openai-go/commit/e4dc9a04257d526444b4cd6618af0e9c969761c5))
+* **azure:** isolate inherited headers when switching providers ([#1001](https://github.com/openai/openai-go/issues/1001)) ([98700dd](https://github.com/openai/openai-go/commit/98700dd34381227befaee04978ace1970a961d95))
+* **azure:** validate configured origin before authentication ([#1000](https://github.com/openai/openai-go/issues/1000)) ([656aeb8](https://github.com/openai/openai-go/commit/656aeb853df8cb800cc879af806b5f6f39d22d54))
+
+
+### Chores
+
+* **api:** correct the eval run cancellation endpoint reference ([#999](https://github.com/openai/openai-go/issues/999)) ([431121b](https://github.com/openai/openai-go/commit/431121bdda379a717f5ce07aeeb582759792868b))
+* **api:** retain WebRTC Live session transport types ([#998](https://github.com/openai/openai-go/issues/998)) ([91e28d4](https://github.com/openai/openai-go/commit/91e28d4471dc2e4410620c1841fa1709bf178ac3))
+
+## [3.68.0](https://github.com/openai/openai-go/compare/v3.67.0...v3.68.0) (2026-09-29)
+
+
+### Features
+
+* **api:** add computer use to beta agents ([#989](https://github.com/openai/openai-go/issues/989)) ([a435999](https://github.com/openai/openai-go/commit/a435999ed592bd694f00120a67d2b1f135f08c31))
+
+## [3.67.0](https://github.com/openai/openai-go/compare/v3.66.0...v3.67.0) (2026-09-29)
+
+
+### Features
+
+* **api:** add Agents credential and session options ([#980](https://github.com/openai/openai-go/issues/980)) ([a5955cc](https://github.com/openai/openai-go/commit/a5955cce3c581a21aa2f614219e930e47d89ef41))
+* **api:** add Cyber access programs to Responses ([#973](https://github.com/openai/openai-go/issues/973)) ([399b02e](https://github.com/openai/openai-go/commit/399b02ea58aa106a36184df72c275e60baf3f15e))
+* **api:** add GPT-6.1 Sol model identifier ([#988](https://github.com/openai/openai-go/issues/988)) ([eb3c1db](https://github.com/openai/openai-go/commit/eb3c1db317a9f14170f5e8ab4ad7543a79fb6255))
+* **responses:** add opt-in WebSocket text and tool-input snapshots ([#982](https://github.com/openai/openai-go/issues/982)) ([d7fd0c6](https://github.com/openai/openai-go/commit/d7fd0c65cc247957d5b247ad42283fc8e4061868))
+* **responses:** preserve provisional WebSocket accumulation details ([#986](https://github.com/openai/openai-go/issues/986)) ([e89227a](https://github.com/openai/openai-go/commit/e89227a85fe39214b16825c19fe59549c4b85928))
+
+
+### Bug Fixes
+
+* honor Retry-After delays in line with the Python SDK ([#987](https://github.com/openai/openai-go/issues/987)) ([ba6afb0](https://github.com/openai/openai-go/commit/ba6afb0a45d3334b72ebeca8fbec7b5a1ddcc6ca))
+* **websocket:** preserve safe close status across receivers and delivery errors ([#985](https://github.com/openai/openai-go/issues/985)) ([7c7af27](https://github.com/openai/openai-go/commit/7c7af27aa8e059af1f9dd09639920faf279ba412))
+
+
+### Chores
+
+* **api:** clarify approximate web search location defaults ([#971](https://github.com/openai/openai-go/issues/971)) ([a9b3b22](https://github.com/openai/openai-go/commit/a9b3b22db75831952dc376a64b7b65abef26a2fe))
+* **api:** clarify documented API error responses ([#979](https://github.com/openai/openai-go/issues/979)) ([fefe204](https://github.com/openai/openai-go/commit/fefe2046c9c96b1d6130c5993c1ddd5f88fa665d))
+* **api:** clarify Realtime modality array definitions ([#972](https://github.com/openai/openai-go/issues/972)) ([edc44ef](https://github.com/openai/openai-go/commit/edc44ef10dba95878a0ad4f4d9f2afea13e865ca))
+* **api:** correct fine-tuning bounds and Realtime response reference ([#968](https://github.com/openai/openai-go/issues/968)) ([69a8c4c](https://github.com/openai/openai-go/commit/69a8c4cfdab27294514a0a4103ee4032c1c16dd3))
+* **api:** document batch error responses ([#976](https://github.com/openai/openai-go/issues/976)) ([1ec6bf1](https://github.com/openai/openai-go/commit/1ec6bf177a521f16ae1595b3430130158ff037b8))
+* **api:** document files and uploads error responses ([#975](https://github.com/openai/openai-go/issues/975)) ([f3489bf](https://github.com/openai/openai-go/commit/f3489bf4030cdbfc9356008a139d9476991db798))
+* **api:** document fine-tuning and model errors ([#978](https://github.com/openai/openai-go/issues/978)) ([360fee6](https://github.com/openai/openai-go/commit/360fee616dda2b50801f6e2e5021328b82efe608))
+* **api:** document Responses not-found errors ([#974](https://github.com/openai/openai-go/issues/974)) ([f7a713e](https://github.com/openai/openai-go/commit/f7a713ea1a73380027858dc0340c134ad5aaf99f))
+* **api:** document stored chat completion errors ([#977](https://github.com/openai/openai-go/issues/977)) ([db51851](https://github.com/openai/openai-go/commit/db51851cd7100a134d9f4d9252d71f3887e4200d))
+
+
+### Documentation
+
+* clarify collaborator-only pull request policy ([#966](https://github.com/openai/openai-go/issues/966)) ([36662ee](https://github.com/openai/openai-go/commit/36662ee6cb4f62d8266d2d1b72ece07c08793edd))
+
+## [3.66.0](https://github.com/openai/openai-go/compare/v3.65.0...v3.66.0) (2026-09-23)
+
+
+### Features
+
+* **api:** Add GCP external storage support ([#964](https://github.com/openai/openai-go/issues/964)) ([511d3c2](https://github.com/openai/openai-go/commit/511d3c254eb056d7ab542a1a5a3c674794281bd2))
+* **api:** add GPT-Rosalind research model ([#962](https://github.com/openai/openai-go/issues/962)) ([7666824](https://github.com/openai/openai-go/commit/7666824c551a7c3ea91e9038c865e5f95d9298c1))
+
+
+### Chores
+
+* **api:** clarify Chat Completions seed range ([#965](https://github.com/openai/openai-go/issues/965)) ([67bd2a5](https://github.com/openai/openai-go/commit/67bd2a559610426f5b2f92e62de938e11d5e8c0f))
+
+## [3.65.0](https://github.com/openai/openai-go/compare/v3.64.3...v3.65.0) (2026-09-22)
+
+
+### Features
+
+* **api:** add GPT-6 Sol and Luna model identifiers ([#960](https://github.com/openai/openai-go/issues/960)) ([6ac30dc](https://github.com/openai/openai-go/commit/6ac30dcba3ba94faad3226e32f1b441139128d39))
+
+## [3.64.3](https://github.com/openai/openai-go/compare/v3.64.2...v3.64.3) (2026-09-22)
+
+
+### Bug Fixes
+
+* **api:** preserve legacy model choices ([#959](https://github.com/openai/openai-go/issues/959)) ([aab38a8](https://github.com/openai/openai-go/commit/aab38a8d8e769672ecb0cb9c7316fa739c102e68))
+
+
+### Build System
+
+* **deps:** bump github.com/aws/aws-sdk-go-v2/config in / ([#870](https://github.com/openai/openai-go/issues/870)) ([d553e47](https://github.com/openai/openai-go/commit/d553e47f81580b41a8b83520dd9887204b70cdef))
+* **deps:** bump github.com/Azure/azure-sdk-for-go/sdk/azidentity in / ([#903](https://github.com/openai/openai-go/issues/903)) ([f458a3b](https://github.com/openai/openai-go/commit/f458a3b0589734d215119f46735868c12a272409))
+* **deps:** bump github.com/ebitengine/oto/v3 in /examples ([#954](https://github.com/openai/openai-go/issues/954)) ([dacfec5](https://github.com/openai/openai-go/commit/dacfec5984e4eb48084bffb87f9e8d2c1dc7a3dc))
+* **deps:** bump the codeql group with 2 updates ([#955](https://github.com/openai/openai-go/issues/955)) ([3d95836](https://github.com/openai/openai-go/commit/3d958367b26e53e7af3c0838edf3d5fda541ef51))
+
+## [3.64.2](https://github.com/openai/openai-go/compare/v3.64.1...v3.64.2) (2026-09-21)
+
+
+### Build System
+
+* **deps:** bump github.com/aws/aws-sdk-go-v2 in / ([#869](https://github.com/openai/openai-go/issues/869)) ([0c41290](https://github.com/openai/openai-go/commit/0c4129020548bf762bffabce0bfe21b64b81390b))
+* **deps:** bump github.com/Azure/azure-sdk-for-go/sdk/azcore in / ([#902](https://github.com/openai/openai-go/issues/902)) ([0e818e6](https://github.com/openai/openai-go/commit/0e818e6c1407ca5cb5b318885dc0379c24b6269b))
+
+## [3.64.1](https://github.com/openai/openai-go/compare/v3.64.0...v3.64.1) (2026-09-21)
+
+
+### Bug Fixes
+
+* **param:** emit extra fields in sorted key order ([#901](https://github.com/openai/openai-go/issues/901)) ([923e128](https://github.com/openai/openai-go/commit/923e128f47c407f1e15e8aa58692f261eff991b9))
+
+
+### Documentation
+
+* add streaming tool calling example ([#706](https://github.com/openai/openai-go/issues/706)) ([abd798a](https://github.com/openai/openai-go/commit/abd798a43c7cd375947328c88d17c8c31da50997)), closes [#402](https://github.com/openai/openai-go/issues/402)
+
+## [3.64.0](https://github.com/openai/openai-go/compare/v3.63.1...v3.64.0) (2026-09-20)
+
+
+### Features
+
+* **api:** add environment-variable vault credentials ([#935](https://github.com/openai/openai-go/issues/935)) ([825408c](https://github.com/openai/openai-go/commit/825408c645f2a22407e9016ec733996fc9676b24))
+* **api:** add external storage configuration management ([#939](https://github.com/openai/openai-go/issues/939)) ([72cdb7d](https://github.com/openai/openai-go/commit/72cdb7def6f96db1403bac1880d6a656c37fea6b))
+* **api:** add safety case retrieval ([#940](https://github.com/openai/openai-go/issues/940)) ([1fcb8bb](https://github.com/openai/openai-go/commit/1fcb8bbdfa352cc729ddefff4fed4f8bb7ceb19b))
+* **api:** add safety warning and deactivation webhook events ([#938](https://github.com/openai/openai-go/issues/938)) ([f7ef9d0](https://github.com/openai/openai-go/commit/f7ef9d030c5db0cd9419352d738834370b9620fe))
+* **api:** add session environment reset events ([#942](https://github.com/openai/openai-go/issues/942)) ([bb3efb9](https://github.com/openai/openai-go/commit/bb3efb92a16862ce83207a15d375f114cb457a8e))
+* **api:** add SIP media security to incoming call events ([#937](https://github.com/openai/openai-go/issues/937)) ([c5573ed](https://github.com/openai/openai-go/commit/c5573ed7af6a1eb612ecce316a2b5975f250fa22))
+
+
+### Bug Fixes
+
+* **azure:** preserve gateway paths and endpoint overrides ([#943](https://github.com/openai/openai-go/issues/943)) ([4e94d30](https://github.com/openai/openai-go/commit/4e94d307146957890db2f6cbe9059f51650934f5))
+
+
+### Chores
+
+* **api:** document response management resources ([#941](https://github.com/openai/openai-go/issues/941)) ([0253af9](https://github.com/openai/openai-go/commit/0253af9d2f129a11df2d4921be519f20f6209b02))
+
+
+### Build System
+
+* **deps:** bump github.com/ebitengine/oto/v3 in /examples ([#918](https://github.com/openai/openai-go/issues/918)) ([560b830](https://github.com/openai/openai-go/commit/560b8308df783b7795a290e3b6b539a225b140e1))
+* **deps:** bump openai/codex-action from 1.11 to 1.12 ([#872](https://github.com/openai/openai-go/issues/872)) ([74e6122](https://github.com/openai/openai-go/commit/74e6122912675bc5e426bd0e11f3c1e5d783ad9c))
+* **deps:** bump the codeql group across 1 directory with 2 updates ([#871](https://github.com/openai/openai-go/issues/871)) ([1b8610f](https://github.com/openai/openai-go/commit/1b8610fe1cb1875872cc9478773271c22580e677))
+
+## [3.63.1](https://github.com/openai/openai-go/compare/v3.63.0...v3.63.1) (2026-09-18)
+
+
+### Chores
+
+* **api:** clarify agent session cancellation and deletion ([#931](https://github.com/openai/openai-go/issues/931)) ([ce4292c](https://github.com/openai/openai-go/commit/ce4292cf0afa8005c63b3852503e80207e98de43))
+
+## [3.63.0](https://github.com/openai/openai-go/compare/v3.62.0...v3.63.0) (2026-09-18)
+
+
+### Features
+
+* **api:** add webhook endpoint management ([#928](https://github.com/openai/openai-go/issues/928)) ([16ccefe](https://github.com/openai/openai-go/commit/16ccefe23d8b52ce6521b2fe287a516cd7cb201a))
+
+
+### Chores
+
+* **api:** deprecate MCP connector_id ([#930](https://github.com/openai/openai-go/issues/930)) ([cef21f6](https://github.com/openai/openai-go/commit/cef21f6c95bef90e3b9c6c24763b1d4c74942df7))
+
+## [3.62.0](https://github.com/openai/openai-go/compare/v3.61.0...v3.62.0) (2026-09-17)
+
+
+### Features
+
+* **api:** add agent session model settings ([#921](https://github.com/openai/openai-go/issues/921)) ([90fd9b1](https://github.com/openai/openai-go/commit/90fd9b1422c94cfed420b38835f2d78b9aab1d4d))
+* **api:** add audio-mini model choices ([#924](https://github.com/openai/openai-go/issues/924)) ([6124cd0](https://github.com/openai/openai-go/commit/6124cd09d3f7a5872823689c6908ab9c9ae77574))
+* **api:** add compaction progress events ([#919](https://github.com/openai/openai-go/issues/919)) ([13ab937](https://github.com/openai/openai-go/commit/13ab9372e62c3f694b874a1827a60c412de15fce))
+* **api:** add managed Responses WebSocket connections ([#927](https://github.com/openai/openai-go/issues/927)) ([b924edd](https://github.com/openai/openai-go/commit/b924eddce40bf401ff33ae29738eb34332c0581d))
+* **api:** add prompt-cache prewarming ([#925](https://github.com/openai/openai-go/issues/925)) ([99bbbd0](https://github.com/openai/openai-go/commit/99bbbd0fde7177e535f0788d1d4d30d0791ef5f2))
+
+
+### Bug Fixes
+
+* **ci:** retry Go documentation indexing after releases ([#909](https://github.com/openai/openai-go/issues/909)) ([ca920ba](https://github.com/openai/openai-go/commit/ca920ba89517ba9441d6a61676e59352d62311bd))
+
+
+### Chores
+
+* **api:** clarify incoming SIP call ID usage ([#923](https://github.com/openai/openai-go/issues/923)) ([3064e59](https://github.com/openai/openai-go/commit/3064e59784617895e01bdbb9c1e9be7b17812b8c))
+* **api:** update image request examples ([#926](https://github.com/openai/openai-go/issues/926)) ([bc0a139](https://github.com/openai/openai-go/commit/bc0a13981816d60236798804ec950d1b16c9165a))
+
+
+### Documentation
+
+* Preserve literal struct tags in Markdown ([#922](https://github.com/openai/openai-go/issues/922)) ([0b0efb3](https://github.com/openai/openai-go/commit/0b0efb348925dd20fb59569e61eefc6a101da636))
+
+## [3.61.0](https://github.com/openai/openai-go/compare/v3.60.0...v3.61.0) (2026-09-10)
+
+
+### Features
+
+* **api:** add Agents API ([#915](https://github.com/openai/openai-go/issues/915)) ([1cca8b7](https://github.com/openai/openai-go/commit/1cca8b771e0abe6f1e496fcf418ed94d20f22801))
+
+## [3.60.0](https://github.com/openai/openai-go/compare/v3.59.0...v3.60.0) (2026-09-10)
+
+
+### Features
+
+* **api:** Add Live API ([59af83b](https://github.com/openai/openai-go/commit/59af83bf037b7a8fc6b75fc259a1cd6367185921))
+
+## [3.59.0](https://github.com/openai/openai-go/compare/v3.58.0...v3.59.0) (2026-09-09)
+
+
+### Features
+
+* **api:** Add project API key expiration support ([#906](https://github.com/openai/openai-go/issues/906)) ([c126b9c](https://github.com/openai/openai-go/commit/c126b9c3df74822b09d2875793acbd9d0ad17f0e))
+
+## [3.58.0](https://github.com/openai/openai-go/compare/v3.57.0...v3.58.0) (2026-09-08)
+
+
+### Features
+
+* **api:** add GPT Image 2.5 models and image options ([#904](https://github.com/openai/openai-go/issues/904)) ([92a91b7](https://github.com/openai/openai-go/commit/92a91b78e0d159a4874296cb79be07e4a0c4682d))
+
+## [3.57.0](https://github.com/openai/openai-go/compare/v3.56.0...v3.57.0) (2026-09-05)
+
+
+### Features
+
+* **api:** add incomplete web search call status constants ([#877](https://github.com/openai/openai-go/issues/877)) ([66688d6](https://github.com/openai/openai-go/commit/66688d6990b364431e7698d9466180bd9db3dc93))
+* **api:** Add prompt cache diagnostics ([#888](https://github.com/openai/openai-go/issues/888)) ([6a8a6a2](https://github.com/openai/openai-go/commit/6a8a6a2fb2a99697e66a5ae6382c0c0630e4c8f2))
+* **api:** add service-account API key expiration fields ([#895](https://github.com/openai/openai-go/issues/895)) ([65785ca](https://github.com/openai/openai-go/commit/65785ca59ffea26f592920b5aae7bbe302cf30cc))
+* **api:** correct function argument completion event fields (openapi-545) ([#889](https://github.com/openai/openai-go/issues/889)) ([b26f72f](https://github.com/openai/openai-go/commit/b26f72f31964ec3533705db479afe58a2a09c765))
+
+
+### Chores
+
+* **api:** document throttling and model overload responses — SDK-235 ([#896](https://github.com/openai/openai-go/issues/896)) ([52e95a9](https://github.com/openai/openai-go/commit/52e95a974582ebd8d3b23f349e1bcdbbb899c0ac))
+* migrate to forked steady ([#882](https://github.com/openai/openai-go/issues/882)) ([a605079](https://github.com/openai/openai-go/commit/a605079515d949150831907a9d62c4823ab29294))
+
+
+### Documentation
+
+* establish canonical security model ([#875](https://github.com/openai/openai-go/issues/875)) ([30b5e81](https://github.com/openai/openai-go/commit/30b5e813e5768ac8e9ad102c9f1f1f1a009a8e57))
+
+## [3.56.0](https://github.com/openai/openai-go/compare/v3.55.0...v3.56.0) (2026-09-03)
+
+
+### Features
+
+* **api:** add gpt-6-astra and related features ([#880](https://github.com/openai/openai-go/issues/880)) ([94a240c](https://github.com/openai/openai-go/commit/94a240c1d3f0c70a80436d4a29ec6c1de83b943f))
+
+## [3.55.0](https://github.com/openai/openai-go/compare/v3.54.0...v3.55.0) (2026-09-02)
+
+
+### Features
+
+* **api:** add compute_units to Responses and Chat Completions usage ([#866](https://github.com/openai/openai-go/issues/866)) ([4d06294](https://github.com/openai/openai-go/commit/4d062949c62507e56514af8c7beb186dc09ac075))
+* **api:** update usage APIs and documentation ([#876](https://github.com/openai/openai-go/issues/876)) ([d8a7e6c](https://github.com/openai/openai-go/commit/d8a7e6c70d1bf67e744ea8e4fb617b622372ca0e))
+
+
+### Bug Fixes
+
+* isolate provider dependencies from root consumers ([#874](https://github.com/openai/openai-go/issues/874)) ([8de3444](https://github.com/openai/openai-go/commit/8de344439ca10236fc958a468bfbd5807737a15f))
+
+## [3.54.0](https://github.com/openai/openai-go/compare/v3.53.0...v3.54.0) (2026-08-27)
+
+
+### Features
+
+* **api:** make function call output call IDs optional ([#864](https://github.com/openai/openai-go/issues/864)) ([7095c46](https://github.com/openai/openai-go/commit/7095c4615c3033d78c460e7bac646ba8062e0e16))
+
+
+### Bug Fixes
+
+* **auth:** harden X.509 workload identity contract ([#863](https://github.com/openai/openai-go/issues/863)) ([adefcb3](https://github.com/openai/openai-go/commit/adefcb377ad07600d995d964c80f15d13fefd468))
+
+## [3.53.0](https://github.com/openai/openai-go/compare/v3.52.0...v3.53.0) (2026-08-25)
+
+
+### Features
+
+* **api:** Add obfuscation field to ChatCompletionChunk ([#813](https://github.com/openai/openai-go/issues/813)) ([4b08348](https://github.com/openai/openai-go/commit/4b08348ed0d61dc0d1f2a7b75f9808e7a51ab9db))
+* **api:** add project residency and usage quantity units ([#853](https://github.com/openai/openai-go/issues/853)) ([2fd626c](https://github.com/openai/openai-go/commit/2fd626c905da2fee3d9ce0d1afb30f6d92fe6099))
+* **api:** add Realtime call creation and recursive filters ([#860](https://github.com/openai/openai-go/issues/860)) ([c396b57](https://github.com/openai/openai-go/commit/c396b579f36ab8e154b9f08390a70e6fcfe15217))
+* **auth:** add caller-attested X.509 transport capability ([#855](https://github.com/openai/openai-go/issues/855)) ([64b2ef2](https://github.com/openai/openai-go/commit/64b2ef2c2b1c0799b382b4f9d9e3bb79cedbcd4a))
+* **auth:** complete X.509 token lifecycle and setup guidance ([#858](https://github.com/openai/openai-go/issues/858)) ([3e3a4e0](https://github.com/openai/openai-go/commit/3e3a4e0a73ff392bb8c4c15523b0a22e12f07b0e))
+* **auth:** implement pinned X.509 token exchange ([#856](https://github.com/openai/openai-go/issues/856)) ([a84eb49](https://github.com/openai/openai-go/commit/a84eb49d65391ab4618b5c653c73332a591981f5))
+* **option:** add attested X.509 workload identity authentication ([#857](https://github.com/openai/openai-go/issues/857)) ([b509c12](https://github.com/openai/openai-go/commit/b509c12cc12a22886f304bf62374c3667020bed2))
+* support named data-residency endpoints ([#805](https://github.com/openai/openai-go/issues/805)) ([6e72880](https://github.com/openai/openai-go/commit/6e7288096828717805cfccbea3b15f054326ff8e))
+
+
+### Bug Fixes
+
+* **apijson:** preserve unknown union array variants ([#768](https://github.com/openai/openai-go/issues/768)) ([0ab7ee6](https://github.com/openai/openai-go/commit/0ab7ee6680fe3887e9eea545706600a8a890549b))
+* **apijson:** reject non-object root payloads ([#769](https://github.com/openai/openai-go/issues/769)) ([2959fbd](https://github.com/openai/openai-go/commit/2959fbd636ee8dacbbb65416ec2f18bea55e136e))
+* **azure:** isolate provider authentication defaults ([#835](https://github.com/openai/openai-go/issues/835)) ([4e5a07a](https://github.com/openai/openai-go/commit/4e5a07a6a205761650d73593fe75cd79ea7a25ec))
+* **azure:** require secure credential transport ([#821](https://github.com/openai/openai-go/issues/821)) ([1dcf764](https://github.com/openai/openai-go/commit/1dcf7643c7661de54b00d189aa421b26db36bc8f))
+* **azure:** validate deployment routing bodies ([#826](https://github.com/openai/openai-go/issues/826)) ([54189a0](https://github.com/openai/openai-go/commit/54189a0b76d51f440bfb842547617beea3dec21d))
+* bound retry and polling delays ([#828](https://github.com/openai/openai-go/issues/828)) ([6d39b8b](https://github.com/openai/openai-go/commit/6d39b8b554a21202dac16dd5bbdc158ecbb09b06))
+* don't drop tool_calls when content is empty but present ([#757](https://github.com/openai/openai-go/issues/757)) ([4a73240](https://github.com/openai/openai-go/commit/4a73240556735716521d97c24df0512d2028d715)), closes [#756](https://github.com/openai/openai-go/issues/756)
+* enforce configured request origins ([#823](https://github.com/openai/openai-go/issues/823)) ([a71b2d1](https://github.com/openai/openai-go/commit/a71b2d17ed0c5b5e9f1ba1817f9b86a1ac7f2b5f))
+* harden multipart file metadata encoding ([#825](https://github.com/openai/openai-go/issues/825)) ([a4632e5](https://github.com/openai/openai-go/commit/a4632e570c087bc5b12e3412982fc6d1cc36ac69))
+* harden workload identity transport and request lifecycles ([#861](https://github.com/openai/openai-go/issues/861)) ([4ce8802](https://github.com/openai/openai-go/commit/4ce8802217a8bdf0ee9959eb292e3004e888fce7))
+* harden X.509 refresh races and empty-body replay ([#859](https://github.com/openai/openai-go/issues/859)) ([f95adf1](https://github.com/openai/openai-go/commit/f95adf17f6894eaf8d4e3a630cfba703615a4dd6))
+* ignore empty tool call deltas in accumulator ([#688](https://github.com/openai/openai-go/issues/688)) ([c2c8590](https://github.com/openai/openai-go/commit/c2c85905588a6f9cea14964cdf70105f9e5ab691))
+* make chat stream accumulation linear ([#819](https://github.com/openai/openai-go/issues/819)) ([0b7382a](https://github.com/openai/openai-go/commit/0b7382a4c1bc2b917b5939eb88005dbd654a472e))
+* make debug logging metadata-only ([#815](https://github.com/openai/openai-go/issues/815)) ([2e0743f](https://github.com/openai/openai-go/commit/2e0743fd569b477247379ff51d80028de3dc450f))
+* normalize registered stream decoder content types ([#790](https://github.com/openai/openai-go/issues/790)) ([a689437](https://github.com/openai/openai-go/commit/a689437a709ca07555386f273d2e048170f0dcc3))
+* preserve request options across pagination ([#820](https://github.com/openai/openai-go/issues/820)) ([ee97c12](https://github.com/openai/openai-go/commit/ee97c12e413e3a1299196e63fee01a85bc7310ac))
+* **responses:** decode shell output delta stream events ([#803](https://github.com/openai/openai-go/issues/803)) ([bb12b7a](https://github.com/openai/openai-go/commit/bb12b7a7d292ea6f4e2c8a662a2d0c3e1aeef8e9))
+* **sdk:** lock and verify the Steady mock server ([#811](https://github.com/openai/openai-go/issues/811)) ([37c0f0a](https://github.com/openai/openai-go/commit/37c0f0ab07fbe5f5b2775c12ca3500acd0caad8c))
+* **ssestream:** finalize stream resources promptly ([#839](https://github.com/openai/openai-go/issues/839)) ([71a7aef](https://github.com/openai/openai-go/commit/71a7aefbe265cbff6088e617fef741e8dfbb1061))
+* track stream accumulator events for every choice ([#806](https://github.com/openai/openai-go/issues/806)) ([8fa5f45](https://github.com/openai/openai-go/commit/8fa5f4504641b33280c3a9cefda82e4cbb668c35))
+* validate stream accumulator indices ([#822](https://github.com/openai/openai-go/issues/822)) ([02959ba](https://github.com/openai/openai-go/commit/02959ba995fbe8c98dad306541ca3ea9ece14284))
+* **webhooks:** honor request-scoped verification options ([#814](https://github.com/openai/openai-go/issues/814)) ([da53088](https://github.com/openai/openai-go/commit/da53088d2320ecf44d8eb75d0ccbdeb5e8c12210))
+* **webhooks:** validate prefixed signing secrets ([#824](https://github.com/openai/openai-go/issues/824)) ([c88e19a](https://github.com/openai/openai-go/commit/c88e19a1c266ef8fbc140969c862c1eb635142d8))
+
+
+### Chores
+
+* **api:** Add file header comments to source files ([#809](https://github.com/openai/openai-go/issues/809)) ([557cc1c](https://github.com/openai/openai-go/commit/557cc1ceed473541eadab147c9dbc468df90caab))
+* **api:** Clarify image background transparency docs ([#831](https://github.com/openai/openai-go/issues/831)) ([6dfcd9b](https://github.com/openai/openai-go/commit/6dfcd9b01bc201830df3aff3820a1664ea05e21b))
+* **api:** Document allowed image generation model values ([#816](https://github.com/openai/openai-go/issues/816)) ([c70532e](https://github.com/openai/openai-go/commit/c70532ec68987507eaacb5257270ae24aea5608d))
+* **api:** update generation metadata ([#842](https://github.com/openai/openai-go/issues/842)) ([ceb67ae](https://github.com/openai/openai-go/commit/ceb67ae80c8bcfe26759ee6fb764d6e265e4304c))
+* set a 2,000-line custom-code budget ([#840](https://github.com/openai/openai-go/issues/840)) ([31ce143](https://github.com/openai/openai-go/commit/31ce1430b9848d7c3716b081a72faf2900154186))
+* **shared:** restore generated alias placement ([#830](https://github.com/openai/openai-go/issues/830)) ([7d0e09e](https://github.com/openai/openai-go/commit/7d0e09e4bec1d20a888fc9a877ff214e608792cd))
+
+
+### Documentation
+
+* add Markdown-only Go SDK review skill ([#795](https://github.com/openai/openai-go/issues/795)) ([3e82f23](https://github.com/openai/openai-go/commit/3e82f23220a804fbc5b55bd517cb7cd94c6eb8b5))
+* add recurring improvement skill ([#818](https://github.com/openai/openai-go/issues/818)) ([cb08fd8](https://github.com/openai/openai-go/commit/cb08fd888dd45446cf037b1ac2caf7e7f6f765bf))
+* clean up changelog release notes ([#696](https://github.com/openai/openai-go/issues/696)) ([5ba3879](https://github.com/openai/openai-go/commit/5ba3879a9277f3d833d143ab9b559a9dbb2f590b))
+* improve webhook request handling examples ([#817](https://github.com/openai/openai-go/issues/817)) ([c152406](https://github.com/openai/openai-go/commit/c15240667e236baf12eed21e81922c3b655f8c8e))
+* migrate structured outputs example to Responses API ([#804](https://github.com/openai/openai-go/issues/804)) ([dd30934](https://github.com/openai/openai-go/commit/dd309349035acf67d81ce9b2b11309e29a6a99f0)), closes [#482](https://github.com/openai/openai-go/issues/482)
+* strengthen Go SDK security contribution guidance ([#797](https://github.com/openai/openai-go/issues/797)) ([b4ca1a7](https://github.com/openai/openai-go/commit/b4ca1a75215e59c13542eed462af9ad0549e58c0))
+
+
+### Refactors
+
+* **chat:** isolate message conversion ([#836](https://github.com/openai/openai-go/issues/836)) ([3175b15](https://github.com/openai/openai-go/commit/3175b151b474b7a14be16688f2a470252e1e0d27))
+* **chat:** reuse generated assistant constructor ([#834](https://github.com/openai/openai-go/issues/834)) ([7a8f196](https://github.com/openai/openai-go/commit/7a8f19666cf536dc9aa7a17b75fb3be32cb41a2d))
+* **responses:** isolate output text aggregation ([#838](https://github.com/openai/openai-go/issues/838)) ([d38d045](https://github.com/openai/openai-go/commit/d38d04517a2c47a70cb58c740270fb7e0ce3043d))
+* **vector-stores:** isolate batch orchestration ([#833](https://github.com/openai/openai-go/issues/833)) ([a2fa6c1](https://github.com/openai/openai-go/commit/a2fa6c18bfddac98262f0c4db7c2ff073b54c882))
+* **vector-stores:** isolate file orchestration ([#832](https://github.com/openai/openai-go/issues/832)) ([803983f](https://github.com/openai/openai-go/commit/803983f0ab5606e50f036d98ebec48bcf959c1f9))
+* **webhooks:** isolate verification helpers ([#837](https://github.com/openai/openai-go/issues/837)) ([401eaf3](https://github.com/openai/openai-go/commit/401eaf328ba7a9ad48a0c8a32820b58b54e0a3ef))
+
+
+### Build System
+
+* **deps:** bump actions/checkout from 6.0.2 to 7.0.1 ([#848](https://github.com/openai/openai-go/issues/848)) ([fbddc21](https://github.com/openai/openai-go/commit/fbddc21d13c33e55222dbc5a34df4996136b6a0e))
+* **deps:** bump actions/github-script from 7.1.0 to 9.0.0 ([#849](https://github.com/openai/openai-go/issues/849)) ([9d7c09e](https://github.com/openai/openai-go/commit/9d7c09e7cb761486cfba37bd11e18f17860d9ae6))
+* **deps:** bump github.com/aws/aws-sdk-go-v2/config in / ([#850](https://github.com/openai/openai-go/issues/850)) ([a5fedc0](https://github.com/openai/openai-go/commit/a5fedc01b16f88a082aad74c49326f63d374ad48))
+* **deps:** bump github.com/Azure/azure-sdk-for-go/sdk/azcore in / ([#845](https://github.com/openai/openai-go/issues/845)) ([f0079ac](https://github.com/openai/openai-go/commit/f0079ac64a790f49b9c8bcec5cc062e19dc3e6b0))
+* **deps:** bump github.com/ebitengine/oto/v3 in /examples ([#851](https://github.com/openai/openai-go/issues/851)) ([65e8a8f](https://github.com/openai/openai-go/commit/65e8a8f024c019b6bf156b65753651458ab9805c))
+* **deps:** bump the codeql group with 2 updates ([#847](https://github.com/openai/openai-go/issues/847)) ([29b2a11](https://github.com/openai/openai-go/commit/29b2a1123ade1d9d587501c58911341fd212bb0d))
+
+## [3.52.0](https://github.com/openai/openai-go/compare/v3.51.0...v3.52.0) (2026-08-17)
+
+
+### Features
+
+* add Bedrock Runtime endpoint support (SDK-290) ([#793](https://github.com/openai/openai-go/issues/793)) ([8e8444e](https://github.com/openai/openai-go/commit/8e8444ecf7918b3370356fa0d8478788e2c8196d))
+
+## [3.51.0](https://github.com/openai/openai-go/compare/v3.50.0...v3.51.0) (2026-08-14)
+
+
+### Features
+
+* **api:** Add model constants for Daybreak and gpt-5.6-cyber ([df00e97](https://github.com/openai/openai-go/commit/df00e9760b4584dc0986b7383ecb843a9cf67789))
+* **api:** add WebSocket stream IDs ([#776](https://github.com/openai/openai-go/issues/776)) ([0b6316e](https://github.com/openai/openai-go/commit/0b6316e74982b8403aac3854405ed90153dfb2e0))
+* **api:** add workload identity access token issued event ([#766](https://github.com/openai/openai-go/issues/766)) ([c61af30](https://github.com/openai/openai-go/commit/c61af303735128ab487ec1486cdf4983047bcbc0))
+* **api:** deprecate Sora video APIs ([#775](https://github.com/openai/openai-go/issues/775)) ([602c5e4](https://github.com/openai/openai-go/commit/602c5e48c7c51827cd656b4f613f3680bd858a7c))
+* **api:** Ultrafast tier, structured MCP and websocket errors, separate websocket events ([#789](https://github.com/openai/openai-go/issues/789)) ([f8b63fd](https://github.com/openai/openai-go/commit/f8b63fd68a81b586a8227e1032d173b039bd888e))
+
+
+### Bug Fixes
+
+* **api:** Add model constants for Daybreak and gpt-5.6-cyber ([#763](https://github.com/openai/openai-go/issues/763)) ([df00e97](https://github.com/openai/openai-go/commit/df00e9760b4584dc0986b7383ecb843a9cf67789))
+* **api:** clarify audio upload metadata requirements ([#764](https://github.com/openai/openai-go/issues/764)) ([e75e3aa](https://github.com/openai/openai-go/commit/e75e3aaf598f6257445984cfedaf3dd40d790a29))
+* handle ignored errors in generated and runtime Go code ([#778](https://github.com/openai/openai-go/issues/778)) ([ba5f249](https://github.com/openai/openai-go/commit/ba5f249454f32f1ba16a184c2290e64b32cd1bee))
+* recover approved Go correctness analyzers after stacked merges ([#782](https://github.com/openai/openai-go/issues/782)) ([a98cf53](https://github.com/openai/openai-go/commit/a98cf53f7a98a977ab90750f3365c65b276df38d))
+
+
+### Chores
+
+* **api:** No public API change; update file header comments ([#755](https://github.com/openai/openai-go/issues/755)) ([d0a42cc](https://github.com/openai/openai-go/commit/d0a42cc753ffb56b7f268ecc2b9975ca58203215))
+* enforce Go lint suppression hygiene ([#771](https://github.com/openai/openai-go/issues/771)) ([7a3bb22](https://github.com/openai/openai-go/commit/7a3bb22e4b29b489efaecc9e539c44be8fa52d2d))
+* enforce gofmt across the repository ([#770](https://github.com/openai/openai-go/issues/770)) ([41b2f1f](https://github.com/openai/openai-go/commit/41b2f1f4d7b30399d143e6cb456b6c94ce7f51e2)), closes [#771](https://github.com/openai/openai-go/issues/771)
+* remove Stainless attribution and infrastructure ([#765](https://github.com/openai/openai-go/issues/765)) ([9b3d395](https://github.com/openai/openai-go/commit/9b3d395105c3272d0d703f8e1e3e37776f7b42a5))
+
+
+### Documentation
+
+* **api:** describe response stream event unions ([#783](https://github.com/openai/openai-go/issues/783)) ([4cc4021](https://github.com/openai/openai-go/commit/4cc4021ca46415326b78377b07f221e11f979b4d))
+* define Go code quality policy ([#767](https://github.com/openai/openai-go/issues/767)) ([4119aa3](https://github.com/openai/openai-go/commit/4119aa3b19feb7c20757d78d4fd6ed0c09233a9b))
+* define Go ignored-error handling policy ([#777](https://github.com/openai/openai-go/issues/777)) ([1941f81](https://github.com/openai/openai-go/commit/1941f81fa2b3353feec2d39c5dd7fd2b85e58780))
+
+
+### Build System
+
+* **deps:** bump github.com/aws/aws-sdk-go-v2/config in / ([#759](https://github.com/openai/openai-go/issues/759)) ([e8dfbe0](https://github.com/openai/openai-go/commit/e8dfbe097d282f0c0aee74f6aed00a6b4decb7c0))
+* **deps:** bump the codeql group with 2 updates ([#760](https://github.com/openai/openai-go/issues/760)) ([9bbfebf](https://github.com/openai/openai-go/commit/9bbfebf71e721d0575ccbd56d0aaeacc4a4cef10))
+* **deps:** enforce an eight-day dependency cooldown ([#762](https://github.com/openai/openai-go/issues/762)) ([744e64f](https://github.com/openai/openai-go/commit/744e64ff17ba988371534849e22555255d90bb56))
+
+## [3.50.0](https://github.com/openai/openai-go/compare/v3.49.0...v3.50.0) (2026-08-03)
+
+
+### Features
+
+* **api:** promote Go SDK changes ([#748](https://github.com/openai/openai-go/issues/748)) ([9e4b4d5](https://github.com/openai/openai-go/commit/9e4b4d5a5ccadc94ea8b8a54148e7a0e52797e94))
+
+
+### Build System
+
+* **deps:** bump github.com/aws/aws-sdk-go-v2/config in / ([#745](https://github.com/openai/openai-go/issues/745)) ([af89b42](https://github.com/openai/openai-go/commit/af89b4276381d98193419f46429f79d74b490ec9))
+* **deps:** bump the codeql group with 2 updates ([#746](https://github.com/openai/openai-go/issues/746)) ([41c8a70](https://github.com/openai/openai-go/commit/41c8a70fef4c2f7067a7eb6bc095c94d1782a2fe))
+
 ## 3.49.0 (2026-07-31)
 
 Full Changelog: [v3.48.0...v3.49.0](https://github.com/openai/openai-go/compare/v3.48.0...v3.49.0)
@@ -387,7 +999,7 @@ Full Changelog: [v3.27.0...v3.28.0](https://github.com/openai/openai-go/compare/
 
 ### ⚠ BREAKING CHANGES
 
-* **api:** The `voice` param and resouce has changed from a `string` to a `string | {id: string}`. This is a breaking change for Go.
+* **api:** The `voice` parameter type has changed from a `string` to a `string | {id: string}`. This is a breaking change for Go.
 
 ## 3.27.0 (2026-03-13)
 
@@ -414,7 +1026,7 @@ Full Changelog: [v3.25.0...v3.26.0](https://github.com/openai/openai-go/compare/
 
 ### Features
 
-* **api:** The GA ComputerTool now uses the CompuerTool class. The 'computer_use_preview' tool is moved to ComputerUsePreview ([347418b](https://github.com/openai/openai-go/commit/347418be8d4fa33881d9ac30f6c7132f2f545f2b))
+* **api:** The GA computer tool now uses the ComputerTool type. The `computer_use_preview` tool has moved to ComputerUsePreviewTool ([347418b](https://github.com/openai/openai-go/commit/347418be8d4fa33881d9ac30f6c7132f2f545f2b))
 
 ## 3.25.0 (2026-03-05)
 
@@ -438,26 +1050,6 @@ Full Changelog: [v3.24.0...v3.25.0](https://github.com/openai/openai-go/compare/
 * **internal:** codegen related update ([ab733b9](https://github.com/openai/openai-go/commit/ab733b91db39e99e292696530340333c065e04b9))
 * **internal:** codegen related update ([23d1831](https://github.com/openai/openai-go/commit/23d1831cb5ca6f61ca8575737cec17e2f347818b))
 * **internal:** reduce warnings ([2963312](https://github.com/openai/openai-go/commit/2963312c075fa9a30abad32b1e90813229b22129))
-
-## 3.24.0 (2026-02-24)
-
-Full Changelog: [v3.23.0...v3.24.0](https://github.com/openai/openai-go/compare/v3.23.0...v3.24.0)
-
-### Features
-
-* **api:** add phase ([72366d8](https://github.com/openai/openai-go/commit/72366d895c78b5188a590ee7f9b572b567447b32))
-
-
-### Bug Fixes
-
-* **api:** fix phase enum ([5712ebf](https://github.com/openai/openai-go/commit/5712ebf1f30e63d148a72c451f1df48620b14a2d))
-* **api:** phase docs ([b67dd66](https://github.com/openai/openai-go/commit/b67dd6680110c013c1660c37dde5467e2cd50030))
-
-
-### Chores
-
-* **internal:** move custom custom `json` tags to `api` ([0735303](https://github.com/openai/openai-go/commit/0735303849ece03c57adbb0f899d7f3a0b60bc50))
-* **internal:** refactor sse event parsing ([45dc6bb](https://github.com/openai/openai-go/commit/45dc6bb18120330de4470739a07b13f08d7f7666))
 
 ## 3.24.0 (2026-02-24)
 
