@@ -120,12 +120,14 @@ func TestX509WorkloadIdentityFollowersUseTheirOwnRetryBudgets(t *testing.T) {
 	for _, test := range []struct {
 		name          string
 		status        int
+		retryAfter    string
 		followerLimit int
 		wantExchanges int32
 		wantSuccess   bool
 	}{
 		{name: "retry-enabled follower recovers", status: http.StatusServiceUnavailable,
 			followerLimit: 2, wantExchanges: 2, wantSuccess: true},
+		{name: "follower rejects excessive issuer delay", status: http.StatusTooManyRequests, retryAfter: "3", followerLimit: 2, wantExchanges: 1},
 		{name: "zero-retry follower fails", status: http.StatusServiceUnavailable, wantExchanges: 1},
 		{name: "permanent failure is not retried", status: http.StatusBadRequest,
 			followerLimit: 2, wantExchanges: 1},
@@ -138,6 +140,9 @@ func TestX509WorkloadIdentityFollowersUseTheirOwnRetryBudgets(t *testing.T) {
 				if exchanges.Add(1) == 1 {
 					close(firstReached)
 					<-releaseFirst
+					if test.retryAfter != "" {
+						w.Header().Set("Retry-After", test.retryAfter)
+					}
 					w.WriteHeader(test.status)
 					_, _ = io.WriteString(w, `{"error":{"code":"invalid_grant"}}`)
 					return
