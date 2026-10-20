@@ -1,5 +1,41 @@
 # Changelog
 
+## [3.83.0](https://github.com/openai/openai-go/compare/v3.82.0...v3.83.0) (2026-10-20)
+
+
+### Features
+
+* **api:** add 30-minute cache-write usage counts ([#1103](https://github.com/openai/openai-go/issues/1103)) ([132dcbe](https://github.com/openai/openai-go/commit/132dcbe34f72db141db294291313ba172fc33588))
+* **api:** add compaction trigger IDs ([#1115](https://github.com/openai/openai-go/issues/1115)) ([252236f](https://github.com/openai/openai-go/commit/252236fb06bc38778de9acdad79ef0a54e9f1de5))
+* **api:** add raw WebSocket helpers and clarify key updates ([#1119](https://github.com/openai/openai-go/issues/1119)) ([0427f24](https://github.com/openai/openai-go/commit/0427f24e5b03928754f6eaa6beab24119cd65c55))
+
+
+### Bug Fixes
+
+* decode base64 embedding vectors ([#1123](https://github.com/openai/openai-go/issues/1123)) ([55a8cc5](https://github.com/openai/openai-go/commit/55a8cc5c532f8477ab7dd06b4ea6cfd0253faae1))
+* preserve issuer retry and agent event contracts ([#1124](https://github.com/openai/openai-go/issues/1124)) ([e1539de](https://github.com/openai/openai-go/commit/e1539de10b87085fd0cf0b5cc770e6063a8ee134))
+* **realtime:** return terminal receive errors before transport cleanup ([#1113](https://github.com/openai/openai-go/issues/1113)) ([ab4977a](https://github.com/openai/openai-go/commit/ab4977a0c2a3ab8f1918dcd8f6cd50ad0a7e60bb))
+* recognize null collection sentinels passed through interfaces ([#1112](https://github.com/openai/openai-go/issues/1112)) ([9121982](https://github.com/openai/openai-go/commit/912198274e8f581e404156788c7b814f77dde920))
+* release Translation send admission if encoding panics ([#1116](https://github.com/openai/openai-go/issues/1116)) ([9f7592c](https://github.com/openai/openai-go/commit/9f7592c85099945585ca34650decb033357fa16a))
+
+
+### Chores
+
+* restore generated budget checker comment ([#1110](https://github.com/openai/openai-go/issues/1110)) ([29e58b9](https://github.com/openai/openai-go/commit/29e58b96ad6762f8ea5e798bdb485e543543b90c))
+
+
+### Documentation
+
+* plan zero mixed Castiron customizations ([#1106](https://github.com/openai/openai-go/issues/1106)) ([85be4f5](https://github.com/openai/openai-go/commit/85be4f59921fc04b44beb2c767ccfde5fad89bde))
+* track transition progress and shared-auth compatibility ([#1111](https://github.com/openai/openai-go/issues/1111)) ([997ec91](https://github.com/openai/openai-go/commit/997ec9134e48b89ac66d503f195eff28730e295f))
+
+
+### Refactors
+
+* keep vector store batch helpers handwritten ([#1107](https://github.com/openai/openai-go/issues/1107)) ([b5e9da2](https://github.com/openai/openai-go/commit/b5e9da2a994a8e2007863d906bf3d2642a4f4a37))
+* move handwritten response and video helpers out of generated files ([#1105](https://github.com/openai/openai-go/issues/1105)) ([d1a720d](https://github.com/openai/openai-go/commit/d1a720d84da12a6855a42e9e9ae9cf5f034a541f))
+* move vector store file wrappers into handwritten helpers ([#1104](https://github.com/openai/openai-go/issues/1104)) ([4520c2d](https://github.com/openai/openai-go/commit/4520c2dac8cbb2b0a6f94d559d34b10bb83019fa))
+
 ## [3.82.0](https://github.com/openai/openai-go/compare/v3.81.0...v3.82.0) (2026-10-18)
 
 
