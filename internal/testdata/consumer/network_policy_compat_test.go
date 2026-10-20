@@ -22,8 +22,8 @@ func TestCodeInterpreterNetworkPolicyParameterCompatibility(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			var current responses.ContainerAutoNetworkPolicyUnionParam = tc.policy
-			got, err := json.Marshal(current)
+			current := responses.ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam{NetworkPolicy: tc.policy}
+			got, err := json.Marshal(current.NetworkPolicy)
 			if err != nil {
 				t.Fatal(err)
 			}
