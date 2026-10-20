@@ -489,7 +489,13 @@ func (c *Connection[T]) Reconnect(ctx context.Context, open func(context.Context
 	c.reconnecting = true
 	c.reconnectCancel = cancel
 	c.mu.Unlock()
-	defer cancel()
+	defer func() {
+		c.mu.Lock()
+		c.reconnecting = false
+		c.reconnectCancel = nil
+		c.mu.Unlock()
+		cancel()
+	}()
 	stopRetirement := context.AfterFunc(ctx, func() { _ = c.transport.Close() })
 	_ = c.close(false)
 	stopRetirement()
@@ -508,8 +514,6 @@ func (c *Connection[T]) Reconnect(ctx context.Context, open func(context.Context
 	c.mu.Lock()
 	closed := c.userClosed
 	canceled := ctx.Err()
-	c.reconnecting = false
-	c.reconnectCancel = nil
 	if err == nil && !closed && canceled == nil {
 		c.userClosed = true
 	}
