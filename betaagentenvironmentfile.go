@@ -125,7 +125,10 @@ func (r BetaAgentEnvironmentFileNewParams) MarshalJSON() (data []byte, err error
 	return shimjson.Marshal(r.HostedEnvironmentFileParam)
 }
 func (r *BetaAgentEnvironmentFileNewParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	if r == nil {
+		return apijson.UnmarshalRoot(data, r)
+	}
+	return apijson.UnmarshalWrappedObject(data, r, &r.HostedEnvironmentFileParam)
 }
 
 type BetaAgentEnvironmentFileListParams struct {

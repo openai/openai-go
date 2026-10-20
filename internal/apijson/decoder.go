@@ -37,6 +37,18 @@ func UnmarshalRoot(raw []byte, to any) error {
 	return d.unmarshal(raw, to)
 }
 
+// UnmarshalWrappedObject decodes an object into body while preserving the
+// wrapper's root decoding behavior for null and non-object values.
+func UnmarshalWrappedObject(raw []byte, wrapper, body any) error {
+	result := gjson.ParseBytes(raw)
+	target := wrapper
+	if result.IsObject() {
+		target = body
+	}
+	d := &decoderBuilder{dateFormat: time.RFC3339, root: true}
+	return d.unmarshalResult(result, target)
+}
+
 // decoderBuilder contains the 'compile-time' state of the decoder.
 type decoderBuilder struct {
 	// Whether or not this is the first element and called by [UnmarshalRoot], see
@@ -88,8 +100,11 @@ type decoderEntry struct {
 }
 
 func (d *decoderBuilder) unmarshal(raw []byte, to any) error {
+	return d.unmarshalResult(gjson.ParseBytes(raw), to)
+}
+
+func (d *decoderBuilder) unmarshalResult(result gjson.Result, to any) error {
 	value := reflect.ValueOf(to).Elem()
-	result := gjson.ParseBytes(raw)
 	if !value.IsValid() {
 		return fmt.Errorf("apijson: cannot marshal into invalid value")
 	}

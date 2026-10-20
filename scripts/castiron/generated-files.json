@@ -347,7 +347,7 @@
     },
     "betaagentenvironmentfile.go": {
       "mode": "100644",
-      "sha256": "60a00d53ac0cc64f1996657f787d4d85a2e6e3bd206868bf45d5d714595e458f"
+      "sha256": "12f08b1a4f730cd581d409f4b5e4235c4f89d0c31f9bf1a556d781e79e2c854f"
     },
     "betaagentenvironmentfile_test.go": {
       "mode": "100644",
@@ -839,7 +839,7 @@
     },
     "realtime/call.go": {
       "mode": "100644",
-      "sha256": "2ae07e80b35212cd463b6a39a2088846fe6cf152206fc1dc0255c2c14366605e"
+      "sha256": "869a8d23f3ce07711269a1307ad42312397f675108ac41b22c1a3df954b5b4ab"
     },
     "realtime/call_test.go": {
       "mode": "100644",
@@ -879,7 +879,7 @@
     },
     "realtime/translationclientsecret.go": {
       "mode": "100644",
-      "sha256": "c87118ba5b5d5789510443e32e434ebbe2883748cac5204d26afea6678980e25"
+      "sha256": "126f3b347abf72962b208e24b9c4e01cd4fbd5452f5822a460b584ca5fd1201c"
     },
     "realtime/translationclientsecret_test.go": {
       "mode": "100644",
