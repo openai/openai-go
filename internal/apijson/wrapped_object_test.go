@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/realtime"
 )
 
@@ -19,6 +20,9 @@ func TestWrappedRequestBody(t *testing.T) {
 	}{
 		{"union", &openai.BetaAgentEnvironmentFileNewParams{}, `{"type":"file_id","file_id":"file_123","path":"/workspace/input"}`},
 		{"struct", &realtime.CallAcceptParams{}, `{"type":"realtime","model":"gpt-realtime","instructions":"Reply briefly."}`},
+		{"null union field", &realtime.CallAcceptParams{}, `{"type":"realtime","tracing":null}`},
+		{"omitted union field", &realtime.CallAcceptParams{}, `{"type":"realtime"}`},
+		{"null object field", &realtime.CallAcceptParams{}, `{"type":"realtime","audio":null}`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			if err := json.Unmarshal([]byte(tc.body), tc.params); err != nil {
@@ -69,4 +73,35 @@ func TestWrappedRequestBody(t *testing.T) {
 			t.Fatal("expected an error for a nil receiver")
 		}
 	})
+}
+
+func TestWrappedRequestBodyTracingNull(t *testing.T) {
+	var params realtime.CallAcceptParams
+	for _, body := range []string{
+		`{"type":"realtime","tracing":"auto"}`,
+		`{"type":"realtime","tracing":null}`,
+		`{"type":"realtime","tracing":"auto"}`,
+	} {
+		if err := json.Unmarshal([]byte(body), &params); err != nil {
+			t.Fatal(err)
+		}
+		wantNull := bytes.Contains([]byte(body), []byte("null"))
+		if param.IsNull(params.RealtimeSessionCreateRequest.Tracing) != wantNull {
+			t.Fatalf("tracing null state does not match %s", body)
+		}
+		got, err := json.Marshal(params)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var wantFields, gotFields map[string]any
+		if err := json.Unmarshal([]byte(body), &wantFields); err != nil {
+			t.Fatal(err)
+		}
+		if err := json.Unmarshal(got, &gotFields); err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(gotFields, wantFields) {
+			t.Fatalf("round trip = %s, want %s", got, body)
+		}
+	}
 }

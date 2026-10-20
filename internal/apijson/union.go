@@ -15,7 +15,7 @@ var apiUnionType = reflect.TypeOf(param.APIUnion{})
 // runtime reflect.Value, so invoke it reflectively after verifying the pointer.
 var setParamJSON = reflect.ValueOf(param.SetJSON)
 
-func preserveUnknownParamUnion(v reflect.Value, raw string) bool {
+func preserveParamJSON(v reflect.Value, raw string) bool {
 	if !v.CanAddr() || !v.Addr().Type().Implements(setParamJSON.Type().In(1)) {
 		return false
 	}
@@ -155,7 +155,7 @@ func (d *decoderBuilder) newStructUnionDecoder(t reflect.Type) decoderFunc {
 					return err
 				}
 			}
-			if state.preserveUnknownDiscriminatedUnion && discriminatorNode.Exists() && compatibleDiscriminatorType && preserveUnknownParamUnion(v, n.Raw) {
+			if state.preserveUnknownDiscriminatedUnion && discriminatorNode.Exists() && compatibleDiscriminatorType && preserveParamJSON(v, n.Raw) {
 				return nil
 			}
 			return errors.New("apijson: was not able to find discriminated union variant")

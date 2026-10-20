@@ -524,6 +524,10 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type, isRoot bool) decod
 
 			isValid := false
 			if dest.IsValid() && itemNode.Type != gjson.Null {
+				// A new value replaces a previously decoded explicit null.
+				if p, ok := dest.Interface().(param.ParamStruct); ok && param.IsNull(p) {
+					dest.SetZero()
+				}
 				err = fn(itemNode, dest, state)
 				if err == nil {
 					isValid = true
@@ -534,6 +538,15 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type, isRoot bool) decod
 			if itemNode.Type == gjson.Null && dest.IsValid() && dest.Type().Implements(reflect.TypeOf((*param.Optional)(nil)).Elem()) {
 				_ = dest.Addr().Interface().(json.Unmarshaler).UnmarshalJSON([]byte(itemNode.Raw))
 				continue
+			}
+
+			// Parameter structs and unions carry explicit null in their metadata.
+			if itemNode.Type == gjson.Null && dest.IsValid() {
+				nullValue := reflect.New(dest.Type()).Elem()
+				if preserveParamJSON(nullValue, "null") {
+					dest.Set(nullValue)
+					continue
+				}
 			}
 
 			if itemNode.Type == gjson.Null {
