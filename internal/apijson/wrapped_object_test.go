@@ -21,8 +21,12 @@ func TestWrappedRequestBody(t *testing.T) {
 		{"union", &openai.BetaAgentEnvironmentFileNewParams{}, `{"type":"file_id","file_id":"file_123","path":"/workspace/input"}`},
 		{"struct", &realtime.CallAcceptParams{}, `{"type":"realtime","model":"gpt-realtime","instructions":"Reply briefly."}`},
 		{"null union field", &realtime.CallAcceptParams{}, `{"type":"realtime","tracing":null}`},
+		{"null interface field", &realtime.CallAcceptParams{}, `{"type":"realtime","tracing":{"metadata":null}}`},
 		{"omitted union field", &realtime.CallAcceptParams{}, `{"type":"realtime"}`},
 		{"null object field", &realtime.CallAcceptParams{}, `{"type":"realtime","audio":null}`},
+		{"null collections", &realtime.CallAcceptParams{}, `{"type":"realtime","include":null,"prompt":{"id":"pmpt_123","variables":null}}`},
+		{"null within union", &realtime.CallAcceptParams{}, `{"type":"realtime","truncation":{"type":"retention_ratio","retention_ratio":0.8,"token_limits":null}}`},
+		{"nested translation null", &realtime.TranslationClientSecretNewParams{}, `{"session":{"model":"translation-model","audio":{"input":{"noise_reduction":null}}}}`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			if err := json.Unmarshal([]byte(tc.body), tc.params); err != nil {
