@@ -120,12 +120,14 @@ func TestX509WorkloadIdentityFollowersUseTheirOwnRetryBudgets(t *testing.T) {
 	for _, test := range []struct {
 		name          string
 		status        int
+		retryAfter    string
 		followerLimit int
 		wantExchanges int32
 		wantSuccess   bool
 	}{
 		{name: "retry-enabled follower recovers", status: http.StatusServiceUnavailable,
 			followerLimit: 2, wantExchanges: 2, wantSuccess: true},
+		{name: "follower rejects excessive issuer delay", status: http.StatusTooManyRequests, retryAfter: "3", followerLimit: 2, wantExchanges: 1},
 		{name: "zero-retry follower fails", status: http.StatusServiceUnavailable, wantExchanges: 1},
 		{name: "permanent failure is not retried", status: http.StatusBadRequest,
 			followerLimit: 2, wantExchanges: 1},
@@ -138,6 +140,9 @@ func TestX509WorkloadIdentityFollowersUseTheirOwnRetryBudgets(t *testing.T) {
 				if exchanges.Add(1) == 1 {
 					close(firstReached)
 					<-releaseFirst
+					if test.retryAfter != "" {
+						w.Header().Set("Retry-After", test.retryAfter)
+					}
 					w.WriteHeader(test.status)
 					_, _ = io.WriteString(w, `{"error":{"code":"invalid_grant"}}`)
 					return
@@ -377,6 +382,7 @@ func TestX509WorkloadIdentitySelectsBoundedIssuerRetryDelays(t *testing.T) {
 		attempt int
 		scope   *requestconfig.RequestRetryScope
 		want    time.Duration
+		stop    bool
 	}{
 		{name: "ordinary exponential delay", err: &x509ExchangeHTTPError{statusCode: 503},
 			attempt: 1, want: 2 * x509InitialRetryDelay},
@@ -387,15 +393,15 @@ func TestX509WorkloadIdentitySelectsBoundedIssuerRetryDelays(t *testing.T) {
 			statusCode: 429, retryAfter: 0, hasRetryAfter: true}},
 		{name: "issuer hint obeys caller maximum", err: &x509ExchangeHTTPError{
 			statusCode: 503, retryAfter: time.Second, hasRetryAfter: true},
-			scope: requestconfig.NewRequestRetryScope(2, 7*time.Millisecond, true, nil), want: 7 * time.Millisecond},
+			scope: requestconfig.NewRequestRetryScope(2, 7*time.Millisecond, true, nil), stop: true},
 		{name: "ordinary delay obeys caller maximum", err: &x509ExchangeReadError{},
 			scope: requestconfig.NewRequestRetryScope(2, time.Millisecond, true, nil), want: time.Millisecond},
 		{name: "standalone delay remains bounded", err: &x509ExchangeHTTPError{
-			statusCode: 429, retryAfter: time.Hour, hasRetryAfter: true}, want: x509MaximumRetryAfter},
+			statusCode: 429, retryAfter: time.Hour, hasRetryAfter: true}, stop: true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			if got := x509ExchangeRetryDelay(test.err, test.attempt, test.scope); got != test.want {
-				t.Errorf("issuer retry delay = %s, want %s", got, test.want)
+			if got, allowed := x509ExchangeRetryDelay(test.err, test.attempt, test.scope); got != test.want || allowed == test.stop {
+				t.Errorf("issuer retry delay = (%s, %t), want (%s, %t)", got, allowed, test.want, !test.stop)
 			}
 		})
 	}
@@ -858,4 +864,28 @@ func newX509LifecycleIdentity(t *testing.T, fixture *x509ExchangeFixture) *X509W
 		t.Fatalf("construct ephemeral X.509 lifecycle identity: %v", err)
 	}
 	return identity
+}
+
+func TestX509WorkloadIdentityRejectsExcessiveRetryAfter(t *testing.T) {
+	for _, header := range []string{"3", "3600", "1e100"} {
+		t.Run(header, func(t *testing.T) {
+			var attempts atomic.Int32
+			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				attempts.Add(1)
+				w.Header().Set("Retry-After", header)
+				w.WriteHeader(http.StatusTooManyRequests)
+			}))
+			identity := newX509LifecycleIdentity(t, fixture)
+			scope := requestconfig.NewRequestRetryScope(2, 10*time.Millisecond, true, nil)
+			ctx := requestconfig.WithRequestRetryScope(t.Context(), scope)
+			_, err := identity.GetToken(ctx, fixture.capability)
+			var status *x509ExchangeHTTPError
+			if !errors.As(err, &status) || status.statusCode != http.StatusTooManyRequests {
+				t.Fatalf("GetToken() error = %v, want original issuer HTTP error", err)
+			}
+			if got := attempts.Load(); got != 1 {
+				t.Fatalf("issuer attempts = %d, want 1", got)
+			}
+		})
+	}
 }

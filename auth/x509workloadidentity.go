@@ -133,8 +133,10 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 					continue
 				}
 				if retryableX509ExchangeError(current.err) {
-					if scope := requestconfig.RequestRetryScopeFromContext(ctx); scope != nil && scope.TryRetry() {
-						continue
+					if scope := requestconfig.RequestRetryScopeFromContext(ctx); scope != nil {
+						if _, allowed := x509ExchangeRetryDelay(current.err, 0, scope); allowed && scope.TryRetry() {
+							continue
+						}
 					}
 				}
 				return "", current.err
@@ -259,13 +261,14 @@ func (identity *X509WorkloadIdentityAuth) exchangeWithRetry(
 			return token, err
 		}
 		scope := requestconfig.RequestRetryScopeFromContext(ctx)
-		if scope != nil && !scope.TryRetry() {
+		delay, allowed := x509ExchangeRetryDelay(err, attempt, scope)
+		if !allowed || (scope != nil && !scope.TryRetry()) {
 			return token, err
 		}
 		if errors.Is(err, errX509InvalidatedBearer) {
 			continue
 		}
-		timer := time.NewTimer(x509ExchangeRetryDelay(err, attempt, scope))
+		timer := time.NewTimer(delay)
 		select {
 		case <-ctx.Done():
 			if !timer.Stop() {
@@ -285,7 +288,7 @@ func (identity *X509WorkloadIdentityAuth) exchangeWithRetry(
 	}
 }
 
-func x509ExchangeRetryDelay(err error, attempt int, scope *requestconfig.RequestRetryScope) time.Duration {
+func x509ExchangeRetryDelay(err error, attempt int, scope *requestconfig.RequestRetryScope) (time.Duration, bool) {
 	delay := x509InitialRetryDelay << attempt
 	var status *x509ExchangeHTTPError
 	if errors.As(err, &status) && status.hasRetryAfter {
@@ -295,7 +298,10 @@ func x509ExchangeRetryDelay(err error, attempt int, scope *requestconfig.Request
 	if scope != nil {
 		maximum = scope.MaxRetryDelay()
 	}
-	return min(delay, maximum)
+	if status != nil && status.hasRetryAfter && delay > maximum {
+		return 0, false
+	}
+	return min(delay, maximum), true
 }
 
 func retryableX509ExchangeError(err error) bool {
