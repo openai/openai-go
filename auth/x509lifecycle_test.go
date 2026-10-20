@@ -944,3 +944,51 @@ func TestX509FollowerHonorsSharedRetryAfter(t *testing.T) {
 		})
 	}
 }
+
+func TestX509InvalidatedBearerFollowerRetriesWithoutDelay(t *testing.T) {
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		t.Error("unexpected issuer request")
+		w.WriteHeader(http.StatusBadRequest)
+	}))
+	for _, retries := range []int{0, 1} {
+		t.Run(strconv.Itoa(retries), func(t *testing.T) {
+			synctest.Test(t, func(t *testing.T) {
+				identity := newX509LifecycleIdentity(t, fixture)
+				refresh := &x509TokenRefresh{done: make(chan struct{})}
+				identity.inFlight = refresh
+				ctx, cancel := context.WithTimeout(t.Context(), 100*time.Millisecond)
+				defer cancel()
+				scope := requestconfig.NewRequestRetryScope(retries, 2*time.Second, true, nil)
+				if !scope.BeginAttempt() {
+					t.Fatal("initial attempt rejected")
+				}
+				ctx = requestconfig.WithRequestRetryScope(ctx, scope)
+				result := make(chan error, 1)
+				go func() { _, err := identity.GetToken(ctx, fixture.capability); result <- err }()
+				synctest.Wait()
+				identity.mu.Lock()
+				identity.inFlight = nil
+				identity.cached = x509ExchangedToken{value: x509ExchangeSyntheticToken, expiresAt: time.Now().Add(time.Minute)}
+				identity.refreshAfter = time.Now().Add(time.Minute)
+				refresh.err = errX509InvalidatedBearer
+				started := time.Now()
+				close(refresh.done)
+				identity.mu.Unlock()
+				err := <-result
+				if retries == 0 {
+					if !errors.Is(err, errX509InvalidatedBearer) {
+						t.Fatalf("error = %v, want invalidated bearer", err)
+					}
+				} else if err != nil {
+					t.Fatalf("error = %v, want immediate retry success", err)
+				}
+				if elapsed := time.Since(started); elapsed != 0 {
+					t.Errorf("retry waited %s, want zero", elapsed)
+				}
+				if scope.TryRetry() {
+					t.Error("follower did not debit retry budget")
+				}
+			})
+		})
+	}
+}
