@@ -190,6 +190,9 @@ func (s *AgentSessionStream) Next() (ok bool) {
 			return false
 		}
 		event := s.stream.Current()
+		if event.EventID == "" {
+			return s.finish(errors.New("agent session stream event is missing event_id"))
+		}
 		if !s.accept(event) {
 			continue
 		}

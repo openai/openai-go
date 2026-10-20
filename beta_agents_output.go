@@ -166,17 +166,16 @@ func betaAgentNormalizeSchema(schema, root map[string]any, path string) error {
 			return fail("$ref must be a string")
 		}
 		if name != "#" {
+			namespace := "$defs"
 			target, local := strings.CutPrefix(name, "#/$defs/")
 			if !local {
+				namespace = "definitions"
 				target, local = strings.CutPrefix(name, "#/definitions/")
 			}
 			if !local || target == "" || strings.Contains(target, "/") {
 				return fail("only local definition references are supported")
 			}
-			defs, ok := root["$defs"].(map[string]any)
-			if !ok {
-				defs, _ = root["definitions"].(map[string]any)
-			}
+			defs, _ := root[namespace].(map[string]any)
 			if _, ok := defs[target].(map[string]any); !ok {
 				return fail("unresolved $ref")
 			}

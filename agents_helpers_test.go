@@ -636,3 +636,22 @@ func TestAgentsHelperProtocolErrorSurfacesAndCloses(t *testing.T) {
 		t.Fatal("protocol error did not close without cancelling the backend")
 	}
 }
+
+func TestAgentsHelperRejectsMissingEventID(t *testing.T) {
+	for _, event := range []string{`{"type":"agent.session.idle"}`, `{"type":"agent.session.idle","event_id":""}`} {
+		t.Run(event, func(t *testing.T) {
+			m, c := newAgentHelperServer(t, event)
+			s := c.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{Input: "hi"})
+			defer func() { _ = s.Close() }()
+			if s.Next() {
+				t.Fatal("Next() = true, want malformed event rejection")
+			}
+			if s.Err() == nil || !strings.Contains(s.Err().Error(), "event_id") {
+				t.Fatalf("Err() = %v, want missing event_id error", s.Err())
+			}
+			if m.closed.Load() != 1 {
+				t.Fatalf("body closes = %d, want 1", m.closed.Load())
+			}
+		})
+	}
+}
