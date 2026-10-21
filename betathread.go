@@ -44,6 +44,8 @@ type BetaThreadService struct {
 // NewBetaThreadService generates a new service that applies the given options to
 // each request. These options are applied after the parent client's options (if
 // there is one), and before any request-specific options.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func NewBetaThreadService(opts ...option.RequestOption) (r BetaThreadService) {
 	r = BetaThreadService{}
 	r.Options = requestconfig.InheritedOptions(opts...)

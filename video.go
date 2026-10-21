@@ -39,6 +39,9 @@ type VideoService struct {
 // NewVideoService generates a new service that applies the given options to each
 // request. These options are applied after the parent client's options (if there
 // is one), and before any request-specific options.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func NewVideoService(opts ...option.RequestOption) (r VideoService) {
 	r = VideoService{}
 	r.Options = requestconfig.InheritedOptions(opts...)

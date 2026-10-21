@@ -85,6 +85,7 @@ type Assistant string                                         // Always "assista
 type AssistantDeleted string                                  // Always "assistant.deleted"
 type AudioSample string                                       // Always "audio_sample"
 type AudioVoice string                                        // Always "audio.voice"
+type AudioVoiceConsent string                                 // Always "audio.voice_consent"
 type AudioPCM string                                          // Always "audio/pcm"
 type AudioPCMA string                                         // Always "audio/pcma"
 type AudioPCMU string                                         // Always "audio/pcmu"
@@ -734,6 +735,7 @@ func (c Assistant) Default() Assistant                         { return "assista
 func (c AssistantDeleted) Default() AssistantDeleted           { return "assistant.deleted" }
 func (c AudioSample) Default() AudioSample                     { return "audio_sample" }
 func (c AudioVoice) Default() AudioVoice                       { return "audio.voice" }
+func (c AudioVoiceConsent) Default() AudioVoiceConsent         { return "audio.voice_consent" }
 func (c AudioPCM) Default() AudioPCM                           { return "audio/pcm" }
 func (c AudioPCMA) Default() AudioPCMA                         { return "audio/pcma" }
 func (c AudioPCMU) Default() AudioPCMU                         { return "audio/pcmu" }
@@ -1597,6 +1599,7 @@ func (c Assistant) MarshalJSON() ([]byte, error)                        { return
 func (c AssistantDeleted) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c AudioSample) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c AudioVoice) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c AudioVoiceConsent) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c AudioPCM) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c AudioPCMA) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c AudioPCMU) MarshalJSON() ([]byte, error)                        { return marshalString(c) }

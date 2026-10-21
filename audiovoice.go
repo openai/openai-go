@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
 	"mime/multipart"
 	"net/http"
 	"slices"
@@ -151,6 +152,11 @@ func init() {
 }
 
 func (u AudioVoiceNewParams) MarshalMultipart() (data []byte, contentType string, err error) {
+	// Overrides replace the entire request, including any already selected body.
+	if _, overridden := u.Overrides(); overridden {
+		data, err = param.MarshalUnion(u)
+		return data, "application/json", err
+	}
 	populatedVariants := 0
 
 	if u.OfAudioSample != nil {
@@ -164,13 +170,43 @@ func (u AudioVoiceNewParams) MarshalMultipart() (data []byte, contentType string
 	if populatedVariants > 1 {
 		return nil, "", fmt.Errorf("expected union to have only one present variant, got %d", populatedVariants)
 	}
-
-	if u.OfAudioSample != nil {
-		return u.OfAudioSample.MarshalMultipart()
+	var selected interface {
+		apiform.Marshaler
+		param.ParamStruct
+		ExtraFields() map[string]any
 	}
-
+	if u.OfAudioSample != nil {
+		selected = u.OfAudioSample
+	}
 	if u.OfPrompt != nil {
-		return u.OfPrompt.MarshalMultipart()
+		selected = u.OfPrompt
+	}
+	if selected != nil {
+		if replacement, ok := selected.Overrides(); ok {
+			data, err = param.MarshalWithExtras(selected, replacement, u.ExtraFields())
+			return data, "application/json", err
+		}
+		if len(u.ExtraFields()) == 0 && len(selected.ExtraFields()) == 0 {
+			return selected.MarshalMultipart()
+		}
+		// Copy metadata before applying root fields so callers can reuse a body.
+		extras := make(map[string]any, len(selected.ExtraFields())+len(u.ExtraFields()))
+		maps.Copy(extras, selected.ExtraFields())
+		maps.Copy(extras, u.ExtraFields())
+		buf := bytes.NewBuffer(nil)
+		writer := multipart.NewWriter(buf)
+		if err = apiform.MarshalEncodedRoot(selected, writer, extras, nil); err != nil {
+			_ = writer.Close()
+			return nil, "", err
+		}
+		if err = writer.Close(); err != nil {
+			return nil, "", err
+		}
+		return buf.Bytes(), writer.FormDataContentType(), nil
+	}
+	if len(u.ExtraFields()) > 0 {
+		data, err = param.MarshalObject(u, struct{}{})
+		return data, "application/json", err
 	}
 
 	data, err = param.MarshalUnion(u)
