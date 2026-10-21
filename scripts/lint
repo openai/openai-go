@@ -18,7 +18,7 @@ fi
 
 scope="${OPENAI_GO_LINT_SCOPE:-all}"
 case "$scope" in
-  all) modules=". examples internal/testdata/consumer" ;;
+  all) modules=". examples internal/testdata/consumer v3/vertex" ;;
   root) modules="."; set -- "$@" . ;;
   packages)
     modules="."
@@ -34,7 +34,7 @@ case "$scope" in
     done
     if [ "$found" = false ]; then exit 0; fi
     ;;
-  examples) modules="examples internal/testdata/consumer" ;;
+  examples) modules="examples internal/testdata/consumer v3/vertex" ;;
   windows) modules="" ;;
   *) echo "Unknown lint scope: $scope" >&2; exit 2 ;;
 esac

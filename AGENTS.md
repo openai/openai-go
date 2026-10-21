@@ -44,9 +44,10 @@ The checker and effective budget come from main, not the PR. Keep default CODEOW
   changes, use artifact-appropriate validation.
 - Review the purpose, provenance, versions, and transitive effects of every
   dependency change across the root, `examples`, `api_reference`,
-  `internal/testdata/consumer`, and `tools` modules. Inspect `go.mod`, `go.sum`,
-  `replace` directives, bootstrap or install scripts, code generators, and
-  npm-based mock tooling; do not bypass Go module checksum verification.
+  `internal/testdata/consumer`, `tools`, and `v3/vertex` modules. Inspect
+  `go.mod`, `go.sum`, `replace` directives, bootstrap or install scripts, code
+  generators, and npm-based mock tooling; do not bypass Go module checksum
+  verification.
 - Pin third-party GitHub Actions to full commit SHAs and review action updates.
   Keep CI permissions minimal, retain `persist-credentials: false`, and protect
   release credentials in approved environments. Grant only the required scopes
@@ -92,7 +93,7 @@ The checker and effective budget come from main, not the PR. Keep default CODEOW
   `GO_VERSION_POLICY.md` adds the retired minimum as a third line. CI tests the
   latest patch release in every supported line.
 - Keep the `go` directives in the root, `examples`,
-  `internal/testdata/consumer`, and `tools` modules aligned.
+  `internal/testdata/consumer`, `tools`, and `v3/vertex` modules aligned.
 - Do not combine a minimum-Go-version change with unrelated SDK or Azure
   dependency upgrades.
 
@@ -100,7 +101,7 @@ The checker and effective budget come from main, not the PR. Keep default CODEOW
 
 When changing a `go` directive:
 
-1. Update all four modules and run `go mod tidy` in each module.
+1. Update the modules listed above and run `go mod tidy` in each module.
 2. Update `README.md`, `CONTRIBUTING.md`, and `GO_VERSION_POLICY.md`.
 3. Update the minimum/current CI matrix in `.github/workflows/ci.yml`.
 4. Add a `## Release note` section to the pull request description that names
@@ -164,8 +165,8 @@ interpret release policy or pull request prose.
     authoritative.
 - `.github/dependabot.yml`
   - Weekly: proposes coordinated Go dependency updates for the coupled root,
-    examples, and external-consumer modules. The isolated tools module and
-    pinned GitHub Actions receive independently reviewable updates.
+    examples, and external-consumer modules. The isolated tools and Vertex
+    modules and pinned GitHub Actions receive independently reviewable updates.
   - Never auto-merges dependency or Go-version changes.
 
 ## Validation
@@ -177,12 +178,15 @@ go mod tidy -diff
 (cd examples && go mod tidy -diff)
 (cd internal/testdata/consumer && go mod tidy -diff)
 (cd tools && go mod tidy -diff)
+(cd v3/vertex && go mod tidy -diff)
 go test ./...
 (cd examples && go test ./...)
 (cd internal/testdata/consumer && go test -mod=readonly ./...)
+(cd v3/vertex && go test ./...)
 (cd tools && go install golang.org/x/vuln/cmd/govulncheck)
 govulncheck ./...
 (cd examples && govulncheck ./...)
+(cd v3/vertex && govulncheck ./...)
 ```
 
 Also test with `GOTOOLCHAIN=local` on every Go release line listed in the CI
