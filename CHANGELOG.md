@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.84.1](https://github.com/openai/openai-go/compare/v3.84.0...v3.84.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* **auth:** avoid a race in X.509 HTTP/2 transport revalidation ([#1128](https://github.com/openai/openai-go/issues/1128)) ([61e5e17](https://github.com/openai/openai-go/commit/61e5e171f8b9838bade695bbf262c41e28e808f5))
+* **responses:** release failed WebSocket restoration on unwind ([#1120](https://github.com/openai/openai-go/issues/1120)) ([bd4c06f](https://github.com/openai/openai-go/commit/bd4c06ffaefa6967e3dd9b1dac0deeef77131e21))
+
+
+### Chores
+
+* **api:** clarify cache-write token totals ([#1134](https://github.com/openai/openai-go/issues/1134)) ([75abc91](https://github.com/openai/openai-go/commit/75abc91b3bc466a5934f28f1969f5e9bf66c6845))
+* **api:** maintain voice consent compatibility ([#1136](https://github.com/openai/openai-go/issues/1136)) ([bffdaf6](https://github.com/openai/openai-go/commit/bffdaf67ccb8accbba244a07ab5de01e3ff4a03d))
+
 ## [3.84.0](https://github.com/openai/openai-go/compare/v3.83.0...v3.84.0) (2026-10-21)
 
 
