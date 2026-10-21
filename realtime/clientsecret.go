@@ -1711,15 +1711,19 @@ func (u clientSecretNewParamsSessionUnionAudioInput) GetTurnDetection() (res cli
 	return res
 }
 
-// Can have the runtime types [RealtimeAudioInputTurnDetectionUnionParam],
-// [RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam]
+// Can have the runtime types [*RealtimeAudioInputTurnDetectionServerVadParam],
+// [*RealtimeAudioInputTurnDetectionSemanticVadParam],
+// [*RealtimeTranscriptionSessionAudioInputTurnDetectionServerVadParam],
+// [*RealtimeTranscriptionSessionAudioInputTurnDetectionSemanticVadParam]
 type clientSecretNewParamsSessionUnionAudioInputTurnDetection struct{ any }
 
 // Use the following switch statement to get the type of the union:
 //
 //	switch u.AsAny().(type) {
-//	case realtime.RealtimeAudioInputTurnDetectionUnionParam:
-//	case realtime.RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam:
+//	case *realtime.RealtimeAudioInputTurnDetectionServerVadParam:
+//	case *realtime.RealtimeAudioInputTurnDetectionSemanticVadParam:
+//	case *realtime.RealtimeTranscriptionSessionAudioInputTurnDetectionServerVadParam:
+//	case *realtime.RealtimeTranscriptionSessionAudioInputTurnDetectionSemanticVadParam:
 //	default:
 //	    fmt.Errorf("not present")
 //	}
@@ -1728,9 +1732,9 @@ func (u clientSecretNewParamsSessionUnionAudioInputTurnDetection) AsAny() any { 
 // Returns a pointer to the underlying variant's property, if present.
 func (u clientSecretNewParamsSessionUnionAudioInputTurnDetection) GetType() *string {
 	switch vt := u.any.(type) {
-	case RealtimeAudioInputTurnDetectionUnionParam:
+	case *RealtimeAudioInputTurnDetectionUnionParam:
 		return vt.GetType()
-	case RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam:
+	case *RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam:
 		return vt.GetType()
 	}
 	return nil
@@ -1739,9 +1743,9 @@ func (u clientSecretNewParamsSessionUnionAudioInputTurnDetection) GetType() *str
 // Returns a pointer to the underlying variant's property, if present.
 func (u clientSecretNewParamsSessionUnionAudioInputTurnDetection) GetCreateResponse() *bool {
 	switch vt := u.any.(type) {
-	case RealtimeAudioInputTurnDetectionUnionParam:
+	case *RealtimeAudioInputTurnDetectionUnionParam:
 		return vt.GetCreateResponse()
-	case RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam:
+	case *RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam:
 		return vt.GetCreateResponse()
 	}
 	return nil
@@ -1750,9 +1754,9 @@ func (u clientSecretNewParamsSessionUnionAudioInputTurnDetection) GetCreateRespo
 // Returns a pointer to the underlying variant's property, if present.
 func (u clientSecretNewParamsSessionUnionAudioInputTurnDetection) GetIdleTimeoutMs() *int64 {
 	switch vt := u.any.(type) {
-	case RealtimeAudioInputTurnDetectionUnionParam:
+	case *RealtimeAudioInputTurnDetectionUnionParam:
 		return vt.GetIdleTimeoutMs()
-	case RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam:
+	case *RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam:
 		return vt.GetIdleTimeoutMs()
 	}
 	return nil
@@ -1761,9 +1765,9 @@ func (u clientSecretNewParamsSessionUnionAudioInputTurnDetection) GetIdleTimeout
 // Returns a pointer to the underlying variant's property, if present.
 func (u clientSecretNewParamsSessionUnionAudioInputTurnDetection) GetInterruptResponse() *bool {
 	switch vt := u.any.(type) {
-	case RealtimeAudioInputTurnDetectionUnionParam:
+	case *RealtimeAudioInputTurnDetectionUnionParam:
 		return vt.GetInterruptResponse()
-	case RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam:
+	case *RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam:
 		return vt.GetInterruptResponse()
 	}
 	return nil
@@ -1772,9 +1776,9 @@ func (u clientSecretNewParamsSessionUnionAudioInputTurnDetection) GetInterruptRe
 // Returns a pointer to the underlying variant's property, if present.
 func (u clientSecretNewParamsSessionUnionAudioInputTurnDetection) GetPrefixPaddingMs() *int64 {
 	switch vt := u.any.(type) {
-	case RealtimeAudioInputTurnDetectionUnionParam:
+	case *RealtimeAudioInputTurnDetectionUnionParam:
 		return vt.GetPrefixPaddingMs()
-	case RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam:
+	case *RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam:
 		return vt.GetPrefixPaddingMs()
 	}
 	return nil
@@ -1783,9 +1787,9 @@ func (u clientSecretNewParamsSessionUnionAudioInputTurnDetection) GetPrefixPaddi
 // Returns a pointer to the underlying variant's property, if present.
 func (u clientSecretNewParamsSessionUnionAudioInputTurnDetection) GetSilenceDurationMs() *int64 {
 	switch vt := u.any.(type) {
-	case RealtimeAudioInputTurnDetectionUnionParam:
+	case *RealtimeAudioInputTurnDetectionUnionParam:
 		return vt.GetSilenceDurationMs()
-	case RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam:
+	case *RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam:
 		return vt.GetSilenceDurationMs()
 	}
 	return nil
@@ -1794,9 +1798,9 @@ func (u clientSecretNewParamsSessionUnionAudioInputTurnDetection) GetSilenceDura
 // Returns a pointer to the underlying variant's property, if present.
 func (u clientSecretNewParamsSessionUnionAudioInputTurnDetection) GetThreshold() *float64 {
 	switch vt := u.any.(type) {
-	case RealtimeAudioInputTurnDetectionUnionParam:
+	case *RealtimeAudioInputTurnDetectionUnionParam:
 		return vt.GetThreshold()
-	case RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam:
+	case *RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam:
 		return vt.GetThreshold()
 	}
 	return nil
@@ -1805,9 +1809,9 @@ func (u clientSecretNewParamsSessionUnionAudioInputTurnDetection) GetThreshold()
 // Returns a pointer to the underlying variant's property, if present.
 func (u clientSecretNewParamsSessionUnionAudioInputTurnDetection) GetEagerness() *string {
 	switch vt := u.any.(type) {
-	case RealtimeAudioInputTurnDetectionUnionParam:
+	case *RealtimeAudioInputTurnDetectionUnionParam:
 		return vt.GetEagerness()
-	case RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam:
+	case *RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam:
 		return vt.GetEagerness()
 	}
 	return nil

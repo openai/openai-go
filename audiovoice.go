@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"maps"
 	"mime/multipart"
 	"net/http"
 	"slices"
@@ -19,8 +18,6 @@ import (
 	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/packages/respjson"
 	"github.com/openai/openai-go/v3/shared/constant"
-	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
 )
 
 // Turn audio into text or text into audio.
@@ -120,43 +117,14 @@ type AudioVoiceNewParams struct {
 	// This field is a request body variant, only one variant field can be set.
 	OfPrompt *AudioVoiceNewParamsBodyPrompt `json:",inline"`
 
-	paramUnion
+	paramObj
 }
 
 func (r *AudioVoiceNewParams) UnmarshalJSON(data []byte) error {
-
-	// Preserve the API's default branch when the discriminator is omitted.
-	key := apijson.EscapeSJSONKey("type")
-	if gjson.ParseBytes(data).IsObject() && !gjson.GetBytes(data, key).Exists() {
-		var err error
-		data, err = sjson.SetBytes(data, key, "audio_sample")
-		if err != nil {
-			return err
-		}
-	}
-
-	// Decode afresh so reusing a params value cannot leave another arm populated.
-	var decoded AudioVoiceNewParams
-	if err := apijson.UnmarshalRoot(data, &decoded); err != nil {
-		return err
-	}
-	*r = decoded
-	return nil
-}
-
-func init() {
-	apijson.RegisterUnion[AudioVoiceNewParams]("type",
-		apijson.Discriminator[AudioVoiceNewParamsBodyAudioSample]("audio_sample"),
-		apijson.Discriminator[AudioVoiceNewParamsBodyPrompt]("prompt"),
-	)
+	return apijson.UnmarshalRoot(data, r)
 }
 
 func (u AudioVoiceNewParams) MarshalMultipart() (data []byte, contentType string, err error) {
-	// Overrides replace the entire request, including any already selected body.
-	if _, overridden := u.Overrides(); overridden {
-		data, err = param.MarshalUnion(u)
-		return data, "application/json", err
-	}
 	populatedVariants := 0
 
 	if u.OfAudioSample != nil {
@@ -170,43 +138,13 @@ func (u AudioVoiceNewParams) MarshalMultipart() (data []byte, contentType string
 	if populatedVariants > 1 {
 		return nil, "", fmt.Errorf("expected union to have only one present variant, got %d", populatedVariants)
 	}
-	var selected interface {
-		apiform.Marshaler
-		param.ParamStruct
-		ExtraFields() map[string]any
-	}
+
 	if u.OfAudioSample != nil {
-		selected = u.OfAudioSample
+		return u.OfAudioSample.MarshalMultipart()
 	}
+
 	if u.OfPrompt != nil {
-		selected = u.OfPrompt
-	}
-	if selected != nil {
-		if replacement, ok := selected.Overrides(); ok {
-			data, err = param.MarshalWithExtras(selected, replacement, u.ExtraFields())
-			return data, "application/json", err
-		}
-		if len(u.ExtraFields()) == 0 && len(selected.ExtraFields()) == 0 {
-			return selected.MarshalMultipart()
-		}
-		// Copy metadata before applying root fields so callers can reuse a body.
-		extras := make(map[string]any, len(selected.ExtraFields())+len(u.ExtraFields()))
-		maps.Copy(extras, selected.ExtraFields())
-		maps.Copy(extras, u.ExtraFields())
-		buf := bytes.NewBuffer(nil)
-		writer := multipart.NewWriter(buf)
-		if err = apiform.MarshalEncodedRoot(selected, writer, extras, nil); err != nil {
-			_ = writer.Close()
-			return nil, "", err
-		}
-		if err = writer.Close(); err != nil {
-			return nil, "", err
-		}
-		return buf.Bytes(), writer.FormDataContentType(), nil
-	}
-	if len(u.ExtraFields()) > 0 {
-		data, err = param.MarshalObject(u, struct{}{})
-		return data, "application/json", err
+		return u.OfPrompt.MarshalMultipart()
 	}
 
 	data, err = param.MarshalUnion(u)

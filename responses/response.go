@@ -17757,20 +17757,16 @@ func init() {
 	)
 }
 
-func NewResponseInputItemCompactionTriggerParam() ResponseInputItemCompactionTriggerParam {
-	return ResponseInputItemCompactionTriggerParam{
-		Type: "compaction_trigger",
-	}
-}
-
 // Compacts the current context. Must be the final input item.
 //
-// Use [NewResponseInputItemCompactionTriggerParam] to initialize the constant
-// fields.
+// The property Type is required.
 type ResponseInputItemCompactionTriggerParam struct {
 	// The unique ID of this compaction trigger.
 	ID param.Opt[string] `json:"id,omitzero"`
 	// The type of the item. Always `compaction_trigger`.
+	//
+	// This field can be elided, and will marshal its zero value as
+	// "compaction_trigger".
 	Type constant.CompactionTrigger `json:"type" default:"compaction_trigger"`
 	paramObj
 }
@@ -25941,6 +25937,9 @@ func (r ResponseToolSearchOutputItemParamResp) ToParam() ResponseToolSearchOutpu
 // [CustomTool], [ToolSearchOutputNamespaceTool], [ToolSearchTool],
 // [WebSearchPreviewTool], [ApplyPatchTool].
 //
+// Use the [ResponseToolSearchOutputItemParamToolUnionResp.AsAny] method to switch
+// on the variant.
+//
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ResponseToolSearchOutputItemParamToolUnionResp struct {
 	Name       string `json:"name"`
@@ -32550,6 +32549,8 @@ func (r *SkillReferenceParam) UnmarshalJSON(data []byte) error {
 // [ToolMcp], [ToolCodeInterpreter], [ToolProgrammaticToolCalling],
 // [ToolImageGeneration], [ToolLocalShell], [FunctionShellTool], [CustomTool],
 // [NamespaceTool], [ToolSearchTool], [WebSearchPreviewTool], [ApplyPatchTool].
+//
+// Use the [ToolUnion.AsAny] method to switch on the variant.
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ToolUnion struct {
