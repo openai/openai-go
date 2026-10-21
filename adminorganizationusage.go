@@ -548,8 +548,8 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompl
 	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period. May be absent or null for older responses.
 	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
-	// The aggregated number of input tokens written to the cache with a 30-minute
-	// retention period.
+	// The aggregated number of input tokens written to the cache across 30-minute and
+	// 12-hour retention periods.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -1449,8 +1449,8 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsag
 	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period. May be absent or null for older responses.
 	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
-	// The aggregated number of input tokens written to the cache with a 30-minute
-	// retention period.
+	// The aggregated number of input tokens written to the cache across 30-minute and
+	// 12-hour retention periods.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -2353,8 +2353,8 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganization
 	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period. May be absent or null for older responses.
 	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
-	// The aggregated number of input tokens written to the cache with a 30-minute
-	// retention period.
+	// The aggregated number of input tokens written to the cache across 30-minute and
+	// 12-hour retention periods.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -3251,8 +3251,8 @@ type AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageComplet
 	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period. May be absent or null for older responses.
 	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
-	// The aggregated number of input tokens written to the cache with a 30-minute
-	// retention period.
+	// The aggregated number of input tokens written to the cache across 30-minute and
+	// 12-hour retention periods.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -4148,8 +4148,8 @@ type AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsRe
 	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period. May be absent or null for older responses.
 	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
-	// The aggregated number of input tokens written to the cache with a 30-minute
-	// retention period.
+	// The aggregated number of input tokens written to the cache across 30-minute and
+	// 12-hour retention periods.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -4738,8 +4738,8 @@ type AdminOrganizationUsageDecisionsResponseDataResult struct {
 	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period.
 	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
-	// The aggregated number of input tokens written to the cache with a 30-minute
-	// retention period.
+	// The aggregated number of input tokens written to the cache across 30-minute and
+	// 12-hour retention periods.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens" api:"nullable"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens" api:"nullable"`
@@ -5200,8 +5200,8 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompleti
 	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period. May be absent or null for older responses.
 	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
-	// The aggregated number of input tokens written to the cache with a 30-minute
-	// retention period.
+	// The aggregated number of input tokens written to the cache across 30-minute and
+	// 12-hour retention periods.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -6100,8 +6100,8 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCom
 	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period. May be absent or null for older responses.
 	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
-	// The aggregated number of input tokens written to the cache with a 30-minute
-	// retention period.
+	// The aggregated number of input tokens written to the cache across 30-minute and
+	// 12-hour retention periods.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -6997,8 +6997,8 @@ type AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsR
 	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period. May be absent or null for older responses.
 	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
-	// The aggregated number of input tokens written to the cache with a 30-minute
-	// retention period.
+	// The aggregated number of input tokens written to the cache across 30-minute and
+	// 12-hour retention periods.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -7895,8 +7895,8 @@ type AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageComplet
 	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period. May be absent or null for older responses.
 	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
-	// The aggregated number of input tokens written to the cache with a 30-minute
-	// retention period.
+	// The aggregated number of input tokens written to the cache across 30-minute and
+	// 12-hour retention periods.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -8795,8 +8795,8 @@ type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageComple
 	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period. May be absent or null for older responses.
 	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
-	// The aggregated number of input tokens written to the cache with a 30-minute
-	// retention period.
+	// The aggregated number of input tokens written to the cache across 30-minute and
+	// 12-hour retention periods.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
@@ -9695,8 +9695,8 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageComp
 	// The aggregated number of input tokens written to the cache with a 30-minute
 	// retention period. May be absent or null for older responses.
 	InputCacheWrite30mTokens int64 `json:"input_cache_write_30m_tokens" api:"nullable"`
-	// The aggregated number of input tokens written to the cache with a 30-minute
-	// retention period.
+	// The aggregated number of input tokens written to the cache across 30-minute and
+	// 12-hour retention periods.
 	InputCacheWriteTokens int64 `json:"input_cache_write_tokens"`
 	// The aggregated number of cached audio input tokens used.
 	InputCachedAudioTokens int64 `json:"input_cached_audio_tokens"`
