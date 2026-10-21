@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.84.0](https://github.com/openai/openai-go/compare/v3.83.0...v3.84.0) (2026-10-21)
+
+
+### Features
+
+* **api:** add custom voice consent management ([#1133](https://github.com/openai/openai-go/issues/1133)) ([d012874](https://github.com/openai/openai-go/commit/d012874ef5cfbe3d6fcbeca58c3b97a9df814b48))
+
+
+### Bug Fixes
+
+* **api:** preserve decoded request body fields ([#1131](https://github.com/openai/openai-go/issues/1131)) ([80fc344](https://github.com/openai/openai-go/commit/80fc3440b34fba495ffc5a0778308689171bac30))
+* **auth:** honor shared issuer retry delay before takeover ([#1130](https://github.com/openai/openai-go/issues/1130)) ([194d75f](https://github.com/openai/openai-go/commit/194d75f497de01db61b6165bc4e77594fa9f9b8e))
+* **auth:** retry invalidated bearer followers immediately ([#1132](https://github.com/openai/openai-go/issues/1132)) ([dd6cda6](https://github.com/openai/openai-go/commit/dd6cda617fd51316a58b3967e9bb8f111d92547e))
+* **responses:** preserve network policy parameter alias ([#1126](https://github.com/openai/openai-go/issues/1126)) ([6eebb4d](https://github.com/openai/openai-go/commit/6eebb4dbfb916aec67361cfa77a3577ba044562d))
+
 ## [3.83.0](https://github.com/openai/openai-go/compare/v3.82.0...v3.83.0) (2026-10-20)
 
 
