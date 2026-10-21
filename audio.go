@@ -23,6 +23,8 @@ type AudioService struct {
 	Speech AudioSpeechService
 	// Turn audio into text or text into audio.
 	Voices AudioVoiceService
+	// Turn audio into text or text into audio.
+	VoiceConsents AudioVoiceConsentService
 }
 
 // NewAudioService generates a new service that applies the given options to each
@@ -35,6 +37,7 @@ func NewAudioService(opts ...option.RequestOption) (r AudioService) {
 	r.Translations = NewAudioTranslationService(opts...)
 	r.Speech = NewAudioSpeechService(opts...)
 	r.Voices = NewAudioVoiceService(opts...)
+	r.VoiceConsents = NewAudioVoiceConsentService(opts...)
 	return
 }
 

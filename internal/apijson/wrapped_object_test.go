@@ -20,6 +20,8 @@ func TestWrappedRequestBody(t *testing.T) {
 	}{
 		{"union", &openai.BetaAgentEnvironmentFileNewParams{}, `{"type":"file_id","file_id":"file_123","path":"/workspace/input"}`},
 		{"struct", &realtime.CallAcceptParams{}, `{"type":"realtime","model":"gpt-realtime","instructions":"Reply briefly."}`},
+		{"explicit null", &realtime.CallAcceptParams{}, `{"type":"realtime","instructions":null}`},
+		{"translation", &realtime.TranslationClientSecretNewParams{}, `{"session":{"model":"gpt-realtime-translate"},"expires_after":{"anchor":"created_at","seconds":30}}`},
 		{"null union field", &realtime.CallAcceptParams{}, `{"type":"realtime","tracing":null}`},
 		{"null interface field", &realtime.CallAcceptParams{}, `{"type":"realtime","tracing":{"metadata":null}}`},
 		{"omitted union field", &realtime.CallAcceptParams{}, `{"type":"realtime"}`},
@@ -57,6 +59,13 @@ func TestWrappedRequestBody(t *testing.T) {
 				}
 				if !bytes.Equal(after, before) {
 					t.Fatalf("null changed the body from %s to %s", before, after)
+				}
+			})
+			t.Run("malformed JSON", func(t *testing.T) {
+				err := json.Unmarshal([]byte(`{"type":`), tc.params)
+				var syntaxErr *json.SyntaxError
+				if !errors.As(err, &syntaxErr) {
+					t.Fatalf("error = %T %v, want a syntax error", err, err)
 				}
 			})
 			for _, root := range []string{`[]`, `true`, `42`, `"value"`} {
