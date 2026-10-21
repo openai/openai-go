@@ -164,6 +164,12 @@ func (c *ResponseConnection) Recover(ctx context.Context, options ResponseRecove
 	}
 	connection, err := c.connection.Reconnect(ctx, func(ctx context.Context) (*websocket.Connection[responseWebsocketEvent], error) {
 		var lastErr error
+		var unreturned *ResponseConnection
+		defer func() {
+			if unreturned != nil {
+				unreturned.Abort()
+			}
+		}()
 		for attempt := 0; attempt < options.MaxAttempts; attempt++ {
 			if err := ctx.Err(); err != nil {
 				return nil, err
@@ -183,11 +189,14 @@ func (c *ResponseConnection) Recover(ctx context.Context, options ResponseRecove
 				continue
 			}
 			if options.Restore != nil {
+				unreturned = next
 				if restoreErr := options.Restore(ctx, next); restoreErr != nil {
 					next.Abort()
+					unreturned = nil
 					lastErr = restoreErr
 					continue
 				}
+				unreturned = nil
 			}
 			return next.connection, nil
 		}
