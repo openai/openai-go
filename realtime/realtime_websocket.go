@@ -55,11 +55,6 @@ func (r *RealtimeService) Connect(ctx context.Context, options RealtimeConnectio
 			}
 		}
 		ctx = request.Context()
-		if timeout := cfg.WebSocketOpenTimeout(); timeout > 0 {
-			var cancel context.CancelFunc
-			ctx, cancel = context.WithTimeout(ctx, timeout)
-			defer cancel()
-		}
 		return websocket.Dial(ctx, request, client, options, decodeRealtimeWebsocketEvent, func(realtimeWebsocketEvent) string { return "" })
 	}
 	connection, err := websocket.OpenSession(ctx, open, recovery)
