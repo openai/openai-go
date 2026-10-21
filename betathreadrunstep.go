@@ -38,6 +38,8 @@ type BetaThreadRunStepService struct {
 // NewBetaThreadRunStepService generates a new service that applies the given
 // options to each request. These options are applied after the parent client's
 // options (if there is one), and before any request-specific options.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func NewBetaThreadRunStepService(opts ...option.RequestOption) (r BetaThreadRunStepService) {
 	r = BetaThreadRunStepService{}
 	r.Options = requestconfig.InheritedOptions(opts...)

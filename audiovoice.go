@@ -170,7 +170,6 @@ func (u AudioVoiceNewParams) MarshalMultipart() (data []byte, contentType string
 	if populatedVariants > 1 {
 		return nil, "", fmt.Errorf("expected union to have only one present variant, got %d", populatedVariants)
 	}
-
 	var selected interface {
 		apiform.Marshaler
 		param.ParamStruct
@@ -205,11 +204,11 @@ func (u AudioVoiceNewParams) MarshalMultipart() (data []byte, contentType string
 		}
 		return buf.Bytes(), writer.FormDataContentType(), nil
 	}
-
 	if len(u.ExtraFields()) > 0 {
 		data, err = param.MarshalObject(u, struct{}{})
 		return data, "application/json", err
 	}
+
 	data, err = param.MarshalUnion(u)
 	return data, "application/json", err
 }
