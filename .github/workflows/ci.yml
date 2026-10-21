@@ -167,6 +167,10 @@ jobs:
       - name: Test root module
         run: ./scripts/test
 
+      - name: Test Vertex module
+        working-directory: v3/vertex
+        run: go test -mod=readonly ./...
+
       - name: Test examples module
         working-directory: examples
         run: go test ./...
@@ -215,6 +219,10 @@ jobs:
         run: go install golang.org/x/vuln/cmd/govulncheck
 
       - name: Scan root module
+        run: govulncheck ./...
+
+      - name: Scan Vertex module
+        working-directory: v3/vertex
         run: govulncheck ./...
 
       - name: Scan examples module

@@ -15,6 +15,7 @@ jobs:
     permissions: {}
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created }}
+      paths_released: ${{ steps.release.outputs.paths_released }}
 
     steps:
       - name: Create release app token
@@ -36,9 +37,12 @@ jobs:
           manifest-file: .release-please-manifest.json
 
   publish:
-    name: publish
+    name: publish (${{ matrix.path }})
     needs: release
     if: ${{ needs.release.outputs.releases_created == 'true' }}
+    strategy:
+      matrix:
+        path: ${{ fromJSON(needs.release.outputs.paths_released) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -49,9 +53,11 @@ jobs:
           persist-credentials: false
 
       - name: Generate godocs
+        env:
+          RELEASE_PATH: ${{ matrix.path }}
         run: |
-          version="$(jq -r '. | to_entries[0] | .value' .release-please-manifest.json)"
-          module="$(awk '$1 == "module" { print $2; exit }' go.mod)"
+          version="$(jq -er --arg path "$RELEASE_PATH" '.[$path]' .release-please-manifest.json)"
+          module="$(awk '$1 == "module" { print $2; exit }' "$RELEASE_PATH/go.mod")"
           curl --fail-with-body --show-error --silent --retry 5 --retry-all-errors \
             --retry-delay 15 --retry-max-time 300 --connect-timeout 10 --max-time 45 \
             -X POST "https://pkg.go.dev/fetch/${module}@v${version}"
