@@ -38,11 +38,6 @@ func (r *BetaResponseService) Connect(ctx context.Context, options BetaResponseC
 			return nil, err
 		}
 		ctx = request.Context()
-		if timeout := cfg.WebSocketOpenTimeout(); timeout > 0 {
-			var cancel context.CancelFunc
-			ctx, cancel = context.WithTimeout(ctx, timeout)
-			defer cancel()
-		}
 		connection, err := websocket.Dial(ctx, request, client, options, decodeBetaResponseWebsocketEvent, func(betaResponseWebsocketEvent) string { return "" })
 		if err != nil {
 			return nil, err

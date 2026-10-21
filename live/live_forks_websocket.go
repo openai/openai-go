@@ -38,11 +38,6 @@ func (r *ForkService) Connect(ctx context.Context, sessionID string, options For
 			return nil, err
 		}
 		ctx = request.Context()
-		if timeout := cfg.WebSocketOpenTimeout(); timeout > 0 {
-			var cancel context.CancelFunc
-			ctx, cancel = context.WithTimeout(ctx, timeout)
-			defer cancel()
-		}
 		connection, err := websocket.Dial(ctx, request, client, options, decodeForkWebsocketEvent, func(forkWebsocketEvent) string { return "" })
 		if err != nil {
 			return nil, err

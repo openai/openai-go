@@ -176,20 +176,28 @@ func TestWebSocketTimeoutCancelsLegacyTransport(t *testing.T) {
 	for _, tc := range []struct {
 		name               string
 		prepared, redirect bool
+		requestTimeout     bool
 	}{
 		{name: "direct"}, {name: "prepared", prepared: true},
 		{name: "direct redirect body", redirect: true},
 		{name: "prepared redirect body", prepared: true, redirect: true},
+		{name: "request timeout", prepared: true, requestTimeout: true},
+		{name: "request timeout redirect body", prepared: true, redirect: true, requestTimeout: true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			tr := &legacyUpgradeTransport{canceled: make(chan struct{}), redirect: tc.redirect}
 			defer tr.once.Do(func() { close(tr.canceled) })
 			client := &http.Client{Transport: tr, Timeout: 50 * time.Millisecond}
+			var opts []option.RequestOption
+			if tc.requestTimeout {
+				client.Timeout = 0
+				opts = append(opts, option.WithRequestTimeout(50*time.Millisecond))
+			}
 			done := make(chan error, 1)
 			go func() {
 				request, _ := http.NewRequest(http.MethodGet, "http://example.invalid/responses", nil)
 				if tc.prepared {
-					cfg, err := requestconfig.NewRequestConfig(context.Background(), http.MethodGet, "responses", nil, nil, option.WithBaseURL("http://example.invalid/"), option.WithHTTPClient(client))
+					cfg, err := requestconfig.NewRequestConfig(context.Background(), http.MethodGet, "responses", nil, nil, append(opts, option.WithBaseURL("http://example.invalid/"), option.WithHTTPClient(client))...)
 					if err != nil {
 						done <- err
 						return
@@ -215,6 +223,138 @@ func TestWebSocketTimeoutCancelsLegacyTransport(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPreparedWebSocketAttemptTimeoutDoesNotCloseLiveSocket(t *testing.T) {
+	const timeout = 100 * time.Millisecond
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		socket, err := wire.Accept(w, r, nil)
+		if err != nil {
+			t.Errorf("upgrade: %v", err)
+			return
+		}
+		defer func() { _ = socket.CloseNow() }()
+		timer := time.NewTimer(2 * timeout)
+		defer timer.Stop()
+		select {
+		case <-r.Context().Done():
+			return
+		case <-timer.C:
+		}
+		if err := socket.Write(r.Context(), wire.MessageText, []byte("after opening deadline")); err != nil {
+			t.Errorf("write after opening deadline: %v", err)
+		}
+		_, _, _ = socket.Read(r.Context())
+	}))
+	defer server.Close()
+	connection, err := dialPrepared(t, option.WithBaseURL(server.URL), option.WithRequestTimeout(timeout))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer connection.Abort()
+	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Second)
+	defer cancel()
+	got, err := connection.Recv(ctx)
+	if err != nil || got != "after opening deadline" {
+		t.Fatalf("receive after opening timeout = %q, %v", got, err)
+	}
+}
+
+type openingResponseBody struct {
+	io.Reader
+	ctx    context.Context
+	closed bool
+	err    error
+}
+
+func (b *openingResponseBody) Close() error {
+	b.closed = true
+	b.err = b.ctx.Err()
+	return nil
+}
+
+func TestPreparedWebSocketRejectionPreservesBodyOwnership(t *testing.T) {
+	for _, status := range []int{http.StatusUnauthorized, http.StatusSwitchingProtocols} {
+		t.Run(strconv.Itoa(status), func(t *testing.T) {
+			var body *openingResponseBody
+			cfg, err := requestconfig.NewRequestConfig(t.Context(), http.MethodGet, "responses", nil, nil,
+				option.WithBaseURL("https://example.invalid/v1"), option.WithRequestTimeout(time.Hour),
+				option.WithMiddleware(func(req *http.Request, _ option.MiddlewareNext) (*http.Response, error) {
+					body = &openingResponseBody{Reader: strings.NewReader("server rejection"), ctx: req.Context()}
+					return &http.Response{StatusCode: status, Header: make(http.Header), Body: body, Request: req}, nil
+				}),
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+			req, client, err := cfg.PrepareWebSocket()
+			if err != nil {
+				t.Fatal(err)
+			}
+			resp, err := client.Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, writable := resp.Body.(io.ReadWriteCloser); writable {
+				t.Fatal("timer wrapper added unsupported write capability")
+			}
+			if _, ok := body.ctx.Deadline(); !ok {
+				t.Error("opening attempt deadline not visible to middleware")
+			}
+			data, err := io.ReadAll(resp.Body)
+			if err != nil || string(data) != "server rejection" || body.closed {
+				t.Fatalf("response = %q, %v, closed=%t", data, err, body.closed)
+			}
+			if err := resp.Body.Close(); err != nil {
+				t.Fatal(err)
+			}
+			if !body.closed || body.err != nil || !errors.Is(body.ctx.Err(), context.Canceled) {
+				t.Fatalf("close = %t, context during/after close = %v / %v", body.closed, body.err, body.ctx.Err())
+			}
+		})
+	}
+}
+
+func TestPreparedWebSocketMiddlewareCannotOutliveAttempt(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		var body *openingResponseBody
+		var captured *http.Response
+		client := &http.Client{Transport: responseTransport(func(req *http.Request) (*http.Response, error) {
+			body = &openingResponseBody{Reader: strings.NewReader("server rejection"), ctx: req.Context()}
+			return &http.Response{StatusCode: http.StatusForbidden, Header: make(http.Header), Body: body, Request: req}, nil
+		})}
+		cfg, err := requestconfig.NewRequestConfig(t.Context(), http.MethodGet, "responses", nil, nil,
+			option.WithBaseURL("https://example.invalid/v1"), option.WithRequestTimeout(time.Second),
+			option.WithHTTPClient(client), option.WithResponseInto(&captured),
+			option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+				resp, err := next(req)
+				<-req.Context().Done()
+				return resp, err
+			}),
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		req, client, err := cfg.PrepareWebSocket()
+		if err != nil {
+			t.Fatal(err)
+		}
+		conn, err := transport.Dial(t.Context(), req, client, transport.Options{}, func([]byte) (string, error) {
+			return "", nil
+		}, func(string) string { return "" })
+		if conn != nil {
+			defer conn.Abort()
+		}
+		if !errors.Is(err, context.DeadlineExceeded) {
+			t.Errorf("opening after middleware deadline = %v, want context deadline", err)
+		}
+		if captured == nil || captured.StatusCode != http.StatusForbidden {
+			t.Errorf("captured response = %v, want original rejection", captured)
+		}
+		if body == nil || !body.closed {
+			t.Error("rejected response body was not closed")
+		}
+	})
 }
 
 type failingUpgradeTransport struct{ cause error }

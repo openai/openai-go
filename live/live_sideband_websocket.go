@@ -38,11 +38,6 @@ func (r *SidebandService) Connect(ctx context.Context, sessionID string, options
 			return nil, err
 		}
 		ctx = request.Context()
-		if timeout := cfg.WebSocketOpenTimeout(); timeout > 0 {
-			var cancel context.CancelFunc
-			ctx, cancel = context.WithTimeout(ctx, timeout)
-			defer cancel()
-		}
 		connection, err := websocket.Dial(ctx, request, client, options, decodeSidebandWebsocketEvent, func(sidebandWebsocketEvent) string { return "" })
 		if err != nil {
 			return nil, err

@@ -90,13 +90,17 @@ type queue[T any] struct {
 // the WebSocket library's closing handshake, including its pending writes.
 type upgradeTransport struct {
 	http.RoundTripper
-	body *upgradeBody
+	body          *upgradeBody
+	finishOpening func()
 }
 
 func (t *upgradeTransport) RoundTrip(request *http.Request) (*http.Response, error) {
 	response, err := websockettransport.RoundTrip(t.RoundTripper, request)
 	if err == nil && response != nil && response.StatusCode == http.StatusSwitchingProtocols {
 		if body, ok := response.Body.(io.ReadWriteCloser); ok {
+			if opening, ok := body.(interface{ CompleteWebSocketOpening() }); ok {
+				t.finishOpening = opening.CompleteWebSocketOpening
+			}
 			t.body = &upgradeBody{ReadWriteCloser: body}
 			response.Body = t.body
 		}
@@ -176,6 +180,11 @@ func Dial[T any](ctx context.Context, request *http.Request, client *http.Client
 	handshakeClient := *client
 	handshakeClient.Timeout = 0
 	transport := &upgradeTransport{RoundTripper: client.Transport}
+	defer func() {
+		if transport.finishOpening != nil {
+			transport.finishOpening()
+		}
+	}()
 	if transport.RoundTripper == nil {
 		transport.RoundTripper = http.DefaultTransport
 	}
