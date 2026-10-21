@@ -203,7 +203,7 @@ func TestResponsesTransport(t *testing.T) {
 		}
 		expected := "/v1/projects/test/locations/us-east5/publishers/openai/v1/responses"
 		if r.Method != "POST" {
-			expected = "/v1beta1/projects/test/locations/us-east5/publishers/openai/v1/responses/resp_test"
+			expected += "/resp_test"
 		}
 		if r.URL.Path != expected {
 			t.Errorf("path = %s; want %s", r.URL.Path, expected)
@@ -250,7 +250,7 @@ func TestLifecyclePreservesEscapedResponseIDs(t *testing.T) {
 	} {
 		t.Run(tc.id, func(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				want := "/v1beta1/projects/test/locations/global/publishers/openai/v1/responses/" + tc.escaped
+				want := "/v1/projects/test/locations/global/publishers/openai/v1/responses/" + tc.escaped
 				if r.RequestURI != want {
 					t.Errorf("request URI = %q, want %q", r.RequestURI, want)
 				}

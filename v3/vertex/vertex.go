@@ -130,17 +130,6 @@ func NewClient(ctx context.Context, cfg Config, userOpts ...option.RequestOption
 					return nil, requestconfig.WithNoRetryError(errors.New("vertex: custom api-key conflicts with provider authentication"))
 				}
 			}
-			// Only Google-style lifecycle endpoints use the beta outer API
-			// version. Custom gateway layouts are not rewritten.
-			responsePrefix := base.EscapedPath() + "responses/"
-			if (req.Method == http.MethodGet || req.Method == http.MethodDelete) &&
-				strings.HasPrefix(req.URL.EscapedPath(), responsePrefix) && strings.HasPrefix(responsePrefix, "/v1/projects/") {
-				req.URL.Path = "/v1beta1/" + strings.TrimPrefix(req.URL.Path, "/v1/")
-				if req.URL.RawPath != "" {
-					req.URL.RawPath = "/v1beta1/" + strings.TrimPrefix(req.URL.RawPath, "/v1/")
-				}
-			}
-
 			// OpenAI routing metadata is never meaningful for Vertex, including
 			// values installed by method-level options and middleware.
 			req.Header.Del("OpenAI-Organization")
