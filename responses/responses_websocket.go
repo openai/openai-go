@@ -8,7 +8,6 @@ import (
 	"errors"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/websocket"
-	"github.com/tidwall/gjson"
 )
 
 // ResponseConnectionOptions configures a WebSocket connection.
@@ -38,6 +37,11 @@ func (r *ResponseService) Connect(ctx context.Context, options ResponseConnectio
 			return nil, err
 		}
 		ctx = request.Context()
+		if timeout := cfg.WebSocketOpenTimeout(); timeout > 0 {
+			var cancel context.CancelFunc
+			ctx, cancel = context.WithTimeout(ctx, timeout)
+			defer cancel()
+		}
 		connection, err := websocket.Dial(ctx, request, client, options, decodeResponseWebsocketEvent, func(responseWebsocketEvent) string { return "" })
 		if err != nil {
 			return nil, err
@@ -57,9 +61,7 @@ func decodeResponseWebsocketEvent(data []byte) (responseWebsocketEvent, error) {
 	if err := json.Unmarshal(data, &envelope); err != nil {
 		return responseWebsocketEvent{}, err
 	}
-	// Typed decoding uses the first exact key; keep legacy envelope validation too.
-	kind := gjson.GetBytes(data, "type")
-	if envelope.Type == "" || (kind.Exists() && (kind.Type != gjson.String || kind.Str == "")) {
+	if envelope.Type == "" {
 		return responseWebsocketEvent{}, errors.New("websocket event is missing type")
 	}
 	return responseWebsocketEvent{data: data}, nil
@@ -93,9 +95,8 @@ func (c *ResponseConnection) SendRaw(ctx context.Context, data json.RawMessage) 
 	return c.connection.Send(ctx, data)
 }
 
-// RecvRaw receives the next event not claimed by an attached lane, preserving
-// its original JSON. Canceling ctx cancels only this wait. Typed and raw reads
-// consume the same ordered event queue.
+// RecvRaw receives the next event's original JSON. Canceling ctx cancels only
+// this wait. Typed and raw reads consume the same ordered event queue.
 func (c *ResponseConnection) RecvRaw(ctx context.Context) (json.RawMessage, error) {
 	event, err := c.connection.Recv(ctx)
 	if err != nil {

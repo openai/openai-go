@@ -8,7 +8,6 @@ import (
 	"errors"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/websocket"
-	"github.com/tidwall/gjson"
 )
 
 // TranslationConnectionOptions configures a WebSocket connection.
@@ -38,6 +37,11 @@ func (r *TranslationService) Connect(ctx context.Context, options TranslationCon
 			return nil, err
 		}
 		ctx = request.Context()
+		if timeout := cfg.WebSocketOpenTimeout(); timeout > 0 {
+			var cancel context.CancelFunc
+			ctx, cancel = context.WithTimeout(ctx, timeout)
+			defer cancel()
+		}
 		connection, err := websocket.Dial(ctx, request, client, options, decodeTranslationWebsocketEvent, func(translationWebsocketEvent) string { return "" })
 		if err != nil {
 			return nil, err
@@ -57,9 +61,7 @@ func decodeTranslationWebsocketEvent(data []byte) (translationWebsocketEvent, er
 	if err := json.Unmarshal(data, &envelope); err != nil {
 		return translationWebsocketEvent{}, err
 	}
-	// Typed decoding uses the first exact key; keep legacy envelope validation too.
-	kind := gjson.GetBytes(data, "type")
-	if envelope.Type == "" || (kind.Exists() && (kind.Type != gjson.String || kind.Str == "")) {
+	if envelope.Type == "" {
 		return translationWebsocketEvent{}, errors.New("websocket event is missing type")
 	}
 	return translationWebsocketEvent{data: data}, nil
@@ -67,7 +69,7 @@ func decodeTranslationWebsocketEvent(data []byte) (translationWebsocketEvent, er
 
 func (e translationWebsocketEvent) decode() (RealtimeTranslationServerEventUnion, error) {
 	var event RealtimeTranslationServerEventUnion
-	err := event.unmarshalWebsocketEvent(e.data)
+	err := json.Unmarshal(e.data, &event)
 	return event, err
 }
 
@@ -93,9 +95,8 @@ func (c *TranslationConnection) SendRaw(ctx context.Context, data json.RawMessag
 	return c.connection.Send(ctx, data)
 }
 
-// RecvRaw receives the next event not claimed by an attached lane, preserving
-// its original JSON. Canceling ctx cancels only this wait. Typed and raw reads
-// consume the same ordered event queue.
+// RecvRaw receives the next event's original JSON. Canceling ctx cancels only
+// this wait. Typed and raw reads consume the same ordered event queue.
 func (c *TranslationConnection) RecvRaw(ctx context.Context) (json.RawMessage, error) {
 	event, err := c.connection.Recv(ctx)
 	if err != nil {
