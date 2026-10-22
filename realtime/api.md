@@ -40,6 +40,7 @@ Params Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTranslationSessionUpdateRequestParam">RealtimeTranslationSessionUpdateRequestParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTruncationUnionParam">RealtimeTruncationUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTruncationRetentionRatioParam">RealtimeTruncationRetentionRatioParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#ResponseItemReferenceParam">ResponseItemReferenceParam</a>
 
 Response Types:
 
@@ -70,6 +71,7 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTranslationSession">RealtimeTranslationSession</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTruncationUnion">RealtimeTruncationUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTruncationRetentionRatio">RealtimeTruncationRetentionRatio</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#ResponseItemReference">ResponseItemReference</a>
 
 ## ClientSecrets
 
