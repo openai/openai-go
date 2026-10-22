@@ -66,8 +66,10 @@ func TestSessionAcceptWithOptionalParams(t *testing.T) {
 					Decisions: live.DecisionTriggerDecisionsParam{
 						Questions: []live.DecisionTriggerDecisionsQuestionUnionParam{{
 							OfPredicate: &live.DecisionTriggerDecisionsQuestionPredicateParam{
-								Instructions: "instructions",
-								Name:         openai.String("name"),
+								Instructions: live.DecisionTriggerDecisionsQuestionPredicateInstructionsUnionParam{
+									OfString: openai.String("string"),
+								},
+								Name: openai.String("name"),
 							},
 						}},
 					},
