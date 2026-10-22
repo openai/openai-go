@@ -60,5 +60,8 @@ func (r TranslationClientSecretNewParams) MarshalJSON() (data []byte, err error)
 	return shimjson.Marshal(r.RealtimeTranslationClientSecretCreateRequest)
 }
 func (r *TranslationClientSecretNewParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	if r == nil {
+		return apijson.UnmarshalRoot(data, r)
+	}
+	return apijson.UnmarshalWrappedObject(data, r, &r.RealtimeTranslationClientSecretCreateRequest)
 }

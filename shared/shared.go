@@ -624,7 +624,7 @@ func (u *ComparisonFilterValueArrayItemUnionParam) UnmarshalJSON(data []byte) er
 type CompoundFilter struct {
 	// Array of filters to combine. Items can be `ComparisonFilter` or
 	// `CompoundFilter`.
-	Filters []CompoundFilterFilterUnion `json:"filters" api:"required"`
+	Filters []ComparisonFilter `json:"filters" api:"required"`
 	// Type of operation: `and` or `or`.
 	//
 	// Any of "and", "or".
@@ -653,44 +653,6 @@ func (r CompoundFilter) ToParam() CompoundFilterParam {
 	return param.Override[CompoundFilterParam](json.RawMessage(r.RawJSON()))
 }
 
-// CompoundFilterFilterUnion contains all possible properties and values from
-// [ComparisonFilter], [CompoundFilter].
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-type CompoundFilterFilterUnion struct {
-	// This field is from variant [ComparisonFilter].
-	Key string `json:"key"`
-	// This field is from variant [ComparisonFilter].
-	Type ComparisonFilterType `json:"type"`
-	// This field is from variant [ComparisonFilter].
-	Value            ComparisonFilterValueUnion `json:"value"`
-	OfCompoundFilter CompoundFilter             `json:",inline"`
-	JSON             struct {
-		Key              respjson.Field
-		Type             respjson.Field
-		Value            respjson.Field
-		OfCompoundFilter respjson.Field
-		raw              string
-	} `json:"-"`
-}
-
-func (u CompoundFilterFilterUnion) AsComparisonFilter() (v ComparisonFilter) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u CompoundFilterFilterUnion) AsCompoundFilter() (v CompoundFilter) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u CompoundFilterFilterUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *CompoundFilterFilterUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 // Type of operation: `and` or `or`.
 type CompoundFilterType string
 
@@ -705,7 +667,7 @@ const (
 type CompoundFilterParam struct {
 	// Array of filters to combine. Items can be `ComparisonFilter` or
 	// `CompoundFilter`.
-	Filters []CompoundFilterFilterUnionParam `json:"filters,omitzero" api:"required"`
+	Filters []ComparisonFilterParam `json:"filters,omitzero" api:"required"`
 	// Type of operation: `and` or `or`.
 	//
 	// Any of "and", "or".
@@ -719,72 +681,6 @@ func (r CompoundFilterParam) MarshalJSON() (data []byte, err error) {
 }
 func (r *CompoundFilterParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type CompoundFilterFilterUnionParam struct {
-	OfComparison *ComparisonFilterParam `json:",omitzero,inline"`
-	OfFilter     *CompoundFilterParam   `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u CompoundFilterFilterUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfComparison, u.OfFilter)
-}
-func (u *CompoundFilterFilterUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u CompoundFilterFilterUnionParam) GetKey() *string {
-	if vt := u.OfComparison; vt != nil {
-		return &vt.Key
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u CompoundFilterFilterUnionParam) GetValue() *ComparisonFilterValueUnionParam {
-	if vt := u.OfComparison; vt != nil {
-		return &vt.Value
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u CompoundFilterFilterUnionParam) GetFilters() []CompoundFilterFilterUnionParam {
-	if vt := u.OfFilter; vt != nil {
-		return vt.Filters
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u CompoundFilterFilterUnionParam) GetType() *string {
-	if vt := u.OfComparison; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfFilter; vt != nil {
-		return (*string)(&vt.Type)
-	}
-	return nil
-}
-
-func init() {
-	apijson.RegisterUnion[CompoundFilterFilterUnionParam](
-		"type",
-		apijson.Discriminator[ComparisonFilterParam]("eq"),
-		apijson.Discriminator[ComparisonFilterParam]("ne"),
-		apijson.Discriminator[ComparisonFilterParam]("gt"),
-		apijson.Discriminator[ComparisonFilterParam]("gte"),
-		apijson.Discriminator[ComparisonFilterParam]("lt"),
-		apijson.Discriminator[ComparisonFilterParam]("lte"),
-		apijson.Discriminator[ComparisonFilterParam]("in"),
-		apijson.Discriminator[ComparisonFilterParam]("nin"),
-		apijson.Discriminator[CompoundFilterParam]("and"),
-		apijson.Discriminator[CompoundFilterParam]("or"),
-	)
 }
 
 // CustomToolInputFormatUnion contains all possible properties and values from
@@ -1374,6 +1270,193 @@ const (
 	ReasoningEffortXhigh   ReasoningEffort = "xhigh"
 	ReasoningEffortMax     ReasoningEffort = "max"
 )
+
+// Combine multiple filters using `and` or `or`.
+type RecursiveCompoundFilter struct {
+	// Array of filters to combine. Items can be `ComparisonFilter` or
+	// `CompoundFilter`.
+	Filters []RecursiveCompoundFilterFilterUnion `json:"filters" api:"required"`
+	// Type of operation: `and` or `or`.
+	//
+	// Any of "and", "or".
+	Type RecursiveCompoundFilterType `json:"type" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Filters     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r RecursiveCompoundFilter) RawJSON() string { return r.JSON.raw }
+func (r *RecursiveCompoundFilter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this RecursiveCompoundFilter to a RecursiveCompoundFilterParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// RecursiveCompoundFilterParam.Overrides()
+func (r RecursiveCompoundFilter) ToParam() RecursiveCompoundFilterParam {
+	return param.Override[RecursiveCompoundFilterParam](json.RawMessage(r.RawJSON()))
+}
+
+// RecursiveCompoundFilterFilterUnion contains all possible properties and values
+// from [ComparisonFilter], [RecursiveCompoundFilter].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type RecursiveCompoundFilterFilterUnion struct {
+	// This field is from variant [ComparisonFilter].
+	Key string `json:"key"`
+	// This field is from variant [ComparisonFilter].
+	Type ComparisonFilterType `json:"type"`
+	// This field is from variant [ComparisonFilter].
+	Value                     ComparisonFilterValueUnion `json:"value"`
+	OfRecursiveCompoundFilter RecursiveCompoundFilter    `json:",inline"`
+	JSON                      struct {
+		Key                       respjson.Field
+		Type                      respjson.Field
+		Value                     respjson.Field
+		OfRecursiveCompoundFilter respjson.Field
+		raw                       string
+	} `json:"-"`
+}
+
+func (u RecursiveCompoundFilterFilterUnion) AsComparisonFilter() (v ComparisonFilter) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u RecursiveCompoundFilterFilterUnion) AsRecursiveCompoundFilter() (v RecursiveCompoundFilter) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u RecursiveCompoundFilterFilterUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *RecursiveCompoundFilterFilterUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Type of operation: `and` or `or`.
+type RecursiveCompoundFilterType string
+
+const (
+	RecursiveCompoundFilterTypeAnd RecursiveCompoundFilterType = "and"
+	RecursiveCompoundFilterTypeOr  RecursiveCompoundFilterType = "or"
+)
+
+// Combine multiple filters using `and` or `or`.
+//
+// The properties Filters, Type are required.
+type RecursiveCompoundFilterParam struct {
+	// Array of filters to combine. Items can be `ComparisonFilter` or
+	// `CompoundFilter`.
+	Filters []RecursiveCompoundFilterFilterUnionParam `json:"filters,omitzero" api:"required"`
+	// Type of operation: `and` or `or`.
+	//
+	// Any of "and", "or".
+	Type RecursiveCompoundFilterType `json:"type,omitzero" api:"required"`
+	paramObj
+}
+
+func (r RecursiveCompoundFilterParam) MarshalJSON() (data []byte, err error) {
+	type shadow RecursiveCompoundFilterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RecursiveCompoundFilterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam serializes an independent snapshot for the legacy request field.
+// The returned override preserves recursive children. Its typed fields are not
+// populated; changing them does not change the snapshot. Call this only after
+// editing the recursive model, immediately before sending the request.
+func (r RecursiveCompoundFilterParam) ToParam() (CompoundFilterParam, error) {
+	data, err := json.Marshal(r)
+	if err != nil {
+		return CompoundFilterParam{}, err
+	}
+	return param.Override[CompoundFilterParam](json.RawMessage(data)), nil
+}
+
+// AsRecursive decodes the original API JSON as a recursive filter.
+// It does not reflect later edits to this value's typed fields.
+func (r CompoundFilter) AsRecursive() (RecursiveCompoundFilter, error) {
+	var value RecursiveCompoundFilter
+	err := json.Unmarshal([]byte(r.RawJSON()), &value)
+	return value, err
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type RecursiveCompoundFilterFilterUnionParam struct {
+	OfComparison *ComparisonFilterParam        `json:",omitzero,inline"`
+	OfFilter     *RecursiveCompoundFilterParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u RecursiveCompoundFilterFilterUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfComparison, u.OfFilter)
+}
+func (u *RecursiveCompoundFilterFilterUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RecursiveCompoundFilterFilterUnionParam) GetKey() *string {
+	if vt := u.OfComparison; vt != nil {
+		return &vt.Key
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RecursiveCompoundFilterFilterUnionParam) GetValue() *ComparisonFilterValueUnionParam {
+	if vt := u.OfComparison; vt != nil {
+		return &vt.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RecursiveCompoundFilterFilterUnionParam) GetFilters() []RecursiveCompoundFilterFilterUnionParam {
+	if vt := u.OfFilter; vt != nil {
+		return vt.Filters
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RecursiveCompoundFilterFilterUnionParam) GetType() *string {
+	if vt := u.OfComparison; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFilter; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[RecursiveCompoundFilterFilterUnionParam](
+		"type",
+		apijson.Discriminator[ComparisonFilterParam]("eq"),
+		apijson.Discriminator[ComparisonFilterParam]("ne"),
+		apijson.Discriminator[ComparisonFilterParam]("gt"),
+		apijson.Discriminator[ComparisonFilterParam]("gte"),
+		apijson.Discriminator[ComparisonFilterParam]("lt"),
+		apijson.Discriminator[ComparisonFilterParam]("lte"),
+		apijson.Discriminator[ComparisonFilterParam]("in"),
+		apijson.Discriminator[ComparisonFilterParam]("nin"),
+		apijson.Discriminator[RecursiveCompoundFilterParam]("and"),
+		apijson.Discriminator[RecursiveCompoundFilterParam]("or"),
+	)
+}
 
 // JSON object response format. An older method of generating JSON responses. Using
 // `json_schema` is recommended for models that support it. Note that the model

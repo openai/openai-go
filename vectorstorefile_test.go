@@ -99,7 +99,7 @@ func TestVectorStoreFileUpdate(t *testing.T) {
 		"file-abc123",
 		openai.VectorStoreFileUpdateParams{
 			Attributes: map[string]openai.VectorStoreFileUpdateParamsAttributeUnion{
-				"foo": openai.VectorStoreFileUpdateParamsAttributeUnion{
+				"foo": {
 					OfString: openai.String("string"),
 				},
 			},

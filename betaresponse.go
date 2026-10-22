@@ -20,6 +20,7 @@ import (
 	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/packages/respjson"
 	"github.com/openai/openai-go/v3/packages/ssestream"
+	"github.com/openai/openai-go/v3/shared"
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
@@ -2403,7 +2404,7 @@ type BetaFileSearchToolFiltersUnion struct {
 	// This field is from variant [BetaFileSearchToolFiltersComparisonFilter].
 	Value BetaFileSearchToolFiltersComparisonFilterValueUnion `json:"value"`
 	// This field is from variant [BetaFileSearchToolFiltersCompoundFilter].
-	Filters []BetaFileSearchToolFiltersCompoundFilterFilterUnion `json:"filters"`
+	Filters []BetaFileSearchToolFiltersCompoundFilterFilter `json:"filters"`
 	JSON    struct {
 		Key     respjson.Field
 		Type    respjson.Field
@@ -2562,15 +2563,280 @@ func (r *BetaFileSearchToolFiltersComparisonFilterValueArrayItemUnion) Unmarshal
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Ranking options for search.
+type BetaFileSearchToolRankingOptions struct {
+	// Weights that control how reciprocal rank fusion balances semantic embedding
+	// matches versus sparse keyword matches when hybrid search is enabled.
+	HybridSearch BetaFileSearchToolRankingOptionsHybridSearch `json:"hybrid_search"`
+	// The ranker to use for the file search.
+	//
+	// Any of "auto", "default-2024-11-15".
+	Ranker string `json:"ranker"`
+	// The score threshold for the file search, a number between 0 and 1. Numbers
+	// closer to 1 will attempt to return only the most relevant results, but may
+	// return fewer results.
+	ScoreThreshold float64 `json:"score_threshold"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		HybridSearch   respjson.Field
+		Ranker         respjson.Field
+		ScoreThreshold respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaFileSearchToolRankingOptions) RawJSON() string { return r.JSON.raw }
+func (r *BetaFileSearchToolRankingOptions) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Weights that control how reciprocal rank fusion balances semantic embedding
+// matches versus sparse keyword matches when hybrid search is enabled.
+type BetaFileSearchToolRankingOptionsHybridSearch struct {
+	// The weight of the embedding in the reciprocal ranking fusion.
+	EmbeddingWeight float64 `json:"embedding_weight" api:"required"`
+	// The weight of the text in the reciprocal ranking fusion.
+	TextWeight float64 `json:"text_weight" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		EmbeddingWeight respjson.Field
+		TextWeight      respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaFileSearchToolRankingOptionsHybridSearch) RawJSON() string { return r.JSON.raw }
+func (r *BetaFileSearchToolRankingOptionsHybridSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A tool that searches for relevant content from uploaded files. Learn more about
+// the
+// [file search tool](https://developers.openai.com/api/docs/guides/tools-file-search).
+//
+// The properties Type, VectorStoreIDs are required.
+type BetaFileSearchToolParam struct {
+	// The IDs of the vector stores to search.
+	VectorStoreIDs []string `json:"vector_store_ids,omitzero" api:"required"`
+	// The maximum number of results to return. This number should be between 1 and 50
+	// inclusive.
+	MaxNumResults param.Opt[int64] `json:"max_num_results,omitzero"`
+	// A filter to apply.
+	Filters BetaFileSearchToolFiltersUnionParam `json:"filters,omitzero"`
+	// Ranking options for search.
+	RankingOptions BetaFileSearchToolRankingOptionsParam `json:"ranking_options,omitzero"`
+	// The type of the file search tool. Always `file_search`.
+	//
+	// This field can be elided, and will marshal its zero value as "file_search".
+	Type constant.FileSearch `json:"type" default:"file_search"`
+	paramObj
+}
+
+func (r BetaFileSearchToolParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaFileSearchToolParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaFileSearchToolParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaFileSearchToolFiltersUnionParam struct {
+	OfComparisonFilter *BetaFileSearchToolFiltersComparisonFilterParam `json:",omitzero,inline"`
+	OfCompoundFilter   *BetaFileSearchToolFiltersCompoundFilterParam   `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaFileSearchToolFiltersUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfComparisonFilter, u.OfCompoundFilter)
+}
+func (u *BetaFileSearchToolFiltersUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *BetaFileSearchToolFiltersUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfComparisonFilter) {
+		return u.OfComparisonFilter
+	} else if !param.IsOmitted(u.OfCompoundFilter) {
+		return u.OfCompoundFilter
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaFileSearchToolFiltersUnionParam) GetKey() *string {
+	if vt := u.OfComparisonFilter; vt != nil {
+		return &vt.Key
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaFileSearchToolFiltersUnionParam) GetValue() *BetaFileSearchToolFiltersComparisonFilterValueUnionParam {
+	if vt := u.OfComparisonFilter; vt != nil {
+		return &vt.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaFileSearchToolFiltersUnionParam) GetFilters() []BetaFileSearchToolFiltersCompoundFilterFilterParam {
+	if vt := u.OfCompoundFilter; vt != nil {
+		return vt.Filters
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaFileSearchToolFiltersUnionParam) GetType() *string {
+	if vt := u.OfComparisonFilter; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCompoundFilter; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// A filter used to compare a specified attribute key to a given value using a
+// defined comparison operation.
+//
+// The properties Key, Type, Value are required.
+type BetaFileSearchToolFiltersComparisonFilterParam struct {
+	// The key to compare against the value.
+	Key string `json:"key" api:"required"`
+	// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`,
+	// `nin`.
+	//
+	// - `eq`: equals
+	// - `ne`: not equal
+	// - `gt`: greater than
+	// - `gte`: greater than or equal
+	// - `lt`: less than
+	// - `lte`: less than or equal
+	// - `in`: in
+	// - `nin`: not in
+	//
+	// Any of "eq", "ne", "gt", "gte", "lt", "lte", "in", "nin".
+	Type string `json:"type,omitzero" api:"required"`
+	// The value to compare against the attribute key; supports string, number, or
+	// boolean types.
+	Value BetaFileSearchToolFiltersComparisonFilterValueUnionParam `json:"value,omitzero" api:"required"`
+	paramObj
+}
+
+func (r BetaFileSearchToolFiltersComparisonFilterParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaFileSearchToolFiltersComparisonFilterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaFileSearchToolFiltersComparisonFilterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaFileSearchToolFiltersComparisonFilterParam](
+		"type", "eq", "ne", "gt", "gte", "lt", "lte", "in", "nin",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaFileSearchToolFiltersComparisonFilterValueUnionParam struct {
+	OfString                                              param.Opt[string]                                                   `json:",omitzero,inline"`
+	OfFloat                                               param.Opt[float64]                                                  `json:",omitzero,inline"`
+	OfBool                                                param.Opt[bool]                                                     `json:",omitzero,inline"`
+	OfBetaFileSearchToolFiltersComparisonFilterValueArray []BetaFileSearchToolFiltersComparisonFilterValueArrayItemUnionParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaFileSearchToolFiltersComparisonFilterValueUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfFloat, u.OfBool, u.OfBetaFileSearchToolFiltersComparisonFilterValueArray)
+}
+func (u *BetaFileSearchToolFiltersComparisonFilterValueUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaFileSearchToolFiltersComparisonFilterValueArrayItemUnionParam struct {
+	OfString param.Opt[string]  `json:",omitzero,inline"`
+	OfFloat  param.Opt[float64] `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaFileSearchToolFiltersComparisonFilterValueArrayItemUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfFloat)
+}
+func (u *BetaFileSearchToolFiltersComparisonFilterValueArrayItemUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Ranking options for search.
+type BetaFileSearchToolRankingOptionsParam struct {
+	// The score threshold for the file search, a number between 0 and 1. Numbers
+	// closer to 1 will attempt to return only the most relevant results, but may
+	// return fewer results.
+	ScoreThreshold param.Opt[float64] `json:"score_threshold,omitzero"`
+	// Weights that control how reciprocal rank fusion balances semantic embedding
+	// matches versus sparse keyword matches when hybrid search is enabled.
+	HybridSearch BetaFileSearchToolRankingOptionsHybridSearchParam `json:"hybrid_search,omitzero"`
+	// The ranker to use for the file search.
+	//
+	// Any of "auto", "default-2024-11-15".
+	Ranker string `json:"ranker,omitzero"`
+	paramObj
+}
+
+func (r BetaFileSearchToolRankingOptionsParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaFileSearchToolRankingOptionsParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaFileSearchToolRankingOptionsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaFileSearchToolRankingOptionsParam](
+		"ranker", "auto", "default-2024-11-15",
+	)
+}
+
+// Weights that control how reciprocal rank fusion balances semantic embedding
+// matches versus sparse keyword matches when hybrid search is enabled.
+//
+// The properties EmbeddingWeight, TextWeight are required.
+type BetaFileSearchToolRankingOptionsHybridSearchParam struct {
+	// The weight of the embedding in the reciprocal ranking fusion.
+	EmbeddingWeight float64 `json:"embedding_weight" api:"required"`
+	// The weight of the text in the reciprocal ranking fusion.
+	TextWeight float64 `json:"text_weight" api:"required"`
+	paramObj
+}
+
+func (r BetaFileSearchToolRankingOptionsHybridSearchParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaFileSearchToolRankingOptionsHybridSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaFileSearchToolRankingOptionsHybridSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Combine multiple filters using `and` or `or`.
 type BetaFileSearchToolFiltersCompoundFilter struct {
 	// Array of filters to combine. Items can be `ComparisonFilter` or
 	// `CompoundFilter`.
-	Filters []BetaFileSearchToolFiltersCompoundFilterFilterUnion `json:"filters" api:"required"`
+	Filters []BetaFileSearchToolFiltersCompoundFilterFilter `json:"filters" api:"required"`
 	// Type of operation: `and` or `or`.
 	//
 	// Any of "and", "or".
-	Type string `json:"type" api:"required"`
+	Type BetaFileSearchToolFiltersCompoundFilterType `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Filters     respjson.Field
@@ -2586,43 +2852,14 @@ func (r *BetaFileSearchToolFiltersCompoundFilter) UnmarshalJSON(data []byte) err
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// BetaFileSearchToolFiltersCompoundFilterFilterUnion contains all possible
-// properties and values from [BetaFileSearchToolFiltersCompoundFilterFilter],
-// [BetaFileSearchToolFiltersCompoundFilter].
+// ToParam converts this BetaFileSearchToolFiltersCompoundFilter to a
+// BetaFileSearchToolFiltersCompoundFilterParam.
 //
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-type BetaFileSearchToolFiltersCompoundFilterFilterUnion struct {
-	// This field is from variant [BetaFileSearchToolFiltersCompoundFilterFilter].
-	Key string `json:"key"`
-	// This field is from variant [BetaFileSearchToolFiltersCompoundFilterFilter].
-	Type string `json:"type"`
-	// This field is from variant [BetaFileSearchToolFiltersCompoundFilterFilter].
-	Value                                     BetaFileSearchToolFiltersCompoundFilterFilterValueUnion `json:"value"`
-	OfBetaFileSearchToolFiltersCompoundFilter BetaFileSearchToolFiltersCompoundFilter                 `json:",inline"`
-	JSON                                      struct {
-		Key                                       respjson.Field
-		Type                                      respjson.Field
-		Value                                     respjson.Field
-		OfBetaFileSearchToolFiltersCompoundFilter respjson.Field
-		raw                                       string
-	} `json:"-"`
-}
-
-func (u BetaFileSearchToolFiltersCompoundFilterFilterUnion) AsFileSearchToolFiltersCompound() (v BetaFileSearchToolFiltersCompoundFilterFilter) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u BetaFileSearchToolFiltersCompoundFilterFilterUnion) AsBetaFileSearchToolFiltersCompoundFilter() (v BetaFileSearchToolFiltersCompoundFilter) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u BetaFileSearchToolFiltersCompoundFilterFilterUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *BetaFileSearchToolFiltersCompoundFilterFilterUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// BetaFileSearchToolFiltersCompoundFilterParam.Overrides()
+func (r BetaFileSearchToolFiltersCompoundFilter) ToParam() BetaFileSearchToolFiltersCompoundFilterParam {
+	return param.Override[BetaFileSearchToolFiltersCompoundFilterParam](json.RawMessage(r.RawJSON()))
 }
 
 // A filter used to compare a specified attribute key to a given value using a
@@ -2757,220 +2994,13 @@ func (r *BetaFileSearchToolFiltersCompoundFilterFilterValueArrayItemUnion) Unmar
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Ranking options for search.
-type BetaFileSearchToolRankingOptions struct {
-	// Weights that control how reciprocal rank fusion balances semantic embedding
-	// matches versus sparse keyword matches when hybrid search is enabled.
-	HybridSearch BetaFileSearchToolRankingOptionsHybridSearch `json:"hybrid_search"`
-	// The ranker to use for the file search.
-	//
-	// Any of "auto", "default-2024-11-15".
-	Ranker string `json:"ranker"`
-	// The score threshold for the file search, a number between 0 and 1. Numbers
-	// closer to 1 will attempt to return only the most relevant results, but may
-	// return fewer results.
-	ScoreThreshold float64 `json:"score_threshold"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		HybridSearch   respjson.Field
-		Ranker         respjson.Field
-		ScoreThreshold respjson.Field
-		ExtraFields    map[string]respjson.Field
-		raw            string
-	} `json:"-"`
-}
+// Type of operation: `and` or `or`.
+type BetaFileSearchToolFiltersCompoundFilterType string
 
-// Returns the unmodified JSON received from the API
-func (r BetaFileSearchToolRankingOptions) RawJSON() string { return r.JSON.raw }
-func (r *BetaFileSearchToolRankingOptions) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Weights that control how reciprocal rank fusion balances semantic embedding
-// matches versus sparse keyword matches when hybrid search is enabled.
-type BetaFileSearchToolRankingOptionsHybridSearch struct {
-	// The weight of the embedding in the reciprocal ranking fusion.
-	EmbeddingWeight float64 `json:"embedding_weight" api:"required"`
-	// The weight of the text in the reciprocal ranking fusion.
-	TextWeight float64 `json:"text_weight" api:"required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		EmbeddingWeight respjson.Field
-		TextWeight      respjson.Field
-		ExtraFields     map[string]respjson.Field
-		raw             string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r BetaFileSearchToolRankingOptionsHybridSearch) RawJSON() string { return r.JSON.raw }
-func (r *BetaFileSearchToolRankingOptionsHybridSearch) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// A tool that searches for relevant content from uploaded files. Learn more about
-// the
-// [file search tool](https://developers.openai.com/api/docs/guides/tools-file-search).
-//
-// The properties Type, VectorStoreIDs are required.
-type BetaFileSearchToolParam struct {
-	// The IDs of the vector stores to search.
-	VectorStoreIDs []string `json:"vector_store_ids,omitzero" api:"required"`
-	// The maximum number of results to return. This number should be between 1 and 50
-	// inclusive.
-	MaxNumResults param.Opt[int64] `json:"max_num_results,omitzero"`
-	// A filter to apply.
-	Filters BetaFileSearchToolFiltersUnionParam `json:"filters,omitzero"`
-	// Ranking options for search.
-	RankingOptions BetaFileSearchToolRankingOptionsParam `json:"ranking_options,omitzero"`
-	// The type of the file search tool. Always `file_search`.
-	//
-	// This field can be elided, and will marshal its zero value as "file_search".
-	Type constant.FileSearch `json:"type" default:"file_search"`
-	paramObj
-}
-
-func (r BetaFileSearchToolParam) MarshalJSON() (data []byte, err error) {
-	type shadow BetaFileSearchToolParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *BetaFileSearchToolParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type BetaFileSearchToolFiltersUnionParam struct {
-	OfComparisonFilter *BetaFileSearchToolFiltersComparisonFilterParam `json:",omitzero,inline"`
-	OfCompoundFilter   *BetaFileSearchToolFiltersCompoundFilterParam   `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u BetaFileSearchToolFiltersUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfComparisonFilter, u.OfCompoundFilter)
-}
-func (u *BetaFileSearchToolFiltersUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *BetaFileSearchToolFiltersUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfComparisonFilter) {
-		return u.OfComparisonFilter
-	} else if !param.IsOmitted(u.OfCompoundFilter) {
-		return u.OfCompoundFilter
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u BetaFileSearchToolFiltersUnionParam) GetKey() *string {
-	if vt := u.OfComparisonFilter; vt != nil {
-		return &vt.Key
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u BetaFileSearchToolFiltersUnionParam) GetValue() *BetaFileSearchToolFiltersComparisonFilterValueUnionParam {
-	if vt := u.OfComparisonFilter; vt != nil {
-		return &vt.Value
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u BetaFileSearchToolFiltersUnionParam) GetFilters() []BetaFileSearchToolFiltersCompoundFilterFilterUnionParam {
-	if vt := u.OfCompoundFilter; vt != nil {
-		return vt.Filters
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u BetaFileSearchToolFiltersUnionParam) GetType() *string {
-	if vt := u.OfComparisonFilter; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfCompoundFilter; vt != nil {
-		return (*string)(&vt.Type)
-	}
-	return nil
-}
-
-// A filter used to compare a specified attribute key to a given value using a
-// defined comparison operation.
-//
-// The properties Key, Type, Value are required.
-type BetaFileSearchToolFiltersComparisonFilterParam struct {
-	// The key to compare against the value.
-	Key string `json:"key" api:"required"`
-	// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`,
-	// `nin`.
-	//
-	// - `eq`: equals
-	// - `ne`: not equal
-	// - `gt`: greater than
-	// - `gte`: greater than or equal
-	// - `lt`: less than
-	// - `lte`: less than or equal
-	// - `in`: in
-	// - `nin`: not in
-	//
-	// Any of "eq", "ne", "gt", "gte", "lt", "lte", "in", "nin".
-	Type string `json:"type,omitzero" api:"required"`
-	// The value to compare against the attribute key; supports string, number, or
-	// boolean types.
-	Value BetaFileSearchToolFiltersComparisonFilterValueUnionParam `json:"value,omitzero" api:"required"`
-	paramObj
-}
-
-func (r BetaFileSearchToolFiltersComparisonFilterParam) MarshalJSON() (data []byte, err error) {
-	type shadow BetaFileSearchToolFiltersComparisonFilterParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *BetaFileSearchToolFiltersComparisonFilterParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[BetaFileSearchToolFiltersComparisonFilterParam](
-		"type", "eq", "ne", "gt", "gte", "lt", "lte", "in", "nin",
-	)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type BetaFileSearchToolFiltersComparisonFilterValueUnionParam struct {
-	OfString                                              param.Opt[string]                                                   `json:",omitzero,inline"`
-	OfFloat                                               param.Opt[float64]                                                  `json:",omitzero,inline"`
-	OfBool                                                param.Opt[bool]                                                     `json:",omitzero,inline"`
-	OfBetaFileSearchToolFiltersComparisonFilterValueArray []BetaFileSearchToolFiltersComparisonFilterValueArrayItemUnionParam `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u BetaFileSearchToolFiltersComparisonFilterValueUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfFloat, u.OfBool, u.OfBetaFileSearchToolFiltersComparisonFilterValueArray)
-}
-func (u *BetaFileSearchToolFiltersComparisonFilterValueUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type BetaFileSearchToolFiltersComparisonFilterValueArrayItemUnionParam struct {
-	OfString param.Opt[string]  `json:",omitzero,inline"`
-	OfFloat  param.Opt[float64] `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u BetaFileSearchToolFiltersComparisonFilterValueArrayItemUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfFloat)
-}
-func (u *BetaFileSearchToolFiltersComparisonFilterValueArrayItemUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
+const (
+	BetaFileSearchToolFiltersCompoundFilterTypeAnd BetaFileSearchToolFiltersCompoundFilterType = "and"
+	BetaFileSearchToolFiltersCompoundFilterTypeOr  BetaFileSearchToolFiltersCompoundFilterType = "or"
+)
 
 // Combine multiple filters using `and` or `or`.
 //
@@ -2978,11 +3008,11 @@ func (u *BetaFileSearchToolFiltersComparisonFilterValueArrayItemUnionParam) Unma
 type BetaFileSearchToolFiltersCompoundFilterParam struct {
 	// Array of filters to combine. Items can be `ComparisonFilter` or
 	// `CompoundFilter`.
-	Filters []BetaFileSearchToolFiltersCompoundFilterFilterUnionParam `json:"filters,omitzero" api:"required"`
+	Filters []BetaFileSearchToolFiltersCompoundFilterFilterParam `json:"filters,omitzero" api:"required"`
 	// Type of operation: `and` or `or`.
 	//
 	// Any of "and", "or".
-	Type string `json:"type,omitzero" api:"required"`
+	Type BetaFileSearchToolFiltersCompoundFilterType `json:"type,omitzero" api:"required"`
 	paramObj
 }
 
@@ -2992,78 +3022,6 @@ func (r BetaFileSearchToolFiltersCompoundFilterParam) MarshalJSON() (data []byte
 }
 func (r *BetaFileSearchToolFiltersCompoundFilterParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[BetaFileSearchToolFiltersCompoundFilterParam](
-		"type", "and", "or",
-	)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type BetaFileSearchToolFiltersCompoundFilterFilterUnionParam struct {
-	OfFileSearchToolFiltersCompound *BetaFileSearchToolFiltersCompoundFilterFilterParam `json:",omitzero,inline"`
-	OfFilter                        *BetaFileSearchToolFiltersCompoundFilterParam       `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u BetaFileSearchToolFiltersCompoundFilterFilterUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfFileSearchToolFiltersCompound, u.OfFilter)
-}
-func (u *BetaFileSearchToolFiltersCompoundFilterFilterUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u BetaFileSearchToolFiltersCompoundFilterFilterUnionParam) GetKey() *string {
-	if vt := u.OfFileSearchToolFiltersCompound; vt != nil {
-		return &vt.Key
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u BetaFileSearchToolFiltersCompoundFilterFilterUnionParam) GetValue() *BetaFileSearchToolFiltersCompoundFilterFilterValueUnionParam {
-	if vt := u.OfFileSearchToolFiltersCompound; vt != nil {
-		return &vt.Value
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u BetaFileSearchToolFiltersCompoundFilterFilterUnionParam) GetFilters() []BetaFileSearchToolFiltersCompoundFilterFilterUnionParam {
-	if vt := u.OfFilter; vt != nil {
-		return vt.Filters
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u BetaFileSearchToolFiltersCompoundFilterFilterUnionParam) GetType() *string {
-	if vt := u.OfFileSearchToolFiltersCompound; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfFilter; vt != nil {
-		return (*string)(&vt.Type)
-	}
-	return nil
-}
-
-func init() {
-	apijson.RegisterUnion[BetaFileSearchToolFiltersCompoundFilterFilterUnionParam](
-		"type",
-		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterFilterParam]("eq"),
-		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterFilterParam]("ne"),
-		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterFilterParam]("gt"),
-		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterFilterParam]("gte"),
-		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterFilterParam]("lt"),
-		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterFilterParam]("lte"),
-		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterFilterParam]("in"),
-		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterFilterParam]("nin"),
-		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterParam]("and"),
-		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterParam]("or"),
-	)
 }
 
 // A filter used to compare a specified attribute key to a given value using a
@@ -3139,56 +3097,6 @@ func (u BetaFileSearchToolFiltersCompoundFilterFilterValueArrayItemUnionParam) M
 }
 func (u *BetaFileSearchToolFiltersCompoundFilterFilterValueArrayItemUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-// Ranking options for search.
-type BetaFileSearchToolRankingOptionsParam struct {
-	// The score threshold for the file search, a number between 0 and 1. Numbers
-	// closer to 1 will attempt to return only the most relevant results, but may
-	// return fewer results.
-	ScoreThreshold param.Opt[float64] `json:"score_threshold,omitzero"`
-	// Weights that control how reciprocal rank fusion balances semantic embedding
-	// matches versus sparse keyword matches when hybrid search is enabled.
-	HybridSearch BetaFileSearchToolRankingOptionsHybridSearchParam `json:"hybrid_search,omitzero"`
-	// The ranker to use for the file search.
-	//
-	// Any of "auto", "default-2024-11-15".
-	Ranker string `json:"ranker,omitzero"`
-	paramObj
-}
-
-func (r BetaFileSearchToolRankingOptionsParam) MarshalJSON() (data []byte, err error) {
-	type shadow BetaFileSearchToolRankingOptionsParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *BetaFileSearchToolRankingOptionsParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[BetaFileSearchToolRankingOptionsParam](
-		"ranker", "auto", "default-2024-11-15",
-	)
-}
-
-// Weights that control how reciprocal rank fusion balances semantic embedding
-// matches versus sparse keyword matches when hybrid search is enabled.
-//
-// The properties EmbeddingWeight, TextWeight are required.
-type BetaFileSearchToolRankingOptionsHybridSearchParam struct {
-	// The weight of the embedding in the reciprocal ranking fusion.
-	EmbeddingWeight float64 `json:"embedding_weight" api:"required"`
-	// The weight of the text in the reciprocal ranking fusion.
-	TextWeight float64 `json:"text_weight" api:"required"`
-	paramObj
-}
-
-func (r BetaFileSearchToolRankingOptionsHybridSearchParam) MarshalJSON() (data []byte, err error) {
-	type shadow BetaFileSearchToolRankingOptionsHybridSearchParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *BetaFileSearchToolRankingOptionsHybridSearchParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 // A tool that allows the model to execute shell commands.
@@ -4410,6 +4318,194 @@ func (r BetaNamespaceToolToolFunctionParam) MarshalJSON() (data []byte, err erro
 }
 func (r *BetaNamespaceToolToolFunctionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// Combine multiple filters using `and` or `or`.
+type BetaRecursiveCompoundFilter struct {
+	// Array of filters to combine. Items can be `ComparisonFilter` or
+	// `CompoundFilter`.
+	Filters []BetaRecursiveCompoundFilterFilterUnion `json:"filters" api:"required"`
+	// Type of operation: `and` or `or`.
+	//
+	// Any of "and", "or".
+	Type BetaRecursiveCompoundFilterType `json:"type" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Filters     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaRecursiveCompoundFilter) RawJSON() string { return r.JSON.raw }
+func (r *BetaRecursiveCompoundFilter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this BetaRecursiveCompoundFilter to a
+// BetaRecursiveCompoundFilterParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// BetaRecursiveCompoundFilterParam.Overrides()
+func (r BetaRecursiveCompoundFilter) ToParam() BetaRecursiveCompoundFilterParam {
+	return param.Override[BetaRecursiveCompoundFilterParam](json.RawMessage(r.RawJSON()))
+}
+
+// BetaRecursiveCompoundFilterFilterUnion contains all possible properties and
+// values from [shared.ComparisonFilter], [BetaRecursiveCompoundFilter].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaRecursiveCompoundFilterFilterUnion struct {
+	// This field is from variant [shared.ComparisonFilter].
+	Key string `json:"key"`
+	// This field is from variant [shared.ComparisonFilter].
+	Type shared.ComparisonFilterType `json:"type"`
+	// This field is from variant [shared.ComparisonFilter].
+	Value                         shared.ComparisonFilterValueUnion `json:"value"`
+	OfBetaRecursiveCompoundFilter BetaRecursiveCompoundFilter       `json:",inline"`
+	JSON                          struct {
+		Key                           respjson.Field
+		Type                          respjson.Field
+		Value                         respjson.Field
+		OfBetaRecursiveCompoundFilter respjson.Field
+		raw                           string
+	} `json:"-"`
+}
+
+func (u BetaRecursiveCompoundFilterFilterUnion) AsComparisonFilter() (v shared.ComparisonFilter) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaRecursiveCompoundFilterFilterUnion) AsBetaRecursiveCompoundFilter() (v BetaRecursiveCompoundFilter) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaRecursiveCompoundFilterFilterUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *BetaRecursiveCompoundFilterFilterUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Type of operation: `and` or `or`.
+type BetaRecursiveCompoundFilterType string
+
+const (
+	BetaRecursiveCompoundFilterTypeAnd BetaRecursiveCompoundFilterType = "and"
+	BetaRecursiveCompoundFilterTypeOr  BetaRecursiveCompoundFilterType = "or"
+)
+
+// Combine multiple filters using `and` or `or`.
+//
+// The properties Filters, Type are required.
+type BetaRecursiveCompoundFilterParam struct {
+	// Array of filters to combine. Items can be `ComparisonFilter` or
+	// `CompoundFilter`.
+	Filters []BetaRecursiveCompoundFilterFilterUnionParam `json:"filters,omitzero" api:"required"`
+	// Type of operation: `and` or `or`.
+	//
+	// Any of "and", "or".
+	Type BetaRecursiveCompoundFilterType `json:"type,omitzero" api:"required"`
+	paramObj
+}
+
+func (r BetaRecursiveCompoundFilterParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaRecursiveCompoundFilterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaRecursiveCompoundFilterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam serializes an independent snapshot for the legacy request field.
+// The returned override preserves recursive children. Its typed fields are not
+// populated; changing them does not change the snapshot. Call this only after
+// editing the recursive model, immediately before sending the request.
+func (r BetaRecursiveCompoundFilterParam) ToParam() (BetaFileSearchToolFiltersCompoundFilterParam, error) {
+	data, err := json.Marshal(r)
+	if err != nil {
+		return BetaFileSearchToolFiltersCompoundFilterParam{}, err
+	}
+	return param.Override[BetaFileSearchToolFiltersCompoundFilterParam](json.RawMessage(data)), nil
+}
+
+// AsRecursive decodes the original API JSON as a recursive filter.
+// It does not reflect later edits to this value's typed fields.
+func (r BetaFileSearchToolFiltersCompoundFilter) AsRecursive() (BetaRecursiveCompoundFilter, error) {
+	var value BetaRecursiveCompoundFilter
+	err := json.Unmarshal([]byte(r.RawJSON()), &value)
+	return value, err
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaRecursiveCompoundFilterFilterUnionParam struct {
+	OfComparison *shared.ComparisonFilterParam     `json:",omitzero,inline"`
+	OfFilter     *BetaRecursiveCompoundFilterParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaRecursiveCompoundFilterFilterUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfComparison, u.OfFilter)
+}
+func (u *BetaRecursiveCompoundFilterFilterUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaRecursiveCompoundFilterFilterUnionParam) GetKey() *string {
+	if vt := u.OfComparison; vt != nil {
+		return &vt.Key
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaRecursiveCompoundFilterFilterUnionParam) GetValue() *shared.ComparisonFilterValueUnionParam {
+	if vt := u.OfComparison; vt != nil {
+		return &vt.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaRecursiveCompoundFilterFilterUnionParam) GetFilters() []BetaRecursiveCompoundFilterFilterUnionParam {
+	if vt := u.OfFilter; vt != nil {
+		return vt.Filters
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaRecursiveCompoundFilterFilterUnionParam) GetType() *string {
+	if vt := u.OfComparison; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFilter; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[BetaRecursiveCompoundFilterFilterUnionParam](
+		"type",
+		apijson.Discriminator[shared.ComparisonFilterParam]("eq"),
+		apijson.Discriminator[shared.ComparisonFilterParam]("ne"),
+		apijson.Discriminator[shared.ComparisonFilterParam]("gt"),
+		apijson.Discriminator[shared.ComparisonFilterParam]("gte"),
+		apijson.Discriminator[shared.ComparisonFilterParam]("lt"),
+		apijson.Discriminator[shared.ComparisonFilterParam]("lte"),
+		apijson.Discriminator[shared.ComparisonFilterParam]("in"),
+		apijson.Discriminator[shared.ComparisonFilterParam]("nin"),
+		apijson.Discriminator[BetaRecursiveCompoundFilterParam]("and"),
+		apijson.Discriminator[BetaRecursiveCompoundFilterParam]("or"),
+	)
 }
 
 type BetaResponse struct {
@@ -17659,6 +17755,20 @@ func BetaResponseInputItemParamOfFunctionCall(arguments string, callID string, n
 
 func BetaResponseInputItemParamOfFunctionCallOutput[
 	T string | BetaResponseFunctionCallOutputItemListParam,
+](callID string, output T) BetaResponseInputItemUnionParam {
+	var functionCallOutput BetaResponseInputItemFunctionCallOutputParam
+	functionCallOutput.CallID = param.NewOpt(callID)
+	switch v := any(output).(type) {
+	case string:
+		functionCallOutput.Output.OfString = param.NewOpt(v)
+	case BetaResponseFunctionCallOutputItemListParam:
+		functionCallOutput.Output.OfBetaResponseFunctionCallOutputItemArray = v
+	}
+	return BetaResponseInputItemUnionParam{OfFunctionCallOutput: &functionCallOutput}
+}
+
+func BetaResponseInputItemParamOfFunctionCallOutputWithoutCallID[
+	T string | BetaResponseFunctionCallOutputItemListParam,
 ](output T) BetaResponseInputItemUnionParam {
 	var functionCallOutput BetaResponseInputItemFunctionCallOutputParam
 	switch v := any(output).(type) {
@@ -17700,7 +17810,7 @@ func BetaResponseInputItemParamOfToolSearchCall(arguments any) BetaResponseInput
 	return BetaResponseInputItemUnionParam{OfToolSearchCall: &toolSearchCall}
 }
 
-func BetaResponseInputItemParamOfToolSearchOutput(tools []BetaResponseToolSearchOutputItemParamToolUnion) BetaResponseInputItemUnionParam {
+func BetaResponseInputItemParamOfToolSearchOutput(tools []BetaToolUnionParam) BetaResponseInputItemUnionParam {
 	var toolSearchOutput BetaResponseToolSearchOutputItemParam
 	toolSearchOutput.Tools = tools
 	return BetaResponseInputItemUnionParam{OfToolSearchOutput: &toolSearchOutput}
@@ -19240,8 +19350,8 @@ func (u BetaResponseInputItemUnionParam) GetTools() (res betaResponseInputItemUn
 	return
 }
 
-// Can have the runtime types [_[]BetaResponseToolSearchOutputItemParamToolUnion],
-// [_[]BetaToolUnionParam], [\*[]BetaResponseInputItemMcpListToolsToolParam]
+// Can have the runtime types [_[]BetaToolUnionParam],
+// [_[]BetaResponseInputItemMcpListToolsToolParam]
 type betaResponseInputItemUnionParamTools struct{ any }
 
 // Use the following switch statement to get the type of the union:
@@ -19255,10 +19365,18 @@ type betaResponseInputItemUnionParamTools struct{ any }
 //	}
 func (u betaResponseInputItemUnionParamTools) AsAny() any { return u.any }
 
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemUnionParam) GetError() *string {
+	if vt := u.OfMcpListTools; vt != nil && vt.Error.Valid() {
+		return &vt.Error.Value
+	}
+	return nil
+}
+
 // Returns a subunion which exports methods to access subproperties
 //
 // Or use AsAny() to get the underlying value
-func (u BetaResponseInputItemUnionParam) GetError() (res betaResponseInputItemUnionParamError) {
+func (u BetaResponseInputItemUnionParam) GetErrorUnion() (res betaResponseInputItemUnionParamErrorUnion) {
 	if vt := u.OfMcpListTools; vt != nil && vt.Error.Valid() {
 		res.any = &vt.Error.Value
 	} else if vt := u.OfMcpCall; vt != nil {
@@ -19271,7 +19389,7 @@ func (u BetaResponseInputItemUnionParam) GetError() (res betaResponseInputItemUn
 // [*BetaMcpToolCallErrorMcpProtocolErrorParam],
 // [*BetaMcpToolCallErrorMcpToolExecutionErrorParam],
 // [*BetaMcpToolCallErrorHTTPErrorParam]
-type betaResponseInputItemUnionParamError struct{ any }
+type betaResponseInputItemUnionParamErrorUnion struct{ any }
 
 // Use the following switch statement to get the type of the union:
 //
@@ -19283,10 +19401,10 @@ type betaResponseInputItemUnionParamError struct{ any }
 //	default:
 //	    fmt.Errorf("not present")
 //	}
-func (u betaResponseInputItemUnionParamError) AsAny() any { return u.any }
+func (u betaResponseInputItemUnionParamErrorUnion) AsAny() any { return u.any }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u betaResponseInputItemUnionParamError) GetCode() *int64 {
+func (u betaResponseInputItemUnionParamErrorUnion) GetCode() *int64 {
 	switch vt := u.any.(type) {
 	case *BetaMcpToolCallErrorMcpProtocolErrorParam:
 		return (*int64)(&vt.Code)
@@ -19297,7 +19415,7 @@ func (u betaResponseInputItemUnionParamError) GetCode() *int64 {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u betaResponseInputItemUnionParamError) GetMessage() *string {
+func (u betaResponseInputItemUnionParamErrorUnion) GetMessage() *string {
 	switch vt := u.any.(type) {
 	case *BetaMcpToolCallErrorMcpProtocolErrorParam:
 		return (*string)(&vt.Message)
@@ -19308,7 +19426,7 @@ func (u betaResponseInputItemUnionParamError) GetMessage() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u betaResponseInputItemUnionParamError) GetType() *string {
+func (u betaResponseInputItemUnionParamErrorUnion) GetType() *string {
 	switch vt := u.any.(type) {
 	case *BetaMcpToolCallErrorMcpProtocolErrorParam:
 		return (*string)(&vt.Type)
@@ -19321,7 +19439,7 @@ func (u betaResponseInputItemUnionParamError) GetType() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u betaResponseInputItemUnionParamError) GetContent() *any {
+func (u betaResponseInputItemUnionParamErrorUnion) GetContent() *any {
 	switch vt := u.any.(type) {
 	case *BetaMcpToolCallErrorMcpToolExecutionErrorParam:
 		return &vt.Content
@@ -27535,7 +27653,7 @@ func (r *BetaResponseOutputTextLogprobTopLogprobParam) UnmarshalJSON(data []byte
 // Emitted when an annotation is added to output text content.
 type BetaResponseOutputTextAnnotationAddedEvent struct {
 	// The annotation object being added. (See annotation schema for details.)
-	Annotation BetaResponseOutputTextAnnotationAddedEventAnnotationUnion `json:"annotation" api:"required"`
+	Annotation any `json:"annotation" api:"required"`
 	// The index of the annotation within the content part.
 	AnnotationIndex int64 `json:"annotation_index" api:"required"`
 	// The index of the content part within the output item.
@@ -27569,6 +27687,18 @@ type BetaResponseOutputTextAnnotationAddedEvent struct {
 func (r BetaResponseOutputTextAnnotationAddedEvent) RawJSON() string { return r.JSON.raw }
 func (r *BetaResponseOutputTextAnnotationAddedEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// AsAnnotation decodes the current Annotation value into its typed representation.
+// It returns an independent value; later edits do not mutate Annotation.
+func (r BetaResponseOutputTextAnnotationAddedEvent) AsAnnotation() (BetaResponseOutputTextAnnotationAddedEventAnnotationUnion, error) {
+	var value BetaResponseOutputTextAnnotationAddedEventAnnotationUnion
+	data, err := json.Marshal(r.Annotation)
+	if err != nil {
+		return value, err
+	}
+	err = json.Unmarshal(data, &value)
+	return value, err
 }
 
 // BetaResponseOutputTextAnnotationAddedEventAnnotationUnion contains all possible
@@ -31201,7 +31331,7 @@ type BetaResponseStreamEventUnion struct {
 	// This field is from variant [BetaResponseImageGenCallPartialImageEvent].
 	Size string `json:"size"`
 	// This field is from variant [BetaResponseOutputTextAnnotationAddedEvent].
-	Annotation BetaResponseOutputTextAnnotationAddedEventAnnotationUnion `json:"annotation"`
+	Annotation any `json:"annotation"`
 	// This field is from variant [BetaResponseOutputTextAnnotationAddedEvent].
 	AnnotationIndex int64 `json:"annotation_index"`
 	// This field is from variant [BetaResponseCustomToolCallInputDoneEvent].
@@ -31870,6 +32000,18 @@ func (r *BetaResponseStreamEventUnionLogprobs) UnmarshalJSON(data []byte) error 
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// AsAnnotation decodes the current Annotation value into its typed representation.
+// It returns an independent value; later edits do not mutate Annotation.
+func (r BetaResponseStreamEventUnion) AsAnnotation() (BetaResponseOutputTextAnnotationAddedEventAnnotationUnion, error) {
+	var value BetaResponseOutputTextAnnotationAddedEventAnnotationUnion
+	data, err := json.Marshal(r.Annotation)
+	if err != nil {
+		return value, err
+	}
+	err = json.Unmarshal(data, &value)
+	return value, err
+}
+
 // Configuration options for a text response from the model. Can be plain text or
 // structured JSON data. Learn more:
 //
@@ -32391,9 +32533,6 @@ func (r BetaResponseToolSearchOutputItemParamResp) ToParam() BetaResponseToolSea
 // [BetaCustomTool], [BetaToolSearchOutputNamespaceTool], [BetaToolSearchTool],
 // [BetaWebSearchPreviewTool], [BetaApplyPatchTool].
 //
-// Use the [BetaResponseToolSearchOutputItemParamToolUnionResp.AsAny] method to
-// switch on the variant.
-//
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type BetaResponseToolSearchOutputItemParamToolUnionResp struct {
 	Name       string `json:"name"`
@@ -32645,7 +32784,7 @@ type BetaResponseToolSearchOutputItemParamToolUnionRespFilters struct {
 	// This field is from variant [BetaFileSearchToolFiltersUnion].
 	Value BetaFileSearchToolFiltersComparisonFilterValueUnion `json:"value"`
 	// This field is from variant [BetaFileSearchToolFiltersUnion].
-	Filters []BetaFileSearchToolFiltersCompoundFilterFilterUnion `json:"filters"`
+	Filters []BetaFileSearchToolFiltersCompoundFilterFilter `json:"filters"`
 	// This field is from variant [BetaWebSearchToolFilters].
 	AllowedDomains []string `json:"allowed_domains"`
 	JSON           struct {
@@ -33422,7 +33561,7 @@ const (
 // The properties Tools, Type are required.
 type BetaResponseToolSearchOutputItemParam struct {
 	// The loaded tool definitions returned by the tool search output.
-	Tools []BetaResponseToolSearchOutputItemParamToolUnion `json:"tools,omitzero" api:"required"`
+	Tools []BetaToolUnionParam `json:"tools,omitzero" api:"required"`
 	// The unique ID of this tool search output.
 	ID param.Opt[string] `json:"id,omitzero"`
 	// The unique ID of the tool search call generated by the model.
@@ -33949,7 +34088,7 @@ func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetValue() *BetaF
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetFilters() []BetaFileSearchToolFiltersCompoundFilterFilterUnionParam {
+func (u betaResponseToolSearchOutputItemParamToolUnionFilters) GetFilters() []BetaFileSearchToolFiltersCompoundFilterFilterParam {
 	switch vt := u.any.(type) {
 	case *BetaFileSearchToolFiltersCompoundFilterParam:
 		return vt.Filters
@@ -39934,8 +40073,6 @@ func (r *BetaSkillReferenceParam) UnmarshalJSON(data []byte) error {
 // [BetaCustomTool], [BetaNamespaceTool], [BetaToolSearchTool],
 // [BetaWebSearchPreviewTool], [BetaApplyPatchTool].
 //
-// Use the [BetaToolUnion.AsAny] method to switch on the variant.
-//
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type BetaToolUnion struct {
 	Name       string `json:"name"`
@@ -40174,7 +40311,7 @@ type BetaToolUnionFilters struct {
 	// This field is from variant [BetaFileSearchToolFiltersUnion].
 	Value BetaFileSearchToolFiltersComparisonFilterValueUnion `json:"value"`
 	// This field is from variant [BetaFileSearchToolFiltersUnion].
-	Filters []BetaFileSearchToolFiltersCompoundFilterFilterUnion `json:"filters"`
+	Filters []BetaFileSearchToolFiltersCompoundFilterFilter `json:"filters"`
 	// This field is from variant [BetaWebSearchToolFilters].
 	AllowedDomains []string `json:"allowed_domains"`
 	JSON           struct {
@@ -41454,7 +41591,7 @@ func (u betaToolUnionParamFilters) GetValue() *BetaFileSearchToolFiltersComparis
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u betaToolUnionParamFilters) GetFilters() []BetaFileSearchToolFiltersCompoundFilterFilterUnionParam {
+func (u betaToolUnionParamFilters) GetFilters() []BetaFileSearchToolFiltersCompoundFilterFilterParam {
 	switch vt := u.any.(type) {
 	case *BetaFileSearchToolFiltersCompoundFilterParam:
 		return vt.Filters

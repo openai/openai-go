@@ -928,12 +928,6 @@ type ComparisonFilterValueArrayItemUnionParam = shared.ComparisonFilterValueArra
 // This is an alias to an internal type.
 type CompoundFilter = shared.CompoundFilter
 
-// A filter used to compare a specified attribute key to a given value using a
-// defined comparison operation.
-//
-// This is an alias to an internal type.
-type CompoundFilterFilterUnion = shared.CompoundFilterFilterUnion
-
 // Type of operation: `and` or `or`.
 //
 // This is an alias to an internal type.
@@ -949,12 +943,6 @@ const CompoundFilterTypeOr = shared.CompoundFilterTypeOr
 //
 // This is an alias to an internal type.
 type CompoundFilterParam = shared.CompoundFilterParam
-
-// A filter used to compare a specified attribute key to a given value using a
-// defined comparison operation.
-//
-// This is an alias to an internal type.
-type CompoundFilterFilterUnionParam = shared.CompoundFilterFilterUnionParam
 
 // The input format for the custom tool. Default is unconstrained text.
 //
@@ -1144,6 +1132,39 @@ const ReasoningEffortXhigh = shared.ReasoningEffortXhigh
 
 // Equals "max"
 const ReasoningEffortMax = shared.ReasoningEffortMax
+
+// Combine multiple filters using `and` or `or`.
+//
+// This is an alias to an internal type.
+type RecursiveCompoundFilter = shared.RecursiveCompoundFilter
+
+// A filter used to compare a specified attribute key to a given value using a
+// defined comparison operation.
+//
+// This is an alias to an internal type.
+type RecursiveCompoundFilterFilterUnion = shared.RecursiveCompoundFilterFilterUnion
+
+// Type of operation: `and` or `or`.
+//
+// This is an alias to an internal type.
+type RecursiveCompoundFilterType = shared.RecursiveCompoundFilterType
+
+// Equals "and"
+const RecursiveCompoundFilterTypeAnd = shared.RecursiveCompoundFilterTypeAnd
+
+// Equals "or"
+const RecursiveCompoundFilterTypeOr = shared.RecursiveCompoundFilterTypeOr
+
+// Combine multiple filters using `and` or `or`.
+//
+// This is an alias to an internal type.
+type RecursiveCompoundFilterParam = shared.RecursiveCompoundFilterParam
+
+// A filter used to compare a specified attribute key to a given value using a
+// defined comparison operation.
+//
+// This is an alias to an internal type.
+type RecursiveCompoundFilterFilterUnionParam = shared.RecursiveCompoundFilterFilterUnionParam
 
 // JSON object response format. An older method of generating JSON responses. Using
 // `json_schema` is recommended for models that support it. Note that the model

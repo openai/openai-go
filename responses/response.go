@@ -2132,7 +2132,7 @@ type FileSearchToolFiltersUnion struct {
 	// This field is from variant [shared.ComparisonFilter].
 	Value shared.ComparisonFilterValueUnion `json:"value"`
 	// This field is from variant [shared.CompoundFilter].
-	Filters []shared.CompoundFilterFilterUnion `json:"filters"`
+	Filters []shared.ComparisonFilter `json:"filters"`
 	JSON    struct {
 		Key     respjson.Field
 		Type    respjson.Field
@@ -2282,7 +2282,7 @@ func (u FileSearchToolFiltersUnionParam) GetValue() *shared.ComparisonFilterValu
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u FileSearchToolFiltersUnionParam) GetFilters() []shared.CompoundFilterFilterUnionParam {
+func (u FileSearchToolFiltersUnionParam) GetFilters() []shared.ComparisonFilterParam {
 	if vt := u.OfCompoundFilter; vt != nil {
 		return vt.Filters
 	}
@@ -14932,7 +14932,21 @@ func ResponseInputItemParamOfFunctionCall(arguments string, callID string, name 
 	return ResponseInputItemUnionParam{OfFunctionCall: &functionCall}
 }
 
-func ResponseInputItemParamOfFunctionCallOutput[T string | ResponseFunctionCallOutputItemListParam](output T) ResponseInputItemUnionParam {
+func ResponseInputItemParamOfFunctionCallOutput[T string | ResponseFunctionCallOutputItemListParam](callID string, output T) ResponseInputItemUnionParam {
+	var functionCallOutput ResponseInputItemFunctionCallOutputParam
+	functionCallOutput.CallID = param.NewOpt(callID)
+	switch v := any(output).(type) {
+	case string:
+		functionCallOutput.Output.OfString = param.NewOpt(v)
+	case ResponseFunctionCallOutputItemListParam:
+		functionCallOutput.Output.OfResponseFunctionCallOutputItemArray = v
+	}
+	return ResponseInputItemUnionParam{OfFunctionCallOutput: &functionCallOutput}
+}
+
+func ResponseInputItemParamOfFunctionCallOutputWithoutCallID[
+	T string | ResponseFunctionCallOutputItemListParam,
+](output T) ResponseInputItemUnionParam {
 	var functionCallOutput ResponseInputItemFunctionCallOutputParam
 	switch v := any(output).(type) {
 	case string:
@@ -14949,7 +14963,7 @@ func ResponseInputItemParamOfToolSearchCall(arguments any) ResponseInputItemUnio
 	return ResponseInputItemUnionParam{OfToolSearchCall: &toolSearchCall}
 }
 
-func ResponseInputItemParamOfToolSearchOutput(tools []ResponseToolSearchOutputItemParamToolUnion) ResponseInputItemUnionParam {
+func ResponseInputItemParamOfToolSearchOutput(tools []ToolUnionParam) ResponseInputItemUnionParam {
 	var toolSearchOutput ResponseToolSearchOutputItemParam
 	toolSearchOutput.Tools = tools
 	return ResponseInputItemUnionParam{OfToolSearchOutput: &toolSearchOutput}
@@ -16206,8 +16220,8 @@ func (u ResponseInputItemUnionParam) GetTools() (res responseInputItemUnionParam
 	return
 }
 
-// Can have the runtime types [_[]ResponseToolSearchOutputItemParamToolUnion],
-// [_[]ToolUnionParam], [\*[]ResponseInputItemMcpListToolsToolParam]
+// Can have the runtime types [_[]ToolUnionParam],
+// [_[]ResponseInputItemMcpListToolsToolParam]
 type responseInputItemUnionParamTools struct{ any }
 
 // Use the following switch statement to get the type of the union:
@@ -16221,10 +16235,18 @@ type responseInputItemUnionParamTools struct{ any }
 //	}
 func (u responseInputItemUnionParamTools) AsAny() any { return u.any }
 
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemUnionParam) GetError() *string {
+	if vt := u.OfMcpListTools; vt != nil && vt.Error.Valid() {
+		return &vt.Error.Value
+	}
+	return nil
+}
+
 // Returns a subunion which exports methods to access subproperties
 //
 // Or use AsAny() to get the underlying value
-func (u ResponseInputItemUnionParam) GetError() (res responseInputItemUnionParamError) {
+func (u ResponseInputItemUnionParam) GetErrorUnion() (res responseInputItemUnionParamErrorUnion) {
 	if vt := u.OfMcpListTools; vt != nil && vt.Error.Valid() {
 		res.any = &vt.Error.Value
 	} else if vt := u.OfMcpCall; vt != nil {
@@ -16235,7 +16257,7 @@ func (u ResponseInputItemUnionParam) GetError() (res responseInputItemUnionParam
 
 // Can have the runtime types [*string], [*McpToolCallErrorMcpProtocolErrorParam],
 // [*McpToolCallErrorMcpToolExecutionErrorParam], [*McpToolCallErrorHTTPErrorParam]
-type responseInputItemUnionParamError struct{ any }
+type responseInputItemUnionParamErrorUnion struct{ any }
 
 // Use the following switch statement to get the type of the union:
 //
@@ -16247,10 +16269,10 @@ type responseInputItemUnionParamError struct{ any }
 //	default:
 //	    fmt.Errorf("not present")
 //	}
-func (u responseInputItemUnionParamError) AsAny() any { return u.any }
+func (u responseInputItemUnionParamErrorUnion) AsAny() any { return u.any }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u responseInputItemUnionParamError) GetCode() *int64 {
+func (u responseInputItemUnionParamErrorUnion) GetCode() *int64 {
 	switch vt := u.any.(type) {
 	case *McpToolCallErrorMcpProtocolErrorParam:
 		return (*int64)(&vt.Code)
@@ -16261,7 +16283,7 @@ func (u responseInputItemUnionParamError) GetCode() *int64 {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u responseInputItemUnionParamError) GetMessage() *string {
+func (u responseInputItemUnionParamErrorUnion) GetMessage() *string {
 	switch vt := u.any.(type) {
 	case *McpToolCallErrorMcpProtocolErrorParam:
 		return (*string)(&vt.Message)
@@ -16272,7 +16294,7 @@ func (u responseInputItemUnionParamError) GetMessage() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u responseInputItemUnionParamError) GetType() *string {
+func (u responseInputItemUnionParamErrorUnion) GetType() *string {
 	switch vt := u.any.(type) {
 	case *McpToolCallErrorMcpProtocolErrorParam:
 		return (*string)(&vt.Type)
@@ -16285,7 +16307,7 @@ func (u responseInputItemUnionParamError) GetType() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u responseInputItemUnionParamError) GetContent() *any {
+func (u responseInputItemUnionParamErrorUnion) GetContent() *any {
 	switch vt := u.any.(type) {
 	case *McpToolCallErrorMcpToolExecutionErrorParam:
 		return &vt.Content
@@ -17757,16 +17779,20 @@ func init() {
 	)
 }
 
+func NewResponseInputItemCompactionTriggerParam() ResponseInputItemCompactionTriggerParam {
+	return ResponseInputItemCompactionTriggerParam{
+		Type: "compaction_trigger",
+	}
+}
+
 // Compacts the current context. Must be the final input item.
 //
-// The property Type is required.
+// Use [NewResponseInputItemCompactionTriggerParam] to initialize the constant
+// fields.
 type ResponseInputItemCompactionTriggerParam struct {
 	// The unique ID of this compaction trigger.
 	ID param.Opt[string] `json:"id,omitzero"`
 	// The type of the item. Always `compaction_trigger`.
-	//
-	// This field can be elided, and will marshal its zero value as
-	// "compaction_trigger".
 	Type constant.CompactionTrigger `json:"type" default:"compaction_trigger"`
 	paramObj
 }
@@ -21733,7 +21759,7 @@ func (r *ResponseOutputTextLogprobTopLogprobParam) UnmarshalJSON(data []byte) er
 // Emitted when an annotation is added to output text content.
 type ResponseOutputTextAnnotationAddedEvent struct {
 	// The annotation object being added. (See annotation schema for details.)
-	Annotation ResponseOutputTextAnnotationAddedEventAnnotationUnion `json:"annotation" api:"required"`
+	Annotation any `json:"annotation" api:"required"`
 	// The index of the annotation within the content part.
 	AnnotationIndex int64 `json:"annotation_index" api:"required"`
 	// The index of the content part within the output item.
@@ -21764,6 +21790,18 @@ type ResponseOutputTextAnnotationAddedEvent struct {
 func (r ResponseOutputTextAnnotationAddedEvent) RawJSON() string { return r.JSON.raw }
 func (r *ResponseOutputTextAnnotationAddedEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// AsAnnotation decodes the current Annotation value into its typed representation.
+// It returns an independent value; later edits do not mutate Annotation.
+func (r ResponseOutputTextAnnotationAddedEvent) AsAnnotation() (ResponseOutputTextAnnotationAddedEventAnnotationUnion, error) {
+	var value ResponseOutputTextAnnotationAddedEventAnnotationUnion
+	data, err := json.Marshal(r.Annotation)
+	if err != nil {
+		return value, err
+	}
+	err = json.Unmarshal(data, &value)
+	return value, err
 }
 
 // ResponseOutputTextAnnotationAddedEventAnnotationUnion contains all possible
@@ -24850,7 +24888,7 @@ type ResponseStreamEventUnion struct {
 	// This field is from variant [ResponseImageGenCallPartialImageEvent].
 	Size string `json:"size"`
 	// This field is from variant [ResponseOutputTextAnnotationAddedEvent].
-	Annotation ResponseOutputTextAnnotationAddedEventAnnotationUnion `json:"annotation"`
+	Annotation any `json:"annotation"`
 	// This field is from variant [ResponseOutputTextAnnotationAddedEvent].
 	AnnotationIndex int64 `json:"annotation_index"`
 	// This field is from variant [ResponseCustomToolCallInputDoneEvent].
@@ -25499,6 +25537,18 @@ func (r *ResponseStreamEventUnionLogprobs) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// AsAnnotation decodes the current Annotation value into its typed representation.
+// It returns an independent value; later edits do not mutate Annotation.
+func (r ResponseStreamEventUnion) AsAnnotation() (ResponseOutputTextAnnotationAddedEventAnnotationUnion, error) {
+	var value ResponseOutputTextAnnotationAddedEventAnnotationUnion
+	data, err := json.Marshal(r.Annotation)
+	if err != nil {
+		return value, err
+	}
+	err = json.Unmarshal(data, &value)
+	return value, err
+}
+
 // Configuration options for a text response from the model. Can be plain text or
 // structured JSON data. Learn more:
 //
@@ -25937,9 +25987,6 @@ func (r ResponseToolSearchOutputItemParamResp) ToParam() ResponseToolSearchOutpu
 // [CustomTool], [ToolSearchOutputNamespaceTool], [ToolSearchTool],
 // [WebSearchPreviewTool], [ApplyPatchTool].
 //
-// Use the [ResponseToolSearchOutputItemParamToolUnionResp.AsAny] method to switch
-// on the variant.
-//
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ResponseToolSearchOutputItemParamToolUnionResp struct {
 	Name       string `json:"name"`
@@ -26190,7 +26237,7 @@ type ResponseToolSearchOutputItemParamToolUnionRespFilters struct {
 	// This field is from variant [FileSearchToolFiltersUnion].
 	Value shared.ComparisonFilterValueUnion `json:"value"`
 	// This field is from variant [FileSearchToolFiltersUnion].
-	Filters []shared.CompoundFilterFilterUnion `json:"filters"`
+	Filters []shared.ComparisonFilter `json:"filters"`
 	// This field is from variant [WebSearchToolFilters].
 	AllowedDomains []string `json:"allowed_domains"`
 	JSON           struct {
@@ -26947,7 +26994,7 @@ const (
 // The properties Tools, Type are required.
 type ResponseToolSearchOutputItemParam struct {
 	// The loaded tool definitions returned by the tool search output.
-	Tools []ResponseToolSearchOutputItemParamToolUnion `json:"tools,omitzero" api:"required"`
+	Tools []ToolUnionParam `json:"tools,omitzero" api:"required"`
 	// The unique ID of this tool search output.
 	ID param.Opt[string] `json:"id,omitzero"`
 	// The unique ID of the tool search call generated by the model.
@@ -27471,7 +27518,7 @@ func (u responseToolSearchOutputItemParamToolUnionFilters) GetValue() *shared.Co
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u responseToolSearchOutputItemParamToolUnionFilters) GetFilters() []shared.CompoundFilterFilterUnionParam {
+func (u responseToolSearchOutputItemParamToolUnionFilters) GetFilters() []shared.ComparisonFilterParam {
 	switch vt := u.any.(type) {
 	case *shared.CompoundFilterParam:
 		return vt.Filters
@@ -32550,8 +32597,6 @@ func (r *SkillReferenceParam) UnmarshalJSON(data []byte) error {
 // [ToolImageGeneration], [ToolLocalShell], [FunctionShellTool], [CustomTool],
 // [NamespaceTool], [ToolSearchTool], [WebSearchPreviewTool], [ApplyPatchTool].
 //
-// Use the [ToolUnion.AsAny] method to switch on the variant.
-//
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ToolUnion struct {
 	Name       string `json:"name"`
@@ -32787,7 +32832,7 @@ type ToolUnionFilters struct {
 	// This field is from variant [FileSearchToolFiltersUnion].
 	Value shared.ComparisonFilterValueUnion `json:"value"`
 	// This field is from variant [FileSearchToolFiltersUnion].
-	Filters []shared.CompoundFilterFilterUnion `json:"filters"`
+	Filters []shared.ComparisonFilter `json:"filters"`
 	// This field is from variant [WebSearchToolFilters].
 	AllowedDomains []string `json:"allowed_domains"`
 	JSON           struct {
@@ -33958,7 +34003,7 @@ func (u toolUnionParamFilters) GetValue() *shared.ComparisonFilterValueUnionPara
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u toolUnionParamFilters) GetFilters() []shared.CompoundFilterFilterUnionParam {
+func (u toolUnionParamFilters) GetFilters() []shared.ComparisonFilterParam {
 	switch vt := u.any.(type) {
 	case *shared.CompoundFilterParam:
 		return vt.Filters
