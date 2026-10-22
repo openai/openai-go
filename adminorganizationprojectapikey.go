@@ -118,10 +118,12 @@ func (r *AdminOrganizationProjectAPIKeyService) ListAutoPaging(ctx context.Conte
 	return pagination.NewConversationCursorPageAutoPager(r.List(ctx, projectID, query, opts...))
 }
 
-// Deletes an API key from the project.
+// Deletes an API key from the project, including keys owned by service accounts.
 //
-// Returns confirmation of the key deletion, or an error if the key belonged to a
-// service account.
+// Requires permission to write project API keys. Deleting a service-account key
+// does not delete the service account or its other keys.
+//
+// Returns confirmation of the key deletion.
 func (r *AdminOrganizationProjectAPIKeyService) Delete(ctx context.Context, projectID string, apiKeyID string, opts ...option.RequestOption) (res *AdminOrganizationProjectAPIKeyDeleteResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
