@@ -1624,7 +1624,7 @@ type ResponseFormatJSONSchemaJSONSchemaParam struct {
 	Description param.Opt[string] `json:"description,omitzero"`
 	// The schema for the response format, described as a JSON Schema object. Learn how
 	// to build JSON schemas [here](https://json-schema.org/).
-	Schema map[string]any `json:"schema,omitzero"`
+	Schema any `json:"schema,omitzero"`
 	paramObj
 }
 

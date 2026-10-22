@@ -60,7 +60,7 @@ func TestAdminOrganizationProjectAPIKeyUpdateWithOptionalParams(t *testing.T) {
 		"project_id",
 		"api_key_id",
 		openai.AdminOrganizationProjectAPIKeyUpdateParams{
-			ExpiresInSeconds: openai.Int(1),
+			ExpiresInSeconds: 1,
 			Scopes:           []string{"api.all.read"},
 		},
 	)

@@ -53,29 +53,14 @@ func NewBetaAgentSessionService(opts ...option.RequestOption) (r BetaAgentSessio
 // the session or streams its events when stream is true. See
 // [running sessions](https://developers.openai.com/api/docs/guides/agents-api/sessions).
 func (r *BetaAgentSessionService) New(ctx context.Context, body BetaAgentSessionNewParams, opts ...option.RequestOption) (res *AgentSession, err error) {
-	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
-	opts = slices.Concat(preClientOpts, r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "agents=v1")}, opts...)
-	path := "agents/sessions"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return res, err
+	return betaAgentSessionNew(r, ctx, body, opts...)
 }
 
 // Creates a managed agent session, optionally submits initial input, and returns
 // the session or streams its events when stream is true. See
 // [running sessions](https://developers.openai.com/api/docs/guides/agents-api/sessions).
 func (r *BetaAgentSessionService) NewStreaming(ctx context.Context, body BetaAgentSessionNewParams, opts ...option.RequestOption) (stream *ssestream.Stream[AgentSessionEventUnion]) {
-	var (
-		raw *http.Response
-		err error
-	)
-	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
-	opts = slices.Concat(preClientOpts, r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "agents=v1")}, opts...)
-	opts = append(opts, option.WithJSONSet("stream", true))
-	path := "agents/sessions"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
-	return ssestream.NewStream[AgentSessionEventUnion](ssestream.NewDecoder(raw), err)
+	return betaAgentSessionNewStreaming(r, ctx, body, opts...)
 }
 
 // Retrieves the current state of a managed agent session. See
@@ -156,6 +141,10 @@ func (r *BetaAgentSessionService) Delete(ctx context.Context, sessionID string, 
 }
 
 type BetaAgentSessionNewParams struct {
+	// ToolHandlers runs local functions during NewStreaming iteration. This beta
+	// helper option is never sent to the API. Use NewStreaming, not New, with handlers.
+	ToolHandlers map[string]AgentToolHandler `json:"-"`
+
 	// An inline execution environment or a reference to an environment template.
 	Environment EnvironmentParamUnion `json:"environment,omitzero" api:"required"`
 	// The ID of a saved reusable agent. Omit `agent` to use its configuration

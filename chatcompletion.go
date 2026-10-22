@@ -1081,8 +1081,6 @@ type ChatCompletionChunkChoice struct {
 	// can arrive in partial updates with an ID, base64 data, or transcript text. The
 	// final audio update contains only its expiry timestamp.
 	Delta ChatCompletionChunkChoiceDelta `json:"delta" api:"required"`
-	// The index of the choice in the list of choices.
-	Index int64 `json:"index" api:"required"`
 	// The reason the model stopped generating tokens. This will be `stop` if the model
 	// hit a natural stop point or a provided stop sequence, `length` if the maximum
 	// number of tokens specified in the request was reached, `content_filter` if
@@ -1093,13 +1091,15 @@ type ChatCompletionChunkChoice struct {
 	//
 	// Any of "stop", "length", "tool_calls", "content_filter", "function_call".
 	FinishReason string `json:"finish_reason" api:"nullable"`
+	// The index of the choice in the list of choices.
+	Index int64 `json:"index" api:"required"`
 	// Log probability information for the choice.
 	Logprobs ChatCompletionChunkChoiceLogprobs `json:"logprobs" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Delta        respjson.Field
-		Index        respjson.Field
 		FinishReason respjson.Field
+		Index        respjson.Field
 		Logprobs     respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string

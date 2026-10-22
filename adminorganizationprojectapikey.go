@@ -299,7 +299,7 @@ type AdminOrganizationProjectAPIKeyUpdateParams struct {
 	// the organization and project expiry policies. Expired keys cannot be updated.
 	// Retrying resets the expiry relative to the new request. Omit to keep the current
 	// expiration.
-	ExpiresInSeconds param.Opt[int64] `json:"expires_in_seconds,omitzero"`
+	ExpiresInSeconds int64 `json:"expires_in_seconds,omitzero"`
 	// Replace the API key scope restrictions. Omit to leave scopes unchanged. An empty
 	// array removes key restrictions (All permissions), subject to the owner's
 	// effective permissions. Use ["api.all.read"] for read-only access. Scopes do not

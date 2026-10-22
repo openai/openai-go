@@ -10918,7 +10918,7 @@ func (u ResponseFunctionWebSearchActionUnion) AsAny() anyResponseFunctionWebSear
 	case "open_page":
 		return u.AsOpenPage()
 	case "find_in_page":
-		return u.AsFindInPage()
+		return u.AsFind()
 	}
 	return nil
 }
@@ -10933,7 +10933,7 @@ func (u ResponseFunctionWebSearchActionUnion) AsOpenPage() (v ResponseFunctionWe
 	return
 }
 
-func (u ResponseFunctionWebSearchActionUnion) AsFindInPage() (v ResponseFunctionWebSearchActionFind) {
+func (u ResponseFunctionWebSearchActionUnion) AsFind() (v ResponseFunctionWebSearchActionFind) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -11085,14 +11085,14 @@ func (r *ResponseFunctionWebSearchParam) UnmarshalJSON(data []byte) error {
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ResponseFunctionWebSearchActionUnionParam struct {
-	OfSearch     *ResponseFunctionWebSearchActionSearchParam   `json:",omitzero,inline"`
-	OfOpenPage   *ResponseFunctionWebSearchActionOpenPageParam `json:",omitzero,inline"`
-	OfFindInPage *ResponseFunctionWebSearchActionFindParam     `json:",omitzero,inline"`
+	OfSearch   *ResponseFunctionWebSearchActionSearchParam   `json:",omitzero,inline"`
+	OfOpenPage *ResponseFunctionWebSearchActionOpenPageParam `json:",omitzero,inline"`
+	OfFind     *ResponseFunctionWebSearchActionFindParam     `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ResponseFunctionWebSearchActionUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfSearch, u.OfOpenPage, u.OfFindInPage)
+	return param.MarshalUnion(u, u.OfSearch, u.OfOpenPage, u.OfFind)
 }
 func (u *ResponseFunctionWebSearchActionUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -11103,8 +11103,8 @@ func (u *ResponseFunctionWebSearchActionUnionParam) asAny() any {
 		return u.OfSearch
 	} else if !param.IsOmitted(u.OfOpenPage) {
 		return u.OfOpenPage
-	} else if !param.IsOmitted(u.OfFindInPage) {
-		return u.OfFindInPage
+	} else if !param.IsOmitted(u.OfFind) {
+		return u.OfFind
 	}
 	return nil
 }
@@ -11135,7 +11135,7 @@ func (u ResponseFunctionWebSearchActionUnionParam) GetSources() []ResponseFuncti
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponseFunctionWebSearchActionUnionParam) GetPattern() *string {
-	if vt := u.OfFindInPage; vt != nil {
+	if vt := u.OfFind; vt != nil {
 		return &vt.Pattern
 	}
 	return nil
@@ -11147,7 +11147,7 @@ func (u ResponseFunctionWebSearchActionUnionParam) GetType() *string {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfOpenPage; vt != nil {
 		return (*string)(&vt.Type)
-	} else if vt := u.OfFindInPage; vt != nil {
+	} else if vt := u.OfFind; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -11157,7 +11157,7 @@ func (u ResponseFunctionWebSearchActionUnionParam) GetType() *string {
 func (u ResponseFunctionWebSearchActionUnionParam) GetURL() *string {
 	if vt := u.OfOpenPage; vt != nil && vt.URL.Valid() {
 		return &vt.URL.Value
-	} else if vt := u.OfFindInPage; vt != nil {
+	} else if vt := u.OfFind; vt != nil {
 		return (*string)(&vt.URL)
 	}
 	return nil
@@ -14917,7 +14917,7 @@ func ResponseInputItemParamOfWebSearchCall[
 	case ResponseFunctionWebSearchActionOpenPageParam:
 		webSearchCall.Action.OfOpenPage = &v
 	case ResponseFunctionWebSearchActionFindParam:
-		webSearchCall.Action.OfFindInPage = &v
+		webSearchCall.Action.OfFind = &v
 	}
 	webSearchCall.ID = id
 	webSearchCall.Status = status
@@ -18164,21 +18164,21 @@ func (r *ResponseInputTextContentPromptCacheBreakpointParam) UnmarshalJSON(data 
 }
 
 // ResponseItemUnion contains all possible properties and values from
-// [ResponseInputMessageItem], [ResponseOutputMessage],
-// [ResponseFileSearchToolCall], [ResponseComputerToolCall],
-// [ResponseComputerToolCallOutputItem], [ResponseFunctionWebSearch],
-// [ResponseFunctionToolCallItem], [ResponseFunctionToolCallOutputItem],
-// [ResponseToolSearchCall], [ResponseToolSearchOutputItem],
-// [ResponseItemAdditionalTools], [ResponseConfigurationUpdateItem],
-// [ResponseReasoningItem], [ResponseItemProgram], [ResponseItemProgramOutput],
-// [ResponseCompactionItem], [ResponseItemImageGenerationCall],
-// [ResponseCodeInterpreterToolCall], [ResponseItemLocalShellCall],
-// [ResponseItemLocalShellCallOutput], [ResponseFunctionShellToolCall],
-// [ResponseFunctionShellToolCallOutput], [ResponseApplyPatchToolCall],
-// [ResponseApplyPatchToolCallOutput], [ResponseItemMcpListTools],
-// [ResponseItemMcpApprovalRequest], [ResponseItemMcpApprovalResponse],
-// [ResponseItemMcpCall], [ResponseCustomToolCallItem],
-// [ResponseCustomToolCallOutputItem].
+// [ResponseInputMessageItem], [ResponseFileSearchToolCall],
+// [ResponseComputerToolCall], [ResponseComputerToolCallOutputItem],
+// [ResponseFunctionWebSearch], [ResponseFunctionToolCallItem],
+// [ResponseFunctionToolCallOutputItem], [ResponseToolSearchCall],
+// [ResponseToolSearchOutputItem], [ResponseItemAdditionalTools],
+// [ResponseConfigurationUpdateItem], [ResponseReasoningItem],
+// [ResponseItemProgram], [ResponseItemProgramOutput], [ResponseCompactionItem],
+// [ResponseItemImageGenerationCall], [ResponseCodeInterpreterToolCall],
+// [ResponseItemLocalShellCall], [ResponseItemLocalShellCallOutput],
+// [ResponseFunctionShellToolCall], [ResponseFunctionShellToolCallOutput],
+// [ResponseApplyPatchToolCall], [ResponseApplyPatchToolCallOutput],
+// [ResponseItemMcpListTools], [ResponseItemMcpApprovalRequest],
+// [ResponseItemMcpApprovalResponse], [ResponseItemMcpCall],
+// [ResponseCustomToolCallItem], [ResponseCustomToolCallOutputItem],
+// [ResponseOutputMessage].
 //
 // Use the [ResponseItemUnion.AsAny] method to switch on the variant.
 //
@@ -18336,7 +18336,6 @@ type anyResponseItem interface {
 }
 
 func (ResponseInputMessageItem) implResponseItemUnion()            {}
-func (ResponseOutputMessage) implResponseItemUnion()               {}
 func (ResponseFileSearchToolCall) implResponseItemUnion()          {}
 func (ResponseComputerToolCall) implResponseItemUnion()            {}
 func (ResponseComputerToolCallOutputItem) implResponseItemUnion()  {}
@@ -18365,12 +18364,12 @@ func (ResponseItemMcpApprovalResponse) implResponseItemUnion()     {}
 func (ResponseItemMcpCall) implResponseItemUnion()                 {}
 func (ResponseCustomToolCallItem) implResponseItemUnion()          {}
 func (ResponseCustomToolCallOutputItem) implResponseItemUnion()    {}
+func (ResponseOutputMessage) implResponseItemUnion()               {}
 
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseItemUnion.AsAny().(type) {
 //	case responses.ResponseInputMessageItem:
-//	case responses.ResponseOutputMessage:
 //	case responses.ResponseFileSearchToolCall:
 //	case responses.ResponseComputerToolCall:
 //	case responses.ResponseComputerToolCallOutputItem:
@@ -18399,18 +18398,12 @@ func (ResponseCustomToolCallOutputItem) implResponseItemUnion()    {}
 //	case responses.ResponseItemMcpCall:
 //	case responses.ResponseCustomToolCallItem:
 //	case responses.ResponseCustomToolCallOutputItem:
+//	case responses.ResponseOutputMessage:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
 func (u ResponseItemUnion) AsAny() anyResponseItem {
 	switch u.Type {
-	case "message":
-		switch u.Role {
-		case "developer", "system", "user":
-			return u.AsMessage()
-		case "assistant":
-			return u.AsOutputMessage()
-		}
 	case "file_search_call":
 		return u.AsFileSearchCall()
 	case "computer_call":
@@ -18467,16 +18460,13 @@ func (u ResponseItemUnion) AsAny() anyResponseItem {
 		return u.AsCustomToolCall()
 	case "custom_tool_call_output":
 		return u.AsCustomToolCallOutput()
+	case "message":
+		return u.AsOutputMessage()
 	}
 	return nil
 }
 
 func (u ResponseItemUnion) AsMessage() (v ResponseInputMessageItem) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u ResponseItemUnion) AsOutputMessage() (v ResponseOutputMessage) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -18617,6 +18607,11 @@ func (u ResponseItemUnion) AsCustomToolCall() (v ResponseCustomToolCallItem) {
 }
 
 func (u ResponseItemUnion) AsCustomToolCallOutput() (v ResponseCustomToolCallOutputItem) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseItemUnion) AsOutputMessage() (v ResponseOutputMessage) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -19645,12 +19640,10 @@ func (r *ResponseMcpListToolsInProgressEvent) UnmarshalJSON(data []byte) error {
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ResponseOutputItemUnion struct {
-	ID string `json:"id"`
-	// This field is a union of [[]ResponseOutputMessageContentUnion],
-	// [[]ResponseReasoningItemContent]
-	Content ResponseOutputItemUnionContent `json:"content"`
-	Role    string                         `json:"role"`
-	Status  string                         `json:"status"`
+	ID      string                              `json:"id"`
+	Content []ResponseOutputMessageContentUnion `json:"content"`
+	Role    string                              `json:"role"`
+	Status  string                              `json:"status"`
 	// Any of "message", "file_search_call", "function_call", "function_call_output",
 	// "web_search_call", "computer_call", "computer_call_output", "reasoning",
 	// "program", "program_output", "tool_search_call", "tool_search_output",
@@ -20061,34 +20054,6 @@ func (u ResponseOutputItemUnion) AsCustomToolCallOutput() (v ResponseCustomToolC
 func (u ResponseOutputItemUnion) RawJSON() string { return u.JSON.raw }
 
 func (r *ResponseOutputItemUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// ResponseOutputItemUnionContent is an implicit subunion of
-// [ResponseOutputItemUnion]. ResponseOutputItemUnionContent provides convenient
-// access to the sub-properties of the union.
-//
-// For type safety it is recommended to directly use a variant of the
-// [ResponseOutputItemUnion].
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfResponseOutputMessageContentArray
-// OfResponseReasoningItemContentArray]
-type ResponseOutputItemUnionContent struct {
-	// This field will be present if the value is a
-	// [[]ResponseOutputMessageContentUnion] instead of an object.
-	OfResponseOutputMessageContentArray []ResponseOutputMessageContentUnion `json:",inline"`
-	// This field will be present if the value is a [[]ResponseReasoningItemContent]
-	// instead of an object.
-	OfResponseReasoningItemContentArray []ResponseReasoningItemContent `json:",inline"`
-	JSON                                struct {
-		OfResponseOutputMessageContentArray respjson.Field
-		OfResponseReasoningItemContentArray respjson.Field
-		raw                                 string
-	} `json:"-"`
-}
-
-func (r *ResponseOutputItemUnionContent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -24783,6 +24748,7 @@ func (r *ResponseSteerRequiredInputMcpApprovalResponse) UnmarshalJSON(data []byt
 // [ResponseFunctionCallArgumentsDeltaEvent],
 // [ResponseFunctionCallArgumentsDoneEvent], [ResponseShellCallCommandAddedEvent],
 // [ResponseShellCallCommandDeltaEvent], [ResponseShellCallCommandDoneEvent],
+// [ResponseShellCallOutputContentDeltaEvent],
 // [ResponseShellCallOutputContentDoneEvent], [ResponseInProgressEvent],
 // [ResponseFailedEvent], [ResponseIncompleteEvent],
 // [ResponseOutputItemAddedEvent], [ResponseOutputItemDoneEvent],
@@ -24822,6 +24788,7 @@ type ResponseStreamEventUnion struct {
 	// "response.file_search_call.searching", "response.function_call_arguments.delta",
 	// "response.function_call_arguments.done", "response.shell_call_command.added",
 	// "response.shell_call_command.delta", "response.shell_call_command.done",
+	// "response.shell_call_output_content.delta",
 	// "response.shell_call_output_content.done", "response.in_progress",
 	// "response.failed", "response.incomplete", "response.output_item.added",
 	// "response.output_item.done", "response.reasoning_summary_part.added",
@@ -24959,6 +24926,7 @@ func (ResponseFunctionCallArgumentsDoneEvent) implResponseStreamEventUnion()    
 func (ResponseShellCallCommandAddedEvent) implResponseStreamEventUnion()           {}
 func (ResponseShellCallCommandDeltaEvent) implResponseStreamEventUnion()           {}
 func (ResponseShellCallCommandDoneEvent) implResponseStreamEventUnion()            {}
+func (ResponseShellCallOutputContentDeltaEvent) implResponseStreamEventUnion()     {}
 func (ResponseShellCallOutputContentDoneEvent) implResponseStreamEventUnion()      {}
 func (ResponseInProgressEvent) implResponseStreamEventUnion()                      {}
 func (ResponseFailedEvent) implResponseStreamEventUnion()                          {}
@@ -25021,6 +24989,7 @@ func (ResponseCustomToolCallInputDoneEvent) implResponseStreamEventUnion()      
 //	case responses.ResponseShellCallCommandAddedEvent:
 //	case responses.ResponseShellCallCommandDeltaEvent:
 //	case responses.ResponseShellCallCommandDoneEvent:
+//	case responses.ResponseShellCallOutputContentDeltaEvent:
 //	case responses.ResponseShellCallOutputContentDoneEvent:
 //	case responses.ResponseInProgressEvent:
 //	case responses.ResponseFailedEvent:
@@ -25107,6 +25076,8 @@ func (u ResponseStreamEventUnion) AsAny() anyResponseStreamEvent {
 		return u.AsResponseShellCallCommandDelta()
 	case "response.shell_call_command.done":
 		return u.AsResponseShellCallCommandDone()
+	case "response.shell_call_output_content.delta":
+		return u.AsResponseShellCallOutputContentDelta()
 	case "response.shell_call_output_content.done":
 		return u.AsResponseShellCallOutputContentDone()
 	case "response.in_progress":
@@ -25292,6 +25263,11 @@ func (u ResponseStreamEventUnion) AsResponseShellCallCommandDelta() (v ResponseS
 }
 
 func (u ResponseStreamEventUnion) AsResponseShellCallCommandDone() (v ResponseShellCallCommandDoneEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseStreamEventUnion) AsResponseShellCallOutputContentDelta() (v ResponseShellCallOutputContentDeltaEvent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -30147,22 +30123,22 @@ func (r *ResponsesServerEventUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// unmarshalWebsocketEvent decodes only the event selected by its type. Public
+// unmarshalWebsocketEventWithRawType decodes only the event selected by its type. Public
 // UnmarshalJSON keeps the existing general-purpose union decoding behavior.
-func (r *ResponsesServerEventUnion) unmarshalWebsocketEvent(data []byte) error {
+func (r *ResponsesServerEventUnion) unmarshalWebsocketEventWithRawType(data []byte) error {
 	var envelope struct {
-		Type string `json:"type"`
-		JSON struct {
-			Type respjson.Field
-		} `json:"-"`
+		Type json.RawMessage `json:"type"`
 	}
-	if err := apijson.UnmarshalRoot(data, &envelope); err != nil {
+	if err := json.Unmarshal(data, &envelope); err != nil {
 		return err
 	}
-	eventType := envelope.Type
+	var eventType string
+	if err := json.Unmarshal(envelope.Type, &eventType); err != nil {
+		return err
+	}
 	*r = ResponsesServerEventUnion{Type: eventType}
 	r.JSON.raw = string(data)
-	r.JSON.Type = envelope.JSON.Type
+	r.JSON.Type = respjson.NewField(string(envelope.Type))
 	switch eventType {
 	case "response.audio.delta":
 		if err := apijson.UnmarshalRoot(data, &r.OfResponsesServerEventResponseAudioWsDelta); err != nil {

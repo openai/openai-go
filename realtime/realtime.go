@@ -6427,7 +6427,7 @@ func (r *RealtimeSessionCreateRequestMaxOutputTokensUnion) UnmarshalJSON(data []
 }
 
 // The Realtime model used for this session.
-type RealtimeSessionCreateRequestModel string
+type RealtimeSessionCreateRequestModel = string
 
 const (
 	RealtimeSessionCreateRequestModelGPTRealtime                        RealtimeSessionCreateRequestModel = "gpt-realtime"

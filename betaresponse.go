@@ -22196,23 +22196,23 @@ func (r *BetaResponseInputTextContentPromptCacheBreakpointParam) UnmarshalJSON(d
 }
 
 // BetaResponseItemUnion contains all possible properties and values from
-// [BetaResponseInputMessageItem], [BetaResponseOutputMessage],
-// [BetaResponseFileSearchToolCall], [BetaResponseComputerToolCall],
-// [BetaResponseComputerToolCallOutputItem], [BetaResponseFunctionWebSearch],
-// [BetaResponseFunctionToolCallItem], [BetaResponseFunctionToolCallOutputItem],
-// [BetaResponseItemAgentMessage], [BetaResponseItemMultiAgentCall],
-// [BetaResponseItemMultiAgentCallOutput], [BetaResponseToolSearchCall],
-// [BetaResponseToolSearchOutputItem], [BetaResponseItemAdditionalTools],
-// [BetaResponseConfigurationUpdateItem], [BetaResponseReasoningItem],
-// [BetaResponseItemProgram], [BetaResponseItemProgramOutput],
-// [BetaResponseCompactionItem], [BetaResponseItemImageGenerationCall],
-// [BetaResponseCodeInterpreterToolCall], [BetaResponseItemLocalShellCall],
-// [BetaResponseItemLocalShellCallOutput], [BetaResponseFunctionShellToolCall],
-// [BetaResponseFunctionShellToolCallOutput], [BetaResponseApplyPatchToolCall],
-// [BetaResponseApplyPatchToolCallOutput], [BetaResponseItemMcpListTools],
-// [BetaResponseItemMcpApprovalRequest], [BetaResponseItemMcpApprovalResponse],
-// [BetaResponseItemMcpCall], [BetaResponseCustomToolCallItem],
-// [BetaResponseCustomToolCallOutputItem].
+// [BetaResponseInputMessageItem], [BetaResponseFileSearchToolCall],
+// [BetaResponseComputerToolCall], [BetaResponseComputerToolCallOutputItem],
+// [BetaResponseFunctionWebSearch], [BetaResponseFunctionToolCallItem],
+// [BetaResponseFunctionToolCallOutputItem], [BetaResponseItemAgentMessage],
+// [BetaResponseItemMultiAgentCall], [BetaResponseItemMultiAgentCallOutput],
+// [BetaResponseToolSearchCall], [BetaResponseToolSearchOutputItem],
+// [BetaResponseItemAdditionalTools], [BetaResponseConfigurationUpdateItem],
+// [BetaResponseReasoningItem], [BetaResponseItemProgram],
+// [BetaResponseItemProgramOutput], [BetaResponseCompactionItem],
+// [BetaResponseItemImageGenerationCall], [BetaResponseCodeInterpreterToolCall],
+// [BetaResponseItemLocalShellCall], [BetaResponseItemLocalShellCallOutput],
+// [BetaResponseFunctionShellToolCall], [BetaResponseFunctionShellToolCallOutput],
+// [BetaResponseApplyPatchToolCall], [BetaResponseApplyPatchToolCallOutput],
+// [BetaResponseItemMcpListTools], [BetaResponseItemMcpApprovalRequest],
+// [BetaResponseItemMcpApprovalResponse], [BetaResponseItemMcpCall],
+// [BetaResponseCustomToolCallItem], [BetaResponseCustomToolCallOutputItem],
+// [BetaResponseOutputMessage].
 //
 // Use the [BetaResponseItemUnion.AsAny] method to switch on the variant.
 //
@@ -22405,7 +22405,6 @@ type anyBetaResponseItem interface {
 }
 
 func (BetaResponseInputMessageItem) implBetaResponseItemUnion()            {}
-func (BetaResponseOutputMessage) implBetaResponseItemUnion()               {}
 func (BetaResponseFileSearchToolCall) implBetaResponseItemUnion()          {}
 func (BetaResponseComputerToolCall) implBetaResponseItemUnion()            {}
 func (BetaResponseComputerToolCallOutputItem) implBetaResponseItemUnion()  {}
@@ -22437,12 +22436,12 @@ func (BetaResponseItemMcpApprovalResponse) implBetaResponseItemUnion()     {}
 func (BetaResponseItemMcpCall) implBetaResponseItemUnion()                 {}
 func (BetaResponseCustomToolCallItem) implBetaResponseItemUnion()          {}
 func (BetaResponseCustomToolCallOutputItem) implBetaResponseItemUnion()    {}
+func (BetaResponseOutputMessage) implBetaResponseItemUnion()               {}
 
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := BetaResponseItemUnion.AsAny().(type) {
 //	case openai.BetaResponseInputMessageItem:
-//	case openai.BetaResponseOutputMessage:
 //	case openai.BetaResponseFileSearchToolCall:
 //	case openai.BetaResponseComputerToolCall:
 //	case openai.BetaResponseComputerToolCallOutputItem:
@@ -22474,18 +22473,12 @@ func (BetaResponseCustomToolCallOutputItem) implBetaResponseItemUnion()    {}
 //	case openai.BetaResponseItemMcpCall:
 //	case openai.BetaResponseCustomToolCallItem:
 //	case openai.BetaResponseCustomToolCallOutputItem:
+//	case openai.BetaResponseOutputMessage:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
 func (u BetaResponseItemUnion) AsAny() anyBetaResponseItem {
 	switch u.Type {
-	case "message":
-		switch u.Role {
-		case "developer", "system", "user":
-			return u.AsMessage()
-		case "assistant":
-			return u.AsOutputMessage()
-		}
 	case "file_search_call":
 		return u.AsFileSearchCall()
 	case "computer_call":
@@ -22548,16 +22541,13 @@ func (u BetaResponseItemUnion) AsAny() anyBetaResponseItem {
 		return u.AsCustomToolCall()
 	case "custom_tool_call_output":
 		return u.AsCustomToolCallOutput()
+	case "message":
+		return u.AsOutputMessage()
 	}
 	return nil
 }
 
 func (u BetaResponseItemUnion) AsMessage() (v BetaResponseInputMessageItem) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u BetaResponseItemUnion) AsOutputMessage() (v BetaResponseOutputMessage) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -22713,6 +22703,11 @@ func (u BetaResponseItemUnion) AsCustomToolCall() (v BetaResponseCustomToolCallI
 }
 
 func (u BetaResponseItemUnion) AsCustomToolCallOutput() (v BetaResponseCustomToolCallOutputItem) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseItemUnion) AsOutputMessage() (v BetaResponseOutputMessage) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -31170,6 +31165,7 @@ func (r *BetaResponseSteerRequiredInputMcpApprovalResponse) UnmarshalJSON(data [
 // [BetaResponseShellCallCommandAddedEvent],
 // [BetaResponseShellCallCommandDeltaEvent],
 // [BetaResponseShellCallCommandDoneEvent],
+// [BetaResponseShellCallOutputContentDeltaEvent],
 // [BetaResponseShellCallOutputContentDoneEvent], [BetaResponseInProgressEvent],
 // [BetaResponseFailedEvent], [BetaResponseIncompleteEvent],
 // [BetaResponseOutputItemAddedEvent], [BetaResponseOutputItemDoneEvent],
@@ -31215,6 +31211,7 @@ type BetaResponseStreamEventUnion struct {
 	// "response.file_search_call.searching", "response.function_call_arguments.delta",
 	// "response.function_call_arguments.done", "response.shell_call_command.added",
 	// "response.shell_call_command.delta", "response.shell_call_command.done",
+	// "response.shell_call_output_content.delta",
 	// "response.shell_call_output_content.done", "response.in_progress",
 	// "response.failed", "response.incomplete", "response.output_item.added",
 	// "response.output_item.done", "response.reasoning_summary_part.added",
@@ -31254,6 +31251,7 @@ type BetaResponseStreamEventUnion struct {
 	// [BetaResponseShellCallCommandAddedEventAgent],
 	// [BetaResponseShellCallCommandDeltaEventAgent],
 	// [BetaResponseShellCallCommandDoneEventAgent],
+	// [BetaResponseShellCallOutputContentDeltaEventAgent],
 	// [BetaResponseShellCallOutputContentDoneEventAgent],
 	// [BetaResponseInProgressEventAgent], [BetaResponseFailedEventAgent],
 	// [BetaResponseIncompleteEventAgent], [BetaResponseOutputItemAddedEventAgent],
@@ -31403,6 +31401,7 @@ func (BetaResponseFunctionCallArgumentsDoneEvent) implBetaResponseStreamEventUni
 func (BetaResponseShellCallCommandAddedEvent) implBetaResponseStreamEventUnion()           {}
 func (BetaResponseShellCallCommandDeltaEvent) implBetaResponseStreamEventUnion()           {}
 func (BetaResponseShellCallCommandDoneEvent) implBetaResponseStreamEventUnion()            {}
+func (BetaResponseShellCallOutputContentDeltaEvent) implBetaResponseStreamEventUnion()     {}
 func (BetaResponseShellCallOutputContentDoneEvent) implBetaResponseStreamEventUnion()      {}
 func (BetaResponseInProgressEvent) implBetaResponseStreamEventUnion()                      {}
 func (BetaResponseFailedEvent) implBetaResponseStreamEventUnion()                          {}
@@ -31465,6 +31464,7 @@ func (BetaResponseCustomToolCallInputDoneEvent) implBetaResponseStreamEventUnion
 //	case openai.BetaResponseShellCallCommandAddedEvent:
 //	case openai.BetaResponseShellCallCommandDeltaEvent:
 //	case openai.BetaResponseShellCallCommandDoneEvent:
+//	case openai.BetaResponseShellCallOutputContentDeltaEvent:
 //	case openai.BetaResponseShellCallOutputContentDoneEvent:
 //	case openai.BetaResponseInProgressEvent:
 //	case openai.BetaResponseFailedEvent:
@@ -31551,6 +31551,8 @@ func (u BetaResponseStreamEventUnion) AsAny() anyBetaResponseStreamEvent {
 		return u.AsResponseShellCallCommandDelta()
 	case "response.shell_call_command.done":
 		return u.AsResponseShellCallCommandDone()
+	case "response.shell_call_output_content.delta":
+		return u.AsResponseShellCallOutputContentDelta()
 	case "response.shell_call_output_content.done":
 		return u.AsResponseShellCallOutputContentDone()
 	case "response.in_progress":
@@ -31736,6 +31738,11 @@ func (u BetaResponseStreamEventUnion) AsResponseShellCallCommandDelta() (v BetaR
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseShellCallCommandDone() (v BetaResponseShellCallCommandDoneEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseStreamEventUnion) AsResponseShellCallOutputContentDelta() (v BetaResponseShellCallOutputContentDeltaEvent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
