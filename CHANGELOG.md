@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.85.1](https://github.com/openai/openai-go/compare/v3.85.0...v3.85.1) (2026-10-22)
+
+
+### Bug Fixes
+
+* **api:** respect each WebSocket authentication attempt timeout ([#1142](https://github.com/openai/openai-go/issues/1142)) ([e7c9fe9](https://github.com/openai/openai-go/commit/e7c9fe9595780b45298225e3a85462edbbdaab22))
+
+
+### Chores
+
+* **api:** clarify service-account API key deletion ([#1144](https://github.com/openai/openai-go/issues/1144)) ([58b1902](https://github.com/openai/openai-go/commit/58b190261dec4832b73113b656229344255119bf))
+
 ## [3.85.0](https://github.com/openai/openai-go/compare/v3.84.1...v3.85.0) (2026-10-21)
 
 
