@@ -150,7 +150,31 @@ func (s *eventStreamDecoder) Err() error {
 	return s.err
 }
 
+// BetaAccumulator observes each decoded event before it is exposed through Current.
+// Accumulate must not retain mutable event data without copying it.
+// Experimental: this extension API is in beta.
+type BetaAccumulator[T any] interface {
+	Accumulate(T)
+}
+
+// BetaIterator is a typed stream adapter. Experimental: this extension API is in beta.
+type BetaIterator[T any] interface {
+	Next() bool
+	Current() T
+	Err() error
+	Close() error
+}
+
+// NewStreamWithBetaIterator adapts an SDK helper without decoding its events again.
+// The iterator owns event accumulation and resource cleanup.
+// Experimental: this extension API is in beta.
+func NewStreamWithBetaIterator[T any](iterator BetaIterator[T], accumulator BetaAccumulator[T]) *Stream[T] {
+	return &Stream[T]{iterator: iterator, accumulator: accumulator, err: iterator.Err()}
+}
+
 type Stream[T any] struct {
+	iterator            BetaIterator[T]
+	accumulator         BetaAccumulator[T]
 	decoder             Decoder
 	cur                 T
 	err                 error
@@ -166,6 +190,19 @@ func NewStream[T any](decoder Decoder, err error) *Stream[T] {
 		err:     err,
 	}
 }
+
+// NewStreamWithBetaAccumulator creates a stream whose accumulator observes all events,
+// including events consumed before a final-result helper is called.
+// Experimental: this extension API is in beta.
+func NewStreamWithBetaAccumulator[T any](decoder Decoder, err error, accumulator BetaAccumulator[T]) *Stream[T] {
+	s := NewStream[T](decoder, err)
+	s.accumulator = accumulator
+	return s
+}
+
+// BetaAccumulator returns the optional accumulator installed when the stream was created.
+// Experimental: this extension API is in beta.
+func (s *Stream[T]) BetaAccumulator() BetaAccumulator[T] { return s.accumulator }
 
 func NewStreamWithSynthesizeEventData[T any](decoder Decoder, err error) *Stream[T] {
 	return &Stream[T]{
@@ -192,8 +229,18 @@ func (s *Stream[T]) Next() bool {
 	if s.err != nil {
 		return s.finish(s.err)
 	}
+	if s.done.Load() {
+		return false
+	}
+	if s.iterator != nil {
+		if !s.iterator.Next() {
+			return s.finish(s.iterator.Err())
+		}
+		s.cur = s.iterator.Current()
+		return true
+	}
 	decoder := s.decoder
-	if s.done.Load() || decoder == nil {
+	if decoder == nil {
 		return false
 	}
 
@@ -230,6 +277,9 @@ func (s *Stream[T]) Next() bool {
 	if err := json.Unmarshal(data, &nxt); err != nil {
 		return s.finish(err)
 	}
+	if s.accumulator != nil {
+		s.accumulator.Accumulate(nxt)
+	}
 	s.cur = nxt
 	return true
 }
@@ -253,6 +303,9 @@ func (s *Stream[T]) Err() error {
 func (s *Stream[T]) Close() error {
 	s.closeOnce.Do(func() {
 		s.done.Store(true)
+		if s.iterator != nil {
+			s.closeErr = s.iterator.Close()
+		}
 		if s.decoder != nil {
 			s.closeErr = s.decoder.Close()
 		}

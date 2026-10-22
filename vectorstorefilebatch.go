@@ -27,13 +27,19 @@ import (
 // the [NewVectorStoreFileBatchService] method instead.
 type VectorStoreFileBatchService struct {
 	Options []option.RequestOption
+
+	// MaxUploadConcurrency limits the number of active uploads per UploadAndPoll
+	// call. Zero uses the default of 16; negative values are invalid.
+	// Set this before concurrent use. To override it for one call, copy the
+	// service first. Each active upload may buffer its entire body for retries.
+	MaxUploadConcurrency int
 }
 
 // NewVectorStoreFileBatchService generates a new service that applies the given
 // options to each request. These options are applied after the parent client's
 // options (if there is one), and before any request-specific options.
 func NewVectorStoreFileBatchService(opts ...option.RequestOption) (r VectorStoreFileBatchService) {
-	r = VectorStoreFileBatchService{}
+	r = VectorStoreFileBatchService{MaxUploadConcurrency: defaultVectorStoreFileBatchUploadConcurrency}
 	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
@@ -50,24 +56,6 @@ func (r *VectorStoreFileBatchService) New(ctx context.Context, vectorStoreID str
 	path := requestconfig.FormatPath("vector_stores/%s/file_batches", vectorStoreID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
-}
-
-// Create a vector store file batch and polls the API until the task is complete.
-// Pass 0 for pollIntervalMs to enable default polling interval.
-func (r *VectorStoreFileBatchService) NewAndPoll(ctx context.Context, vectorStoreId string, body VectorStoreFileBatchNewParams, pollIntervalMs int, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
-	return newVectorStoreFileBatchAndPoll(r, ctx, vectorStoreId, body, pollIntervalMs, opts...)
-}
-
-// Uploads the given files concurrently and then creates a vector store file batch.
-//
-// If you've already uploaded certain files that you want to include in this batch
-// then you can pass their IDs through the file_ids argument.
-//
-// Pass 0 for pollIntervalMs to enable default polling interval.
-//
-// By default, if any file upload fails then an exception will be eagerly raised.
-func (r *VectorStoreFileBatchService) UploadAndPoll(ctx context.Context, vectorStoreID string, files []FileNewParams, fileIDs []string, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFileBatch, error) {
-	return uploadVectorStoreFileBatchAndPoll(r, ctx, vectorStoreID, files, fileIDs, pollIntervalMs, opts...)
 }
 
 // Retrieves a vector store file batch.

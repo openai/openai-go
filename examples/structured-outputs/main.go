@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/invopop/jsonschema"
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/responses"
 )
@@ -84,19 +85,19 @@ func main() {
 
 	schema, err := GenerateSchema[HistoricalComputer]()
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	response, err := client.Responses.New(ctx, historicalComputerParams(question, schema))
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	// The model responds with a JSON string, so parse it into a struct
 	var historicalComputer HistoricalComputer
 	err = json.Unmarshal([]byte(response.OutputText()), &historicalComputer)
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	// Use the model's structured response with a native Go struct

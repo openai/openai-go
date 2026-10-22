@@ -23,7 +23,7 @@ func compactionProgressClient(t *testing.T) openai.Client {
 			"data: [DONE]\n\n")
 	}))
 	t.Cleanup(server.Close)
-	return openai.NewClient(option.WithBaseURL(server.URL+"/"), option.WithAPIKey("synthetic-key"), option.WithMaxRetries(0))
+	return openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL+"/"), option.WithAPIKey("synthetic-key"), option.WithMaxRetries(0))
 }
 
 func TestResponseCompactionProgressStream(t *testing.T) {

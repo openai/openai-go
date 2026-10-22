@@ -80,7 +80,7 @@ func TestExternalStorageCreateProviders(t *testing.T) {
 			}))
 			t.Cleanup(server.Close)
 			client := openai.NewClient(
-				option.WithBaseURL(server.URL+"/v1"), option.WithHTTPClient(server.Client()),
+				option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL+"/v1"), option.WithHTTPClient(server.Client()),
 				option.WithAPIKey("fake-project-key"), option.WithAdminAPIKey("fake-admin-key"),
 			)
 			result, err := client.Admin.Organization.ExternalStorage.New(t.Context(), openai.AdminOrganizationExternalStorageNewParams{
@@ -141,7 +141,7 @@ func TestExternalStoragePaginationPreservesFiltersAndAdminAuth(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 	client := openai.NewClient(
-		option.WithBaseURL(server.URL+"/v1"), option.WithHTTPClient(server.Client()),
+		option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL+"/v1"), option.WithHTTPClient(server.Client()),
 		option.WithAPIKey("fake-project-key"), option.WithAdminAPIKey("fake-admin-key"),
 	)
 	page := client.Admin.Organization.ExternalStorage.ListAutoPaging(t.Context(), openai.AdminOrganizationExternalStorageListParams{
@@ -207,7 +207,7 @@ func TestExternalStorageIDRoutesAndFutureProvider(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 	client := openai.NewClient(
-		option.WithBaseURL(server.URL+"/v1"), option.WithHTTPClient(server.Client()),
+		option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL+"/v1"), option.WithHTTPClient(server.Client()),
 		option.WithAPIKey("fake-project-key"), option.WithAdminAPIKey("fake-admin-key"),
 	)
 	storage := &client.Admin.Organization.ExternalStorage
@@ -243,7 +243,7 @@ func TestExternalStorageNeverFallsBackToProjectKey(t *testing.T) {
 	}))
 	t.Cleanup(server.Close)
 	client := openai.NewClient(
-		option.WithBaseURL(server.URL+"/v1"), option.WithHTTPClient(server.Client()),
+		option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL+"/v1"), option.WithHTTPClient(server.Client()),
 		option.WithAPIKey("fake-project-key"), option.WithAdminAPIKey(""), option.WithMaxRetries(0),
 	)
 	_, err := client.Admin.Organization.ExternalStorage.Get(t.Context(), "extstorage_test")

@@ -26,6 +26,7 @@ import (
 // the [NewBetaAgentSessionTurnService] method instead.
 type BetaAgentSessionTurnService struct {
 	Options []option.RequestOption
+	Items   BetaAgentSessionTurnItemService
 }
 
 // NewBetaAgentSessionTurnService generates a new service that applies the given
@@ -34,6 +35,7 @@ type BetaAgentSessionTurnService struct {
 func NewBetaAgentSessionTurnService(opts ...option.RequestOption) (r BetaAgentSessionTurnService) {
 	r = BetaAgentSessionTurnService{}
 	r.Options = requestconfig.InheritedOptions(opts...)
+	r.Items = NewBetaAgentSessionTurnItemService(opts...)
 	return
 }
 

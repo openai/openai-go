@@ -79,7 +79,7 @@ func TestResponsesWorkflowRecipes(t *testing.T) {
 		_, _, _ = socket.Read(ctx)
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("fixture-key"))
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	connection, err := client.Responses.Connect(ctx, responses.ResponseConnectionOptions{})

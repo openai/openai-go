@@ -56,6 +56,13 @@ const (
 // configured for a loopback-only local development endpoint.
 // Azure authentication also requires custom networking to use an [*http.Client]
 // with a custom [http.RoundTripper] so every redirect destination can be checked.
+// Trusted option.WithBaseURL overrides select the credential origin before
+// middleware runs; middleware cannot select a different initial origin.
+//
+// When switching an existing OpenAI client or service to Azure, inherited custom
+// headers, including organization and project headers, are removed. Supply any
+// headers needed by Azure in the same option call as Azure authentication or in
+// a later request option call.
 //
 // This function should be paired with a call to authenticate, like [azure.WithAPIKey] or [azure.WithTokenCredential], similar to this:
 //
@@ -166,6 +173,7 @@ func WithTokenCredential(tokenCredential azcore.TokenCredential, options ...Toke
 		if isNilTokenCredential(tokenCredential) {
 			return errors.New("azure: token credential must not be nil")
 		}
+		rc.ClearInheritedProviderHeaders(azureProvider)
 		auth := requestconfig.NewProviderAuthOption(azureProvider, azureTokenCredentialAuth)
 		if err := rc.Apply(requestconfig.WithEndpointProvider(azureProvider), auth); err != nil {
 			return err
@@ -245,6 +253,7 @@ func WithAPIKey(apiKey string) option.RequestOption {
 	// Api-Key instead.
 	directTransports := &azureDirectLoopbackTransportCache{}
 	return requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
+		rc.ClearInheritedProviderHeaders(azureProvider)
 		auth := requestconfig.NewProviderAuthOption(azureProvider, azureAPIKeyAuth)
 		if err := rc.Apply(requestconfig.WithEndpointProvider(azureProvider), auth); err != nil {
 			return err
@@ -303,9 +312,16 @@ func nonEmptyHeaderValues(header http.Header, name string) int {
 
 func withAzureCredentialMiddleware(authenticate option.Middleware, directTransports *azureDirectLoopbackTransportCache) option.RequestOption {
 	return requestconfig.WithRequestFinalizer(func(rc *requestconfig.RequestConfig) error {
+		if rc.BaseURL == nil {
+			return errors.New("azure: authentication requires azure.WithEndpoint")
+		}
 		if rc.CustomHTTPDoer != nil {
 			return errors.New("azure: custom HTTP clients must use *http.Client with a custom RoundTripper so redirects can be validated")
 		}
+		// Snapshot the effective endpoint after options, including trusted BaseURL
+		// overrides, but before middleware can rewrite the request destination.
+		endpoint := *rc.BaseURL
+		origin := azureCredentialOriginFromURL(&endpoint)
 
 		// Redirects run inside http.Client.Do and don't re-enter SDK middleware.
 		// Clone the selected client so every redirect reaches this guard without
@@ -321,7 +337,11 @@ func withAzureCredentialMiddleware(authenticate option.Middleware, directTranspo
 		rc.HTTPClient = &client
 
 		return option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
-			origin := azureCredentialOriginFromURL(req.URL)
+			// Initial requests must retain the configured origin and HTTP authority.
+			// The transport separately preserves the unsafe loopback redirect policy.
+			if !requestconfig.RequestHasOrigin(req, &endpoint) {
+				return requestconfig.RejectRequestOrigin(req)
+			}
 			ctx := context.WithValue(req.Context(), azureCredentialOriginContextKey{}, origin)
 			req = req.WithContext(ctx)
 			if err := validateAzureCredentialTransport(req); err != nil {

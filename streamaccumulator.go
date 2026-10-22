@@ -111,19 +111,21 @@ const maxStreamAccumulatorChoiceIndex = 127
 // indices while limiting one received tool-call entry to 128 newly allocated
 // positions. The limit applies to growth, not the total number of tool calls,
 // so dense streams can exceed 128 calls without allowing one sparse index to
-// trigger an unbounded allocation.
+// trigger an unbounded allocation. A chunk also shares 127 extra positions
+// beyond its received tool-call entry count across all choices.
 const maxStreamAccumulatorToolCallGrowth = 128
 
 // AddChunk incorporates a chunk into the accumulation. Chunks must be added in order.
 // Returns false if the chunk could not be successfully accumulated. To bound work and
 // memory for untrusted streams, an accumulator accepts choice indices from 0 through
-// 127 and bounds the sparse growth caused by each individual tool-call index.
+// 127 and bounds sparse tool-call growth both per index and across a chunk.
 // Accumulated chunks, dense tool calls, content, refusal, tool-function text,
 // metadata, and log probabilities retain their existing unlimited-size contract;
 // text and logprob buffers grow geometrically with checked representable-int
 // accounting.
 // A tool-call index may grow its choice by at most 128 positions; dense sequences
-// may contain more than 128 calls.
+// may contain more than 128 calls. Across all choices, a chunk may allocate at
+// most 127 more tool-call positions than the number of tool-call entries it contains.
 // For compatibility with providers that use -1 for a single tool call, that value is
 // treated as index 0. A rejected chunk does not modify accumulated response data or
 // resource budgets, but it clears any prior JustFinished event.

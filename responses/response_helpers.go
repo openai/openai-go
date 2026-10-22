@@ -19,6 +19,10 @@ func responseOutputText(r Response) string {
 	return outputText.String()
 }
 
+func (r Response) OutputText() string {
+	return responseOutputText(r)
+}
+
 // ToInput converts this response's output items to request input while preserving
 // every item in its original order.
 //

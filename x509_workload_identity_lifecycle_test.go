@@ -284,6 +284,7 @@ func TestX509WorkloadIdentityHonorsBoundedIssuerRetryAfter(t *testing.T) {
 		maximum time.Duration
 		minimum time.Duration
 		ceiling time.Duration
+		stop    bool
 	}{
 		{name: "request timeout", status: http.StatusRequestTimeout,
 			header: "Retry-After-Ms", value: "40", maximum: 200 * time.Millisecond, minimum: 30 * time.Millisecond},
@@ -293,8 +294,8 @@ func TestX509WorkloadIdentityHonorsBoundedIssuerRetryAfter(t *testing.T) {
 			header: "Retry-After", value: "0.04", maximum: 200 * time.Millisecond, minimum: 30 * time.Millisecond},
 		{name: "service unavailable", status: http.StatusServiceUnavailable,
 			header: "Retry-After-Ms", value: "40", maximum: 200 * time.Millisecond, minimum: 30 * time.Millisecond},
-		{name: "caller delay clamps issuer hint", status: http.StatusTooManyRequests,
-			header: "Retry-After", value: "8", maximum: 5 * time.Millisecond, ceiling: 250 * time.Millisecond},
+		{name: "caller delay rejects excessive issuer hint", status: http.StatusTooManyRequests,
+			header: "Retry-After", value: "8", maximum: 5 * time.Millisecond, stop: true},
 		{name: "explicit zero is immediate", status: http.StatusServiceUnavailable,
 			header: "Retry-After-Ms", value: "0", maximum: time.Second, ceiling: 250 * time.Millisecond},
 	} {
@@ -313,7 +314,14 @@ func TestX509WorkloadIdentityHonorsBoundedIssuerRetryAfter(t *testing.T) {
 				_, _ = io.WriteString(w, x509IntegrationTokenResponse("synthetic-retry-after-bearer"))
 			})
 			client := openai.NewClient(option.WithX509WorkloadIdentity(config), option.WithMaxRetryDelay(test.maximum))
-			if _, err := client.Models.List(t.Context()); err != nil {
+			_, err := client.Models.List(t.Context())
+			if test.stop {
+				if err == nil || exchanges.Load() != 1 || len(api.requests()) != 0 {
+					t.Fatalf("excessive issuer hint: error=%v, issuer/API requests=%d/%d; want error and 1/0", err, exchanges.Load(), len(api.requests()))
+				}
+				return
+			}
+			if err != nil {
 				t.Fatalf("issuer-directed retry failed: %v", err)
 			}
 			first, second := <-attempted, <-attempted

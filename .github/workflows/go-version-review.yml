@@ -125,10 +125,12 @@ jobs:
           (cd examples && go mod download)
           (cd internal/testdata/consumer && go mod download)
           (cd tools && go mod download)
+          (cd v3/vertex && go mod download)
           ./scripts/check-go-mod
           ./scripts/lint
           (cd examples && go test ./...)
           (cd internal/testdata/consumer && go test -mod=readonly ./...)
+          (cd v3/vertex && go test ./...)
 
       - name: Ask Codex to prepare the update
         id: codex
@@ -140,7 +142,7 @@ jobs:
         # The built-in :workspace profile permits checkout and temp writes but
         # denies command network access by default. The job has read-only
         # repository permissions and checkout did not persist a credential.
-        uses: openai/codex-action@86365089eb2b84e0a8fb0717b304f8bdcb13b20e # v1
+        uses: openai/codex-action@bdf19a4a223ec2549a3e2274a0cf61556bc07675 # v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           prompt-file: .github/codex/prompts/go-version-review.md
@@ -251,7 +253,7 @@ jobs:
                 ;;
               internal/testdata/consumer/go.mod)
                 ;;
-              tools/go.mod|.github/workflows/ci.yml)
+              tools/go.mod|v3/vertex/go.mod|.github/workflows/ci.yml)
                 ;;
               *)
                 echo "::error file=$path::Codex changed a file outside the approved policy surface"
@@ -272,7 +274,8 @@ jobs:
             go.mod \
             examples/go.mod \
             internal/testdata/consumer/go.mod \
-            tools/go.mod; do
+            tools/go.mod \
+            v3/vertex/go.mod; do
             if [[ "$(grep -Ec '^go [0-9]+\.[0-9]+(\.[0-9]+)?$' "$module_file")" -ne 1 ]]; then
               echo "::error file=$module_file::Expected exactly one valid Go directive"
               exit 1
@@ -311,10 +314,12 @@ jobs:
           ./scripts/test
           (cd examples && go test ./...)
           (cd internal/testdata/consumer && go test -mod=readonly ./...)
+          (cd v3/vertex && go test ./...)
           (cd tools && go install golang.org/x/vuln/cmd/govulncheck)
           govulncheck_bin="$(go env GOPATH)/bin/govulncheck"
           "$govulncheck_bin" ./...
           (cd examples && "$govulncheck_bin" ./...)
+          (cd v3/vertex && "$govulncheck_bin" ./...)
           if ! git diff --quiet; then
             echo '::error::Validation modified tracked files'
             git diff --stat

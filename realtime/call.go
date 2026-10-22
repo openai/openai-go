@@ -44,7 +44,7 @@ func (r *CallService) New(ctx context.Context, body CallNewParams, opts ...optio
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	path := "realtime/calls"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &res, opts...)
 	return res, err
 }
 
@@ -128,6 +128,12 @@ func (r CallNewParams) MarshalMultipart() (data []byte, contentType string, err 
 	return buf.Bytes(), writer.FormDataContentType(), nil
 }
 
+// MarshalMultipartTo writes multipart fields without buffering file contents.
+// The caller owns writer and must close it to finish the multipart body.
+func (r CallNewParams) MarshalMultipartTo(writer *multipart.Writer) error {
+	return apiform.MarshalEncodedRoot(r, writer, r.ExtraFields(), map[string]apiform.PartEncoding{"sdp": {ContentType: "application/sdp", JSON: false}, "session": {ContentType: "application/json", JSON: true}})
+}
+
 type CallAcceptParams struct {
 	// Realtime session object configuration.
 	RealtimeSessionCreateRequest RealtimeSessionCreateRequestParam
@@ -138,7 +144,10 @@ func (r CallAcceptParams) MarshalJSON() (data []byte, err error) {
 	return shimjson.Marshal(r.RealtimeSessionCreateRequest)
 }
 func (r *CallAcceptParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	if r == nil {
+		return apijson.UnmarshalRoot(data, r)
+	}
+	return apijson.UnmarshalWrappedObject(data, r, &r.RealtimeSessionCreateRequest)
 }
 
 type CallReferParams struct {

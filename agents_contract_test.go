@@ -97,7 +97,7 @@ func TestAgentsIDListPaginationPreservesFilters(t *testing.T) {
 				}
 			}))
 			defer server.Close()
-			client := openai.NewClient(option.WithAPIKey("test-key"), option.WithBaseURL(server.URL), option.WithMaxRetries(0))
+			client := openai.NewClient(option.WithAPIKey("test-key"), option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithMaxRetries(0))
 			ids, err := tc.list(client)
 			if err != nil {
 				t.Fatal(err)

@@ -75,13 +75,13 @@ func TestCloudSubjectTokenProvidersBoundAndRedactMetadataResponses(t *testing.T)
 					doer := ordinaryOpaqueHTTPDoer(func(*http.Request) (*http.Response, error) {
 						return &http.Response{
 							StatusCode:    test.status,
-							Header:        make(http.Header),
+							Header:        http.Header{"Metadata-Flavor": {"Google"}},
 							Body:          body,
 							ContentLength: test.contentLength,
 						}, nil
 					})
 
-					token, err := provider.new().GetToken(ctx, doer)
+					token, err := auth.MetadataProviderWithClientForTest(provider.new(), doer).GetToken(ctx, nil)
 					var typed *auth.SubjectTokenProviderError
 					if token != "" || !errors.As(err, &typed) || typed.Provider != provider.identity ||
 						!strings.Contains(err.Error(), test.want) {
@@ -107,7 +107,7 @@ func TestCloudSubjectTokenProvidersBoundAndRedactMetadataResponses(t *testing.T)
 				doer := ordinaryOpaqueHTTPDoer(func(*http.Request) (*http.Response, error) {
 					return &http.Response{StatusCode: http.StatusOK}, nil
 				})
-				token, err := provider.new().GetToken(t.Context(), doer)
+				token, err := auth.MetadataProviderWithClientForTest(provider.new(), doer).GetToken(t.Context(), nil)
 				var typed *auth.SubjectTokenProviderError
 				if token != "" || !errors.As(err, &typed) || typed.Provider != provider.identity ||
 					!strings.Contains(err.Error(), "invalid response") {
@@ -127,7 +127,7 @@ func TestAzureSubjectTokenProviderSanitizesInvalidMetadataJSON(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(fmt.Sprintf(`{"access_token":%q,`, sensitive))),
 		}, nil
 	})
-	token, err := auth.AzureManagedIdentityTokenProvider(nil).GetToken(t.Context(), doer)
+	token, err := auth.MetadataProviderWithClientForTest(auth.AzureManagedIdentityTokenProvider(nil), doer).GetToken(t.Context(), nil)
 	var typed *auth.SubjectTokenProviderError
 	if token != "" || !errors.As(err, &typed) || typed.Provider != "azure-imds" ||
 		!strings.Contains(err.Error(), "failed to decode") {
@@ -190,7 +190,7 @@ func TestCloudSubjectTokenProvidersNeverFollowMetadataRedirects(t *testing.T) {
 						},
 					}
 
-					token, err := provider.new().GetToken(t.Context(), caller)
+					token, err := auth.MetadataProviderWithClientForTest(provider.new(), caller).GetToken(t.Context(), nil)
 					var typed *auth.SubjectTokenProviderError
 					if token != "" || !errors.As(err, &typed) || typed.Provider != provider.identity ||
 						!strings.Contains(err.Error(), "does not follow redirects") {

@@ -56,7 +56,7 @@ func (r *ContainerFileService) New(ctx context.Context, containerID string, body
 		return nil, err
 	}
 	path := requestconfig.FormatPath("containers/%s/files", containerID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &res, opts...)
 	return res, err
 }
 
@@ -252,6 +252,15 @@ func (r ContainerFileNewParams) MarshalMultipart() (data []byte, contentType str
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
+}
+
+// MarshalMultipartTo writes multipart fields without buffering file contents.
+// The caller owns writer and must close it to finish the multipart body.
+func (r ContainerFileNewParams) MarshalMultipartTo(writer *multipart.Writer) error {
+	if err := apiform.MarshalRoot(r, writer); err != nil {
+		return err
+	}
+	return apiform.WriteExtras(writer, r.ExtraFields())
 }
 
 type ContainerFileListParams struct {

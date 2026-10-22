@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/bedrock"
 )
@@ -16,7 +17,7 @@ func main() {
 	case "", "sigv4":
 		// The explicit SigV4 example must not silently select an ambient bearer.
 		if err := os.Unsetenv("AWS_BEARER_TOKEN_BEDROCK"); err != nil {
-			panic(err)
+			panic(errutil.Message(err))
 		}
 	case "bearer":
 		config.APIKey = os.Getenv("AWS_BEARER_TOKEN_BEDROCK")
@@ -28,7 +29,7 @@ func main() {
 	}
 	client, err := bedrock.NewClient(ctx, config)
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 
 	model := os.Getenv("BEDROCK_MODEL")
@@ -48,7 +49,7 @@ func main() {
 			}
 		}
 		if streamErr := stream.Err(); streamErr != nil {
-			panic(streamErr)
+			panic(errutil.Message(streamErr))
 		}
 		fmt.Println()
 		return
@@ -56,7 +57,7 @@ func main() {
 
 	completion, err := client.Chat.Completions.New(ctx, params)
 	if err != nil {
-		panic(err)
+		panic(errutil.Message(err))
 	}
 	fmt.Println(completion.Choices[0].Message.Content)
 }

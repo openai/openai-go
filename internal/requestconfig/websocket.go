@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/openai/openai-go/v3/internal/websockettransport"
 )
@@ -47,6 +47,12 @@ func (cfg *RequestConfig) RecordQueryChange(key string, replace bool) {
 // workload-identity handshake can retry, within its existing request retry scope.
 // Provider-specific clients require an independently tested adapter.
 func (cfg *RequestConfig) PrepareWebSocket() (*http.Request, *http.Client, error) {
+	return cfg.PrepareWebSocketWithRecovery(false)
+}
+
+// PrepareWebSocketWithRecovery rejects excluded session selectors on every
+// recovery-enabled upgrade before handing it to the configured transport.
+func (cfg *RequestConfig) PrepareWebSocketWithRecovery(recoveryEnabled bool, excludedQueryParams ...string) (*http.Request, *http.Client, error) {
 	if cfg.cloneError != nil {
 		return nil, nil, cfg.cloneError
 	}
@@ -110,6 +116,14 @@ func (cfg *RequestConfig) PrepareWebSocket() (*http.Request, *http.Client, error
 		transport = http.DefaultTransport
 	}
 	client.Transport = websocketRoundTripper(enforceRequestOrigin(&origin, func(req *http.Request) (*http.Response, error) {
+		if recoveryEnabled && len(excludedQueryParams) > 0 {
+			query := req.URL.Query()
+			for _, key := range excludedQueryParams {
+				if query.Has(key) {
+					return nil, errors.New("websocket: automatic recovery does not support this session selector")
+				}
+			}
+		}
 		return websockettransport.RoundTrip(transport, req)
 	}))
 	previousRedirect := client.CheckRedirect
@@ -140,11 +154,24 @@ func (cfg *RequestConfig) PrepareWebSocket() (*http.Request, *http.Client, error
 	for i := len(cfg.Middlewares) - 1; i >= 0; i-- {
 		handler = applyMiddleware(cfg.Middlewares[i], handler)
 	}
+	// Authenticate only the endpoint prepared by this binding, even if middleware
+	// changes the request URL before the credential exchange.
+	expectedPath := websocketUpgradePath{path: target.Path, escapedPath: target.EscapedPath()}
 	handshakeClient := &http.Client{
 		Transport: websocketRoundTripper(func(req *http.Request) (*http.Response, error) {
-			req = req.WithContext(context.WithValue(req.Context(), websocketUpgradeContextKey{}, true))
+			req = req.WithContext(context.WithValue(req.Context(), websocketUpgradeContextKey{}, expectedPath))
+			var cancel context.CancelFunc
+			defer func() {
+				if cancel != nil {
+					cancel()
+				}
+			}()
 			for retryCount := 0; ; retryCount++ {
-				attempt := req.Clone(req.Context())
+				attemptContext := req.Context()
+				if cfg.RequestTimeout > 0 {
+					attemptContext, cancel = context.WithTimeout(attemptContext, cfg.RequestTimeout)
+				}
+				attempt := req.Clone(attemptContext)
 				if req.Header.Get("X-Stainless-Retry-Count") == "0" {
 					attempt.Header.Set("X-Stainless-Retry-Count", strconv.Itoa(retryCount))
 				}
@@ -152,17 +179,38 @@ func (cfg *RequestConfig) PrepareWebSocket() (*http.Request, *http.Client, error
 				if cfg.ResponseInto != nil {
 					*cfg.ResponseInto = response
 				}
-				if err != nil || response == nil || response.StatusCode != http.StatusUnauthorized ||
-					response.Header.Get("X-Should-Retry") != "true" ||
-					RequestRetryScopeFromContext(req.Context()) == nil || retryCount >= cfg.MaxRetries {
-					return response, err
+				if attemptErr := attemptContext.Err(); attemptErr != nil {
+					err = attemptErr
 				}
-				if response.Body != nil {
-					_ = response.Body.Close() // Release the rejected handshake before opening another.
+				if err == nil && response != nil && response.StatusCode == http.StatusUnauthorized &&
+					response.Header.Get("X-Should-Retry") == "true" &&
+					RequestRetryScopeFromContext(req.Context()) != nil && retryCount < cfg.MaxRetries {
+					if delay, retry := retryDelay(response, retryCount, cfg.MaxRetryDelay); retry {
+						if response.Body != nil {
+							_ = response.Body.Close()
+						}
+						// As in Execute, rejection and its backoff belong to this attempt.
+						waitErr := WaitForDelay(attemptContext, delay)
+						if cancel != nil {
+							cancel()
+							cancel = nil
+						}
+						if waitErr != nil {
+							return nil, waitErr
+						}
+						continue
+					}
 				}
-				if err := WaitForDelay(req.Context(), retryDelay(response, retryCount, cfg.MaxRetryDelay)); err != nil {
-					return nil, err
+				if cancel != nil && response != nil && response.Body != nil {
+					if body, ok := response.Body.(io.ReadWriteCloser); ok && err == nil && response.StatusCode == http.StatusSwitchingProtocols {
+						response.Body = &websocketOpeningBody{ReadWriteCloser: body, cancel: cancel}
+					} else {
+						// Release rejected bodies before canceling their opening request.
+						response.Body = &bodyWithTimeout{rc: response.Body, stop: cancel}
+					}
+					cancel = nil // Ownership moves to the response body or upgraded socket.
 				}
+				return response, err
 			}
 		}),
 		Timeout: selected.Timeout,
@@ -172,30 +220,45 @@ func (cfg *RequestConfig) PrepareWebSocket() (*http.Request, *http.Client, error
 	return request, handshakeClient, nil
 }
 
-// WebSocketOpenTimeout is the configured timeout for an upgrade attempt.
-func (cfg *RequestConfig) WebSocketOpenTimeout() time.Duration {
-	if cfg.RequestTimeout != 0 {
-		return cfg.RequestTimeout
-	}
-	return 0
+// websocketOpeningBody keeps the attempt alive through handshake validation.
+// It must not add write support to a non-writable response body.
+type websocketOpeningBody struct {
+	io.ReadWriteCloser
+	cancel context.CancelFunc
+}
+
+func (b *websocketOpeningBody) CompleteWebSocketOpening() { b.cancel() }
+
+func (b *websocketOpeningBody) Close() error {
+	defer b.CompleteWebSocketOpening()
+	return b.ReadWriteCloser.Close()
 }
 
 // websocketUpgradeContextKey marks an opening prepared by the SDK, not an
 // ordinary HTTP request with user-supplied protocol upgrade headers.
 type websocketUpgradeContextKey struct{}
 
+type websocketUpgradePath struct {
+	path        string
+	escapedPath string
+}
+
 // WebSocketValidationRequest returns an ordinary HTTP view of an SDK-owned
-// Responses upgrade for authentication policy checks. It validates the complete
+// upgrade for authentication policy checks. It validates the complete
 // upgrade framing before omitting only the two protocol-switch headers. The
 // actual request and its headers remain unchanged.
 func WebSocketValidationRequest(request *http.Request) (*http.Request, error) {
-	if request == nil || request.Context().Value(websocketUpgradeContextKey{}) != true {
+	if request == nil {
 		return request, nil
 	}
-	if request.URL == nil || request.Method != http.MethodGet || request.URL.Path != "/v1/responses" ||
-		request.URL.EscapedPath() != "/v1/responses" || request.ContentLength != 0 ||
+	expectedPath, prepared := request.Context().Value(websocketUpgradeContextKey{}).(websocketUpgradePath)
+	if !prepared {
+		return request, nil
+	}
+	if request.URL == nil || request.Method != http.MethodGet || request.URL.Path != expectedPath.path ||
+		request.URL.EscapedPath() != expectedPath.escapedPath || request.ContentLength != 0 ||
 		(request.Body != nil && request.Body != http.NoBody) {
-		return nil, errors.New("websocket: X.509 upgrades require a bodyless GET to /v1/responses")
+		return nil, errors.New("websocket: X.509 upgrades require a bodyless GET to " + expectedPath.path)
 	}
 	counts := make(map[string]int)
 	for name, values := range request.Header {

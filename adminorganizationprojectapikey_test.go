@@ -22,6 +22,7 @@ func TestAdminOrganizationProjectAPIKeyGet(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -30,6 +31,38 @@ func TestAdminOrganizationProjectAPIKeyGet(t *testing.T) {
 		context.TODO(),
 		"project_id",
 		"api_key_id",
+	)
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestAdminOrganizationProjectAPIKeyUpdateWithOptionalParams(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
+	)
+	_, err := client.Admin.Organization.Projects.APIKeys.Update(
+		context.TODO(),
+		"project_id",
+		"api_key_id",
+		openai.AdminOrganizationProjectAPIKeyUpdateParams{
+			ExpiresInSeconds: 1,
+			Scopes:           []string{"api.all.read"},
+		},
 	)
 	if err != nil {
 		var apierr *openai.Error
@@ -49,6 +82,7 @@ func TestAdminOrganizationProjectAPIKeyListWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -80,6 +114,7 @@ func TestAdminOrganizationProjectAPIKeyDelete(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),

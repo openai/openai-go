@@ -22,15 +22,16 @@ func TestModerationNewWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Moderations.New(context.TODO(), openai.ModerationNewParams{
 		Input: openai.ModerationNewParamsInputUnion{
-			OfString: openai.String("I want to kill them."),
+			OfString: openai.String("...text to classify goes here..."),
 		},
-		Model: openai.ModerationModelOmniModerationLatest,
+		Model: openai.ModerationModelOmniModeration2024_09_26,
 	})
 	if err != nil {
 		var apierr *openai.Error

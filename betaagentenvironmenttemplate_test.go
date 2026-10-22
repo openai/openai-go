@@ -22,12 +22,16 @@ func TestBetaAgentEnvironmentTemplateNewWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Agents.Environments.Templates.New(context.TODO(), openai.BetaAgentEnvironmentTemplateNewParams{
 		CapabilityDirectories: []string{"string"},
+		Desktop: openai.BetaAgentEnvironmentTemplateNewParamsDesktop{
+			Enabled: true,
+		},
 		Env: map[string]string{
 			"foo": "string",
 		},
@@ -39,8 +43,9 @@ func TestBetaAgentEnvironmentTemplateNewWithOptionalParams(t *testing.T) {
 		}},
 		Name: openai.String("x"),
 		Network: openai.BetaAgentEnvironmentTemplateNewParamsNetwork{
-			Access:         "enabled",
-			AllowedDomains: []string{"string"},
+			Access:         "restricted",
+			AllowedDomains: []string{"example.com"},
+			BlockedDomains: []string{},
 		},
 		Packages: openai.BetaAgentEnvironmentTemplateNewParamsPackages{
 			Npm:    []string{"string"},
@@ -83,6 +88,7 @@ func TestBetaAgentEnvironmentTemplateGet(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -106,6 +112,7 @@ func TestBetaAgentEnvironmentTemplateUpdateWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -115,6 +122,9 @@ func TestBetaAgentEnvironmentTemplateUpdateWithOptionalParams(t *testing.T) {
 		"environment_template_id",
 		openai.BetaAgentEnvironmentTemplateUpdateParams{
 			CapabilityDirectories: []string{"string"},
+			Desktop: openai.BetaAgentEnvironmentTemplateUpdateParamsDesktop{
+				Enabled: true,
+			},
 			Env: map[string]string{
 				"foo": "string",
 			},
@@ -126,8 +136,9 @@ func TestBetaAgentEnvironmentTemplateUpdateWithOptionalParams(t *testing.T) {
 			}},
 			Name: openai.String("x"),
 			Network: openai.BetaAgentEnvironmentTemplateUpdateParamsNetwork{
-				Access:         "enabled",
-				AllowedDomains: []string{"string"},
+				Access:         "restricted",
+				AllowedDomains: []string{"example.com"},
+				BlockedDomains: []string{},
 			},
 			Packages: openai.BetaAgentEnvironmentTemplateUpdateParamsPackages{
 				Npm:    []string{"string"},
@@ -171,6 +182,7 @@ func TestBetaAgentEnvironmentTemplateListWithOptionalParams(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
@@ -198,6 +210,7 @@ func TestBetaAgentEnvironmentTemplateDelete(t *testing.T) {
 		return
 	}
 	client := openai.NewClient(
+		option.WithUnsafeAllowHTTP(),
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),

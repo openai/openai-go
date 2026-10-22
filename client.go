@@ -22,7 +22,8 @@ import (
 // interacting with the openai API. You should not instantiate this client
 // directly, and instead use the [NewClient] method instead.
 type Client struct {
-	Options []option.RequestOption
+	Options   []option.RequestOption
+	Decisions DecisionService
 	// Given a prompt, the model will return one or more predicted completions, and can
 	// also return the probabilities of alternative tokens at each position.
 	Completions CompletionService
@@ -118,6 +119,7 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 
 	r = Client{Options: opts}
 
+	r.Decisions = NewDecisionService(opts...)
 	r.Completions = NewCompletionService(opts...)
 	r.Chat = NewChatService(opts...)
 	r.Embeddings = NewEmbeddingService(opts...)

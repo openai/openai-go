@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -173,6 +174,177 @@ func TestLanesDetachIndependently(t *testing.T) {
 	}
 	if event, err := connection.Recv(ctx); err != nil || event.Text != "default" {
 		t.Fatalf("default lane = %+v,%v", event, err)
+	}
+}
+
+func TestPeerCloseRetainsStatusAcrossReceiversAndUnsentWrites(t *testing.T) {
+	release := make(chan struct{})
+	connection := testConnection(t, Options{}, func(ctx context.Context, socket *wire.Conn) {
+		<-release
+		for _, event := range []testEvent{{StreamID: "a", Text: "accepted-a"}, {Text: "accepted-default"}} {
+			if err := writeEvent(ctx, socket, event); err != nil {
+				t.Errorf("write: %v", err)
+				return
+			}
+		}
+		_ = socket.Close(wire.StatusPolicyViolation, "synthetic peer detail")
+	})
+	laneA, err := connection.Lane("a")
+	if err != nil {
+		t.Fatal(err)
+	}
+	laneB, err := connection.Lane("b")
+	if err != nil {
+		t.Fatal(err)
+	}
+	close(release)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if event, err := laneA.Recv(ctx); err != nil || event.Text != "accepted-a" {
+		t.Fatalf("accepted lane event = %+v, %v", event, err)
+	}
+	if event, err := connection.Recv(ctx); err != nil || event.Text != "accepted-default" {
+		t.Fatalf("accepted default event = %+v, %v", event, err)
+	}
+	_, defaultErr := connection.Recv(ctx)
+	_, laneErr := laneA.Recv(ctx)
+	_, neighborErr := laneB.Recv(ctx)
+	sendErr := connection.Send(ctx, []byte("not attempted"))
+	var delivery *DeliveryError
+	if !errors.As(sendErr, &delivery) || delivery.MayHaveBeenSent {
+		t.Fatalf("send after closed receive = %v, want certainly unsent", sendErr)
+	}
+	for _, test := range []struct {
+		name string
+		err  error
+	}{{"default", defaultErr}, {"lane", laneErr}, {"neighbor", neighborErr}, {"send", sendErr}} {
+		t.Run(test.name, func(t *testing.T) {
+			var closeErr wire.CloseError
+			if !errors.As(test.err, &closeErr) || wire.CloseStatus(test.err) != wire.StatusPolicyViolation {
+				t.Fatalf("close = %v, want recognizable policy status", test.err)
+			}
+			if closeErr.Reason != "" || strings.Contains(test.err.Error(), "synthetic peer detail") {
+				t.Errorf("close reason is retained: %v", test.err)
+			}
+		})
+	}
+}
+
+// Hold an admitted send at its final context check, after its connection
+// failure check and before handing the write to coder/websocket. This models
+// a scheduler pause while the real reader processes a peer close.
+type pauseBeforeWriteContext struct {
+	context.Context
+	checks  atomic.Int32
+	reached chan struct{}
+	resume  chan struct{}
+}
+
+func (c *pauseBeforeWriteContext) Err() error {
+	err := c.Context.Err()
+	if c.checks.Add(1) == 2 {
+		close(c.reached)
+		select {
+		case <-c.resume:
+		case <-c.Context.Done():
+		}
+	}
+	return err
+}
+
+func TestPeerCloseAfterWriteAdmissionPreservesStatus(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	sendCtx := &pauseBeforeWriteContext{Context: ctx, reached: make(chan struct{}), resume: make(chan struct{})}
+	connection := testConnection(t, Options{}, func(ctx context.Context, socket *wire.Conn) {
+		select {
+		case <-sendCtx.reached:
+			_ = socket.Close(wire.StatusPolicyViolation, "synthetic peer detail")
+		case <-ctx.Done():
+			t.Errorf("send did not reach write: %v", ctx.Err())
+		}
+	})
+	finished := make(chan error, 1)
+	go func() { finished <- connection.Send(sendCtx, []byte("possibly attempted")) }()
+	_, recvErr := connection.Recv(ctx)
+	// Resume even if the receive assertion fails, so cleanup cannot strand send.
+	close(sendCtx.resume)
+	if wire.CloseStatus(recvErr) != wire.StatusPolicyViolation {
+		t.Fatalf("receive = %v, want peer close status", recvErr)
+	}
+	select {
+	case sendErr := <-finished:
+		var delivery *DeliveryError
+		var peer wire.CloseError
+		if !errors.As(sendErr, &delivery) || !delivery.MayHaveBeenSent {
+			t.Fatalf("admitted send = %v, want uncertain delivery", sendErr)
+		}
+		if !errors.As(sendErr, &peer) || wire.CloseStatus(sendErr) != wire.StatusPolicyViolation {
+			t.Fatalf("admitted send = %v, want stored peer close status", sendErr)
+		}
+		if peer.Reason != "" || strings.Contains(sendErr.Error(), "synthetic peer detail") {
+			t.Errorf("admitted send retained peer close details: %v", sendErr)
+		}
+	case <-ctx.Done():
+		t.Fatal(ctx.Err())
+	}
+}
+
+func TestCallerCancellationAfterWriteAdmissionIsNotReplacedByPeerClose(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		want error
+	}{
+		{"cancel", context.Canceled},
+		{"deadline", context.DeadlineExceeded},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			var caller context.Context
+			var cancelCaller context.CancelFunc
+			if errors.Is(test.want, context.DeadlineExceeded) {
+				caller, cancelCaller = context.WithTimeout(ctx, time.Second)
+			} else {
+				caller, cancelCaller = context.WithCancel(ctx)
+			}
+			defer cancelCaller()
+			sendCtx := &pauseBeforeWriteContext{Context: caller, reached: make(chan struct{}), resume: make(chan struct{})}
+			connection := testConnection(t, Options{}, func(ctx context.Context, socket *wire.Conn) {
+				select {
+				case <-sendCtx.reached:
+					_ = socket.Close(wire.StatusPolicyViolation, "synthetic peer detail")
+				case <-ctx.Done():
+					t.Errorf("send did not reach write: %v", ctx.Err())
+				}
+			})
+			finished := make(chan error, 1)
+			go func() { finished <- connection.Send(sendCtx, []byte("possibly attempted")) }()
+			_, recvErr := connection.Recv(ctx)
+			if wire.CloseStatus(recvErr) != wire.StatusPolicyViolation {
+				t.Fatalf("receive = %v, want peer close status", recvErr)
+			}
+			if errors.Is(test.want, context.Canceled) {
+				cancelCaller()
+			}
+			<-caller.Done()
+			close(sendCtx.resume)
+			select {
+			case sendErr := <-finished:
+				var delivery *DeliveryError
+				if !errors.As(sendErr, &delivery) || !delivery.MayHaveBeenSent {
+					t.Fatalf("admitted send = %v, want uncertain delivery", sendErr)
+				}
+				if !errors.Is(sendErr, test.want) {
+					t.Fatalf("admitted send = %v, want %v", sendErr, test.want)
+				}
+				if strings.Contains(sendErr.Error(), "synthetic peer detail") {
+					t.Errorf("admitted send retained peer close details: %v", sendErr)
+				}
+			case <-ctx.Done():
+				t.Fatal(ctx.Err())
+			}
+		})
 	}
 }
 

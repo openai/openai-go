@@ -28,10 +28,13 @@ The checker and effective budget come from main, not the PR. Keep default CODEOW
   metadata, including `Authorization`, `Cookie`, `Set-Cookie`, `Api-Key`,
   `X-Api-Key`, and `X-Amz-Security-Token`; credentials in URLs or query
   parameters; webhook material; and sensitive request or response bodies before
-  logging, recording, forwarding, or disclosure. `Error.DumpRequest`,
-  `Error.DumpResponse`, and `Error.Error` intentionally expose raw, opt-in
-  diagnostics that may include these values; sanitize their output before it
-  reaches logs, test recordings, CI output, or any other untrusted sink.
+  logging, recording, forwarding, or disclosure. SDK error formatting methods
+  return a status-only summary. Go's invalid-format diagnostics may bypass those
+  methods and expose raw fields; use valid directives as documented in README.md.
+  `Error.DumpRequest`,
+  `Error.DumpResponse`, `Error.RawJSON`, and exported error fields still expose
+  raw diagnostics that may include sensitive values; sanitize them before they
+  reach logs, test recordings, CI output, or any other untrusted sink.
 - Require SDK CODEOWNER review for changes to authentication, Azure or AWS
   credentials, webhook verification, custom endpoints, redirects, proxies, TLS,
   file handling, uploads, JSON or event-stream decoding, code generation, CI,
@@ -41,9 +44,10 @@ The checker and effective budget come from main, not the PR. Keep default CODEOW
   changes, use artifact-appropriate validation.
 - Review the purpose, provenance, versions, and transitive effects of every
   dependency change across the root, `examples`, `api_reference`,
-  `internal/testdata/consumer`, and `tools` modules. Inspect `go.mod`, `go.sum`,
-  `replace` directives, bootstrap or install scripts, code generators, and
-  npm-based mock tooling; do not bypass Go module checksum verification.
+  `internal/testdata/consumer`, `tools`, and `v3/vertex` modules. Inspect
+  `go.mod`, `go.sum`, `replace` directives, bootstrap or install scripts, code
+  generators, and npm-based mock tooling; do not bypass Go module checksum
+  verification.
 - Pin third-party GitHub Actions to full commit SHAs and review action updates.
   Keep CI permissions minimal, retain `persist-credentials: false`, and protect
   release credentials in approved environments. Grant only the required scopes
@@ -89,7 +93,7 @@ The checker and effective budget come from main, not the PR. Keep default CODEOW
   `GO_VERSION_POLICY.md` adds the retired minimum as a third line. CI tests the
   latest patch release in every supported line.
 - Keep the `go` directives in the root, `examples`,
-  `internal/testdata/consumer`, and `tools` modules aligned.
+  `internal/testdata/consumer`, `tools`, and `v3/vertex` modules aligned.
 - Do not combine a minimum-Go-version change with unrelated SDK or Azure
   dependency upgrades.
 
@@ -97,7 +101,7 @@ The checker and effective budget come from main, not the PR. Keep default CODEOW
 
 When changing a `go` directive:
 
-1. Update all four modules and run `go mod tidy` in each module.
+1. Update the modules listed above and run `go mod tidy` in each module.
 2. Update `README.md`, `CONTRIBUTING.md`, and `GO_VERSION_POLICY.md`.
 3. Update the minimum/current CI matrix in `.github/workflows/ci.yml`.
 4. Add a `## Release note` section to the pull request description that names
@@ -114,7 +118,9 @@ interpret release policy or pull request prose.
 ## Automation map
 
 - `.github/workflows/ci.yml`
-  - On branch pushes: lint, tidy, and tests on each supported Go line.
+  - On pushes to `main`, `next`, and `release-please--**`: lint, tidy, and
+    tests on each supported Go line. Feature branches run CI when a PR is
+    opened (including a draft), or via manual workflow dispatch before a PR.
   - On pull requests: the same lint and test coverage, plus reachable
     vulnerability checks.
   - Nightly: reachable-vulnerability checks only, so newly published
@@ -159,8 +165,8 @@ interpret release policy or pull request prose.
     authoritative.
 - `.github/dependabot.yml`
   - Weekly: proposes coordinated Go dependency updates for the coupled root,
-    examples, and external-consumer modules. The isolated tools module and
-    pinned GitHub Actions receive independently reviewable updates.
+    examples, and external-consumer modules. The isolated tools and Vertex
+    modules and pinned GitHub Actions receive independently reviewable updates.
   - Never auto-merges dependency or Go-version changes.
 
 ## Validation
@@ -172,12 +178,15 @@ go mod tidy -diff
 (cd examples && go mod tidy -diff)
 (cd internal/testdata/consumer && go mod tidy -diff)
 (cd tools && go mod tidy -diff)
+(cd v3/vertex && go mod tidy -diff)
 go test ./...
 (cd examples && go test ./...)
 (cd internal/testdata/consumer && go test -mod=readonly ./...)
+(cd v3/vertex && go test ./...)
 (cd tools && go install golang.org/x/vuln/cmd/govulncheck)
 govulncheck ./...
 (cd examples && govulncheck ./...)
+(cd v3/vertex && govulncheck ./...)
 ```
 
 Also test with `GOTOOLCHAIN=local` on every Go release line listed in the CI

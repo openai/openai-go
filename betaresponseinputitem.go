@@ -44,6 +44,7 @@ func NewBetaResponseInputItemService(opts ...option.RequestOption) (r BetaRespon
 // Returns a list of input items for a given response.
 func (r *BetaResponseInputItemService) List(ctx context.Context, responseID string, params BetaResponseInputItemListParams, opts ...option.RequestOption) (res *pagination.CursorPage[BetaResponseItemUnion], err error) {
 	var raw *http.Response
+	opts = slices.Clone(opts)
 	for _, v := range params.Betas {
 		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}

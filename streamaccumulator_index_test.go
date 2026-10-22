@@ -35,6 +35,22 @@ func TestAccumulatorRejectsInvalidIndicesWithoutMutation(t *testing.T) {
 			raw:  `{"id":"test","choices":[{"index":0,"delta":{"content":" mutated","tool_calls":[{"index":128}]}}]}`,
 		},
 		{
+			name: "sparse staircase",
+			raw:  `{"id":"test","choices":[{"index":0,"delta":{"content":" mutated","tool_calls":[{"index":127},{"index":255}]}}]}`,
+		},
+		{
+			name: "staircase across repeated choice entries",
+			raw:  `{"id":"test","choices":[{"index":0,"delta":{"tool_calls":[{"index":127}]}},{"index":0,"delta":{"tool_calls":[{"index":255}]}}]}`,
+		},
+		{
+			name: "sparse growth across choices",
+			raw:  `{"id":"test","choices":[{"index":0,"delta":{"tool_calls":[{"index":127}]}},{"index":1,"delta":{"tool_calls":[{"index":127}]}}]}`,
+		},
+		{
+			name: "one position beyond chunk allowance",
+			raw:  `{"id":"test","choices":[{"index":0,"delta":{"tool_calls":[{"index":127},{"index":129}]}}]}`,
+		},
+		{
 			name: "maximum int64 tool call",
 			raw:  `{"id":"test","choices":[{"index":0,"delta":{"content":" mutated","tool_calls":[{"index":9223372036854775807}]}}]}`,
 		},
@@ -66,6 +82,10 @@ func TestAccumulatorRejectsInvalidIndicesWithoutMutation(t *testing.T) {
 			}
 			if content, ok := acc.JustFinishedContent(); ok {
 				t.Fatalf("rejected chunk retained the finished event: got %q", content)
+			}
+			addAccumulatorChunk(t, &acc, `{"id":"test","choices":[{"index":0,"delta":{"tool_calls":[{"index":127,"id":"after-rejection"}]}}]}`)
+			if calls := acc.Choices[0].Message.ToolCalls; len(calls) != 128 || calls[127].ID != "after-rejection" {
+				t.Fatal("rejected chunk affected the next chunk's growth allowance")
 			}
 		})
 	}
@@ -161,5 +181,34 @@ func addAccumulatorChunk(t *testing.T, acc *openai.ChatCompletionAccumulator, ra
 	}
 	if !acc.AddChunk(chunk) {
 		t.Fatal("AddChunk returned false for a valid chunk")
+	}
+}
+
+func TestAccumulatorToolGrowthAllowance(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		raw  string
+		want int
+	}{
+		{"single sparse boundary", `[{"index":127,"id":"last"}]`, 128},
+		{"sparse then dense boundary", `[{"index":127},{"index":128,"id":"last"}]`, 129},
+		{"later entries contribute allowance", `[{"index":127},{"index":129,"id":"last"},{"index":0}]`, 130},
+		{"provider negative one", `[{"index":-1,"id":"last"}]`, 1},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var acc openai.ChatCompletionAccumulator
+			addAccumulatorChunk(t, &acc, `{"id":"test","choices":[{"index":0,"delta":{"tool_calls":`+test.raw+`}}]}`)
+			calls := acc.Choices[0].Message.ToolCalls
+			if len(calls) != test.want || calls[test.want-1].ID != "last" {
+				t.Fatalf("unexpected tool calls: count %d, want %d with final ID last", len(calls), test.want)
+			}
+			// Existing calls consume no growth allowance, and each chunk receives
+			// fresh sparse slack without imposing a total-output cap.
+			addAccumulatorChunk(t, &acc, fmt.Sprintf(`{"id":"test","choices":[{"index":0,"delta":{"tool_calls":[{"index":0},{"index":%d,"id":"next"}]}}]}`, test.want+127))
+			calls = acc.Choices[0].Message.ToolCalls
+			if len(calls) != test.want+128 || calls[test.want+127].ID != "next" {
+				t.Fatal("subsequent chunk did not preserve existing and new tool calls")
+			}
+		})
 	}
 }

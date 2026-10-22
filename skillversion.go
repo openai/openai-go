@@ -53,7 +53,7 @@ func (r *SkillVersionService) New(ctx context.Context, skillID string, body Skil
 		return nil, err
 	}
 	path := requestconfig.FormatPath("skills/%s/versions", skillID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &res, opts...)
 	return res, err
 }
 
@@ -230,6 +230,15 @@ func (r SkillVersionNewParams) MarshalMultipart() (data []byte, contentType stri
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
+}
+
+// MarshalMultipartTo writes multipart fields without buffering file contents.
+// The caller owns writer and must close it to finish the multipart body.
+func (r SkillVersionNewParams) MarshalMultipartTo(writer *multipart.Writer) error {
+	if err := apiform.MarshalRoot(r, writer); err != nil {
+		return err
+	}
+	return apiform.WriteExtras(writer, r.ExtraFields())
 }
 
 // Only one field can be non-zero.

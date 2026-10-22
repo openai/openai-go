@@ -30,6 +30,7 @@ type BetaAgentSessionService struct {
 	Artifacts BetaAgentSessionArtifactService
 	Items     BetaAgentSessionItemService
 	Events    BetaAgentSessionEventService
+	Traces    BetaAgentSessionTraceService
 	Turns     BetaAgentSessionTurnService
 }
 
@@ -43,6 +44,7 @@ func NewBetaAgentSessionService(opts ...option.RequestOption) (r BetaAgentSessio
 	r.Artifacts = NewBetaAgentSessionArtifactService(opts...)
 	r.Items = NewBetaAgentSessionItemService(opts...)
 	r.Events = NewBetaAgentSessionEventService(opts...)
+	r.Traces = NewBetaAgentSessionTraceService(opts...)
 	r.Turns = NewBetaAgentSessionTurnService(opts...)
 	return
 }
@@ -51,6 +53,9 @@ func NewBetaAgentSessionService(opts ...option.RequestOption) (r BetaAgentSessio
 // the session or streams its events when stream is true. See
 // [running sessions](https://developers.openai.com/api/docs/guides/agents-api/sessions).
 func (r *BetaAgentSessionService) New(ctx context.Context, body BetaAgentSessionNewParams, opts ...option.RequestOption) (res *AgentSession, err error) {
+	if len(body.ToolHandlers) != 0 {
+		return nil, errors.New("ToolHandlers requires NewStreaming")
+	}
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "agents=v1")}, opts...)
@@ -63,17 +68,31 @@ func (r *BetaAgentSessionService) New(ctx context.Context, body BetaAgentSession
 // the session or streams its events when stream is true. See
 // [running sessions](https://developers.openai.com/api/docs/guides/agents-api/sessions).
 func (r *BetaAgentSessionService) NewStreaming(ctx context.Context, body BetaAgentSessionNewParams, opts ...option.RequestOption) (stream *ssestream.Stream[AgentSessionEventUnion]) {
+	toolOpts := opts
+	var cancel context.CancelFunc
+	if len(body.ToolHandlers) != 0 {
+		ctx, cancel = context.WithCancel(ctx)
+	}
 	var (
 		raw *http.Response
 		err error
 	)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	if cancel != nil {
+		capture, require := agentStreamResponseGuard[http.Response]()
+		preClientOpts = append(preClientOpts, capture)
+		opts = append(slices.Clone(opts), require)
+	}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "agents=v1")}, opts...)
 	opts = append(opts, option.WithJSONSet("stream", true))
 	path := "agents/sessions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
-	return ssestream.NewStream[AgentSessionEventUnion](ssestream.NewDecoder(raw), err)
+	stream = ssestream.NewStreamWithBetaAccumulator[AgentSessionEventUnion](ssestream.NewDecoder(raw), err, &betaAgentTurnCollector{})
+	if cancel != nil {
+		return betaAgentCreationStream(ctx, cancel, r, stream, body.ToolHandlers, toolOpts)
+	}
+	return stream
 }
 
 // Retrieves the current state of a managed agent session. See
@@ -154,6 +173,10 @@ func (r *BetaAgentSessionService) Delete(ctx context.Context, sessionID string, 
 }
 
 type BetaAgentSessionNewParams struct {
+	// ToolHandlers runs local functions during NewStreaming iteration. This beta
+	// helper option is never sent to the API. Use NewStreaming, not New, with handlers.
+	ToolHandlers map[string]AgentToolHandler `json:"-"`
+
 	// An inline execution environment or a reference to an environment template.
 	Environment EnvironmentParamUnion `json:"environment,omitzero" api:"required"`
 	// The ID of a saved reusable agent. Omit `agent` to use its configuration
@@ -167,6 +190,9 @@ type BetaAgentSessionNewParams struct {
 	// Up to 16 string key-value pairs, with keys up to 64 and values up to 512
 	// characters. Omission or null defaults to an empty map.
 	Metadata map[string]string `json:"metadata,omitzero"`
+	// Optional spending limit in USD cents. Omission or null creates an unlimited
+	// session.
+	SpendControl BetaAgentSessionNewParamsSpendControl `json:"spend_control,omitzero"`
 	// The IDs of vaults made available to the session.
 	VaultIDs []string `json:"vault_ids,omitzero"`
 	// Agent configuration. With `agent_id`, supplied fields override the saved agent
@@ -193,9 +219,11 @@ type BetaAgentSessionNewParamsAgent struct {
 	Model param.Opt[string] `json:"model,omitzero"`
 	// The service tier used for model requests.
 	//
-	// Any of "auto", "default", "flex", "priority", "fast".
+	// Any of "auto", "default", "flex", "priority", "fast", "ultrafast".
 	ServiceTier string `json:"service_tier,omitzero"`
-	// Tools available to the agent. Omit to inherit, or pass null to clear them.
+	// Tools available to the agent. Omit to inherit, or pass null to clear them. The
+	// resolved tool list must fit within 3 MiB (3,145,728 bytes) of compact UTF-8
+	// JSON.
 	Tools []AgentToolParamUnion `json:"tools,omitzero"`
 	// Configuration for creating and coordinating subagents.
 	MultiAgent MultiAgentConfigParam `json:"multi_agent,omitzero"`
@@ -217,7 +245,7 @@ func (r *BetaAgentSessionNewParamsAgent) UnmarshalJSON(data []byte) error {
 
 func init() {
 	apijson.RegisterFieldValidator[BetaAgentSessionNewParamsAgent](
-		"service_tier", "auto", "default", "flex", "priority", "fast",
+		"service_tier", "auto", "default", "flex", "priority", "fast", "ultrafast",
 	)
 }
 
@@ -237,11 +265,32 @@ func (u *BetaAgentSessionNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
+// Optional spending limit in USD cents. Omission or null creates an unlimited
+// session.
+//
+// The property Limit is required.
+type BetaAgentSessionNewParamsSpendControl struct {
+	// Positive USD cents, or null to remove the limit.
+	Limit param.Opt[int64] `json:"limit,omitzero" api:"required"`
+	paramObj
+}
+
+func (r BetaAgentSessionNewParamsSpendControl) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentSessionNewParamsSpendControl
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentSessionNewParamsSpendControl) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type BetaAgentSessionUpdateParams struct {
 	// Replaces all metadata. Omit to leave unchanged, or pass null or {} to clear it.
 	// Up to 16 string key-value pairs, with keys up to 64 and values up to 512
 	// characters.
 	Metadata map[string]string `json:"metadata,omitzero"`
+	// Omit to retain the limit; null or a null limit removes it without resetting
+	// spend.
+	SpendControl BetaAgentSessionUpdateParamsSpendControl `json:"spend_control,omitzero"`
 	// Model settings for subsequent turns. Omitted fields stay unchanged.
 	Agent BetaAgentSessionUpdateParamsAgent `json:"agent,omitzero"`
 	paramObj
@@ -261,7 +310,7 @@ type BetaAgentSessionUpdateParamsAgent struct {
 	Model param.Opt[string] `json:"model,omitzero"`
 	// Omit to keep the current tier. Null resets it to auto.
 	//
-	// Any of "auto", "default", "flex", "priority", "fast".
+	// Any of "auto", "default", "flex", "priority", "fast", "ultrafast".
 	ServiceTier param.Opt[string] `json:"service_tier,omitzero"`
 	// Reasoning settings to update. Omit to keep the current effort.
 	Reasoning BetaAgentSessionUpdateParamsAgentReasoning `json:"reasoning,omitzero"`
@@ -293,16 +342,33 @@ func (r *BetaAgentSessionUpdateParamsAgentReasoning) UnmarshalJSON(data []byte) 
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Omit to retain the limit; null or a null limit removes it without resetting
+// spend.
+//
+// The property Limit is required.
+type BetaAgentSessionUpdateParamsSpendControl struct {
+	// Positive USD cents, or null to remove the limit.
+	Limit param.Opt[int64] `json:"limit,omitzero" api:"required"`
+	paramObj
+}
+
+func (r BetaAgentSessionUpdateParamsSpendControl) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentSessionUpdateParamsSpendControl
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentSessionUpdateParamsSpendControl) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type BetaAgentSessionListParams struct {
 	// Return resources after this resource ID in the selected order.
 	After param.Opt[string] `query:"after,omitzero" json:"-"`
 	// Only return sessions whose root agent has this ID. Omit to return sessions for
 	// all agents.
 	AgentID param.Opt[string] `query:"agent_id,omitzero" json:"-"`
-	// The maximum number of resources to return.
+	// The maximum number of resources to return, between 1 and 100. Defaults to 20.
 	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
-	// Sort order by the `created_at` timestamp. Use `asc` for ascending order or
-	// `desc` for descending order. Defaults to `desc`.
+	// The order in which resources are returned. Defaults to `desc`.
 	//
 	// Any of "asc", "desc".
 	Order BetaAgentSessionListParamsOrder `query:"order,omitzero" json:"-"`
@@ -318,8 +384,7 @@ func (r BetaAgentSessionListParams) URLQuery() (v url.Values, err error) {
 	})
 }
 
-// Sort order by the `created_at` timestamp. Use `asc` for ascending order or
-// `desc` for descending order. Defaults to `desc`.
+// The order in which resources are returned. Defaults to `desc`.
 type BetaAgentSessionListParamsOrder string
 
 const (

@@ -13,6 +13,8 @@ import (
 )
 
 // Existing consumer code must retain access through every exported alias package.
+//
+//nolint:staticcheck // SA1019: This fixture specifically checks that the deprecated alias remains source-compatible.
 const (
 	_ openai.ChatModel        = openai.ChatModelGPT5_1Mini
 	_ conversations.ChatModel = conversations.ChatModelGPT5_1Mini
@@ -24,6 +26,7 @@ const (
 )
 
 func TestCorePackageCompiles(t *testing.T) {
+	//nolint:staticcheck // SA1019: This fixture verifies that the deprecated public alias remains source-compatible.
 	if openai.ChatModelGPT4o == "" {
 		t.Error("ChatModelGPT4o = empty, want a model identifier")
 	}

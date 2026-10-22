@@ -13,6 +13,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/openai/openai-go/v3/internal/requestconfig"
@@ -120,29 +121,27 @@ func TestX509WorkloadIdentityFollowersUseTheirOwnRetryBudgets(t *testing.T) {
 	for _, test := range []struct {
 		name          string
 		status        int
+		retryAfter    string
 		followerLimit int
-		wantExchanges int32
+		wantRetries   int
 		wantSuccess   bool
 	}{
 		{name: "retry-enabled follower recovers", status: http.StatusServiceUnavailable,
-			followerLimit: 2, wantExchanges: 2, wantSuccess: true},
-		{name: "zero-retry follower fails", status: http.StatusServiceUnavailable, wantExchanges: 1},
+			followerLimit: 2, wantRetries: 1, wantSuccess: true},
+		{name: "follower rejects excessive issuer delay", status: http.StatusTooManyRequests, retryAfter: "3", followerLimit: 2},
+		{name: "zero-retry follower fails", status: http.StatusServiceUnavailable},
 		{name: "permanent failure is not retried", status: http.StatusBadRequest,
-			followerLimit: 2, wantExchanges: 1},
+			followerLimit: 2},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			var exchanges atomic.Int32
-			firstReached := make(chan struct{})
-			releaseFirst := make(chan struct{})
 			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-				if exchanges.Add(1) == 1 {
-					close(firstReached)
-					<-releaseFirst
-					w.WriteHeader(test.status)
-					_, _ = io.WriteString(w, `{"error":{"code":"invalid_grant"}}`)
-					return
+				exchanges.Add(1)
+				if test.retryAfter != "" {
+					w.Header().Set("Retry-After", test.retryAfter)
 				}
-				_, _ = io.WriteString(w, x509ValidExchangeResponse())
+				w.WriteHeader(test.status)
+				_, _ = io.WriteString(w, `{"error":{"code":"invalid_grant"}}`)
 			}))
 			identity := newX509LifecycleIdentity(t, fixture)
 			leaderScope := requestconfig.NewRequestRetryScope(0, time.Millisecond, true, nil)
@@ -150,55 +149,47 @@ func TestX509WorkloadIdentityFollowersUseTheirOwnRetryBudgets(t *testing.T) {
 			if !leaderScope.BeginAttempt() {
 				t.Fatal("zero-retry leader initial attempt was rejected")
 			}
-			leaderResult := make(chan error, 1)
-			go func() {
-				_, err := identity.GetToken(leaderContext, fixture.capability)
-				leaderResult <- err
-			}()
-			select {
-			case <-firstReached:
-			case <-time.After(5 * time.Second):
-				t.Fatal("zero-retry refresh leader never reached the issuer")
+			_, leaderErr := identity.GetToken(leaderContext, fixture.capability)
+			if leaderErr == nil {
+				t.Fatal("zero-retry refresh leader unexpectedly recovered")
 			}
-			followerScope := requestconfig.NewRequestRetryScope(test.followerLimit, time.Millisecond, true, nil)
-			followerParent := requestconfig.WithRequestRetryScope(t.Context(), followerScope)
-			if !followerScope.BeginAttempt() {
-				t.Fatal("follower initial attempt was rejected")
-			}
-			waiting := make(chan struct{})
-			followerContext := &x509ObservedDoneContext{Context: followerParent, observed: waiting}
-			followerResult := make(chan error, 1)
-			go func() {
-				token, err := identity.GetToken(followerContext, fixture.capability)
-				if err == nil && token != x509ExchangeSyntheticToken {
-					err = errors.New("retry-enabled follower received an unexpected bearer")
+			synctest.Test(t, func(t *testing.T) {
+				refresh := &x509TokenRefresh{done: make(chan struct{})}
+				identity.inFlight = refresh
+				var retries int
+				followerScope := requestconfig.NewRequestRetryScope(test.followerLimit, time.Millisecond, true, func(consumed int) {
+					retries = consumed
+				})
+				followerContext := requestconfig.WithRequestRetryScope(t.Context(), followerScope)
+				if !followerScope.BeginAttempt() {
+					t.Fatal("follower initial attempt was rejected")
 				}
-				followerResult <- err
-			}()
-			select {
-			case <-waiting:
-				close(releaseFirst)
-			case <-time.After(5 * time.Second):
-				t.Fatal("refresh follower never waited for its shared leader")
-			}
-			select {
-			case err := <-leaderResult:
-				if err == nil {
-					t.Error("zero-retry refresh leader unexpectedly recovered")
-				}
-			case <-time.After(5 * time.Second):
-				t.Fatal("zero-retry refresh leader did not finish")
-			}
-			select {
-			case err := <-followerResult:
-				if (err == nil) != test.wantSuccess {
+				followerResult := make(chan error, 1)
+				go func() {
+					token, err := identity.GetToken(followerContext, fixture.capability)
+					if err == nil && token != x509ExchangeSyntheticToken {
+						err = errors.New("retry-enabled follower received an unexpected bearer")
+					}
+					followerResult <- err
+				}()
+				synctest.Wait() // The follower is blocked on the shared refresh.
+				identity.mu.Lock()
+				identity.inFlight = nil
+				// A permitted retry can recover from the cache without crossing the synctest bubble's network boundary.
+				identity.cached = x509ExchangedToken{value: x509ExchangeSyntheticToken, expiresAt: time.Now().Add(time.Minute)}
+				identity.refreshAfter = identity.cached.expiresAt
+				refresh.err = leaderErr
+				close(refresh.done)
+				identity.mu.Unlock()
+				if err := <-followerResult; (err == nil) != test.wantSuccess {
 					t.Errorf("shared-failure follower error = %v, want success %t", err, test.wantSuccess)
 				}
-			case <-time.After(5 * time.Second):
-				t.Fatal("refresh follower did not finish after its shared failure")
-			}
-			if got := exchanges.Load(); got != test.wantExchanges {
-				t.Errorf("leader/follower issuer attempts = %d, want %d", got, test.wantExchanges)
+				if retries != test.wantRetries {
+					t.Errorf("follower retries = %d, want %d", retries, test.wantRetries)
+				}
+			})
+			if got := exchanges.Load(); got != 1 {
+				t.Errorf("issuer attempts = %d, want 1", got)
 			}
 		})
 	}
@@ -377,6 +368,7 @@ func TestX509WorkloadIdentitySelectsBoundedIssuerRetryDelays(t *testing.T) {
 		attempt int
 		scope   *requestconfig.RequestRetryScope
 		want    time.Duration
+		stop    bool
 	}{
 		{name: "ordinary exponential delay", err: &x509ExchangeHTTPError{statusCode: 503},
 			attempt: 1, want: 2 * x509InitialRetryDelay},
@@ -387,15 +379,15 @@ func TestX509WorkloadIdentitySelectsBoundedIssuerRetryDelays(t *testing.T) {
 			statusCode: 429, retryAfter: 0, hasRetryAfter: true}},
 		{name: "issuer hint obeys caller maximum", err: &x509ExchangeHTTPError{
 			statusCode: 503, retryAfter: time.Second, hasRetryAfter: true},
-			scope: requestconfig.NewRequestRetryScope(2, 7*time.Millisecond, true, nil), want: 7 * time.Millisecond},
+			scope: requestconfig.NewRequestRetryScope(2, 7*time.Millisecond, true, nil), stop: true},
 		{name: "ordinary delay obeys caller maximum", err: &x509ExchangeReadError{},
 			scope: requestconfig.NewRequestRetryScope(2, time.Millisecond, true, nil), want: time.Millisecond},
 		{name: "standalone delay remains bounded", err: &x509ExchangeHTTPError{
-			statusCode: 429, retryAfter: time.Hour, hasRetryAfter: true}, want: x509MaximumRetryAfter},
+			statusCode: 429, retryAfter: time.Hour, hasRetryAfter: true}, stop: true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			if got := x509ExchangeRetryDelay(test.err, test.attempt, test.scope); got != test.want {
-				t.Errorf("issuer retry delay = %s, want %s", got, test.want)
+			if got, allowed := x509ExchangeRetryDelay(test.err, test.attempt, test.scope); got != test.want || allowed == test.stop {
+				t.Errorf("issuer retry delay = (%s, %t), want (%s, %t)", got, allowed, test.want, !test.stop)
 			}
 		})
 	}
@@ -858,4 +850,130 @@ func newX509LifecycleIdentity(t *testing.T, fixture *x509ExchangeFixture) *X509W
 		t.Fatalf("construct ephemeral X.509 lifecycle identity: %v", err)
 	}
 	return identity
+}
+
+func TestX509WorkloadIdentityRejectsExcessiveRetryAfter(t *testing.T) {
+	for _, header := range []string{"3", "3600", "1e100"} {
+		t.Run(header, func(t *testing.T) {
+			var attempts atomic.Int32
+			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				attempts.Add(1)
+				w.Header().Set("Retry-After", header)
+				w.WriteHeader(http.StatusTooManyRequests)
+			}))
+			identity := newX509LifecycleIdentity(t, fixture)
+			scope := requestconfig.NewRequestRetryScope(2, 10*time.Millisecond, true, nil)
+			ctx := requestconfig.WithRequestRetryScope(t.Context(), scope)
+			_, err := identity.GetToken(ctx, fixture.capability)
+			var status *x509ExchangeHTTPError
+			if !errors.As(err, &status) || status.statusCode != http.StatusTooManyRequests {
+				t.Fatalf("GetToken() error = %v, want original issuer HTTP error", err)
+			}
+			if got := attempts.Load(); got != 1 {
+				t.Fatalf("issuer attempts = %d, want 1", got)
+			}
+		})
+	}
+}
+
+func TestX509FollowerHonorsSharedRetryAfter(t *testing.T) {
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		t.Error("unexpected issuer request during shared backoff")
+		w.WriteHeader(http.StatusBadRequest)
+	}))
+	for _, cancelBackoff := range []bool{false, true} {
+		t.Run(strconv.FormatBool(cancelBackoff), func(t *testing.T) {
+			synctest.Test(t, func(t *testing.T) {
+				identity := newX509LifecycleIdentity(t, fixture)
+				refresh := &x509TokenRefresh{done: make(chan struct{})}
+				identity.inFlight = refresh
+				ctx, cancel := context.WithCancel(t.Context())
+				defer cancel()
+				scope := requestconfig.NewRequestRetryScope(2, 2*time.Second, true, nil)
+				if !scope.BeginAttempt() {
+					t.Fatal("initial attempt rejected")
+				}
+				ctx = requestconfig.WithRequestRetryScope(ctx, scope)
+				result := make(chan error, 1)
+				go func() { _, err := identity.GetToken(ctx, fixture.capability); result <- err }()
+				synctest.Wait() // The caller is durably blocked on this synthetic refresh.
+				identity.mu.Lock()
+				identity.inFlight = nil
+				identity.cached = x509ExchangedToken{value: x509ExchangeSyntheticToken, expiresAt: time.Now().Add(time.Minute)}
+				identity.refreshAfter = time.Now().Add(time.Minute)
+				refresh.err = &x509ExchangeHTTPError{statusCode: 429, retryAfter: time.Second, hasRetryAfter: true}
+				started := time.Now()
+				close(refresh.done)
+				identity.mu.Unlock()
+				if cancelBackoff {
+					synctest.Wait() // Waiting on the retry timer must remain cancellable.
+					cancel()
+				}
+				err := <-result
+				if cancelBackoff {
+					if !errors.Is(err, context.Canceled) {
+						t.Errorf("GetToken error = %v, want cancellation", err)
+					}
+					if elapsed := time.Since(started); elapsed != 0 {
+						t.Errorf("cancellation waited %s, want zero", elapsed)
+					}
+				} else {
+					if err != nil {
+						t.Errorf("GetToken error = %v, want nil", err)
+					}
+					if elapsed := time.Since(started); elapsed != time.Second {
+						t.Errorf("shared Retry-After waited %s, want 1s", elapsed)
+					}
+				}
+			})
+		})
+	}
+}
+
+func TestX509InvalidatedBearerFollowerRetriesWithoutDelay(t *testing.T) {
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		t.Error("unexpected issuer request")
+		w.WriteHeader(http.StatusBadRequest)
+	}))
+	for _, retries := range []int{0, 1} {
+		t.Run(strconv.Itoa(retries), func(t *testing.T) {
+			synctest.Test(t, func(t *testing.T) {
+				identity := newX509LifecycleIdentity(t, fixture)
+				refresh := &x509TokenRefresh{done: make(chan struct{})}
+				identity.inFlight = refresh
+				ctx, cancel := context.WithTimeout(t.Context(), 100*time.Millisecond)
+				defer cancel()
+				scope := requestconfig.NewRequestRetryScope(retries, 2*time.Second, true, nil)
+				if !scope.BeginAttempt() {
+					t.Fatal("initial attempt rejected")
+				}
+				ctx = requestconfig.WithRequestRetryScope(ctx, scope)
+				result := make(chan error, 1)
+				go func() { _, err := identity.GetToken(ctx, fixture.capability); result <- err }()
+				synctest.Wait()
+				identity.mu.Lock()
+				identity.inFlight = nil
+				identity.cached = x509ExchangedToken{value: x509ExchangeSyntheticToken, expiresAt: time.Now().Add(time.Minute)}
+				identity.refreshAfter = time.Now().Add(time.Minute)
+				refresh.err = errX509InvalidatedBearer
+				started := time.Now()
+				close(refresh.done)
+				identity.mu.Unlock()
+				err := <-result
+				if retries == 0 {
+					if !errors.Is(err, errX509InvalidatedBearer) {
+						t.Fatalf("error = %v, want invalidated bearer", err)
+					}
+				} else if err != nil {
+					t.Fatalf("error = %v, want immediate retry success", err)
+				}
+				if elapsed := time.Since(started); elapsed != 0 {
+					t.Errorf("retry waited %s, want zero", elapsed)
+				}
+				if scope.TryRetry() {
+					t.Error("follower did not debit retry budget")
+				}
+			})
+		})
+	}
 }

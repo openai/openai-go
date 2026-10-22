@@ -30,6 +30,13 @@ type AgentSessionStreamParams struct {
 	// Input must be a nonempty string or []AgentSessionInputMessageParam.
 	Input        any
 	ToolHandlers map[string]AgentToolHandler
+	// OnToolError reports local tool failures to application logging or monitoring.
+	// Use alongside ToolHandlers to observe argument decoding, handler execution,
+	// and output serialization failures before the generic failed result is sent.
+	// Request and stream errors continue through Err, not this callback.
+	// It runs sequentially during iteration; no logging is performed automatically.
+	// Panics propagate as usual.
+	OnToolError func(context.Context, BetaAgentToolError)
 	// IdempotencyKey applies only to input. A request header overrides this value.
 	// When absent, the helper generates a unique key. Each tool result gets its own key.
 	IdempotencyKey param.Opt[string]
@@ -40,12 +47,14 @@ type AgentSessionStreamParams struct {
 // It is not safe to iterate concurrently. Close may be called concurrently to
 // unblock iteration; it closes local resources without cancelling the backend turn.
 type AgentSessionStream struct {
+	collector    betaAgentTurnCollector
 	ctx          context.Context
 	cancel       context.CancelFunc
 	sessions     *BetaAgentSessionService
 	sessionID    string
 	options      []option.RequestOption
 	handlers     map[string]AgentToolHandler
+	onToolError  func(context.Context, BetaAgentToolError)
 	stream       *ssestream.Stream[AgentSessionEventUnion]
 	current      AgentSessionEventUnion
 	err          error
@@ -54,6 +63,7 @@ type AgentSessionStream struct {
 	closeErr     error
 	turnID       string
 	turnEnded    bool
+	allowEOF     bool
 	recent       [1024]string
 	recentCount  int
 	recentNext   int
@@ -66,10 +76,10 @@ type agentCallKey struct{ turnID, callID string }
 
 // Capture dispatch state before exposing the mutable event to the caller.
 type agentPendingCall struct {
-	turnID, callID string
-	handler        AgentToolHandler
-	arguments      map[string]any
-	argumentErr    error
+	turnID, callID, toolName string
+	handler                  AgentToolHandler
+	arguments                map[string]any
+	argumentErr              error
 }
 
 // Stream subscribes to events before submitting input, then streams through the
@@ -86,7 +96,7 @@ type agentPendingCall struct {
 func (r *BetaAgentSessionService) Stream(ctx context.Context, sessionID string, params AgentSessionStreamParams, opts ...option.RequestOption) *AgentSessionStream {
 	ctx, cancel := context.WithCancel(ctx)
 	s := &AgentSessionStream{ctx: ctx, cancel: cancel, sessions: r, sessionID: sessionID,
-		options: slices.Clone(opts), handlers: maps.Clone(params.ToolHandlers),
+		options: slices.Clone(opts), handlers: maps.Clone(params.ToolHandlers), onToolError: params.OnToolError,
 		eventIDs: make(map[string]struct{}), handledCalls: make(map[agentCallKey]struct{})}
 	input, err := agentStreamInput(params.Input)
 	if err != nil {
@@ -180,9 +190,13 @@ func (s *AgentSessionStream) Next() (ok bool) {
 			return false
 		}
 		event := s.stream.Current()
+		if event.EventID == "" {
+			return s.finish(errors.New("agent session stream event is missing event_id"))
+		}
 		if !s.accept(event) {
 			continue
 		}
+		s.collector.Accumulate(event)
 		s.current = event
 		if event.Type == "agent.session.failed" || (event.Type == "agent.session.idle" && s.turnEnded) {
 			_ = s.Close()
@@ -192,7 +206,7 @@ func (s *AgentSessionStream) Next() (ok bool) {
 				s.handledCalls[key] = struct{}{}
 				if handler := s.handlers[event.Item.Name]; handler != nil {
 					arguments, argumentErr := agentToolArguments(event.Item.Arguments)
-					s.pending = &agentPendingCall{turnID: event.Item.TurnID, callID: event.Item.CallID,
+					s.pending = &agentPendingCall{turnID: event.Item.TurnID, callID: event.Item.CallID, toolName: event.Item.Name,
 						handler: handler, arguments: arguments, argumentErr: argumentErr}
 				}
 			}
@@ -205,10 +219,16 @@ func (s *AgentSessionStream) Next() (ok bool) {
 	if err := s.stream.Err(); err != nil {
 		return s.finish(err)
 	}
+	if s.allowEOF {
+		return s.finish(nil)
+	}
 	return s.finish(io.ErrUnexpectedEOF)
 }
 
 func (s *AgentSessionStream) accept(event AgentSessionEventUnion) bool {
+	if s.sessionID == "" && event.Type == "agent.session.created" {
+		s.sessionID = event.Session.ID
+	}
 	if _, exists := s.eventIDs[event.EventID]; exists {
 		return false
 	}
@@ -259,9 +279,16 @@ func agentStreamKey() string {
 }
 
 func (s *AgentSessionStream) handle(call agentPendingCall) error {
-	result := agentToolResult(s.ctx, call)
+	if s.sessionID == "" {
+		return errors.New("missing session identity for tool result")
+	}
+	result, failure := agentToolResult(s.ctx, call)
 	if err := s.ctx.Err(); err != nil {
 		return err
+	}
+	if failure != nil && s.onToolError != nil {
+		failure.SessionID = s.sessionID
+		s.onToolError(s.ctx, *failure)
 	}
 	opts := append(slices.Clone(s.options), option.WithHeader("Idempotency-Key", agentStreamKey()))
 	delays := [...]time.Duration{100 * time.Millisecond, 300 * time.Millisecond, 600 * time.Millisecond}
@@ -296,7 +323,7 @@ func agentStreamResponseGuard[T any]() (option.RequestOption, option.RequestOpti
 	require := requestconfig.RequestOptionFunc(func(cfg *requestconfig.RequestConfig) error {
 		actual, ok := cfg.ResponseBodyInto.(**T)
 		if !ok || actual != destination {
-			return errors.New("sessions.Stream does not support WithResponseBodyInto; typed session and event decoding is required")
+			return errors.New("beta Agents helpers do not support WithResponseBodyInto; typed decoding is required")
 		}
 		return nil
 	})

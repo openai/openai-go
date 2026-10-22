@@ -556,6 +556,9 @@ func TestX509TransportAcceptsNativeInitializedHTTP2Templates(t *testing.T) {
 			var capability *auth.X509Transport
 			if !initializeBefore {
 				capability = newX509Capability(t, template)
+				if template.HTTP2 != nil || template.TLSNextProto != nil || len(template.TLSClientConfig.NextProtos) != 0 {
+					t.Fatal("attestation initialized the caller-owned transport")
+				}
 			}
 			request := x509TransportRequest(t, http.MethodGet, "https://"+x509TransportAPI+"/v1/models")
 			response, err := (&http.Client{Transport: template}).Do(request)
@@ -716,6 +719,32 @@ func TestX509TransportRejectsHTTP2ErrorCallbacks(t *testing.T) {
 	}
 	if got := invoked.Load(); got != 0 {
 		t.Errorf("rejected caller-controlled HTTP/2 error callback ran %d times", got)
+	}
+}
+
+func TestX509TransportRevalidatesAttestedHTTP2ErrorCallbacks(t *testing.T) {
+	fixture := newX509TransportFixture(t)
+	var received, invoked atomic.Int32
+	server := newX509HTTP2TransportServer(t, fixture, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		received.Add(1)
+		w.WriteHeader(http.StatusOK)
+	}))
+	template := fixture.transport(t, server)
+	template.ForceAttemptHTTP2 = true
+	template.HTTP2 = &http.HTTP2Config{}
+	capability := newX509Capability(t, template)
+	template.HTTP2.CountError = func(string) { invoked.Add(1) }
+
+	request := x509TransportRequest(t, http.MethodGet, "https://"+x509TransportAPI+"/v1/models")
+	response, err := capability.Do(request)
+	if response != nil {
+		_ = response.Body.Close()
+	}
+	if err == nil || !strings.Contains(err.Error(), "HTTP/2 error callbacks") {
+		t.Fatalf("changed attested HTTP/2 error hook: got %v", err)
+	}
+	if received.Load() != 0 || invoked.Load() != 0 {
+		t.Fatalf("callback change sent %d requests and invoked %d callbacks", received.Load(), invoked.Load())
 	}
 }
 

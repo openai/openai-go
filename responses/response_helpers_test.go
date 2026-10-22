@@ -135,7 +135,6 @@ func TestResponseToInputPreservesCompleteOutputForFollowupRequest(t *testing.T) 
 	}
 }
 
-
 func TestDharmaHistoryUnknownAndIsolation(t *testing.T) {
 	t.Run("unknown output item survives in order", func(t *testing.T) {
 		const body = `{"output":[{"id":"future_123","type":"future_fixture","payload":{"nested":[1,null,{"ok":true}]},"list":[{"name":"first"},null,[2,3]]},{"id":"msg_123","type":"message","role":"assistant","content":[{"type":"output_text","text":"after unknown"}],"status":"completed"}]}`
@@ -188,7 +187,11 @@ func TestDharmaHistoryUnknownAndIsolation(t *testing.T) {
 		}
 		sourceRaw := response.Output[0].RawJSON()
 
-		override, ok := first[0].Overrides()
+		overrideValue, ok := first[0].Overrides()
+		if !ok {
+			t.Fatal("first ToInput() item did not contain an override")
+		}
+		override, ok := overrideValue.(json.RawMessage)
 		if !ok || len(override) == 0 {
 			t.Fatal("first ToInput() item did not contain raw override bytes")
 		}

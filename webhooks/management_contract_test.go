@@ -65,7 +65,7 @@ func TestWebhookManagementRequestContract(t *testing.T) {
 				}
 			}))
 			t.Cleanup(server.Close)
-			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("test-api-key"), option.WithAdminAPIKey("test-admin-key"), option.WithMaxRetries(0))
+			client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("test-api-key"), option.WithAdminAPIKey("test-admin-key"), option.WithMaxRetries(0))
 			if err := tc.call(&client); err != nil {
 				t.Fatalf("Webhooks(%s, %q) = %v, want nil error", tc.name, id, err)
 			}
@@ -94,7 +94,7 @@ func TestWebhookManagementCreateKeepsDestinationInBody(t *testing.T) {
 		}
 	}))
 	t.Cleanup(server.Close)
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("test-api-key"), option.WithMaxRetries(0))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("test-api-key"), option.WithMaxRetries(0))
 	endpoint, err := client.Webhooks.New(t.Context(), webhooks.WebhookNewParams{Name: "test endpoint", URL: destination, EventTypes: []string{"response.completed"}})
 	if err != nil {
 		t.Fatalf("Webhooks.New(%q) = %v, want nil error", destination, err)
@@ -141,7 +141,7 @@ func TestWebhookManagementPaginationAndEventTypes(t *testing.T) {
 		}
 	}))
 	t.Cleanup(server.Close)
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("test-api-key"), option.WithMaxRetries(0))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("test-api-key"), option.WithMaxRetries(0))
 	events, err := client.Webhooks.EventTypes.List(t.Context())
 	if err != nil {
 		t.Fatalf("EventTypes.List() = %v, want nil error", err)

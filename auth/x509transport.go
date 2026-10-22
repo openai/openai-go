@@ -82,6 +82,7 @@ func (ctx x509TraceFreeContext) Value(key any) any {
 type X509Transport struct {
 	template          *http.Transport
 	templateTLS       *tls.Config
+	templateHTTP2     *http.HTTP2Config
 	transport         *http.Transport
 	tlsConfig         *tls.Config
 	certificateDigest [sha256.Size]byte
@@ -104,7 +105,11 @@ type x509TransportLifecycle struct {
 // with one static client certificate. The template and TLS credentials remain
 // caller-owned; the returned capability owns a separate clean connection pool.
 func NewX509Transport(template *http.Transport) (*X509Transport, error) {
-	if err := validateX509NativeTransport(template); err != nil {
+	var http2Config *http.HTTP2Config
+	if template != nil {
+		http2Config = template.HTTP2
+	}
+	if err := validateX509NativeTransport(template, http2Config); err != nil {
 		return nil, err
 	}
 	if err := validateX509ApplicationProtocols(template); err != nil {
@@ -189,8 +194,8 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 		protocols.SetHTTP2(template.TLSNextProto["h2"] != nil)
 		transport.Protocols = protocols
 	}
-	if template.HTTP2 != nil {
-		configuration := *template.HTTP2
+	if http2Config != nil {
+		configuration := *http2Config
 		transport.HTTP2 = &configuration
 	}
 	http1, http2 := x509EffectiveHTTPProtocols(template)
@@ -234,6 +239,7 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 	capability := &X509Transport{
 		template:          template,
 		templateTLS:       template.TLSClientConfig,
+		templateHTTP2:     http2Config,
 		transport:         transport,
 		tlsConfig:         config,
 		certificateDigest: x509CertificateDigest(config.Certificates[0].Certificate),
@@ -263,7 +269,7 @@ func x509CertificateDigest(chain [][]byte) [sha256.Size]byte {
 	return result
 }
 
-func validateX509NativeTransport(transport *http.Transport) error {
+func validateX509NativeTransport(transport *http.Transport, http2Config *http.HTTP2Config) error {
 	if transport == nil {
 		return errors.New("X.509 transport requires a non-nil native HTTP transport")
 	}
@@ -283,7 +289,7 @@ func validateX509NativeTransport(transport *http.Transport) error {
 	if transport.Proxy != nil {
 		return errors.New("X.509 transport currently supports direct connections only")
 	}
-	if transport.HTTP2 != nil && transport.HTTP2.CountError != nil {
+	if http2Config != nil && http2Config.CountError != nil {
 		return errors.New("X.509 transport does not support HTTP/2 error callbacks")
 	}
 	return nil
@@ -392,7 +398,10 @@ func (transport *X509Transport) validateAttestation() error {
 	if transport.lifecycle.closed.Load() {
 		return errors.New("X.509 transport capability is closed")
 	}
-	if err := validateX509NativeTransport(transport.template); err != nil {
+	// net/http may initialize template.HTTP2 during the caller's first request.
+	// Revalidate the originally attested configuration; replacing the caller's
+	// HTTP2 pointer cannot affect our isolated copy and must not race native I/O.
+	if err := validateX509NativeTransport(transport.template, transport.templateHTTP2); err != nil {
 		return fmt.Errorf("X.509 transport attestation changed: %w", err)
 	}
 	if transport.template.TLSClientConfig != transport.templateTLS ||

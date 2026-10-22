@@ -66,6 +66,22 @@ func (r *BetaAgentVaultService) Get(ctx context.Context, vaultID string, opts ..
 	return res, err
 }
 
+// Updates the name or metadata of an active vault. Omitted fields remain
+// unchanged. See
+// [vaults](https://developers.openai.com/api/docs/guides/agents-api/tools/vaults).
+func (r *BetaAgentVaultService) Update(ctx context.Context, vaultID string, body BetaAgentVaultUpdateParams, opts ...option.RequestOption) (res *Vault, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "agents=v1")}, opts...)
+	if vaultID == "" {
+		err = errors.New("missing required vault_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("vaults/%s", vaultID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	return res, err
+}
+
 // Lists vaults using ID-based pagination. See
 // [vaults](https://developers.openai.com/api/docs/guides/agents-api/tools/vaults).
 func (r *BetaAgentVaultService) List(ctx context.Context, query BetaAgentVaultListParams, opts ...option.RequestOption) (res *pagination.CursorPage[Vault], err error) {
@@ -205,14 +221,35 @@ func (r *BetaAgentVaultNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type BetaAgentVaultUpdateParams struct {
+	// A replacement name. Omit to leave unchanged, or pass null to clear it. The name
+	// is trimmed before storage. It must contain 1 to 256 UTF-8 bytes after trimming.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// Replaces all metadata. Omit to leave unchanged, or pass {} to clear it. Up to 16
+	// string key-value pairs, with keys up to 64 and values up to 512 characters.
+	Metadata map[string]string `json:"metadata,omitzero"`
+	paramObj
+}
+
+func (r BetaAgentVaultUpdateParams) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentVaultUpdateParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentVaultUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type BetaAgentVaultListParams struct {
 	// Return resources after this resource ID in the selected order.
 	After param.Opt[string] `query:"after,omitzero" json:"-"`
-	// The maximum number of resources to return. Defaults to 20. Values are clamped
-	// between 1 and 100.
+	// The maximum number of resources to return, between 1 and 100. Defaults to 20.
 	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
-	// Sort order by the `created_at` timestamp. Use `asc` for ascending order or
-	// `desc` for descending order. Defaults to `desc`.
+	// Exact string matches supplied as `metadata[key]=value`. All supplied pairs must
+	// match. Up to 16 pairs, with keys from 1 to 64 characters and values up to 512
+	// characters. Filtering is eventually consistent; metadata changes may take time
+	// to appear.
+	Metadata map[string]string `query:"metadata,omitzero" json:"-"`
+	// The order in which resources are returned. Defaults to `desc`.
 	//
 	// Any of "asc", "desc".
 	Order BetaAgentVaultListParamsOrder `query:"order,omitzero" json:"-"`
@@ -231,8 +268,7 @@ func (r BetaAgentVaultListParams) URLQuery() (v url.Values, err error) {
 	})
 }
 
-// Sort order by the `created_at` timestamp. Use `asc` for ascending order or
-// `desc` for descending order. Defaults to `desc`.
+// The order in which resources are returned. Defaults to `desc`.
 type BetaAgentVaultListParamsOrder string
 
 const (

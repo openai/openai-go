@@ -30,16 +30,22 @@ Or to pin an SDK version (see the Go compatibility note below):
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/openai/openai-go/v3@v3.64.3'
+go get -u 'github.com/openai/openai-go/v3@v3.85.1'
 ```
 
 <!-- x-release-please-end -->
 
 ## Requirements
 
-SDK v3.45.0 and later require Go 1.25 or later. If your application must
-remain on Go 1.22–1.24, pin SDK v3.44.0, the final compatible release. Older
-SDK releases receive no guaranteed fixes or security backports.
+This version requires Go 1.26 or later. Use the latest patch release of Go
+1.26 or Go 1.27; the HTTP/2 security fixes require Go 1.26.9 or Go 1.27.2
+or later patches in those release lines.
+
+If your application must remain on Go 1.25, pin SDK v3.74.0, the final
+compatible release. For Go 1.22–1.24, pin SDK v3.44.0. These older SDK
+releases receive no guaranteed fixes or security backports, and v3.74.0
+retains the affected HTTP/2 dependency. Upgrade your Go toolchain to use
+the security update.
 
 See the [Go version support policy](GO_VERSION_POLICY.md) for the supported
 release window and upgrade guidance.
@@ -437,6 +443,76 @@ Realtime sessions. Leave `stream` and `background` unset. Use `Create` followed 
 incomplete responses retain their status. `Recv` exposes individual typed events
 and their `RawJSON`. A terminal response ends a turn, not the socket.
 
+For opt-in incremental text and tool-input snapshots, feed the events you read
+to a `responses.ResponseAccumulator`. It consumes no events itself:
+
+```go
+var acc responses.ResponseAccumulator
+for {
+    event, err := connection.Recv(ctx) // Or lane.Recv(ctx) for a named lane.
+    if err != nil { return err }
+    // The original typed event and event.RawJSON() remain available here.
+    if err := acc.AddEvent(event); err != nil { return err }
+    if event.Type == "response.completed" || event.Type == "response.failed" || event.Type == "response.incomplete" {
+        snapshot := acc.Snapshot()
+        // Inspect TerminalEvent: completed, failed and incomplete all end a turn.
+        // Function arguments and custom-tool input in snapshot.Output are data;
+        // the application decides whether and when to act on them.
+        fmt.Println(snapshot.OutputText())
+        break
+    }
+}
+acc.Reset() // Ready for another turn; does not close the connection.
+```
+
+Use a separate accumulator for each lane. Snapshots remain unchanged as more
+events arrive or after `Reset`. Text is grouped by output and content index;
+function arguments and custom input retain their item and call IDs. Finalized
+fields replace earlier deltas. `OutputText()` is the entire current projection,
+not a delta: read a snapshot at a terminal or on explicit demand. Use the original
+typed events for a live UI; later done events can shorten or correct earlier text.
+A supplied final output, even an empty array,
+overrides prior items; if final output is absent or null, the opt-in projection
+retains collected fields. An item with a different nonempty ID starts fresh
+at its output index; it cannot inherit text or tool inputs from an earlier item.
+This projection is not a server `Response`. A missing or invalid terminal
+response, an API error, or EOF never becomes a completed result.
+`FinalResponse` keeps its original behavior and returns the server snapshot.
+
+Use `acc.DetailedSnapshot()` for a mutable copy of all observed response metadata,
+item, part and annotation fields, beyond the fields selected by `Snapshot()`.
+`Response` is the last observed lifecycle response metadata, without `output`
+(nil until one arrives). Output entries are sorted by `OutputIndex`;
+`Content` and `Annotations` use sparse int64 content and annotation indices.
+Fields are `json.RawMessage`: they preserve exact numbers, omitted versus null,
+and fields from unknown variants, rather than manufacturing a typed complete
+`Response`. Message content and list-valued annotations are extracted to those
+indexed maps; null annotations remain null in the part fields. Unknown item
+fields, including non-message content, remain in `Item`.
+
+```go
+details := acc.DetailedSnapshot() // At a terminal, or when explicitly requested.
+for _, item := range details.Output {
+    for contentIndex, part := range item.Content {
+        text := part["text"]                   // nil if never received
+        logprobs := part["logprobs"]           // provisional streamed form
+        annotations := item.Annotations[contentIndex]
+        _, _, _ = text, logprobs, annotations // Use in application-owned UI/state.
+    }
+}
+```
+
+Streamed logprobs accumulate with deltas. Supplied text-done logprobs replace them
+(including empty or null); whole part/item replacements discard prior fields
+and citations at those positions. Annotations and non-text parts enrich a
+matching known item; an annotation-only event never binds a lane, starts a
+turn or replaces an unrelated item. Standalone unsupported events and parts
+without a known item remain available on the original received event. Tools and
+unknown/partial data are never executed or promoted into final validated models.
+Every returned map and raw JSON byte slice is a separate caller-owned copy.
+Reading either snapshot joins/copies full accumulated output; reading one
+after every delta would repeatedly rebuild growing prefixes.
+
 Continue with `PreviousResponseID: openai.String(previous.ID)` and **only new input**.
 For example, return a function result using its original call ID, then add a new
 user message. The application executes tools and retains their results:
@@ -449,7 +525,7 @@ input := responses.ResponseInputParam{
     responses.ResponseInputItemParamOfMessage("Explain the result.", responses.EasyInputMessageRoleUser),
 }
 err := connection.Create(ctx, responses.ResponsesClientEventResponseCreateParam{
-    Model: "gpt-4o-mini",
+    Model: openai.ChatModelGPT5_2,
     PreviousResponseID: openai.String(previous.ID),
     Input: responses.ResponsesClientEventResponseCreateInputUnionParam{OfResponse: &input},
 })
@@ -479,7 +555,7 @@ fork, err := connection.Lane("fork")
 if err != nil { return err }
 defer fork.Close()
 if err := connection.Create(ctx, responses.ResponsesClientEventResponseCreateParam{
-    Model: "gpt-4o-mini", Store: openai.Bool(false),
+    Model: openai.ChatModelGPT5_2, Store: openai.Bool(false),
     StreamID: openai.String("fork"), PreviousResponseID: openai.String(previous.ID),
     Input: responses.ResponsesClientEventResponseCreateInputUnionParam{OfString: openai.String("Explore another approach.")},
 }); err != nil { return err }
@@ -516,7 +592,7 @@ for _, item := range compacted.Output {
     input = append(input, param.Override[responses.ResponseInputItemUnionParam](json.RawMessage(item.RawJSON())))
 }
 err := connection.Create(ctx, responses.ResponsesClientEventResponseCreateParam{
-    Model: "gpt-4o-mini",
+    Model: openai.ChatModelGPT5_2,
     Input: responses.ResponsesClientEventResponseCreateInputUnionParam{OfResponse: &input},
 })
 ```
@@ -838,12 +914,23 @@ When the API returns a non-success status code, we return an error with type
 `*http.Response` values of the request, as well as the JSON of the error body
 (much like other response objects in the SDK).
 
+`Error.Error()` returns only the HTTP status code and its standard description.
+Routine formatting, wrapping, and logging of `*openai.Error` omit request URLs
+and provider response data. Use `StatusCode` and `errors.As` for programmatic
+handling instead of parsing the error string. Other error types, such as network
+errors, may still contain sensitive details.
+
+Use valid format directives. Go bypasses custom formatting for some invalid
+directives, including `%w` outside `fmt.Errorf` and `%p` on a copied `openai.Error`
+value, and its resulting diagnostics can expose raw fields. Explicit JSON
+serialization and reflection also retain raw diagnostic data.
+
 To handle errors, we recommend that you use the `errors.As` pattern:
 
 > [!WARNING]
-> `Error.DumpRequest`, `Error.DumpResponse`, and `Error.Error` expose raw
-> diagnostics that may include authorization headers, credentials in URLs, and
-> sensitive request or response bodies. The dump `body` option does not redact
+> `Error.RawJSON`, `Error.DumpRequest`, `Error.DumpResponse`, and the error
+> fields expose raw diagnostics that may include authorization headers,
+> credentials in URLs, and sensitive request or response bodies. The dump `body` option does not redact
 > headers. Sanitize this output before logging, sharing, or storing it.
 
 ```go
@@ -922,6 +1009,36 @@ openai.FileNewParams{
 ```
 
 ## Webhook Verification
+
+Signature verification authenticates the delivery and checks timestamp freshness.
+It does not provide exactly-once processing: the same signed request can pass
+verification more than once within the accepted timestamp window. The handlers
+below show verification only; applications must deduplicate before side effects.
+
+After successful verification, use the authenticated `webhook-id` header as a
+deduplication key, scoped to your application or endpoint. Store it durably with
+a unique constraint shared by all workers. For database effects, claim the ID
+and apply the effect in the same transaction. For example, this PostgreSQL
+pseudocode assumes `processed_webhooks` has a unique `(endpoint, delivery_id)` key:
+
+```sql
+BEGIN;
+INSERT INTO processed_webhooks (endpoint, delivery_id)
+VALUES (:endpoint, :verified_webhook_id)
+ON CONFLICT (endpoint, delivery_id) DO NOTHING
+RETURNING delivery_id;
+-- If no row was returned, acknowledge the duplicate without applying effects.
+-- Otherwise, apply the application's database changes in this transaction.
+COMMIT;
+```
+
+Roll back the claim when processing fails so a retry can succeed. For external
+effects, write a transactional outbox entry and have its worker use a stable
+idempotency key with the destination. A separate "seen" check followed by an
+insert races between workers; an in-memory set does not survive restarts or
+coordinate replicas. Retain deduplication records for the application's retry
+and replay policy, not merely the SDK's default five-minute timestamp tolerance.
+Return a successful acknowledgement for an already completed delivery.
 
 Verifying webhook signatures is _optional but encouraged_.
 
@@ -1353,6 +1470,14 @@ client := openai.NewClient(
 )
 ```
 
+The built-in Azure and GCP providers use their documented link-local IPv4 metadata
+endpoints with dedicated standard-library HTTP clients. They bypass API-client
+proxies, custom HTTP transports, and DNS resolution, and reject redirects.
+Metadata retrieval has a five-second total timeout, including reading the response,
+and honors earlier context deadlines. `option.WithHTTPClient` still controls token
+exchange and API requests. Tests or applications requiring a different metadata
+route can implement a custom subject token provider; they own that route's security.
+
 ### Custom Subject Token Provider
 
 You can implement your own subject token provider:
@@ -1490,6 +1615,8 @@ connections use the same attested transport and bearer-token exchange, including
 custom request headers and the configured opening retry budget. Close each
 WebSocket connection to release its stream; capability `Close` retains its
 ordinary behavior of allowing already active requests to finish.
+X.509-authenticated WebSocket connections are limited to Responses. Live,
+fork, and sideband WebSocket connections do not support X.509 authentication.
 A legacy `http.Transport.Dial` remains supported for compatibility when
 `DialContext` is unset, but its in-progress
 dial call cannot itself be interrupted by context cancellation. The capability
@@ -1645,6 +1772,38 @@ We take backwards-compatibility seriously and work hard to ensure you can rely o
 
 We are keen for your feedback; please open an [issue](https://www.github.com/openai/openai-go/issues) with questions, bugs, or suggestions.
 
+## Reconnecting a WebSocket session
+
+`packages/websocket.OpenSession` can reopen a failed connection. Pass it a
+function that opens a connection with a fresh authenticated request on each
+attempt. Reconnecting is off by default. When enabled, keep calling `Recv` so the
+SDK can detect connection failures. An event that ends a response or session does
+not itself trigger a reconnect.
+
+The SDK keeps the same session object and allows five reconnect attempts in total
+by default. Retry delays grow to eight seconds by default. `Close` or `Abort`
+cancels pending retries. Reopening does not restore server state. For a Realtime
+model session, restore any session settings and conversation state your application needs.
+Pause other application sends while restoring state; the callback does not block them.
+
+By default, sends while reconnecting fail without writing. Set `MaxPendingBytes`
+to hold unsent commands up to that size in bytes. After restoring session state,
+call `FlushPending` to send them, or `TakePending` to remove them without sending.
+`FlushPending` returns `ErrPendingLimit` while the connection is recovering or
+another send, serialization, or flush is in progress. Retry the flush when it is ready.
+A waiting `Send` still respects its context. It returns nil only after a local
+write succeeds. This does not confirm that the server received the command.
+The SDK does not resend commands it already tried to send.
+
+Generated API methods must support this feature before you can enable it with
+`option.WithWebSocketReconnect(true)`. For methods that support it,
+`option.WithWebSocketRecovery` sets limits and an optional `OnReconnected`
+callback. Other methods ignore these options. Existing `websocket.Options` fields
+and defaults stay the same.
+
 ## Contributing
 
-See [the contributing documentation](./CONTRIBUTING.md).
+Please share bug reports and feature requests through [GitHub issues](https://github.com/openai/openai-go/issues).
+Pull requests are limited to repository collaborators; we do not accept pull requests from non-collaborators.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the contribution policy and development guide.
+For security vulnerabilities, follow [SECURITY.md](SECURITY.md).

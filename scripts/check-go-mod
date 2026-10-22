@@ -6,6 +6,14 @@ cd "$(dirname "$0")/.."
 
 echo "==> Checking go.mod is tidy"
 go mod tidy -diff
+root_modules="$(go list -m -f '{{.Path}}' all)"
+if grep -Fxq 'cloud.google.com/go/auth' <<< "$root_modules"; then
+  echo 'Google auth must remain in the optional Vertex module.' >&2
+  exit 1
+fi
+
+echo "==> Checking Vertex go.mod is tidy"
+(cd v3/vertex && go mod tidy -diff)
 
 echo "==> Checking examples/go.mod is tidy"
 (cd examples && go mod tidy -diff)

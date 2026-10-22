@@ -4,11 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/websocket"
-	"net/http"
-	"slices"
+	"github.com/tidwall/gjson"
 	"time"
 )
 
@@ -26,10 +24,10 @@ type ResponseConnection struct {
 // Connect opens a Responses API WebSocket. ctx and HTTP client timeouts bound
 // opening only. The caller owns the connection lifetime through Close or Abort.
 func (r *ResponseService) Connect(ctx context.Context, options ResponseConnectionOptions, opts ...option.RequestOption) (*ResponseConnection, error) {
-	requestOptions := slices.Concat([]option.RequestOption{requestconfig.WithBearerAuthSecurity()}, r.Options, opts)
+	newRequest := r.newWebSocketRequest(opts...)
 	var open func(context.Context) (*ResponseConnection, error)
 	open = func(ctx context.Context) (*ResponseConnection, error) {
-		cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, "responses", nil, nil, requestOptions...)
+		cfg, err := newRequest(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -38,11 +36,6 @@ func (r *ResponseService) Connect(ctx context.Context, options ResponseConnectio
 			return nil, err
 		}
 		ctx = request.Context()
-		if timeout := cfg.WebSocketOpenTimeout(); timeout > 0 {
-			var cancel context.CancelFunc
-			ctx, cancel = context.WithTimeout(ctx, timeout)
-			defer cancel()
-		}
 		connection, err := websocket.Dial(ctx, request, client, options, decodeResponseWebsocketEvent, func(event responseWebsocketEvent) string { return event.streamID })
 		if err != nil {
 			return nil, err
@@ -68,7 +61,9 @@ func decodeResponseWebsocketEvent(data []byte) (responseWebsocketEvent, error) {
 	if err := json.Unmarshal(data, &envelope); err != nil {
 		return event, err
 	}
-	if envelope.Type == "" {
+	// Typed decoding uses the first exact key; keep legacy envelope validation too.
+	kind := gjson.GetBytes(data, "type")
+	if envelope.Type == "" || (kind.Exists() && (kind.Type != gjson.String || kind.Str == "")) {
 		return event, errors.New("responses websocket event is missing type")
 	}
 	var route struct {
@@ -109,6 +104,23 @@ func (c *ResponseConnection) Recv(ctx context.Context) (ResponsesServerEventUnio
 	return event.decode()
 }
 
+// SendRaw writes a JSON event once without changing its bytes. Success means a
+// local write, not acknowledgment. A websocket.DeliveryError reports uncertainty.
+func (c *ResponseConnection) SendRaw(ctx context.Context, data json.RawMessage) error {
+	return c.connection.Send(ctx, data)
+}
+
+// RecvRaw receives the next event not claimed by an attached lane, preserving
+// its original JSON. Canceling ctx cancels only this wait. Typed and raw reads
+// consume the same ordered event queue.
+func (c *ResponseConnection) RecvRaw(ctx context.Context) (json.RawMessage, error) {
+	event, err := c.connection.Recv(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return event.data, nil
+}
+
 // Close performs a bounded closing handshake and releases connection resources.
 func (c *ResponseConnection) Close() error { return c.connection.Close() }
 
@@ -147,6 +159,12 @@ func (c *ResponseConnection) Recover(ctx context.Context, options ResponseRecove
 	}
 	connection, err := c.connection.Reconnect(ctx, func(ctx context.Context) (*websocket.Connection[responseWebsocketEvent], error) {
 		var lastErr error
+		var unreturned *ResponseConnection
+		defer func() {
+			if unreturned != nil {
+				unreturned.Abort()
+			}
+		}()
 		for attempt := 0; attempt < options.MaxAttempts; attempt++ {
 			if err := ctx.Err(); err != nil {
 				return nil, err
@@ -166,11 +184,14 @@ func (c *ResponseConnection) Recover(ctx context.Context, options ResponseRecove
 				continue
 			}
 			if options.Restore != nil {
+				unreturned = next
 				if restoreErr := options.Restore(ctx, next); restoreErr != nil {
 					next.Abort()
+					unreturned = nil
 					lastErr = restoreErr
 					continue
 				}
+				unreturned = nil
 			}
 			return next.connection, nil
 		}

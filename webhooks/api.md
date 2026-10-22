@@ -2,6 +2,15 @@
 
 Response Types:
 
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#AgentEnvironmentExpiredWebhookEvent">AgentEnvironmentExpiredWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#AgentEnvironmentFailedWebhookEvent">AgentEnvironmentFailedWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#AgentEnvironmentReadyWebhookEvent">AgentEnvironmentReadyWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#AgentEnvironmentSuspendedWebhookEvent">AgentEnvironmentSuspendedWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#AgentSessionActionRequiredWebhookEvent">AgentSessionActionRequiredWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#AgentSessionCreatedWebhookEvent">AgentSessionCreatedWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#AgentSessionFailedWebhookEvent">AgentSessionFailedWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#AgentSessionIdleWebhookEvent">AgentSessionIdleWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#AgentSessionInProgressWebhookEvent">AgentSessionInProgressWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#BatchCancelledWebhookEvent">BatchCancelledWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#BatchCompletedWebhookEvent">BatchCompletedWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#BatchExpiredWebhookEvent">BatchExpiredWebhookEvent</a>

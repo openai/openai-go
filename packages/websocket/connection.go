@@ -90,13 +90,17 @@ type queue[T any] struct {
 // the WebSocket library's closing handshake, including its pending writes.
 type upgradeTransport struct {
 	http.RoundTripper
-	body *upgradeBody
+	body          *upgradeBody
+	finishOpening func()
 }
 
 func (t *upgradeTransport) RoundTrip(request *http.Request) (*http.Response, error) {
 	response, err := websockettransport.RoundTrip(t.RoundTripper, request)
 	if err == nil && response != nil && response.StatusCode == http.StatusSwitchingProtocols {
 		if body, ok := response.Body.(io.ReadWriteCloser); ok {
+			if opening, ok := body.(interface{ CompleteWebSocketOpening() }); ok {
+				t.finishOpening = opening.CompleteWebSocketOpening
+			}
 			t.body = &upgradeBody{ReadWriteCloser: body}
 			response.Body = t.body
 		}
@@ -117,7 +121,10 @@ func (b *upgradeBody) Close() error {
 
 // dialError omits URL-bearing wrappers from its display while retaining the
 // original error chain for errors.Is/As and structured diagnostics.
-type dialError struct{ cause error }
+type dialError struct {
+	cause      error
+	statusCode int
+}
 
 func (e *dialError) Error() string {
 	cause := e.cause
@@ -173,6 +180,11 @@ func Dial[T any](ctx context.Context, request *http.Request, client *http.Client
 	handshakeClient := *client
 	handshakeClient.Timeout = 0
 	transport := &upgradeTransport{RoundTripper: client.Transport}
+	defer func() {
+		if transport.finishOpening != nil {
+			transport.finishOpening()
+		}
+	}()
 	if transport.RoundTripper == nil {
 		transport.RoundTripper = http.DefaultTransport
 	}
@@ -182,7 +194,11 @@ func Dial[T any](ctx context.Context, request *http.Request, client *http.Client
 		if response != nil && response.Body != nil {
 			_ = response.Body.Close()
 		}
-		return nil, &dialError{cause: err}
+		status := 0
+		if response != nil {
+			status = response.StatusCode
+		}
+		return nil, &dialError{cause: err, statusCode: status}
 	}
 	if options.MaxMessageBytes == 0 {
 		socket.SetReadLimit(-1)
@@ -208,12 +224,21 @@ func (c *Connection[T]) fail(err error) {
 	_ = c.socket.CloseNow() // Best effort: the initiating error remains authoritative.
 }
 
+// Preserve the transport status without carrying peer-provided close details
+// into the stored failure or a delivery error.
+func safeCloseError(err error) error {
+	if status := wire.CloseStatus(err); status != -1 {
+		return fmt.Errorf("websocket: closed: %w", wire.CloseError{Code: status})
+	}
+	return err
+}
+
 func (c *Connection[T]) read(ctx context.Context, decode func([]byte) (T, error), route func(T) string) {
 	defer close(c.readerDone)
 	for {
 		kind, data, err := c.socket.Read(ctx)
 		if err != nil {
-			c.fail(err)
+			c.fail(&readError{cause: safeCloseError(err)})
 			return
 		}
 		if kind != wire.MessageText {
@@ -295,7 +320,15 @@ func (c *Connection[T]) send(ctx context.Context, encode func() ([]byte, error))
 		return &DeliveryError{Cause: err}
 	}
 	if err := c.socket.Write(ctx, wire.MessageText, data); err != nil {
+		err = safeCloseError(err)
 		c.fail(err)
+		// Native Write can observe either the caller cancellation or the closed
+		// socket first. Keep cancellation recognizable in both cases.
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			err = ctxErr
+		} else if stored := c.failure(); wire.CloseStatus(stored) != -1 {
+			err = stored
+		}
 		return &DeliveryError{Cause: err, MayHaveBeenSent: true}
 	}
 	return nil
@@ -465,7 +498,13 @@ func (c *Connection[T]) Reconnect(ctx context.Context, open func(context.Context
 	c.reconnecting = true
 	c.reconnectCancel = cancel
 	c.mu.Unlock()
-	defer cancel()
+	defer func() {
+		c.mu.Lock()
+		c.reconnecting = false
+		c.reconnectCancel = nil
+		c.mu.Unlock()
+		cancel()
+	}()
 	stopRetirement := context.AfterFunc(ctx, func() { _ = c.transport.Close() })
 	_ = c.close(false)
 	stopRetirement()
@@ -484,8 +523,6 @@ func (c *Connection[T]) Reconnect(ctx context.Context, open func(context.Context
 	c.mu.Lock()
 	closed := c.userClosed
 	canceled := ctx.Err()
-	c.reconnecting = false
-	c.reconnectCancel = nil
 	if err == nil && !closed && canceled == nil {
 		c.userClosed = true
 	}

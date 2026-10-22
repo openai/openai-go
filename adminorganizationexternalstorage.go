@@ -175,7 +175,7 @@ type ExternalStorageConfiguration struct {
 	Object    constant.OrganizationExternalStorage      `json:"object" default:"organization.external_storage"`
 	ProjectID string                                    `json:"project_id" api:"required"`
 	Provider  ExternalStorageConfigurationProviderUnion `json:"provider" api:"required"`
-	// Any of "pending", "validated", "unhealthy".
+	// Any of "pending", "validated", "degraded", "unhealthy".
 	Status ExternalStorageConfigurationStatus `json:"status" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -198,7 +198,8 @@ func (r *ExternalStorageConfiguration) UnmarshalJSON(data []byte) error {
 }
 
 // ExternalStorageConfigurationProviderUnion contains all possible properties and
-// values from [AwsExternalStorageProvider], [AzureExternalStorageProvider].
+// values from [AwsExternalStorageProvider], [AzureExternalStorageProvider],
+// [GcpExternalStorageProvider], [OciExternalStorageProvider].
 //
 // Use the [ExternalStorageConfigurationProviderUnion.AsAny] method to switch on
 // the variant.
@@ -207,14 +208,13 @@ func (r *ExternalStorageConfiguration) UnmarshalJSON(data []byte) error {
 type ExternalStorageConfigurationProviderUnion struct {
 	// This field is from variant [AwsExternalStorageProvider].
 	AccountID string `json:"account_id"`
-	// This field is from variant [AwsExternalStorageProvider].
-	Bucket string `json:"bucket"`
+	Bucket    string `json:"bucket"`
 	// This field is from variant [AwsExternalStorageProvider].
 	ExternalID string `json:"external_id"`
 	Region     string `json:"region"`
 	// This field is from variant [AwsExternalStorageProvider].
 	RoleArn string `json:"role_arn"`
-	// Any of "aws", "azure".
+	// Any of "aws", "azure", "gcp", "oci".
 	Type string `json:"type"`
 	// This field is from variant [AzureExternalStorageProvider].
 	AccountName string `json:"account_name"`
@@ -226,19 +226,34 @@ type ExternalStorageConfigurationProviderUnion struct {
 	SubscriptionID string `json:"subscription_id"`
 	// This field is from variant [AzureExternalStorageProvider].
 	TenantID string `json:"tenant_id"`
-	JSON     struct {
-		AccountID      respjson.Field
-		Bucket         respjson.Field
-		ExternalID     respjson.Field
-		Region         respjson.Field
-		RoleArn        respjson.Field
-		Type           respjson.Field
-		AccountName    respjson.Field
-		Container      respjson.Field
-		ResourceGroup  respjson.Field
-		SubscriptionID respjson.Field
-		TenantID       respjson.Field
-		raw            string
+	// This field is from variant [GcpExternalStorageProvider].
+	Audience string `json:"audience"`
+	// This field is from variant [GcpExternalStorageProvider].
+	WorkloadIdentityPoolID string `json:"workload_identity_pool_id"`
+	// This field is from variant [GcpExternalStorageProvider].
+	WorkloadIdentityProjectNumber string `json:"workload_identity_project_number"`
+	// This field is from variant [GcpExternalStorageProvider].
+	WorkloadIdentityProviderID string `json:"workload_identity_provider_id"`
+	// This field is from variant [OciExternalStorageProvider].
+	TenancyOcid string `json:"tenancy_ocid"`
+	JSON        struct {
+		AccountID                     respjson.Field
+		Bucket                        respjson.Field
+		ExternalID                    respjson.Field
+		Region                        respjson.Field
+		RoleArn                       respjson.Field
+		Type                          respjson.Field
+		AccountName                   respjson.Field
+		Container                     respjson.Field
+		ResourceGroup                 respjson.Field
+		SubscriptionID                respjson.Field
+		TenantID                      respjson.Field
+		Audience                      respjson.Field
+		WorkloadIdentityPoolID        respjson.Field
+		WorkloadIdentityProjectNumber respjson.Field
+		WorkloadIdentityProviderID    respjson.Field
+		TenancyOcid                   respjson.Field
+		raw                           string
 	} `json:"-"`
 }
 
@@ -251,12 +266,16 @@ type anyExternalStorageConfigurationProvider interface {
 
 func (AwsExternalStorageProvider) implExternalStorageConfigurationProviderUnion()   {}
 func (AzureExternalStorageProvider) implExternalStorageConfigurationProviderUnion() {}
+func (GcpExternalStorageProvider) implExternalStorageConfigurationProviderUnion()   {}
+func (OciExternalStorageProvider) implExternalStorageConfigurationProviderUnion()   {}
 
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ExternalStorageConfigurationProviderUnion.AsAny().(type) {
 //	case openai.AwsExternalStorageProvider:
 //	case openai.AzureExternalStorageProvider:
+//	case openai.GcpExternalStorageProvider:
+//	case openai.OciExternalStorageProvider:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -266,6 +285,10 @@ func (u ExternalStorageConfigurationProviderUnion) AsAny() anyExternalStorageCon
 		return u.AsAws()
 	case "azure":
 		return u.AsAzure()
+	case "gcp":
+		return u.AsGcp()
+	case "oci":
+		return u.AsOci()
 	}
 	return nil
 }
@@ -276,6 +299,16 @@ func (u ExternalStorageConfigurationProviderUnion) AsAws() (v AwsExternalStorage
 }
 
 func (u ExternalStorageConfigurationProviderUnion) AsAzure() (v AzureExternalStorageProvider) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ExternalStorageConfigurationProviderUnion) AsGcp() (v GcpExternalStorageProvider) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ExternalStorageConfigurationProviderUnion) AsOci() (v OciExternalStorageProvider) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -292,6 +325,7 @@ type ExternalStorageConfigurationStatus string
 const (
 	ExternalStorageConfigurationStatusPending   ExternalStorageConfigurationStatus = "pending"
 	ExternalStorageConfigurationStatusValidated ExternalStorageConfigurationStatus = "validated"
+	ExternalStorageConfigurationStatusDegraded  ExternalStorageConfigurationStatus = "degraded"
 	ExternalStorageConfigurationStatusUnhealthy ExternalStorageConfigurationStatus = "unhealthy"
 )
 
@@ -315,6 +349,56 @@ func (r *ExternalStorageDeleted) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type GcpExternalStorageProvider struct {
+	Audience                      string       `json:"audience" api:"required"`
+	Bucket                        string       `json:"bucket" api:"required"`
+	Region                        string       `json:"region" api:"required"`
+	Type                          constant.Gcp `json:"type" default:"gcp"`
+	WorkloadIdentityPoolID        string       `json:"workload_identity_pool_id" api:"required"`
+	WorkloadIdentityProjectNumber string       `json:"workload_identity_project_number" api:"required"`
+	WorkloadIdentityProviderID    string       `json:"workload_identity_provider_id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Audience                      respjson.Field
+		Bucket                        respjson.Field
+		Region                        respjson.Field
+		Type                          respjson.Field
+		WorkloadIdentityPoolID        respjson.Field
+		WorkloadIdentityProjectNumber respjson.Field
+		WorkloadIdentityProviderID    respjson.Field
+		ExtraFields                   map[string]respjson.Field
+		raw                           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r GcpExternalStorageProvider) RawJSON() string { return r.JSON.raw }
+func (r *GcpExternalStorageProvider) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type OciExternalStorageProvider struct {
+	Bucket      string       `json:"bucket" api:"required"`
+	Region      string       `json:"region" api:"required"`
+	TenancyOcid string       `json:"tenancy_ocid" api:"required"`
+	Type        constant.Oci `json:"type" default:"oci"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Bucket      respjson.Field
+		Region      respjson.Field
+		TenancyOcid respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r OciExternalStorageProvider) RawJSON() string { return r.JSON.raw }
+func (r *OciExternalStorageProvider) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type AdminOrganizationExternalStorageNewParams struct {
 	ProjectID string                                                 `json:"project_id" api:"required"`
 	Provider  AdminOrganizationExternalStorageNewParamsProviderUnion `json:"provider,omitzero" api:"required"`
@@ -335,22 +419,16 @@ func (r *AdminOrganizationExternalStorageNewParams) UnmarshalJSON(data []byte) e
 type AdminOrganizationExternalStorageNewParamsProviderUnion struct {
 	OfAws   *AdminOrganizationExternalStorageNewParamsProviderAws   `json:",omitzero,inline"`
 	OfAzure *AdminOrganizationExternalStorageNewParamsProviderAzure `json:",omitzero,inline"`
+	OfGcp   *AdminOrganizationExternalStorageNewParamsProviderGcp   `json:",omitzero,inline"`
+	OfOci   *AdminOrganizationExternalStorageNewParamsProviderOci   `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u AdminOrganizationExternalStorageNewParamsProviderUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfAws, u.OfAzure)
+	return param.MarshalUnion(u, u.OfAws, u.OfAzure, u.OfGcp, u.OfOci)
 }
 func (u *AdminOrganizationExternalStorageNewParamsProviderUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u AdminOrganizationExternalStorageNewParamsProviderUnion) GetBucket() *string {
-	if vt := u.OfAws; vt != nil {
-		return &vt.Bucket
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -402,10 +480,66 @@ func (u AdminOrganizationExternalStorageNewParamsProviderUnion) GetTenantID() *s
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u AdminOrganizationExternalStorageNewParamsProviderUnion) GetWorkloadIdentityPoolID() *string {
+	if vt := u.OfGcp; vt != nil {
+		return &vt.WorkloadIdentityPoolID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u AdminOrganizationExternalStorageNewParamsProviderUnion) GetWorkloadIdentityProjectNumber() *string {
+	if vt := u.OfGcp; vt != nil {
+		return &vt.WorkloadIdentityProjectNumber
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u AdminOrganizationExternalStorageNewParamsProviderUnion) GetWorkloadIdentityProviderID() *string {
+	if vt := u.OfGcp; vt != nil {
+		return &vt.WorkloadIdentityProviderID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u AdminOrganizationExternalStorageNewParamsProviderUnion) GetRegion() *string {
+	if vt := u.OfOci; vt != nil {
+		return &vt.Region
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u AdminOrganizationExternalStorageNewParamsProviderUnion) GetTenancyOcid() *string {
+	if vt := u.OfOci; vt != nil {
+		return &vt.TenancyOcid
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u AdminOrganizationExternalStorageNewParamsProviderUnion) GetBucket() *string {
+	if vt := u.OfAws; vt != nil {
+		return (*string)(&vt.Bucket)
+	} else if vt := u.OfGcp; vt != nil {
+		return (*string)(&vt.Bucket)
+	} else if vt := u.OfOci; vt != nil {
+		return (*string)(&vt.Bucket)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u AdminOrganizationExternalStorageNewParamsProviderUnion) GetType() *string {
 	if vt := u.OfAws; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfAzure; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfGcp; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfOci; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -416,6 +550,8 @@ func init() {
 		"type",
 		apijson.Discriminator[AdminOrganizationExternalStorageNewParamsProviderAws]("aws"),
 		apijson.Discriminator[AdminOrganizationExternalStorageNewParamsProviderAzure]("azure"),
+		apijson.Discriminator[AdminOrganizationExternalStorageNewParamsProviderGcp]("gcp"),
+		apijson.Discriminator[AdminOrganizationExternalStorageNewParamsProviderOci]("oci"),
 	)
 }
 
@@ -454,6 +590,44 @@ func (r AdminOrganizationExternalStorageNewParamsProviderAzure) MarshalJSON() (d
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *AdminOrganizationExternalStorageNewParamsProviderAzure) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Bucket, Type, WorkloadIdentityPoolID,
+// WorkloadIdentityProjectNumber, WorkloadIdentityProviderID are required.
+type AdminOrganizationExternalStorageNewParamsProviderGcp struct {
+	Bucket                        string `json:"bucket" api:"required"`
+	WorkloadIdentityPoolID        string `json:"workload_identity_pool_id" api:"required"`
+	WorkloadIdentityProjectNumber string `json:"workload_identity_project_number" api:"required"`
+	WorkloadIdentityProviderID    string `json:"workload_identity_provider_id" api:"required"`
+	// This field can be elided, and will marshal its zero value as "gcp".
+	Type constant.Gcp `json:"type" default:"gcp"`
+	paramObj
+}
+
+func (r AdminOrganizationExternalStorageNewParamsProviderGcp) MarshalJSON() (data []byte, err error) {
+	type shadow AdminOrganizationExternalStorageNewParamsProviderGcp
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AdminOrganizationExternalStorageNewParamsProviderGcp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Bucket, Region, TenancyOcid, Type are required.
+type AdminOrganizationExternalStorageNewParamsProviderOci struct {
+	Bucket      string `json:"bucket" api:"required"`
+	Region      string `json:"region" api:"required"`
+	TenancyOcid string `json:"tenancy_ocid" api:"required"`
+	// This field can be elided, and will marshal its zero value as "oci".
+	Type constant.Oci `json:"type" default:"oci"`
+	paramObj
+}
+
+func (r AdminOrganizationExternalStorageNewParamsProviderOci) MarshalJSON() (data []byte, err error) {
+	type shadow AdminOrganizationExternalStorageNewParamsProviderOci
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AdminOrganizationExternalStorageNewParamsProviderOci) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

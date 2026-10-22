@@ -39,8 +39,9 @@ func NewBetaAgentEnvironmentFileService(opts ...option.RequestOption) (r BetaAge
 	return
 }
 
-// Copies inline bytes or a Files API file into a connected execution environment.
-// See
+// Copies inline bytes or a Files API file into a connected execution environment,
+// replacing an existing regular file at the same path. Upload between turns and
+// wait for success before starting the next turn. See
 // [environment files](https://developers.openai.com/api/docs/guides/agents-api/environments/files).
 func (r *BetaAgentEnvironmentFileService) New(ctx context.Context, environmentID string, body BetaAgentEnvironmentFileNewParams, opts ...option.RequestOption) (res *EnvironmentFile, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
@@ -124,7 +125,10 @@ func (r BetaAgentEnvironmentFileNewParams) MarshalJSON() (data []byte, err error
 	return shimjson.Marshal(r.HostedEnvironmentFileParam)
 }
 func (r *BetaAgentEnvironmentFileNewParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	if r == nil {
+		return apijson.UnmarshalRoot(data, r)
+	}
+	return apijson.UnmarshalWrappedObject(data, r, &r.HostedEnvironmentFileParam)
 }
 
 type BetaAgentEnvironmentFileListParams struct {
