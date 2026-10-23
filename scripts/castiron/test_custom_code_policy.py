@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import copy
+import io
 import json
 import sys
 import tempfile
@@ -29,6 +30,9 @@ class ReviewedPinTests(GitTestCase):
         checker = self.repo / "scripts/castiron/custom_code_budget.py"
         checker.parent.mkdir(parents=True)
         checker.write_text("NEXT_POLICY_VERSION = 1\n")
+        checker.with_name("custom_code_policy.py").write_text(
+            'PIN_REVIEW_POLICY = "effective-policy-v1"\n'
+        )
         self.main = self.commit("main policy")
         self.git("update-ref", "refs/remotes/origin/main", self.main)
         self.pin = {"repository": REPO, "main_sha": self.main}
@@ -37,6 +41,52 @@ class ReviewedPinTests(GitTestCase):
         self.git("checkout", "-q", "-b", "next", self.base)
         (self.repo / "sdk.txt").write_text("candidate SDK bytes")
         self.head = self.commit("sdk change")
+
+    def test_review_command_uses_git_policies_and_rejects_stale_main(self) -> None:
+        git: Callable[..., bytes] = selector.report.git
+
+        def local_fetch(repo: Path, *args: str, **kwargs: Any) -> bytes:
+            if args[0] == "fetch":
+                return git(
+                    repo,
+                    "fetch",
+                    "--quiet",
+                    str(self.repo),
+                    f"{self.main}:refs/remotes/origin/main",
+                    self.base,
+                    self.head,
+                )
+            return git(repo, *args, **kwargs)
+
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            mock.patch.object(selector.report, "git", side_effect=local_fetch),
+        ):
+            for stale in (False, True):
+                with (
+                    self.subTest(stale=stale),
+                    mock.patch("sys.stdout", new_callable=io.StringIO) as output,
+                ):
+                    args = [
+                        "review-required",
+                        "--repo",
+                        str(Path(directory) / str(stale)),
+                        "--repository",
+                        REPO,
+                        "--base",
+                        self.base,
+                        "--head",
+                        self.head,
+                        "--main",
+                        self.base if stale else self.main,
+                    ]
+                    if stale:
+                        with self.assertRaisesRegex(ValueError, "authenticated main changed"):
+                            selector.main(args)
+                        self.assertEqual(output.getvalue(), "")
+                    else:
+                        self.assertEqual(selector.main(args), 0)
+                        self.assertEqual(json.loads(output.getvalue()), {"requires_human": False})
 
     def write_policy(self, value: dict[str, Any]) -> None:
         (self.repo / ".castiron-ratchet.json").write_text(json.dumps(value))
@@ -499,6 +549,48 @@ class ReviewedPinTests(GitTestCase):
                                 self.assertEqual(
                                     result["policy_reviews"], [{"number": 3, "head_sha": self.head}]
                                 )
+
+    def test_legacy_checker_pin_review_receipt_for_pr_and_queue(self) -> None:
+        declarations = (
+            None,
+            'PIN_REVIEW_POLICY = "unknown"\n',
+            'PIN_REVIEW_POLICY = "effective-policy-v1"\n' * 2,
+        )
+        for declaration in declarations:
+            self.git("checkout", "-q", "--detach", self.main)
+            checker = self.repo / "scripts/castiron/custom_code_policy.py"
+            if declaration is None:
+                checker.unlink()
+            else:
+                checker.write_text(declaration)
+            legacy = self.commit("legacy review contract")
+            checker.write_text('PIN_REVIEW_POLICY = "effective-policy-v1"\n')
+            newer = self.commit("modern review contract")
+            self.git("update-ref", "refs/remotes/origin/main", newer)
+            self.git("checkout", "-q", "--detach", legacy)
+            self.write_policy(
+                {**self.policy, "next_policy": {"repository": REPO, "main_sha": legacy}}
+            )
+            base = self.commit("protected legacy checker")
+            self.write_policy(
+                {**self.policy, "next_policy": {"repository": REPO, "main_sha": newer}}
+            )
+            self.head = self.commit("forward same-budget pin")
+            for heads in (None, [self.head]):
+                with self.subTest(declaration=declaration, heads=heads):
+                    with (
+                        mock.patch.object(selector.report, "api", side_effect=self.review_api([])),
+                        self.assertRaisesRegex(ValueError, "human"),
+                    ):
+                        self.select(base=base, main=newer, pull_heads=heads)
+                    with mock.patch.object(
+                        selector.report, "api", side_effect=self.review_api([self.approved()])
+                    ):
+                        result = self.select(base=base, main=newer, pull_heads=heads)
+                        self.assertEqual(result["policy_sha"], legacy)
+                        self.assertEqual(
+                            result["policy_reviews"], [{"number": 3, "head_sha": self.head}]
+                        )
 
     def test_rollback_pin_keeps_human_proof_for_pr_and_queue(self) -> None:
         self.git("checkout", "-q", "--detach", self.main)

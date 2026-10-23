@@ -5187,7 +5187,7 @@ const (
 
 // AgentToolUnion contains all possible properties and values from
 // [AgentToolFunction], [AgentToolProgrammaticToolCalling], [AgentToolMcp],
-// [AgentToolWebSearch], [AgentToolComputerUse].
+// [AgentToolWebSearch], [AgentToolComputerUse], [AgentToolAutomations].
 //
 // Use the [AgentToolUnion.AsAny] method to switch on the variant.
 //
@@ -5202,7 +5202,7 @@ type AgentToolUnion struct {
 	// This field is from variant [AgentToolFunction].
 	Parameters map[string]any `json:"parameters"`
 	// Any of "function", "programmatic_tool_calling", "mcp", "web_search",
-	// "computer_use".
+	// "computer_use", "automations".
 	Type string `json:"type"`
 	// This field is from variant [AgentToolProgrammaticToolCalling].
 	Enabled bool `json:"enabled"`
@@ -5264,6 +5264,7 @@ func (AgentToolProgrammaticToolCalling) implAgentToolUnion() {}
 func (AgentToolMcp) implAgentToolUnion()                     {}
 func (AgentToolWebSearch) implAgentToolUnion()               {}
 func (AgentToolComputerUse) implAgentToolUnion()             {}
+func (AgentToolAutomations) implAgentToolUnion()             {}
 
 // Use the following switch statement to find the correct variant
 //
@@ -5273,6 +5274,7 @@ func (AgentToolComputerUse) implAgentToolUnion()             {}
 //	case openai.AgentToolMcp:
 //	case openai.AgentToolWebSearch:
 //	case openai.AgentToolComputerUse:
+//	case openai.AgentToolAutomations:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -5288,6 +5290,8 @@ func (u AgentToolUnion) AsAny() anyAgentTool {
 		return u.AsWebSearch()
 	case "computer_use":
 		return u.AsComputerUse()
+	case "automations":
+		return u.AsAutomations()
 	}
 	return nil
 }
@@ -5313,6 +5317,11 @@ func (u AgentToolUnion) AsWebSearch() (v AgentToolWebSearch) {
 }
 
 func (u AgentToolUnion) AsComputerUse() (v AgentToolComputerUse) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AgentToolUnion) AsAutomations() (v AgentToolAutomations) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -5499,6 +5508,24 @@ func (r *AgentToolComputerUse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Lets the agent manage its own scheduled wakeups.
+type AgentToolAutomations struct {
+	// The type of the object. Always `automations`.
+	Type constant.Automations `json:"type" default:"automations"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentToolAutomations) RawJSON() string { return r.JSON.raw }
+func (r *AgentToolAutomations) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 func AgentToolParamOfParamFunction(description string, name string, parameters map[string]any) AgentToolParamUnion {
 	var paramFunction AgentToolParamFunction
 	paramFunction.Description = description
@@ -5531,6 +5558,7 @@ type AgentToolParamUnion struct {
 	OfParamMcp                     *AgentToolParamMcp                     `json:",omitzero,inline"`
 	OfParamWebSearch               *AgentToolParamWebSearch               `json:",omitzero,inline"`
 	OfParamComputerUse             *AgentToolParamComputerUse             `json:",omitzero,inline"`
+	OfParamAutomations             *AgentToolParamAutomations             `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -5540,7 +5568,8 @@ func (u AgentToolParamUnion) MarshalJSON() ([]byte, error) {
 		u.OfParamProgrammaticToolCalling,
 		u.OfParamMcp,
 		u.OfParamWebSearch,
-		u.OfParamComputerUse)
+		u.OfParamComputerUse,
+		u.OfParamAutomations)
 }
 func (u *AgentToolParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -5696,6 +5725,8 @@ func (u AgentToolParamUnion) GetType() *string {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfParamComputerUse; vt != nil {
 		return (*string)(&vt.Type)
+	} else if vt := u.OfParamAutomations; vt != nil {
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -5709,6 +5740,7 @@ func init() {
 		apijson.Discriminator[AgentToolParamMcp]("mcp"),
 		apijson.Discriminator[AgentToolParamWebSearch]("web_search"),
 		apijson.Discriminator[AgentToolParamComputerUse]("computer_use"),
+		apijson.Discriminator[AgentToolParamAutomations]("automations"),
 	)
 }
 
@@ -5910,6 +5942,30 @@ func (r AgentToolParamComputerUse) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *AgentToolParamComputerUse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewAgentToolParamAutomations() AgentToolParamAutomations {
+	return AgentToolParamAutomations{
+		Type: "automations",
+	}
+}
+
+// Lets the agent manage its own scheduled wakeups.
+//
+// This struct has a constant value, construct it with
+// [NewAgentToolParamAutomations].
+type AgentToolParamAutomations struct {
+	// The type of the object. Always `automations`.
+	Type constant.Automations `json:"type" default:"automations"`
+	paramObj
+}
+
+func (r AgentToolParamAutomations) MarshalJSON() (data []byte, err error) {
+	type shadow AgentToolParamAutomations
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AgentToolParamAutomations) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -7713,7 +7769,8 @@ func (r *OutputText) UnmarshalJSON(data []byte) error {
 // PersistedAgentToolUnion contains all possible properties and values from
 // [PersistedAgentToolFunction], [PersistedAgentToolToolSearch],
 // [PersistedAgentToolProgrammaticToolCalling], [PersistedAgentToolMcp],
-// [PersistedAgentToolWebSearch], [PersistedAgentToolComputerUse].
+// [PersistedAgentToolWebSearch], [PersistedAgentToolComputerUse],
+// [PersistedAgentToolAutomations].
 //
 // Use the [PersistedAgentToolUnion.AsAny] method to switch on the variant.
 //
@@ -7728,7 +7785,7 @@ type PersistedAgentToolUnion struct {
 	// This field is from variant [PersistedAgentToolFunction].
 	Parameters map[string]any `json:"parameters"`
 	// Any of "function", "tool_search", "programmatic_tool_calling", "mcp",
-	// "web_search", "computer_use".
+	// "web_search", "computer_use", "automations".
 	Type string `json:"type"`
 	// This field is from variant [PersistedAgentToolProgrammaticToolCalling].
 	Enabled bool `json:"enabled"`
@@ -7792,6 +7849,7 @@ func (PersistedAgentToolProgrammaticToolCalling) implPersistedAgentToolUnion() {
 func (PersistedAgentToolMcp) implPersistedAgentToolUnion()                     {}
 func (PersistedAgentToolWebSearch) implPersistedAgentToolUnion()               {}
 func (PersistedAgentToolComputerUse) implPersistedAgentToolUnion()             {}
+func (PersistedAgentToolAutomations) implPersistedAgentToolUnion()             {}
 
 // Use the following switch statement to find the correct variant
 //
@@ -7802,6 +7860,7 @@ func (PersistedAgentToolComputerUse) implPersistedAgentToolUnion()             {
 //	case openai.PersistedAgentToolMcp:
 //	case openai.PersistedAgentToolWebSearch:
 //	case openai.PersistedAgentToolComputerUse:
+//	case openai.PersistedAgentToolAutomations:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -7819,6 +7878,8 @@ func (u PersistedAgentToolUnion) AsAny() anyPersistedAgentTool {
 		return u.AsWebSearch()
 	case "computer_use":
 		return u.AsComputerUse()
+	case "automations":
+		return u.AsAutomations()
 	}
 	return nil
 }
@@ -7849,6 +7910,11 @@ func (u PersistedAgentToolUnion) AsWebSearch() (v PersistedAgentToolWebSearch) {
 }
 
 func (u PersistedAgentToolUnion) AsComputerUse() (v PersistedAgentToolComputerUse) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u PersistedAgentToolUnion) AsAutomations() (v PersistedAgentToolAutomations) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -8052,6 +8118,24 @@ func (r *PersistedAgentToolComputerUse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Lets the agent manage its own scheduled wakeups.
+type PersistedAgentToolAutomations struct {
+	// The type of the object. Always `automations`.
+	Type constant.Automations `json:"type" default:"automations"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r PersistedAgentToolAutomations) RawJSON() string { return r.JSON.raw }
+func (r *PersistedAgentToolAutomations) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 func PersistedAgentToolParamOfParamFunction(description string, name string, parameters map[string]any) PersistedAgentToolParamUnion {
 	var paramFunction PersistedAgentToolParamFunction
 	paramFunction.Description = description
@@ -8084,6 +8168,7 @@ type PersistedAgentToolParamUnion struct {
 	OfParamMcp                     *PersistedAgentToolParamMcp                     `json:",omitzero,inline"`
 	OfParamWebSearch               *PersistedAgentToolParamWebSearch               `json:",omitzero,inline"`
 	OfParamComputerUse             *PersistedAgentToolParamComputerUse             `json:",omitzero,inline"`
+	OfParamAutomations             *PersistedAgentToolParamAutomations             `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -8093,7 +8178,8 @@ func (u PersistedAgentToolParamUnion) MarshalJSON() ([]byte, error) {
 		u.OfParamProgrammaticToolCalling,
 		u.OfParamMcp,
 		u.OfParamWebSearch,
-		u.OfParamComputerUse)
+		u.OfParamComputerUse,
+		u.OfParamAutomations)
 }
 func (u *PersistedAgentToolParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -8249,6 +8335,8 @@ func (u PersistedAgentToolParamUnion) GetType() *string {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfParamComputerUse; vt != nil {
 		return (*string)(&vt.Type)
+	} else if vt := u.OfParamAutomations; vt != nil {
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -8262,6 +8350,7 @@ func init() {
 		apijson.Discriminator[PersistedAgentToolParamMcp]("mcp"),
 		apijson.Discriminator[PersistedAgentToolParamWebSearch]("web_search"),
 		apijson.Discriminator[PersistedAgentToolParamComputerUse]("computer_use"),
+		apijson.Discriminator[PersistedAgentToolParamAutomations]("automations"),
 	)
 }
 
@@ -8461,6 +8550,30 @@ func (r PersistedAgentToolParamComputerUse) MarshalJSON() (data []byte, err erro
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *PersistedAgentToolParamComputerUse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewPersistedAgentToolParamAutomations() PersistedAgentToolParamAutomations {
+	return PersistedAgentToolParamAutomations{
+		Type: "automations",
+	}
+}
+
+// Lets the agent manage its own scheduled wakeups.
+//
+// This struct has a constant value, construct it with
+// [NewPersistedAgentToolParamAutomations].
+type PersistedAgentToolParamAutomations struct {
+	// The type of the object. Always `automations`.
+	Type constant.Automations `json:"type" default:"automations"`
+	paramObj
+}
+
+func (r PersistedAgentToolParamAutomations) MarshalJSON() (data []byte, err error) {
+	type shadow PersistedAgentToolParamAutomations
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *PersistedAgentToolParamAutomations) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

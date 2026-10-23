@@ -47,7 +47,9 @@ func TestSessionAcceptWithOptionalParams(t *testing.T) {
 					},
 				},
 				Delegation: live.SessionAcceptParamsSessionDelegationUnion{
-					OfClient: &live.ClientDelegationParam{},
+					OfClient: &live.ClientDelegationParam{
+						AcknowledgementDelayMs: openai.Int(0),
+					},
 				},
 				Input: []live.InitialItemUnionParam{{
 					OfDeveloper: &live.InitialItemDeveloperParam{
@@ -162,6 +164,7 @@ func TestSessionForkWithOptionalParams(t *testing.T) {
 					},
 				},
 				Delegation: live.MediaSessionForkConfigDelegationParam{
+					AcknowledgementDelayMs: openai.Int(0),
 					Responses: live.ResponsesDelegationUpdateConfigParam{
 						Instructions:      openai.String("instructions"),
 						MaxOutputTokens:   openai.Int(16),

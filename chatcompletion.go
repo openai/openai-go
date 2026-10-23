@@ -1796,6 +1796,21 @@ func (u chatCompletionContentPartUnionParamPromptCacheBreakpoint) GetMode() *str
 	return nil
 }
 
+// Returns a pointer to the underlying variant's property, if present.
+func (u chatCompletionContentPartUnionParamPromptCacheBreakpoint) GetTtl() *string {
+	switch vt := u.any.(type) {
+	case *ChatCompletionContentPartTextPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *ChatCompletionContentPartImagePromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *ChatCompletionContentPartInputAudioPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *ChatCompletionContentPartFilePromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	}
+	return nil
+}
+
 func init() {
 	apijson.RegisterUnion[ChatCompletionContentPartUnionParam](
 		"type",
@@ -1860,9 +1875,13 @@ func NewChatCompletionContentPartFilePromptCacheBreakpointParam() ChatCompletion
 // from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
 // token block.
 //
-// This struct has a constant value, construct it with
-// [NewChatCompletionContentPartFilePromptCacheBreakpointParam].
+// Use [NewChatCompletionContentPartFilePromptCacheBreakpointParam] to initialize
+// the constant fields.
 type ChatCompletionContentPartFilePromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -1874,6 +1893,12 @@ func (r ChatCompletionContentPartFilePromptCacheBreakpointParam) MarshalJSON() (
 }
 func (r *ChatCompletionContentPartFilePromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ChatCompletionContentPartFilePromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
 }
 
 // Learn about
@@ -1941,9 +1966,14 @@ func (r *ChatCompletionContentPartImageImageURL) UnmarshalJSON(data []byte) erro
 type ChatCompletionContentPartImagePromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -2016,9 +2046,13 @@ func NewChatCompletionContentPartImagePromptCacheBreakpointParam() ChatCompletio
 // from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
 // token block.
 //
-// This struct has a constant value, construct it with
-// [NewChatCompletionContentPartImagePromptCacheBreakpointParam].
+// Use [NewChatCompletionContentPartImagePromptCacheBreakpointParam] to initialize
+// the constant fields.
 type ChatCompletionContentPartImagePromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -2030,6 +2064,12 @@ func (r ChatCompletionContentPartImagePromptCacheBreakpointParam) MarshalJSON() 
 }
 func (r *ChatCompletionContentPartImagePromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ChatCompletionContentPartImagePromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
 }
 
 // Learn about [audio inputs](https://developers.openai.com/api/docs/guides/audio).
@@ -2091,9 +2131,13 @@ func NewChatCompletionContentPartInputAudioPromptCacheBreakpointParam() ChatComp
 // from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
 // token block.
 //
-// This struct has a constant value, construct it with
-// [NewChatCompletionContentPartInputAudioPromptCacheBreakpointParam].
+// Use [NewChatCompletionContentPartInputAudioPromptCacheBreakpointParam] to
+// initialize the constant fields.
 type ChatCompletionContentPartInputAudioPromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -2105,6 +2149,12 @@ func (r ChatCompletionContentPartInputAudioPromptCacheBreakpointParam) MarshalJS
 }
 func (r *ChatCompletionContentPartInputAudioPromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ChatCompletionContentPartInputAudioPromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
 }
 
 // The properties Refusal, Type are required.
@@ -2168,9 +2218,14 @@ func (r ChatCompletionContentPartText) ToParam() ChatCompletionContentPartTextPa
 type ChatCompletionContentPartTextPromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -2217,9 +2272,13 @@ func NewChatCompletionContentPartTextPromptCacheBreakpointParam() ChatCompletion
 // from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
 // token block.
 //
-// This struct has a constant value, construct it with
-// [NewChatCompletionContentPartTextPromptCacheBreakpointParam].
+// Use [NewChatCompletionContentPartTextPromptCacheBreakpointParam] to initialize
+// the constant fields.
 type ChatCompletionContentPartTextPromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -2231,6 +2290,12 @@ func (r ChatCompletionContentPartTextPromptCacheBreakpointParam) MarshalJSON() (
 }
 func (r *ChatCompletionContentPartTextPromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ChatCompletionContentPartTextPromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
 }
 
 // A custom tool that processes input using a specified format.
@@ -3379,8 +3444,10 @@ func (r *ChatCompletionStoreMessageContentPartUnion) UnmarshalJSON(data []byte) 
 type ChatCompletionStoreMessageContentPartUnionPromptCacheBreakpoint struct {
 	// This field is from variant [ChatCompletionContentPartTextPromptCacheBreakpoint].
 	Mode constant.Explicit `json:"mode"`
+	Ttl  string            `json:"ttl"`
 	JSON struct {
 		Mode respjson.Field
+		Ttl  respjson.Field
 		raw  string
 	} `json:"-"`
 }
