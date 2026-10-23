@@ -503,7 +503,7 @@
     },
     "betaresponse.go": {
       "mode": "100644",
-      "sha256": "791db62668e3b5078aa55a26695f8f350d06beff723d88bf3ecd4dcdbc557dda"
+      "sha256": "c7f8696fdaca297d24cbb4a03098368e9701c3fb122da1b2fbdd6e9c7ec672a1"
     },
     "betaresponse_test.go": {
       "mode": "100644",
@@ -767,7 +767,7 @@
     },
     "live/live.go": {
       "mode": "100644",
-      "sha256": "557c01db13149643816b89f74edccefbc719c8aa15e6d074503cd13b0706984e"
+      "sha256": "f1790798f842d39bec09c8afe81145d01b739d00697c2b7741bfee2781c47c5f"
     },
     "live/live_forks_websocket.go": {
       "mode": "100644",
@@ -923,7 +923,7 @@
     },
     "responses/response.go": {
       "mode": "100644",
-      "sha256": "7123dcccc28adef0fba748dbb4157a48f56744e22a9c7e18be5f9b1495b1dd6d"
+      "sha256": "3a47c22b15ac994d75bf15565de745d9924e734f7dc4866990850d85c6ec6579"
     },
     "responses/response_test.go": {
       "mode": "100644",
@@ -987,7 +987,7 @@
     },
     "scripts/castiron/fixtures/github_publisher.cjs": {
       "mode": "100644",
-      "sha256": "3f77c368ed668bb6ddcde1f2e806e3f307d64cb68cc45fe4c4968adfe1f7c0fe"
+      "sha256": "ae535ab4cdc11e29eb9dd39b932ef5fa59b3d3e3183dbcd6b6989f98308024d8"
     },
     "scripts/castiron/ruff.toml": {
       "mode": "100644",

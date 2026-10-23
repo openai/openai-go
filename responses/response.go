@@ -23842,15 +23842,19 @@ func (r *ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutpu
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion struct {
+	OfResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect `json:",inline"`
 	// Any of "direct", "program".
-	Type string `json:"type"`
+	Type                                                                          string                                                                      `json:"type"`
+	OfResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram `json:",inline"`
 	// This field is from variant
 	// [ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram].
 	CallerID string `json:"caller_id"`
 	JSON     struct {
-		Type     respjson.Field
-		CallerID respjson.Field
-		raw      string
+		OfResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect  respjson.Field
+		Type                                                                          respjson.Field
+		OfResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram respjson.Field
+		CallerID                                                                      respjson.Field
+		raw                                                                           string
 	} `json:"-"`
 }
 

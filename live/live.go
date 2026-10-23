@@ -7623,19 +7623,25 @@ func (r *SessionResourceAudioOutputVoiceUnion) UnmarshalJSON(data []byte) error 
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type SessionResourceDelegationUnion struct {
+	OfClientDelegation ClientDelegation `json:",inline"`
 	// Any of "client", "responses", "decisions".
-	Type                   string `json:"type"`
-	AcknowledgementDelayMs int64  `json:"acknowledgement_delay_ms"`
+	Type                                 string                             `json:"type"`
+	AcknowledgementDelayMs               int64                              `json:"acknowledgement_delay_ms"`
+	OfSessionResourceDelegationResponses SessionResourceDelegationResponses `json:",inline"`
 	// This field is from variant [SessionResourceDelegationResponses].
-	Responses ResponsesDelegationConfig `json:"responses"`
+	Responses                            ResponsesDelegationConfig          `json:"responses"`
+	OfSessionResourceDelegationDecisions SessionResourceDelegationDecisions `json:",inline"`
 	// This field is from variant [SessionResourceDelegationDecisions].
 	Decisions DecisionsDelegationConfig `json:"decisions"`
 	JSON      struct {
-		Type                   respjson.Field
-		AcknowledgementDelayMs respjson.Field
-		Responses              respjson.Field
-		Decisions              respjson.Field
-		raw                    string
+		OfClientDelegation                   respjson.Field
+		Type                                 respjson.Field
+		AcknowledgementDelayMs               respjson.Field
+		OfSessionResourceDelegationResponses respjson.Field
+		Responses                            respjson.Field
+		OfSessionResourceDelegationDecisions respjson.Field
+		Decisions                            respjson.Field
+		raw                                  string
 	} `json:"-"`
 }
 
