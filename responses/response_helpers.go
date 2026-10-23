@@ -1,6 +1,14 @@
 package responses
 
-import "strings"
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"strings"
+	"time"
+
+	"github.com/openai/openai-go/v3/packages/websocket"
+)
 
 func responseOutputText(r Response) string {
 	var outputText strings.Builder
@@ -16,4 +24,188 @@ func responseOutputText(r Response) string {
 
 func (r Response) OutputText() string {
 	return responseOutputText(r)
+}
+
+// Create sends a typed response.create command, including routing and
+// continuation fields. It does not wait for response completion.
+func (c *ResponseConnection) Create(ctx context.Context, event ResponsesClientEventResponseCreateParam) error {
+	return c.connection.SendJSON(ctx, event)
+}
+
+// ResponseRecoveryOptions configures explicit, opt-in transport recovery.
+// Recovery never restores server caches or replays previous client commands.
+type ResponseRecoveryOptions struct {
+	// MaxAttempts defaults to one. Every attempt resolves handshake credentials.
+	MaxAttempts int
+	// RetryDelay is a fixed, cancellable delay between attempts.
+	RetryDelay time.Duration
+	// Restore runs on a fresh connection before it is returned. It may run once
+	// per attempt and must honor its context. The application owns any commands
+	// it deliberately sends here, including idempotency and replay decisions.
+	Restore func(context.Context, *ResponseConnection) error
+}
+
+// Recover replaces the transport with a bounded number of attempts. A failed
+// restoration closes that attempted connection. Closing the original connection
+// while recovery runs cancels opening, retry delays and restoration context.
+func (c *ResponseConnection) Recover(ctx context.Context, options ResponseRecoveryOptions) (*ResponseConnection, error) {
+	if options.MaxAttempts == 0 {
+		options.MaxAttempts = 1
+	}
+	if options.MaxAttempts < 1 || options.RetryDelay < 0 {
+		return nil, errors.New("websocket: invalid recovery options")
+	}
+	connection, err := c.connection.Reconnect(ctx, func(ctx context.Context) (*websocket.Connection[responseWebsocketEvent], error) {
+		var lastErr error
+		var unreturned *ResponseConnection
+		defer func() {
+			if unreturned != nil {
+				unreturned.Abort()
+			}
+		}()
+		for attempt := 0; attempt < options.MaxAttempts; attempt++ {
+			if err := ctx.Err(); err != nil {
+				return nil, err
+			}
+			if attempt > 0 && options.RetryDelay > 0 {
+				timer := time.NewTimer(options.RetryDelay)
+				select {
+				case <-timer.C:
+				case <-ctx.Done():
+					timer.Stop()
+					return nil, ctx.Err()
+				}
+			}
+			next, err := c.open(ctx)
+			if err != nil {
+				lastErr = err
+				continue
+			}
+			if options.Restore != nil {
+				unreturned = next
+				if restoreErr := options.Restore(ctx, next); restoreErr != nil {
+					next.Abort()
+					unreturned = nil
+					lastErr = restoreErr
+					continue
+				}
+				unreturned = nil
+			}
+			return next.connection, nil
+		}
+		return nil, lastErr
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &ResponseConnection{connection: connection, open: c.open}, nil
+}
+
+// ResponseLane consumes events for one stream_id without a second socket reader.
+// Attach before sending the corresponding command.
+type ResponseLane struct {
+	lane *websocket.Lane[responseWebsocketEvent]
+}
+
+// Lane attaches a consumer for a stream_id of 1-256 ASCII letters, digits,
+// underscores, hyphens, or periods. The ID remains reserved until this connection
+// ends, including after the lane closes. Reuse an open lane for sequential responses.
+func (c *ResponseConnection) Lane(streamID string) (*ResponseLane, error) {
+	if !validResponseStreamID(streamID) {
+		return nil, errors.New("websocket: stream_id must contain 1-256 ASCII letters, digits, underscores, hyphens, or periods")
+	}
+	lane, err := c.connection.Lane(streamID)
+	if err != nil {
+		return nil, err
+	}
+	return &ResponseLane{lane: lane}, nil
+}
+
+func validResponseStreamID(streamID string) bool {
+	if len(streamID) == 0 || len(streamID) > 256 {
+		return false
+	}
+	for i := range len(streamID) {
+		ch := streamID[i]
+		if !((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_' || ch == '-' || ch == '.') {
+			return false
+		}
+	}
+	return true
+}
+
+// Recv returns this lane's next event without reading the physical socket itself.
+func (l *ResponseLane) Recv(ctx context.Context) (ResponsesServerEventUnion, error) {
+	event, err := l.lane.Recv(ctx)
+	if err != nil {
+		return ResponsesServerEventUnion{}, err
+	}
+	return event.decode()
+}
+
+// Close detaches only this lane; it does not cancel remote work or the socket.
+// Its stream_id stays reserved on this connection; later events use connection Recv.
+func (l *ResponseLane) Close() { l.lane.Close() }
+
+// ResponseProtocolError retains the complete typed API error event.
+type ResponseProtocolError struct{ Event ResponsesServerEventUnion }
+
+func (e *ResponseProtocolError) Error() string { return "responses websocket API error" }
+
+// FinalResponse consumes events until a completed, failed, or incomplete
+// response supplies its authoritative final snapshot, including tool and
+// multi-part output. EOF is never completion. Use Recv to observe intermediate
+// events directly. This consumes unclaimed events, including named streams;
+// attached lanes collect their own events. Cancellation leaves the connection usable.
+func (c *ResponseConnection) FinalResponse(ctx context.Context) (*Response, error) {
+	return finalWebsocketResponse(ctx, c.Recv)
+}
+
+// FinalResponse receives this lane's authoritative final response snapshot.
+func (l *ResponseLane) FinalResponse(ctx context.Context) (*Response, error) {
+	return finalWebsocketResponse(ctx, l.Recv)
+}
+func finalWebsocketResponse(ctx context.Context, receive func(context.Context) (ResponsesServerEventUnion, error)) (*Response, error) {
+	for {
+		event, err := receive(ctx)
+		if err != nil {
+			return nil, err
+		}
+		// Use the already decoded snapshot without parsing large output again.
+		// Keep the raw path below for missing or invalid fields so its errors
+		// and permissive handling of other envelope fields remain unchanged.
+		switch event.Type {
+		case "response.completed":
+			if event.OfResponsesServerEventResponseWsCompleted.JSON.Response.Valid() {
+				response := event.OfResponsesServerEventResponseWsCompleted.Response
+				return &response, nil
+			}
+		case "response.failed":
+			if event.OfResponsesServerEventResponseWsFailed.JSON.Response.Valid() {
+				response := event.OfResponsesServerEventResponseWsFailed.Response
+				return &response, nil
+			}
+		case "response.incomplete":
+			if event.OfResponsesServerEventResponseWsIncomplete.JSON.Response.Valid() {
+				response := event.OfResponsesServerEventResponseWsIncomplete.Response
+				return &response, nil
+			}
+		}
+		var envelope struct {
+			Type     string    `json:"type"`
+			Response *Response `json:"response"`
+		}
+		if decodeErr := json.Unmarshal([]byte(event.RawJSON()), &envelope); decodeErr != nil {
+			return nil, decodeErr
+		}
+		switch envelope.Type {
+		case "response.completed", "response.failed", "response.incomplete":
+			if envelope.Response == nil {
+				return nil, errors.New("responses terminal event is missing response")
+			}
+			return envelope.Response, nil
+		case "error":
+			return nil, &ResponseProtocolError{Event: event}
+		}
+	}
 }

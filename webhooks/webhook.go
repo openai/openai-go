@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
-	"time"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
 	"github.com/openai/openai-go/v3/internal/apiquery"
@@ -143,41 +142,6 @@ func (r *WebhookService) Test(ctx context.Context, webhookEndpointID string, bod
 // Validates that the given payload was sent by OpenAI and parses the payload.
 func (r *WebhookService) Unwrap(body []byte, headers http.Header, opts ...option.RequestOption) (*UnwrapWebhookEventUnion, error) {
 	return unwrapWebhook(r, body, headers, opts...)
-}
-
-// UnwrapWithTolerance validates that the given payload was sent by OpenAI using custom tolerance, then parses the payload.
-// tolerance specifies the maximum age of the webhook.
-func (r *WebhookService) UnwrapWithTolerance(body []byte, headers http.Header, tolerance time.Duration, opts ...option.RequestOption) (*UnwrapWebhookEventUnion, error) {
-	return unwrapWebhookWithTolerance(r, body, headers, tolerance, opts...)
-}
-
-// UnwrapWithToleranceAndTime validates that the given payload was sent by OpenAI using custom tolerance and time, then parses the payload.
-// tolerance specifies the maximum age of the webhook.
-// now allows specifying the current time for testing purposes.
-func (r *WebhookService) UnwrapWithToleranceAndTime(body []byte, headers http.Header, tolerance time.Duration, now time.Time, opts ...option.RequestOption) (*UnwrapWebhookEventUnion, error) {
-	return unwrapWebhookWithToleranceAndTime(r, body, headers, tolerance, now, opts...)
-}
-
-// VerifySignature validates whether or not the webhook payload was sent by OpenAI.
-// An error will be raised if the webhook signature is invalid.
-// tolerance specifies the maximum age of the webhook (default: 5 minutes).
-func (r *WebhookService) VerifySignature(body []byte, headers http.Header, opts ...option.RequestOption) error {
-	return r.VerifySignatureWithTolerance(body, headers, 5*time.Minute, opts...)
-}
-
-// VerifySignatureWithTolerance validates whether or not the webhook payload was sent by OpenAI.
-// An error will be raised if the webhook signature is invalid.
-// tolerance specifies the maximum age of the webhook.
-func (r *WebhookService) VerifySignatureWithTolerance(body []byte, headers http.Header, tolerance time.Duration, opts ...option.RequestOption) error {
-	return r.VerifySignatureWithToleranceAndTime(body, headers, tolerance, time.Now(), opts...)
-}
-
-// VerifySignatureWithToleranceAndTime validates whether or not the webhook payload was sent by OpenAI.
-// An error will be raised if the webhook signature is invalid.
-// tolerance specifies the maximum age of the webhook.
-// now allows specifying the current time for testing purposes.
-func (r *WebhookService) VerifySignatureWithToleranceAndTime(body []byte, headers http.Header, tolerance time.Duration, now time.Time, opts ...option.RequestOption) error {
-	return verifyWebhookSignatureWithToleranceAndTime(r, body, headers, tolerance, now, opts...)
 }
 
 // Sent when an agent environment expires and can no longer resume from a snapshot.

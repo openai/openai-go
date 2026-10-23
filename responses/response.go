@@ -18142,21 +18142,21 @@ func (r *ResponseInputTextContentPromptCacheBreakpointParam) UnmarshalJSON(data 
 }
 
 // ResponseItemUnion contains all possible properties and values from
-// [ResponseInputMessageItem], [ResponseOutputMessage],
-// [ResponseFileSearchToolCall], [ResponseComputerToolCall],
-// [ResponseComputerToolCallOutputItem], [ResponseFunctionWebSearch],
-// [ResponseFunctionToolCallItem], [ResponseFunctionToolCallOutputItem],
-// [ResponseToolSearchCall], [ResponseToolSearchOutputItem],
-// [ResponseItemAdditionalTools], [ResponseConfigurationUpdateItem],
-// [ResponseReasoningItem], [ResponseItemProgram], [ResponseItemProgramOutput],
-// [ResponseCompactionItem], [ResponseItemImageGenerationCall],
-// [ResponseCodeInterpreterToolCall], [ResponseItemLocalShellCall],
-// [ResponseItemLocalShellCallOutput], [ResponseFunctionShellToolCall],
-// [ResponseFunctionShellToolCallOutput], [ResponseApplyPatchToolCall],
-// [ResponseApplyPatchToolCallOutput], [ResponseItemMcpListTools],
-// [ResponseItemMcpApprovalRequest], [ResponseItemMcpApprovalResponse],
-// [ResponseItemMcpCall], [ResponseCustomToolCallItem],
-// [ResponseCustomToolCallOutputItem].
+// [ResponseInputMessageItem], [ResponseFileSearchToolCall],
+// [ResponseComputerToolCall], [ResponseComputerToolCallOutputItem],
+// [ResponseFunctionWebSearch], [ResponseFunctionToolCallItem],
+// [ResponseFunctionToolCallOutputItem], [ResponseToolSearchCall],
+// [ResponseToolSearchOutputItem], [ResponseItemAdditionalTools],
+// [ResponseConfigurationUpdateItem], [ResponseReasoningItem],
+// [ResponseItemProgram], [ResponseItemProgramOutput], [ResponseCompactionItem],
+// [ResponseItemImageGenerationCall], [ResponseCodeInterpreterToolCall],
+// [ResponseItemLocalShellCall], [ResponseItemLocalShellCallOutput],
+// [ResponseFunctionShellToolCall], [ResponseFunctionShellToolCallOutput],
+// [ResponseApplyPatchToolCall], [ResponseApplyPatchToolCallOutput],
+// [ResponseItemMcpListTools], [ResponseItemMcpApprovalRequest],
+// [ResponseItemMcpApprovalResponse], [ResponseItemMcpCall],
+// [ResponseCustomToolCallItem], [ResponseCustomToolCallOutputItem],
+// [ResponseOutputMessage].
 //
 // Use the [ResponseItemUnion.AsAny] method to switch on the variant.
 //
@@ -18314,7 +18314,6 @@ type anyResponseItem interface {
 }
 
 func (ResponseInputMessageItem) implResponseItemUnion()            {}
-func (ResponseOutputMessage) implResponseItemUnion()               {}
 func (ResponseFileSearchToolCall) implResponseItemUnion()          {}
 func (ResponseComputerToolCall) implResponseItemUnion()            {}
 func (ResponseComputerToolCallOutputItem) implResponseItemUnion()  {}
@@ -18343,12 +18342,12 @@ func (ResponseItemMcpApprovalResponse) implResponseItemUnion()     {}
 func (ResponseItemMcpCall) implResponseItemUnion()                 {}
 func (ResponseCustomToolCallItem) implResponseItemUnion()          {}
 func (ResponseCustomToolCallOutputItem) implResponseItemUnion()    {}
+func (ResponseOutputMessage) implResponseItemUnion()               {}
 
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseItemUnion.AsAny().(type) {
 //	case responses.ResponseInputMessageItem:
-//	case responses.ResponseOutputMessage:
 //	case responses.ResponseFileSearchToolCall:
 //	case responses.ResponseComputerToolCall:
 //	case responses.ResponseComputerToolCallOutputItem:
@@ -18377,13 +18376,12 @@ func (ResponseCustomToolCallOutputItem) implResponseItemUnion()    {}
 //	case responses.ResponseItemMcpCall:
 //	case responses.ResponseCustomToolCallItem:
 //	case responses.ResponseCustomToolCallOutputItem:
+//	case responses.ResponseOutputMessage:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
 func (u ResponseItemUnion) AsAny() anyResponseItem {
 	switch u.Type {
-	case "message":
-		return u.AsOutputMessage()
 	case "file_search_call":
 		return u.AsFileSearchCall()
 	case "computer_call":
@@ -18440,16 +18438,13 @@ func (u ResponseItemUnion) AsAny() anyResponseItem {
 		return u.AsCustomToolCall()
 	case "custom_tool_call_output":
 		return u.AsCustomToolCallOutput()
+	case "message":
+		return u.AsOutputMessage()
 	}
 	return nil
 }
 
 func (u ResponseItemUnion) AsMessage() (v ResponseInputMessageItem) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u ResponseItemUnion) AsOutputMessage() (v ResponseOutputMessage) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -18590,6 +18585,11 @@ func (u ResponseItemUnion) AsCustomToolCall() (v ResponseCustomToolCallItem) {
 }
 
 func (u ResponseItemUnion) AsCustomToolCallOutput() (v ResponseCustomToolCallOutputItem) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseItemUnion) AsOutputMessage() (v ResponseOutputMessage) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -24754,6 +24754,7 @@ type ResponseStreamEventUnion struct {
 	// "response.file_search_call.searching", "response.function_call_arguments.delta",
 	// "response.function_call_arguments.done", "response.shell_call_command.added",
 	// "response.shell_call_command.delta", "response.shell_call_command.done",
+	// "response.shell_call_output_content.delta",
 	// "response.shell_call_output_content.done", "response.in_progress",
 	// "response.failed", "response.incomplete", "response.output_item.added",
 	// "response.output_item.done", "response.reasoning_summary_part.added",
@@ -30076,9 +30077,9 @@ func (r *ResponsesServerEventUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// unmarshalWebsocketEvent decodes only the event selected by its type. Public
+// unmarshalWebsocketEventWithRawType decodes only the event selected by its type. Public
 // UnmarshalJSON keeps the existing general-purpose union decoding behavior.
-func (r *ResponsesServerEventUnion) unmarshalWebsocketEvent(data []byte) error {
+func (r *ResponsesServerEventUnion) unmarshalWebsocketEventWithRawType(data []byte) error {
 	var envelope struct {
 		Type json.RawMessage `json:"type"`
 	}

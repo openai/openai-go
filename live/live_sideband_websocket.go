@@ -67,7 +67,7 @@ func decodeSidebandWebsocketEvent(data []byte) (sidebandWebsocketEvent, error) {
 
 func (e sidebandWebsocketEvent) decode() (ConnectServerEventUnion, error) {
 	var event ConnectServerEventUnion
-	err := event.unmarshalWebsocketEvent(e.data)
+	err := event.unmarshalWebsocketEventWithRawType(e.data)
 	return event, err
 }
 
