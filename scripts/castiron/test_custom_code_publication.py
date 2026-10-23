@@ -1486,13 +1486,22 @@ class ReviewRevocationTests(unittest.TestCase):
         payload = self.payload()
         checker = "f" * 40
         payload["main_sha"] = checker
-        payload["policies_by_sha"][checker] = payload["policies_by_sha"]["b" * 40]
+        payload["policies_by_sha"]["b" * 40] = {
+            "schema_version": 1,
+            "max_custom_patch_lines": 4000,
+        }
+        payload["policies_by_sha"][checker] = {
+            "schema_version": 2,
+            "max_custom_patch_lines": 0,
+            "generated_files": "strict",
+        }
         payload["policies_by_sha"]["a" * 40] = {
             **payload["policies_by_sha"]["b" * 40],
             "next_policy": {"repository": "openai/example", "main_sha": checker},
         }
         self.assertEqual(self.invoke(payload), [])
         advanced_main = "e" * 40
+        payload["policies_by_sha"][advanced_main] = payload["policies_by_sha"][checker]
         payload["main_sha_sequence"] = [checker, advanced_main]
         payload["main_sha"] = advanced_main
         payload["comparisons"] = {

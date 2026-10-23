@@ -3,7 +3,7 @@
   "files": {
     ".github/workflows/castiron-custom-code-comment.yml": {
       "mode": "100644",
-      "sha256": "afebb2d21c7b322905e67452004da087d5bd3f60fc3c0cc11d9bccad9900103d"
+      "sha256": "a896f4bac69c6f8debe7b4bf540129466be04cb62b75c60f5f80a37f5739b0a5"
     },
     ".github/workflows/castiron-custom-code.yml": {
       "mode": "100644",
@@ -1007,7 +1007,7 @@
     },
     "scripts/castiron/test_custom_code_publication.py": {
       "mode": "100644",
-      "sha256": "4e9077ffc214685e49d4156163eaf904e650bc9ed82ecbdb03a19fc22bd4fbbf"
+      "sha256": "8548acaf8958bf745759ba5c7a08791cb72793aa0a780d027a2a686e0464ac8e"
     },
     "scripts/castiron/test_custom_code_report.py": {
       "mode": "100644",
