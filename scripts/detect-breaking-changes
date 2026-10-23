@@ -91,12 +91,13 @@ TEST_PATHS=(
 	paginationmanual_test.go
 )
 
-for PATHSPEC in "${TEST_PATHS[@]}"; do
-    # Try to check out previous versions of the test files
-    # with the current SDK.
-    git checkout "$1" -- "${PATHSPEC}" 2>/dev/null || true
-done
+# Restore only paths present at the baseline so missing files remain untouched.
+historical_paths=$(mktemp)
+trap 'rm -f "$historical_paths"' EXIT
+git ls-tree -r -z --name-only "$1" -- "${TEST_PATHS[@]}" > "$historical_paths"
+if [[ -s "$historical_paths" ]]; then
+    git --literal-pathspecs checkout "$1" --pathspec-from-file="$historical_paths" --pathspec-file-nul
+fi
 
-# Instead of running the tests, use the linter to check if an
-# older test is no longer compatible with the latest SDK.
-./scripts/lint
+# Compile historical tests against the current SDK without running them.
+go test -c -vet=off -o /dev/null ./...
