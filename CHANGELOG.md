@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.86.0](https://github.com/openai/openai-go/compare/v3.85.1...v3.86.0) (2026-10-23)
+
+
+### Features
+
+* **api: Breaking change in a minor release.** Decisions and Live question `Instructions` fields now use typed unions to support a string or a list of text, image, or JSON parts. Existing Go code that assigns a string directly, such as `Instructions: "check"`, no longer compiles; wrap it in the field’s union type, for example `Instructions: openai.DecisionNewParamsQuestionPredicateInstructionsUnion{OfString: openai.String("check")}`. For Live responses, check `question.Instructions.JSON.OfString.Valid()` before reading `question.Instructions.OfString`, and handle `question.Instructions.OfArrayOfDecisionQuestionInputPartUnion` for the list case. Decisions request inputs also support additional message roles and tool-history items; update code that assumes it knows every input type. String instructions remain supported through the union, and the existing `DecisionInputMessageParam` user-message input form still works. ([#1147](https://github.com/openai/openai-go/issues/1147)) ([bc63762](https://github.com/openai/openai-go/commit/bc637624ce75c29e552db07442edb78fa566011e))
+
+
+### Chores
+
+* align generated SDK maintenance tooling ([#1146](https://github.com/openai/openai-go/issues/1146)) ([bcb69a7](https://github.com/openai/openai-go/commit/bcb69a7bf7fdd8f076c8742641fe7d9f02e9ab72))
+
 ## [3.85.1](https://github.com/openai/openai-go/compare/v3.85.0...v3.85.1) (2026-10-22)
 
 
