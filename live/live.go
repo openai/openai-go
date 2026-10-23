@@ -4761,7 +4761,7 @@ func init() {
 type InitialItemAssistantContentUnionParam struct {
 	OfText       *InitialItemAssistantContentTextParam       `json:",omitzero,inline"`
 	OfOutputText *InitialItemAssistantContentOutputTextParam `json:",omitzero,inline"`
-	paramUnion
+	paramUnion   `default:"text"`
 }
 
 func (u InitialItemAssistantContentUnionParam) MarshalJSON() ([]byte, error) {
@@ -7623,16 +7623,19 @@ func (r *SessionResourceAudioOutputVoiceUnion) UnmarshalJSON(data []byte) error 
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type SessionResourceDelegationUnion struct {
-	OfClientDelegation                   ClientDelegation                   `json:",inline"`
-	OfSessionResourceDelegationResponses SessionResourceDelegationResponses `json:",inline"`
-	OfSessionResourceDelegationDecisions SessionResourceDelegationDecisions `json:",inline"`
-	Type                                 string                             `json:"type"`
-	JSON                                 struct {
-		OfClientDelegation                   respjson.Field
-		OfSessionResourceDelegationResponses respjson.Field
-		OfSessionResourceDelegationDecisions respjson.Field
-		Type                                 respjson.Field
-		raw                                  string
+	// Any of "client", "responses", "decisions".
+	Type                   string `json:"type"`
+	AcknowledgementDelayMs int64  `json:"acknowledgement_delay_ms"`
+	// This field is from variant [SessionResourceDelegationResponses].
+	Responses ResponsesDelegationConfig `json:"responses"`
+	// This field is from variant [SessionResourceDelegationDecisions].
+	Decisions DecisionsDelegationConfig `json:"decisions"`
+	JSON      struct {
+		Type                   respjson.Field
+		AcknowledgementDelayMs respjson.Field
+		Responses              respjson.Field
+		Decisions              respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 

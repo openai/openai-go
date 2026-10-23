@@ -18893,7 +18893,8 @@ func (r *ResponseItemUnionAction) UnmarshalJSON(data []byte) error {
 //
 // If the underlying value is not a json object, one of the following properties
 // will be valid: OfString OfOutputContentList
-// OfResponseFunctionShellToolCallOutputOutputArray]
+// OfResponseFunctionShellToolCallOutputOutputArray
+// OfOutputContentListResponseCustomToolCallOutputOutputOutputContentListItemUnion]
 type ResponseItemUnionOutput struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
@@ -18904,6 +18905,10 @@ type ResponseItemUnionOutput struct {
 	// This field will be present if the value is a
 	// [[]ResponseFunctionShellToolCallOutputOutput] instead of an object.
 	OfResponseFunctionShellToolCallOutputOutputArray []ResponseFunctionShellToolCallOutputOutput `json:",inline"`
+	// This field will be present if the value is a
+	// [[]ResponseCustomToolCallOutputOutputOutputContentListItemUnion] instead of an
+	// object.
+	OfOutputContentListResponseCustomToolCallOutputOutputOutputContentListItemUnion []ResponseCustomToolCallOutputOutputOutputContentListItemUnion `json:",inline"`
 	// This field is from variant [ResponseComputerToolCallOutputScreenshot].
 	Type constant.ComputerScreenshot `json:"type"`
 	// This field is from variant [ResponseComputerToolCallOutputScreenshot].
@@ -18911,13 +18916,14 @@ type ResponseItemUnionOutput struct {
 	// This field is from variant [ResponseComputerToolCallOutputScreenshot].
 	ImageURL string `json:"image_url"`
 	JSON     struct {
-		OfString                                         respjson.Field
-		OfOutputContentList                              respjson.Field
-		OfResponseFunctionShellToolCallOutputOutputArray respjson.Field
-		Type                                             respjson.Field
-		FileID                                           respjson.Field
-		ImageURL                                         respjson.Field
-		raw                                              string
+		OfString                                                                        respjson.Field
+		OfOutputContentList                                                             respjson.Field
+		OfResponseFunctionShellToolCallOutputOutputArray                                respjson.Field
+		OfOutputContentListResponseCustomToolCallOutputOutputOutputContentListItemUnion respjson.Field
+		Type                                                                            respjson.Field
+		FileID                                                                          respjson.Field
+		ImageURL                                                                        respjson.Field
+		raw                                                                             string
 	} `json:"-"`
 }
 
@@ -18930,7 +18936,8 @@ func (r *ResponseItemUnionOutput) UnmarshalJSON(data []byte) error {
 	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
 		if decoded.JSON.OfString.Valid() ||
 			decoded.JSON.OfOutputContentList.Valid() ||
-			decoded.JSON.OfResponseFunctionShellToolCallOutputOutputArray.Valid() {
+			decoded.JSON.OfResponseFunctionShellToolCallOutputOutputArray.Valid() ||
+			decoded.JSON.OfOutputContentListResponseCustomToolCallOutputOutputOutputContentListItemUnion.Valid() {
 			*r = decoded
 			return nil
 		}
@@ -20248,7 +20255,8 @@ func (r *ResponseOutputItemUnionCaller) UnmarshalJSON(data []byte) error {
 //
 // If the underlying value is not a json object, one of the following properties
 // will be valid: OfString OfOutputContentList
-// OfResponseFunctionShellToolCallOutputOutputArray]
+// OfResponseFunctionShellToolCallOutputOutputArray
+// OfOutputContentListResponseCustomToolCallOutputOutputOutputContentListItemUnion]
 type ResponseOutputItemUnionOutput struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
@@ -20259,6 +20267,10 @@ type ResponseOutputItemUnionOutput struct {
 	// This field will be present if the value is a
 	// [[]ResponseFunctionShellToolCallOutputOutput] instead of an object.
 	OfResponseFunctionShellToolCallOutputOutputArray []ResponseFunctionShellToolCallOutputOutput `json:",inline"`
+	// This field will be present if the value is a
+	// [[]ResponseCustomToolCallOutputOutputOutputContentListItemUnion] instead of an
+	// object.
+	OfOutputContentListResponseCustomToolCallOutputOutputOutputContentListItemUnion []ResponseCustomToolCallOutputOutputOutputContentListItemUnion `json:",inline"`
 	// This field is from variant [ResponseComputerToolCallOutputScreenshot].
 	Type constant.ComputerScreenshot `json:"type"`
 	// This field is from variant [ResponseComputerToolCallOutputScreenshot].
@@ -20266,13 +20278,14 @@ type ResponseOutputItemUnionOutput struct {
 	// This field is from variant [ResponseComputerToolCallOutputScreenshot].
 	ImageURL string `json:"image_url"`
 	JSON     struct {
-		OfString                                         respjson.Field
-		OfOutputContentList                              respjson.Field
-		OfResponseFunctionShellToolCallOutputOutputArray respjson.Field
-		Type                                             respjson.Field
-		FileID                                           respjson.Field
-		ImageURL                                         respjson.Field
-		raw                                              string
+		OfString                                                                        respjson.Field
+		OfOutputContentList                                                             respjson.Field
+		OfResponseFunctionShellToolCallOutputOutputArray                                respjson.Field
+		OfOutputContentListResponseCustomToolCallOutputOutputOutputContentListItemUnion respjson.Field
+		Type                                                                            respjson.Field
+		FileID                                                                          respjson.Field
+		ImageURL                                                                        respjson.Field
+		raw                                                                             string
 	} `json:"-"`
 }
 
@@ -20285,7 +20298,8 @@ func (r *ResponseOutputItemUnionOutput) UnmarshalJSON(data []byte) error {
 	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
 		if decoded.JSON.OfString.Valid() ||
 			decoded.JSON.OfOutputContentList.Valid() ||
-			decoded.JSON.OfResponseFunctionShellToolCallOutputOutputArray.Valid() {
+			decoded.JSON.OfResponseFunctionShellToolCallOutputOutputArray.Valid() ||
+			decoded.JSON.OfOutputContentListResponseCustomToolCallOutputOutputOutputContentListItemUnion.Valid() {
 			*r = decoded
 			return nil
 		}
@@ -23828,14 +23842,15 @@ func (r *ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutpu
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion struct {
-	OfResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect  ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect  `json:",inline"`
-	OfResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram `json:",inline"`
-	Type                                                                          string                                                                      `json:"type"`
-	JSON                                                                          struct {
-		OfResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect  respjson.Field
-		OfResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram respjson.Field
-		Type                                                                          respjson.Field
-		raw                                                                           string
+	// Any of "direct", "program".
+	Type string `json:"type"`
+	// This field is from variant
+	// [ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram].
+	CallerID string `json:"caller_id"`
+	JSON     struct {
+		Type     respjson.Field
+		CallerID respjson.Field
+		raw      string
 	} `json:"-"`
 }
 
