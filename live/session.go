@@ -360,6 +360,18 @@ func (u SessionAcceptParamsSessionDelegationUnion) GetType() *string {
 	return nil
 }
 
+// Returns a pointer to the underlying variant's property, if present.
+func (u SessionAcceptParamsSessionDelegationUnion) GetAcknowledgementDelayMs() *int64 {
+	if vt := u.OfClient; vt != nil && vt.AcknowledgementDelayMs.Valid() {
+		return &vt.AcknowledgementDelayMs.Value
+	} else if vt := u.OfResponses; vt != nil && vt.AcknowledgementDelayMs.Valid() {
+		return &vt.AcknowledgementDelayMs.Value
+	} else if vt := u.OfDecisions; vt != nil && vt.AcknowledgementDelayMs.Valid() {
+		return &vt.AcknowledgementDelayMs.Value
+	}
+	return nil
+}
+
 func init() {
 	apijson.RegisterUnion[SessionAcceptParamsSessionDelegationUnion](
 		"type",
@@ -376,6 +388,13 @@ type SessionAcceptParamsSessionDelegationResponses struct {
 	// Backend model, prompt, and tools used when the Live session delegates a task to
 	// Responses.
 	Responses ResponsesDelegationConfigParam `json:"responses,omitzero" api:"required"`
+	// Milliseconds to wait before requesting an automatic spoken acknowledgement for a
+	// delegation. The model may still speak before this delay. Any commentary or
+	// thinking appended to the session cancels all pending acknowledgements, including
+	// those for other delegations. Defaults to 400 for Decisions sessions and 0
+	// (request immediately) for other sessions. Omission in a session update preserves
+	// the current value. Updates apply to subsequent delegations.
+	AcknowledgementDelayMs param.Opt[int64] `json:"acknowledgement_delay_ms,omitzero"`
 	// The delegation owner. Always `responses` for tasks handled by the Responses API.
 	//
 	// This field can be elided, and will marshal its zero value as "responses".
@@ -394,6 +413,12 @@ func (r *SessionAcceptParamsSessionDelegationResponses) UnmarshalJSON(data []byt
 // The properties Decisions, Type are required.
 type SessionAcceptParamsSessionDelegationDecisions struct {
 	Decisions DecisionsDelegationConfigParam `json:"decisions" api:"required"`
+	// Milliseconds to wait before requesting an automatic spoken acknowledgement for a
+	// delegation. The model may still speak before this delay. Any commentary or
+	// thinking appended to the session cancels all pending acknowledgements, including
+	// those for other delegations. Defaults to 400. Updates apply to subsequent
+	// delegations.
+	AcknowledgementDelayMs param.Opt[int64] `json:"acknowledgement_delay_ms,omitzero"`
 	// This field can be elided, and will marshal its zero value as "decisions".
 	Type constant.Decisions `json:"type" default:"decisions"`
 	paramObj

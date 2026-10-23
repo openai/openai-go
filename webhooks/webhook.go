@@ -140,13 +140,8 @@ func (r *WebhookService) Test(ctx context.Context, webhookEndpointID string, bod
 }
 
 // Validates that the given payload was sent by OpenAI and parses the payload.
-func (r *WebhookService) Unwrap(payload []byte, opts ...option.RequestOption) (*UnwrapWebhookEventUnion, error) {
-	res := &UnwrapWebhookEventUnion{}
-	err := res.UnmarshalJSON(payload)
-	if err != nil {
-		return res, err
-	}
-	return res, nil
+func (r *WebhookService) Unwrap(body []byte, headers http.Header, opts ...option.RequestOption) (*UnwrapWebhookEventUnion, error) {
+	return unwrapWebhook(r, body, headers, opts...)
 }
 
 // Sent when an agent environment expires and can no longer resume from a snapshot.
@@ -1968,8 +1963,7 @@ type UnwrapWebhookEventUnion struct {
 	// [ResponseIncompleteWebhookEventData], [SafetyAlertCreatedWebhookEventData],
 	// [SafetyDeactivationIssuedWebhookEventData],
 	// [SafetyOrgAlertCreatedWebhookEventData], [SafetyWarningIssuedWebhookEventData]
-	Data   UnwrapWebhookEventUnionData `json:"data"`
-	Object string                      `json:"object"`
+	Data UnwrapWebhookEventUnionData `json:"data"`
 	// Any of "agent.environment.expired", "agent.environment.failed",
 	// "agent.environment.ready", "agent.environment.suspended",
 	// "agent.session.action_required", "agent.session.created",
@@ -1982,13 +1976,14 @@ type UnwrapWebhookEventUnion struct {
 	// "response.failed", "response.incomplete", "safety.alert.created",
 	// "safety.deactivation_issued", "safety.org_alert.created",
 	// "safety.warning_issued".
-	Type string `json:"type"`
-	JSON struct {
+	Type   string `json:"type"`
+	Object string `json:"object"`
+	JSON   struct {
 		ID        respjson.Field
 		CreatedAt respjson.Field
 		Data      respjson.Field
-		Object    respjson.Field
 		Type      respjson.Field
+		Object    respjson.Field
 		raw       string
 	} `json:"-"`
 }

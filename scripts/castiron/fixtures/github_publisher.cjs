@@ -8,7 +8,9 @@ const github = {
     actions: {
       getWorkflowRun: async ({ run_id }) => {
         if (data.run_errors?.[run_id])
-          throw Object.assign(new Error('Workflow run lookup failed'), { status: data.run_errors[run_id] });
+          throw Object.assign(new Error('Workflow run lookup failed'), {
+            status: data.run_errors[run_id],
+          });
         return { data: data.runs_by_id?.[run_id] || data.run };
       },
       getWorkflow: async ({ workflow_id }) => ({
@@ -47,21 +49,10 @@ const github = {
     repos: {
       getCommit: async () => ({ data: data.merge_commit }),
       compareCommitsWithBasehead: async ({ basehead }) => ({
-        data: data.comparisons?.[basehead] || { merge_base_commit: { sha: basehead.split('...')[0] } },
+        data: data.comparisons?.[basehead] || {
+          merge_base_commit: { sha: basehead.split('...')[0] },
+        },
       }),
-      getContent: async ({ path, ref }) => {
-        if (path !== '.castiron-ratchet.json' || !data.policies_by_sha?.[ref])
-          throw new Error('Unexpected policy lookup');
-        const content = Buffer.from(JSON.stringify(data.policies_by_sha[ref]));
-        return {
-          data: {
-            type: 'file',
-            encoding: 'base64',
-            size: content.length,
-            content: content.toString('base64'),
-          },
-        };
-      },
       createCommitStatus: async (value) => {
         writes.push(value);
         data.statuses_by_sha ||= {};
@@ -123,12 +114,34 @@ const github = {
     throw new Error(`Unexpected GitHub lookup: ${method}`);
   },
 };
+const exec = {
+  getExecOutput: async (command, args) => {
+    if (
+      command !== 'python3' ||
+      args[0] !== '-I' ||
+      args[1] !== 'scripts/castiron/custom_code_policy.py' ||
+      args[2] !== 'review-required' ||
+      args[3] !== '--repository' ||
+      args[4] !== 'openai/example' ||
+      args[5] !== '--repo' ||
+      args[7] !== '--base' ||
+      args[9] !== '--head' ||
+      args[11] !== '--main' ||
+      ![args[8], args[10], args[12]].every((value) => /^[0-9a-f]{40}$/.test(value))
+    ) {
+      throw new Error('Unexpected trusted policy invocation');
+    }
+    if (data.policy_error) throw new Error('Trusted policy evaluation failed');
+    return { stdout: JSON.stringify({ requires_human: data.requires_human ?? true }) };
+  },
+};
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
-new AsyncFunction('github', 'context', 'process', 'require', data.script)(
+new AsyncFunction('github', 'context', 'process', 'require', 'exec', data.script)(
   github,
   data.context,
-  { env: data.env || {} },
+  { env: { RUNNER_TEMP: require('node:os').tmpdir(), ...(data.env || {}) } },
   require,
+  exec,
 )
   .then(() => process.stdout.write(JSON.stringify(writes)))
   .catch((error) => {

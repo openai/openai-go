@@ -420,11 +420,19 @@ func (r *ClientConfigParam) UnmarshalJSON(data []byte) error {
 type ClientDelegation struct {
 	// The delegation owner. Always `client` for tasks handled by your application.
 	Type constant.Client `json:"type" default:"client"`
+	// Milliseconds to wait before requesting an automatic spoken acknowledgement for a
+	// delegation. The model may still speak before this delay. Any commentary or
+	// thinking appended to the session cancels all pending acknowledgements, including
+	// those for other delegations. Defaults to 400 for Decisions sessions and 0
+	// (request immediately) for other sessions. Omission in a session update preserves
+	// the current value. Updates apply to subsequent delegations.
+	AcknowledgementDelayMs int64 `json:"acknowledgement_delay_ms"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Type                   respjson.Field
+		AcknowledgementDelayMs respjson.Field
+		ExtraFields            map[string]respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -452,8 +460,15 @@ func NewClientDelegationParam() ClientDelegationParam {
 // Delegate tasks to your application. The Live session emits delegation events
 // that your backend handles.
 //
-// This struct has a constant value, construct it with [NewClientDelegationParam].
+// Use [NewClientDelegationParam] to initialize the constant fields.
 type ClientDelegationParam struct {
+	// Milliseconds to wait before requesting an automatic spoken acknowledgement for a
+	// delegation. The model may still speak before this delay. Any commentary or
+	// thinking appended to the session cancels all pending acknowledgements, including
+	// those for other delegations. Defaults to 400 for Decisions sessions and 0
+	// (request immediately) for other sessions. Omission in a session update preserves
+	// the current value. Updates apply to subsequent delegations.
+	AcknowledgementDelayMs param.Opt[int64] `json:"acknowledgement_delay_ms,omitzero"`
 	// The delegation owner. Always `client` for tasks handled by your application.
 	Type constant.Client `json:"type" default:"client"`
 	paramObj
@@ -899,6 +914,23 @@ func (u clientEventUnionParamSessionDelegation) GetType() *string {
 	return nil
 }
 
+// Returns a pointer to the underlying variant's property, if present.
+func (u clientEventUnionParamSessionDelegation) GetAcknowledgementDelayMs() *int64 {
+	switch vt := u.any.(type) {
+	case *ClientDelegationParam:
+		return paramutil.AddrIfPresent(vt.AcknowledgementDelayMs)
+	case *SessionConfigDelegationResponsesParam:
+		return paramutil.AddrIfPresent(vt.AcknowledgementDelayMs)
+	case *SessionConfigDelegationDecisionsParam:
+		return paramutil.AddrIfPresent(vt.AcknowledgementDelayMs)
+	case *SessionUpdateConfigDelegationResponsesParam:
+		return paramutil.AddrIfPresent(vt.AcknowledgementDelayMs)
+	case *SessionUpdateConfigDelegationDecisionsParam:
+		return paramutil.AddrIfPresent(vt.AcknowledgementDelayMs)
+	}
+	return nil
+}
+
 // Returns a subunion which exports methods to access subproperties
 //
 // Or use AsAny() to get the underlying value
@@ -986,7 +1018,7 @@ func init() {
 }
 
 // Provide context the Live model can communicate to the user, optionally for an
-// existing client delegation.
+// existing client delegation. Rejected while an audio fixture is active.
 //
 // The properties Content, DelegationID, Type are required.
 type CommentaryAppendEventParam struct {
@@ -3951,6 +3983,13 @@ func (r *ForkSessionConfigAudioParam) UnmarshalJSON(data []byte) error {
 //
 // The property Type is required.
 type ForkSessionConfigDelegationParam struct {
+	// Milliseconds to wait before requesting an automatic spoken acknowledgement for a
+	// delegation. The model may still speak before this delay. Any commentary or
+	// thinking appended to the session cancels all pending acknowledgements, including
+	// those for other delegations. Defaults to 400 for Decisions sessions and 0
+	// (request immediately) for other sessions. Omission in a session update preserves
+	// the current value. Updates apply to subsequent delegations.
+	AcknowledgementDelayMs param.Opt[int64] `json:"acknowledgement_delay_ms,omitzero"`
 	// Responses backend settings to update. Omitted settings keep their existing
 	// values.
 	Responses ResponsesDelegationUpdateConfigParam `json:"responses,omitzero"`
@@ -4863,8 +4902,9 @@ func (r *InputAudioMuteEventParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Returned when a session.input_audio.mute command is accepted. Input audio is no
-// longer sent to the model; sideband audio reflection continues.
+// Acknowledges a session.input_audio.mute command. An independent input mute sends
+// silence to the model and preserves sideband audio reflection. Fixture playback
+// does not emit this event.
 type InputAudioMutedEvent struct {
 	// The unique ID of the Live server event.
 	EventID string `json:"event_id" api:"required"`
@@ -4890,7 +4930,8 @@ func (r *InputAudioMutedEvent) UnmarshalJSON(data []byte) error {
 }
 
 // Resume audio input to a Live model after muting it. The server acknowledges with
-// `session.input_audio.unmuted`.
+// `session.input_audio.unmuted`. An active audio fixture still pauses inference
+// until playback finishes.
 //
 // The property Type is required.
 type InputAudioUnmuteEventParam struct {
@@ -4913,8 +4954,9 @@ func (r *InputAudioUnmuteEventParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Returned when a session.input_audio.unmute command is accepted. Input audio is
-// sent to the model again.
+// Acknowledges a session.input_audio.unmute command, removing the independent
+// input mute. An active audio fixture still pauses inference until playback
+// finishes. Fixture playback does not emit this event.
 type InputAudioUnmutedEvent struct {
 	// The unique ID of the Live server event.
 	EventID string `json:"event_id" api:"required"`
@@ -4978,8 +5020,11 @@ func (r *InputTranscriptDeltaEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Append instructions to the Live conversation while it is running, optionally
-// associating them with an existing client delegation.
+// Append developer instructions to the Live conversation while it is running,
+// optionally associating them with an existing client delegation. Rejected while
+// an audio fixture is active. These instructions remain in conversation history
+// through compaction and are included in future backend delegations. For external
+// audio, describe content already delivered so the assistant does not repeat it.
 //
 // The properties Content, DelegationID, Type are required.
 type InstructionsAppendEventParam struct {
@@ -5200,6 +5245,18 @@ func (u MediaSessionConfigDelegationUnionParam) GetType() *string {
 	return nil
 }
 
+// Returns a pointer to the underlying variant's property, if present.
+func (u MediaSessionConfigDelegationUnionParam) GetAcknowledgementDelayMs() *int64 {
+	if vt := u.OfClient; vt != nil && vt.AcknowledgementDelayMs.Valid() {
+		return &vt.AcknowledgementDelayMs.Value
+	} else if vt := u.OfResponses; vt != nil && vt.AcknowledgementDelayMs.Valid() {
+		return &vt.AcknowledgementDelayMs.Value
+	} else if vt := u.OfDecisions; vt != nil && vt.AcknowledgementDelayMs.Valid() {
+		return &vt.AcknowledgementDelayMs.Value
+	}
+	return nil
+}
+
 func init() {
 	apijson.RegisterUnion[MediaSessionConfigDelegationUnionParam](
 		"type",
@@ -5216,6 +5273,13 @@ type MediaSessionConfigDelegationResponsesParam struct {
 	// Backend model, prompt, and tools used when the Live session delegates a task to
 	// Responses.
 	Responses ResponsesDelegationConfigParam `json:"responses,omitzero" api:"required"`
+	// Milliseconds to wait before requesting an automatic spoken acknowledgement for a
+	// delegation. The model may still speak before this delay. Any commentary or
+	// thinking appended to the session cancels all pending acknowledgements, including
+	// those for other delegations. Defaults to 400 for Decisions sessions and 0
+	// (request immediately) for other sessions. Omission in a session update preserves
+	// the current value. Updates apply to subsequent delegations.
+	AcknowledgementDelayMs param.Opt[int64] `json:"acknowledgement_delay_ms,omitzero"`
 	// The delegation owner. Always `responses` for tasks handled by the Responses API.
 	//
 	// This field can be elided, and will marshal its zero value as "responses".
@@ -5234,6 +5298,12 @@ func (r *MediaSessionConfigDelegationResponsesParam) UnmarshalJSON(data []byte) 
 // The properties Decisions, Type are required.
 type MediaSessionConfigDelegationDecisionsParam struct {
 	Decisions DecisionsDelegationConfigParam `json:"decisions" api:"required"`
+	// Milliseconds to wait before requesting an automatic spoken acknowledgement for a
+	// delegation. The model may still speak before this delay. Any commentary or
+	// thinking appended to the session cancels all pending acknowledgements, including
+	// those for other delegations. Defaults to 400. Updates apply to subsequent
+	// delegations.
+	AcknowledgementDelayMs param.Opt[int64] `json:"acknowledgement_delay_ms,omitzero"`
 	// This field can be elided, and will marshal its zero value as "decisions".
 	Type constant.Decisions `json:"type" default:"decisions"`
 	paramObj
@@ -5277,6 +5347,13 @@ func (r *MediaSessionForkConfigParam) UnmarshalJSON(data []byte) error {
 //
 // The property Type is required.
 type MediaSessionForkConfigDelegationParam struct {
+	// Milliseconds to wait before requesting an automatic spoken acknowledgement for a
+	// delegation. The model may still speak before this delay. Any commentary or
+	// thinking appended to the session cancels all pending acknowledgements, including
+	// those for other delegations. Defaults to 400 for Decisions sessions and 0
+	// (request immediately) for other sessions. Omission in a session update preserves
+	// the current value. Updates apply to subsequent delegations.
+	AcknowledgementDelayMs param.Opt[int64] `json:"acknowledgement_delay_ms,omitzero"`
 	// Responses backend settings to update. Omitted settings keep their existing
 	// values.
 	Responses ResponsesDelegationUpdateConfigParam `json:"responses,omitzero"`
@@ -6693,22 +6770,22 @@ func (r *ServerEventUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// unmarshalWebsocketEvent decodes only the event selected by its type. Public
+// unmarshalWebsocketEventWithRawType decodes only the event selected by its type. Public
 // UnmarshalJSON keeps the existing general-purpose union decoding behavior.
-func (r *ServerEventUnion) unmarshalWebsocketEvent(data []byte) error {
+func (r *ServerEventUnion) unmarshalWebsocketEventWithRawType(data []byte) error {
 	var envelope struct {
-		Type string `json:"type"`
-		JSON struct {
-			Type respjson.Field
-		} `json:"-"`
+		Type json.RawMessage `json:"type"`
 	}
-	if err := apijson.UnmarshalRoot(data, &envelope); err != nil {
+	if err := json.Unmarshal(data, &envelope); err != nil {
 		return err
 	}
-	eventType := envelope.Type
+	var eventType string
+	if err := json.Unmarshal(envelope.Type, &eventType); err != nil {
+		return err
+	}
 	*r = ServerEventUnion{Type: eventType}
 	r.JSON.raw = string(data)
-	r.JSON.Type = envelope.JSON.Type
+	r.JSON.Type = respjson.NewField(string(envelope.Type))
 	switch eventType {
 	case "session.started":
 		if err := apijson.UnmarshalRoot(data, &r.OfSessionStartedEvent); err != nil {
@@ -7302,6 +7379,18 @@ func (u SessionConfigDelegationUnionParam) GetType() *string {
 	return nil
 }
 
+// Returns a pointer to the underlying variant's property, if present.
+func (u SessionConfigDelegationUnionParam) GetAcknowledgementDelayMs() *int64 {
+	if vt := u.OfClient; vt != nil && vt.AcknowledgementDelayMs.Valid() {
+		return &vt.AcknowledgementDelayMs.Value
+	} else if vt := u.OfResponses; vt != nil && vt.AcknowledgementDelayMs.Valid() {
+		return &vt.AcknowledgementDelayMs.Value
+	} else if vt := u.OfDecisions; vt != nil && vt.AcknowledgementDelayMs.Valid() {
+		return &vt.AcknowledgementDelayMs.Value
+	}
+	return nil
+}
+
 func init() {
 	apijson.RegisterUnion[SessionConfigDelegationUnionParam](
 		"type",
@@ -7318,6 +7407,13 @@ type SessionConfigDelegationResponsesParam struct {
 	// Backend model, prompt, and tools used when the Live session delegates a task to
 	// Responses.
 	Responses ResponsesDelegationConfigParam `json:"responses,omitzero" api:"required"`
+	// Milliseconds to wait before requesting an automatic spoken acknowledgement for a
+	// delegation. The model may still speak before this delay. Any commentary or
+	// thinking appended to the session cancels all pending acknowledgements, including
+	// those for other delegations. Defaults to 400 for Decisions sessions and 0
+	// (request immediately) for other sessions. Omission in a session update preserves
+	// the current value. Updates apply to subsequent delegations.
+	AcknowledgementDelayMs param.Opt[int64] `json:"acknowledgement_delay_ms,omitzero"`
 	// The delegation owner. Always `responses` for tasks handled by the Responses API.
 	//
 	// This field can be elided, and will marshal its zero value as "responses".
@@ -7336,6 +7432,12 @@ func (r *SessionConfigDelegationResponsesParam) UnmarshalJSON(data []byte) error
 // The properties Decisions, Type are required.
 type SessionConfigDelegationDecisionsParam struct {
 	Decisions DecisionsDelegationConfigParam `json:"decisions" api:"required"`
+	// Milliseconds to wait before requesting an automatic spoken acknowledgement for a
+	// delegation. The model may still speak before this delay. Any commentary or
+	// thinking appended to the session cancels all pending acknowledgements, including
+	// those for other delegations. Defaults to 400. Updates apply to subsequent
+	// delegations.
+	AcknowledgementDelayMs param.Opt[int64] `json:"acknowledgement_delay_ms,omitzero"`
 	// This field can be elided, and will marshal its zero value as "decisions".
 	Type constant.Decisions `json:"type" default:"decisions"`
 	paramObj
@@ -7590,6 +7692,13 @@ func (r *SessionResourceDelegationUnion) UnmarshalJSON(data []byte) error {
 
 // Delegate tasks to a Responses model managed by the Live session.
 type SessionResourceDelegationResponses struct {
+	// Milliseconds to wait before requesting an automatic spoken acknowledgement for a
+	// delegation. The model may still speak before this delay. Any commentary or
+	// thinking appended to the session cancels all pending acknowledgements, including
+	// those for other delegations. Defaults to 400 for Decisions sessions and 0
+	// (request immediately) for other sessions. Omission in a session update preserves
+	// the current value. Updates apply to subsequent delegations.
+	AcknowledgementDelayMs int64 `json:"acknowledgement_delay_ms"`
 	// Backend model, prompt, and tools used when the Live session delegates a task to
 	// Responses.
 	Responses ResponsesDelegationConfig `json:"responses" api:"required"`
@@ -7597,10 +7706,11 @@ type SessionResourceDelegationResponses struct {
 	Type constant.Responses `json:"type" default:"responses"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Responses   respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		AcknowledgementDelayMs respjson.Field
+		Responses              respjson.Field
+		Type                   respjson.Field
+		ExtraFields            map[string]respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -7611,14 +7721,21 @@ func (r *SessionResourceDelegationResponses) UnmarshalJSON(data []byte) error {
 }
 
 type SessionResourceDelegationDecisions struct {
-	Decisions DecisionsDelegationConfig `json:"decisions" api:"required"`
-	Type      constant.Decisions        `json:"type" default:"decisions"`
+	// Milliseconds to wait before requesting an automatic spoken acknowledgement for a
+	// delegation. The model may still speak before this delay. Any commentary or
+	// thinking appended to the session cancels all pending acknowledgements, including
+	// those for other delegations. Defaults to 400. Updates apply to subsequent
+	// delegations.
+	AcknowledgementDelayMs int64                     `json:"acknowledgement_delay_ms"`
+	Decisions              DecisionsDelegationConfig `json:"decisions" api:"required"`
+	Type                   constant.Decisions        `json:"type" default:"decisions"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Decisions   respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		AcknowledgementDelayMs respjson.Field
+		Decisions              respjson.Field
+		Type                   respjson.Field
+		ExtraFields            map[string]respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -7761,6 +7878,18 @@ func (u SessionUpdateConfigDelegationUnionParam) GetType() *string {
 	return nil
 }
 
+// Returns a pointer to the underlying variant's property, if present.
+func (u SessionUpdateConfigDelegationUnionParam) GetAcknowledgementDelayMs() *int64 {
+	if vt := u.OfClient; vt != nil && vt.AcknowledgementDelayMs.Valid() {
+		return &vt.AcknowledgementDelayMs.Value
+	} else if vt := u.OfResponses; vt != nil && vt.AcknowledgementDelayMs.Valid() {
+		return &vt.AcknowledgementDelayMs.Value
+	} else if vt := u.OfDecisions; vt != nil && vt.AcknowledgementDelayMs.Valid() {
+		return &vt.AcknowledgementDelayMs.Value
+	}
+	return nil
+}
+
 func init() {
 	apijson.RegisterUnion[SessionUpdateConfigDelegationUnionParam](
 		"type",
@@ -7775,6 +7904,13 @@ func init() {
 //
 // The property Type is required.
 type SessionUpdateConfigDelegationResponsesParam struct {
+	// Milliseconds to wait before requesting an automatic spoken acknowledgement for a
+	// delegation. The model may still speak before this delay. Any commentary or
+	// thinking appended to the session cancels all pending acknowledgements, including
+	// those for other delegations. Defaults to 400 for Decisions sessions and 0
+	// (request immediately) for other sessions. Omission in a session update preserves
+	// the current value. Updates apply to subsequent delegations.
+	AcknowledgementDelayMs param.Opt[int64] `json:"acknowledgement_delay_ms,omitzero"`
 	// Responses backend settings to update. Omitted settings keep their existing
 	// values.
 	Responses ResponsesDelegationUpdateConfigParam `json:"responses,omitzero"`
@@ -7795,7 +7931,14 @@ func (r *SessionUpdateConfigDelegationResponsesParam) UnmarshalJSON(data []byte)
 
 // The property Type is required.
 type SessionUpdateConfigDelegationDecisionsParam struct {
-	Decisions DecisionsDelegationUpdateConfigParam `json:"decisions,omitzero"`
+	// Milliseconds to wait before requesting an automatic spoken acknowledgement for a
+	// delegation. The model may still speak before this delay. Any commentary or
+	// thinking appended to the session cancels all pending acknowledgements, including
+	// those for other delegations. Defaults to 400 for Decisions sessions and 0
+	// (request immediately) for other sessions. Omission in a session update preserves
+	// the current value. Updates apply to subsequent delegations.
+	AcknowledgementDelayMs param.Opt[int64]                     `json:"acknowledgement_delay_ms,omitzero"`
+	Decisions              DecisionsDelegationUpdateConfigParam `json:"decisions,omitzero"`
 	// This field can be elided, and will marshal its zero value as "decisions".
 	Type constant.Decisions `json:"type" default:"decisions"`
 	paramObj
@@ -7940,7 +8083,7 @@ func (r *SessionUsageUpdatedEventContextWindow) UnmarshalJSON(data []byte) error
 }
 
 // Provide silent reasoning or progress context to the Live model, optionally for
-// an existing client delegation.
+// an existing client delegation. Rejected while an audio fixture is active.
 //
 // The properties Content, DelegationID, Type are required.
 type ThinkingAppendEventParam struct {

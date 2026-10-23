@@ -9076,8 +9076,10 @@ func (r *BetaResponseCustomToolCallOutputOutputOutputContentListItemUnion) Unmar
 type BetaResponseCustomToolCallOutputOutputOutputContentListItemUnionPromptCacheBreakpoint struct {
 	// This field is from variant [BetaResponseInputTextPromptCacheBreakpoint].
 	Mode constant.Explicit `json:"mode"`
+	Ttl  string            `json:"ttl"`
 	JSON struct {
 		Mode respjson.Field
+		Ttl  respjson.Field
 		raw  string
 	} `json:"-"`
 }
@@ -9394,6 +9396,19 @@ func (u betaResponseCustomToolCallOutputOutputOutputContentListItemUnionParamPro
 		return (*string)(&vt.Mode)
 	case *BetaResponseInputFilePromptCacheBreakpointParam:
 		return (*string)(&vt.Mode)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseCustomToolCallOutputOutputOutputContentListItemUnionParamPromptCacheBreakpoint) GetTtl() *string {
+	switch vt := u.any.(type) {
+	case *BetaResponseInputTextPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *BetaResponseInputImagePromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *BetaResponseInputFilePromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
 	}
 	return nil
 }
@@ -10692,8 +10707,10 @@ func (r *BetaResponseFunctionCallOutputItemUnion) UnmarshalJSON(data []byte) err
 type BetaResponseFunctionCallOutputItemUnionPromptCacheBreakpoint struct {
 	// This field is from variant [BetaResponseInputTextContentPromptCacheBreakpoint].
 	Mode constant.Explicit `json:"mode"`
+	Ttl  string            `json:"ttl"`
 	JSON struct {
 		Mode respjson.Field
+		Ttl  respjson.Field
 		raw  string
 	} `json:"-"`
 }
@@ -10847,6 +10864,19 @@ func (u betaResponseFunctionCallOutputItemUnionParamPromptCacheBreakpoint) GetMo
 		return (*string)(&vt.Mode)
 	case *BetaResponseInputFileContentPromptCacheBreakpointParam:
 		return (*string)(&vt.Mode)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseFunctionCallOutputItemUnionParamPromptCacheBreakpoint) GetTtl() *string {
+	switch vt := u.any.(type) {
+	case *BetaResponseInputTextContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *BetaResponseInputImageContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *BetaResponseInputFileContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
 	}
 	return nil
 }
@@ -12266,8 +12296,10 @@ func (r *BetaResponseFunctionToolCallOutputItemOutputOutputContentListItemUnion)
 type BetaResponseFunctionToolCallOutputItemOutputOutputContentListItemUnionPromptCacheBreakpoint struct {
 	// This field is from variant [BetaResponseInputTextPromptCacheBreakpoint].
 	Mode constant.Explicit `json:"mode"`
+	Ttl  string            `json:"ttl"`
 	JSON struct {
 		Mode respjson.Field
+		Ttl  respjson.Field
 		raw  string
 	} `json:"-"`
 }
@@ -13454,8 +13486,10 @@ func (r *BetaResponseInputContentUnion) UnmarshalJSON(data []byte) error {
 type BetaResponseInputContentUnionPromptCacheBreakpoint struct {
 	// This field is from variant [BetaResponseInputTextPromptCacheBreakpoint].
 	Mode constant.Explicit `json:"mode"`
+	Ttl  string            `json:"ttl"`
 	JSON struct {
 		Mode respjson.Field
+		Ttl  respjson.Field
 		raw  string
 	} `json:"-"`
 }
@@ -13618,6 +13652,19 @@ func (u betaResponseInputContentUnionParamPromptCacheBreakpoint) GetMode() *stri
 	return nil
 }
 
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseInputContentUnionParamPromptCacheBreakpoint) GetTtl() *string {
+	switch vt := u.any.(type) {
+	case *BetaResponseInputTextPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *BetaResponseInputImagePromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *BetaResponseInputFilePromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	}
+	return nil
+}
+
 func init() {
 	apijson.RegisterUnion[BetaResponseInputContentUnionParam](
 		"type",
@@ -13699,9 +13746,14 @@ const (
 type BetaResponseInputFilePromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -13762,9 +13814,13 @@ func NewBetaResponseInputFilePromptCacheBreakpointParam() BetaResponseInputFileP
 // from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
 // token block.
 //
-// This struct has a constant value, construct it with
-// [NewBetaResponseInputFilePromptCacheBreakpointParam].
+// Use [NewBetaResponseInputFilePromptCacheBreakpointParam] to initialize the
+// constant fields.
 type BetaResponseInputFilePromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -13776,6 +13832,12 @@ func (r BetaResponseInputFilePromptCacheBreakpointParam) MarshalJSON() (data []b
 }
 func (r *BetaResponseInputFilePromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseInputFilePromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
 }
 
 // A file input to the model.
@@ -13851,9 +13913,14 @@ const (
 type BetaResponseInputFileContentPromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -13914,9 +13981,13 @@ func NewBetaResponseInputFileContentPromptCacheBreakpointParam() BetaResponseInp
 // from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
 // token block.
 //
-// This struct has a constant value, construct it with
-// [NewBetaResponseInputFileContentPromptCacheBreakpointParam].
+// Use [NewBetaResponseInputFileContentPromptCacheBreakpointParam] to initialize
+// the constant fields.
 type BetaResponseInputFileContentPromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -13928,6 +13999,12 @@ func (r BetaResponseInputFileContentPromptCacheBreakpointParam) MarshalJSON() (d
 }
 func (r *BetaResponseInputFileContentPromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseInputFileContentPromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
 }
 
 // An image input to the model. Learn about
@@ -13993,9 +14070,14 @@ const (
 type BetaResponseInputImagePromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -14051,9 +14133,13 @@ func NewBetaResponseInputImagePromptCacheBreakpointParam() BetaResponseInputImag
 // from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
 // token block.
 //
-// This struct has a constant value, construct it with
-// [NewBetaResponseInputImagePromptCacheBreakpointParam].
+// Use [NewBetaResponseInputImagePromptCacheBreakpointParam] to initialize the
+// constant fields.
 type BetaResponseInputImagePromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -14065,6 +14151,12 @@ func (r BetaResponseInputImagePromptCacheBreakpointParam) MarshalJSON() (data []
 }
 func (r *BetaResponseInputImagePromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseInputImagePromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
 }
 
 // An image input to the model. Learn about
@@ -14131,9 +14223,14 @@ const (
 type BetaResponseInputImageContentPromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -14189,9 +14286,13 @@ func NewBetaResponseInputImageContentPromptCacheBreakpointParam() BetaResponseIn
 // from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
 // token block.
 //
-// This struct has a constant value, construct it with
-// [NewBetaResponseInputImageContentPromptCacheBreakpointParam].
+// Use [NewBetaResponseInputImageContentPromptCacheBreakpointParam] to initialize
+// the constant fields.
 type BetaResponseInputImageContentPromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -14203,6 +14304,12 @@ func (r BetaResponseInputImageContentPromptCacheBreakpointParam) MarshalJSON() (
 }
 func (r *BetaResponseInputImageContentPromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseInputImageContentPromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
 }
 
 // BetaResponseInputItemUnion contains all possible properties and values from
@@ -15600,8 +15707,10 @@ func (r *BetaResponseInputItemAgentMessageContentUnion) UnmarshalJSON(data []byt
 type BetaResponseInputItemAgentMessageContentUnionPromptCacheBreakpoint struct {
 	// This field is from variant [BetaResponseInputTextContentPromptCacheBreakpoint].
 	Mode constant.Explicit `json:"mode"`
+	Ttl  string            `json:"ttl"`
 	JSON struct {
 		Mode respjson.Field
+		Ttl  respjson.Field
 		raw  string
 	} `json:"-"`
 }
@@ -19951,6 +20060,17 @@ func (u betaResponseInputItemAgentMessageContentUnionParamPromptCacheBreakpoint)
 	return nil
 }
 
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseInputItemAgentMessageContentUnionParamPromptCacheBreakpoint) GetTtl() *string {
+	switch vt := u.any.(type) {
+	case *BetaResponseInputTextContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *BetaResponseInputImageContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	}
+	return nil
+}
+
 func init() {
 	apijson.RegisterUnion[BetaResponseInputItemAgentMessageContentUnionParam](
 		"type",
@@ -22023,9 +22143,14 @@ func (r BetaResponseInputText) ToParam() BetaResponseInputTextParam {
 type BetaResponseInputTextPromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -22072,9 +22197,13 @@ func NewBetaResponseInputTextPromptCacheBreakpointParam() BetaResponseInputTextP
 // from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
 // token block.
 //
-// This struct has a constant value, construct it with
-// [NewBetaResponseInputTextPromptCacheBreakpointParam].
+// Use [NewBetaResponseInputTextPromptCacheBreakpointParam] to initialize the
+// constant fields.
 type BetaResponseInputTextPromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -22086,6 +22215,12 @@ func (r BetaResponseInputTextPromptCacheBreakpointParam) MarshalJSON() (data []b
 }
 func (r *BetaResponseInputTextPromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseInputTextPromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
 }
 
 // A text input to the model.
@@ -22130,9 +22265,14 @@ func (r BetaResponseInputTextContent) ToParam() BetaResponseInputTextContentPara
 type BetaResponseInputTextContentPromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -22179,9 +22319,13 @@ func NewBetaResponseInputTextContentPromptCacheBreakpointParam() BetaResponseInp
 // from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
 // token block.
 //
-// This struct has a constant value, construct it with
-// [NewBetaResponseInputTextContentPromptCacheBreakpointParam].
+// Use [NewBetaResponseInputTextContentPromptCacheBreakpointParam] to initialize
+// the constant fields.
 type BetaResponseInputTextContentPromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -22195,24 +22339,30 @@ func (r *BetaResponseInputTextContentPromptCacheBreakpointParam) UnmarshalJSON(d
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseInputTextContentPromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
+}
+
 // BetaResponseItemUnion contains all possible properties and values from
-// [BetaResponseInputMessageItem], [BetaResponseOutputMessage],
-// [BetaResponseFileSearchToolCall], [BetaResponseComputerToolCall],
-// [BetaResponseComputerToolCallOutputItem], [BetaResponseFunctionWebSearch],
-// [BetaResponseFunctionToolCallItem], [BetaResponseFunctionToolCallOutputItem],
-// [BetaResponseItemAgentMessage], [BetaResponseItemMultiAgentCall],
-// [BetaResponseItemMultiAgentCallOutput], [BetaResponseToolSearchCall],
-// [BetaResponseToolSearchOutputItem], [BetaResponseItemAdditionalTools],
-// [BetaResponseConfigurationUpdateItem], [BetaResponseReasoningItem],
-// [BetaResponseItemProgram], [BetaResponseItemProgramOutput],
-// [BetaResponseCompactionItem], [BetaResponseItemImageGenerationCall],
-// [BetaResponseCodeInterpreterToolCall], [BetaResponseItemLocalShellCall],
-// [BetaResponseItemLocalShellCallOutput], [BetaResponseFunctionShellToolCall],
-// [BetaResponseFunctionShellToolCallOutput], [BetaResponseApplyPatchToolCall],
-// [BetaResponseApplyPatchToolCallOutput], [BetaResponseItemMcpListTools],
-// [BetaResponseItemMcpApprovalRequest], [BetaResponseItemMcpApprovalResponse],
-// [BetaResponseItemMcpCall], [BetaResponseCustomToolCallItem],
-// [BetaResponseCustomToolCallOutputItem].
+// [BetaResponseInputMessageItem], [BetaResponseFileSearchToolCall],
+// [BetaResponseComputerToolCall], [BetaResponseComputerToolCallOutputItem],
+// [BetaResponseFunctionWebSearch], [BetaResponseFunctionToolCallItem],
+// [BetaResponseFunctionToolCallOutputItem], [BetaResponseItemAgentMessage],
+// [BetaResponseItemMultiAgentCall], [BetaResponseItemMultiAgentCallOutput],
+// [BetaResponseToolSearchCall], [BetaResponseToolSearchOutputItem],
+// [BetaResponseItemAdditionalTools], [BetaResponseConfigurationUpdateItem],
+// [BetaResponseReasoningItem], [BetaResponseItemProgram],
+// [BetaResponseItemProgramOutput], [BetaResponseCompactionItem],
+// [BetaResponseItemImageGenerationCall], [BetaResponseCodeInterpreterToolCall],
+// [BetaResponseItemLocalShellCall], [BetaResponseItemLocalShellCallOutput],
+// [BetaResponseFunctionShellToolCall], [BetaResponseFunctionShellToolCallOutput],
+// [BetaResponseApplyPatchToolCall], [BetaResponseApplyPatchToolCallOutput],
+// [BetaResponseItemMcpListTools], [BetaResponseItemMcpApprovalRequest],
+// [BetaResponseItemMcpApprovalResponse], [BetaResponseItemMcpCall],
+// [BetaResponseCustomToolCallItem], [BetaResponseCustomToolCallOutputItem],
+// [BetaResponseOutputMessage].
 //
 // Use the [BetaResponseItemUnion.AsAny] method to switch on the variant.
 //
@@ -22405,7 +22555,6 @@ type anyBetaResponseItem interface {
 }
 
 func (BetaResponseInputMessageItem) implBetaResponseItemUnion()            {}
-func (BetaResponseOutputMessage) implBetaResponseItemUnion()               {}
 func (BetaResponseFileSearchToolCall) implBetaResponseItemUnion()          {}
 func (BetaResponseComputerToolCall) implBetaResponseItemUnion()            {}
 func (BetaResponseComputerToolCallOutputItem) implBetaResponseItemUnion()  {}
@@ -22437,12 +22586,12 @@ func (BetaResponseItemMcpApprovalResponse) implBetaResponseItemUnion()     {}
 func (BetaResponseItemMcpCall) implBetaResponseItemUnion()                 {}
 func (BetaResponseCustomToolCallItem) implBetaResponseItemUnion()          {}
 func (BetaResponseCustomToolCallOutputItem) implBetaResponseItemUnion()    {}
+func (BetaResponseOutputMessage) implBetaResponseItemUnion()               {}
 
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := BetaResponseItemUnion.AsAny().(type) {
 //	case openai.BetaResponseInputMessageItem:
-//	case openai.BetaResponseOutputMessage:
 //	case openai.BetaResponseFileSearchToolCall:
 //	case openai.BetaResponseComputerToolCall:
 //	case openai.BetaResponseComputerToolCallOutputItem:
@@ -22474,18 +22623,12 @@ func (BetaResponseCustomToolCallOutputItem) implBetaResponseItemUnion()    {}
 //	case openai.BetaResponseItemMcpCall:
 //	case openai.BetaResponseCustomToolCallItem:
 //	case openai.BetaResponseCustomToolCallOutputItem:
+//	case openai.BetaResponseOutputMessage:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
 func (u BetaResponseItemUnion) AsAny() anyBetaResponseItem {
 	switch u.Type {
-	case "message":
-		switch u.Role {
-		case "developer", "system", "user":
-			return u.AsMessage()
-		case "assistant":
-			return u.AsOutputMessage()
-		}
 	case "file_search_call":
 		return u.AsFileSearchCall()
 	case "computer_call":
@@ -22548,16 +22691,13 @@ func (u BetaResponseItemUnion) AsAny() anyBetaResponseItem {
 		return u.AsCustomToolCall()
 	case "custom_tool_call_output":
 		return u.AsCustomToolCallOutput()
+	case "message":
+		return u.AsOutputMessage()
 	}
 	return nil
 }
 
 func (u BetaResponseItemUnion) AsMessage() (v BetaResponseInputMessageItem) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u BetaResponseItemUnion) AsOutputMessage() (v BetaResponseOutputMessage) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -22713,6 +22853,11 @@ func (u BetaResponseItemUnion) AsCustomToolCall() (v BetaResponseCustomToolCallI
 }
 
 func (u BetaResponseItemUnion) AsCustomToolCallOutput() (v BetaResponseCustomToolCallOutputItem) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseItemUnion) AsOutputMessage() (v BetaResponseOutputMessage) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -23271,8 +23416,10 @@ func (r *BetaResponseItemAgentMessageContentUnion) UnmarshalJSON(data []byte) er
 type BetaResponseItemAgentMessageContentUnionPromptCacheBreakpoint struct {
 	// This field is from variant [BetaResponseInputTextPromptCacheBreakpoint].
 	Mode constant.Explicit `json:"mode"`
+	Ttl  string            `json:"ttl"`
 	JSON struct {
 		Mode respjson.Field
+		Ttl  respjson.Field
 		raw  string
 	} `json:"-"`
 }
@@ -23384,9 +23531,14 @@ func (r *BetaResponseItemAgentMessageContentComputerScreenshot) UnmarshalJSON(da
 type BetaResponseItemAgentMessageContentComputerScreenshotPromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -25678,8 +25830,10 @@ func (r *BetaResponseOutputItemAgentMessageContentUnion) UnmarshalJSON(data []by
 type BetaResponseOutputItemAgentMessageContentUnionPromptCacheBreakpoint struct {
 	// This field is from variant [BetaResponseInputTextPromptCacheBreakpoint].
 	Mode constant.Explicit `json:"mode"`
+	Ttl  string            `json:"ttl"`
 	JSON struct {
 		Mode respjson.Field
+		Ttl  respjson.Field
 		raw  string
 	} `json:"-"`
 }
@@ -25793,9 +25947,14 @@ func (r *BetaResponseOutputItemAgentMessageContentComputerScreenshot) UnmarshalJ
 type BetaResponseOutputItemAgentMessageContentComputerScreenshotPromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -28069,8 +28228,10 @@ func (r *BetaResponsePromptVariableUnion) UnmarshalJSON(data []byte) error {
 type BetaResponsePromptVariableUnionPromptCacheBreakpoint struct {
 	// This field is from variant [BetaResponseInputTextPromptCacheBreakpoint].
 	Mode constant.Explicit `json:"mode"`
+	Ttl  string            `json:"ttl"`
 	JSON struct {
 		Mode respjson.Field
+		Ttl  respjson.Field
 		raw  string
 	} `json:"-"`
 }
@@ -28232,6 +28393,19 @@ func (u betaResponsePromptVariableUnionParamPromptCacheBreakpoint) GetMode() *st
 		return (*string)(&vt.Mode)
 	case *BetaResponseInputFilePromptCacheBreakpointParam:
 		return (*string)(&vt.Mode)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponsePromptVariableUnionParamPromptCacheBreakpoint) GetTtl() *string {
+	switch vt := u.any.(type) {
+	case *BetaResponseInputTextPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *BetaResponseInputImagePromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *BetaResponseInputFilePromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
 	}
 	return nil
 }
@@ -30625,8 +30799,10 @@ func (r *BetaResponseSteerInputContentUnion) UnmarshalJSON(data []byte) error {
 type BetaResponseSteerInputContentUnionPromptCacheBreakpoint struct {
 	// This field is from variant [BetaResponseInputTextContentPromptCacheBreakpoint].
 	Mode constant.Explicit `json:"mode"`
+	Ttl  string            `json:"ttl"`
 	JSON struct {
 		Mode respjson.Field
+		Ttl  respjson.Field
 		raw  string
 	} `json:"-"`
 }
@@ -30780,6 +30956,19 @@ func (u betaResponseSteerInputContentUnionParamPromptCacheBreakpoint) GetMode() 
 		return (*string)(&vt.Mode)
 	case *BetaResponseInputFileContentPromptCacheBreakpointParam:
 		return (*string)(&vt.Mode)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseSteerInputContentUnionParamPromptCacheBreakpoint) GetTtl() *string {
+	switch vt := u.any.(type) {
+	case *BetaResponseInputTextContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *BetaResponseInputImageContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *BetaResponseInputFileContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
 	}
 	return nil
 }
@@ -31170,6 +31359,7 @@ func (r *BetaResponseSteerRequiredInputMcpApprovalResponse) UnmarshalJSON(data [
 // [BetaResponseShellCallCommandAddedEvent],
 // [BetaResponseShellCallCommandDeltaEvent],
 // [BetaResponseShellCallCommandDoneEvent],
+// [BetaResponseShellCallOutputContentDeltaEvent],
 // [BetaResponseShellCallOutputContentDoneEvent], [BetaResponseInProgressEvent],
 // [BetaResponseFailedEvent], [BetaResponseIncompleteEvent],
 // [BetaResponseOutputItemAddedEvent], [BetaResponseOutputItemDoneEvent],
@@ -31215,6 +31405,7 @@ type BetaResponseStreamEventUnion struct {
 	// "response.file_search_call.searching", "response.function_call_arguments.delta",
 	// "response.function_call_arguments.done", "response.shell_call_command.added",
 	// "response.shell_call_command.delta", "response.shell_call_command.done",
+	// "response.shell_call_output_content.delta",
 	// "response.shell_call_output_content.done", "response.in_progress",
 	// "response.failed", "response.incomplete", "response.output_item.added",
 	// "response.output_item.done", "response.reasoning_summary_part.added",
@@ -31254,6 +31445,7 @@ type BetaResponseStreamEventUnion struct {
 	// [BetaResponseShellCallCommandAddedEventAgent],
 	// [BetaResponseShellCallCommandDeltaEventAgent],
 	// [BetaResponseShellCallCommandDoneEventAgent],
+	// [BetaResponseShellCallOutputContentDeltaEventAgent],
 	// [BetaResponseShellCallOutputContentDoneEventAgent],
 	// [BetaResponseInProgressEventAgent], [BetaResponseFailedEventAgent],
 	// [BetaResponseIncompleteEventAgent], [BetaResponseOutputItemAddedEventAgent],
@@ -31403,6 +31595,7 @@ func (BetaResponseFunctionCallArgumentsDoneEvent) implBetaResponseStreamEventUni
 func (BetaResponseShellCallCommandAddedEvent) implBetaResponseStreamEventUnion()           {}
 func (BetaResponseShellCallCommandDeltaEvent) implBetaResponseStreamEventUnion()           {}
 func (BetaResponseShellCallCommandDoneEvent) implBetaResponseStreamEventUnion()            {}
+func (BetaResponseShellCallOutputContentDeltaEvent) implBetaResponseStreamEventUnion()     {}
 func (BetaResponseShellCallOutputContentDoneEvent) implBetaResponseStreamEventUnion()      {}
 func (BetaResponseInProgressEvent) implBetaResponseStreamEventUnion()                      {}
 func (BetaResponseFailedEvent) implBetaResponseStreamEventUnion()                          {}
@@ -31465,6 +31658,7 @@ func (BetaResponseCustomToolCallInputDoneEvent) implBetaResponseStreamEventUnion
 //	case openai.BetaResponseShellCallCommandAddedEvent:
 //	case openai.BetaResponseShellCallCommandDeltaEvent:
 //	case openai.BetaResponseShellCallCommandDoneEvent:
+//	case openai.BetaResponseShellCallOutputContentDeltaEvent:
 //	case openai.BetaResponseShellCallOutputContentDoneEvent:
 //	case openai.BetaResponseInProgressEvent:
 //	case openai.BetaResponseFailedEvent:
@@ -31551,6 +31745,8 @@ func (u BetaResponseStreamEventUnion) AsAny() anyBetaResponseStreamEvent {
 		return u.AsResponseShellCallCommandDelta()
 	case "response.shell_call_command.done":
 		return u.AsResponseShellCallCommandDone()
+	case "response.shell_call_output_content.delta":
+		return u.AsResponseShellCallOutputContentDelta()
 	case "response.shell_call_output_content.done":
 		return u.AsResponseShellCallOutputContentDone()
 	case "response.in_progress":
@@ -31736,6 +31932,11 @@ func (u BetaResponseStreamEventUnion) AsResponseShellCallCommandDelta() (v BetaR
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseShellCallCommandDone() (v BetaResponseShellCallCommandDoneEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseStreamEventUnion) AsResponseShellCallOutputContentDelta() (v BetaResponseShellCallOutputContentDeltaEvent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }

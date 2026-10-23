@@ -5,6 +5,7 @@ package openai
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"maps"
@@ -63,6 +64,26 @@ func (r *AudioVoiceService) New(ctx context.Context, body AudioVoiceNewParams, o
 	return res, err
 }
 
+// Deletes a voice created from a text prompt or an audio sample.
+//
+// Requires voice write permission and access to the voice's project. Access to
+// voices created from recordings is limited to eligible customers. See the
+// [custom voices guide](https://developers.openai.com/api/docs/guides/custom-voices).
+//
+// Deleting a voice does not delete its consent recording. Deleting an already
+// deleted voice returns a 404 error.
+func (r *AudioVoiceService) Delete(ctx context.Context, voiceID string, opts ...option.RequestOption) (res *VoiceDeleted, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if voiceID == "" {
+		err = errors.New("missing required voice_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("audio/voices/%s", voiceID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
+	return res, err
+}
+
 // A custom voice that can be used for audio output. Voices created from text
 // prompts are supported only in Live.
 type Voice struct {
@@ -108,6 +129,29 @@ const (
 	VoiceTypeAudioSample VoiceType = "audio_sample"
 	VoiceTypePrompt      VoiceType = "prompt"
 )
+
+type VoiceDeleted struct {
+	// The voice identifier.
+	ID string `json:"id" api:"required"`
+	// Whether the voice was deleted.
+	Deleted bool `json:"deleted" api:"required"`
+	// The object type, which is always `audio.voice.deleted`.
+	Object constant.AudioVoiceDeleted `json:"object" default:"audio.voice.deleted"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Deleted     respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r VoiceDeleted) RawJSON() string { return r.JSON.raw }
+func (r *VoiceDeleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type AudioVoiceNewParams struct {
 

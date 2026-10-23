@@ -38,7 +38,7 @@ func (r *ResponseService) Connect(ctx context.Context, options ResponseConnectio
 			return nil, err
 		}
 		ctx = request.Context()
-		connection, err := websocket.Dial(ctx, request, client, options, decodeResponseWebsocketEvent, func(responseWebsocketEvent) string { return "" })
+		connection, err := websocket.Dial(ctx, request, client, options, decodeResponseWebsocketEvent, func(event responseWebsocketEvent) string { return event.streamID })
 		if err != nil {
 			return nil, err
 		}
@@ -48,7 +48,10 @@ func (r *ResponseService) Connect(ctx context.Context, options ResponseConnectio
 }
 
 // Queues retain wire bytes instead of every inline variant of the event union.
-type responseWebsocketEvent struct{ data []byte }
+type responseWebsocketEvent struct {
+	data     []byte
+	streamID string
+}
 
 func decodeResponseWebsocketEvent(data []byte) (responseWebsocketEvent, error) {
 	var envelope struct {
@@ -60,14 +63,19 @@ func decodeResponseWebsocketEvent(data []byte) (responseWebsocketEvent, error) {
 	// Typed decoding uses the first exact key; keep legacy envelope validation too.
 	kind := gjson.GetBytes(data, "type")
 	if envelope.Type == "" || (kind.Exists() && (kind.Type != gjson.String || kind.Str == "")) {
-		return responseWebsocketEvent{}, errors.New("websocket event is missing type")
+		return responseWebsocketEvent{}, errors.New("responses websocket event is missing type")
 	}
-	return responseWebsocketEvent{data: data}, nil
+	var route struct {
+		StreamID string `json:"stream_id"`
+	}
+	// Preserve permissive routing of missing or invalid stream IDs.
+	_ = json.Unmarshal(data, &route)
+	return responseWebsocketEvent{data: data, streamID: route.StreamID}, nil
 }
 
 func (e responseWebsocketEvent) decode() (ResponsesServerEventUnion, error) {
 	var event ResponsesServerEventUnion
-	err := event.unmarshalWebsocketEvent(e.data)
+	err := event.unmarshalWebsocketEventWithRawType(e.data)
 	return event, err
 }
 
@@ -113,15 +121,6 @@ func (c *ResponseConnection) Abort() { c.connection.Abort() }
 // Reconnect explicitly replaces this connection and refreshes its credentials.
 // It never replays commands or restores API session state.
 func (c *ResponseConnection) Reconnect(ctx context.Context) (*ResponseConnection, error) {
-	connection, err := c.connection.Reconnect(ctx, func(ctx context.Context) (*websocket.Connection[responseWebsocketEvent], error) {
-		next, err := c.open(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return next.connection, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	return &ResponseConnection{connection: connection, open: c.open}, nil
+	return c.Recover(ctx, ResponseRecoveryOptions{})
+
 }

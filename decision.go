@@ -1094,7 +1094,7 @@ type DecisionNewParams struct {
 	Input DecisionNewParamsInputUnion `json:"input,omitzero" api:"required"`
 	// The model to use. Only `gpt-6-luna` is supported.
 	Model string `json:"model" api:"required"`
-	// Ask 1–200 questions about the input. Each question can be a predicate, choice,
+	// Ask 1–400 questions about the input. Each question can be a predicate, choice,
 	// or score. Answers come back in the same order.
 	Questions []DecisionNewParamsQuestionUnion `json:"questions,omitzero" api:"required"`
 	// Partition prompt cache reuse by caller-provided key.
