@@ -37,8 +37,8 @@ const github = {
           object: {
             sha: ref.startsWith('pull/')
               ? data.merge_sha
-              : ref === 'heads/main' && data.main_sha
-                ? data.main_sha
+              : ref === 'heads/main' && (data.main_sha_sequence?.length || data.main_sha)
+                ? data.main_sha_sequence?.shift() || data.main_sha
                 : data.current.base.sha,
           },
         },
@@ -46,6 +46,22 @@ const github = {
     },
     repos: {
       getCommit: async () => ({ data: data.merge_commit }),
+      compareCommitsWithBasehead: async ({ basehead }) => ({
+        data: data.comparisons?.[basehead] || { merge_base_commit: { sha: basehead.split('...')[0] } },
+      }),
+      getContent: async ({ path, ref }) => {
+        if (path !== '.castiron-ratchet.json' || !data.policies_by_sha?.[ref])
+          throw new Error('Unexpected policy lookup');
+        const content = Buffer.from(JSON.stringify(data.policies_by_sha[ref]));
+        return {
+          data: {
+            type: 'file',
+            encoding: 'base64',
+            size: content.length,
+            content: content.toString('base64'),
+          },
+        };
+      },
       createCommitStatus: async (value) => {
         writes.push(value);
         data.statuses_by_sha ||= {};
