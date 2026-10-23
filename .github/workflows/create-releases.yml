@@ -13,9 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: release
     permissions: {}
-    outputs:
-      releases_created: ${{ steps.release.outputs.releases_created }}
-      paths_released: ${{ steps.release.outputs.paths_released }}
 
     steps:
       - name: Create release app token
@@ -29,35 +26,8 @@ jobs:
           permission-pull-requests: write
 
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
-        id: release
         with:
           token: ${{ steps.app-token.outputs.token }}
           target-branch: main
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-
-  publish:
-    name: publish (${{ matrix.path }})
-    needs: release
-    if: ${{ needs.release.outputs.releases_created == 'true' }}
-    strategy:
-      matrix:
-        path: ${{ fromJSON(needs.release.outputs.paths_released) }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
-        with:
-          persist-credentials: false
-
-      - name: Generate godocs
-        env:
-          RELEASE_PATH: ${{ matrix.path }}
-        run: |
-          version="$(jq -er --arg path "$RELEASE_PATH" '.[$path]' .release-please-manifest.json)"
-          module="$(awk '$1 == "module" { print $2; exit }' "$RELEASE_PATH/go.mod")"
-          curl --fail-with-body --show-error --silent --retry 5 --retry-all-errors \
-            --retry-delay 15 --retry-max-time 300 --connect-timeout 10 --max-time 45 \
-            -X POST "https://pkg.go.dev/fetch/${module}@v${version}"

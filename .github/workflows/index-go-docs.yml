@@ -1,0 +1,99 @@
+name: Index Go docs
+run-name: Index Go docs (${{ github.event.release.tag_name || inputs.tag }})
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Exact release tag
+        required: true
+        type: string
+      expected_sha:
+        description: Full commit SHA verified from the release
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  index:
+    if: github.repository == 'openai/openai-go' && (github.event_name == 'workflow_dispatch' || github.event.release.author.login == 'openai-sdks[bot]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      contents: read
+    concurrency:
+      group: go-docs-${{ github.event.release.tag_name || inputs.tag }}
+      cancel-in-progress: false
+    env:
+      RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      EXPECTED_SHA: ${{ inputs.expected_sha || github.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          ref: refs/tags/${{ github.event.release.tag_name || inputs.tag }}
+          persist-credentials: false
+
+      - name: Verify release and request indexing
+        shell: bash
+        run: |
+          if [[ ! "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ || "$(git rev-parse HEAD)" != "$EXPECTED_SHA" ]]; then
+            echo "::error::Release tag does not match the expected commit"
+            exit 1
+          fi
+
+          path=.
+          if [[ "$RELEASE_TAG" == */* ]]; then
+            path="${RELEASE_TAG%/*}"
+          fi
+          jq -e --arg path "$path" '.packages | has($path)' release-please-config.json >/dev/null
+          version="$(jq -er --arg path "$path" '.[$path] | strings' .release-please-manifest.json)"
+          module="$(awk '$1 == "module" { print $2; exit }' "$path/go.mod")"
+          expected_tag="v$version"
+          expected_module="github.com/openai/openai-go"
+          if [[ "$path" != . ]]; then
+            expected_tag="$path/$expected_tag"
+            expected_module="$expected_module/$path"
+          elif [[ "$version" != 0.* && "$version" != 1.* ]]; then
+            expected_module="$expected_module/v${version%%.*}"
+          fi
+          if [[ "$RELEASE_TAG" != "$expected_tag" || "$module" != "$expected_module" ]]; then
+            echo "::error::Release tag, manifest version, and Go module do not match"
+            exit 1
+          fi
+
+          for attempt in 1 2 3; do
+            curl_status=0
+            http_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+              --connect-timeout 5 --max-time 20 --request POST \
+              "https://pkg.go.dev/fetch/$module@v$version")" || curl_status=$?
+            case "$curl_status:$http_status" in
+              0:2??)
+                echo "Requested indexing for $module@v$version (attempt $attempt)" >> "$GITHUB_STEP_SUMMARY"
+                exit 0
+                ;;
+              0:404|0:408|0:429|0:5??|5:*|6:*|7:*|18:*|28:*|52:*|55:*|56:*|92:*)
+                echo "::warning::Indexing attempt $attempt failed (HTTP $http_status, curl $curl_status)"
+                ;;
+              *)
+                echo "::error::Indexing failed without retry (HTTP $http_status, curl $curl_status)"
+                exit 1
+                ;;
+            esac
+            if (( attempt < 3 )); then
+              sleep "$((attempt * 5))"
+            fi
+          done
+          echo "::error::Indexing failed after 3 attempts"
+          exit 1
+
+      - name: Recovery instructions
+        if: failure()
+        run: |
+          {
+            echo "Release DRI: acknowledge failed or missing indexing within 15 minutes of release and recover within 60 minutes."
+            echo "Retry Index Go docs on main with the exact release tag and independently verified full commit SHA."
+            echo "Escalate to the SDK on-call after one manual recovery fails or the 60-minute deadline passes. Never rerun Create releases to retry indexing."
+          } >> "$GITHUB_STEP_SUMMARY"
