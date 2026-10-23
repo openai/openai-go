@@ -4,6 +4,10 @@
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#ComparisonFilterParam">ComparisonFilterParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#CompoundFilterParam">CompoundFilterParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#CustomToolInputFormatUnionParam">CustomToolInputFormatUnionParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#DecisionInputJSONParam">DecisionInputJSONParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#DecisionQuestionInputImageParam">DecisionQuestionInputImageParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#DecisionQuestionInputPartUnionParam">DecisionQuestionInputPartUnionParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#DecisionQuestionInputTextParam">DecisionQuestionInputTextParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#FunctionDefinitionParam">FunctionDefinitionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#FunctionParameters">FunctionParameters</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#Metadata">Metadata</a>
@@ -22,6 +26,7 @@
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#CompoundFilter">CompoundFilter</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#CustomToolInputFormatUnion">CustomToolInputFormatUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#ErrorObject">ErrorObject</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#DecisionQuestionInputPartUnion">DecisionQuestionInputPartUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#FunctionDefinition">FunctionDefinition</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#FunctionParameters">FunctionParameters</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#Metadata">Metadata</a>
@@ -37,7 +42,7 @@
 Params Types:
 
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DecisionInputImageParam">DecisionInputImageParam</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DecisionInputMessageParam">DecisionInputMessageParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DecisionInputMessageUnionParam">DecisionInputMessageUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DecisionInputPartUnionParam">DecisionInputPartUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DecisionInputTextParam">DecisionInputTextParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DecisionPromptCacheBreakpointParam">DecisionPromptCacheBreakpointParam</a>

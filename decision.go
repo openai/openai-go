@@ -13,6 +13,7 @@ import (
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/shared"
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
@@ -539,6 +540,446 @@ const (
 	DecisionInputMessageTypeMessage DecisionInputMessageType = "message"
 )
 
+func DecisionInputMessageParamOfUser[T string | []DecisionInputPartUnionParam](content T) DecisionInputMessageUnionParam {
+	var user DecisionInputMessageUserParam
+	switch v := any(content).(type) {
+	case string:
+		user.Content.OfString = param.NewOpt(v)
+	case []DecisionInputPartUnionParam:
+		user.Content.OfParts = v
+	}
+	return DecisionInputMessageUnionParam{OfUser: &user}
+}
+
+func DecisionInputMessageParamOfDeveloper[T string | []DecisionInputTextParam](content T) DecisionInputMessageUnionParam {
+	var developer DecisionInputMessageDeveloperParam
+	switch v := any(content).(type) {
+	case string:
+		developer.Content.OfString = param.NewOpt(v)
+	case []DecisionInputTextParam:
+		developer.Content.OfParts = v
+	}
+	return DecisionInputMessageUnionParam{OfDeveloper: &developer}
+}
+
+func DecisionInputMessageParamOfSystem[T string | []DecisionInputTextParam](content T) DecisionInputMessageUnionParam {
+	var system DecisionInputMessageSystemParam
+	switch v := any(content).(type) {
+	case string:
+		system.Content.OfString = param.NewOpt(v)
+	case []DecisionInputTextParam:
+		system.Content.OfParts = v
+	}
+	return DecisionInputMessageUnionParam{OfSystem: &system}
+}
+
+func DecisionInputMessageParamOfAssistant[
+	T string | []DecisionInputMessageAssistantContentPartsItemUnionParam,
+](content T) DecisionInputMessageUnionParam {
+	var assistant DecisionInputMessageAssistantParam
+	switch v := any(content).(type) {
+	case string:
+		assistant.Content.OfString = param.NewOpt(v)
+	case []DecisionInputMessageAssistantContentPartsItemUnionParam:
+		assistant.Content.OfParts = v
+	}
+	return DecisionInputMessageUnionParam{OfAssistant: &assistant}
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionInputMessageUnionParam struct {
+	OfUser      *DecisionInputMessageUserParam      `json:",omitzero,inline"`
+	OfDeveloper *DecisionInputMessageDeveloperParam `json:",omitzero,inline"`
+	OfSystem    *DecisionInputMessageSystemParam    `json:",omitzero,inline"`
+	OfAssistant *DecisionInputMessageAssistantParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionInputMessageUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfUser, u.OfDeveloper, u.OfSystem, u.OfAssistant)
+}
+func (u *DecisionInputMessageUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionInputMessageUnionParam) GetPhase() *string {
+	if vt := u.OfAssistant; vt != nil {
+		return &vt.Phase
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionInputMessageUnionParam) GetRole() *string {
+	if vt := u.OfUser; vt != nil {
+		return (*string)(&vt.Role)
+	} else if vt := u.OfDeveloper; vt != nil {
+		return (*string)(&vt.Role)
+	} else if vt := u.OfSystem; vt != nil {
+		return (*string)(&vt.Role)
+	} else if vt := u.OfAssistant; vt != nil {
+		return (*string)(&vt.Role)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionInputMessageUnionParam) GetType() *string {
+	if vt := u.OfUser; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfDeveloper; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfSystem; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfAssistant; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u DecisionInputMessageUnionParam) GetContent() (res decisionInputMessageUnionParamContent) {
+	if vt := u.OfUser; vt != nil {
+		res.any = vt.Content.asAny()
+	} else if vt := u.OfDeveloper; vt != nil {
+		res.any = vt.Content.asAny()
+	} else if vt := u.OfSystem; vt != nil {
+		res.any = vt.Content.asAny()
+	} else if vt := u.OfAssistant; vt != nil {
+		res.any = vt.Content.asAny()
+	}
+	return
+}
+
+// Can have the runtime types [*string], [_[]DecisionInputPartUnionParam],
+// [_[]DecisionInputTextParam],
+// [\*[]DecisionInputMessageAssistantContentPartsItemUnionParam]
+type decisionInputMessageUnionParamContent struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *string:
+//	case *[]openai.DecisionInputPartUnionParam:
+//	case *[]openai.DecisionInputTextParam:
+//	case *[]openai.DecisionInputMessageAssistantContentPartsItemUnionParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u decisionInputMessageUnionParamContent) AsAny() any { return u.any }
+
+func init() {
+	apijson.RegisterUnion[DecisionInputMessageUnionParam](
+		"role",
+		apijson.Discriminator[DecisionInputMessageUserParam]("user"),
+		apijson.Discriminator[DecisionInputMessageDeveloperParam]("developer"),
+		apijson.Discriminator[DecisionInputMessageSystemParam]("system"),
+		apijson.Discriminator[DecisionInputMessageAssistantParam]("assistant"),
+	)
+}
+
+// A user message containing input text, images, or JSON.
+//
+// The properties Content, Role are required.
+type DecisionInputMessageUserParam struct {
+	// A text string or an ordered list of text, image, and JSON parts.
+	Content DecisionInputMessageUserContentUnionParam `json:"content,omitzero" api:"required"`
+	// Any of "message".
+	Type string `json:"type,omitzero"`
+	// This field can be elided, and will marshal its zero value as "user".
+	Role constant.User `json:"role" default:"user"`
+	paramObj
+}
+
+func (r DecisionInputMessageUserParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionInputMessageUserParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionInputMessageUserParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionInputMessageUserParam](
+		"type", "message",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionInputMessageUserContentUnionParam struct {
+	OfString param.Opt[string]             `json:",omitzero,inline"`
+	OfParts  []DecisionInputPartUnionParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionInputMessageUserContentUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfParts)
+}
+func (u *DecisionInputMessageUserContentUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionInputMessageUserContentUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfParts) {
+		return &u.OfParts
+	}
+	return nil
+}
+
+// A developer message containing input text.
+//
+// The properties Content, Role are required.
+type DecisionInputMessageDeveloperParam struct {
+	// A text string or an ordered list of input text parts.
+	Content DecisionInputMessageDeveloperContentUnionParam `json:"content,omitzero" api:"required"`
+	// Any of "message".
+	Type string `json:"type,omitzero"`
+	// This field can be elided, and will marshal its zero value as "developer".
+	Role constant.Developer `json:"role" default:"developer"`
+	paramObj
+}
+
+func (r DecisionInputMessageDeveloperParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionInputMessageDeveloperParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionInputMessageDeveloperParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionInputMessageDeveloperParam](
+		"type", "message",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionInputMessageDeveloperContentUnionParam struct {
+	OfString param.Opt[string]        `json:",omitzero,inline"`
+	OfParts  []DecisionInputTextParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionInputMessageDeveloperContentUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfParts)
+}
+func (u *DecisionInputMessageDeveloperContentUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionInputMessageDeveloperContentUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfParts) {
+		return &u.OfParts
+	}
+	return nil
+}
+
+// A system message containing input text.
+//
+// The properties Content, Role are required.
+type DecisionInputMessageSystemParam struct {
+	// A text string or an ordered list of input text parts.
+	Content DecisionInputMessageSystemContentUnionParam `json:"content,omitzero" api:"required"`
+	// Any of "message".
+	Type string `json:"type,omitzero"`
+	// This field can be elided, and will marshal its zero value as "system".
+	Role constant.System `json:"role" default:"system"`
+	paramObj
+}
+
+func (r DecisionInputMessageSystemParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionInputMessageSystemParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionInputMessageSystemParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionInputMessageSystemParam](
+		"type", "message",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionInputMessageSystemContentUnionParam struct {
+	OfString param.Opt[string]        `json:",omitzero,inline"`
+	OfParts  []DecisionInputTextParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionInputMessageSystemContentUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfParts)
+}
+func (u *DecisionInputMessageSystemContentUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionInputMessageSystemContentUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfParts) {
+		return &u.OfParts
+	}
+	return nil
+}
+
+// An assistant message containing output text or refusals.
+//
+// The properties Content, Role are required.
+type DecisionInputMessageAssistantParam struct {
+	// A text string or an ordered list of output text and refusal parts.
+	Content DecisionInputMessageAssistantContentUnionParam `json:"content,omitzero" api:"required"`
+	// The phase of an assistant message.
+	//
+	// Any of "commentary", "final_answer".
+	Phase string `json:"phase,omitzero"`
+	// Any of "message".
+	Type string `json:"type,omitzero"`
+	// This field can be elided, and will marshal its zero value as "assistant".
+	Role constant.Assistant `json:"role" default:"assistant"`
+	paramObj
+}
+
+func (r DecisionInputMessageAssistantParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionInputMessageAssistantParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionInputMessageAssistantParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionInputMessageAssistantParam](
+		"phase", "commentary", "final_answer",
+	)
+	apijson.RegisterFieldValidator[DecisionInputMessageAssistantParam](
+		"type", "message",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionInputMessageAssistantContentUnionParam struct {
+	OfString param.Opt[string]                                         `json:",omitzero,inline"`
+	OfParts  []DecisionInputMessageAssistantContentPartsItemUnionParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionInputMessageAssistantContentUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfParts)
+}
+func (u *DecisionInputMessageAssistantContentUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionInputMessageAssistantContentUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfParts) {
+		return &u.OfParts
+	}
+	return nil
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionInputMessageAssistantContentPartsItemUnionParam struct {
+	OfOutputText *DecisionInputMessageAssistantContentPartOutputTextParam `json:",omitzero,inline"`
+	OfRefusal    *DecisionInputMessageAssistantContentPartRefusalParam    `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionInputMessageAssistantContentPartsItemUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfOutputText, u.OfRefusal)
+}
+func (u *DecisionInputMessageAssistantContentPartsItemUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionInputMessageAssistantContentPartsItemUnionParam) GetText() *string {
+	if vt := u.OfOutputText; vt != nil {
+		return &vt.Text
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionInputMessageAssistantContentPartsItemUnionParam) GetRefusal() *string {
+	if vt := u.OfRefusal; vt != nil {
+		return &vt.Refusal
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionInputMessageAssistantContentPartsItemUnionParam) GetType() *string {
+	if vt := u.OfOutputText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfRefusal; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[DecisionInputMessageAssistantContentPartsItemUnionParam](
+		"type",
+		apijson.Discriminator[DecisionInputMessageAssistantContentPartOutputTextParam]("output_text"),
+		apijson.Discriminator[DecisionInputMessageAssistantContentPartRefusalParam]("refusal"),
+	)
+}
+
+// The properties Text, Type are required.
+type DecisionInputMessageAssistantContentPartOutputTextParam struct {
+	Text string `json:"text" api:"required"`
+	// This field can be elided, and will marshal its zero value as "output_text".
+	Type constant.OutputText `json:"type" default:"output_text"`
+	paramObj
+}
+
+func (r DecisionInputMessageAssistantContentPartOutputTextParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionInputMessageAssistantContentPartOutputTextParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionInputMessageAssistantContentPartOutputTextParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Refusal, Type are required.
+type DecisionInputMessageAssistantContentPartRefusalParam struct {
+	Refusal string `json:"refusal" api:"required"`
+	// This field can be elided, and will marshal its zero value as "refusal".
+	Type constant.Refusal `json:"type" default:"refusal"`
+	paramObj
+}
+
+func (r DecisionInputMessageAssistantContentPartRefusalParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionInputMessageAssistantContentPartRefusalParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionInputMessageAssistantContentPartRefusalParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 func DecisionInputPartParamOfInputText(text string) DecisionInputPartUnionParam {
 	var inputText DecisionInputTextParam
 	inputText.Text = text
@@ -551,17 +992,29 @@ func DecisionInputPartParamOfInputImage(imageURL string) DecisionInputPartUnionP
 	return DecisionInputPartUnionParam{OfInputImage: &inputImage}
 }
 
+func DecisionInputPartParamOfInputJSON[T map[string]any | []map[string]any](data T) DecisionInputPartUnionParam {
+	var inputJSON shared.DecisionInputJSONParam
+	switch v := any(data).(type) {
+	case map[string]any:
+		inputJSON.Data.OfAnyMap = v
+	case []map[string]any:
+		inputJSON.Data.OfArrayOfValues = v
+	}
+	return DecisionInputPartUnionParam{OfInputJSON: &inputJSON}
+}
+
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type DecisionInputPartUnionParam struct {
-	OfInputText  *DecisionInputTextParam  `json:",omitzero,inline"`
-	OfInputImage *DecisionInputImageParam `json:",omitzero,inline"`
+	OfInputText  *DecisionInputTextParam        `json:",omitzero,inline"`
+	OfInputImage *DecisionInputImageParam       `json:",omitzero,inline"`
+	OfInputJSON  *shared.DecisionInputJSONParam `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u DecisionInputPartUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfInputText, u.OfInputImage)
+	return param.MarshalUnion(u, u.OfInputText, u.OfInputImage, u.OfInputJSON)
 }
 func (u *DecisionInputPartUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -592,10 +1045,20 @@ func (u DecisionInputPartUnionParam) GetDetail() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u DecisionInputPartUnionParam) GetData() *shared.DecisionInputJSONDataUnionParam {
+	if vt := u.OfInputJSON; vt != nil {
+		return &vt.Data
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u DecisionInputPartUnionParam) GetType() *string {
 	if vt := u.OfInputText; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfInputImage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfInputJSON; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -617,6 +1080,7 @@ func init() {
 		"type",
 		apijson.Discriminator[DecisionInputTextParam]("input_text"),
 		apijson.Discriminator[DecisionInputImageParam]("input_image"),
+		apijson.Discriminator[shared.DecisionInputJSONParam]("input_json"),
 	)
 }
 
@@ -667,10 +1131,9 @@ func (r *DecisionPromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 }
 
 type DecisionNewParams struct {
-	// The text or images to evaluate for every question. Provide a text string or user
-	// messages containing text and images. Images can be base64 data URLs or publicly
-	// accessible HTTP(S) URLs; at most 128 images are allowed across all messages in
-	// one request. Files, audio, tools, and item references are not supported.
+	// The input to evaluate for every question. Provide a text string or an ordered
+	// array of messages, function calls and outputs, or custom tool calls and outputs.
+	// Each tool output must identify a matching call by call ID.
 	Input DecisionNewParamsInputUnion `json:"input,omitzero" api:"required"`
 	// The model to use. Only `gpt-6-luna` is supported.
 	Model string `json:"model" api:"required"`
@@ -707,16 +1170,601 @@ func (r *DecisionNewParams) UnmarshalJSON(data []byte) error {
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type DecisionNewParamsInputUnion struct {
-	OfString                    param.Opt[string]           `json:",omitzero,inline"`
-	OfDecisionInputMessageArray []DecisionInputMessageParam `json:",omitzero,inline"`
+	OfString param.Opt[string] `json:",omitzero,inline"`
+	// OfDecisionInputMessageArray preserves the existing message-only input form.
+	OfDecisionInputMessageArray []DecisionInputMessageParam            `json:",omitzero,inline"`
+	OfDecisionNewsInputArray    []DecisionNewParamsInputArrayItemUnion `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u DecisionNewParamsInputUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfDecisionInputMessageArray)
+	return param.MarshalUnion(u, u.OfString, u.OfDecisionInputMessageArray, u.OfDecisionNewsInputArray)
 }
 func (u *DecisionNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionNewParamsInputArrayItemUnion struct {
+	OfDecisionInputUserMessage      *DecisionNewParamsInputArrayItemDecisionInputUserMessage      `json:",omitzero,inline"`
+	OfDecisionInputDeveloperMessage *DecisionNewParamsInputArrayItemDecisionInputDeveloperMessage `json:",omitzero,inline"`
+	OfDecisionInputSystemMessage    *DecisionNewParamsInputArrayItemDecisionInputSystemMessage    `json:",omitzero,inline"`
+	OfDecisionInputAssistantMessage *DecisionNewParamsInputArrayItemDecisionInputAssistantMessage `json:",omitzero,inline"`
+	OfDecisionInputMessage          *DecisionInputMessageUnionParam                               `json:",omitzero,inline"`
+	OfFunctionCall                  *DecisionNewParamsInputArrayItemFunctionCall                  `json:",omitzero,inline"`
+	OfFunctionCallOutput            *DecisionNewParamsInputArrayItemFunctionCallOutput            `json:",omitzero,inline"`
+	OfCustomToolCall                *DecisionNewParamsInputArrayItemCustomToolCall                `json:",omitzero,inline"`
+	OfCustomToolCallOutput          *DecisionNewParamsInputArrayItemCustomToolCallOutput          `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionNewParamsInputArrayItemUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfDecisionInputUserMessage,
+		u.OfDecisionInputDeveloperMessage,
+		u.OfDecisionInputSystemMessage,
+		u.OfDecisionInputAssistantMessage,
+		u.OfDecisionInputMessage,
+		u.OfFunctionCall,
+		u.OfFunctionCallOutput,
+		u.OfCustomToolCall,
+		u.OfCustomToolCallOutput)
+}
+func (u *DecisionNewParamsInputArrayItemUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemUnion) GetPhase() *string {
+	if vt := u.OfDecisionInputAssistantMessage; vt != nil {
+		return &vt.Phase
+	} else if vt := u.OfDecisionInputMessage; vt != nil {
+		return vt.GetPhase()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemUnion) GetArguments() *string {
+	if vt := u.OfFunctionCall; vt != nil {
+		return &vt.Arguments
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemUnion) GetInput() *string {
+	if vt := u.OfCustomToolCall; vt != nil {
+		return &vt.Input
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemUnion) GetCallID() *string {
+	if vt := u.OfFunctionCall; vt != nil {
+		return (*string)(&vt.CallID)
+	} else if vt := u.OfFunctionCallOutput; vt != nil {
+		return (*string)(&vt.CallID)
+	} else if vt := u.OfCustomToolCall; vt != nil {
+		return (*string)(&vt.CallID)
+	} else if vt := u.OfCustomToolCallOutput; vt != nil {
+		return (*string)(&vt.CallID)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemUnion) GetName() *string {
+	if vt := u.OfFunctionCall; vt != nil {
+		return (*string)(&vt.Name)
+	} else if vt := u.OfCustomToolCall; vt != nil {
+		return (*string)(&vt.Name)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemUnion) GetID() *string {
+	if vt := u.OfFunctionCall; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
+	} else if vt := u.OfFunctionCallOutput; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
+	} else if vt := u.OfCustomToolCall; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
+	} else if vt := u.OfCustomToolCallOutput; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemUnion) GetNamespace() *string {
+	if vt := u.OfFunctionCall; vt != nil && vt.Namespace.Valid() {
+		return &vt.Namespace.Value
+	} else if vt := u.OfCustomToolCall; vt != nil && vt.Namespace.Valid() {
+		return &vt.Namespace.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemUnion) GetStatus() *string {
+	if vt := u.OfFunctionCall; vt != nil {
+		return (*string)(&vt.Status)
+	} else if vt := u.OfFunctionCallOutput; vt != nil {
+		return (*string)(&vt.Status)
+	} else if vt := u.OfCustomToolCall; vt != nil {
+		return (*string)(&vt.Status)
+	} else if vt := u.OfCustomToolCallOutput; vt != nil {
+		return (*string)(&vt.Status)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemUnion) GetRole() *string {
+	if vt := u.OfDecisionInputUserMessage; vt != nil {
+		return (*string)(&vt.Role)
+	} else if vt := u.OfDecisionInputDeveloperMessage; vt != nil {
+		return (*string)(&vt.Role)
+	} else if vt := u.OfDecisionInputSystemMessage; vt != nil {
+		return (*string)(&vt.Role)
+	} else if vt := u.OfDecisionInputAssistantMessage; vt != nil {
+		return (*string)(&vt.Role)
+	} else if vt := u.OfDecisionInputMessage; vt != nil {
+		return vt.GetRole()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemUnion) GetType() *string {
+	if vt := u.OfDecisionInputUserMessage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfDecisionInputDeveloperMessage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfDecisionInputSystemMessage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfDecisionInputAssistantMessage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfDecisionInputMessage; vt != nil {
+		return vt.GetType()
+	} else if vt := u.OfFunctionCall; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFunctionCallOutput; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCustomToolCall; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCustomToolCallOutput; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u DecisionNewParamsInputArrayItemUnion) GetContent() (res decisionNewParamsInputArrayItemUnionContent) {
+	if vt := u.OfDecisionInputUserMessage; vt != nil {
+		res.any = vt.Content.asAny()
+	} else if vt := u.OfDecisionInputDeveloperMessage; vt != nil {
+		res.any = vt.Content.asAny()
+	} else if vt := u.OfDecisionInputSystemMessage; vt != nil {
+		res.any = vt.Content.asAny()
+	} else if vt := u.OfDecisionInputAssistantMessage; vt != nil {
+		res.any = vt.Content.asAny()
+	} else if vt := u.OfDecisionInputMessage; vt != nil {
+		res.any = vt.GetContent().AsAny()
+	}
+	return
+}
+
+// Can have the runtime types [*string], [_[]DecisionInputPartUnionParam],
+// [_[]DecisionInputTextParam], [_[]DecisionInputMessageAssistantContentPartsItemUnionParam],
+// [_[]DecisionNewParamsInputArrayItemDecisionInputDeveloperMessageContentParts],
+// [_[]DecisionNewParamsInputArrayItemDecisionInputSystemMessageContentParts],
+// [_[]DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartsItemUnion]
+type decisionNewParamsInputArrayItemUnionContent struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *string:
+//	case *[]openai.DecisionInputPartUnionParam:
+//	case *[]openai.DecisionInputTextParam:
+//	case *[]openai.DecisionInputMessageAssistantContentPartsItemUnionParam:
+//	case *[]openai.DecisionNewParamsInputArrayItemDecisionInputDeveloperMessageContentParts:
+//	case *[]openai.DecisionNewParamsInputArrayItemDecisionInputSystemMessageContentParts:
+//	case *[]openai.DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartsItemUnion:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u decisionNewParamsInputArrayItemUnionContent) AsAny() any { return u.any }
+
+func init() {
+	apijson.RegisterUnion[DecisionNewParamsInputArrayItemUnion](
+		"type",
+		apijson.Discriminator[DecisionNewParamsInputArrayItemDecisionInputUserMessage]("message"),
+		apijson.Discriminator[DecisionNewParamsInputArrayItemDecisionInputDeveloperMessage]("message"),
+		apijson.Discriminator[DecisionNewParamsInputArrayItemDecisionInputSystemMessage]("message"),
+		apijson.Discriminator[DecisionNewParamsInputArrayItemDecisionInputAssistantMessage]("message"),
+		// Messages may omit the primary discriminator; their role still selects the variant.
+		apijson.Discriminator[DecisionNewParamsInputArrayItemDecisionInputUserMessage](nil),
+		apijson.Discriminator[DecisionNewParamsInputArrayItemDecisionInputDeveloperMessage](nil),
+		apijson.Discriminator[DecisionNewParamsInputArrayItemDecisionInputSystemMessage](nil),
+		apijson.Discriminator[DecisionNewParamsInputArrayItemDecisionInputAssistantMessage](nil),
+		apijson.Discriminator[DecisionNewParamsInputArrayItemFunctionCall]("function_call"),
+		apijson.Discriminator[DecisionNewParamsInputArrayItemFunctionCallOutput]("function_call_output"),
+		apijson.Discriminator[DecisionNewParamsInputArrayItemCustomToolCall]("custom_tool_call"),
+		apijson.Discriminator[DecisionNewParamsInputArrayItemCustomToolCallOutput]("custom_tool_call_output"),
+	)
+}
+
+// A user message containing input text, images, or JSON.
+//
+// The properties Content, Role are required.
+type DecisionNewParamsInputArrayItemDecisionInputUserMessage struct {
+	// A text string or an ordered list of text, image, and JSON parts.
+	Content DecisionNewParamsInputArrayItemDecisionInputUserMessageContentUnion `json:"content,omitzero" api:"required"`
+	// Any of "message".
+	Type string `json:"type,omitzero"`
+	// This field can be elided, and will marshal its zero value as "user".
+	Role constant.User `json:"role" default:"user"`
+	paramObj
+}
+
+func (r DecisionNewParamsInputArrayItemDecisionInputUserMessage) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionNewParamsInputArrayItemDecisionInputUserMessage
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionNewParamsInputArrayItemDecisionInputUserMessage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionNewParamsInputArrayItemDecisionInputUserMessage](
+		"type", "message",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionNewParamsInputArrayItemDecisionInputUserMessageContentUnion struct {
+	OfString param.Opt[string]             `json:",omitzero,inline"`
+	OfParts  []DecisionInputPartUnionParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionNewParamsInputArrayItemDecisionInputUserMessageContentUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfParts)
+}
+func (u *DecisionNewParamsInputArrayItemDecisionInputUserMessageContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionNewParamsInputArrayItemDecisionInputUserMessageContentUnion) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfParts) {
+		return &u.OfParts
+	}
+	return nil
+}
+
+// A developer message containing input text.
+//
+// The properties Content, Role are required.
+type DecisionNewParamsInputArrayItemDecisionInputDeveloperMessage struct {
+	// A text string or an ordered list of input text parts.
+	Content DecisionNewParamsInputArrayItemDecisionInputDeveloperMessageContentUnion `json:"content,omitzero" api:"required"`
+	// Any of "message".
+	Type string `json:"type,omitzero"`
+	// This field can be elided, and will marshal its zero value as "developer".
+	Role constant.Developer `json:"role" default:"developer"`
+	paramObj
+}
+
+func (r DecisionNewParamsInputArrayItemDecisionInputDeveloperMessage) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionNewParamsInputArrayItemDecisionInputDeveloperMessage
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionNewParamsInputArrayItemDecisionInputDeveloperMessage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionNewParamsInputArrayItemDecisionInputDeveloperMessage](
+		"type", "message",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionNewParamsInputArrayItemDecisionInputDeveloperMessageContentUnion struct {
+	OfString param.Opt[string]                                                          `json:",omitzero,inline"`
+	OfParts  []DecisionNewParamsInputArrayItemDecisionInputDeveloperMessageContentParts `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionNewParamsInputArrayItemDecisionInputDeveloperMessageContentUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfParts)
+}
+func (u *DecisionNewParamsInputArrayItemDecisionInputDeveloperMessageContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionNewParamsInputArrayItemDecisionInputDeveloperMessageContentUnion) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfParts) {
+		return &u.OfParts
+	}
+	return nil
+}
+
+// The properties Text, Type are required.
+type DecisionNewParamsInputArrayItemDecisionInputDeveloperMessageContentParts struct {
+	Text string `json:"text" api:"required"`
+	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
+	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
+	// token block.
+	PromptCacheBreakpoint DecisionPromptCacheBreakpointParam `json:"prompt_cache_breakpoint,omitzero"`
+	// This field can be elided, and will marshal its zero value as "input_text".
+	Type constant.InputText `json:"type" default:"input_text"`
+	paramObj
+}
+
+func (r DecisionNewParamsInputArrayItemDecisionInputDeveloperMessageContentParts) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionNewParamsInputArrayItemDecisionInputDeveloperMessageContentParts
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionNewParamsInputArrayItemDecisionInputDeveloperMessageContentParts) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A system message containing input text.
+//
+// The properties Content, Role are required.
+type DecisionNewParamsInputArrayItemDecisionInputSystemMessage struct {
+	// A text string or an ordered list of input text parts.
+	Content DecisionNewParamsInputArrayItemDecisionInputSystemMessageContentUnion `json:"content,omitzero" api:"required"`
+	// Any of "message".
+	Type string `json:"type,omitzero"`
+	// This field can be elided, and will marshal its zero value as "system".
+	Role constant.System `json:"role" default:"system"`
+	paramObj
+}
+
+func (r DecisionNewParamsInputArrayItemDecisionInputSystemMessage) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionNewParamsInputArrayItemDecisionInputSystemMessage
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionNewParamsInputArrayItemDecisionInputSystemMessage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionNewParamsInputArrayItemDecisionInputSystemMessage](
+		"type", "message",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionNewParamsInputArrayItemDecisionInputSystemMessageContentUnion struct {
+	OfString param.Opt[string]                                                       `json:",omitzero,inline"`
+	OfParts  []DecisionNewParamsInputArrayItemDecisionInputSystemMessageContentParts `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionNewParamsInputArrayItemDecisionInputSystemMessageContentUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfParts)
+}
+func (u *DecisionNewParamsInputArrayItemDecisionInputSystemMessageContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionNewParamsInputArrayItemDecisionInputSystemMessageContentUnion) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfParts) {
+		return &u.OfParts
+	}
+	return nil
+}
+
+// The properties Text, Type are required.
+type DecisionNewParamsInputArrayItemDecisionInputSystemMessageContentParts struct {
+	Text string `json:"text" api:"required"`
+	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
+	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
+	// token block.
+	PromptCacheBreakpoint DecisionPromptCacheBreakpointParam `json:"prompt_cache_breakpoint,omitzero"`
+	// This field can be elided, and will marshal its zero value as "input_text".
+	Type constant.InputText `json:"type" default:"input_text"`
+	paramObj
+}
+
+func (r DecisionNewParamsInputArrayItemDecisionInputSystemMessageContentParts) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionNewParamsInputArrayItemDecisionInputSystemMessageContentParts
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionNewParamsInputArrayItemDecisionInputSystemMessageContentParts) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An assistant message containing output text or refusals.
+//
+// The properties Content, Role are required.
+type DecisionNewParamsInputArrayItemDecisionInputAssistantMessage struct {
+	// A text string or an ordered list of output text and refusal parts.
+	Content DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentUnion `json:"content,omitzero" api:"required"`
+	// The phase of an assistant message.
+	//
+	// Any of "commentary", "final_answer".
+	Phase string `json:"phase,omitzero"`
+	// Any of "message".
+	Type string `json:"type,omitzero"`
+	// This field can be elided, and will marshal its zero value as "assistant".
+	Role constant.Assistant `json:"role" default:"assistant"`
+	paramObj
+}
+
+func (r DecisionNewParamsInputArrayItemDecisionInputAssistantMessage) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionNewParamsInputArrayItemDecisionInputAssistantMessage
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionNewParamsInputArrayItemDecisionInputAssistantMessage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionNewParamsInputArrayItemDecisionInputAssistantMessage](
+		"phase", "commentary", "final_answer",
+	)
+	apijson.RegisterFieldValidator[DecisionNewParamsInputArrayItemDecisionInputAssistantMessage](
+		"type", "message",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentUnion struct {
+	OfString param.Opt[string]                                                                   `json:",omitzero,inline"`
+	OfParts  []DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartsItemUnion `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfParts)
+}
+func (u *DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentUnion) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfParts) {
+		return &u.OfParts
+	}
+	return nil
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartsItemUnion struct {
+	OfOutputText *DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartOutputText `json:",omitzero,inline"`
+	OfRefusal    *DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartRefusal    `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartsItemUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfOutputText, u.OfRefusal)
+}
+func (u *DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartsItemUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartsItemUnion) GetText() *string {
+	if vt := u.OfOutputText; vt != nil {
+		return &vt.Text
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartsItemUnion) GetRefusal() *string {
+	if vt := u.OfRefusal; vt != nil {
+		return &vt.Refusal
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartsItemUnion) GetType() *string {
+	if vt := u.OfOutputText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfRefusal; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartsItemUnion](
+		"type",
+		apijson.Discriminator[DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartOutputText]("output_text"),
+		apijson.Discriminator[DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartRefusal]("refusal"),
+	)
+}
+
+// The properties Text, Type are required.
+type DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartOutputText struct {
+	Text string `json:"text" api:"required"`
+	// This field can be elided, and will marshal its zero value as "output_text".
+	Type constant.OutputText `json:"type" default:"output_text"`
+	paramObj
+}
+
+func (r DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartOutputText) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartOutputText
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartOutputText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Refusal, Type are required.
+type DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartRefusal struct {
+	Refusal string `json:"refusal" api:"required"`
+	// This field can be elided, and will marshal its zero value as "refusal".
+	Type constant.Refusal `json:"type" default:"refusal"`
+	paramObj
+}
+
+func (r DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartRefusal) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartRefusal
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionNewParamsInputArrayItemDecisionInputAssistantMessageContentPartRefusal) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Arguments, CallID, Name, Type are required.
+type DecisionNewParamsInputArrayItemFunctionCall struct {
+	Arguments string            `json:"arguments" api:"required"`
+	CallID    string            `json:"call_id" api:"required"`
+	Name      string            `json:"name" api:"required"`
+	ID        param.Opt[string] `json:"id,omitzero"`
+	Namespace param.Opt[string] `json:"namespace,omitzero"`
+	// Any of "in_progress", "completed", "incomplete".
+	Status string `json:"status,omitzero"`
+	// This field can be elided, and will marshal its zero value as "function_call".
+	Type constant.FunctionCall `json:"type" default:"function_call"`
+	paramObj
+}
+
+func (r DecisionNewParamsInputArrayItemFunctionCall) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionNewParamsInputArrayItemFunctionCall
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionNewParamsInputArrayItemFunctionCall) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionNewParamsInputArrayItemFunctionCall](
+		"status", "in_progress", "completed", "incomplete",
+	)
 }
 
 // Only one field can be non-zero.
@@ -753,18 +1801,6 @@ func (u DecisionNewParamsQuestionUnion) GetLevels() []DecisionNewParamsQuestionS
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u DecisionNewParamsQuestionUnion) GetInstructions() *string {
-	if vt := u.OfPredicate; vt != nil {
-		return (*string)(&vt.Instructions)
-	} else if vt := u.OfChoice; vt != nil {
-		return (*string)(&vt.Instructions)
-	} else if vt := u.OfScore; vt != nil {
-		return (*string)(&vt.Instructions)
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
 func (u DecisionNewParamsQuestionUnion) GetType() *string {
 	if vt := u.OfPredicate; vt != nil {
 		return (*string)(&vt.Type)
@@ -788,6 +1824,34 @@ func (u DecisionNewParamsQuestionUnion) GetName() *string {
 	return nil
 }
 
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u DecisionNewParamsQuestionUnion) GetInstructions() (res decisionNewParamsQuestionUnionInstructions) {
+	if vt := u.OfPredicate; vt != nil {
+		res.any = vt.Instructions.asAny()
+	} else if vt := u.OfChoice; vt != nil {
+		res.any = vt.Instructions.asAny()
+	} else if vt := u.OfScore; vt != nil {
+		res.any = vt.Instructions.asAny()
+	}
+	return
+}
+
+// Can have the runtime types [*string],
+// [\*[]shared.DecisionQuestionInputPartUnionParam]
+type decisionNewParamsQuestionUnionInstructions struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *string:
+//	case *[]shared.DecisionQuestionInputPartUnionParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u decisionNewParamsQuestionUnionInstructions) AsAny() any { return u.any }
+
 func init() {
 	apijson.RegisterUnion[DecisionNewParamsQuestionUnion](
 		"type",
@@ -801,8 +1865,8 @@ func init() {
 //
 // The properties Instructions, Type are required.
 type DecisionNewParamsQuestionPredicate struct {
-	Instructions string            `json:"instructions" api:"required"`
-	Name         param.Opt[string] `json:"name,omitzero"`
+	Instructions DecisionNewParamsQuestionPredicateInstructionsUnion `json:"instructions,omitzero" api:"required"`
+	Name         param.Opt[string]                                   `json:"name,omitzero"`
 	// The type of the object. Always `predicate`.
 	//
 	// This field can be elided, and will marshal its zero value as "predicate".
@@ -818,14 +1882,39 @@ func (r *DecisionNewParamsQuestionPredicate) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionNewParamsQuestionPredicateInstructionsUnion struct {
+	OfString                         param.Opt[string]                            `json:",omitzero,inline"`
+	OfDecisionQuestionInputPartArray []shared.DecisionQuestionInputPartUnionParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionNewParamsQuestionPredicateInstructionsUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfDecisionQuestionInputPartArray)
+}
+func (u *DecisionNewParamsQuestionPredicateInstructionsUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionNewParamsQuestionPredicateInstructionsUnion) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfDecisionQuestionInputPartArray) {
+		return &u.OfDecisionQuestionInputPartArray
+	}
+	return nil
+}
+
 // Choose from the supplied options based on the input.
 //
 // The properties Choices, Instructions, Type are required.
 type DecisionNewParamsQuestionChoice struct {
 	// Provide between 2 and 255 choices. Each choice must be unique.
-	Choices      []DecisionNewParamsQuestionChoiceChoice `json:"choices,omitzero" api:"required"`
-	Instructions string                                  `json:"instructions" api:"required"`
-	Name         param.Opt[string]                       `json:"name,omitzero"`
+	Choices      []DecisionNewParamsQuestionChoiceChoice          `json:"choices,omitzero" api:"required"`
+	Instructions DecisionNewParamsQuestionChoiceInstructionsUnion `json:"instructions,omitzero" api:"required"`
+	Name         param.Opt[string]                                `json:"name,omitzero"`
 	// The type of the object. Always `choice`.
 	//
 	// This field can be elided, and will marshal its zero value as "choice".
@@ -873,13 +1962,38 @@ func (u *DecisionNewParamsQuestionChoiceChoiceValueUnion) UnmarshalJSON(data []b
 	return apijson.UnmarshalRoot(data, u)
 }
 
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionNewParamsQuestionChoiceInstructionsUnion struct {
+	OfString                         param.Opt[string]                            `json:",omitzero,inline"`
+	OfDecisionQuestionInputPartArray []shared.DecisionQuestionInputPartUnionParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionNewParamsQuestionChoiceInstructionsUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfDecisionQuestionInputPartArray)
+}
+func (u *DecisionNewParamsQuestionChoiceInstructionsUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionNewParamsQuestionChoiceInstructionsUnion) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfDecisionQuestionInputPartArray) {
+		return &u.OfDecisionQuestionInputPartArray
+	}
+	return nil
+}
+
 // Rate the input against the supplied ordered levels.
 //
 // The properties Instructions, Levels, Type are required.
 type DecisionNewParamsQuestionScore struct {
-	Instructions string                                `json:"instructions" api:"required"`
-	Levels       []DecisionNewParamsQuestionScoreLevel `json:"levels,omitzero" api:"required"`
-	Name         param.Opt[string]                     `json:"name,omitzero"`
+	Instructions DecisionNewParamsQuestionScoreInstructionsUnion `json:"instructions,omitzero" api:"required"`
+	Levels       []DecisionNewParamsQuestionScoreLevel           `json:"levels,omitzero" api:"required"`
+	Name         param.Opt[string]                               `json:"name,omitzero"`
 	// The type of the object. Always `score`.
 	//
 	// This field can be elided, and will marshal its zero value as "score".
@@ -893,6 +2007,31 @@ func (r DecisionNewParamsQuestionScore) MarshalJSON() (data []byte, err error) {
 }
 func (r *DecisionNewParamsQuestionScore) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionNewParamsQuestionScoreInstructionsUnion struct {
+	OfString                         param.Opt[string]                            `json:",omitzero,inline"`
+	OfDecisionQuestionInputPartArray []shared.DecisionQuestionInputPartUnionParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionNewParamsQuestionScoreInstructionsUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfDecisionQuestionInputPartArray)
+}
+func (u *DecisionNewParamsQuestionScoreInstructionsUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionNewParamsQuestionScoreInstructionsUnion) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfDecisionQuestionInputPartArray) {
+		return &u.OfDecisionQuestionInputPartArray
+	}
+	return nil
 }
 
 // The property Label is required.
@@ -949,5 +2088,259 @@ func (r *DecisionNewParamsPromptCacheOptions) UnmarshalJSON(data []byte) error {
 func init() {
 	apijson.RegisterFieldValidator[DecisionNewParamsPromptCacheOptions](
 		"ttl", "30m",
+	)
+}
+
+// The properties CallID, Output, Type are required.
+type DecisionNewParamsInputArrayItemFunctionCallOutput struct {
+	CallID string `json:"call_id" api:"required"`
+	// Text evidence or an ordered list of text and image parts.
+	Output DecisionNewParamsInputArrayItemFunctionCallOutputOutputUnion `json:"output,omitzero" api:"required"`
+	ID     param.Opt[string]                                            `json:"id,omitzero"`
+	// Any of "in_progress", "completed", "incomplete".
+	Status string `json:"status,omitzero"`
+	// This field can be elided, and will marshal its zero value as
+	// "function_call_output".
+	Type constant.FunctionCallOutput `json:"type" default:"function_call_output"`
+	paramObj
+}
+
+func (r DecisionNewParamsInputArrayItemFunctionCallOutput) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionNewParamsInputArrayItemFunctionCallOutput
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionNewParamsInputArrayItemFunctionCallOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionNewParamsInputArrayItemFunctionCallOutput](
+		"status", "in_progress", "completed", "incomplete",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionNewParamsInputArrayItemFunctionCallOutputOutputUnion struct {
+	OfString param.Opt[string]                                                       `json:",omitzero,inline"`
+	OfParts  []DecisionNewParamsInputArrayItemFunctionCallOutputOutputPartsItemUnion `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionNewParamsInputArrayItemFunctionCallOutputOutputUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfParts)
+}
+func (u *DecisionNewParamsInputArrayItemFunctionCallOutputOutputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionNewParamsInputArrayItemFunctionCallOutputOutputPartsItemUnion struct {
+	OfInputText  *DecisionInputTextParam  `json:",omitzero,inline"`
+	OfInputImage *DecisionInputImageParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionNewParamsInputArrayItemFunctionCallOutputOutputPartsItemUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfInputText, u.OfInputImage)
+}
+func (u *DecisionNewParamsInputArrayItemFunctionCallOutputOutputPartsItemUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemFunctionCallOutputOutputPartsItemUnion) GetText() *string {
+	if vt := u.OfInputText; vt != nil {
+		return &vt.Text
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemFunctionCallOutputOutputPartsItemUnion) GetImageURL() *string {
+	if vt := u.OfInputImage; vt != nil {
+		return &vt.ImageURL
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemFunctionCallOutputOutputPartsItemUnion) GetDetail() *string {
+	if vt := u.OfInputImage; vt != nil {
+		return (*string)(&vt.Detail)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemFunctionCallOutputOutputPartsItemUnion) GetType() *string {
+	if vt := u.OfInputText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfInputImage; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's PromptCacheBreakpoint property, if
+// present.
+func (u DecisionNewParamsInputArrayItemFunctionCallOutputOutputPartsItemUnion) GetPromptCacheBreakpoint() *DecisionPromptCacheBreakpointParam {
+	if vt := u.OfInputText; vt != nil {
+		return &vt.PromptCacheBreakpoint
+	} else if vt := u.OfInputImage; vt != nil {
+		return &vt.PromptCacheBreakpoint
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[DecisionNewParamsInputArrayItemFunctionCallOutputOutputPartsItemUnion](
+		"type",
+		apijson.Discriminator[DecisionInputTextParam]("input_text"),
+		apijson.Discriminator[DecisionInputImageParam]("input_image"),
+	)
+}
+
+// The properties CallID, Input, Name, Type are required.
+type DecisionNewParamsInputArrayItemCustomToolCall struct {
+	CallID    string            `json:"call_id" api:"required"`
+	Input     string            `json:"input" api:"required"`
+	Name      string            `json:"name" api:"required"`
+	ID        param.Opt[string] `json:"id,omitzero"`
+	Namespace param.Opt[string] `json:"namespace,omitzero"`
+	// Any of "in_progress", "completed", "incomplete".
+	Status string `json:"status,omitzero"`
+	// This field can be elided, and will marshal its zero value as "custom_tool_call".
+	Type constant.CustomToolCall `json:"type" default:"custom_tool_call"`
+	paramObj
+}
+
+func (r DecisionNewParamsInputArrayItemCustomToolCall) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionNewParamsInputArrayItemCustomToolCall
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionNewParamsInputArrayItemCustomToolCall) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionNewParamsInputArrayItemCustomToolCall](
+		"status", "in_progress", "completed", "incomplete",
+	)
+}
+
+// The properties CallID, Output, Type are required.
+type DecisionNewParamsInputArrayItemCustomToolCallOutput struct {
+	CallID string `json:"call_id" api:"required"`
+	// Text evidence or an ordered list of text and image parts.
+	Output DecisionNewParamsInputArrayItemCustomToolCallOutputOutputUnion `json:"output,omitzero" api:"required"`
+	ID     param.Opt[string]                                              `json:"id,omitzero"`
+	// Any of "in_progress", "completed", "incomplete".
+	Status string `json:"status,omitzero"`
+	// This field can be elided, and will marshal its zero value as
+	// "custom_tool_call_output".
+	Type constant.CustomToolCallOutput `json:"type" default:"custom_tool_call_output"`
+	paramObj
+}
+
+func (r DecisionNewParamsInputArrayItemCustomToolCallOutput) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionNewParamsInputArrayItemCustomToolCallOutput
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionNewParamsInputArrayItemCustomToolCallOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionNewParamsInputArrayItemCustomToolCallOutput](
+		"status", "in_progress", "completed", "incomplete",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionNewParamsInputArrayItemCustomToolCallOutputOutputUnion struct {
+	OfString param.Opt[string]                                                         `json:",omitzero,inline"`
+	OfParts  []DecisionNewParamsInputArrayItemCustomToolCallOutputOutputPartsItemUnion `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionNewParamsInputArrayItemCustomToolCallOutputOutputUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfParts)
+}
+func (u *DecisionNewParamsInputArrayItemCustomToolCallOutputOutputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionNewParamsInputArrayItemCustomToolCallOutputOutputPartsItemUnion struct {
+	OfInputText  *DecisionInputTextParam  `json:",omitzero,inline"`
+	OfInputImage *DecisionInputImageParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionNewParamsInputArrayItemCustomToolCallOutputOutputPartsItemUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfInputText, u.OfInputImage)
+}
+func (u *DecisionNewParamsInputArrayItemCustomToolCallOutputOutputPartsItemUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemCustomToolCallOutputOutputPartsItemUnion) GetText() *string {
+	if vt := u.OfInputText; vt != nil {
+		return &vt.Text
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemCustomToolCallOutputOutputPartsItemUnion) GetImageURL() *string {
+	if vt := u.OfInputImage; vt != nil {
+		return &vt.ImageURL
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemCustomToolCallOutputOutputPartsItemUnion) GetDetail() *string {
+	if vt := u.OfInputImage; vt != nil {
+		return (*string)(&vt.Detail)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionNewParamsInputArrayItemCustomToolCallOutputOutputPartsItemUnion) GetType() *string {
+	if vt := u.OfInputText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfInputImage; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's PromptCacheBreakpoint property, if
+// present.
+func (u DecisionNewParamsInputArrayItemCustomToolCallOutputOutputPartsItemUnion) GetPromptCacheBreakpoint() *DecisionPromptCacheBreakpointParam {
+	if vt := u.OfInputText; vt != nil {
+		return &vt.PromptCacheBreakpoint
+	} else if vt := u.OfInputImage; vt != nil {
+		return &vt.PromptCacheBreakpoint
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[DecisionNewParamsInputArrayItemCustomToolCallOutputOutputPartsItemUnion](
+		"type",
+		apijson.Discriminator[DecisionInputTextParam]("input_text"),
+		apijson.Discriminator[DecisionInputImageParam]("input_image"),
 	)
 }

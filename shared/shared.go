@@ -1020,6 +1020,389 @@ func init() {
 	)
 }
 
+// A JSON object or an array of objects rendered as text. Nested values may be any
+// JSON value. Limited to 32 container levels, 10,000 values, and 256 KiB of
+// compact UTF-8 JSON.
+type DecisionInputJSON struct {
+	Data DecisionInputJSONDataUnion `json:"data" api:"required"`
+	Type constant.InputJSON         `json:"type" default:"input_json"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionInputJSON) RawJSON() string { return r.JSON.raw }
+func (r *DecisionInputJSON) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this DecisionInputJSON to a DecisionInputJSONParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// DecisionInputJSONParam.Overrides()
+func (r DecisionInputJSON) ToParam() DecisionInputJSONParam {
+	return param.Override[DecisionInputJSONParam](json.RawMessage(r.RawJSON()))
+}
+
+// DecisionInputJSONDataUnion contains all possible properties and values from
+// [map[string]any], [[]map[string]any].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type DecisionInputJSONDataUnion struct {
+	// This field will be present if the value is a [map[string]any].
+	OfDecisionInputJSONDataMapItem map[string]any `json:",inline"`
+	// This field will be present if the value is a [[]map[string]any].
+	OfArrayOfMap []map[string]any `json:",inline"`
+	JSON         struct {
+		OfDecisionInputJSONDataMapItem respjson.Field
+		OfArrayOfMap                   respjson.Field
+		raw                            string
+	} `json:"-"`
+}
+
+func (u DecisionInputJSONDataUnion) AsMap() (v map[string]any) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionInputJSONDataUnion) AsArrayOfMap() (v []map[string]any) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionInputJSONDataUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionInputJSONDataUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A JSON object or an array of objects rendered as text. Nested values may be any
+// JSON value. Limited to 32 container levels, 10,000 values, and 256 KiB of
+// compact UTF-8 JSON.
+//
+// The properties Data, Type are required.
+type DecisionInputJSONParam struct {
+	Data DecisionInputJSONDataUnionParam `json:"data,omitzero" api:"required"`
+	// This field can be elided, and will marshal its zero value as "input_json".
+	Type constant.InputJSON `json:"type" default:"input_json"`
+	paramObj
+}
+
+func (r DecisionInputJSONParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionInputJSONParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionInputJSONParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionInputJSONDataUnionParam struct {
+	OfAnyMap        map[string]any   `json:",omitzero,inline"`
+	OfArrayOfValues []map[string]any `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionInputJSONDataUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfAnyMap, u.OfArrayOfValues)
+}
+func (u *DecisionInputJSONDataUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// An image provided as a base64 data URL or a publicly accessible HTTP(S) URL.
+// File IDs are not supported.
+type DecisionQuestionInputImage struct {
+	// A base64-encoded image in a data URL or a publicly accessible HTTP(S) image URL.
+	ImageURL string              `json:"image_url" api:"required"`
+	Type     constant.InputImage `json:"type" default:"input_image"`
+	// The image detail level, using the selected model's image profile. Defaults to
+	// auto.
+	//
+	// Any of "low", "high", "auto", "original".
+	Detail DecisionQuestionInputImageDetail `json:"detail" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ImageURL    respjson.Field
+		Type        respjson.Field
+		Detail      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionQuestionInputImage) RawJSON() string { return r.JSON.raw }
+func (r *DecisionQuestionInputImage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this DecisionQuestionInputImage to a
+// DecisionQuestionInputImageParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// DecisionQuestionInputImageParam.Overrides()
+func (r DecisionQuestionInputImage) ToParam() DecisionQuestionInputImageParam {
+	return param.Override[DecisionQuestionInputImageParam](json.RawMessage(r.RawJSON()))
+}
+
+// The image detail level, using the selected model's image profile. Defaults to
+// auto.
+type DecisionQuestionInputImageDetail string
+
+const (
+	DecisionQuestionInputImageDetailLow      DecisionQuestionInputImageDetail = "low"
+	DecisionQuestionInputImageDetailHigh     DecisionQuestionInputImageDetail = "high"
+	DecisionQuestionInputImageDetailAuto     DecisionQuestionInputImageDetail = "auto"
+	DecisionQuestionInputImageDetailOriginal DecisionQuestionInputImageDetail = "original"
+)
+
+// An image provided as a base64 data URL or a publicly accessible HTTP(S) URL.
+// File IDs are not supported.
+//
+// The properties ImageURL, Type are required.
+type DecisionQuestionInputImageParam struct {
+	// A base64-encoded image in a data URL or a publicly accessible HTTP(S) image URL.
+	ImageURL string `json:"image_url" api:"required"`
+	// The image detail level, using the selected model's image profile. Defaults to
+	// auto.
+	//
+	// Any of "low", "high", "auto", "original".
+	Detail DecisionQuestionInputImageDetail `json:"detail,omitzero"`
+	// This field can be elided, and will marshal its zero value as "input_image".
+	Type constant.InputImage `json:"type" default:"input_image"`
+	paramObj
+}
+
+func (r DecisionQuestionInputImageParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionQuestionInputImageParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionQuestionInputImageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionQuestionInputPartUnion contains all possible properties and values from
+// [DecisionQuestionInputText], [DecisionQuestionInputImage], [DecisionInputJSON].
+//
+// Use the [DecisionQuestionInputPartUnion.AsAny] method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type DecisionQuestionInputPartUnion struct {
+	Type                         string                     `json:"type" api:"required"`
+	OfDecisionQuestionInputText  DecisionQuestionInputText  `json:",inline"`
+	OfDecisionQuestionInputImage DecisionQuestionInputImage `json:",inline"`
+	OfDecisionInputJSON          DecisionInputJSON          `json:",inline"`
+	JSON                         struct {
+		OfDecisionQuestionInputText  respjson.Field
+		OfDecisionQuestionInputImage respjson.Field
+		OfDecisionInputJSON          respjson.Field
+		Type                         respjson.Field
+		raw                          string
+	} `json:"-"`
+}
+
+// anyDecisionQuestionInputPart is implemented by each variant of
+// [DecisionQuestionInputPartUnion] to add type safety for the return type of
+// [DecisionQuestionInputPartUnion.AsAny]
+type anyDecisionQuestionInputPart interface {
+	implDecisionQuestionInputPartUnion()
+}
+
+func (DecisionQuestionInputText) implDecisionQuestionInputPartUnion()  {}
+func (DecisionQuestionInputImage) implDecisionQuestionInputPartUnion() {}
+func (DecisionInputJSON) implDecisionQuestionInputPartUnion()          {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := DecisionQuestionInputPartUnion.AsAny().(type) {
+//	case shared.DecisionQuestionInputText:
+//	case shared.DecisionQuestionInputImage:
+//	case shared.DecisionInputJSON:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u DecisionQuestionInputPartUnion) AsAny() anyDecisionQuestionInputPart {
+	switch u.Type {
+	case "input_text":
+		return u.AsInputText()
+	case "input_image":
+		return u.AsInputImage()
+	case "input_json":
+		return u.AsInputJSON()
+	}
+	return nil
+}
+
+func (u DecisionQuestionInputPartUnion) AsInputText() (v DecisionQuestionInputText) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionQuestionInputPartUnion) AsInputImage() (v DecisionQuestionInputImage) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionQuestionInputPartUnion) AsInputJSON() (v DecisionInputJSON) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionQuestionInputPartUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionQuestionInputPartUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func DecisionQuestionInputPartParamOfInputText(text string) DecisionQuestionInputPartUnionParam {
+	var inputText DecisionQuestionInputTextParam
+	inputText.Text = text
+	return DecisionQuestionInputPartUnionParam{OfInputText: &inputText}
+}
+
+func DecisionQuestionInputPartParamOfInputImage(imageURL string) DecisionQuestionInputPartUnionParam {
+	var inputImage DecisionQuestionInputImageParam
+	inputImage.ImageURL = imageURL
+	return DecisionQuestionInputPartUnionParam{OfInputImage: &inputImage}
+}
+
+func DecisionQuestionInputPartParamOfInputJSON[T map[string]any | []map[string]any](data T) DecisionQuestionInputPartUnionParam {
+	var inputJSON DecisionInputJSONParam
+	switch v := any(data).(type) {
+	case map[string]any:
+		inputJSON.Data.OfAnyMap = v
+	case []map[string]any:
+		inputJSON.Data.OfArrayOfValues = v
+	}
+	return DecisionQuestionInputPartUnionParam{OfInputJSON: &inputJSON}
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionQuestionInputPartUnionParam struct {
+	OfInputText  *DecisionQuestionInputTextParam  `json:",omitzero,inline"`
+	OfInputImage *DecisionQuestionInputImageParam `json:",omitzero,inline"`
+	OfInputJSON  *DecisionInputJSONParam          `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionQuestionInputPartUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfInputText, u.OfInputImage, u.OfInputJSON)
+}
+func (u *DecisionQuestionInputPartUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionInputPartUnionParam) GetText() *string {
+	if vt := u.OfInputText; vt != nil {
+		return &vt.Text
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionInputPartUnionParam) GetImageURL() *string {
+	if vt := u.OfInputImage; vt != nil {
+		return &vt.ImageURL
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionInputPartUnionParam) GetDetail() *string {
+	if vt := u.OfInputImage; vt != nil {
+		return (*string)(&vt.Detail)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionInputPartUnionParam) GetData() *DecisionInputJSONDataUnionParam {
+	if vt := u.OfInputJSON; vt != nil {
+		return &vt.Data
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionInputPartUnionParam) GetType() *string {
+	if vt := u.OfInputText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfInputImage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfInputJSON; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[DecisionQuestionInputPartUnionParam](
+		"type",
+		apijson.Discriminator[DecisionQuestionInputTextParam]("input_text"),
+		apijson.Discriminator[DecisionQuestionInputImageParam]("input_image"),
+		apijson.Discriminator[DecisionInputJSONParam]("input_json"),
+	)
+}
+
+type DecisionQuestionInputText struct {
+	Text string             `json:"text" api:"required"`
+	Type constant.InputText `json:"type" default:"input_text"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Text        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionQuestionInputText) RawJSON() string { return r.JSON.raw }
+func (r *DecisionQuestionInputText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this DecisionQuestionInputText to a
+// DecisionQuestionInputTextParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// DecisionQuestionInputTextParam.Overrides()
+func (r DecisionQuestionInputText) ToParam() DecisionQuestionInputTextParam {
+	return param.Override[DecisionQuestionInputTextParam](json.RawMessage(r.RawJSON()))
+}
+
+// The properties Text, Type are required.
+type DecisionQuestionInputTextParam struct {
+	Text string `json:"text" api:"required"`
+	// This field can be elided, and will marshal its zero value as "input_text".
+	Type constant.InputText `json:"type" default:"input_text"`
+	paramObj
+}
+
+func (r DecisionQuestionInputTextParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionQuestionInputTextParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionQuestionInputTextParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type ErrorObject struct {
 	Code         string                  `json:"code" api:"required"`
 	Message      string                  `json:"message" api:"required"`

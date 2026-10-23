@@ -9,6 +9,24 @@ and human review, and [AGENTS.md](../../AGENTS.md#custom-code-budget) for agent 
 
 ## What is counted
 
+Repositories may separately activate `"ratchet": "go"` in their policy after
+this checker reaches trusted main. Activation must be a human-reviewed,
+policy-only PR; SDK promotion does not carry policy edits. Keep the existing
+`max_custom_patch_lines` ceiling.
+
+The Go ratchet rejects net growth in generated-owned custom patch additions
+plus deletions **and physical lines of handwritten Go** compared with the
+captured live target. It includes helpers, tests, comments, blank lines, nested
+modules, and SDK-owned CI Go retained in private checkpoints. Non-text and
+nonregular handwritten Go fail validation. Both revisions use their own verified
+generated snapshots, read as Git objects without executing candidate code.
+
+Stale PRs compare with the live target, not their historical merge base. Merge
+queues check the complete combined candidate. Every landed reduction becomes
+the next baseline automatically. An activated ratchet cannot be disabled;
+raising the independent patch-only ceiling does not restore retired headroom.
+Existing policy isolation, human review, and snapshot ownership rules still apply.
+
 The budget is **added lines plus deleted lines in the entire current custom patch**
 against the candidate's verified pure-generated snapshot. It is not the PR's diff
 against main, and additions and deletions never cancel. Replacing 500 generated
@@ -188,12 +206,19 @@ PR targeting next; preserve the existing budget/schema fields:
 
 The SHA must belong to that same repository's authenticated main first-parent
 history and support this pin protocol. Selection reads the protected target
-base, never the candidate. Updates require an exact-head human approving review
-from a repository owner, member, or collaborator, in addition to ordinary
-CODEOWNERS and required reviews. Bot reviews, review-body markers, stale reviews,
-and dismissed approvals do not authorize activation.
+base, never the candidate. Pin-only updates and initial pin adoption use ordinary
+CODEOWNERS and required reviews when the pin does not roll back to an older main
+checker, the effective pinned budget stays the same or decreases, and its schema,
+strictness and ratchet mode stay unchanged. Initial adoption compares checker age
+and effective policy with authenticated bootstrap main, not the unpinned target's
+local policy fields; later updates compare with the current protected
+target pin and effective policy, even for stale PRs. A
+checker rollback, an effective pinned-budget increase or mode transition, a local numeric budget increase, or Go
+ratchet activation still requires an exact-head human approving review from a
+repository owner, member, or collaborator. Bot reviews, stale reviews and dismissed
+approvals do not authorize those changes.
 
-For these policy-only reviews, the approving reviewer must explicitly attest that
+For those human-required changes, the approving reviewer must explicitly attest that
 they personally performed the human review. The entire review body must be the
 following sentence, substituting the exact full current head SHA:
 
@@ -209,7 +234,7 @@ SDK code reviews continue to accept automation under their normal repository gat
 
 For initial adoption only, a base with no pin may accept an exact policy-only
 pin-initialization PR under authenticated current-main checker/policy, with the
-same human review requirement. The proposed pin is validated but never executed
+same effective-budget and mode review requirements. The proposed pin is validated but never executed
 for its own initialization. A malformed base pin cannot enter this path; other
 changes without a base pin fail closed. Ordinary pin updates execute under the
 previous approved version and cannot include SDK/tooling changes.
@@ -229,7 +254,6 @@ immediately before publication. Dismissed, replaced, stale, automated or missing
 approvals fail closed even if ordinary automated approvals keep the queue live.
 The publisher consumes the selector's versioned review rules, with cross-runtime
 predicate fixtures; candidate artifacts never supply authorization or outcomes.
-
 
 ### Review changes after publication
 
