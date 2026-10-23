@@ -640,7 +640,8 @@ func (r *ConversationItemUnionCaller) UnmarshalJSON(data []byte) error {
 //
 // If the underlying value is not a json object, one of the following properties
 // will be valid: OfString OfOutputContentList
-// OfResponseFunctionShellToolCallOutputOutputArray]
+// OfResponseFunctionShellToolCallOutputOutputArray
+// OfOutputContentListresponsesResponseCustomToolCallOutputOutputOutputContentListItemUnion]
 type ConversationItemUnionOutput struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
@@ -651,6 +652,10 @@ type ConversationItemUnionOutput struct {
 	// This field will be present if the value is a
 	// [[]responses.ResponseFunctionShellToolCallOutputOutput] instead of an object.
 	OfResponseFunctionShellToolCallOutputOutputArray []responses.ResponseFunctionShellToolCallOutputOutput `json:",inline"`
+	// This field will be present if the value is a
+	// [[]responses.ResponseCustomToolCallOutputOutputOutputContentListItemUnion]
+	// instead of an object.
+	OfOutputContentListresponsesResponseCustomToolCallOutputOutputOutputContentListItemUnion []responses.ResponseCustomToolCallOutputOutputOutputContentListItemUnion `json:",inline"`
 	// This field is from variant [responses.ResponseComputerToolCallOutputScreenshot].
 	Type constant.ComputerScreenshot `json:"type"`
 	// This field is from variant [responses.ResponseComputerToolCallOutputScreenshot].
@@ -658,13 +663,14 @@ type ConversationItemUnionOutput struct {
 	// This field is from variant [responses.ResponseComputerToolCallOutputScreenshot].
 	ImageURL string `json:"image_url"`
 	JSON     struct {
-		OfString                                         respjson.Field
-		OfOutputContentList                              respjson.Field
-		OfResponseFunctionShellToolCallOutputOutputArray respjson.Field
-		Type                                             respjson.Field
-		FileID                                           respjson.Field
-		ImageURL                                         respjson.Field
-		raw                                              string
+		OfString                                                                                 respjson.Field
+		OfOutputContentList                                                                      respjson.Field
+		OfResponseFunctionShellToolCallOutputOutputArray                                         respjson.Field
+		OfOutputContentListresponsesResponseCustomToolCallOutputOutputOutputContentListItemUnion respjson.Field
+		Type                                                                                     respjson.Field
+		FileID                                                                                   respjson.Field
+		ImageURL                                                                                 respjson.Field
+		raw                                                                                      string
 	} `json:"-"`
 }
 
@@ -677,7 +683,8 @@ func (r *ConversationItemUnionOutput) UnmarshalJSON(data []byte) error {
 	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
 		if decoded.JSON.OfString.Valid() ||
 			decoded.JSON.OfOutputContentList.Valid() ||
-			decoded.JSON.OfResponseFunctionShellToolCallOutputOutputArray.Valid() {
+			decoded.JSON.OfResponseFunctionShellToolCallOutputOutputArray.Valid() ||
+			decoded.JSON.OfOutputContentListresponsesResponseCustomToolCallOutputOutputOutputContentListItemUnion.Valid() {
 			*r = decoded
 			return nil
 		}

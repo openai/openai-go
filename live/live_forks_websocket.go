@@ -67,7 +67,7 @@ func decodeForkWebsocketEvent(data []byte) (forkWebsocketEvent, error) {
 
 func (e forkWebsocketEvent) decode() (ForkServerEventUnion, error) {
 	var event ForkServerEventUnion
-	err := event.unmarshalWebsocketEvent(e.data)
+	err := event.unmarshalWebsocketEventWithRawType(e.data)
 	return event, err
 }
 

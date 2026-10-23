@@ -78,7 +78,7 @@ func (e responseWebsocketEvent) decode() (ResponsesServerEventUnion, error) {
 	// The union preserves schema mismatches as field metadata; JSON and event
 	// type errors have already been rejected by the reader.
 	var event ResponsesServerEventUnion
-	err := event.unmarshalWebsocketEvent(e.data)
+	err := event.unmarshalWebsocketEventWithRawType(e.data)
 	return event, err
 }
 

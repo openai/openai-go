@@ -252,10 +252,12 @@ Methods:
 Response Types:
 
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Voice">Voice</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VoiceDeleted">VoiceDeleted</a>
 
 Methods:
 
 - <code title="post /audio/voices">client.Audio.Voices.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AudioVoiceService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AudioVoiceNewParams">AudioVoiceNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Voice">Voice</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="delete /audio/voices/{voice_id}">client.Audio.Voices.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AudioVoiceService.Delete">Delete</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, voiceID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VoiceDeleted">VoiceDeleted</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 ## VoiceConsents
 

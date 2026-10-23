@@ -453,6 +453,21 @@ func (u forkClientEventUnionParamSessionDelegation) GetType() *string {
 	return nil
 }
 
+// Returns a pointer to the underlying variant's property, if present.
+func (u forkClientEventUnionParamSessionDelegation) GetAcknowledgementDelayMs() *int64 {
+	switch vt := u.any.(type) {
+	case *ForkSessionConfigDelegationParam:
+		return paramutil.AddrIfPresent(vt.AcknowledgementDelayMs)
+	case *ClientDelegationParam:
+		return paramutil.AddrIfPresent(vt.AcknowledgementDelayMs)
+	case *SessionUpdateConfigDelegationResponsesParam:
+		return paramutil.AddrIfPresent(vt.AcknowledgementDelayMs)
+	case *SessionUpdateConfigDelegationDecisionsParam:
+		return paramutil.AddrIfPresent(vt.AcknowledgementDelayMs)
+	}
+	return nil
+}
+
 // Returns a pointer to the underlying variant's Responses property, if present.
 func (u forkClientEventUnionParamSessionDelegation) GetResponses() *ResponsesDelegationUpdateConfigParam {
 	switch vt := u.any.(type) {
@@ -833,9 +848,9 @@ func (r *ForkServerEventUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// unmarshalWebsocketEvent decodes only the event selected by its type. Public
+// unmarshalWebsocketEventWithRawType decodes only the event selected by its type. Public
 // UnmarshalJSON keeps the existing general-purpose union decoding behavior.
-func (r *ForkServerEventUnion) unmarshalWebsocketEvent(data []byte) error {
+func (r *ForkServerEventUnion) unmarshalWebsocketEventWithRawType(data []byte) error {
 	var envelope struct {
 		Type json.RawMessage `json:"type"`
 	}
