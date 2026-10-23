@@ -250,6 +250,7 @@ type InputAudioBufferSpeechStopped string                     // Always "input_a
 type InputAudioBufferTimeoutTriggered string                  // Always "input_audio_buffer.timeout_triggered"
 type InputFile string                                         // Always "input_file"
 type InputImage string                                        // Always "input_image"
+type InputJSON string                                         // Always "input_json"
 type InputText string                                         // Always "input_text"
 type InterruptSubagentCall string                             // Always "interrupt_subagent_call"
 type InvalidRequestError string                               // Always "invalid_request_error"
@@ -946,6 +947,7 @@ func (c InputAudioBufferTimeoutTriggered) Default() InputAudioBufferTimeoutTrigg
 }
 func (c InputFile) Default() InputFile                           { return "input_file" }
 func (c InputImage) Default() InputImage                         { return "input_image" }
+func (c InputJSON) Default() InputJSON                           { return "input_json" }
 func (c InputText) Default() InputText                           { return "input_text" }
 func (c InterruptSubagentCall) Default() InterruptSubagentCall   { return "interrupt_subagent_call" }
 func (c InvalidRequestError) Default() InvalidRequestError       { return "invalid_request_error" }
@@ -1772,6 +1774,7 @@ func (c InputAudioBufferSpeechStopped) MarshalJSON() ([]byte, error)       { ret
 func (c InputAudioBufferTimeoutTriggered) MarshalJSON() ([]byte, error)    { return marshalString(c) }
 func (c InputFile) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c InputImage) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
+func (c InputJSON) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c InputText) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c InterruptSubagentCall) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c InvalidRequestError) MarshalJSON() ([]byte, error)                 { return marshalString(c) }

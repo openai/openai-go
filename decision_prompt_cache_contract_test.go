@@ -19,7 +19,7 @@ func TestDecisionPromptCacheWireContract(t *testing.T) {
 		t.Run(mode, func(t *testing.T) {
 			text := openai.DecisionInputPartParamOfInputText("hello")
 			image := openai.DecisionInputPartParamOfInputImage("https://example.test/image.png")
-			p := openai.DecisionNewParams{Model: "test-model", Questions: []openai.DecisionNewParamsQuestionUnion{{OfPredicate: &openai.DecisionNewParamsQuestionPredicate{Instructions: "check"}}}}
+			p := openai.DecisionNewParams{Model: "test-model", Questions: []openai.DecisionNewParamsQuestionUnion{{OfPredicate: &openai.DecisionNewParamsQuestionPredicate{Instructions: openai.DecisionNewParamsQuestionPredicateInstructionsUnion{OfString: openai.String("check")}}}}}
 			var expected any
 			if mode == "explicit" {
 				breakpoint := openai.NewDecisionPromptCacheBreakpointParam()
@@ -113,7 +113,7 @@ func TestDecisionPromptCacheModeWireContract(t *testing.T) {
 			client := openai.NewClient(option.WithAPIKey("fake-test-key"), option.WithBaseURL(server.URL), option.WithUnsafeAllowHTTP(), option.WithMaxRetries(0))
 			_, err := client.Decisions.New(context.Background(), openai.DecisionNewParams{
 				Model:              "test-model",
-				Questions:          []openai.DecisionNewParamsQuestionUnion{{OfPredicate: &openai.DecisionNewParamsQuestionPredicate{Instructions: "check"}}},
+				Questions:          []openai.DecisionNewParamsQuestionUnion{{OfPredicate: &openai.DecisionNewParamsQuestionPredicate{Instructions: openai.DecisionNewParamsQuestionPredicateInstructionsUnion{OfString: openai.String("check")}}}},
 				PromptCacheOptions: openai.DecisionNewParamsPromptCacheOptions{Mode: tc.mode, Ttl: "30m"},
 			})
 			if err != nil {

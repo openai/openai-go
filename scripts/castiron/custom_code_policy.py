@@ -59,6 +59,10 @@ def read_policy(repo: Path, revision: str) -> dict[str, Any]:
     if type(version) is not int or version not in (1, 2):
         raise ValueError("unsupported budget schema_version")
     keys = {"schema_version", "max_custom_patch_lines"}
+    if "ratchet" in value:
+        keys.add("ratchet")
+        if value["ratchet"] != "go":
+            raise ValueError("ratchet must be go")
     if version == 2:
         keys.add("generated_files")
     if "next_policy" in value:
@@ -252,7 +256,8 @@ def select_policy(
         raise ValueError("next evaluation has no verified constituent PR")
     for candidate in candidates:
         candidate_policy = read_policy(repo, candidate)
-        candidate_base_policy = read_policy(repo, merge_base(repo, base, candidate))
+        candidate_base = merge_base(repo, base, candidate)
+        candidate_base_policy = read_policy(repo, candidate_base)
         pin_changed = candidate_policy.get("next_policy") != candidate_base_policy.get(
             "next_policy"
         )
@@ -260,9 +265,47 @@ def select_policy(
             candidate_policy["max_custom_patch_lines"]
             > candidate_base_policy["max_custom_patch_lines"]
         )
-        if pin_changed or budget_increased:
-            if changed_paths(repo, base, candidate) != {POLICY.encode()}:
-                raise ValueError("each next policy activation or increase must be policy-only")
+        ratchet_activated = (
+            candidate_policy.get("ratchet") == "go" and candidate_base_policy.get("ratchet") != "go"
+        )
+        if (pin_changed or budget_increased or ratchet_activated) and changed_paths(
+            repo, base, candidate
+        ) != {POLICY.encode()}:
+            raise ValueError("each next policy activation or increase must be policy-only")
+        pin_requires_human = False
+        if pin_changed:
+            proposed = read_policy(
+                repo, next_policy_sha(repo, repository, candidate, authenticated_main)
+            )
+            # Authored changes come from the merge base, but their safety must be
+            # measured against the active policy: the protected target's pin, or
+            # authenticated main during bootstrap.
+            previous = read_policy(repo, policy)
+            # Bootstrap executes authenticated main; initial adoption must not silently
+            # replace it with older checker code, even when policy fields match.
+            previous_checker = (
+                base_policy["next_policy"]["main_sha"]
+                if "next_policy" in base_policy
+                else authenticated_main
+            )
+            rolled_back = bool(
+                report.git(
+                    repo,
+                    "rev-list",
+                    "--first-parent",
+                    f"{candidate_policy['next_policy']['main_sha']}..{previous_checker}",
+                ).strip()
+            )
+            # Compare effective policies, not the candidate's unchanged local ceiling.
+            # Schema/strictness or ratchet transitions also retain human authorization.
+            pin_requires_human = (
+                rolled_back
+                or proposed["max_custom_patch_lines"] > previous["max_custom_patch_lines"]
+                or proposed["schema_version"] != previous["schema_version"]
+                or proposed.get("generated_files") != previous.get("generated_files")
+                or proposed.get("ratchet") != previous.get("ratchet")
+            )
+        if budget_increased or ratchet_activated or pin_requires_human:
             number = require_human_policy_review(repository, candidate)
             policy_reviews.append({"number": number, "head_sha": candidate})
     return {

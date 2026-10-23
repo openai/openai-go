@@ -34,8 +34,10 @@ func TestDecisionNewWithOptionalParams(t *testing.T) {
 		Model: "model",
 		Questions: []openai.DecisionNewParamsQuestionUnion{{
 			OfPredicate: &openai.DecisionNewParamsQuestionPredicate{
-				Instructions: "instructions",
-				Name:         openai.String("name"),
+				Instructions: openai.DecisionNewParamsQuestionPredicateInstructionsUnion{
+					OfString: openai.String("string"),
+				},
+				Name: openai.String("name"),
 			},
 		}},
 		PromptCacheKey: openai.String("prompt_cache_key"),

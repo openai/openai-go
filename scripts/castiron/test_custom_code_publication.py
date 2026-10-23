@@ -990,7 +990,6 @@ class StatusPublisherTests(unittest.TestCase):
 class ReviewRevocationTests(unittest.TestCase):
     def payload(self) -> dict[str, Any]:
         head, base, queue = "a" * 40, "b" * 40, "c" * 40
-        pin = {"repository": "openai/example", "main_sha": "d" * 40}
         pull = {
             "number": 3,
             "user": {"login": "author"},
@@ -1012,10 +1011,9 @@ class ReviewRevocationTests(unittest.TestCase):
 
         return {
             "run": run,
-            "policy_merge_base_sha": base,
             "policies_by_sha": {
-                base: {"schema_version": 1, "max_custom_patch_lines": 10, "next_policy": pin},
-                head: {"schema_version": 1, "max_custom_patch_lines": 20, "next_policy": pin},
+                base: {"schema_version": 1, "max_custom_patch_lines": 0},
+                head: {"schema_version": 1, "max_custom_patch_lines": 1},
             },
             "previous_statuses": [
                 {
@@ -1055,33 +1053,6 @@ class ReviewRevocationTests(unittest.TestCase):
         self.assertTrue(all(item["context"].startswith("Castiron next /") for item in result[:4]))
         self.assertEqual([item["run_id"] for item in result[4:]], [12, 14])
         self.assertNotIn("success", [item.get("state") for item in result])
-
-    def test_unattested_policy_reviews_leave_passing_statuses_untouched(self) -> None:
-        for changes in (
-            {"max_custom_patch_lines": 5},
-            {"schema_version": 2, "generated_files": "strict", "max_custom_patch_lines": 0},
-        ):
-            with self.subTest(changes=changes):
-                payload = self.payload()
-                payload["policies_by_sha"]["a" * 40].update(changes)
-                payload["review_nodes"] = [
-                    {
-                        **self.approval(),
-                        "state": "COMMENTED",
-                        "body": "Looks good",
-                        "author": {"login": "outsider", "__typename": "User"},
-                        "authorAssociation": "NONE",
-                    }
-                ]
-                self.assertEqual(self.invoke(payload), [])
-
-    def test_revoked_pin_only_approval_still_invalidates_statuses(self) -> None:
-        payload = self.payload()
-        payload["policies_by_sha"]["a" * 40].update(
-            max_custom_patch_lines=10,
-            next_policy={"repository": "openai/example", "main_sha": "e" * 40},
-        )
-        self.assertEqual(len(self.invoke(payload)), 6)
 
     def approval(self) -> dict[str, Any]:
         return {
@@ -1415,40 +1386,146 @@ class ReviewRevocationTests(unittest.TestCase):
         self.assertEqual([item.get("state") for item in result[:4]], ["pending"] * 4)
         self.assertEqual({item["sha"] for item in result[:4]}, {"a" * 40, "c" * 40})
 
-    def test_associated_merge_sha_signal_requires_unchanged_head_parent(self) -> None:
+    def test_branch_only_merge_signal_requires_current_merge_and_base(self) -> None:
+        payload = self.payload()
+        payload["run"]["pull_requests"] = []
+        payload["run"]["head_sha"] = payload["context"]["payload"]["workflow_run"]["head_sha"] = (
+            "e" * 40
+        )
+        payload["fallback_pulls"] = [{"number": 3}]
+        payload["merge_commit"] = {"parents": [{"sha": "b" * 40}, {"sha": "a" * 40}]}
+        payload["merge_sha"] = "f" * 40
+        self.assertEqual(self.invoke(payload), [])
+
+        payload["merge_sha"] = "e" * 40
+        self.assertEqual(len(self.invoke(payload)), 6)
+        payload["current"]["base"]["sha"] = "d" * 40
+        payload["comparisons"] = {
+            f"{'d' * 40}...{'a' * 40}": {"merge_base_commit": {"sha": "b" * 40}}
+        }
+        self.assertEqual(self.invoke(payload), [])
+
+    def test_merge_sha_signal_survives_base_advance_and_rejects_wrong_parents(self) -> None:
         payload = self.payload()
         payload["run"]["head_sha"] = payload["context"]["payload"]["workflow_run"]["head_sha"] = (
             "e" * 40
         )
-        payload["merge_sha"] = "e" * 40
+        payload["current"]["base"]["sha"] = "d" * 40
+        payload["comparisons"] = {
+            f"{'d' * 40}...{'a' * 40}": {"merge_base_commit": {"sha": "b" * 40}}
+        }
         payload["merge_commit"] = {"parents": [{"sha": "b" * 40}, {"sha": "a" * 40}]}
         self.assertEqual(len(self.invoke(payload)), 6)
+        payload["comparisons"][f"{'b' * 40}...{'d' * 40}"] = {
+            "merge_base_commit": {"sha": "f" * 40}
+        }
+        self.assertEqual(self.invoke(payload), [])
         payload["merge_commit"]["parents"].reverse()
         self.assertEqual(self.invoke(payload), [])
 
-    def test_dismissed_review_invalidates_current_targets_after_base_advances(self) -> None:
-        payload = self.payload()
-        payload["run"]["head_sha"] = "e" * 40
-        payload["context"]["payload"]["workflow_run"]["head_sha"] = "e" * 40
-        payload["merge_commit"] = {"parents": [{"sha": "b" * 40}, {"sha": "a" * 40}]}
-        payload["current"]["base"]["sha"] = "f" * 40
-        payload["merge_sha"] = "d" * 40
-        payload["review_nodes"] = [{**self.approval(), "state": "DISMISSED"}]
-
-        result = self.invoke(payload)
-        self.assertEqual([item.get("state") for item in result[:4]], ["pending"] * 4)
-        self.assertEqual({item["sha"] for item in result[:4]}, {"a" * 40, "c" * 40})
-        self.assertEqual([item["run_id"] for item in result[4:]], [12, 14])
-
-        payload["run"].update(
-            {
-                "pull_requests": [],
-                "head_repository": {"owner": {"login": "contributor"}},
-                "head_branch": "sdk",
-            }
+    def test_policy_changes_without_human_attestation_do_not_invalidate_statuses(self) -> None:
+        cases = (
+            (
+                {"schema_version": 1, "max_custom_patch_lines": 2},
+                {"schema_version": 1, "max_custom_patch_lines": 1},
+            ),
+            (
+                {"schema_version": 1, "max_custom_patch_lines": 0},
+                {"schema_version": 2, "max_custom_patch_lines": 0, "generated_files": "strict"},
+            ),
         )
-        payload["fallback_pulls"] = [{"number": 3}]
+        for base_policy, head_policy in cases:
+            with self.subTest(base_policy=base_policy, head_policy=head_policy):
+                payload = self.payload()
+                payload["policies_by_sha"] = {"b" * 40: base_policy, "a" * 40: head_policy}
+                self.assertEqual(self.invoke(payload), [])
+
+    def test_go_ratchet_activation_invalidates_statuses(self) -> None:
+        payload = self.payload()
+        payload["policies_by_sha"]["a" * 40] = {
+            **payload["policies_by_sha"]["b" * 40],
+            "ratchet": "go",
+        }
+        self.assertEqual(len(self.invoke(payload)), 6)
+
+    def test_policy_pin_reviews_follow_effective_protected_target(self) -> None:
+        historical_checker, target_checker, proposed_checker = "e" * 40, "f" * 40, "0" * 40
+        target = "d" * 40
+
+        def pinned(checker: str) -> dict[str, Any]:
+            return {
+                "schema_version": 1,
+                "max_custom_patch_lines": 0,
+                "next_policy": {"repository": "openai/example", "main_sha": checker},
+            }
+
+        payload = self.payload()
+        payload["current"]["base"]["sha"] = target
+        payload["main_sha"] = proposed_checker
+        payload["comparisons"] = {
+            f"{target}...{'a' * 40}": {"merge_base_commit": {"sha": "b" * 40}}
+        }
+        payload["policies_by_sha"] = {
+            "a" * 40: pinned(proposed_checker),
+            "b" * 40: pinned(historical_checker),
+            target: pinned(target_checker),
+            historical_checker: {"schema_version": 1, "max_custom_patch_lines": 10},
+            target_checker: {"schema_version": 1, "max_custom_patch_lines": 5},
+            proposed_checker: {"schema_version": 1, "max_custom_patch_lines": 5},
+        }
         self.assertEqual(self.invoke(payload), [])
+        payload["policies_by_sha"][proposed_checker]["max_custom_patch_lines"] = 7
+        self.assertEqual(len(self.invoke(payload)), 6)
+        payload["policies_by_sha"][proposed_checker]["max_custom_patch_lines"] = 5
+        payload["comparisons"][f"{target_checker}...{proposed_checker}"] = {
+            "merge_base_commit": {"sha": proposed_checker}
+        }
+        self.assertEqual(len(self.invoke(payload)), 6)
+
+    def test_initial_pin_at_current_main_keeps_statuses(self) -> None:
+        payload = self.payload()
+        checker = "f" * 40
+        payload["main_sha"] = checker
+        payload["policies_by_sha"]["b" * 40] = {
+            "schema_version": 1,
+            "max_custom_patch_lines": 4000,
+        }
+        payload["policies_by_sha"][checker] = {
+            "schema_version": 2,
+            "max_custom_patch_lines": 0,
+            "generated_files": "strict",
+        }
+        payload["policies_by_sha"]["a" * 40] = {
+            **payload["policies_by_sha"]["b" * 40],
+            "next_policy": {"repository": "openai/example", "main_sha": checker},
+        }
+        self.assertEqual(self.invoke(payload), [])
+        advanced_main = "e" * 40
+        payload["policies_by_sha"][advanced_main] = payload["policies_by_sha"][checker]
+        payload["main_sha_sequence"] = [checker, advanced_main]
+        payload["main_sha"] = advanced_main
+        payload["comparisons"] = {
+            f"{advanced_main}...{checker}": {"merge_base_commit": {"sha": checker}}
+        }
+        self.assertEqual(len(self.invoke(payload)), 6)
+
+    def test_revoked_go_ratchet_activation_invalidates_pr_and_queue_statuses(self) -> None:
+        for changed in ({"state": "DISMISSED"}, {"body": ""}):
+            with self.subTest(changed=changed):
+                payload = self.payload()
+                payload["policies_by_sha"]["a" * 40] = {
+                    **payload["policies_by_sha"]["b" * 40],
+                    "ratchet": "go",
+                }
+                payload["review_nodes"] = [{**self.approval(), **changed}]
+                writes = self.invoke(payload)
+                self.assertCountEqual(
+                    [(item["sha"], item["state"]) for item in writes if "state" in item],
+                    [("a" * 40, "pending")] * 2 + [("c" * 40, "pending")] * 2,
+                )
+                self.assertCountEqual(
+                    [item["run_id"] for item in writes if "run_id" in item], [12, 14]
+                )
 
     def test_closed_or_superseded_review_is_a_no_op(self) -> None:
         for changed in ({"state": "closed"}, {"head": {"sha": "f" * 40}}):
