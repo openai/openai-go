@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.87.0](https://github.com/openai/openai-go/compare/v3.86.0...v3.87.0) (2026-10-23)
+
+
+### Features
+
+* **api:** add delegation controls and prompt cache lifetimes ([#1150](https://github.com/openai/openai-go/issues/1150)) ([cd6966a](https://github.com/openai/openai-go/commit/cd6966a97b40d526b221692cbb75e5a01bb9035d))
+
 ## [3.86.0](https://github.com/openai/openai-go/compare/v3.85.1...v3.86.0) (2026-10-23)
 
 
