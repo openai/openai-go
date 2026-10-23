@@ -41837,6 +41837,12 @@ components:
               index:
                 type: integer
                 description: The index of the choice in the list of choices.
+            x-openai-go-public-shape:
+              field_order:
+              - delta
+              - finish_reason
+              - index
+              - logprobs
         created:
           type: integer
           format: unixtime
@@ -50097,6 +50103,9 @@ components:
       - $ref: '#/components/schemas/MCPToolCall'
       - $ref: '#/components/schemas/CustomToolCallResource'
       - $ref: '#/components/schemas/CustomToolCallOutputResource'
+      x-openai-go-public-shape:
+        dispatch:
+          message: '#/components/schemas/OutputMessage'
     ListAssistantsResponse:
       type: object
       properties:
@@ -51942,6 +51951,9 @@ components:
                     anyOf:
                     - $ref: '#/components/schemas/AssistantToolsCode'
                     - $ref: '#/components/schemas/AssistantToolsFileSearchTypeOnly'
+                    x-openai-go-public-shape:
+                      variant_names:
+                        '#/components/schemas/AssistantToolsFileSearchTypeOnly': FileSearchTool
             description: A list of files attached to the message, and the tools they were added to.
           - type: 'null'
         metadata:
@@ -52903,6 +52915,9 @@ components:
       - $ref: '#/components/schemas/MCPApprovalResponseResource'
       - $ref: '#/components/schemas/CustomToolCall'
       - $ref: '#/components/schemas/CustomToolCallOutputResource'
+      x-openai-go-public-shape:
+        projection_sources:
+          content: '#/components/schemas/OutputMessage/properties/content'
     OutputMessage:
       type: object
       title: Output message
@@ -61024,8 +61039,10 @@ components:
             - gpt-audio-mini-2025-10-06
             - gpt-audio-mini-2025-12-15
             x-stainless-nominal: false
+            x-openai-go-public-type: string_alias
           description: |
             The Realtime model used for this session.
+          x-openai-go-public-type: string_alias
         instructions:
           type: string
           description: |
@@ -64134,6 +64151,7 @@ components:
             schema:
               $ref: '#/components/schemas/ResponseFormatJsonSchemaSchema'
               x-openai-ruby-json-schema-input: true
+              x-openai-go-public-type: any
             strict:
               anyOf:
               - type: boolean
@@ -66226,8 +66244,8 @@ components:
       - $ref: '#/components/schemas/ResponseShellCallCommandDeltaStreamingEvent'
       - $ref: '#/components/schemas/ResponseShellCallCommandDoneStreamingEvent'
       - $ref: '#/components/schemas/ResponseShellCallOutputContentDeltaStreamingEvent'
-        x-stainless-skip:
-        - go
+        x-stainless-skip: []
+        x-openai-go-include-union-variant: true
       - $ref: '#/components/schemas/ResponseShellCallOutputContentDoneStreamingEvent'
       - $ref: '#/components/schemas/ResponseInProgressEvent'
       - $ref: '#/components/schemas/ResponseFailedEvent'
@@ -72023,6 +72041,9 @@ components:
                 type_name: ActionFind
               ruby:
                 type_name: Find
+          x-openai-go-public-shape:
+            variant_names:
+              '#/components/schemas/WebSearchActionFind': Find
       required:
       - id
       - type
@@ -78551,6 +78572,7 @@ components:
           maximum: 31536000
           minimum: 1
           description: Number of seconds from this request until the API key expires. Must comply with the organization and project expiry policies. Expired keys cannot be updated. Retrying resets the expiry relative to the new request. Omit to keep the current expiration.
+          x-openai-go-public-type: plain_scalar
         scopes:
           items:
             type: string
@@ -78978,6 +79000,7 @@ components:
         delta:
           $ref: '#/components/schemas/ShellCallOutputDelta'
           description: The stdout/stderr delta that was emitted.
+          x-openai-go-skip-union-projection: true
       type: object
       required:
       - type
@@ -99428,6 +99451,9 @@ components:
       - $ref: '#/components/schemas/BetaMCPToolCall'
       - $ref: '#/components/schemas/BetaCustomToolCallResource'
       - $ref: '#/components/schemas/BetaCustomToolCallOutputResource'
+      x-openai-go-public-shape:
+        dispatch:
+          message: '#/components/schemas/BetaOutputMessage'
     BetaCustomToolCallOutputResource:
       title: ResponseCustomToolCallOutputItem
       allOf:
@@ -103030,6 +103056,7 @@ components:
         delta:
           $ref: '#/components/schemas/BetaShellCallOutputDelta'
           description: The stdout/stderr delta that was emitted.
+          x-openai-go-skip-union-projection: true
       type: object
       required:
       - type
@@ -106400,8 +106427,8 @@ components:
       - $ref: '#/components/schemas/BetaResponseShellCallCommandDeltaStreamingEvent'
       - $ref: '#/components/schemas/BetaResponseShellCallCommandDoneStreamingEvent'
       - $ref: '#/components/schemas/BetaResponseShellCallOutputContentDeltaStreamingEvent'
-        x-stainless-skip:
-        - go
+        x-stainless-skip: []
+        x-openai-go-include-union-variant: true
       - $ref: '#/components/schemas/BetaResponseShellCallOutputContentDoneStreamingEvent'
       - $ref: '#/components/schemas/BetaResponseInProgressEvent'
       - $ref: '#/components/schemas/BetaResponseFailedEvent'

@@ -58,12 +58,12 @@ func (r *ImageService) NewVariation(ctx context.Context, body ImageNewVariationP
 // Creates an edited or extended image given one or more source images and a
 // prompt. This endpoint supports GPT Image models.
 func (r *ImageService) Edit(ctx context.Context, body ImageEditParams, opts ...option.RequestOption) (res *ImagesResponse, err error) {
-	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
-	opts = slices.Concat(preClientOpts, r.Options, opts)
-	path := "images/edits"
 	if param.IsNull(body.SafetyIdentifier) {
 		body.SafetyIdentifier = param.Opt[string]{}
 	}
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	path := "images/edits"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &res, opts...)
 	return res, err
 }
@@ -71,6 +71,9 @@ func (r *ImageService) Edit(ctx context.Context, body ImageEditParams, opts ...o
 // Creates an edited or extended image given one or more source images and a
 // prompt. This endpoint supports GPT Image models.
 func (r *ImageService) EditStreaming(ctx context.Context, body ImageEditParams, opts ...option.RequestOption) (stream *ssestream.Stream[ImageEditStreamEventUnion]) {
+	if param.IsNull(body.SafetyIdentifier) {
+		body.SafetyIdentifier = param.Opt[string]{}
+	}
 	var (
 		raw *http.Response
 		err error
@@ -81,9 +84,6 @@ func (r *ImageService) EditStreaming(ctx context.Context, body ImageEditParams, 
 		"stream": "true",
 	})
 	path := "images/edits"
-	if param.IsNull(body.SafetyIdentifier) {
-		body.SafetyIdentifier = param.Opt[string]{}
-	}
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &raw, opts...)
 	return ssestream.NewStream[ImageEditStreamEventUnion](ssestream.NewDecoder(raw), err)
 }
