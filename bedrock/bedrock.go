@@ -79,7 +79,7 @@ type Config struct {
 	AWSCredentialsProvider aws.CredentialsProvider
 
 	// BaseURL overrides AWS_BEDROCK_BASE_URL and the selected regional endpoint.
-	// Mantle defaults to https://bedrock-mantle.{region}.api.aws/openai/v1;
+	// Mantle defaults to https://bedrock-mantle.{region}.api.aws/v1;
 	// Runtime defaults to https://bedrock-runtime.{region}.amazonaws.com/openai/v1
 	// in the standard AWS partition. Use BaseURL if a deployment requires /v1.
 	BaseURL string
