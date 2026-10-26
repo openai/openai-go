@@ -169,6 +169,9 @@ const ChatModelGPT6Astra = shared.ChatModelGPT6Astra
 // Equals "gpt-6.1-sol"
 const ChatModelGPT6_1Sol = shared.ChatModelGPT6_1Sol
 
+// Equals "gpt-6.1-terra"
+const ChatModelGPT6_1Terra = shared.ChatModelGPT6_1Terra
+
 // Equals "gpt-6-sol"
 const ChatModelGPT6Sol = shared.ChatModelGPT6Sol
 
