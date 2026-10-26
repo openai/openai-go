@@ -5,11 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"reflect"
+	"runtime"
 	"testing"
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/realtime"
+	"github.com/openai/openai-go/v3/responses"
+	"github.com/tidwall/gjson"
 )
 
 func TestWrappedRequestBody(t *testing.T) {
@@ -86,6 +89,82 @@ func TestWrappedRequestBody(t *testing.T) {
 			t.Fatal("expected an error for a nil receiver")
 		}
 	})
+}
+
+func TestWrappedRequestBodyNullMapIsolation(t *testing.T) {
+	const body = `{"type":"realtime","prompt":{"id":"pmpt_123","variables":null}}`
+	var first, second realtime.CallAcceptParams
+	for _, params := range []*realtime.CallAcceptParams{&first, &second} {
+		if err := json.Unmarshal([]byte(body), params); err != nil {
+			t.Fatal(err)
+		}
+		variables := params.RealtimeSessionCreateRequest.Prompt.Variables
+		if !param.IsNull(variables) || param.IsOmitted(variables) {
+			t.Fatal("decoded variables should be explicitly null")
+		}
+	}
+
+	runtime.GC()
+	if !param.IsNull(any(second.RealtimeSessionCreateRequest.Prompt.Variables)) {
+		t.Fatal("decoded map should remain null after garbage collection")
+	}
+	firstVariables := first.RealtimeSessionCreateRequest.Prompt.Variables
+	// Keep the test isolated if a regression restores the shared sentinel.
+	t.Cleanup(func() { delete(firstVariables, "tenant") })
+	firstVariables["tenant"] = responses.ResponsePromptVariableUnionParam{OfString: param.NewOpt("first")}
+	if _, ok := second.RealtimeSessionCreateRequest.Prompt.Variables["tenant"]; ok {
+		t.Fatal("independently decoded null maps share values")
+	}
+	if _, ok := param.NullMap[map[string]responses.ResponsePromptVariableUnionParam]()["tenant"]; ok {
+		t.Fatal("decoded null map shares values with param.NullMap")
+	}
+	if param.IsNull(firstVariables) {
+		t.Fatal("populated map should no longer be null")
+	}
+
+	for _, tc := range []struct {
+		params realtime.CallAcceptParams
+		want   string
+	}{
+		{first, `{"tenant":"first"}`},
+		{second, "null"},
+	} {
+		got, err := json.Marshal(tc.params)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if variables := gjson.GetBytes(got, "prompt.variables").Raw; variables != tc.want {
+			t.Errorf("marshaled variables = %s, want %s", variables, tc.want)
+		}
+	}
+
+	clear(firstVariables)
+	got, err := json.Marshal(first)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if variables := gjson.GetBytes(got, "prompt.variables").Raw; variables != "null" {
+		t.Fatalf("cleared variables = %s, want null", variables)
+	}
+}
+
+func TestWrappedRequestBodyNullSliceIsolation(t *testing.T) {
+	const body = `{"type":"realtime","include":null}`
+	var first, second realtime.CallAcceptParams
+	for _, params := range []*realtime.CallAcceptParams{&first, &second} {
+		if err := json.Unmarshal([]byte(body), params); err != nil {
+			t.Fatal(err)
+		}
+		if !param.IsNull(params.RealtimeSessionCreateRequest.Include) {
+			t.Fatal("decoded include should be explicitly null")
+		}
+	}
+	first.RealtimeSessionCreateRequest.Include = append(first.RealtimeSessionCreateRequest.Include, "first")
+	t.Cleanup(func() { first.RealtimeSessionCreateRequest.Include[0] = "" })
+	second.RealtimeSessionCreateRequest.Include = append(second.RealtimeSessionCreateRequest.Include, "second")
+	if got := first.RealtimeSessionCreateRequest.Include[0]; got != "first" {
+		t.Fatalf("first include = %q, want first", got)
+	}
 }
 
 func TestWrappedRequestBodyTracingNull(t *testing.T) {
