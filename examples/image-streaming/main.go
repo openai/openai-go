@@ -18,7 +18,7 @@ func main() {
 	fmt.Println("Starting image streaming example...")
 
 	stream := client.Images.GenerateStreaming(ctx, openai.ImageGenerateParams{
-		Model:         openai.ImageModelGPTImage1,
+		Model:         openai.ImageModelGPTImage2_5Sunburst,
 		Prompt:        "A cute baby sea otter",
 		N:             openai.Int(1),
 		Size:          openai.ImageGenerateParamsSize1024x1024,

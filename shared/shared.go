@@ -1042,6 +1042,9 @@ func (r *DecisionInputJSON) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func (DecisionInputJSON) implDecisionQuestionInputPartUnion() {}
+func (DecisionInputJSON) ImplDecisionInputPartUnion()         {}
+
 // ToParam converts this DecisionInputJSON to a DecisionInputJSONParam.
 //
 // Warning: the fields of the param type will not be present. ToParam should only
@@ -1055,10 +1058,13 @@ func (r DecisionInputJSON) ToParam() DecisionInputJSONParam {
 // [map[string]any], [[]map[string]any].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfArrayOfMap]
 type DecisionInputJSONDataUnion struct {
-	// This field will be present if the value is a [map[string]any].
 	OfDecisionInputJSONDataMapItem map[string]any `json:",inline"`
-	// This field will be present if the value is a [[]map[string]any].
+	// This field will be present if the value is a [[]map[string]any] instead of an
+	// object.
 	OfArrayOfMap []map[string]any `json:",inline"`
 	JSON         struct {
 		OfDecisionInputJSONDataMapItem respjson.Field
@@ -1147,6 +1153,8 @@ func (r *DecisionQuestionInputImage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func (DecisionQuestionInputImage) implDecisionQuestionInputPartUnion() {}
+
 // ToParam converts this DecisionQuestionInputImage to a
 // DecisionQuestionInputImageParam.
 //
@@ -1205,10 +1213,10 @@ type DecisionQuestionInputPartUnion struct {
 	OfDecisionQuestionInputImage DecisionQuestionInputImage `json:",inline"`
 	OfDecisionInputJSON          DecisionInputJSON          `json:",inline"`
 	JSON                         struct {
+		Type                         respjson.Field
 		OfDecisionQuestionInputText  respjson.Field
 		OfDecisionQuestionInputImage respjson.Field
 		OfDecisionInputJSON          respjson.Field
-		Type                         respjson.Field
 		raw                          string
 	} `json:"-"`
 }
@@ -1219,10 +1227,6 @@ type DecisionQuestionInputPartUnion struct {
 type anyDecisionQuestionInputPart interface {
 	implDecisionQuestionInputPartUnion()
 }
-
-func (DecisionQuestionInputText) implDecisionQuestionInputPartUnion()  {}
-func (DecisionQuestionInputImage) implDecisionQuestionInputPartUnion() {}
-func (DecisionInputJSON) implDecisionQuestionInputPartUnion()          {}
 
 // Use the following switch statement to find the correct variant
 //
@@ -1377,6 +1381,8 @@ func (r DecisionQuestionInputText) RawJSON() string { return r.JSON.raw }
 func (r *DecisionQuestionInputText) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+func (DecisionQuestionInputText) implDecisionQuestionInputPartUnion() {}
 
 // ToParam converts this DecisionQuestionInputText to a
 // DecisionQuestionInputTextParam.

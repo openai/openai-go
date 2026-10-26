@@ -13,6 +13,7 @@ import (
 	"github.com/openai/openai-go/v3/responses"
 	"github.com/openai/openai-go/v3/shared"
 	"github.com/openai/openai-go/v3/shared/constant"
+	"github.com/tidwall/gjson"
 )
 
 // RealtimeService contains methods and other services that help with interacting
@@ -226,8 +227,11 @@ func (r *ConversationCreatedEventConversation) UnmarshalJSON(data []byte) error 
 // [RealtimeConversationItemFunctionCallOutput], [RealtimeMcpApprovalResponse],
 // [RealtimeMcpListTools], [RealtimeMcpToolCall], [RealtimeMcpApprovalRequest].
 //
+// Use the [ConversationItemUnion.AsAny] method to switch on the variant.
+//
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ConversationItemUnion struct {
+	Type                                         string                                     `json:"type" api:"required"`
 	OfRealtimeConversationItemSystemMessage      RealtimeConversationItemSystemMessage      `json:",inline"`
 	OfRealtimeConversationItemUserMessage        RealtimeConversationItemUserMessage        `json:",inline"`
 	OfRealtimeConversationItemAssistantMessage   RealtimeConversationItemAssistantMessage   `json:",inline"`
@@ -238,6 +242,7 @@ type ConversationItemUnion struct {
 	OfRealtimeMcpToolCall                        RealtimeMcpToolCall                        `json:",inline"`
 	OfRealtimeMcpApprovalRequest                 RealtimeMcpApprovalRequest                 `json:",inline"`
 	JSON                                         struct {
+		Type                                         respjson.Field
 		OfRealtimeConversationItemSystemMessage      respjson.Field
 		OfRealtimeConversationItemUserMessage        respjson.Field
 		OfRealtimeConversationItemAssistantMessage   respjson.Field
@@ -249,6 +254,68 @@ type ConversationItemUnion struct {
 		OfRealtimeMcpApprovalRequest                 respjson.Field
 		raw                                          string
 	} `json:"-"`
+}
+
+// anyConversationItem is implemented by each variant of [ConversationItemUnion] to
+// add type safety for the return type of [ConversationItemUnion.AsAny]
+type anyConversationItem interface {
+	implConversationItemUnion()
+}
+
+func (RealtimeConversationItemSystemMessage) implConversationItemUnion()      {}
+func (RealtimeConversationItemUserMessage) implConversationItemUnion()        {}
+func (RealtimeConversationItemAssistantMessage) implConversationItemUnion()   {}
+func (RealtimeConversationItemFunctionCall) implConversationItemUnion()       {}
+func (RealtimeConversationItemFunctionCallOutput) implConversationItemUnion() {}
+func (RealtimeMcpApprovalResponse) implConversationItemUnion()                {}
+func (RealtimeMcpListTools) implConversationItemUnion()                       {}
+func (RealtimeMcpToolCall) implConversationItemUnion()                        {}
+func (RealtimeMcpApprovalRequest) implConversationItemUnion()                 {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ConversationItemUnion.AsAny().(type) {
+//	case realtime.RealtimeConversationItemSystemMessage:
+//	case realtime.RealtimeConversationItemUserMessage:
+//	case realtime.RealtimeConversationItemAssistantMessage:
+//	case realtime.RealtimeConversationItemFunctionCall:
+//	case realtime.RealtimeConversationItemFunctionCallOutput:
+//	case realtime.RealtimeMcpApprovalResponse:
+//	case realtime.RealtimeMcpListTools:
+//	case realtime.RealtimeMcpToolCall:
+//	case realtime.RealtimeMcpApprovalRequest:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ConversationItemUnion) AsAny() anyConversationItem {
+	switch u.Type {
+	case "message":
+		discriminator := gjson.Get(u.JSON.raw, apijson.EscapeSJSONKey("role"))
+		if discriminator.Type != gjson.String {
+			return nil
+		}
+		switch discriminator.Str {
+		case "system":
+			return u.AsRealtimeConversationItemSystemMessage()
+		case "user":
+			return u.AsRealtimeConversationItemUserMessage()
+		case "assistant":
+			return u.AsRealtimeConversationItemAssistantMessage()
+		}
+	case "function_call":
+		return u.AsRealtimeConversationItemFunctionCall()
+	case "function_call_output":
+		return u.AsRealtimeConversationItemFunctionCallOutput()
+	case "mcp_approval_response":
+		return u.AsRealtimeMcpApprovalResponse()
+	case "mcp_list_tools":
+		return u.AsRealtimeMcpListTools()
+	case "mcp_call":
+		return u.AsRealtimeMcpToolCall()
+	case "mcp_approval_request":
+		return u.AsRealtimeMcpApprovalRequest()
+	}
+	return nil
 }
 
 func (u ConversationItemUnion) AsRealtimeConversationItemSystemMessage() (v RealtimeConversationItemSystemMessage) {
@@ -8426,6 +8493,7 @@ func (r *RealtimeTranslationOutputTranscriptDeltaEvent) UnmarshalJSON(data []byt
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type RealtimeTranslationServerEventUnion struct {
+	Type                                            string                                        `json:"type" api:"required"`
 	OfRealtimeErrorEvent                            RealtimeErrorEvent                            `json:",inline"`
 	OfRealtimeTranslationSessionCreatedEvent        RealtimeTranslationSessionCreatedEvent        `json:",inline"`
 	OfRealtimeTranslationSessionUpdatedEvent        RealtimeTranslationSessionUpdatedEvent        `json:",inline"`
@@ -8433,8 +8501,8 @@ type RealtimeTranslationServerEventUnion struct {
 	OfRealtimeTranslationInputTranscriptDeltaEvent  RealtimeTranslationInputTranscriptDeltaEvent  `json:",inline"`
 	OfRealtimeTranslationOutputTranscriptDeltaEvent RealtimeTranslationOutputTranscriptDeltaEvent `json:",inline"`
 	OfRealtimeTranslationOutputAudioDeltaEvent      RealtimeTranslationOutputAudioDeltaEvent      `json:",inline"`
-	Type                                            string                                        `json:"type"`
 	JSON                                            struct {
+		Type                                            respjson.Field
 		OfRealtimeErrorEvent                            respjson.Field
 		OfRealtimeTranslationSessionCreatedEvent        respjson.Field
 		OfRealtimeTranslationSessionUpdatedEvent        respjson.Field
@@ -8442,7 +8510,6 @@ type RealtimeTranslationServerEventUnion struct {
 		OfRealtimeTranslationInputTranscriptDeltaEvent  respjson.Field
 		OfRealtimeTranslationOutputTranscriptDeltaEvent respjson.Field
 		OfRealtimeTranslationOutputAudioDeltaEvent      respjson.Field
-		Type                                            respjson.Field
 		raw                                             string
 	} `json:"-"`
 }

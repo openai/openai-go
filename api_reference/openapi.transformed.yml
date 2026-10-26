@@ -41482,7 +41482,7 @@ components:
               propertyName: type
             anyOf:
             - $ref: '#/components/schemas/ComparisonFilter'
-            - $ref: '#/components/schemas/CompoundFilter'
+            - $recursiveRef: '#'
       required:
       - type
       - filters
@@ -44108,12 +44108,22 @@ components:
             - chatgpt-image-latest
             - dall-e-2
             x-openai-enum-deprecations:
+              gpt-image-1:
+                message: GPT Image 1 was shut down on October 23, 2026. Use gpt-image-2.5-sunburst or gpt-image-2.5-flare instead.
               dall-e-2:
                 message: This model was retired on May 12, 2026. Use a GPT image model instead.
             x-stainless-const: true
           x-oaiTypeLabel: string
           example: gpt-image-1.5
-          description: The GPT image model to use for image editing (`gpt-image-1`, `gpt-image-1-mini`, `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`).
+          description: |
+            The GPT image model to use for image editing
+            (`gpt-image-1-mini`, `gpt-image-1.5`, `gpt-image-2`,
+            `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
+            `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
+            `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`).
+
+            `gpt-image-1` was shut down on October 23, 2026. Use
+            `gpt-image-2.5-sunburst` or `gpt-image-2.5-flare` instead.
           nullable: true
         n:
           type:
@@ -44251,6 +44261,8 @@ components:
             - dall-e-2
             - dall-e-3
             x-openai-enum-deprecations:
+              gpt-image-1:
+                message: GPT Image 1 was shut down on October 23, 2026. Use gpt-image-2.5-sunburst or gpt-image-2.5-flare instead.
               dall-e-2:
                 message: This model was retired on May 12, 2026. Use a GPT image model instead.
               dall-e-3:
@@ -44258,7 +44270,15 @@ components:
             x-stainless-nominal: false
           x-oaiTypeLabel: string
           example: gpt-image-2.5-flare
-          description: The GPT image model to use for image generation. Specify a model explicitly. Supported models include `gpt-image-1`, `gpt-image-1-mini`, `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, and `chatgpt-image-latest`.
+          description: |
+            The GPT image model to use for image generation. Specify a model explicitly.
+            Supported models include `gpt-image-1-mini`, `gpt-image-1.5`, `gpt-image-2`,
+            `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
+            `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
+            `gpt-image-2.5-flare-2026-09-08`, and `chatgpt-image-latest`.
+
+            `gpt-image-1` was shut down on October 23, 2026. Use
+            `gpt-image-2.5-sunburst` or `gpt-image-2.5-flare` instead.
           nullable: true
         n:
           type:
@@ -46606,11 +46626,21 @@ components:
             - gpt-image-1
             - gpt-image-1-mini
             - chatgpt-image-latest
+            x-openai-enum-deprecations:
+              gpt-image-1:
+                message: GPT Image 1 was shut down on October 23, 2026. Use gpt-image-2.5-sunburst or gpt-image-2.5-flare instead.
           - type: 'null'
           x-oaiTypeLabel: string
           default: gpt-image-2.5-sunburst
           example: gpt-image-2.5-sunburst
-          description: The GPT image model to use for image editing, including `gpt-image-2`, its dated snapshot `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`, and `gpt-image-2.5-flare-2026-09-08`. Defaults to `gpt-image-2.5-sunburst`.
+          description: |
+            The GPT image model to use for image editing, including `gpt-image-2`, its dated
+            snapshot `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
+            `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`, and
+            `gpt-image-2.5-flare-2026-09-08`. Defaults to `gpt-image-2.5-sunburst`.
+
+            `gpt-image-1` was shut down on October 23, 2026. Use
+            `gpt-image-2.5-sunburst` or `gpt-image-2.5-flare` instead.
         images:
           type: array
           minItems: 1
@@ -46661,7 +46691,7 @@ components:
             - high
             - low
           - type: 'null'
-          description: Control how much effort the model will exert to match the style and features, especially facial features, of input images. Supports `high` and `low` on `gpt-image-1` and `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For `gpt-image-2`, omit this parameter. Defaults to `low` on supported models.
+          description: Control how much effort the model will exert to match the style and features, especially facial features, of input images. Supports `high` and `low` on `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For `gpt-image-2`, omit this parameter. Defaults to `low` on supported models.
         size:
           anyOf:
           - type: string
@@ -50376,14 +50406,20 @@ components:
             - gpt-image-2.5-flare-2026-09-08
             - gpt-image-1.5
             - chatgpt-image-latest
+            x-openai-enum-deprecations:
+              gpt-image-1:
+                message: GPT Image 1 was shut down on October 23, 2026. Use gpt-image-2.5-sunburst or gpt-image-2.5-flare instead.
             description: |
-              The image generation model to use. One of `gpt-image-1`,
-              `gpt-image-1-mini`, `gpt-image-1.5`, `gpt-image-2`,
+              The image generation model to use. One of `gpt-image-1-mini`,
+              `gpt-image-1.5`, `gpt-image-2`,
               `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
               `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
               `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
-              `gpt-image-1`.
-            default: gpt-image-1
+              `gpt-image-2`.
+
+              `gpt-image-1` was shut down on October 23, 2026. Use
+              `gpt-image-2.5-sunburst` or `gpt-image-2.5-flare` instead.
+            default: gpt-image-2
         quality:
           type: string
           enum:
@@ -52869,14 +52905,10 @@ components:
                     x-openai-go-public-shape:
                       variant_names:
                         '#/components/schemas/AssistantToolsFileSearchTypeOnly': FileSearchTool
+                        '#/components/schemas/MessageObject/properties/attachments/anyOf/0/items/properties/tools/items/anyOf/1': FileSearchTool
                     anyOf:
                     - $ref: '#/components/schemas/AssistantToolsCode'
                     - $ref: '#/components/schemas/AssistantToolsFileSearchTypeOnly'
-                      x-openai-go-public-shape:
-                        type_name: MessageAttachmentToolFileSearchTool
-                      x-stainless-naming:
-                        go:
-                          type_name: MessageAttachmentToolFileSearchTool
             description: A list of files attached to the message, and the tools they were added to.
           - type: 'null'
         metadata:
@@ -74947,7 +74979,6 @@ components:
           description: The text input to the model.
         prompt_cache_breakpoint:
           $ref: '#/components/schemas/PromptCacheBreakpointConfig'
-          x-stainless-go-constant-constructor: true
       type: object
       required:
       - type
@@ -75223,7 +75254,6 @@ components:
           description: The detail level of the image to be sent to the model. One of `high`, `low`, `auto`, or `original`. Defaults to `auto`.
         prompt_cache_breakpoint:
           $ref: '#/components/schemas/PromptCacheBreakpointConfig'
-          x-stainless-go-constant-constructor: true
       type: object
       required:
       - type
@@ -75292,7 +75322,6 @@ components:
             The content of the file to be sent to the model.
         prompt_cache_breakpoint:
           $ref: '#/components/schemas/PromptCacheBreakpointConfig'
-          x-stainless-go-constant-constructor: true
         file_url:
           type: string
           format: uri
@@ -77284,7 +77313,6 @@ components:
         prompt_cache_breakpoint:
           anyOf:
           - $ref: '#/components/schemas/PromptCacheBreakpointParam'
-            x-stainless-go-constant-constructor: true
           - type: 'null'
           x-stainless-go-constant-constructor: true
       type: object
@@ -77323,7 +77351,6 @@ components:
         prompt_cache_breakpoint:
           anyOf:
           - $ref: '#/components/schemas/PromptCacheBreakpointParam'
-            x-stainless-go-constant-constructor: true
           - type: 'null'
           x-stainless-go-constant-constructor: true
       type: object
@@ -77375,7 +77402,6 @@ components:
         prompt_cache_breakpoint:
           anyOf:
           - $ref: '#/components/schemas/PromptCacheBreakpointParam'
-            x-stainless-go-constant-constructor: true
           - type: 'null'
           x-stainless-go-constant-constructor: true
       type: object
@@ -79106,6 +79132,72 @@ components:
       required:
       - type
       - responses
+    LiveDecisionInputTextParam:
+      type: object
+      properties:
+        type:
+          default: input_text
+          x-stainless-const: true
+          type: string
+          enum:
+          - input_text
+        text:
+          description: The text input to the model.
+          type: string
+          maxLength: 10485760
+      required:
+      - type
+      - text
+    LiveDetailEnum:
+      type: string
+      enum:
+      - low
+      - high
+      - auto
+      - original
+    LiveDecisionInputImageParam:
+      type: object
+      properties:
+        type:
+          default: input_image
+          x-stainless-const: true
+          type: string
+          enum:
+          - input_image
+        image_url:
+          description: A base64-encoded image data URL or a publicly accessible HTTP(S) image URL.
+          type: string
+          maxLength: 20971520
+          pattern: ^(data:|https?://)
+        detail:
+          anyOf:
+          - description: The detail level of the image to be sent to the model. One of `high`, `low`, `auto`, or `original`. Defaults to `auto`.
+            $ref: '#/components/schemas/LiveDetailEnum'
+          - type: 'null'
+      required:
+      - type
+      - image_url
+    LiveDecisionJsonObject:
+      type: object
+      additionalProperties: true
+    LiveDecisionInputJsonParam:
+      type: object
+      properties:
+        type:
+          default: input_json
+          x-stainless-const: true
+          type: string
+          enum:
+          - input_json
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/LiveDecisionJsonObject'
+          - type: array
+            items:
+              $ref: '#/components/schemas/LiveDecisionJsonObject'
+      required:
+      - type
+      - data
     LiveDecisionChoiceParam:
       type: object
       properties:
@@ -83175,6 +83267,7 @@ components:
               type: string
               minLength: 0
             minProperties: 0
+            x-openai-go-public-type: json_object
           - type: array
             items:
               type: object
@@ -94603,76 +94696,6 @@ components:
           description: The voice used for speech generated by the Live model.
           $ref: '#/components/schemas/LiveInitialSessionAudioOutputParam'
       required: []
-    LiveDecisionsSettingsInputParam-2:
-      type: object
-      properties:
-        questions:
-          description: Native Decision API questions evaluated together, in order.
-          type: array
-          items:
-            $ref: '#/components/schemas/QuestionParam'
-          minItems: 1
-          maxItems: 64
-        model:
-          type: string
-          minLength: 1
-      required:
-      - questions
-      - model
-    LiveDecisionsDelegationParam-2:
-      type: object
-      properties:
-        acknowledgement_delay_ms:
-          description: Milliseconds to wait before requesting an automatic spoken acknowledgement for a delegation. The model may still speak before this delay. Any commentary or thinking appended to the session cancels all pending acknowledgements, including those for other delegations. Defaults to 400. Updates apply to subsequent delegations.
-          type: integer
-          minimum: 0
-          maximum: 800
-        type:
-          default: decisions
-          x-stainless-const: true
-          type: string
-          enum:
-          - decisions
-        decisions:
-          $ref: '#/components/schemas/LiveDecisionsSettingsInputParam-2'
-      required:
-      - type
-      - decisions
-    LiveDecisionQuestionsInputParam-2:
-      description: Questions evaluated using the current transcript and the session's shared Decision items.
-      type: object
-      properties:
-        questions:
-          description: Native Decision API questions evaluated together, in order.
-          type: array
-          items:
-            $ref: '#/components/schemas/QuestionParam'
-          minItems: 1
-          maxItems: 64
-      required:
-      - questions
-    LiveDecisionTriggerInputParam-2:
-      type: object
-      properties:
-        type:
-          default: decisions
-          x-stainless-const: true
-          type: string
-          enum:
-          - decisions
-        event_type:
-          type: string
-          enum:
-          - session.input_transcript.delta
-          - session.output_transcript.delta
-        decisions:
-          description: Questions evaluated using the current transcript and the session's shared Decision items.
-          $ref: '#/components/schemas/LiveDecisionQuestionsInputParam-2'
-      required:
-      - type
-      - event_type
-      - decisions
-      additionalProperties: false
     LiveSessionCreateParams:
       description: Initial configuration for a Live session, including its model, conversation instructions, audio, and delegated task handling.
       type: object
@@ -95123,11 +95146,10 @@ components:
         example:
           type: decision.create
           event_id: decision_1
-    LiveDecisionInputTextParam:
+    LiveDecisionUserInputTextParam:
       type: object
       properties:
         type:
-          description: The type of the input item. Always `input_text`.
           default: input_text
           x-stainless-const: true
           type: string
@@ -95140,28 +95162,20 @@ components:
       required:
       - type
       - text
-    LiveDetailEnum:
-      type: string
-      enum:
-      - low
-      - high
-      - auto
-      - original
-    LiveDecisionInputImageParam:
+    LiveDecisionUserInputImageParam:
       type: object
       properties:
         type:
-          description: The type of the input item. Always `input_image`.
           default: input_image
           x-stainless-const: true
           type: string
           enum:
           - input_image
         image_url:
-          description: An inline image encoded as a data URL.
+          description: A base64-encoded image data URL or a publicly accessible HTTP(S) image URL.
           type: string
           maxLength: 20971520
-          pattern: '^data:'
+          pattern: ^(data:|https?://)
         detail:
           anyOf:
           - description: The detail level of the image to be sent to the model. One of `high`, `low`, `auto`, or `original`. Defaults to `auto`.
@@ -95170,6 +95184,367 @@ components:
       required:
       - type
       - image_url
+    LiveDecisionUserMessageParam:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - description: The unique ID of this message item.
+            type: string
+          - type: 'null'
+        type:
+          default: message
+          x-stainless-const: true
+          type: string
+          enum:
+          - message
+        role:
+          description: The message role. Always `user`.
+          default: user
+          x-stainless-const: true
+          type: string
+          enum:
+          - user
+        content:
+          anyOf:
+          - description: The text input to the model.
+            type: string
+            maxLength: 10485760
+          - type: array
+            items:
+              discriminator:
+                propertyName: type
+              anyOf:
+              - $ref: '#/components/schemas/LiveDecisionUserInputTextParam'
+              - $ref: '#/components/schemas/LiveDecisionUserInputImageParam'
+              - $ref: '#/components/schemas/LiveDecisionInputJsonParam'
+            x-stainless-variantName: parts
+            x-stainless-naming:
+              java:
+                variant_constructor: DecisionItemCreateEventItemContentItems
+      required:
+      - role
+      - content
+    LiveDecisionDeveloperMessageParam:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - description: The unique ID of this message item.
+            type: string
+          - type: 'null'
+        type:
+          default: message
+          x-stainless-const: true
+          type: string
+          enum:
+          - message
+        role:
+          default: developer
+          x-stainless-const: true
+          type: string
+          enum:
+          - developer
+        content:
+          anyOf:
+          - description: The text input to the model.
+            type: string
+            maxLength: 10485760
+          - type: array
+            items:
+              $ref: '#/components/schemas/LiveDecisionInputTextParam'
+            x-stainless-variantName: parts
+      required:
+      - role
+      - content
+    LiveDecisionSystemMessageParam:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - description: The unique ID of this message item.
+            type: string
+          - type: 'null'
+        type:
+          default: message
+          x-stainless-const: true
+          type: string
+          enum:
+          - message
+        role:
+          default: system
+          x-stainless-const: true
+          type: string
+          enum:
+          - system
+        content:
+          anyOf:
+          - description: The text input to the model.
+            type: string
+            maxLength: 10485760
+          - type: array
+            items:
+              $ref: '#/components/schemas/LiveDecisionInputTextParam'
+            x-stainless-variantName: parts
+      required:
+      - role
+      - content
+    LiveDecisionOutputTextParam:
+      type: object
+      properties:
+        type:
+          default: output_text
+          x-stainless-const: true
+          type: string
+          enum:
+          - output_text
+        text:
+          description: The text content.
+          type: string
+          maxLength: 10485760
+      required:
+      - type
+      - text
+    LiveDecisionRefusalParam:
+      type: object
+      properties:
+        type:
+          default: refusal
+          x-stainless-const: true
+          type: string
+          enum:
+          - refusal
+        refusal:
+          description: The refusal text.
+          type: string
+          maxLength: 10485760
+      required:
+      - type
+      - refusal
+    LiveMessagePhase:
+      type: string
+      enum:
+      - commentary
+      - final_answer
+    LiveDecisionAssistantMessageParam:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - description: The unique ID of this message item.
+            type: string
+          - type: 'null'
+        type:
+          default: message
+          x-stainless-const: true
+          type: string
+          enum:
+          - message
+        role:
+          default: assistant
+          x-stainless-const: true
+          type: string
+          enum:
+          - assistant
+        content:
+          anyOf:
+          - description: The text input to the model.
+            type: string
+            maxLength: 10485760
+          - type: array
+            items:
+              discriminator:
+                propertyName: type
+              anyOf:
+              - $ref: '#/components/schemas/LiveDecisionOutputTextParam'
+              - $ref: '#/components/schemas/LiveDecisionRefusalParam'
+            x-stainless-variantName: parts
+        phase:
+          anyOf:
+          - description: Labels an `assistant` message as intermediate commentary (`commentary`) or the final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when sending follow-up requests, preserve and resend phase on all assistant messages — dropping it can degrade performance. Not used for user messages.
+            $ref: '#/components/schemas/LiveMessagePhase'
+          - type: 'null'
+      required:
+      - role
+      - content
+    LiveFunctionCallItemStatus:
+      type: string
+      enum:
+      - in_progress
+      - completed
+      - incomplete
+    LiveDecisionFunctionCallParam:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - description: The local Decision item ID.
+            type: string
+          - type: 'null'
+        call_id:
+          description: The unique ID of the function tool call generated by the model.
+          type: string
+          minLength: 1
+          maxLength: 64
+        status:
+          anyOf:
+          - $ref: '#/components/schemas/LiveFunctionCallItemStatus'
+          - type: 'null'
+        type:
+          description: The item type. Always `function_call`.
+          default: function_call
+          x-stainless-const: true
+          type: string
+          enum:
+          - function_call
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[a-zA-Z0-9_.-]+$
+        namespace:
+          anyOf:
+          - description: The namespace of the function to call.
+            type: string
+            minLength: 1
+            maxLength: 64
+            pattern: ^[a-zA-Z0-9_-]+$
+          - type: 'null'
+        arguments:
+          description: The function arguments as a JSON string.
+          type: string
+      required:
+      - call_id
+      - type
+      - name
+      - arguments
+    LiveDecisionFunctionCallOutputParam:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - description: The local Decision item ID.
+            type: string
+          - type: 'null'
+        call_id:
+          description: The unique ID of the function tool call generated by the model.
+          type: string
+          minLength: 1
+          maxLength: 64
+        status:
+          anyOf:
+          - $ref: '#/components/schemas/LiveFunctionCallItemStatus'
+          - type: 'null'
+        type:
+          description: The type of the function tool call output. Always `function_call_output`.
+          default: function_call_output
+          x-stainless-const: true
+          type: string
+          enum:
+          - function_call_output
+        output:
+          anyOf:
+          - description: The text input to the model.
+            type: string
+            maxLength: 10485760
+          - type: array
+            items:
+              discriminator:
+                propertyName: type
+              anyOf:
+              - $ref: '#/components/schemas/LiveDecisionInputTextParam'
+              - $ref: '#/components/schemas/LiveDecisionInputImageParam'
+            x-stainless-variantName: parts
+      required:
+      - call_id
+      - type
+      - output
+    LiveDecisionCustomToolCallParam:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - description: The local Decision item ID.
+            type: string
+          - type: 'null'
+        call_id:
+          description: The unique ID of the function tool call generated by the model.
+          type: string
+          minLength: 1
+          maxLength: 64
+        status:
+          anyOf:
+          - $ref: '#/components/schemas/LiveFunctionCallItemStatus'
+          - type: 'null'
+        type:
+          description: The item type. Always `custom_tool_call`.
+          default: custom_tool_call
+          x-stainless-const: true
+          type: string
+          enum:
+          - custom_tool_call
+        name:
+          description: The name of the custom tool to call.
+          type: string
+          minLength: 1
+          maxLength: 64
+          pattern: ^[a-zA-Z0-9_-]+$
+        namespace:
+          anyOf:
+          - description: The namespace of the function to call.
+            type: string
+            minLength: 1
+            maxLength: 64
+            pattern: ^[a-zA-Z0-9_-]+$
+          - type: 'null'
+        input:
+          description: The input to the custom tool call.
+          type: string
+      required:
+      - call_id
+      - type
+      - name
+      - input
+    LiveDecisionCustomToolCallOutputParam:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - description: The local Decision item ID.
+            type: string
+          - type: 'null'
+        call_id:
+          description: The unique ID of the function tool call generated by the model.
+          type: string
+          minLength: 1
+          maxLength: 64
+        status:
+          anyOf:
+          - $ref: '#/components/schemas/LiveFunctionCallItemStatus'
+          - type: 'null'
+        type:
+          default: custom_tool_call_output
+          x-stainless-const: true
+          type: string
+          enum:
+          - custom_tool_call_output
+        output:
+          anyOf:
+          - description: The text input to the model.
+            type: string
+            maxLength: 10485760
+          - type: array
+            items:
+              discriminator:
+                propertyName: type
+              anyOf:
+              - $ref: '#/components/schemas/LiveDecisionInputTextParam'
+              - $ref: '#/components/schemas/LiveDecisionInputImageParam'
+            x-stainless-variantName: parts
+      required:
+      - call_id
+      - type
+      - output
     LiveDecisionInputItemParam:
       type: object
       properties:
@@ -96206,6 +96581,296 @@ components:
                 output_tokens_details:
                   reasoning_tokens: 0
                 total_tokens: 42
+    LiveDecisionStoredUserMessageParam:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          const: message
+        role:
+          description: The message role. Always `user`.
+          default: user
+          x-stainless-const: true
+          type: string
+          enum:
+          - user
+        content:
+          anyOf:
+          - description: The text input to the model.
+            type: string
+            maxLength: 10485760
+          - type: array
+            items:
+              discriminator:
+                propertyName: type
+              anyOf:
+              - $ref: '#/components/schemas/LiveDecisionUserInputTextParam'
+              - $ref: '#/components/schemas/LiveDecisionUserInputImageParam'
+              - $ref: '#/components/schemas/LiveDecisionInputJsonParam'
+            x-stainless-variantName: parts
+            x-stainless-naming:
+              java:
+                variant_constructor: DecisionItemCreatedEventItemContentItems
+      required:
+      - role
+      - content
+      - id
+    LiveDecisionStoredDeveloperMessageParam:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          const: message
+        role:
+          default: developer
+          x-stainless-const: true
+          type: string
+          enum:
+          - developer
+        content:
+          anyOf:
+          - description: The text input to the model.
+            type: string
+            maxLength: 10485760
+          - type: array
+            items:
+              $ref: '#/components/schemas/LiveDecisionInputTextParam'
+            x-stainless-variantName: parts
+      required:
+      - role
+      - content
+      - id
+    LiveDecisionStoredSystemMessageParam:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          const: message
+        role:
+          default: system
+          x-stainless-const: true
+          type: string
+          enum:
+          - system
+        content:
+          anyOf:
+          - description: The text input to the model.
+            type: string
+            maxLength: 10485760
+          - type: array
+            items:
+              $ref: '#/components/schemas/LiveDecisionInputTextParam'
+            x-stainless-variantName: parts
+      required:
+      - role
+      - content
+      - id
+    LiveDecisionStoredAssistantMessageParam:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          const: message
+        role:
+          default: assistant
+          x-stainless-const: true
+          type: string
+          enum:
+          - assistant
+        content:
+          anyOf:
+          - description: The text input to the model.
+            type: string
+            maxLength: 10485760
+          - type: array
+            items:
+              discriminator:
+                propertyName: type
+              anyOf:
+              - $ref: '#/components/schemas/LiveDecisionOutputTextParam'
+              - $ref: '#/components/schemas/LiveDecisionRefusalParam'
+            x-stainless-variantName: parts
+        phase:
+          anyOf:
+          - description: Labels an `assistant` message as intermediate commentary (`commentary`) or the final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when sending follow-up requests, preserve and resend phase on all assistant messages — dropping it can degrade performance. Not used for user messages.
+            $ref: '#/components/schemas/LiveMessagePhase'
+          - type: 'null'
+      required:
+      - role
+      - content
+      - id
+    LiveDecisionStoredFunctionCallParam:
+      type: object
+      properties:
+        id:
+          type: string
+        call_id:
+          description: The unique ID of the function tool call generated by the model.
+          type: string
+          minLength: 1
+          maxLength: 64
+        status:
+          anyOf:
+          - $ref: '#/components/schemas/LiveFunctionCallItemStatus'
+          - type: 'null'
+        type:
+          description: The item type. Always `function_call`.
+          default: function_call
+          x-stainless-const: true
+          type: string
+          enum:
+          - function_call
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[a-zA-Z0-9_.-]+$
+        namespace:
+          anyOf:
+          - description: The namespace of the function to call.
+            type: string
+            minLength: 1
+            maxLength: 64
+            pattern: ^[a-zA-Z0-9_-]+$
+          - type: 'null'
+        arguments:
+          description: The function arguments as a JSON string.
+          type: string
+      required:
+      - call_id
+      - type
+      - name
+      - arguments
+      - id
+    LiveDecisionStoredFunctionCallOutputParam:
+      type: object
+      properties:
+        id:
+          type: string
+        call_id:
+          description: The unique ID of the function tool call generated by the model.
+          type: string
+          minLength: 1
+          maxLength: 64
+        status:
+          anyOf:
+          - $ref: '#/components/schemas/LiveFunctionCallItemStatus'
+          - type: 'null'
+        type:
+          description: The type of the function tool call output. Always `function_call_output`.
+          default: function_call_output
+          x-stainless-const: true
+          type: string
+          enum:
+          - function_call_output
+        output:
+          anyOf:
+          - description: The text input to the model.
+            type: string
+            maxLength: 10485760
+          - type: array
+            items:
+              discriminator:
+                propertyName: type
+              anyOf:
+              - $ref: '#/components/schemas/LiveDecisionInputTextParam'
+              - $ref: '#/components/schemas/LiveDecisionInputImageParam'
+            x-stainless-variantName: parts
+      required:
+      - call_id
+      - type
+      - output
+      - id
+    LiveDecisionStoredCustomToolCallParam:
+      type: object
+      properties:
+        id:
+          type: string
+        call_id:
+          description: The unique ID of the function tool call generated by the model.
+          type: string
+          minLength: 1
+          maxLength: 64
+        status:
+          anyOf:
+          - $ref: '#/components/schemas/LiveFunctionCallItemStatus'
+          - type: 'null'
+        type:
+          description: The item type. Always `custom_tool_call`.
+          default: custom_tool_call
+          x-stainless-const: true
+          type: string
+          enum:
+          - custom_tool_call
+        name:
+          description: The name of the custom tool to call.
+          type: string
+          minLength: 1
+          maxLength: 64
+          pattern: ^[a-zA-Z0-9_-]+$
+        namespace:
+          anyOf:
+          - description: The namespace of the function to call.
+            type: string
+            minLength: 1
+            maxLength: 64
+            pattern: ^[a-zA-Z0-9_-]+$
+          - type: 'null'
+        input:
+          description: The input to the custom tool call.
+          type: string
+      required:
+      - call_id
+      - type
+      - name
+      - input
+      - id
+    LiveDecisionStoredCustomToolCallOutputParam:
+      type: object
+      properties:
+        id:
+          type: string
+        call_id:
+          description: The unique ID of the function tool call generated by the model.
+          type: string
+          minLength: 1
+          maxLength: 64
+        status:
+          anyOf:
+          - $ref: '#/components/schemas/LiveFunctionCallItemStatus'
+          - type: 'null'
+        type:
+          default: custom_tool_call_output
+          x-stainless-const: true
+          type: string
+          enum:
+          - custom_tool_call_output
+        output:
+          anyOf:
+          - description: The text input to the model.
+            type: string
+            maxLength: 10485760
+          - type: array
+            items:
+              discriminator:
+                propertyName: type
+              anyOf:
+              - $ref: '#/components/schemas/LiveDecisionInputTextParam'
+              - $ref: '#/components/schemas/LiveDecisionInputImageParam'
+            x-stainless-variantName: parts
+      required:
+      - call_id
+      - type
+      - output
+      - id
     LiveDecisionStoredInputItemParam:
       type: object
       properties:
@@ -98114,14 +98779,20 @@ components:
             - gpt-image-2.5-flare-2026-09-08
             - gpt-image-1.5
             - chatgpt-image-latest
+            x-openai-enum-deprecations:
+              gpt-image-1:
+                message: GPT Image 1 was shut down on October 23, 2026. Use gpt-image-2.5-sunburst or gpt-image-2.5-flare instead.
             description: |
-              The image generation model to use. One of `gpt-image-1`,
-              `gpt-image-1-mini`, `gpt-image-1.5`, `gpt-image-2`,
+              The image generation model to use. One of `gpt-image-1-mini`,
+              `gpt-image-1.5`, `gpt-image-2`,
               `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
               `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
               `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
-              `gpt-image-1`.
-            default: gpt-image-1
+              `gpt-image-2`.
+
+              `gpt-image-1` was shut down on October 23, 2026. Use
+              `gpt-image-2.5-sunburst` or `gpt-image-2.5-flare` instead.
+            default: gpt-image-2
         quality:
           type: string
           enum:
@@ -98660,7 +99331,7 @@ components:
               propertyName: type
             anyOf:
             - $ref: '#/components/schemas/BetaComparisonFilter'
-            - $ref: '#/components/schemas/BetaCompoundFilter'
+            - $recursiveRef: '#'
       required:
       - type
       - filters
@@ -99166,7 +99837,6 @@ components:
             The content of the file to be sent to the model.
         prompt_cache_breakpoint:
           $ref: '#/components/schemas/BetaPromptCacheBreakpointConfig'
-          x-stainless-go-constant-constructor: true
         file_url:
           type: string
           format: uri
@@ -99231,7 +99901,6 @@ components:
           description: The detail level of the image to be sent to the model. One of `high`, `low`, `auto`, or `original`. Defaults to `auto`.
         prompt_cache_breakpoint:
           $ref: '#/components/schemas/BetaPromptCacheBreakpointConfig'
-          x-stainless-go-constant-constructor: true
       type: object
       required:
       - type
@@ -99259,7 +99928,6 @@ components:
           description: The text input to the model.
         prompt_cache_breakpoint:
           $ref: '#/components/schemas/BetaPromptCacheBreakpointConfig'
-          x-stainless-go-constant-constructor: true
       type: object
       required:
       - type
@@ -101039,7 +101707,6 @@ components:
         prompt_cache_breakpoint:
           anyOf:
           - $ref: '#/components/schemas/BetaPromptCacheBreakpointParam'
-            x-stainless-go-constant-constructor: true
           - type: 'null'
           x-stainless-go-constant-constructor: true
       type: object
@@ -101091,7 +101758,6 @@ components:
         prompt_cache_breakpoint:
           anyOf:
           - $ref: '#/components/schemas/BetaPromptCacheBreakpointParam'
-            x-stainless-go-constant-constructor: true
           - type: 'null'
           x-stainless-go-constant-constructor: true
       type: object
@@ -101212,7 +101878,6 @@ components:
         prompt_cache_breakpoint:
           anyOf:
           - $ref: '#/components/schemas/BetaPromptCacheBreakpointParam'
-            x-stainless-go-constant-constructor: true
           - type: 'null'
           x-stainless-go-constant-constructor: true
       type: object

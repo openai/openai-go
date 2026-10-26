@@ -23,7 +23,7 @@ func main() {
 	// GPT image models return base64-encoded image data.
 	image, err := client.Images.Generate(ctx, openai.ImageGenerateParams{
 		Prompt: prompt,
-		Model:  openai.ImageModelGPTImage1,
+		Model:  openai.ImageModelGPTImage2_5Sunburst,
 		N:      openai.Int(1),
 	})
 	if err != nil {
