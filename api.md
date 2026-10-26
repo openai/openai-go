@@ -14,7 +14,6 @@
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#OAuthErrorCode">OAuthErrorCode</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#ReasoningParam">ReasoningParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#ReasoningEffort">ReasoningEffort</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#RecursiveCompoundFilterParam">RecursiveCompoundFilterParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#ResponseFormatJSONObjectParam">ResponseFormatJSONObjectParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#ResponseFormatJSONSchemaParam">ResponseFormatJSONSchemaParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#ResponseFormatTextParam">ResponseFormatTextParam</a>
@@ -815,7 +814,6 @@ Params Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaCustomToolParam">BetaCustomToolParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaEasyInputMessageParam">BetaEasyInputMessageParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaFileSearchToolParam">BetaFileSearchToolParam</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaFileSearchToolFiltersCompoundFilterParam">BetaFileSearchToolFiltersCompoundFilterParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaFunctionShellToolParam">BetaFunctionShellToolParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaFunctionToolParam">BetaFunctionToolParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaInlineSkillParam">BetaInlineSkillParam</a>
@@ -824,7 +822,6 @@ Params Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaLocalSkillParam">BetaLocalSkillParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaMcpToolCallErrorUnionParam">BetaMcpToolCallErrorUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaNamespaceToolParam">BetaNamespaceToolParam</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaRecursiveCompoundFilterParam">BetaRecursiveCompoundFilterParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseCodeInterpreterToolCallParam">BetaResponseCodeInterpreterToolCallParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseCompactionItemParam">BetaResponseCompactionItemParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaResponseComputerToolCallParam">BetaResponseComputerToolCallParam</a>
@@ -892,7 +889,6 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaCustomTool">BetaCustomTool</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaEasyInputMessage">BetaEasyInputMessage</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaFileSearchTool">BetaFileSearchTool</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaFileSearchToolFiltersCompoundFilter">BetaFileSearchToolFiltersCompoundFilter</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaFunctionShellTool">BetaFunctionShellTool</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaFunctionTool">BetaFunctionTool</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaInlineSkill">BetaInlineSkill</a>

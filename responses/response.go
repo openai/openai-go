@@ -2132,7 +2132,7 @@ type FileSearchToolFiltersUnion struct {
 	// This field is from variant [shared.ComparisonFilter].
 	Value shared.ComparisonFilterValueUnion `json:"value"`
 	// This field is from variant [shared.CompoundFilter].
-	Filters []shared.ComparisonFilter `json:"filters"`
+	Filters []shared.CompoundFilterFilterUnion `json:"filters"`
 	JSON    struct {
 		Key     respjson.Field
 		Type    respjson.Field
@@ -2282,7 +2282,7 @@ func (u FileSearchToolFiltersUnionParam) GetValue() *shared.ComparisonFilterValu
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u FileSearchToolFiltersUnionParam) GetFilters() []shared.ComparisonFilterParam {
+func (u FileSearchToolFiltersUnionParam) GetFilters() []shared.CompoundFilterFilterUnionParam {
 	if vt := u.OfCompoundFilter; vt != nil {
 		return vt.Filters
 	}
@@ -15039,21 +15039,7 @@ func ResponseInputItemParamOfFunctionCall(arguments string, callID string, name 
 	return ResponseInputItemUnionParam{OfFunctionCall: &functionCall}
 }
 
-func ResponseInputItemParamOfFunctionCallOutput[T string | ResponseFunctionCallOutputItemListParam](callID string, output T) ResponseInputItemUnionParam {
-	var functionCallOutput ResponseInputItemFunctionCallOutputParam
-	functionCallOutput.CallID = param.NewOpt(callID)
-	switch v := any(output).(type) {
-	case string:
-		functionCallOutput.Output.OfString = param.NewOpt(v)
-	case ResponseFunctionCallOutputItemListParam:
-		functionCallOutput.Output.OfResponseFunctionCallOutputItemArray = v
-	}
-	return ResponseInputItemUnionParam{OfFunctionCallOutput: &functionCallOutput}
-}
-
-func ResponseInputItemParamOfFunctionCallOutputWithoutCallID[
-	T string | ResponseFunctionCallOutputItemListParam,
-](output T) ResponseInputItemUnionParam {
+func ResponseInputItemParamOfFunctionCallOutput[T string | ResponseFunctionCallOutputItemListParam](output T) ResponseInputItemUnionParam {
 	var functionCallOutput ResponseInputItemFunctionCallOutputParam
 	switch v := any(output).(type) {
 	case string:
@@ -15070,7 +15056,7 @@ func ResponseInputItemParamOfToolSearchCall(arguments any) ResponseInputItemUnio
 	return ResponseInputItemUnionParam{OfToolSearchCall: &toolSearchCall}
 }
 
-func ResponseInputItemParamOfToolSearchOutput(tools []ToolUnionParam) ResponseInputItemUnionParam {
+func ResponseInputItemParamOfToolSearchOutput(tools []ResponseToolSearchOutputItemParamToolUnion) ResponseInputItemUnionParam {
 	var toolSearchOutput ResponseToolSearchOutputItemParam
 	toolSearchOutput.Tools = tools
 	return ResponseInputItemUnionParam{OfToolSearchOutput: &toolSearchOutput}
@@ -16327,8 +16313,8 @@ func (u ResponseInputItemUnionParam) GetTools() (res responseInputItemUnionParam
 	return
 }
 
-// Can have the runtime types [_[]ToolUnionParam],
-// [_[]ResponseInputItemMcpListToolsToolParam]
+// Can have the runtime types [_[]ResponseToolSearchOutputItemParamToolUnion],
+// [_[]ToolUnionParam], [\*[]ResponseInputItemMcpListToolsToolParam]
 type responseInputItemUnionParamTools struct{ any }
 
 // Use the following switch statement to get the type of the union:
@@ -16342,18 +16328,10 @@ type responseInputItemUnionParamTools struct{ any }
 //	}
 func (u responseInputItemUnionParamTools) AsAny() any { return u.any }
 
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponseInputItemUnionParam) GetError() *string {
-	if vt := u.OfMcpListTools; vt != nil && vt.Error.Valid() {
-		return &vt.Error.Value
-	}
-	return nil
-}
-
 // Returns a subunion which exports methods to access subproperties
 //
 // Or use AsAny() to get the underlying value
-func (u ResponseInputItemUnionParam) GetErrorUnion() (res responseInputItemUnionParamErrorUnion) {
+func (u ResponseInputItemUnionParam) GetError() (res responseInputItemUnionParamError) {
 	if vt := u.OfMcpListTools; vt != nil && vt.Error.Valid() {
 		res.any = &vt.Error.Value
 	} else if vt := u.OfMcpCall; vt != nil {
@@ -16364,7 +16342,7 @@ func (u ResponseInputItemUnionParam) GetErrorUnion() (res responseInputItemUnion
 
 // Can have the runtime types [*string], [*McpToolCallErrorMcpProtocolErrorParam],
 // [*McpToolCallErrorMcpToolExecutionErrorParam], [*McpToolCallErrorHTTPErrorParam]
-type responseInputItemUnionParamErrorUnion struct{ any }
+type responseInputItemUnionParamError struct{ any }
 
 // Use the following switch statement to get the type of the union:
 //
@@ -16376,10 +16354,10 @@ type responseInputItemUnionParamErrorUnion struct{ any }
 //	default:
 //	    fmt.Errorf("not present")
 //	}
-func (u responseInputItemUnionParamErrorUnion) AsAny() any { return u.any }
+func (u responseInputItemUnionParamError) AsAny() any { return u.any }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u responseInputItemUnionParamErrorUnion) GetCode() *int64 {
+func (u responseInputItemUnionParamError) GetCode() *int64 {
 	switch vt := u.any.(type) {
 	case *McpToolCallErrorMcpProtocolErrorParam:
 		return (*int64)(&vt.Code)
@@ -16390,7 +16368,7 @@ func (u responseInputItemUnionParamErrorUnion) GetCode() *int64 {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u responseInputItemUnionParamErrorUnion) GetMessage() *string {
+func (u responseInputItemUnionParamError) GetMessage() *string {
 	switch vt := u.any.(type) {
 	case *McpToolCallErrorMcpProtocolErrorParam:
 		return (*string)(&vt.Message)
@@ -16401,7 +16379,7 @@ func (u responseInputItemUnionParamErrorUnion) GetMessage() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u responseInputItemUnionParamErrorUnion) GetType() *string {
+func (u responseInputItemUnionParamError) GetType() *string {
 	switch vt := u.any.(type) {
 	case *McpToolCallErrorMcpProtocolErrorParam:
 		return (*string)(&vt.Type)
@@ -16414,7 +16392,7 @@ func (u responseInputItemUnionParamErrorUnion) GetType() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u responseInputItemUnionParamErrorUnion) GetContent() *any {
+func (u responseInputItemUnionParamError) GetContent() *any {
 	switch vt := u.any.(type) {
 	case *McpToolCallErrorMcpToolExecutionErrorParam:
 		return &vt.Content
@@ -21875,7 +21853,7 @@ func (r *ResponseOutputTextLogprobTopLogprobParam) UnmarshalJSON(data []byte) er
 // Emitted when an annotation is added to output text content.
 type ResponseOutputTextAnnotationAddedEvent struct {
 	// The annotation object being added. (See annotation schema for details.)
-	Annotation any `json:"annotation" api:"required"`
+	Annotation ResponseOutputTextAnnotationAddedEventAnnotationUnion `json:"annotation" api:"required"`
 	// The index of the annotation within the content part.
 	AnnotationIndex int64 `json:"annotation_index" api:"required"`
 	// The index of the content part within the output item.
@@ -21906,18 +21884,6 @@ type ResponseOutputTextAnnotationAddedEvent struct {
 func (r ResponseOutputTextAnnotationAddedEvent) RawJSON() string { return r.JSON.raw }
 func (r *ResponseOutputTextAnnotationAddedEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-// AsAnnotation decodes the current Annotation value into its typed representation.
-// It returns an independent value; later edits do not mutate Annotation.
-func (r ResponseOutputTextAnnotationAddedEvent) AsAnnotation() (ResponseOutputTextAnnotationAddedEventAnnotationUnion, error) {
-	var value ResponseOutputTextAnnotationAddedEventAnnotationUnion
-	data, err := json.Marshal(r.Annotation)
-	if err != nil {
-		return value, err
-	}
-	err = json.Unmarshal(data, &value)
-	return value, err
 }
 
 // ResponseOutputTextAnnotationAddedEventAnnotationUnion contains all possible
@@ -25041,7 +25007,7 @@ type ResponseStreamEventUnion struct {
 	// This field is from variant [ResponseImageGenCallPartialImageEvent].
 	Size string `json:"size"`
 	// This field is from variant [ResponseOutputTextAnnotationAddedEvent].
-	Annotation any `json:"annotation"`
+	Annotation ResponseOutputTextAnnotationAddedEventAnnotationUnion `json:"annotation"`
 	// This field is from variant [ResponseOutputTextAnnotationAddedEvent].
 	AnnotationIndex int64 `json:"annotation_index"`
 	// This field is from variant [ResponseCustomToolCallInputDoneEvent].
@@ -25697,18 +25663,6 @@ type ResponseStreamEventUnionLogprobs struct {
 
 func (r *ResponseStreamEventUnionLogprobs) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-// AsAnnotation decodes the current Annotation value into its typed representation.
-// It returns an independent value; later edits do not mutate Annotation.
-func (r ResponseStreamEventUnion) AsAnnotation() (ResponseOutputTextAnnotationAddedEventAnnotationUnion, error) {
-	var value ResponseOutputTextAnnotationAddedEventAnnotationUnion
-	data, err := json.Marshal(r.Annotation)
-	if err != nil {
-		return value, err
-	}
-	err = json.Unmarshal(data, &value)
-	return value, err
 }
 
 // Configuration options for a text response from the model. Can be plain text or
@@ -26399,7 +26353,7 @@ type ResponseToolSearchOutputItemParamToolUnionRespFilters struct {
 	// This field is from variant [FileSearchToolFiltersUnion].
 	Value shared.ComparisonFilterValueUnion `json:"value"`
 	// This field is from variant [FileSearchToolFiltersUnion].
-	Filters []shared.ComparisonFilter `json:"filters"`
+	Filters []shared.CompoundFilterFilterUnion `json:"filters"`
 	// This field is from variant [WebSearchToolFilters].
 	AllowedDomains []string `json:"allowed_domains"`
 	JSON           struct {
@@ -27031,11 +26985,14 @@ type ResponseToolSearchOutputItemParamToolImageGeneration struct {
 	// Optional mask for inpainting. Contains `image_url` (string, optional) and
 	// `file_id` (string, optional).
 	InputImageMask ResponseToolSearchOutputItemParamToolImageGenerationInputImageMaskResp `json:"input_image_mask"`
-	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
-	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`,
-	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
-	// `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, or
-	// `chatgpt-image-latest`. Default: `gpt-image-1`.
+	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
+	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
+	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
+	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2`.
+	//
+	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
+	// `gpt-image-2.5-flare` instead.
 	Model string `json:"model"`
 	// Moderation level for the generated image. Default: `auto`.
 	//
@@ -27156,7 +27113,7 @@ const (
 // The properties Tools, Type are required.
 type ResponseToolSearchOutputItemParam struct {
 	// The loaded tool definitions returned by the tool search output.
-	Tools []ToolUnionParam `json:"tools,omitzero" api:"required"`
+	Tools []ResponseToolSearchOutputItemParamToolUnion `json:"tools,omitzero" api:"required"`
 	// The unique ID of this tool search output.
 	ID param.Opt[string] `json:"id,omitzero"`
 	// The unique ID of the tool search call generated by the model.
@@ -27680,7 +27637,7 @@ func (u responseToolSearchOutputItemParamToolUnionFilters) GetValue() *shared.Co
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u responseToolSearchOutputItemParamToolUnionFilters) GetFilters() []shared.ComparisonFilterParam {
+func (u responseToolSearchOutputItemParamToolUnionFilters) GetFilters() []shared.CompoundFilterFilterUnionParam {
 	switch vt := u.any.(type) {
 	case *shared.CompoundFilterParam:
 		return vt.Filters
@@ -28293,11 +28250,14 @@ type ResponseToolSearchOutputItemParamToolImageGenerationParam struct {
 	// Optional mask for inpainting. Contains `image_url` (string, optional) and
 	// `file_id` (string, optional).
 	InputImageMask ResponseToolSearchOutputItemParamToolImageGenerationInputImageMask `json:"input_image_mask,omitzero"`
-	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
-	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`,
-	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
-	// `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, or
-	// `chatgpt-image-latest`. Default: `gpt-image-1`.
+	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
+	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
+	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
+	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2`.
+	//
+	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
+	// `gpt-image-2.5-flare` instead.
 	Model string `json:"model,omitzero"`
 	// Moderation level for the generated image. Default: `auto`.
 	//
@@ -32994,7 +32954,7 @@ type ToolUnionFilters struct {
 	// This field is from variant [FileSearchToolFiltersUnion].
 	Value shared.ComparisonFilterValueUnion `json:"value"`
 	// This field is from variant [FileSearchToolFiltersUnion].
-	Filters []shared.ComparisonFilter `json:"filters"`
+	Filters []shared.CompoundFilterFilterUnion `json:"filters"`
 	// This field is from variant [WebSearchToolFilters].
 	AllowedDomains []string `json:"allowed_domains"`
 	JSON           struct {
@@ -33500,11 +33460,14 @@ type ToolImageGeneration struct {
 	// Optional mask for inpainting. Contains `image_url` (string, optional) and
 	// `file_id` (string, optional).
 	InputImageMask ToolImageGenerationInputImageMask `json:"input_image_mask"`
-	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
-	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`,
-	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
-	// `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, or
-	// `chatgpt-image-latest`. Default: `gpt-image-1`.
+	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
+	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
+	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
+	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2`.
+	//
+	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
+	// `gpt-image-2.5-flare` instead.
 	Model string `json:"model"`
 	// Moderation level for the generated image. Default: `auto`.
 	//
@@ -34165,7 +34128,7 @@ func (u toolUnionParamFilters) GetValue() *shared.ComparisonFilterValueUnionPara
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u toolUnionParamFilters) GetFilters() []shared.ComparisonFilterParam {
+func (u toolUnionParamFilters) GetFilters() []shared.CompoundFilterFilterUnionParam {
 	switch vt := u.any.(type) {
 	case *shared.CompoundFilterParam:
 		return vt.Filters
@@ -34694,11 +34657,14 @@ type ToolImageGenerationParam struct {
 	// Optional mask for inpainting. Contains `image_url` (string, optional) and
 	// `file_id` (string, optional).
 	InputImageMask ToolImageGenerationInputImageMaskParam `json:"input_image_mask,omitzero"`
-	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
-	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`,
-	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
-	// `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, or
-	// `chatgpt-image-latest`. Default: `gpt-image-1`.
+	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
+	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
+	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
+	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2`.
+	//
+	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
+	// `gpt-image-2.5-flare` instead.
 	Model string `json:"model,omitzero"`
 	// Moderation level for the generated image. Default: `auto`.
 	//

@@ -1872,8 +1872,6 @@ func init() {
 type DecisionItemCreateEventItemContentPartInputTextParam struct {
 	// The text input to the model.
 	Text string `json:"text" api:"required"`
-	// The type of the input item. Always `input_text`.
-	//
 	// This field can be elided, and will marshal its zero value as "input_text".
 	Type constant.InputText `json:"type" default:"input_text"`
 	paramObj
@@ -1889,15 +1887,13 @@ func (r *DecisionItemCreateEventItemContentPartInputTextParam) UnmarshalJSON(dat
 
 // The properties ImageURL, Type are required.
 type DecisionItemCreateEventItemContentPartInputImageParam struct {
-	// An inline image encoded as a data URL.
+	// A base64-encoded image data URL or a publicly accessible HTTP(S) image URL.
 	ImageURL string `json:"image_url" api:"required"`
 	// The detail level of the image to be sent to the model. One of `high`, `low`,
 	// `auto`, or `original`. Defaults to `auto`.
 	//
 	// Any of "low", "high", "auto", "original".
 	Detail string `json:"detail,omitzero"`
-	// The type of the input item. Always `input_image`.
-	//
 	// This field can be elided, and will marshal its zero value as "input_image".
 	Type constant.InputImage `json:"type" default:"input_image"`
 	paramObj
@@ -2040,8 +2036,7 @@ func (r *DecisionItemCreatedEventItemContentPartsItemUnion) UnmarshalJSON(data [
 
 type DecisionItemCreatedEventItemContentPartInputText struct {
 	// The text input to the model.
-	Text string `json:"text" api:"required"`
-	// The type of the input item. Always `input_text`.
+	Text string             `json:"text" api:"required"`
 	Type constant.InputText `json:"type" default:"input_text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -2064,10 +2059,9 @@ type DecisionItemCreatedEventItemContentPartInputImage struct {
 	//
 	// Any of "low", "high", "auto", "original".
 	Detail string `json:"detail" api:"nullable"`
-	// An inline image encoded as a data URL.
-	ImageURL string `json:"image_url" api:"required"`
-	// The type of the input item. Always `input_image`.
-	Type constant.InputImage `json:"type" default:"input_image"`
+	// A base64-encoded image data URL or a publicly accessible HTTP(S) image URL.
+	ImageURL string              `json:"image_url" api:"required"`
+	Type     constant.InputImage `json:"type" default:"input_image"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Detail      respjson.Field
@@ -4796,6 +4790,7 @@ func init() {
 		"type",
 		apijson.Discriminator[InitialItemAssistantContentTextParam]("text"),
 		apijson.Discriminator[InitialItemAssistantContentOutputTextParam]("output_text"),
+		apijson.Discriminator[InitialItemAssistantContentTextParam](nil),
 	)
 }
 

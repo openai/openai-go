@@ -116,7 +116,7 @@ type Embedding struct {
 // Returns the unmodified JSON received from the API
 func (r Embedding) RawJSON() string { return r.JSON.raw }
 func (r *Embedding) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return r.unmarshalEmbedding(data)
 }
 
 type EmbeddingModel = string
