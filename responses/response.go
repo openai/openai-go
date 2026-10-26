@@ -36789,6 +36789,7 @@ type ResponseCompactParamsModel string
 const (
 	ResponseCompactParamsModelGPT6Astra         ResponseCompactParamsModel = "gpt-6-astra"
 	ResponseCompactParamsModelGPT6_1Sol         ResponseCompactParamsModel = "gpt-6.1-sol"
+	ResponseCompactParamsModelGPT6_1Terra       ResponseCompactParamsModel = "gpt-6.1-terra"
 	ResponseCompactParamsModelGPT6Sol           ResponseCompactParamsModel = "gpt-6-sol"
 	ResponseCompactParamsModelGPT6Luna          ResponseCompactParamsModel = "gpt-6-luna"
 	ResponseCompactParamsModelGPT5_6Sol         ResponseCompactParamsModel = "gpt-5.6-sol"
