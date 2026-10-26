@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -39,7 +39,7 @@ type SkillVersionService struct {
 // there is one), and before any request-specific options.
 func NewSkillVersionService(opts ...option.RequestOption) (r SkillVersionService) {
 	r = SkillVersionService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Content = NewSkillVersionContentService(opts...)
 	return
 }
@@ -53,7 +53,7 @@ func (r *SkillVersionService) New(ctx context.Context, skillID string, body Skil
 		return nil, err
 	}
 	path := requestconfig.FormatPath("skills/%s/versions", skillID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, requestconfig.MultipartBody(body), &res, opts...)
 	return res, err
 }
 
@@ -222,7 +222,7 @@ func (r SkillVersionNewParams) MarshalMultipart() (data []byte, contentType stri
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()
@@ -230,6 +230,15 @@ func (r SkillVersionNewParams) MarshalMultipart() (data []byte, contentType stri
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
+}
+
+// MarshalMultipartTo writes multipart fields without buffering file contents.
+// The caller owns writer and must close it to finish the multipart body.
+func (r SkillVersionNewParams) MarshalMultipartTo(writer *multipart.Writer) error {
+	if err := apiform.MarshalRoot(r, writer); err != nil {
+		return err
+	}
+	return apiform.WriteExtras(writer, r.ExtraFields())
 }
 
 // Only one field can be non-zero.
@@ -246,15 +255,6 @@ func (u SkillVersionNewParamsFilesUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *SkillVersionNewParamsFilesUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *SkillVersionNewParamsFilesUnion) asAny() any {
-	if !param.IsOmitted(u.OfFileArray) {
-		return &u.OfFileArray
-	} else if !param.IsOmitted(u.OfFile) {
-		return &u.OfFile
-	}
-	return nil
 }
 
 type SkillVersionListParams struct {

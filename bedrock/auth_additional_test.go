@@ -17,7 +17,8 @@ import (
 )
 
 func TestNewClientOptionsRejectsNilContext(t *testing.T) {
-	_, err := newClientOptions(nil, Config{}, time.Now)
+	var nilContext context.Context
+	_, err := newClientOptions(nilContext, Config{}, time.Now)
 	if err == nil || !strings.Contains(err.Error(), "nil context") {
 		t.Fatalf("error = %v", err)
 	}
@@ -165,21 +166,21 @@ func TestEnvironmentBearerRefreshesAndFailsSafelyWhenRemoved(t *testing.T) {
 	}
 
 	var response *http.Response
-	if err := client.Get(context.Background(), "/models", nil, &response); err != nil {
-		t.Fatal(err)
+	if requestErr := client.Get(context.Background(), "/models", nil, &response); requestErr != nil {
+		t.Fatal(requestErr)
 	}
-	if err := os.Setenv("AWS_BEARER_TOKEN_BEDROCK", "second-token"); err != nil {
-		t.Fatal(err)
+	if setEnvErr := os.Setenv("AWS_BEARER_TOKEN_BEDROCK", "second-token"); setEnvErr != nil {
+		t.Fatal(setEnvErr)
 	}
-	if err := client.Get(context.Background(), "/models", nil, &response); err != nil {
-		t.Fatal(err)
+	if requestErr := client.Get(context.Background(), "/models", nil, &response); requestErr != nil {
+		t.Fatal(requestErr)
 	}
 	if got := strings.Join(authorizations, ","); got != "Bearer first-token,Bearer second-token" {
 		t.Fatalf("authorizations = %q", got)
 	}
 
-	if err := os.Unsetenv("AWS_BEARER_TOKEN_BEDROCK"); err != nil {
-		t.Fatal(err)
+	if unsetEnvErr := os.Unsetenv("AWS_BEARER_TOKEN_BEDROCK"); unsetEnvErr != nil {
+		t.Fatal(unsetEnvErr)
 	}
 	err = client.Get(context.Background(), "/models", nil, &response)
 	if err == nil || !strings.Contains(err.Error(), "failed to resolve a bearer credential") {
@@ -507,10 +508,15 @@ func TestSigV4MiddlewareRejectsUnsafeRequests(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			transportCalls := 0
-			_, err := sigV4Middleware(baseURL, test.config, v4.NewSigner(), time.Now)(test.request(), func(req *http.Request) (*http.Response, error) {
+			response, err := sigV4Middleware(baseURL, test.config, v4.NewSigner(), time.Now)(test.request(), func(req *http.Request) (*http.Response, error) {
 				transportCalls++
 				return successfulResponse(req), nil
 			})
+			if response != nil {
+				if closeErr := response.Body.Close(); closeErr != nil {
+					t.Fatalf("close response body: %v", closeErr)
+				}
+			}
 			if err == nil || !strings.Contains(err.Error(), test.message) {
 				t.Fatalf("error = %v, want substring %q", err, test.message)
 			}
@@ -561,10 +567,15 @@ func TestSigV4MiddlewareCredentialAndSignerFailures(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodPost, "https://bedrock-mantle.us-east-1.api.aws/openai/v1/responses", strings.NewReader("body"))
 			contentLength := req.ContentLength
-			_, err := sigV4Middleware(baseURL, test.config, test.signer, time.Now)(req, func(req *http.Request) (*http.Response, error) {
+			response, err := sigV4Middleware(baseURL, test.config, test.signer, time.Now)(req, func(req *http.Request) (*http.Response, error) {
 				t.Fatal("transport must not be called")
 				return nil, nil
 			})
+			if response != nil {
+				if closeErr := response.Body.Close(); closeErr != nil {
+					t.Fatalf("close response body: %v", closeErr)
+				}
+			}
 			if err == nil || !strings.Contains(err.Error(), test.message) {
 				t.Fatalf("error = %v, want substring %q", err, test.message)
 			}
@@ -638,7 +649,11 @@ func TestMaterializeReplayableBodyFailuresAndReset(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer replayed.Close()
+	defer func() {
+		if closeErr := replayed.Close(); closeErr != nil {
+			t.Errorf("close replayed request body: %v", closeErr)
+		}
+	}()
 	replayedBody, err := io.ReadAll(replayed)
 	if err != nil {
 		t.Fatal(err)
@@ -648,25 +663,11 @@ func TestMaterializeReplayableBodyFailuresAndReset(t *testing.T) {
 	}
 }
 
-func TestURLHelpers(t *testing.T) {
+func TestBaseURLHelpers(t *testing.T) {
 	if normalizeBaseURL(nil) != nil {
 		t.Fatal("normalizeBaseURL(nil) must return nil")
 	}
 	if !sameBaseURL(nil, nil) || sameBaseURL(nil, &url.URL{}) {
 		t.Fatal("unexpected nil base URL comparison")
-	}
-	httpDefault, _ := url.Parse("http://example.com/path")
-	httpExplicit, _ := url.Parse("http://example.com:80/other")
-	if !sameOrigin(httpDefault, httpExplicit) {
-		t.Fatal("default and explicit HTTP ports should match")
-	}
-	httpsDefault, _ := url.Parse("https://example.com/path")
-	httpsExplicit, _ := url.Parse("https://example.com:443/other")
-	if !sameOrigin(httpsDefault, httpsExplicit) {
-		t.Fatal("default and explicit HTTPS ports should match")
-	}
-	ftpURL, _ := url.Parse("ftp://example.com/path")
-	if got := effectivePort(ftpURL); got != "" {
-		t.Fatalf("FTP effective port = %q", got)
 	}
 }

@@ -21,8 +21,8 @@ If the repository already matches policy, make no file changes.
 If it has drifted, prepare one focused change:
 
 1. Align only the `go` directives in the root, `examples`,
-   `internal/testdata/consumer`, and `tools` modules. Do not change module,
-   toolchain, require, replace, exclude, retract, or tool directives.
+   `internal/testdata/consumer`, `tools`, and `v3/vertex` modules. Do not change
+   module, toolchain, require, replace, exclude, retract, or tool directives.
 2. Run `go mod tidy -diff` in every module to verify that the directive-only
    update leaves every `go.mod` and `go.sum` tidy. Do not retain dependency
    graph or checksum changes; those require a separate maintainer-reviewed

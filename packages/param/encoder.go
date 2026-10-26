@@ -3,7 +3,9 @@ package param
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"reflect"
+	"slices"
 	"strings"
 	"time"
 
@@ -48,7 +50,14 @@ func MarshalWithExtras[T ParamStruct, R any](f T, underlying any, extras map[str
 		if err != nil {
 			return nil, err
 		}
-		for k, v := range extras {
+		// Sorted rather than map order. Each key is applied with sjson on top of
+		// the already-encoded struct, so iteration order ends up as byte order in
+		// the output, and the same value marshals to a different byte string on
+		// every call. That breaks anything hashing or diffing request bodies,
+		// prefix-based prompt caching most visibly. encoding/json has always
+		// emitted map keys in sorted order, so this matches it.
+		for _, k := range slices.Sorted(maps.Keys(extras)) {
+			v := extras[k]
 			var a any = v
 			if a == Omit {
 				// Errors when handling ForceOmitted are ignored.

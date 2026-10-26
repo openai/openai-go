@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -11,6 +11,7 @@ import (
 
 	"github.com/openai/openai-go/v3/conversations"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/live"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/realtime"
 	"github.com/openai/openai-go/v3/responses"
@@ -21,7 +22,8 @@ import (
 // interacting with the openai API. You should not instantiate this client
 // directly, and instead use the [NewClient] method instead.
 type Client struct {
-	Options []option.RequestOption
+	Options   []option.RequestOption
+	Decisions DecisionService
 	// Given a prompt, the model will return one or more predicted completions, and can
 	// also return the probabilities of alternative tokens at each position.
 	Completions CompletionService
@@ -44,20 +46,25 @@ type Client struct {
 	FineTuning   FineTuningService
 	Graders      GraderService
 	VectorStores VectorStoreService
+	Safety       SafetyService
 	Webhooks     webhooks.WebhookService
 	Beta         BetaService
 	// Create large batches of API requests to run asynchronously.
 	Batches BatchService
 	// Use Uploads to upload large files in multiple parts.
-	Uploads   UploadService
-	Admin     AdminService
+	Uploads UploadService
+	Admin   AdminService
+	// Create and manage model responses.
 	Responses responses.ResponseService
+	Live      live.LiveService
 	Realtime  realtime.RealtimeService
 	// Manage conversations and conversation items.
 	Conversations conversations.ConversationService
 	Containers    ContainerService
 	Skills        SkillService
-	Videos        VideoService
+	// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+	// 2026.
+	Videos VideoService
 }
 
 // DefaultClientOptions read from the environment (OPENAI_API_KEY,
@@ -91,7 +98,7 @@ func DefaultClientOptions() []option.RequestOption {
 			}
 		}
 	}
-	return defaults
+	return requestconfig.InheritedOptions(defaults...)
 }
 
 func defaultClientOptionsWithoutEnvironment() []option.RequestOption {
@@ -106,12 +113,13 @@ func defaultClientOptionsWithoutEnvironment() []option.RequestOption {
 func NewClient(opts ...option.RequestOption) (r Client) {
 	defaults := DefaultClientOptions()
 	if requestconfig.EnvironmentDefaultsDisabled(opts...) {
-		defaults = defaultClientOptionsWithoutEnvironment()
+		defaults = requestconfig.InheritedOptions(defaultClientOptionsWithoutEnvironment()...)
 	}
-	opts = append(defaults, opts...)
+	opts = requestconfig.InheritedOptions(append(defaults, opts...)...)
 
 	r = Client{Options: opts}
 
+	r.Decisions = NewDecisionService(opts...)
 	r.Completions = NewCompletionService(opts...)
 	r.Chat = NewChatService(opts...)
 	r.Embeddings = NewEmbeddingService(opts...)
@@ -124,12 +132,14 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 	r.FineTuning = NewFineTuningService(opts...)
 	r.Graders = NewGraderService(opts...)
 	r.VectorStores = NewVectorStoreService(opts...)
+	r.Safety = NewSafetyService(opts...)
 	r.Webhooks = webhooks.NewWebhookService(opts...)
 	r.Beta = NewBetaService(opts...)
 	r.Batches = NewBatchService(opts...)
 	r.Uploads = NewUploadService(opts...)
 	r.Admin = NewAdminService(opts...)
 	r.Responses = responses.NewResponseService(opts...)
+	r.Live = live.NewLiveService(opts...)
 	r.Realtime = realtime.NewRealtimeService(opts...)
 	r.Conversations = conversations.NewConversationService(opts...)
 	r.Containers = NewContainerService(opts...)

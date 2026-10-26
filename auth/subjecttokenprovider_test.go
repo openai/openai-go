@@ -2,9 +2,11 @@ package auth_test
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -12,19 +14,13 @@ import (
 )
 
 func TestK8sProviderFileReading(t *testing.T) {
-	tmpFile, err := os.CreateTemp("", "k8s-token-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp file: %v", err)
-	}
-	defer os.Remove(tmpFile.Name())
-
+	tokenPath := filepath.Join(t.TempDir(), "token")
 	tokenContent := "  test-jwt-token-123  \n"
-	if _, err := tmpFile.WriteString(tokenContent); err != nil {
-		t.Fatalf("Failed to write to temp file: %v", err)
+	if writeErr := os.WriteFile(tokenPath, []byte(tokenContent), 0o600); writeErr != nil {
+		t.Fatalf("Failed to write to temp file: %v", writeErr)
 	}
-	tmpFile.Close()
 
-	provider := auth.K8sServiceAccountTokenProvider(tmpFile.Name())
+	provider := auth.K8sServiceAccountTokenProvider(tokenPath)
 
 	token, err := provider.GetToken(context.Background(), nil)
 	if err != nil {
@@ -52,8 +48,8 @@ func TestK8sProviderDefaultPath(t *testing.T) {
 		return
 	}
 
-	providerErr, ok := err.(*auth.SubjectTokenProviderError)
-	if !ok {
+	var providerErr *auth.SubjectTokenProviderError
+	if !errors.As(err, &providerErr) {
 		t.Fatalf("Expected *SubjectTokenProviderError, got %T", err)
 	}
 
@@ -74,8 +70,8 @@ func TestK8sProviderErrorHandling(t *testing.T) {
 		t.Fatal("Expected error, got nil")
 	}
 
-	providerErr, ok := err.(*auth.SubjectTokenProviderError)
-	if !ok {
+	var providerErr *auth.SubjectTokenProviderError
+	if !errors.As(err, &providerErr) {
 		t.Fatalf("Expected *SubjectTokenProviderError, got %T", err)
 	}
 
@@ -89,26 +85,20 @@ func TestK8sProviderErrorHandling(t *testing.T) {
 }
 
 func TestK8sProviderEmptyToken(t *testing.T) {
-	tmpFile, err := os.CreateTemp("", "k8s-token-empty-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp file: %v", err)
+	tokenPath := filepath.Join(t.TempDir(), "token")
+	if writeErr := os.WriteFile(tokenPath, []byte("   \n   "), 0o600); writeErr != nil {
+		t.Fatalf("Failed to write to temp file: %v", writeErr)
 	}
-	defer os.Remove(tmpFile.Name())
 
-	if _, err := tmpFile.WriteString("   \n   "); err != nil {
-		t.Fatalf("Failed to write to temp file: %v", err)
-	}
-	tmpFile.Close()
+	provider := auth.K8sServiceAccountTokenProvider(tokenPath)
 
-	provider := auth.K8sServiceAccountTokenProvider(tmpFile.Name())
-
-	_, err = provider.GetToken(context.Background(), nil)
+	_, err := provider.GetToken(context.Background(), nil)
 	if err == nil {
 		t.Fatal("Expected error for empty token, got nil")
 	}
 
-	providerErr, ok := err.(*auth.SubjectTokenProviderError)
-	if !ok {
+	var providerErr *auth.SubjectTokenProviderError
+	if !errors.As(err, &providerErr) {
 		t.Fatalf("Expected *SubjectTokenProviderError, got %T", err)
 	}
 
@@ -138,13 +128,13 @@ func TestAzureProviderGetToken(t *testing.T) {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(strings.NewReader(`{"access_token":"azure-token-123"}`)),
-				Header:     make(http.Header),
+				Header:     http.Header{"Metadata-Flavor": {"Google"}},
 			}, nil
 		}),
 	}
 
 	provider := auth.AzureManagedIdentityTokenProvider(nil)
-	token, err := provider.GetToken(context.Background(), mockClient)
+	token, err := auth.MetadataProviderWithClientForTest(provider, mockClient).GetToken(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("GetToken() error = %v", err)
 	}
@@ -170,7 +160,7 @@ func TestAzureProviderCustomResource(t *testing.T) {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(strings.NewReader(`{"access_token":"azure-custom-token"}`)),
-				Header:     make(http.Header),
+				Header:     http.Header{"Metadata-Flavor": {"Google"}},
 			}, nil
 		}),
 	}
@@ -178,7 +168,7 @@ func TestAzureProviderCustomResource(t *testing.T) {
 	provider := auth.AzureManagedIdentityTokenProvider(&auth.AzureManagedIdentityTokenProviderConfig{
 		Resource: "https://custom.openai.com",
 	})
-	token, err := provider.GetToken(context.Background(), mockClient)
+	token, err := auth.MetadataProviderWithClientForTest(provider, mockClient).GetToken(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("GetToken() error = %v", err)
 	}
@@ -196,7 +186,7 @@ func TestGCPProviderCustomAudience(t *testing.T) {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(strings.NewReader("gcp-custom-token-jwt")),
-				Header:     make(http.Header),
+				Header:     http.Header{"Metadata-Flavor": {"Google"}},
 			}, nil
 		}),
 	}
@@ -204,7 +194,7 @@ func TestGCPProviderCustomAudience(t *testing.T) {
 	provider := auth.GCPIDTokenProvider(&auth.GCPIDTokenProviderConfig{
 		Audience: "https://custom.openai.com",
 	})
-	token, err := provider.GetToken(context.Background(), mockClient)
+	token, err := auth.MetadataProviderWithClientForTest(provider, mockClient).GetToken(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("GetToken() error = %v", err)
 	}
@@ -225,13 +215,13 @@ func TestAzureProviderNilConfigBackwardCompatibility(t *testing.T) {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(strings.NewReader(`{"access_token":"default-token"}`)),
-				Header:     make(http.Header),
+				Header:     http.Header{"Metadata-Flavor": {"Google"}},
 			}, nil
 		}),
 	}
 
 	provider := auth.AzureManagedIdentityTokenProvider(nil)
-	_, err := provider.GetToken(context.Background(), mockClient)
+	_, err := auth.MetadataProviderWithClientForTest(provider, mockClient).GetToken(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("GetToken() error = %v", err)
 	}
@@ -250,13 +240,13 @@ func TestGCPProviderNilConfigBackwardCompatibility(t *testing.T) {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(strings.NewReader("default-gcp-token")),
-				Header:     make(http.Header),
+				Header:     http.Header{"Metadata-Flavor": {"Google"}},
 			}, nil
 		}),
 	}
 
 	provider := auth.GCPIDTokenProvider(nil)
-	_, err := provider.GetToken(context.Background(), mockClient)
+	_, err := auth.MetadataProviderWithClientForTest(provider, mockClient).GetToken(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("GetToken() error = %v", err)
 	}
@@ -271,7 +261,7 @@ func TestAzureProviderResourceURLEncoding(t *testing.T) {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(strings.NewReader(`{"access_token":"encoded-token"}`)),
-				Header:     make(http.Header),
+				Header:     http.Header{"Metadata-Flavor": {"Google"}},
 			}, nil
 		}),
 	}
@@ -279,7 +269,7 @@ func TestAzureProviderResourceURLEncoding(t *testing.T) {
 	provider := auth.AzureManagedIdentityTokenProvider(&auth.AzureManagedIdentityTokenProviderConfig{
 		Resource: "https://api.openai.com/v1/special",
 	})
-	_, err := provider.GetToken(context.Background(), mockClient)
+	_, err := auth.MetadataProviderWithClientForTest(provider, mockClient).GetToken(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("GetToken() error = %v", err)
 	}

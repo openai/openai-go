@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -16,6 +16,8 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Create and manage model responses.
+//
 // BetaResponseInputTokenService contains methods and other services that help with
 // interacting with the openai API.
 //
@@ -31,7 +33,7 @@ type BetaResponseInputTokenService struct {
 // options (if there is one), and before any request-specific options.
 func NewBetaResponseInputTokenService(opts ...option.RequestOption) (r BetaResponseInputTokenService) {
 	r = BetaResponseInputTokenService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
@@ -40,6 +42,7 @@ func NewBetaResponseInputTokenService(opts ...option.RequestOption) (r BetaRespo
 // Returns an object with `object` set to `response.input_tokens` and an
 // `input_tokens` count.
 func (r *BetaResponseInputTokenService) Count(ctx context.Context, params BetaResponseInputTokenCountParams, opts ...option.RequestOption) (res *BetaResponseInputTokenCountResponse, err error) {
+	opts = slices.Clone(opts)
 	for _, v := range params.Betas {
 		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
@@ -77,14 +80,14 @@ type BetaResponseInputTokenCountParams struct {
 	// Model ID used to generate the response, like `gpt-4o` or `o3`. OpenAI offers a
 	// wide range of models with different capabilities, performance characteristics,
 	// and price points. Refer to the
-	// [model guide](https://platform.openai.com/docs/models) to browse and compare
-	// available models.
+	// [model guide](https://developers.openai.com/api/docs/models) to browse and
+	// compare available models.
 	Model param.Opt[string] `json:"model,omitzero"`
 	// Whether to allow the model to run tool calls in parallel.
 	ParallelToolCalls param.Opt[bool] `json:"parallel_tool_calls,omitzero"`
 	// The unique ID of the previous response to the model. Use this to create
 	// multi-turn conversations. Learn more about
-	// [conversation state](https://platform.openai.com/docs/guides/conversation-state).
+	// [conversation state](https://developers.openai.com/api/docs/guides/conversation-state).
 	// Cannot be used in conjunction with `conversation`.
 	PreviousResponseID param.Opt[string] `json:"previous_response_id,omitzero"`
 	// The conversation that this response belongs to. Items from this conversation are
@@ -95,13 +98,13 @@ type BetaResponseInputTokenCountParams struct {
 	// Text, image, or file inputs to the model, used to generate a response
 	Input BetaResponseInputTokenCountParamsInputUnion `json:"input,omitzero"`
 	// **gpt-5 and o-series models only** Configuration options for
-	// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+	// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 	Reasoning BetaResponseInputTokenCountParamsReasoning `json:"reasoning,omitzero"`
 	// Configuration options for a text response from the model. Can be plain text or
 	// structured JSON data. Learn more:
 	//
-	// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
-	// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
+	//   - [Text inputs and outputs](https://developers.openai.com/api/docs/guides/text)
+	//   - [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
 	Text BetaResponseInputTokenCountParamsText `json:"text,omitzero"`
 	// Controls which tool the model should use, if any.
 	ToolChoice BetaResponseInputTokenCountParamsToolChoiceUnion `json:"tool_choice,omitzero"`
@@ -149,15 +152,6 @@ func (u *BetaResponseInputTokenCountParamsConversationUnion) UnmarshalJSON(data 
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *BetaResponseInputTokenCountParamsConversationUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfConversationObject) {
-		return u.OfConversationObject
-	}
-	return nil
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -174,15 +168,6 @@ func (u *BetaResponseInputTokenCountParamsInputUnion) UnmarshalJSON(data []byte)
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *BetaResponseInputTokenCountParamsInputUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfBetaResponseInputItemArray) {
-		return &u.OfBetaResponseInputItemArray
-	}
-	return nil
-}
-
 // A model-owned style preset to apply to this request. Omit this parameter to use
 // the model's default style. Supported values may expand over time. Values must be
 // at most 64 characters.
@@ -194,7 +179,7 @@ const (
 )
 
 // **gpt-5 and o-series models only** Configuration options for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+// [reasoning models](https://developers.openai.com/api/docs/guides/reasoning).
 type BetaResponseInputTokenCountParamsReasoning struct {
 	// Controls which reasoning items are rendered back to the model on later turns. If
 	// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
@@ -209,7 +194,7 @@ type BetaResponseInputTokenCountParamsReasoning struct {
 	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
 	// reasoning effort can result in faster responses and fewer tokens used on
 	// reasoning in a response. Not all reasoning models support every value. See the
-	// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+	// [reasoning guide](https://developers.openai.com/api/docs/guides/reasoning) for
 	// model-specific support.
 	//
 	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
@@ -266,8 +251,8 @@ func init() {
 // Configuration options for a text response from the model. Can be plain text or
 // structured JSON data. Learn more:
 //
-// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
-// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
+//   - [Text inputs and outputs](https://developers.openai.com/api/docs/guides/text)
+//   - [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
 type BetaResponseInputTokenCountParamsText struct {
 	// Constrains the verbosity of the model's response. Lower values will result in
 	// more concise responses, while higher values will result in more verbose
@@ -280,7 +265,7 @@ type BetaResponseInputTokenCountParamsText struct {
 	//
 	// Configuring `{ "type": "json_schema" }` enables Structured Outputs, which
 	// ensures the model will match your supplied JSON schema. Learn more in the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	//
 	// The default format is `{ "type": "text" }` with no additional options.
 	//
@@ -337,29 +322,6 @@ func (u BetaResponseInputTokenCountParamsToolChoiceUnion) MarshalJSON() ([]byte,
 }
 func (u *BetaResponseInputTokenCountParamsToolChoiceUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *BetaResponseInputTokenCountParamsToolChoiceUnion) asAny() any {
-	if !param.IsOmitted(u.OfToolChoiceMode) {
-		return &u.OfToolChoiceMode
-	} else if !param.IsOmitted(u.OfAllowedTools) {
-		return u.OfAllowedTools
-	} else if !param.IsOmitted(u.OfHostedTool) {
-		return u.OfHostedTool
-	} else if !param.IsOmitted(u.OfFunctionTool) {
-		return u.OfFunctionTool
-	} else if !param.IsOmitted(u.OfMcpTool) {
-		return u.OfMcpTool
-	} else if !param.IsOmitted(u.OfCustomTool) {
-		return u.OfCustomTool
-	} else if !param.IsOmitted(u.OfBetaResponseInputTokenCountsToolChoiceBetaSpecificProgrammaticToolCallingParam) {
-		return u.OfBetaResponseInputTokenCountsToolChoiceBetaSpecificProgrammaticToolCallingParam
-	} else if !param.IsOmitted(u.OfSpecificApplyPatchToolChoice) {
-		return u.OfSpecificApplyPatchToolChoice
-	} else if !param.IsOmitted(u.OfSpecificShellToolChoice) {
-		return u.OfSpecificShellToolChoice
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.

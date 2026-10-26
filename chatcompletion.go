@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -43,28 +43,28 @@ type ChatCompletionService struct {
 // there is one), and before any request-specific options.
 func NewChatCompletionService(opts ...option.RequestOption) (r ChatCompletionService) {
 	r = ChatCompletionService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Messages = NewChatCompletionMessageService(opts...)
 	return
 }
 
 // **Starting a new project?** We recommend trying
-// [Responses](https://platform.openai.com/docs/api-reference/responses) to take
-// advantage of the latest OpenAI platform features. Compare
-// [Chat Completions with Responses](https://platform.openai.com/docs/guides/responses-vs-chat-completions?api-mode=responses).
+// [Responses](https://developers.openai.com/api/reference/resources/responses) to
+// take advantage of the latest OpenAI platform features. Compare
+// [Chat Completions with Responses](https://developers.openai.com/api/docs/guides/migrate-to-responses?api-mode=responses).
 //
 // ---
 //
 // Creates a model response for the given chat conversation. Learn more in the
-// [text generation](https://platform.openai.com/docs/guides/text-generation),
-// [vision](https://platform.openai.com/docs/guides/vision), and
-// [audio](https://platform.openai.com/docs/guides/audio) guides.
+// [text generation](https://developers.openai.com/api/docs/guides/text),
+// [vision](https://developers.openai.com/api/docs/guides/images-vision), and
+// [audio](https://developers.openai.com/api/docs/guides/audio) guides.
 //
 // Parameter support can differ depending on the model used to generate the
 // response, particularly for newer reasoning models. Parameters that are only
 // supported for reasoning models are noted below. For the current state of
 // unsupported parameters in reasoning models,
-// [refer to the reasoning guide](https://platform.openai.com/docs/guides/reasoning).
+// [refer to the reasoning guide](https://developers.openai.com/api/docs/guides/reasoning).
 //
 // Returns a chat completion object, or a streamed sequence of chat completion
 // chunk objects if the request is streamed.
@@ -77,22 +77,22 @@ func (r *ChatCompletionService) New(ctx context.Context, body ChatCompletionNewP
 }
 
 // **Starting a new project?** We recommend trying
-// [Responses](https://platform.openai.com/docs/api-reference/responses) to take
-// advantage of the latest OpenAI platform features. Compare
-// [Chat Completions with Responses](https://platform.openai.com/docs/guides/responses-vs-chat-completions?api-mode=responses).
+// [Responses](https://developers.openai.com/api/reference/resources/responses) to
+// take advantage of the latest OpenAI platform features. Compare
+// [Chat Completions with Responses](https://developers.openai.com/api/docs/guides/migrate-to-responses?api-mode=responses).
 //
 // ---
 //
 // Creates a model response for the given chat conversation. Learn more in the
-// [text generation](https://platform.openai.com/docs/guides/text-generation),
-// [vision](https://platform.openai.com/docs/guides/vision), and
-// [audio](https://platform.openai.com/docs/guides/audio) guides.
+// [text generation](https://developers.openai.com/api/docs/guides/text),
+// [vision](https://developers.openai.com/api/docs/guides/images-vision), and
+// [audio](https://developers.openai.com/api/docs/guides/audio) guides.
 //
 // Parameter support can differ depending on the model used to generate the
 // response, particularly for newer reasoning models. Parameters that are only
 // supported for reasoning models are noted below. For the current state of
 // unsupported parameters in reasoning models,
-// [refer to the reasoning guide](https://platform.openai.com/docs/guides/reasoning).
+// [refer to the reasoning guide](https://developers.openai.com/api/docs/guides/reasoning).
 //
 // Returns a chat completion object, or a streamed sequence of chat completion
 // chunk objects if the request is streamed.
@@ -192,6 +192,13 @@ type ChatCompletion struct {
 	Model string `json:"model" api:"required"`
 	// The object type, which is always `chat.completion`.
 	Object constant.ChatCompletion `json:"object" default:"chat.completion"`
+	// Set of 16 key-value pairs that can be attached to an object. This can be useful
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata shared.Metadata `json:"metadata" api:"nullable"`
 	// Moderation results for the request input and generated output, if moderated
 	// completions were requested.
 	Moderation ChatCompletionModeration `json:"moderation" api:"nullable"`
@@ -202,13 +209,15 @@ type ChatCompletion struct {
 	//     will use 'default'.
 	//   - If set to 'default', then the request will be processed with the standard
 	//     pricing and performance for the selected model.
-	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)',
-	//     then the request will be processed with the Flex Processing service tier.
-	//   - To opt-in to [Fast mode](/api/docs/guides/fast-mode) at the request level,
-	//     include the `service_tier=fast` or `service_tier=priority` parameter for
-	//     Responses or Chat Completions. The response will show `service_tier=priority`
-	//     regardless of if you specify `service_tier=fast` or `priority` in your
-	//     request.
+	//   - If set to
+	//     '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+	//     the request will be processed with the Flex Processing service tier.
+	//   - To opt-in to
+	//     [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+	//     request level, include the `service_tier=fast` or `service_tier=priority`
+	//     parameter for Responses or Chat Completions. The response will show
+	//     `service_tier=priority` regardless of if you specify `service_tier=fast` or
+	//     `priority` in your request.
 	//   - When not set, the default behavior is 'auto'.
 	//
 	// When the `service_tier` parameter is set, the response body will include the
@@ -234,6 +243,7 @@ type ChatCompletion struct {
 		Created           respjson.Field
 		Model             respjson.Field
 		Object            respjson.Field
+		Metadata          respjson.Field
 		Moderation        respjson.Field
 		ServiceTier       respjson.Field
 		SystemFingerprint respjson.Field
@@ -384,12 +394,12 @@ func (u ChatCompletionModerationInputUnion) AsAny() anyChatCompletionModerationI
 }
 
 func (u ChatCompletionModerationInputUnion) AsModerationResults() (v ChatCompletionModerationInputModerationResults) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatCompletionModerationInputUnion) AsError() (v ChatCompletionModerationInputError) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -541,12 +551,12 @@ func (u ChatCompletionModerationOutputUnion) AsAny() anyChatCompletionModeration
 }
 
 func (u ChatCompletionModerationOutputUnion) AsModerationResults() (v ChatCompletionModerationOutputModerationResults) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatCompletionModerationOutputUnion) AsError() (v ChatCompletionModerationOutputError) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -647,13 +657,15 @@ func (r *ChatCompletionModerationOutputError) UnmarshalJSON(data []byte) error {
 //     will use 'default'.
 //   - If set to 'default', then the request will be processed with the standard
 //     pricing and performance for the selected model.
-//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)',
-//     then the request will be processed with the Flex Processing service tier.
-//   - To opt-in to [Fast mode](/api/docs/guides/fast-mode) at the request level,
-//     include the `service_tier=fast` or `service_tier=priority` parameter for
-//     Responses or Chat Completions. The response will show `service_tier=priority`
-//     regardless of if you specify `service_tier=fast` or `priority` in your
-//     request.
+//   - If set to
+//     '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+//     the request will be processed with the Flex Processing service tier.
+//   - To opt-in to
+//     [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+//     request level, include the `service_tier=fast` or `service_tier=priority`
+//     parameter for Responses or Chat Completions. The response will show
+//     `service_tier=priority` regardless of if you specify `service_tier=fast` or
+//     `priority` in your request.
 //   - When not set, the default behavior is 'auto'.
 //
 // When the `service_tier` parameter is set, the response body will include the
@@ -702,7 +714,7 @@ type ChatCompletionAssistantMessageParam struct {
 	// differentiate between participants of the same role.
 	Name param.Opt[string] `json:"name,omitzero"`
 	// Data about a previous audio response from the model.
-	// [Learn more](https://platform.openai.com/docs/guides/audio).
+	// [Learn more](https://developers.openai.com/api/docs/guides/audio).
 	Audio ChatCompletionAssistantMessageParamAudio `json:"audio,omitzero"`
 	// The contents of the assistant message. Required unless `tool_calls` or
 	// `function_call` is specified.
@@ -730,7 +742,7 @@ func (r *ChatCompletionAssistantMessageParam) UnmarshalJSON(data []byte) error {
 }
 
 // Data about a previous audio response from the model.
-// [Learn more](https://platform.openai.com/docs/guides/audio).
+// [Learn more](https://developers.openai.com/api/docs/guides/audio).
 //
 // The property ID is required.
 type ChatCompletionAssistantMessageParamAudio struct {
@@ -786,15 +798,6 @@ func (u ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) Marsh
 }
 func (u *ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) asAny() any {
-	if !param.IsOmitted(u.OfText) {
-		return u.OfText
-	} else if !param.IsOmitted(u.OfRefusal) {
-		return u.OfRefusal
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -866,7 +869,7 @@ func (r *ChatCompletionAssistantMessageParamFunctionCall) UnmarshalJSON(data []b
 
 // If the audio output modality is requested, this object contains data about the
 // audio response from the model.
-// [Learn more](https://platform.openai.com/docs/guides/audio).
+// [Learn more](https://developers.openai.com/api/docs/guides/audio).
 type ChatCompletionAudio struct {
 	// Unique identifier for this audio response.
 	ID string `json:"id" api:"required"`
@@ -897,7 +900,7 @@ func (r *ChatCompletionAudio) UnmarshalJSON(data []byte) error {
 
 // Parameters for audio output. Required when audio output is requested with
 // `modalities: ["audio"]`.
-// [Learn more](https://platform.openai.com/docs/guides/audio).
+// [Learn more](https://developers.openai.com/api/docs/guides/audio).
 //
 // The properties Format, Voice are required.
 type ChatCompletionAudioParam struct {
@@ -909,7 +912,8 @@ type ChatCompletionAudioParam struct {
 	// The voice the model uses to respond. Supported built-in voices are `alloy`,
 	// `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer`,
 	// `marin`, and `cedar`. You may also provide a custom voice object with an `id`,
-	// for example `{ "id": "voice_1234" }`.
+	// for example `{ "id": "voice_1234" }`. Custom voices must be created from audio
+	// samples. Voices created from text prompts are supported only in Live.
 	Voice ChatCompletionAudioParamVoiceUnion `json:"voice,omitzero" api:"required"`
 	paramObj
 }
@@ -954,17 +958,6 @@ func (u *ChatCompletionAudioParamVoiceUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ChatCompletionAudioParamVoiceUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfChatCompletionAudioVoiceString2) {
-		return &u.OfChatCompletionAudioVoiceString2
-	} else if !param.IsOmitted(u.OfChatCompletionAudioVoiceID) {
-		return u.OfChatCompletionAudioVoiceID
-	}
-	return nil
-}
-
 type ChatCompletionAudioParamVoiceString2 string
 
 const (
@@ -999,7 +992,7 @@ func (r *ChatCompletionAudioParamVoiceID) UnmarshalJSON(data []byte) error {
 
 // Represents a streamed chunk of a chat completion response returned by the model,
 // based on the provided input.
-// [Learn more](https://platform.openai.com/docs/guides/streaming-responses).
+// [Learn more](https://developers.openai.com/api/docs/guides/streaming-responses).
 type ChatCompletionChunk struct {
 	// A unique identifier for the chat completion. Each chunk has the same ID.
 	ID string `json:"id" api:"required"`
@@ -1017,6 +1010,10 @@ type ChatCompletionChunk struct {
 	// Moderation results for the request input and generated output. Present on the
 	// moderation chunk when moderated completions are requested.
 	Moderation ChatCompletionChunkModeration `json:"moderation" api:"nullable"`
+	// An obfuscation string added to normalize the size of streamed chunks as a
+	// mitigation to certain side-channel attacks. The field is included by default and
+	// omitted when `stream_options.include_obfuscation` is `false`.
+	Obfuscation string `json:"obfuscation"`
 	// Specifies the processing type used for serving the request.
 	//
 	//   - If set to 'auto', then the request will be processed with the service tier
@@ -1024,13 +1021,15 @@ type ChatCompletionChunk struct {
 	//     will use 'default'.
 	//   - If set to 'default', then the request will be processed with the standard
 	//     pricing and performance for the selected model.
-	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)',
-	//     then the request will be processed with the Flex Processing service tier.
-	//   - To opt-in to [Fast mode](/api/docs/guides/fast-mode) at the request level,
-	//     include the `service_tier=fast` or `service_tier=priority` parameter for
-	//     Responses or Chat Completions. The response will show `service_tier=priority`
-	//     regardless of if you specify `service_tier=fast` or `priority` in your
-	//     request.
+	//   - If set to
+	//     '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+	//     the request will be processed with the Flex Processing service tier.
+	//   - To opt-in to
+	//     [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+	//     request level, include the `service_tier=fast` or `service_tier=priority`
+	//     parameter for Responses or Chat Completions. The response will show
+	//     `service_tier=priority` regardless of if you specify `service_tier=fast` or
+	//     `priority` in your request.
 	//   - When not set, the default behavior is 'auto'.
 	//
 	// When the `service_tier` parameter is set, the response body will include the
@@ -1062,6 +1061,7 @@ type ChatCompletionChunk struct {
 		Model             respjson.Field
 		Object            respjson.Field
 		Moderation        respjson.Field
+		Obfuscation       respjson.Field
 		ServiceTier       respjson.Field
 		SystemFingerprint respjson.Field
 		Usage             respjson.Field
@@ -1077,17 +1077,20 @@ func (r *ChatCompletionChunk) UnmarshalJSON(data []byte) error {
 }
 
 type ChatCompletionChunkChoice struct {
-	// A chat completion delta generated by streamed model responses.
+	// A chat completion delta generated by streamed model responses. Streamed audio
+	// can arrive in partial updates with an ID, base64 data, or transcript text. The
+	// final audio update contains only its expiry timestamp.
 	Delta ChatCompletionChunkChoiceDelta `json:"delta" api:"required"`
 	// The reason the model stopped generating tokens. This will be `stop` if the model
 	// hit a natural stop point or a provided stop sequence, `length` if the maximum
 	// number of tokens specified in the request was reached, `content_filter` if
 	// content was omitted due to a flag from our content filters, `tool_calls` if the
 	// model called a tool, or `function_call` (deprecated) if the model called a
-	// function.
+	// function. Omitted from the final audio update containing only
+	// `delta.audio.expires_at`.
 	//
 	// Any of "stop", "length", "tool_calls", "content_filter", "function_call".
-	FinishReason string `json:"finish_reason" api:"required"`
+	FinishReason string `json:"finish_reason" api:"nullable"`
 	// The index of the choice in the list of choices.
 	Index int64 `json:"index" api:"required"`
 	// Log probability information for the choice.
@@ -1109,8 +1112,13 @@ func (r *ChatCompletionChunkChoice) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// A chat completion delta generated by streamed model responses.
+// A chat completion delta generated by streamed model responses. Streamed audio
+// can arrive in partial updates with an ID, base64 data, or transcript text. The
+// final audio update contains only its expiry timestamp.
 type ChatCompletionChunkChoiceDelta struct {
+	// A partial audio response. Audio chunks may carry an ID, base64 data, or
+	// transcript text; the final audio update contains only its expiry timestamp.
+	Audio ChatCompletionChunkChoiceDeltaAudio `json:"audio"`
 	// The contents of the chunk message.
 	Content string `json:"content" api:"nullable"`
 	// Deprecated and replaced by `tool_calls`. The name and arguments of a function
@@ -1127,6 +1135,7 @@ type ChatCompletionChunkChoiceDelta struct {
 	ToolCalls []ChatCompletionChunkChoiceDeltaToolCall `json:"tool_calls"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		Audio        respjson.Field
 		Content      respjson.Field
 		FunctionCall respjson.Field
 		Refusal      respjson.Field
@@ -1140,6 +1149,36 @@ type ChatCompletionChunkChoiceDelta struct {
 // Returns the unmodified JSON received from the API
 func (r ChatCompletionChunkChoiceDelta) RawJSON() string { return r.JSON.raw }
 func (r *ChatCompletionChunkChoiceDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A partial audio response. Audio chunks may carry an ID, base64 data, or
+// transcript text; the final audio update contains only its expiry timestamp.
+type ChatCompletionChunkChoiceDeltaAudio struct {
+	// Unique identifier for this audio response.
+	ID string `json:"id"`
+	// Base64 encoded audio bytes generated by the model, in the format specified in
+	// the request.
+	Data string `json:"data"`
+	// The Unix timestamp (in seconds) for when this audio response will no longer be
+	// accessible on the server for use in multi-turn conversations.
+	ExpiresAt int64 `json:"expires_at" format:"unixtime"`
+	// Transcript text from this audio chunk.
+	Transcript string `json:"transcript"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Data        respjson.Field
+		ExpiresAt   respjson.Field
+		Transcript  respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionChunkChoiceDeltaAudio) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionChunkChoiceDeltaAudio) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -1323,12 +1362,12 @@ func (u ChatCompletionChunkModerationInputUnion) AsAny() anyChatCompletionChunkM
 }
 
 func (u ChatCompletionChunkModerationInputUnion) AsModerationResults() (v ChatCompletionChunkModerationInputModerationResults) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatCompletionChunkModerationInputUnion) AsError() (v ChatCompletionChunkModerationInputError) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1485,12 +1524,12 @@ func (u ChatCompletionChunkModerationOutputUnion) AsAny() anyChatCompletionChunk
 }
 
 func (u ChatCompletionChunkModerationOutputUnion) AsModerationResults() (v ChatCompletionChunkModerationOutputModerationResults) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatCompletionChunkModerationOutputUnion) AsError() (v ChatCompletionChunkModerationOutputError) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1593,13 +1632,15 @@ func (r *ChatCompletionChunkModerationOutputError) UnmarshalJSON(data []byte) er
 //     will use 'default'.
 //   - If set to 'default', then the request will be processed with the standard
 //     pricing and performance for the selected model.
-//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)',
-//     then the request will be processed with the Flex Processing service tier.
-//   - To opt-in to [Fast mode](/api/docs/guides/fast-mode) at the request level,
-//     include the `service_tier=fast` or `service_tier=priority` parameter for
-//     Responses or Chat Completions. The response will show `service_tier=priority`
-//     regardless of if you specify `service_tier=fast` or `priority` in your
-//     request.
+//   - If set to
+//     '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+//     the request will be processed with the Flex Processing service tier.
+//   - To opt-in to
+//     [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+//     request level, include the `service_tier=fast` or `service_tier=priority`
+//     parameter for Responses or Chat Completions. The response will show
+//     `service_tier=priority` regardless of if you specify `service_tier=fast` or
+//     `priority` in your request.
 //   - When not set, the default behavior is 'auto'.
 //
 // When the `service_tier` parameter is set, the response body will include the
@@ -1657,19 +1698,6 @@ func (u ChatCompletionContentPartUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *ChatCompletionContentPartUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ChatCompletionContentPartUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfText) {
-		return u.OfText
-	} else if !param.IsOmitted(u.OfImageURL) {
-		return u.OfImageURL
-	} else if !param.IsOmitted(u.OfInputAudio) {
-		return u.OfInputAudio
-	} else if !param.IsOmitted(u.OfFile) {
-		return u.OfFile
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -1768,6 +1796,21 @@ func (u chatCompletionContentPartUnionParamPromptCacheBreakpoint) GetMode() *str
 	return nil
 }
 
+// Returns a pointer to the underlying variant's property, if present.
+func (u chatCompletionContentPartUnionParamPromptCacheBreakpoint) GetTtl() *string {
+	switch vt := u.any.(type) {
+	case *ChatCompletionContentPartTextPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *ChatCompletionContentPartImagePromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *ChatCompletionContentPartInputAudioPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *ChatCompletionContentPartFilePromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	}
+	return nil
+}
+
 func init() {
 	apijson.RegisterUnion[ChatCompletionContentPartUnionParam](
 		"type",
@@ -1778,8 +1821,8 @@ func init() {
 	)
 }
 
-// Learn about [file inputs](https://platform.openai.com/docs/guides/text) for text
-// generation.
+// Learn about [file inputs](https://developers.openai.com/api/docs/guides/text)
+// for text generation.
 //
 // The properties File, Type are required.
 type ChatCompletionContentPartFileParam struct {
@@ -1832,9 +1875,13 @@ func NewChatCompletionContentPartFilePromptCacheBreakpointParam() ChatCompletion
 // from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
 // token block.
 //
-// This struct has a constant value, construct it with
-// [NewChatCompletionContentPartFilePromptCacheBreakpointParam].
+// Use [NewChatCompletionContentPartFilePromptCacheBreakpointParam] to initialize
+// the constant fields.
 type ChatCompletionContentPartFilePromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -1848,7 +1895,14 @@ func (r *ChatCompletionContentPartFilePromptCacheBreakpointParam) UnmarshalJSON(
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Learn about [image inputs](https://platform.openai.com/docs/guides/vision).
+func init() {
+	apijson.RegisterFieldValidator[ChatCompletionContentPartFilePromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
+}
+
+// Learn about
+// [image inputs](https://developers.openai.com/api/docs/guides/images-vision).
 type ChatCompletionContentPartImage struct {
 	ImageURL ChatCompletionContentPartImageImageURL `json:"image_url" api:"required"`
 	// The type of the content part.
@@ -1887,9 +1941,9 @@ type ChatCompletionContentPartImageImageURL struct {
 	// Either a URL of the image or the base64 encoded image data.
 	URL string `json:"url" api:"required" format:"uri"`
 	// Specifies the detail level of the image. Learn more in the
-	// [Vision guide](https://platform.openai.com/docs/guides/vision#low-or-high-fidelity-image-understanding).
+	// [Vision guide](https://developers.openai.com/api/docs/guides/images-vision#choose-an-image-detail-level).
 	//
-	// Any of "auto", "low", "high".
+	// Any of "auto", "low", "high", "original".
 	Detail string `json:"detail"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -1912,9 +1966,14 @@ func (r *ChatCompletionContentPartImageImageURL) UnmarshalJSON(data []byte) erro
 type ChatCompletionContentPartImagePromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -1926,7 +1985,8 @@ func (r *ChatCompletionContentPartImagePromptCacheBreakpoint) UnmarshalJSON(data
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Learn about [image inputs](https://platform.openai.com/docs/guides/vision).
+// Learn about
+// [image inputs](https://developers.openai.com/api/docs/guides/images-vision).
 //
 // The properties ImageURL, Type are required.
 type ChatCompletionContentPartImageParam struct {
@@ -1955,9 +2015,9 @@ type ChatCompletionContentPartImageImageURLParam struct {
 	// Either a URL of the image or the base64 encoded image data.
 	URL string `json:"url" api:"required" format:"uri"`
 	// Specifies the detail level of the image. Learn more in the
-	// [Vision guide](https://platform.openai.com/docs/guides/vision#low-or-high-fidelity-image-understanding).
+	// [Vision guide](https://developers.openai.com/api/docs/guides/images-vision#choose-an-image-detail-level).
 	//
-	// Any of "auto", "low", "high".
+	// Any of "auto", "low", "high", "original".
 	Detail string `json:"detail,omitzero"`
 	paramObj
 }
@@ -1972,7 +2032,7 @@ func (r *ChatCompletionContentPartImageImageURLParam) UnmarshalJSON(data []byte)
 
 func init() {
 	apijson.RegisterFieldValidator[ChatCompletionContentPartImageImageURLParam](
-		"detail", "auto", "low", "high",
+		"detail", "auto", "low", "high", "original",
 	)
 }
 
@@ -1986,9 +2046,13 @@ func NewChatCompletionContentPartImagePromptCacheBreakpointParam() ChatCompletio
 // from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
 // token block.
 //
-// This struct has a constant value, construct it with
-// [NewChatCompletionContentPartImagePromptCacheBreakpointParam].
+// Use [NewChatCompletionContentPartImagePromptCacheBreakpointParam] to initialize
+// the constant fields.
 type ChatCompletionContentPartImagePromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -2002,7 +2066,13 @@ func (r *ChatCompletionContentPartImagePromptCacheBreakpointParam) UnmarshalJSON
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Learn about [audio inputs](https://platform.openai.com/docs/guides/audio).
+func init() {
+	apijson.RegisterFieldValidator[ChatCompletionContentPartImagePromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
+}
+
+// Learn about [audio inputs](https://developers.openai.com/api/docs/guides/audio).
 //
 // The properties InputAudio, Type are required.
 type ChatCompletionContentPartInputAudioParam struct {
@@ -2061,9 +2131,13 @@ func NewChatCompletionContentPartInputAudioPromptCacheBreakpointParam() ChatComp
 // from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
 // token block.
 //
-// This struct has a constant value, construct it with
-// [NewChatCompletionContentPartInputAudioPromptCacheBreakpointParam].
+// Use [NewChatCompletionContentPartInputAudioPromptCacheBreakpointParam] to
+// initialize the constant fields.
 type ChatCompletionContentPartInputAudioPromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -2075,6 +2149,12 @@ func (r ChatCompletionContentPartInputAudioPromptCacheBreakpointParam) MarshalJS
 }
 func (r *ChatCompletionContentPartInputAudioPromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ChatCompletionContentPartInputAudioPromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
 }
 
 // The properties Refusal, Type are required.
@@ -2096,8 +2176,7 @@ func (r *ChatCompletionContentPartRefusalParam) UnmarshalJSON(data []byte) error
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Learn about
-// [text inputs](https://platform.openai.com/docs/guides/text-generation).
+// Learn about [text inputs](https://developers.openai.com/api/docs/guides/text).
 type ChatCompletionContentPartText struct {
 	// The text content.
 	Text string `json:"text" api:"required"`
@@ -2139,9 +2218,14 @@ func (r ChatCompletionContentPartText) ToParam() ChatCompletionContentPartTextPa
 type ChatCompletionContentPartTextPromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -2153,8 +2237,7 @@ func (r *ChatCompletionContentPartTextPromptCacheBreakpoint) UnmarshalJSON(data 
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Learn about
-// [text inputs](https://platform.openai.com/docs/guides/text-generation).
+// Learn about [text inputs](https://developers.openai.com/api/docs/guides/text).
 //
 // The properties Text, Type are required.
 type ChatCompletionContentPartTextParam struct {
@@ -2189,9 +2272,13 @@ func NewChatCompletionContentPartTextPromptCacheBreakpointParam() ChatCompletion
 // from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
 // token block.
 //
-// This struct has a constant value, construct it with
-// [NewChatCompletionContentPartTextPromptCacheBreakpointParam].
+// Use [NewChatCompletionContentPartTextPromptCacheBreakpointParam] to initialize
+// the constant fields.
 type ChatCompletionContentPartTextPromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -2203,6 +2290,12 @@ func (r ChatCompletionContentPartTextPromptCacheBreakpointParam) MarshalJSON() (
 }
 func (r *ChatCompletionContentPartTextPromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ChatCompletionContentPartTextPromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
 }
 
 // A custom tool that processes input using a specified format.
@@ -2261,15 +2354,6 @@ func (u ChatCompletionCustomToolCustomFormatUnionParam) MarshalJSON() ([]byte, e
 }
 func (u *ChatCompletionCustomToolCustomFormatUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ChatCompletionCustomToolCustomFormatUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfText) {
-		return u.OfText
-	} else if !param.IsOmitted(u.OfGrammar) {
-		return u.OfGrammar
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -2514,11 +2598,11 @@ type ChatCompletionMessage struct {
 	// The role of the author of this message.
 	Role constant.Assistant `json:"role" default:"assistant"`
 	// Annotations for the message, when applicable, as when using the
-	// [web search tool](https://platform.openai.com/docs/guides/tools-web-search?api-mode=chat).
+	// [web search tool](https://developers.openai.com/api/docs/guides/tools-web-search).
 	Annotations []ChatCompletionMessageAnnotation `json:"annotations"`
 	// If the audio output modality is requested, this object contains data about the
 	// audio response from the model.
-	// [Learn more](https://platform.openai.com/docs/guides/audio).
+	// [Learn more](https://developers.openai.com/api/docs/guides/audio).
 	Audio ChatCompletionAudio `json:"audio" api:"nullable"`
 	// Deprecated and replaced by `tool_calls`. The name and arguments of a function
 	// that should be called, as generated by the model.
@@ -2545,59 +2629,6 @@ type ChatCompletionMessage struct {
 func (r ChatCompletionMessage) RawJSON() string { return r.JSON.raw }
 func (r *ChatCompletionMessage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r ChatCompletionMessage) ToParam() ChatCompletionMessageParamUnion {
-	asst := r.ToAssistantMessageParam()
-	return ChatCompletionMessageParamUnion{OfAssistant: &asst}
-}
-
-func (r ChatCompletionMessage) ToAssistantMessageParam() ChatCompletionAssistantMessageParam {
-	var p ChatCompletionAssistantMessageParam
-
-	// It is important to not rely on the JSON metadata property
-	// here, it may be unset if the receiver was generated via a
-	// [ChatCompletionAccumulator].
-	//
-	// Explicit null is intentionally elided from the response.
-	if r.Content != "" {
-		p.Content.OfString = String(r.Content)
-	}
-	if r.Refusal != "" {
-		p.Refusal = String(r.Refusal)
-	}
-
-	p.Audio.ID = r.Audio.ID
-	p.Role = r.Role
-	p.FunctionCall.Arguments = r.FunctionCall.Arguments
-	p.FunctionCall.Name = r.FunctionCall.Name
-
-	if len(r.ToolCalls) > 0 {
-		for _, v := range r.ToolCalls {
-			u := ChatCompletionMessageToolCallUnionParam{}
-			switch v.AsAny().(type) {
-			case ChatCompletionMessageFunctionToolCall:
-				u.OfFunction = &ChatCompletionMessageFunctionToolCallParam{
-					ID: v.ID,
-					Function: ChatCompletionMessageFunctionToolCallFunctionParam{
-						Arguments: v.Function.Arguments,
-						Name:      v.Function.Name,
-					},
-				}
-			case ChatCompletionMessageCustomToolCall:
-				u.OfCustom = &ChatCompletionMessageCustomToolCallParam{
-					ID: v.ID,
-					Custom: ChatCompletionMessageCustomToolCallCustomParam{
-						Input: v.Custom.Input,
-						Name:  v.Custom.Name,
-					},
-				}
-			}
-
-			p.ToolCalls = append(p.ToolCalls, u)
-		}
-	}
-	return p
 }
 
 // A URL citation when using web search.
@@ -2875,17 +2906,6 @@ func (r *ChatCompletionMessageFunctionToolCallFunctionParam) UnmarshalJSON(data 
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func AssistantMessage[T string | []ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion](content T) ChatCompletionMessageParamUnion {
-	var assistant ChatCompletionAssistantMessageParam
-	switch v := any(content).(type) {
-	case string:
-		assistant.Content.OfString = param.NewOpt(v)
-	case []ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion:
-		assistant.Content.OfArrayOfContentParts = v
-	}
-	return ChatCompletionMessageParamUnion{OfAssistant: &assistant}
-}
-
 func DeveloperMessage[T string | []ChatCompletionContentPartTextParam](content T) ChatCompletionMessageParamUnion {
 	var developer ChatCompletionDeveloperMessageParam
 	switch v := any(content).(type) {
@@ -2974,23 +2994,6 @@ func (u ChatCompletionMessageParamUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *ChatCompletionMessageParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ChatCompletionMessageParamUnion) asAny() any {
-	if !param.IsOmitted(u.OfDeveloper) {
-		return u.OfDeveloper
-	} else if !param.IsOmitted(u.OfSystem) {
-		return u.OfSystem
-	} else if !param.IsOmitted(u.OfUser) {
-		return u.OfUser
-	} else if !param.IsOmitted(u.OfAssistant) {
-		return u.OfAssistant
-	} else if !param.IsOmitted(u.OfTool) {
-		return u.OfTool
-	} else if !param.IsOmitted(u.OfFunction) {
-		return u.OfFunction
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -3170,12 +3173,12 @@ func (u ChatCompletionMessageToolCallUnion) AsAny() anyChatCompletionMessageTool
 }
 
 func (u ChatCompletionMessageToolCallUnion) AsFunction() (v ChatCompletionMessageFunctionToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatCompletionMessageToolCallUnion) AsCustom() (v ChatCompletionMessageCustomToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -3210,15 +3213,6 @@ func (u ChatCompletionMessageToolCallUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *ChatCompletionMessageToolCallUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ChatCompletionMessageToolCallUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfFunction) {
-		return u.OfFunction
-	} else if !param.IsOmitted(u.OfCustom) {
-		return u.OfCustom
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -3378,15 +3372,6 @@ func (u *ChatCompletionPredictionContentContentUnionParam) UnmarshalJSON(data []
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ChatCompletionPredictionContentContentUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfContentParts) {
-		return &u.OfArrayOfContentParts
-	}
-	return nil
-}
-
 // A chat completion message generated by the model.
 type ChatCompletionStoreMessage struct {
 	// The identifier of the chat message.
@@ -3433,12 +3418,12 @@ type ChatCompletionStoreMessageContentPartUnion struct {
 }
 
 func (u ChatCompletionStoreMessageContentPartUnion) AsTextContentPart() (v ChatCompletionContentPartText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatCompletionStoreMessageContentPartUnion) AsImageContentPart() (v ChatCompletionContentPartImage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -3459,8 +3444,10 @@ func (r *ChatCompletionStoreMessageContentPartUnion) UnmarshalJSON(data []byte) 
 type ChatCompletionStoreMessageContentPartUnionPromptCacheBreakpoint struct {
 	// This field is from variant [ChatCompletionContentPartTextPromptCacheBreakpoint].
 	Mode constant.Explicit `json:"mode"`
+	Ttl  string            `json:"ttl"`
 	JSON struct {
 		Mode respjson.Field
+		Ttl  respjson.Field
 		raw  string
 	} `json:"-"`
 }
@@ -3636,15 +3623,6 @@ func (u *ChatCompletionToolUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ChatCompletionToolUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfFunction) {
-		return u.OfFunction
-	} else if !param.IsOmitted(u.OfCustom) {
-		return u.OfCustom
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u ChatCompletionToolUnionParam) GetFunction() *shared.FunctionDefinitionParam {
 	if vt := u.OfFunction; vt != nil {
@@ -3714,19 +3692,6 @@ func (u ChatCompletionToolChoiceOptionUnionParam) MarshalJSON() ([]byte, error) 
 }
 func (u *ChatCompletionToolChoiceOptionUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ChatCompletionToolChoiceOptionUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfAllowedTools) {
-		return u.OfAllowedTools
-	} else if !param.IsOmitted(u.OfFunctionToolChoice) {
-		return u.OfFunctionToolChoice
-	} else if !param.IsOmitted(u.OfCustomToolChoice) {
-		return u.OfCustomToolChoice
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -3924,17 +3889,17 @@ const (
 
 type ChatCompletionNewParams struct {
 	// A list of messages comprising the conversation so far. Depending on the
-	// [model](https://platform.openai.com/docs/models) you use, different message
-	// types (modalities) are supported, like
-	// [text](https://platform.openai.com/docs/guides/text-generation),
-	// [images](https://platform.openai.com/docs/guides/vision), and
-	// [audio](https://platform.openai.com/docs/guides/audio).
+	// [model](https://developers.openai.com/api/docs/models) you use, different
+	// message types (modalities) are supported, like
+	// [text](https://developers.openai.com/api/docs/guides/text),
+	// [images](https://developers.openai.com/api/docs/guides/images-vision), and
+	// [audio](https://developers.openai.com/api/docs/guides/audio).
 	Messages []ChatCompletionMessageParamUnion `json:"messages,omitzero" api:"required"`
-	// Model ID used to generate the response, like `gpt-4o` or `o3`. OpenAI offers a
-	// wide range of models with different capabilities, performance characteristics,
-	// and price points. Refer to the
-	// [model guide](https://platform.openai.com/docs/models) to browse and compare
-	// available models.
+	// Model ID used to generate the response, like `gpt-6-astra` or `o3`. OpenAI
+	// offers a wide range of models with different capabilities, performance
+	// characteristics, and price points. Refer to the
+	// [model guide](https://developers.openai.com/api/docs/models) to browse and
+	// compare available models.
 	Model shared.ChatModel `json:"model,omitzero" api:"required"`
 	// Number between -2.0 and 2.0. Positive values penalize new tokens based on their
 	// existing frequency in the text so far, decreasing the model's likelihood to
@@ -3946,15 +3911,15 @@ type ChatCompletionNewParams struct {
 	Logprobs param.Opt[bool] `json:"logprobs,omitzero"`
 	// An upper bound for the number of tokens that can be generated for a completion,
 	// including visible output tokens and
-	// [reasoning tokens](https://platform.openai.com/docs/guides/reasoning).
+	// [reasoning tokens](https://developers.openai.com/api/docs/guides/reasoning).
 	MaxCompletionTokens param.Opt[int64] `json:"max_completion_tokens,omitzero"`
-	// The maximum number of [tokens](/tokenizer) that can be generated in the chat
-	// completion. This value can be used to control
+	// The maximum number of [tokens](https://platform.openai.com/tokenizer) that can
+	// be generated in the chat completion. This value can be used to control
 	// [costs](https://openai.com/api/pricing/) for text generated via API.
 	//
 	// This value is now deprecated in favor of `max_completion_tokens`, and is not
 	// compatible with
-	// [o-series models](https://platform.openai.com/docs/guides/reasoning).
+	// [o-series models](https://developers.openai.com/api/docs/guides/reasoning).
 	MaxTokens param.Opt[int64] `json:"max_tokens,omitzero"`
 	// How many chat completion choices to generate for each input message. Note that
 	// you will be charged based on the number of generated tokens across all of the
@@ -3966,14 +3931,14 @@ type ChatCompletionNewParams struct {
 	PresencePenalty param.Opt[float64] `json:"presence_penalty,omitzero"`
 	// Used by OpenAI to cache responses for similar requests to optimize your cache
 	// hit rates. Replaces the `user` field.
-	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
+	// [Learn more](https://developers.openai.com/api/docs/guides/prompt-caching).
 	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
 	// A stable identifier used to help detect users of your application that may be
 	// violating OpenAI's usage policies. The IDs should be a string that uniquely
-	// identifies each user, with a maximum length of 64 characters. We recommend
+	// identifies each user, with a maximum length of 128 characters. We recommend
 	// hashing their username or email address, in order to avoid sending us any
 	// identifying information.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
 	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
 	// This feature is in Beta. If specified, our system will make a best effort to
 	// sample deterministically, such that repeated requests with the same `seed` and
@@ -3982,8 +3947,9 @@ type ChatCompletionNewParams struct {
 	// in the backend.
 	Seed param.Opt[int64] `json:"seed,omitzero"`
 	// Whether or not to store the output of this chat completion request for use in
-	// our [model distillation](https://platform.openai.com/docs/guides/distillation)
-	// or [evals](https://platform.openai.com/docs/guides/evals) products.
+	// our
+	// [model distillation](https://developers.openai.com/api/docs/guides/supervised-fine-tuning#distilling-from-a-larger-model)
+	// or [evals](https://developers.openai.com/api/docs/guides/evals) products.
 	//
 	// Supports text and image inputs. Note: image inputs over 8MB will be dropped.
 	Store param.Opt[bool] `json:"store,omitzero"`
@@ -4004,18 +3970,18 @@ type ChatCompletionNewParams struct {
 	// We generally recommend altering this or `temperature` but not both.
 	TopP param.Opt[float64] `json:"top_p,omitzero"`
 	// Whether to enable
-	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
+	// [parallel function calling](https://developers.openai.com/api/docs/guides/function-calling#parallel-function-calling)
 	// during tool use.
 	ParallelToolCalls param.Opt[bool] `json:"parallel_tool_calls,omitzero"`
 	// This field is being replaced by `safety_identifier` and `prompt_cache_key`. Use
 	// `prompt_cache_key` instead to maintain caching optimizations. A stable
 	// identifier for your end-users. Used to boost cache hit rates by better bucketing
 	// similar requests and to help OpenAI detect and prevent abuse.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
+	// [Learn more](https://developers.openai.com/api/docs/guides/safety-best-practices#implement-safety-identifiers).
 	User param.Opt[string] `json:"user,omitzero"`
 	// Parameters for audio output. Required when audio output is requested with
 	// `modalities: ["audio"]`.
-	// [Learn more](https://platform.openai.com/docs/guides/audio).
+	// [Learn more](https://developers.openai.com/api/docs/guides/audio).
 	Audio ChatCompletionAudioParam `json:"audio,omitzero"`
 	// Modify the likelihood of specified tokens appearing in the completion.
 	//
@@ -4039,8 +4005,8 @@ type ChatCompletionNewParams struct {
 	// `["text"]`
 	//
 	// The `gpt-4o-audio-preview` model can also be used to
-	// [generate audio](https://platform.openai.com/docs/guides/audio). To request that
-	// this model generate both text and audio responses, you can use:
+	// [generate audio](https://developers.openai.com/api/docs/guides/audio). To
+	// request that this model generate both text and audio responses, you can use:
 	//
 	// `["text", "audio"]`
 	//
@@ -4053,7 +4019,7 @@ type ChatCompletionNewParams struct {
 	// The retention policy for the prompt cache. Set to `24h` to enable extended
 	// prompt caching, which keeps cached prefixes active for longer, up to a maximum
 	// of 24 hours.
-	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching#prompt-cache-retention).
+	// [Learn more](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-retention).
 	// This field expresses a maximum retention policy, while
 	// `prompt_cache_options.ttl` expresses a minimum cache lifetime. The two fields
 	// are independent and do not interact. For `gpt-5.5`, `gpt-5.5-pro`, and future
@@ -4072,7 +4038,7 @@ type ChatCompletionNewParams struct {
 	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
 	// reasoning effort can result in faster responses and fewer tokens used on
 	// reasoning in a response. Not all reasoning models support every value. See the
-	// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+	// [reasoning guide](https://developers.openai.com/api/docs/guides/reasoning) for
 	// model-specific support.
 	//
 	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
@@ -4084,13 +4050,15 @@ type ChatCompletionNewParams struct {
 	//     will use 'default'.
 	//   - If set to 'default', then the request will be processed with the standard
 	//     pricing and performance for the selected model.
-	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)',
-	//     then the request will be processed with the Flex Processing service tier.
-	//   - To opt-in to [Fast mode](/api/docs/guides/fast-mode) at the request level,
-	//     include the `service_tier=fast` or `service_tier=priority` parameter for
-	//     Responses or Chat Completions. The response will show `service_tier=priority`
-	//     regardless of if you specify `service_tier=fast` or `priority` in your
-	//     request.
+	//   - If set to
+	//     '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+	//     the request will be processed with the Flex Processing service tier.
+	//   - To opt-in to
+	//     [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+	//     request level, include the `service_tier=fast` or `service_tier=priority`
+	//     parameter for Responses or Chat Completions. The response will show
+	//     `service_tier=priority` regardless of if you specify `service_tier=fast` or
+	//     `priority` in your request.
 	//   - When not set, the default behavior is 'auto'.
 	//
 	// When the `service_tier` parameter is set, the response body will include the
@@ -4133,8 +4101,11 @@ type ChatCompletionNewParams struct {
 	//
 	// A list of functions the model may generate JSON inputs for.
 	Functions []ChatCompletionNewParamsFunction `json:"functions,omitzero"`
-	// Static predicted output content, such as the content of a text file that is
-	// being regenerated.
+	// Configuration for a
+	// [Predicted Output](https://developers.openai.com/api/docs/guides/predicted-outputs),
+	// which can greatly improve response times when large parts of the model response
+	// are known ahead of time. This is most common when you are regenerating a file
+	// with only minor changes to most of the content.
 	Prediction ChatCompletionPredictionContentParam `json:"prediction,omitzero"`
 	// Options for prompt caching. Supported for `gpt-5.6` and later models. By
 	// default, OpenAI automatically chooses one implicit cache breakpoint. You can add
@@ -4143,7 +4114,7 @@ type ChatCompletionNewParams struct {
 	// up to the latest 80 breakpoints in the conversation, without a content-block
 	// lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
 	// `ttl` defaults to `30m`, which is currently the only supported value. See the
-	// [prompt caching guide](https://platform.openai.com/docs/guides/prompt-caching)
+	// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 	// for current details.
 	PromptCacheOptions ChatCompletionNewParamsPromptCacheOptions `json:"prompt_cache_options,omitzero"`
 	// An object specifying the format that the model must output.
@@ -4151,7 +4122,7 @@ type ChatCompletionNewParams struct {
 	// Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
 	// Outputs which ensures the model will match your supplied JSON schema. Learn more
 	// in the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	// [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
 	//
 	// Setting to `{ "type": "json_object" }` enables the older JSON mode, which
 	// ensures the message the model generates is valid JSON. Using `json_schema` is
@@ -4168,12 +4139,13 @@ type ChatCompletionNewParams struct {
 	// are present.
 	ToolChoice ChatCompletionToolChoiceOptionUnionParam `json:"tool_choice,omitzero"`
 	// A list of tools the model may call. You can provide either
-	// [custom tools](https://platform.openai.com/docs/guides/function-calling#custom-tools)
-	// or [function tools](https://platform.openai.com/docs/guides/function-calling).
+	// [custom tools](https://developers.openai.com/api/docs/guides/function-calling#custom-tools)
+	// or
+	// [function tools](https://developers.openai.com/api/docs/guides/function-calling).
 	Tools []ChatCompletionToolUnionParam `json:"tools,omitzero"`
 	// This tool searches the web for relevant results to use in a response. Learn more
 	// about the
-	// [web search tool](https://platform.openai.com/docs/guides/tools-web-search?api-mode=chat).
+	// [web search tool](https://developers.openai.com/api/docs/guides/tools-web-search).
 	WebSearchOptions ChatCompletionNewParamsWebSearchOptions `json:"web_search_options,omitzero"`
 	paramObj
 }
@@ -4203,15 +4175,6 @@ func (u *ChatCompletionNewParamsFunctionCallUnion) UnmarshalJSON(data []byte) er
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ChatCompletionNewParamsFunctionCallUnion) asAny() any {
-	if !param.IsOmitted(u.OfFunctionCallMode) {
-		return &u.OfFunctionCallMode
-	} else if !param.IsOmitted(u.OfFunctionCallOption) {
-		return u.OfFunctionCallOption
-	}
-	return nil
-}
-
 // `none` means the model will not call a function and instead generates a message.
 // `auto` means the model can pick between generating a message or calling a
 // function.
@@ -4233,8 +4196,8 @@ type ChatCompletionNewParamsFunction struct {
 	// how to call the function.
 	Description param.Opt[string] `json:"description,omitzero"`
 	// The parameters the functions accepts, described as a JSON Schema object. See the
-	// [guide](https://platform.openai.com/docs/guides/function-calling) for examples,
-	// and the
+	// [guide](https://developers.openai.com/api/docs/guides/function-calling) for
+	// examples, and the
 	// [JSON Schema reference](https://json-schema.org/understanding-json-schema/) for
 	// documentation about the format.
 	//
@@ -4341,7 +4304,7 @@ func init() {
 // up to the latest 80 breakpoints in the conversation, without a content-block
 // lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
 // `ttl` defaults to `30m`, which is currently the only supported value. See the
-// [prompt caching guide](https://platform.openai.com/docs/guides/prompt-caching)
+// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 // for current details.
 type ChatCompletionNewParamsPromptCacheOptions struct {
 	// Controls whether OpenAI automatically creates an implicit cache breakpoint.
@@ -4384,7 +4347,7 @@ func init() {
 // The retention policy for the prompt cache. Set to `24h` to enable extended
 // prompt caching, which keeps cached prefixes active for longer, up to a maximum
 // of 24 hours.
-// [Learn more](https://platform.openai.com/docs/guides/prompt-caching#prompt-cache-retention).
+// [Learn more](https://developers.openai.com/api/docs/guides/prompt-caching#prompt-cache-retention).
 // This field expresses a maximum retention policy, while
 // `prompt_cache_options.ttl` expresses a minimum cache lifetime. The two fields
 // are independent and do not interact. For `gpt-5.5`, `gpt-5.5-pro`, and future
@@ -4418,17 +4381,6 @@ func (u ChatCompletionNewParamsResponseFormatUnion) MarshalJSON() ([]byte, error
 }
 func (u *ChatCompletionNewParamsResponseFormatUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ChatCompletionNewParamsResponseFormatUnion) asAny() any {
-	if !param.IsOmitted(u.OfText) {
-		return u.OfText
-	} else if !param.IsOmitted(u.OfJSONSchema) {
-		return u.OfJSONSchema
-	} else if !param.IsOmitted(u.OfJSONObject) {
-		return u.OfJSONObject
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -4467,13 +4419,15 @@ func init() {
 //     will use 'default'.
 //   - If set to 'default', then the request will be processed with the standard
 //     pricing and performance for the selected model.
-//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)',
-//     then the request will be processed with the Flex Processing service tier.
-//   - To opt-in to [Fast mode](/api/docs/guides/fast-mode) at the request level,
-//     include the `service_tier=fast` or `service_tier=priority` parameter for
-//     Responses or Chat Completions. The response will show `service_tier=priority`
-//     regardless of if you specify `service_tier=fast` or `priority` in your
-//     request.
+//   - If set to
+//     '[flex](https://developers.openai.com/api/docs/guides/flex-processing)', then
+//     the request will be processed with the Flex Processing service tier.
+//   - To opt-in to
+//     [Fast mode](https://developers.openai.com/api/docs/guides/fast-mode) at the
+//     request level, include the `service_tier=fast` or `service_tier=priority`
+//     parameter for Responses or Chat Completions. The response will show
+//     `service_tier=priority` regardless of if you specify `service_tier=fast` or
+//     `priority` in your request.
 //   - When not set, the default behavior is 'auto'.
 //
 // When the `service_tier` parameter is set, the response body will include the
@@ -4507,15 +4461,6 @@ func (u *ChatCompletionNewParamsStopUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ChatCompletionNewParamsStopUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfStringArray) {
-		return &u.OfStringArray
-	}
-	return nil
-}
-
 // Constrains the verbosity of the model's response. Lower values will result in
 // more concise responses, while higher values will result in more verbose
 // responses. Currently supported values are `low`, `medium`, and `high`. The
@@ -4530,7 +4475,7 @@ const (
 
 // This tool searches the web for relevant results to use in a response. Learn more
 // about the
-// [web search tool](https://platform.openai.com/docs/guides/tools-web-search?api-mode=chat).
+// [web search tool](https://developers.openai.com/api/docs/guides/tools-web-search).
 type ChatCompletionNewParamsWebSearchOptions struct {
 	// Approximate location parameters for the search.
 	UserLocation ChatCompletionNewParamsWebSearchOptionsUserLocation `json:"user_location,omitzero"`

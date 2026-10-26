@@ -12,3 +12,4 @@
 /.github/workflows/go-version-review.yml @openai/sdks-team
 /.github/codex/ @openai/sdks-team
 /GO_VERSION_POLICY.md @openai/sdks-team
+/GO_CODE_QUALITY_POLICY.md @openai/sdks-team
