@@ -93,7 +93,7 @@ jobs:
         if: failure()
         run: |
           {
-            echo "Release DRI: acknowledge failed or missing indexing within 15 minutes of release and recover within 60 minutes."
-            echo "Retry Index Go docs on main with the exact release tag and independently verified full commit SHA."
-            echo "Escalate to the SDK on-call after one manual recovery fails or the 60-minute deadline passes. Never rerun Create releases to retry indexing."
+            echo "Release DRI: acknowledge failed indexing within 15 minutes of release."
+            echo "Retry Index Go docs on main with the exact release tag and independently verified full commit SHA. Never rerun Create releases to retry indexing."
+            echo "Within 60 minutes, verify that the exact released version appears on pkg.go.dev or escalate to SDK on-call if blocked upstream. Escalate immediately after one failed manual recovery."
           } >> "$GITHUB_STEP_SUMMARY"

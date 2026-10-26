@@ -26,8 +26,18 @@ jobs:
           permission-pull-requests: write
 
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        id: release
         with:
           token: ${{ steps.app-token.outputs.token }}
           target-branch: main
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+      - name: Record indexing handoff
+        if: steps.release.outputs.releases_created == 'true'
+        run: |
+          {
+            echo "Release DRI: within 15 minutes of release, check that every new release tag has a matching [Index Go docs run](https://github.com/openai/openai-go/actions/workflows/index-go-docs.yml)."
+            echo "If a run is missing or failed, dispatch Index Go docs on main with the exact tag and independently verified full commit SHA. Never rerun Create releases to retry indexing."
+            echo "Within 60 minutes, verify that the exact released version appears on pkg.go.dev or escalate to SDK on-call if blocked upstream. Escalate immediately after one failed manual recovery."
+          } >> "$GITHUB_STEP_SUMMARY"
