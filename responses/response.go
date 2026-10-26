@@ -18519,8 +18519,6 @@ func (ResponseOutputMessage) implResponseItemUnion()               {}
 //	}
 func (u ResponseItemUnion) AsAny() anyResponseItem {
 	switch u.Type {
-	case "message":
-		return u.AsOutputMessage()
 	case "file_search_call":
 		return u.AsFileSearchCall()
 	case "computer_call":
@@ -18577,6 +18575,8 @@ func (u ResponseItemUnion) AsAny() anyResponseItem {
 		return u.AsCustomToolCall()
 	case "custom_tool_call_output":
 		return u.AsCustomToolCallOutput()
+	case "message":
+		return u.AsOutputMessage()
 	}
 	return nil
 }
@@ -26985,11 +26985,14 @@ type ResponseToolSearchOutputItemParamToolImageGeneration struct {
 	// Optional mask for inpainting. Contains `image_url` (string, optional) and
 	// `file_id` (string, optional).
 	InputImageMask ResponseToolSearchOutputItemParamToolImageGenerationInputImageMaskResp `json:"input_image_mask"`
-	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
-	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`,
-	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
-	// `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, or
-	// `chatgpt-image-latest`. Default: `gpt-image-1`.
+	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
+	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
+	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
+	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2`.
+	//
+	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
+	// `gpt-image-2.5-flare` instead.
 	Model string `json:"model"`
 	// Moderation level for the generated image. Default: `auto`.
 	//
@@ -28247,11 +28250,14 @@ type ResponseToolSearchOutputItemParamToolImageGenerationParam struct {
 	// Optional mask for inpainting. Contains `image_url` (string, optional) and
 	// `file_id` (string, optional).
 	InputImageMask ResponseToolSearchOutputItemParamToolImageGenerationInputImageMask `json:"input_image_mask,omitzero"`
-	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
-	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`,
-	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
-	// `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, or
-	// `chatgpt-image-latest`. Default: `gpt-image-1`.
+	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
+	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
+	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
+	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2`.
+	//
+	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
+	// `gpt-image-2.5-flare` instead.
 	Model string `json:"model,omitzero"`
 	// Moderation level for the generated image. Default: `auto`.
 	//
@@ -33454,11 +33460,14 @@ type ToolImageGeneration struct {
 	// Optional mask for inpainting. Contains `image_url` (string, optional) and
 	// `file_id` (string, optional).
 	InputImageMask ToolImageGenerationInputImageMask `json:"input_image_mask"`
-	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
-	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`,
-	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
-	// `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, or
-	// `chatgpt-image-latest`. Default: `gpt-image-1`.
+	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
+	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
+	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
+	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2`.
+	//
+	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
+	// `gpt-image-2.5-flare` instead.
 	Model string `json:"model"`
 	// Moderation level for the generated image. Default: `auto`.
 	//
@@ -34648,11 +34657,14 @@ type ToolImageGenerationParam struct {
 	// Optional mask for inpainting. Contains `image_url` (string, optional) and
 	// `file_id` (string, optional).
 	InputImageMask ToolImageGenerationInputImageMaskParam `json:"input_image_mask,omitzero"`
-	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
-	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`,
-	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
-	// `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, or
-	// `chatgpt-image-latest`. Default: `gpt-image-1`.
+	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
+	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
+	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
+	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2`.
+	//
+	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
+	// `gpt-image-2.5-flare` instead.
 	Model string `json:"model,omitzero"`
 	// Moderation level for the generated image. Default: `auto`.
 	//

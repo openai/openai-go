@@ -1,3 +1,5 @@
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
+
 package responses
 
 import (
@@ -10,19 +12,20 @@ import (
 	"time"
 )
 
-// ResponseConnectionOptions configures a Responses WebSocket connection.
+// ResponseConnectionOptions configures a WebSocket connection.
 // Zero values use the transport's documented defaults.
 type ResponseConnectionOptions = websocket.Options
 
-// ResponseConnection owns a Responses API socket. Terminal response events do
-// not close it. Use Close or Abort to release its reader and network resources.
+// ResponseConnection owns a WebSocket. Receiving a terminal API event
+// does not close it. Use Close or Abort to release its reader and socket.
 type ResponseConnection struct {
 	connection *websocket.Connection[responseWebsocketEvent]
 	open       func(context.Context) (*ResponseConnection, error)
 }
 
-// Connect opens a Responses API WebSocket. ctx and HTTP client timeouts bound
-// opening only. The caller owns the connection lifetime through Close or Abort.
+// Connect opens a WebSocket. ctx and HTTP client timeouts bound opening only.
+// The caller owns its lifetime through Close or Abort. Use option.WithQuery
+// and option.WithQueryAdd for API query parameters.
 func (r *ResponseService) Connect(ctx context.Context, options ResponseConnectionOptions, opts ...option.RequestOption) (*ResponseConnection, error) {
 	newRequest := r.newWebSocketRequest(opts...)
 	var open func(context.Context) (*ResponseConnection, error)
@@ -45,61 +48,50 @@ func (r *ResponseService) Connect(ctx context.Context, options ResponseConnectio
 	return open(ctx)
 }
 
-// Queues retain wire bytes rather than all inline variants of the public union.
-// Validate JSON and its event type before queueing so malformed events still
-// fail the connection immediately, even when their lane is not being consumed.
+// Queues retain wire bytes instead of every inline variant of the event union.
 type responseWebsocketEvent struct {
 	data     []byte
 	streamID string
 }
 
 func decodeResponseWebsocketEvent(data []byte) (responseWebsocketEvent, error) {
-	var event responseWebsocketEvent
 	var envelope struct {
 		Type string `json:"type"`
 	}
 	if err := json.Unmarshal(data, &envelope); err != nil {
-		return event, err
+		return responseWebsocketEvent{}, err
 	}
 	// Typed decoding uses the first exact key; keep legacy envelope validation too.
 	kind := gjson.GetBytes(data, "type")
 	if envelope.Type == "" || (kind.Exists() && (kind.Type != gjson.String || kind.Str == "")) {
-		return event, errors.New("responses websocket event is missing type")
+		return responseWebsocketEvent{}, errors.New("responses websocket event is missing type")
 	}
 	var route struct {
 		StreamID string `json:"stream_id"`
 	}
-	// Preserve the existing permissive routing of missing or invalid stream IDs.
+	// Preserve permissive routing of missing or invalid stream IDs.
 	_ = json.Unmarshal(data, &route)
 	return responseWebsocketEvent{data: data, streamID: route.StreamID}, nil
 }
 
 func (e responseWebsocketEvent) decode() (ResponsesServerEventUnion, error) {
-	// The union preserves schema mismatches as field metadata; JSON and event
-	// type errors have already been rejected by the reader.
 	var event ResponsesServerEventUnion
 	err := event.unmarshalWebsocketEventWithRawType(e.data)
 	return event, err
 }
 
-// Send writes a typed client event once. Success is a local write, not a server
-// acknowledgment. A websocket.DeliveryError identifies uncertain delivery.
+// Send writes an event once. Success means a local write, not acknowledgment.
+// A websocket.DeliveryError identifies uncertain delivery.
 func (c *ResponseConnection) Send(ctx context.Context, event ResponsesClientEventUnionParam) error {
 	return c.connection.SendJSON(ctx, event)
 }
 
-// Create sends a typed response.create command, including routing and
-// continuation fields. It does not wait for response completion.
-func (c *ResponseConnection) Create(ctx context.Context, event ResponsesClientEventResponseCreateParam) error {
-	return c.connection.SendJSON(ctx, event)
-}
-
-// Recv receives the next event not claimed by an attached lane. Canceling ctx
-// cancels only this wait and leaves the next event available.
+// Recv receives the next event. Canceling ctx cancels only this wait.
 func (c *ResponseConnection) Recv(ctx context.Context) (ResponsesServerEventUnion, error) {
 	event, err := c.connection.Recv(ctx)
 	if err != nil {
-		return ResponsesServerEventUnion{}, err
+		var zero ResponsesServerEventUnion
+		return zero, err
 	}
 	return event.decode()
 }
@@ -127,11 +119,17 @@ func (c *ResponseConnection) Close() error { return c.connection.Close() }
 // Abort immediately closes the connection and cancels pending operations.
 func (c *ResponseConnection) Abort() { c.connection.Abort() }
 
-// Reconnect explicitly replaces this connection. It refreshes handshake
-// credentials but never replays commands or restores connection-local service
-// state. Applications must restore any required state on the returned connection.
+// Reconnect explicitly replaces this connection and refreshes its credentials.
+// It never replays commands or restores API session state.
 func (c *ResponseConnection) Reconnect(ctx context.Context) (*ResponseConnection, error) {
 	return c.Recover(ctx, ResponseRecoveryOptions{})
+
+}
+
+// Create sends a typed response.create command, including routing and
+// continuation fields. It does not wait for response completion.
+func (c *ResponseConnection) Create(ctx context.Context, event ResponsesClientEventResponseCreateParam) error {
+	return c.connection.SendJSON(ctx, event)
 }
 
 // ResponseRecoveryOptions configures explicit, opt-in transport recovery.
