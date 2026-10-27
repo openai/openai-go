@@ -52909,6 +52909,11 @@ components:
                     anyOf:
                     - $ref: '#/components/schemas/AssistantToolsCode'
                     - $ref: '#/components/schemas/AssistantToolsFileSearchTypeOnly'
+                      x-openai-go-public-shape:
+                        type_name: MessageAttachmentToolFileSearchTool
+                      x-stainless-naming:
+                        go:
+                          type_name: MessageAttachmentToolFileSearchTool
             description: A list of files attached to the message, and the tools they were added to.
           - type: 'null'
         metadata:

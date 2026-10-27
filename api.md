@@ -27,7 +27,6 @@
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#CustomToolInputFormatUnion">CustomToolInputFormatUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#DecisionQuestionInputPartUnion">DecisionQuestionInputPartUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#ErrorObject">ErrorObject</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#DecisionQuestionInputPartUnion">DecisionQuestionInputPartUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#FunctionDefinition">FunctionDefinition</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#FunctionParameters">FunctionParameters</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#Metadata">Metadata</a>
