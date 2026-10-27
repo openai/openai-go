@@ -22,6 +22,10 @@ Security cloud scan field is external configuration, not repository guidance,
 and should contain only a short pointer to this file once the scanned revision
 includes it.
 
+SDK lint verifies generated-file contents and Git file modes against the
+checked-in compiler inventory. The checker runs with the existing lint job
+permissions; inventory and checker changes receive ordinary SDK code review.
+
 ## 1. Overview
 
 openai-go is the official Go client SDK for OpenAI APIs. It is a library
