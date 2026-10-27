@@ -4,10 +4,12 @@ on:
   push:
     branches:
       - main
+      - next
   pull_request:
     types: [opened, synchronize, reopened, edited]
     branches:
       - main
+      - next
   merge_group:
     types:
       - checks_requested
