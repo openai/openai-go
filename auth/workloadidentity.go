@@ -30,10 +30,19 @@ var (
 	errWorkloadIdentityRedirect  = errors.New("workload identity does not follow redirects")
 )
 
+// WorkloadIdentityAuth caches credentials separately for each HTTP identity.
+// Providers and custom doers must keep their identity stable while in use.
+// Rotate opaque credentials by creating a new provider/authenticator or doer.
 type WorkloadIdentityAuth struct {
+	config     WorkloadIdentity
+	mu         sync.Mutex
+	partitions *workloadIdentityPartitions
+}
+
+type workloadTokenCache struct {
 	config WorkloadIdentity
 
-	// Protects cachedToken, tokenExpiry, and refreshInFlight
+	// Protects cachedToken, tokenExpiry, and refreshInFlight.
 	mu              sync.Mutex
 	cachedToken     string
 	rejectedToken   string
@@ -81,7 +90,18 @@ func NewWorkloadIdentityAuth(config WorkloadIdentity) (*WorkloadIdentityAuth, er
 	}, nil
 }
 
+// GetToken reuses tokens only for the same effective HTTP identity. Native
+// clients are scoped by both client and transport; certificate rotation should
+// use a new transport. Non-comparable custom doers are supported without caching
+// across calls. Cached identity retention is bounded, so idle identities may
+// need a new exchange after eviction.
 func (w *WorkloadIdentityAuth) GetToken(ctx context.Context, httpClient HTTPDoer) (string, error) {
+	cache, httpClient, release := w.acquireCache(httpClient)
+	defer release()
+	return cache.getToken(ctx, httpClient)
+}
+
+func (w *workloadTokenCache) getToken(ctx context.Context, httpClient HTTPDoer) (string, error) {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
@@ -122,7 +142,7 @@ func (w *WorkloadIdentityAuth) GetToken(ctx context.Context, httpClient HTTPDoer
 }
 
 // Single-flight pattern: ensures only one refresh runs, others wait for result
-func (w *WorkloadIdentityAuth) handleLockedRefresh(ctx context.Context, httpClient HTTPDoer) (string, error) {
+func (w *workloadTokenCache) handleLockedRefresh(ctx context.Context, httpClient HTTPDoer) (string, error) {
 	if w.refreshInFlight == nil {
 		// No refresh running: start foreground refresh, unlock before blocking operation
 		state := w.beginRefreshLocked()
@@ -136,7 +156,7 @@ func (w *WorkloadIdentityAuth) handleLockedRefresh(ctx context.Context, httpClie
 	return w.waitForRefresh(ctx, state)
 }
 
-func (w *WorkloadIdentityAuth) invalidateToken(value string) {
+func (w *workloadTokenCache) invalidateToken(value string) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if w.cachedToken != value {
@@ -149,19 +169,19 @@ func (w *WorkloadIdentityAuth) invalidateToken(value string) {
 	}
 }
 
-func (w *WorkloadIdentityAuth) beginRefreshLocked() *tokenRefreshState {
+func (w *workloadTokenCache) beginRefreshLocked() *tokenRefreshState {
 	w.refreshInFlight = &tokenRefreshState{done: make(chan struct{}), generation: w.cachedToken}
 	return w.refreshInFlight
 }
 
-func (w *WorkloadIdentityAuth) completeForegroundRefresh(ctx context.Context, state *tokenRefreshState, httpClient HTTPDoer) (string, error) {
+func (w *workloadTokenCache) completeForegroundRefresh(ctx context.Context, state *tokenRefreshState, httpClient HTTPDoer) (string, error) {
 	token, err := w.refreshToken(ctx, httpClient)
 	w.finishRefresh(state, token, err)
 	return state.result.token, state.result.err
 }
 
 // Atomically publishes refresh result and signals all waiting goroutines via channel close
-func (w *WorkloadIdentityAuth) finishRefresh(state *tokenRefreshState, token string, err error) {
+func (w *workloadTokenCache) finishRefresh(state *tokenRefreshState, token string, err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if w.refreshInFlight != state {
@@ -181,7 +201,7 @@ func (w *WorkloadIdentityAuth) finishRefresh(state *tokenRefreshState, token str
 }
 
 // Blocks until refresh completes or context is canceled
-func (w *WorkloadIdentityAuth) waitForRefresh(ctx context.Context, state *tokenRefreshState) (string, error) {
+func (w *workloadTokenCache) waitForRefresh(ctx context.Context, state *tokenRefreshState) (string, error) {
 	select {
 	case <-state.done: // Refresh completed
 		return state.result.token, state.result.err
@@ -190,7 +210,7 @@ func (w *WorkloadIdentityAuth) waitForRefresh(ctx context.Context, state *tokenR
 	}
 }
 
-func (w *WorkloadIdentityAuth) refreshToken(ctx context.Context, httpClient HTTPDoer) (string, error) {
+func (w *workloadTokenCache) refreshToken(ctx context.Context, httpClient HTTPDoer) (string, error) {
 	for attempt := 0; attempt < workloadMaximumRefreshAttempts; attempt++ {
 		token, expiry, err := w.exchangeToken(ctx, httpClient)
 		if err != nil {
@@ -220,7 +240,7 @@ func (w *WorkloadIdentityAuth) refreshToken(ctx context.Context, httpClient HTTP
 	return "", errInvalidatedWorkloadBearer
 }
 
-func (w *WorkloadIdentityAuth) exchangeToken(ctx context.Context, httpClient HTTPDoer) (string, time.Time, error) {
+func (w *workloadTokenCache) exchangeToken(ctx context.Context, httpClient HTTPDoer) (string, time.Time, error) {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}

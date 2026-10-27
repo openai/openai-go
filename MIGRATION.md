@@ -282,3 +282,27 @@ The `.RawJSON()` method has moved to the parent of the `.JSON` property.
 ```
 
 [^1]: The SDK doesn't require Go 1.24, despite supporting the `omitzero` feature
+
+## Workload identity token reuse
+
+Reusing `option.WithWorkloadIdentity` across clients no longer shares one token
+cache across different HTTP identities. Each native HTTP client and transport
+pair keeps its own cache; request-level `option.WithHTTPClient` overrides select
+the corresponding identity. A rejected token invalidates only that identity's
+cache. The public method and option signatures are unchanged.
+
+Applications that previously relied on token reuse across different clients may
+make additional token exchanges. Reuse a stable client and transport when they
+represent the same identity. Native HTTP clients also retain tokens when their
+transport is a function or other non-comparable value; replacing that transport
+selects a separate cache. Non-comparable custom HTTP doers remain supported,
+but acquire tokens independently for each logical SDK request while retaining
+authentication state across that request’s retry attempts. The cache retains at most 32 idle
+or active identity entries; eviction or overflow may also require another
+exchange without limiting the number of clients you can use. An overflowing
+identity retains its authentication state across attempts of one SDK request.
+
+Keep provider and custom-doer identities stable while in use. To rotate opaque
+credentials, construct a new provider/authenticator or HTTP doer. To rotate
+client certificates, use a new transport. Do not mutate a client or transport
+concurrently with requests.
