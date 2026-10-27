@@ -3,11 +3,11 @@
   "files": {
     ".github/workflows/castiron-custom-code-comment.yml": {
       "mode": "100644",
-      "sha256": "bdde9eec1ff9c0e842ddc0f69df5611ad4eb0336602489e2dcddfbcf8ad86e37"
+      "sha256": "ec43a2286a8f61efc2bfade540b4ccf572aac51fe0d2796121700f64f5bfce9b"
     },
     ".github/workflows/castiron-custom-code.yml": {
       "mode": "100644",
-      "sha256": "2760a19c1e05a2a01d73a679dac9d59ba7cfee2faa2fe426182f740ae1603202"
+      "sha256": "b52dcb3feb424790aff1f6f7cff7f385bd921369257b8e59be2e3860ec1f4926"
     },
     "admin.go": {
       "mode": "100644",
@@ -503,7 +503,7 @@
     },
     "betaresponse.go": {
       "mode": "100644",
-      "sha256": "89c97aae0a2643ee3a3900058a32f8df810c5ac547fa0e52769551b5d8950d50"
+      "sha256": "8a49bc5e4dcb96ceb3dd693848488c5fbd600ba244b5c361a8e844a299768e6f"
     },
     "betaresponse_test.go": {
       "mode": "100644",
@@ -563,7 +563,7 @@
     },
     "chatcompletion.go": {
       "mode": "100644",
-      "sha256": "67d563e396b65c3f2dd6df4158d13be65e2cf3a9606114743ab9767eae9ab3e6"
+      "sha256": "d8c44c94fb0f59211c031581c8db53e148cd523a293687aff15ad2e3feff5be6"
     },
     "chatcompletion_test.go": {
       "mode": "100644",
@@ -635,7 +635,7 @@
     },
     "conversations/conversation.go": {
       "mode": "100644",
-      "sha256": "f5a0d28169ca4245e74ca0553dca0e80f357c97326f2adc53a2d7fd9150fed5f"
+      "sha256": "fd31c2e017768742c2ab4ea3614a8564b615394b4a98096949b17c27aa063470"
     },
     "conversations/conversation_test.go": {
       "mode": "100644",
@@ -923,7 +923,7 @@
     },
     "responses/response.go": {
       "mode": "100644",
-      "sha256": "edcfac30047c17e81fc4cdc41a1352aef2cefa8a933fb05ef98d02dcd109d2cc"
+      "sha256": "840b6bfc08b87cea5dfc30adea5a36a220f1cf6a4bf54bc81446f1fcae658a3f"
     },
     "responses/response_test.go": {
       "mode": "100644",
@@ -963,7 +963,7 @@
     },
     "scripts/castiron/CUSTOM_CODE.md": {
       "mode": "100644",
-      "sha256": "8464fb28964ae0f7bec38ae7ba8107e97287d4118657a3017a2712e753d4c608"
+      "sha256": "c2b12719937fa007d65bea7429962f2b674c531a8c284cc6e5e51c2a526ae351"
     },
     "scripts/castiron/README.md": {
       "mode": "100644",
@@ -971,23 +971,23 @@
     },
     "scripts/castiron/custom_code_budget.py": {
       "mode": "100755",
-      "sha256": "3c96300546afb5e57fbfb596d4e1bde90821928e44904c4aeb91e2d7e4e27ff5"
+      "sha256": "b85ae4eab2a84dfbcd1f197f87077f686bc4f3347dbf74cca3abb1f99ab50b9a"
     },
     "scripts/castiron/custom_code_policy.py": {
       "mode": "100755",
-      "sha256": "7dff1ec5cd69deb85e430015d8f379f042eccbedc1786d3c9e4ed8532dfeca9c"
+      "sha256": "890ecfc963b8a2461e7e801c9071735a975ed9876de89c80323da10960965295"
     },
     "scripts/castiron/custom_code_report.py": {
       "mode": "100755",
-      "sha256": "a52a1aabf4047f4c20e96d1d788c25a4aa78c1987b4fa73a13d22c92ef213a3f"
+      "sha256": "ddb15c9a162d26a6c9abf1b4fefcd80f2e685d9d255af729863258b7ecd08e2d"
     },
     "scripts/castiron/custom_code_test_support.py": {
       "mode": "100644",
-      "sha256": "8fc5147352025e2c874ae855ac8f3ac649d531d2c1bd80c532bc4e9ec4fafa3f"
+      "sha256": "b90c31b6b7347a3bc254b9fec228d5ccad3025306c60465a027a239420276671"
     },
     "scripts/castiron/fixtures/github_publisher.cjs": {
       "mode": "100644",
-      "sha256": "162963b9a13c24443ac1a97f852f269fcde5fb011a0871d428f4585cbaac2dab"
+      "sha256": "c84bd86518a70a5b7bbf877d8c13129debface0c220e5118510b0ef17d9ab707"
     },
     "scripts/castiron/ruff.toml": {
       "mode": "100644",
@@ -995,27 +995,39 @@
     },
     "scripts/castiron/test_custom_code_budget.py": {
       "mode": "100644",
-      "sha256": "feaf35f7f30deecb89d95b31b8a325033180c64650e1d965cbdee486ab11f16d"
+      "sha256": "7fdb3a9282978e6b1c0d84d73c43bb4adf96ff035663e77bc8e45f0fe082be7d"
     },
     "scripts/castiron/test_custom_code_github.py": {
       "mode": "100644",
-      "sha256": "034eecfd80d3236509d2bf32fb6e69f8f13589c170b93f85935adde3d3b58b42"
+      "sha256": "815e8db60dd81f69895696813f6b612856eb899803e3e9b85df22ec688073b87"
     },
     "scripts/castiron/test_custom_code_policy.py": {
       "mode": "100644",
-      "sha256": "29b8dde7d69cad22fe6757356fa18ef189d7fc8f9349f65aad641005540faa26"
+      "sha256": "fd503013d604cf9659df95a3a47cecfc17da364397625d95ef6121aa790e6a05"
+    },
+    "scripts/castiron/test_custom_code_policy_source.py": {
+      "mode": "100644",
+      "sha256": "dcb0be5e8157791dc02d1ae1d6b82cc703d4bc7b3c4797bc00bd9d2672ad13a2"
     },
     "scripts/castiron/test_custom_code_publication.py": {
       "mode": "100644",
-      "sha256": "0e7628d6906153029fea156273094a3d0b17846abd0894a91ab0833241bfdf31"
+      "sha256": "4533c8c852d590446180715adbd00a63c12af29c53316d3e91d129890ccadbc6"
     },
     "scripts/castiron/test_custom_code_report.py": {
       "mode": "100644",
-      "sha256": "f4d90fd38b17aac59096488391b65ef9da5493d2049d4c038d5926a960257ca7"
+      "sha256": "e1fbafb5242cac6128757339d78902b12e7658c82e5f157cc2ca7bef80347838"
     },
     "scripts/castiron/test_custom_code_review_revocation.py": {
       "mode": "100644",
-      "sha256": "6d971965f6b4da770f4d49b3587dbd136c5be549453ae0d220150fc537b2736a"
+      "sha256": "d7f309e2324f48f62f9f7f90c2e82f31354e414a20e3ddb0da724b60adeff7a3"
+    },
+    "scripts/castiron/test_custom_code_status_publication.py": {
+      "mode": "100644",
+      "sha256": "7398877d4ec209d0cd40e0d83f8e4482b6de5bef95f1711c9905d6a97a3791d3"
+    },
+    "scripts/castiron/test_custom_code_strict.py": {
+      "mode": "100644",
+      "sha256": "20684147ec37f8233798a46aef8b618a2bbf2c8b507605a959d644fce163d73d"
     },
     "shared/constant/constants.go": {
       "mode": "100644",
@@ -1035,7 +1047,7 @@
     },
     "skillcontent.go": {
       "mode": "100644",
-      "sha256": "0d17285da7dddb8d4148c1e89920874940c496ab96954f047b1a63a2e2ecb0ec"
+      "sha256": "68838b31c585846b3638d7653886bf97beddc1ba4e788e51460e94c7a3556428"
     },
     "skillcontent_test.go": {
       "mode": "100644",
@@ -1051,7 +1063,7 @@
     },
     "skillversioncontent.go": {
       "mode": "100644",
-      "sha256": "66cc3d3a172f4413aa884b05cf7b917988511aca2581ce557437f3faf230629a"
+      "sha256": "c14cdb1a700d74c5c3f09e6a6b0edfec6754bce9280234e75164088492437ae3"
     },
     "skillversioncontent_test.go": {
       "mode": "100644",
@@ -1107,7 +1119,7 @@
     },
     "video.go": {
       "mode": "100644",
-      "sha256": "f6b0973331086e1021333666f115c62c6c291ee057f4f7196fc1a1104044d0b0"
+      "sha256": "5401da9db1300a02b914b012d0bf8024d273ee29602f8c668b0a4bc7310c7c45"
     },
     "video_test.go": {
       "mode": "100644",
