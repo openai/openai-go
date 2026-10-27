@@ -1672,8 +1672,10 @@ See [`examples/bedrock`](examples/bedrock) for a complete Responses API example.
 
 ## Azure OpenAI in Azure AI Foundry Models
 
-To use this library with [Azure OpenAI in Azure AI Foundry Models](https://learn.microsoft.com/azure/ai-services/openai/overview),
-use the option.RequestOption functions in the `azure` package.
+For dated [Azure OpenAI REST endpoints](https://learn.microsoft.com/azure/ai-services/openai/overview),
+use the `option.RequestOption` functions in the `azure` package. The versioned
+`azure.WithEndpoint` adapter does not support WebSocket upgrades. For the
+unified v1 WebSocket route, see below.
 
 ```go
 package main
@@ -1707,6 +1709,97 @@ func main() {
 	)
 }
 ```
+
+### Azure unified v1 WebSockets
+
+Use an HTTPS Azure resource endpoint with `/openai/v1/` and a deployment name
+for each service. Do not pass a dated `api-version` or `azure.WithEndpoint`.
+Responses sends the deployment in `response.create`; Realtime selects it with
+the `model` query parameter. The two services use different documented API-key
+handshakes: Responses accepts a bearer key, while Realtime uses `api-key`.
+
+Construct each service directly for an Azure endpoint. Unlike
+`openai.NewClient`, these constructors do not load `OPENAI_*` client defaults,
+including custom headers. Pass the Azure credential on each `Connect` call.
+Supply any intended transport settings as service or connection options.
+
+For Responses, construct a service with
+`responses.NewResponseService(option.WithBaseURL(endpoint+"/openai/v1/"))`.
+Pass `option.WithAPIKey(key)` to that service's
+`Connect(ctx, responses.ResponseConnectionOptions{}, ...)`,
+then set your Azure deployment name in `ResponsesClientEventResponseCreateParam.Model`.
+Follow the [Responses WebSocket lifecycle](#responses-websockets) to send,
+read and check a terminal response. A successful upgrade alone is not a completed response.
+
+The following program opens Realtime and verifies its initial session-ready event.
+It sends no application request. Set
+`AZURE_OPENAI_ENDPOINT` to the HTTPS resource endpoint without `/openai/v1`,
+`AZURE_OPENAI_API_KEY` and `AZURE_REALTIME_DEPLOYMENT`.
+
+```go
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/realtime"
+)
+
+func main() {
+	if err := run(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	endpoint := strings.TrimRight(os.Getenv("AZURE_OPENAI_ENDPOINT"), "/")
+	if !strings.HasPrefix(endpoint, "https://") {
+		return errors.New("AZURE_OPENAI_ENDPOINT must use https://")
+	}
+	key := os.Getenv("AZURE_OPENAI_API_KEY")
+	service := realtime.NewRealtimeService(
+		option.WithBaseURL(endpoint + "/openai/v1/"),
+	)
+	realtimeSocket, err := service.Connect(ctx, realtime.RealtimeConnectionOptions{},
+		option.WithQuery("model", os.Getenv("AZURE_REALTIME_DEPLOYMENT")),
+		option.WithHeader("api-key", key),
+	)
+	if err != nil {
+		return fmt.Errorf("Realtime opening failed (%T)", err)
+	}
+	defer realtimeSocket.Abort()
+	event, err := realtimeSocket.Recv(ctx)
+	if err != nil {
+		return fmt.Errorf("Realtime readiness failed (%T)", err)
+	}
+	if event.Type != "session.created" {
+		return errors.New("Realtime did not send its session-ready event")
+	}
+	return nil
+}
+```
+
+For Microsoft Entra ID, acquire a fresh token for the documented Azure scope
+`https://ai.azure.com/.default` before opening either v1 socket, and pass its
+`token.Token` through `option.WithAPIKey` on that `Connect` call. For Realtime,
+replace the `api-key` header option with that bearer option. The application owns
+token acquisition and expiry: before opening a replacement connection, acquire
+another token and call `Connect` with it. Do not rely on `Reconnect` to refresh
+a token supplied as a string. `azure.WithTokenCredential` belongs to the
+versioned REST adapter and cannot be used on its own with this v1 base URL.
+
+See Microsoft's [Responses WebSocket guide](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/websockets)
+and [Realtime WebSocket guide](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/realtime-audio-websockets)
+for the Azure-side endpoint, authentication, and deployment requirements.
 
 ## Semantic versioning
 
