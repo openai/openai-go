@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -42,6 +43,9 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	if response.Status != responses.ResponseStatusCompleted {
+		return errors.New("first response did not complete")
+	}
 	// Every turn is response.create. Send only new input with the previous ID.
 	if err = connection.Create(ctx, responses.ResponsesClientEventResponseCreateParam{
 		Model:              openai.ChatModelGPT5_2,
@@ -53,6 +57,9 @@ func run() error {
 	response, err = connection.FinalResponse(ctx)
 	if err != nil {
 		return err
+	}
+	if response.Status != responses.ResponseStatusCompleted {
+		return errors.New("continuation did not complete")
 	}
 	log.Printf("Continuation finished with status %s", errutil.Status(string(response.Status)))
 	return nil
