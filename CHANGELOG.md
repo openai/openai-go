@@ -1,5 +1,35 @@
 # Changelog
 
+## [3.89.0](https://github.com/openai/openai-go/compare/v3.88.0...v3.89.0) (2026-10-27)
+
+
+### Features
+
+* **api:** add prompt cache breakpoint TTL options ([#1162](https://github.com/openai/openai-go/issues/1162)) ([51a5817](https://github.com/openai/openai-go/commit/51a58179206a7aacda919e11a39d576c1ff2bb5b))
+
+
+### Bug Fixes
+
+* **api:** isolate decoded null collections ([#1159](https://github.com/openai/openai-go/issues/1159)) ([898671b](https://github.com/openai/openai-go/commit/898671b24c57cffc4bdc27387a2050eccf8e67a8))
+* **api:** preserve existing response and decision input behavior ([#1158](https://github.com/openai/openai-go/issues/1158)) ([0bd7238](https://github.com/openai/openai-go/commit/0bd72386202637e532ab25bddd88c221d9e09447))
+
+
+### Chores
+
+* **api:** alphabetize the shared type index ([#1163](https://github.com/openai/openai-go/issues/1163)) ([d32fa05](https://github.com/openai/openai-go/commit/d32fa05522b0459b237392efdbef17de5b898a26))
+* enforce strict generated-file ownership ([#1165](https://github.com/openai/openai-go/issues/1165)) ([2bd28ff](https://github.com/openai/openai-go/commit/2bd28ffdb83b6a864be82340cebb5c42e4829da5))
+* set custom-code budget to zero ([#1164](https://github.com/openai/openai-go/issues/1164)) ([9d77839](https://github.com/openai/openai-go/commit/9d778394b406ae0da61efdc36d310060570d7e17))
+
+
+### Build System
+
+* **deps:** bump actions/create-github-app-token from 3.2.0 to 3.3.0 ([#1139](https://github.com/openai/openai-go/issues/1139)) ([67bcaaf](https://github.com/openai/openai-go/commit/67bcaafa45abcb3191036b28fdec3c069d6fae19))
+* **deps:** bump actions/download-artifact from 8.0.1 to 8.0.2 ([#1101](https://github.com/openai/openai-go/issues/1101)) ([b2b294f](https://github.com/openai/openai-go/commit/b2b294f60a18d2c0db487d63dd4436faead96d68))
+* **deps:** bump actions/setup-node from 7.0.0 to 7.1.0 ([#1102](https://github.com/openai/openai-go/issues/1102)) ([c3a3c9a](https://github.com/openai/openai-go/commit/c3a3c9af1d7c5b873d51b7566d30457d475a00cb))
+* **deps:** bump actions/upload-artifact from 7.0.1 to 7.0.2 ([#1100](https://github.com/openai/openai-go/issues/1100)) ([17caf9b](https://github.com/openai/openai-go/commit/17caf9b205a88ef776fb2bf665226a1bdf9c674a))
+* **deps:** bump github.com/aws/aws-sdk-go-v2/config in / ([#1098](https://github.com/openai/openai-go/issues/1098)) ([e8374d1](https://github.com/openai/openai-go/commit/e8374d15a84e0226d8b09bacb8aaf8f462f18dd8))
+* **deps:** bump the codeql group across 1 directory with 2 updates ([#1099](https://github.com/openai/openai-go/issues/1099)) ([a97ac6d](https://github.com/openai/openai-go/commit/a97ac6da31ee0ab4f0e34401acbc5c95dc94a1db))
+
 ## [3.88.0](https://github.com/openai/openai-go/compare/v3.87.0...v3.88.0) (2026-10-26)
 
 
