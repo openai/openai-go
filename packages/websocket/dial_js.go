@@ -9,5 +9,5 @@ import (
 )
 
 func dialSocket(context.Context, *http.Request, *http.Client) (*wire.Conn, *http.Response, error) {
-	return nil, nil, errors.New("websocket: Responses connections require a transport that supports custom HTTP headers; js/wasm is unsupported")
+	return nil, nil, errors.New("websocket: SDK WebSocket connections require native HTTP transport; js/wasm is unsupported")
 }

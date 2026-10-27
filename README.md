@@ -369,8 +369,12 @@ including `option.WithHeader`, apply to the opening handshake. See the
 [WebSocket example](examples/responses-websocket/main.go).
 `option.WithResponseInto` exposes the opening HTTP response. A rejected workload-identity
 handshake can refresh its token within the configured retry budget; application
-messages are never replayed. These connections require native HTTP transport
-support and are unavailable in `js/wasm`; other SDK APIs remain usable there.
+messages are never replayed.
+
+All SDK WebSocket connections require native HTTP transport and are unavailable
+in `js/wasm`. This includes Responses and beta Responses, Realtime and Realtime
+translations, and Live, Live sideband, and Live forks. The restriction does not
+apply to ordinary HTTP requests.
 
 The default options do not cap message size or the receive buffer. Set
 `MaxMessageBytes`, `MaxBufferedBytes` or `MaxBufferedEvents` to a positive value
