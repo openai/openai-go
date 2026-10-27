@@ -1,6 +1,10 @@
 # Eliminate mixed Castiron and handwritten files
 
-Status: executing. Baseline captured 2026-10-19. This is an internal ownership
+> Historical migration plan: budgets and reporter commands below are retired.
+> Follow [AGENTS.md](../AGENTS.md#generated-file-ownership) for current ownership
+> guidance. Generated output is replaced; handwritten edits are not replayed.
+
+Historical status: executing. Baseline captured 2026-10-19. This is an internal ownership
 transition: developers must not need to change their code or observe changed SDK
 behavior. The current integrated SDK defines compatibility, including its custom
 patches. Restoring the generated snapshot wholesale is unsafe.
