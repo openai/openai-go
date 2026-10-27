@@ -535,7 +535,7 @@
     },
     "betathreadmessage.go": {
       "mode": "100644",
-      "sha256": "f7d8502c2fb7b9e4ec3f5607f74a0989b660d44a3faff0f539afaf729d841b23"
+      "sha256": "fb0de42d250bb558e04b575374187dc822d8b80f6f594c871ff45a487dede026"
     },
     "betathreadmessage_test.go": {
       "mode": "100644",
