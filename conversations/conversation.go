@@ -105,9 +105,9 @@ type ComputerScreenshotContent struct {
 	// Specifies the event type. For a computer screenshot, this property is always set
 	// to `computer_screenshot`.
 	Type constant.ComputerScreenshot `json:"type" default:"computer_screenshot"`
-	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-	// token block.
+	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+	// not rounded to a token block.
 	PromptCacheBreakpoint ComputerScreenshotContentPromptCacheBreakpoint `json:"prompt_cache_breakpoint"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -138,15 +138,20 @@ const (
 	ComputerScreenshotContentDetailOriginal ComputerScreenshotContentDetail = "original"
 )
 
-// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-// token block.
+// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+// not rounded to a token block.
 type ComputerScreenshotContentPromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -416,8 +421,10 @@ func (r *MessageContentUnion) UnmarshalJSON(data []byte) error {
 type MessageContentUnionPromptCacheBreakpoint struct {
 	// This field is from variant [responses.ResponseInputTextPromptCacheBreakpoint].
 	Mode constant.Explicit `json:"mode"`
+	Ttl  string            `json:"ttl"`
 	JSON struct {
 		Mode respjson.Field
+		Ttl  respjson.Field
 		raw  string
 	} `json:"-"`
 }

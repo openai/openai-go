@@ -50,7 +50,9 @@ func TestLiveNewWithOptionalParams(t *testing.T) {
 				},
 			},
 			Delegation: live.MediaSessionConfigDelegationUnionParam{
-				OfClient: &live.ClientDelegationParam{},
+				OfClient: &live.ClientDelegationParam{
+					AcknowledgementDelayMs: openai.Int(0),
+				},
 			},
 			Input: []live.InitialItemUnionParam{{
 				OfDeveloper: &live.InitialItemDeveloperParam{

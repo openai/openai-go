@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.88.0](https://github.com/openai/openai-go/compare/v3.87.0...v3.88.0) (2026-10-26)
+
+
+### Features
+
+* **api:** add gpt-6.1-terra model identifier ([#1157](https://github.com/openai/openai-go/issues/1157)) ([b5e1cc9](https://github.com/openai/openai-go/commit/b5e1cc96c39635df1e227f78fc96bee6870a2f91))
+
+## [3.87.0](https://github.com/openai/openai-go/compare/v3.86.0...v3.87.0) (2026-10-23)
+
+
+### Features
+
+* **api:** add delegation controls and prompt cache lifetimes ([#1150](https://github.com/openai/openai-go/issues/1150)) ([cd6966a](https://github.com/openai/openai-go/commit/cd6966a97b40d526b221692cbb75e5a01bb9035d))
+
 ## [3.86.0](https://github.com/openai/openai-go/compare/v3.85.1...v3.86.0) (2026-10-23)
 
 

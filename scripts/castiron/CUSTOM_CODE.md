@@ -122,6 +122,11 @@ Next uses separate `Castiron next / budget-only change` and
 two tracks cannot overwrite each other's authorization. The policy version is
 fixed by next's protected base; advancing main does not silently change it.
 Changing the reviewed pin changes next's own base and rebuilds its merge queue.
+Review invalidation reads the effective checker's inert `PIN_REVIEW_POLICY`
+capability marker at that exact revision. Legacy or unknown versions retain
+human review for every pin edit; only the recognized effective-policy contract
+allows non-increasing forward pin changes to use ordinary review. No checker
+code is executed by the invalidation handler.
 
 The effective policy is read from the selected authenticated main commit. The
 next base selects that version; a candidate never selects its own executing
@@ -239,6 +244,16 @@ for its own initialization. A malformed base pin cannot enter this path; other
 changes without a base pin fail closed. Ordinary pin updates execute under the
 previous approved version and cannot include SDK/tooling changes.
 
+An existing unpinned `next` may instead adopt the complete authenticated current-main
+snapshot when next is an ancestor of main and main already uses strict ownership
+with zero custom lines. The canonical `sdk prepare-next-baseline` command preserves
+all main bytes, modes and existing public checkpoints, adding only the exact
+same-main policy pin. This exception cannot include additional edits, a different
+pin, a relaxed policy or multiple queue constituents. Ordinary checkpoint, manifest,
+zero-budget and repository review checks remain mandatory. Main must still match
+at final publication; if it moves, prepare and qualify a fresh candidate. This is
+adoption of already-public output, not regeneration or a budget increase.
+
 Keep required status activation separate until hosted tests have exercised main
 and next PRs, forks, retargeting, policy changes, and both merge queues. Require
 the target-specific next contexts after observing their genuine producers;
@@ -279,3 +294,5 @@ handler as their replacement. A failed invalidation or rerun must be investigate
 missing reporter runs remain pending until the normal trusted run is requested.
 Install and validate the review signal on the protected target before activating
 next policy checks, including actual PR and queue revocation after dismissal.
+
+The trusted selector also checks this exact active-checker contract before granting a pin-only review exemption. Legacy or unrecognized contracts retain the required exact-head review in the selection receipt, so the final publisher revalidates it even without a review-change event.

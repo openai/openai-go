@@ -1796,6 +1796,21 @@ func (u chatCompletionContentPartUnionParamPromptCacheBreakpoint) GetMode() *str
 	return nil
 }
 
+// Returns a pointer to the underlying variant's property, if present.
+func (u chatCompletionContentPartUnionParamPromptCacheBreakpoint) GetTtl() *string {
+	switch vt := u.any.(type) {
+	case *ChatCompletionContentPartTextPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *ChatCompletionContentPartImagePromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *ChatCompletionContentPartInputAudioPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *ChatCompletionContentPartFilePromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	}
+	return nil
+}
+
 func init() {
 	apijson.RegisterUnion[ChatCompletionContentPartUnionParam](
 		"type",
@@ -1812,9 +1827,9 @@ func init() {
 // The properties File, Type are required.
 type ChatCompletionContentPartFileParam struct {
 	File ChatCompletionContentPartFileFileParam `json:"file,omitzero" api:"required"`
-	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-	// token block.
+	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+	// not rounded to a token block.
 	PromptCacheBreakpoint ChatCompletionContentPartFilePromptCacheBreakpointParam `json:"prompt_cache_breakpoint,omitzero"`
 	// The type of the content part. Always `file`.
 	//
@@ -1856,13 +1871,17 @@ func NewChatCompletionContentPartFilePromptCacheBreakpointParam() ChatCompletion
 	}
 }
 
-// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-// token block.
+// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+// not rounded to a token block.
 //
-// This struct has a constant value, construct it with
-// [NewChatCompletionContentPartFilePromptCacheBreakpointParam].
+// Use [NewChatCompletionContentPartFilePromptCacheBreakpointParam] to initialize
+// the constant fields.
 type ChatCompletionContentPartFilePromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -1876,15 +1895,21 @@ func (r *ChatCompletionContentPartFilePromptCacheBreakpointParam) UnmarshalJSON(
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[ChatCompletionContentPartFilePromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
+}
+
 // Learn about
 // [image inputs](https://developers.openai.com/api/docs/guides/images-vision).
 type ChatCompletionContentPartImage struct {
 	ImageURL ChatCompletionContentPartImageImageURL `json:"image_url" api:"required"`
 	// The type of the content part.
 	Type constant.ImageURL `json:"type" default:"image_url"`
-	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-	// token block.
+	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+	// not rounded to a token block.
 	PromptCacheBreakpoint ChatCompletionContentPartImagePromptCacheBreakpoint `json:"prompt_cache_breakpoint"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -1935,15 +1960,20 @@ func (r *ChatCompletionContentPartImageImageURL) UnmarshalJSON(data []byte) erro
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-// token block.
+// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+// not rounded to a token block.
 type ChatCompletionContentPartImagePromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -1961,9 +1991,9 @@ func (r *ChatCompletionContentPartImagePromptCacheBreakpoint) UnmarshalJSON(data
 // The properties ImageURL, Type are required.
 type ChatCompletionContentPartImageParam struct {
 	ImageURL ChatCompletionContentPartImageImageURLParam `json:"image_url,omitzero" api:"required"`
-	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-	// token block.
+	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+	// not rounded to a token block.
 	PromptCacheBreakpoint ChatCompletionContentPartImagePromptCacheBreakpointParam `json:"prompt_cache_breakpoint,omitzero"`
 	// The type of the content part.
 	//
@@ -2012,13 +2042,17 @@ func NewChatCompletionContentPartImagePromptCacheBreakpointParam() ChatCompletio
 	}
 }
 
-// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-// token block.
+// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+// not rounded to a token block.
 //
-// This struct has a constant value, construct it with
-// [NewChatCompletionContentPartImagePromptCacheBreakpointParam].
+// Use [NewChatCompletionContentPartImagePromptCacheBreakpointParam] to initialize
+// the constant fields.
 type ChatCompletionContentPartImagePromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -2032,14 +2066,20 @@ func (r *ChatCompletionContentPartImagePromptCacheBreakpointParam) UnmarshalJSON
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[ChatCompletionContentPartImagePromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
+}
+
 // Learn about [audio inputs](https://developers.openai.com/api/docs/guides/audio).
 //
 // The properties InputAudio, Type are required.
 type ChatCompletionContentPartInputAudioParam struct {
 	InputAudio ChatCompletionContentPartInputAudioInputAudioParam `json:"input_audio,omitzero" api:"required"`
-	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-	// token block.
+	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+	// not rounded to a token block.
 	PromptCacheBreakpoint ChatCompletionContentPartInputAudioPromptCacheBreakpointParam `json:"prompt_cache_breakpoint,omitzero"`
 	// The type of the content part. Always `input_audio`.
 	//
@@ -2087,13 +2127,17 @@ func NewChatCompletionContentPartInputAudioPromptCacheBreakpointParam() ChatComp
 	}
 }
 
-// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-// token block.
+// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+// not rounded to a token block.
 //
-// This struct has a constant value, construct it with
-// [NewChatCompletionContentPartInputAudioPromptCacheBreakpointParam].
+// Use [NewChatCompletionContentPartInputAudioPromptCacheBreakpointParam] to
+// initialize the constant fields.
 type ChatCompletionContentPartInputAudioPromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -2105,6 +2149,12 @@ func (r ChatCompletionContentPartInputAudioPromptCacheBreakpointParam) MarshalJS
 }
 func (r *ChatCompletionContentPartInputAudioPromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ChatCompletionContentPartInputAudioPromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
 }
 
 // The properties Refusal, Type are required.
@@ -2132,9 +2182,9 @@ type ChatCompletionContentPartText struct {
 	Text string `json:"text" api:"required"`
 	// The type of the content part.
 	Type constant.Text `json:"type" default:"text"`
-	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-	// token block.
+	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+	// not rounded to a token block.
 	PromptCacheBreakpoint ChatCompletionContentPartTextPromptCacheBreakpoint `json:"prompt_cache_breakpoint"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -2162,15 +2212,20 @@ func (r ChatCompletionContentPartText) ToParam() ChatCompletionContentPartTextPa
 	return param.Override[ChatCompletionContentPartTextParam](json.RawMessage(r.RawJSON()))
 }
 
-// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-// token block.
+// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+// not rounded to a token block.
 type ChatCompletionContentPartTextPromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -2188,9 +2243,9 @@ func (r *ChatCompletionContentPartTextPromptCacheBreakpoint) UnmarshalJSON(data 
 type ChatCompletionContentPartTextParam struct {
 	// The text content.
 	Text string `json:"text" api:"required"`
-	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-	// token block.
+	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+	// not rounded to a token block.
 	PromptCacheBreakpoint ChatCompletionContentPartTextPromptCacheBreakpointParam `json:"prompt_cache_breakpoint,omitzero"`
 	// The type of the content part.
 	//
@@ -2213,13 +2268,17 @@ func NewChatCompletionContentPartTextPromptCacheBreakpointParam() ChatCompletion
 	}
 }
 
-// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-// token block.
+// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+// not rounded to a token block.
 //
-// This struct has a constant value, construct it with
-// [NewChatCompletionContentPartTextPromptCacheBreakpointParam].
+// Use [NewChatCompletionContentPartTextPromptCacheBreakpointParam] to initialize
+// the constant fields.
 type ChatCompletionContentPartTextPromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -2231,6 +2290,12 @@ func (r ChatCompletionContentPartTextPromptCacheBreakpointParam) MarshalJSON() (
 }
 func (r *ChatCompletionContentPartTextPromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ChatCompletionContentPartTextPromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
 }
 
 // A custom tool that processes input using a specified format.
@@ -3379,8 +3444,10 @@ func (r *ChatCompletionStoreMessageContentPartUnion) UnmarshalJSON(data []byte) 
 type ChatCompletionStoreMessageContentPartUnionPromptCacheBreakpoint struct {
 	// This field is from variant [ChatCompletionContentPartTextPromptCacheBreakpoint].
 	Mode constant.Explicit `json:"mode"`
+	Ttl  string            `json:"ttl"`
 	JSON struct {
 		Mode respjson.Field
+		Ttl  respjson.Field
 		raw  string
 	} `json:"-"`
 }

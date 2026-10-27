@@ -67,7 +67,7 @@ func decodeLiveWebsocketEvent(data []byte) (liveWebsocketEvent, error) {
 
 func (e liveWebsocketEvent) decode() (ServerEventUnion, error) {
 	var event ServerEventUnion
-	err := event.unmarshalWebsocketEvent(e.data)
+	err := event.unmarshalWebsocketEventWithRawType(e.data)
 	return event, err
 }
 

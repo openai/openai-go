@@ -685,9 +685,9 @@ func (r *ConnectServerEventUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// unmarshalWebsocketEvent decodes only the event selected by its type. Public
+// unmarshalWebsocketEventWithRawType decodes only the event selected by its type. Public
 // UnmarshalJSON keeps the existing general-purpose union decoding behavior.
-func (r *ConnectServerEventUnion) unmarshalWebsocketEvent(data []byte) error {
+func (r *ConnectServerEventUnion) unmarshalWebsocketEventWithRawType(data []byte) error {
 	var envelope struct {
 		Type json.RawMessage `json:"type"`
 	}

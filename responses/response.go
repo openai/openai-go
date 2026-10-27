@@ -7908,8 +7908,10 @@ func (r *ResponseCustomToolCallOutputOutputOutputContentListItemUnion) Unmarshal
 type ResponseCustomToolCallOutputOutputOutputContentListItemUnionPromptCacheBreakpoint struct {
 	// This field is from variant [ResponseInputTextPromptCacheBreakpoint].
 	Mode constant.Explicit `json:"mode"`
+	Ttl  string            `json:"ttl"`
 	JSON struct {
 		Mode respjson.Field
+		Ttl  respjson.Field
 		raw  string
 	} `json:"-"`
 }
@@ -8204,6 +8206,19 @@ func (u responseCustomToolCallOutputOutputOutputContentListItemUnionParamPromptC
 		return (*string)(&vt.Mode)
 	case *ResponseInputFilePromptCacheBreakpointParam:
 		return (*string)(&vt.Mode)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u responseCustomToolCallOutputOutputOutputContentListItemUnionParamPromptCacheBreakpoint) GetTtl() *string {
+	switch vt := u.any.(type) {
+	case *ResponseInputTextPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *ResponseInputImagePromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *ResponseInputFilePromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
 	}
 	return nil
 }
@@ -9208,8 +9223,10 @@ func (r *ResponseFunctionCallOutputItemUnion) UnmarshalJSON(data []byte) error {
 type ResponseFunctionCallOutputItemUnionPromptCacheBreakpoint struct {
 	// This field is from variant [ResponseInputTextContentPromptCacheBreakpoint].
 	Mode constant.Explicit `json:"mode"`
+	Ttl  string            `json:"ttl"`
 	JSON struct {
 		Mode respjson.Field
+		Ttl  respjson.Field
 		raw  string
 	} `json:"-"`
 }
@@ -9363,6 +9380,19 @@ func (u responseFunctionCallOutputItemUnionParamPromptCacheBreakpoint) GetMode()
 		return (*string)(&vt.Mode)
 	case *ResponseInputFileContentPromptCacheBreakpointParam:
 		return (*string)(&vt.Mode)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u responseFunctionCallOutputItemUnionParamPromptCacheBreakpoint) GetTtl() *string {
+	switch vt := u.any.(type) {
+	case *ResponseInputTextContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *ResponseInputImageContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *ResponseInputFileContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
 	}
 	return nil
 }
@@ -10691,8 +10721,10 @@ func (r *ResponseFunctionToolCallOutputItemOutputOutputContentListItemUnion) Unm
 type ResponseFunctionToolCallOutputItemOutputOutputContentListItemUnionPromptCacheBreakpoint struct {
 	// This field is from variant [ResponseInputTextPromptCacheBreakpoint].
 	Mode constant.Explicit `json:"mode"`
+	Ttl  string            `json:"ttl"`
 	JSON struct {
 		Mode respjson.Field
+		Ttl  respjson.Field
 		raw  string
 	} `json:"-"`
 }
@@ -11678,8 +11710,10 @@ func (r *ResponseInputContentUnion) UnmarshalJSON(data []byte) error {
 type ResponseInputContentUnionPromptCacheBreakpoint struct {
 	// This field is from variant [ResponseInputTextPromptCacheBreakpoint].
 	Mode constant.Explicit `json:"mode"`
+	Ttl  string            `json:"ttl"`
 	JSON struct {
 		Mode respjson.Field
+		Ttl  respjson.Field
 		raw  string
 	} `json:"-"`
 }
@@ -11842,6 +11876,19 @@ func (u responseInputContentUnionParamPromptCacheBreakpoint) GetMode() *string {
 	return nil
 }
 
+// Returns a pointer to the underlying variant's property, if present.
+func (u responseInputContentUnionParamPromptCacheBreakpoint) GetTtl() *string {
+	switch vt := u.any.(type) {
+	case *ResponseInputTextPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *ResponseInputImagePromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *ResponseInputFilePromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	}
+	return nil
+}
+
 func init() {
 	apijson.RegisterUnion[ResponseInputContentUnionParam](
 		"type",
@@ -11871,9 +11918,9 @@ type ResponseInputFile struct {
 	FileURL string `json:"file_url" format:"uri"`
 	// The name of the file to be sent to the model.
 	Filename string `json:"filename"`
-	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-	// token block.
+	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+	// not rounded to a token block.
 	PromptCacheBreakpoint ResponseInputFilePromptCacheBreakpoint `json:"prompt_cache_breakpoint"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -11919,15 +11966,20 @@ const (
 	ResponseInputFileDetailHigh ResponseInputFileDetail = "high"
 )
 
-// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-// token block.
+// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+// not rounded to a token block.
 type ResponseInputFilePromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -11959,9 +12011,9 @@ type ResponseInputFileParam struct {
 	//
 	// Any of "auto", "low", "high".
 	Detail ResponseInputFileDetail `json:"detail,omitzero"`
-	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-	// token block.
+	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+	// not rounded to a token block.
 	PromptCacheBreakpoint ResponseInputFilePromptCacheBreakpointParam `json:"prompt_cache_breakpoint,omitzero"`
 	// The type of the input item. Always `input_file`.
 	//
@@ -11984,13 +12036,17 @@ func NewResponseInputFilePromptCacheBreakpointParam() ResponseInputFilePromptCac
 	}
 }
 
-// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-// token block.
+// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+// not rounded to a token block.
 //
-// This struct has a constant value, construct it with
-// [NewResponseInputFilePromptCacheBreakpointParam].
+// Use [NewResponseInputFilePromptCacheBreakpointParam] to initialize the constant
+// fields.
 type ResponseInputFilePromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -12002,6 +12058,12 @@ func (r ResponseInputFilePromptCacheBreakpointParam) MarshalJSON() (data []byte,
 }
 func (r *ResponseInputFilePromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputFilePromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
 }
 
 // A file input to the model.
@@ -12024,9 +12086,9 @@ type ResponseInputFileContent struct {
 	FileURL string `json:"file_url" api:"nullable" format:"uri"`
 	// The name of the file to be sent to the model.
 	Filename string `json:"filename" api:"nullable"`
-	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-	// token block.
+	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+	// not rounded to a token block.
 	PromptCacheBreakpoint ResponseInputFileContentPromptCacheBreakpoint `json:"prompt_cache_breakpoint" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -12071,15 +12133,20 @@ const (
 	ResponseInputFileContentDetailHigh ResponseInputFileContentDetail = "high"
 )
 
-// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-// token block.
+// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+// not rounded to a token block.
 type ResponseInputFileContentPromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -12103,9 +12170,9 @@ type ResponseInputFileContentParam struct {
 	FileURL param.Opt[string] `json:"file_url,omitzero" format:"uri"`
 	// The name of the file to be sent to the model.
 	Filename param.Opt[string] `json:"filename,omitzero"`
-	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-	// token block.
+	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+	// not rounded to a token block.
 	PromptCacheBreakpoint ResponseInputFileContentPromptCacheBreakpointParam `json:"prompt_cache_breakpoint,omitzero"`
 	// The detail level of the file to be sent to the model. Use `auto` to let the
 	// system select the detail level; for GPT-5.6 and later models, `auto` uses
@@ -12136,13 +12203,17 @@ func NewResponseInputFileContentPromptCacheBreakpointParam() ResponseInputFileCo
 	}
 }
 
-// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-// token block.
+// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+// not rounded to a token block.
 //
-// This struct has a constant value, construct it with
-// [NewResponseInputFileContentPromptCacheBreakpointParam].
+// Use [NewResponseInputFileContentPromptCacheBreakpointParam] to initialize the
+// constant fields.
 type ResponseInputFileContentPromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -12154,6 +12225,12 @@ func (r ResponseInputFileContentPromptCacheBreakpointParam) MarshalJSON() (data 
 }
 func (r *ResponseInputFileContentPromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputFileContentPromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
 }
 
 // An image input to the model. Learn about
@@ -12171,9 +12248,9 @@ type ResponseInputImage struct {
 	// The URL of the image to be sent to the model. A fully qualified URL or base64
 	// encoded image in a data URL.
 	ImageURL string `json:"image_url" api:"nullable" format:"uri"`
-	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-	// token block.
+	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+	// not rounded to a token block.
 	PromptCacheBreakpoint ResponseInputImagePromptCacheBreakpoint `json:"prompt_cache_breakpoint"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -12215,15 +12292,20 @@ const (
 	ResponseInputImageDetailOriginal ResponseInputImageDetail = "original"
 )
 
-// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-// token block.
+// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+// not rounded to a token block.
 type ResponseInputImagePromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -12250,9 +12332,9 @@ type ResponseInputImageParam struct {
 	// The URL of the image to be sent to the model. A fully qualified URL or base64
 	// encoded image in a data URL.
 	ImageURL param.Opt[string] `json:"image_url,omitzero" format:"uri"`
-	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-	// token block.
+	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+	// not rounded to a token block.
 	PromptCacheBreakpoint ResponseInputImagePromptCacheBreakpointParam `json:"prompt_cache_breakpoint,omitzero"`
 	// The type of the input item. Always `input_image`.
 	//
@@ -12275,13 +12357,17 @@ func NewResponseInputImagePromptCacheBreakpointParam() ResponseInputImagePromptC
 	}
 }
 
-// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-// token block.
+// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+// not rounded to a token block.
 //
-// This struct has a constant value, construct it with
-// [NewResponseInputImagePromptCacheBreakpointParam].
+// Use [NewResponseInputImagePromptCacheBreakpointParam] to initialize the constant
+// fields.
 type ResponseInputImagePromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -12293,6 +12379,12 @@ func (r ResponseInputImagePromptCacheBreakpointParam) MarshalJSON() (data []byte
 }
 func (r *ResponseInputImagePromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputImagePromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
 }
 
 // An image input to the model. Learn about
@@ -12310,9 +12402,9 @@ type ResponseInputImageContent struct {
 	// The URL of the image to be sent to the model. A fully qualified URL or base64
 	// encoded image in a data URL.
 	ImageURL string `json:"image_url" api:"nullable" format:"uri"`
-	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-	// token block.
+	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+	// not rounded to a token block.
 	PromptCacheBreakpoint ResponseInputImageContentPromptCacheBreakpoint `json:"prompt_cache_breakpoint" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -12353,15 +12445,20 @@ const (
 	ResponseInputImageContentDetailOriginal ResponseInputImageContentDetail = "original"
 )
 
-// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-// token block.
+// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+// not rounded to a token block.
 type ResponseInputImageContentPromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -12388,9 +12485,9 @@ type ResponseInputImageContentParam struct {
 	//
 	// Any of "low", "high", "auto", "original".
 	Detail ResponseInputImageContentDetail `json:"detail,omitzero"`
-	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-	// token block.
+	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+	// not rounded to a token block.
 	PromptCacheBreakpoint ResponseInputImageContentPromptCacheBreakpointParam `json:"prompt_cache_breakpoint,omitzero"`
 	// The type of the input item. Always `input_image`.
 	//
@@ -12413,13 +12510,17 @@ func NewResponseInputImageContentPromptCacheBreakpointParam() ResponseInputImage
 	}
 }
 
-// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-// token block.
+// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+// not rounded to a token block.
 //
-// This struct has a constant value, construct it with
-// [NewResponseInputImageContentPromptCacheBreakpointParam].
+// Use [NewResponseInputImageContentPromptCacheBreakpointParam] to initialize the
+// constant fields.
 type ResponseInputImageContentPromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -12431,6 +12532,12 @@ func (r ResponseInputImageContentPromptCacheBreakpointParam) MarshalJSON() (data
 }
 func (r *ResponseInputImageContentPromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputImageContentPromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
 }
 
 // ResponseInputItemUnion contains all possible properties and values from
@@ -17932,9 +18039,9 @@ type ResponseInputText struct {
 	Text string `json:"text" api:"required"`
 	// The type of the input item. Always `input_text`.
 	Type constant.InputText `json:"type" default:"input_text"`
-	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-	// token block.
+	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+	// not rounded to a token block.
 	PromptCacheBreakpoint ResponseInputTextPromptCacheBreakpoint `json:"prompt_cache_breakpoint"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -17963,15 +18070,20 @@ func (r ResponseInputText) ToParam() ResponseInputTextParam {
 	return param.Override[ResponseInputTextParam](json.RawMessage(r.RawJSON()))
 }
 
-// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-// token block.
+// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+// not rounded to a token block.
 type ResponseInputTextPromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -17989,9 +18101,9 @@ func (r *ResponseInputTextPromptCacheBreakpoint) UnmarshalJSON(data []byte) erro
 type ResponseInputTextParam struct {
 	// The text input to the model.
 	Text string `json:"text" api:"required"`
-	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-	// token block.
+	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+	// not rounded to a token block.
 	PromptCacheBreakpoint ResponseInputTextPromptCacheBreakpointParam `json:"prompt_cache_breakpoint,omitzero"`
 	// The type of the input item. Always `input_text`.
 	//
@@ -18014,13 +18126,17 @@ func NewResponseInputTextPromptCacheBreakpointParam() ResponseInputTextPromptCac
 	}
 }
 
-// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-// token block.
+// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+// not rounded to a token block.
 //
-// This struct has a constant value, construct it with
-// [NewResponseInputTextPromptCacheBreakpointParam].
+// Use [NewResponseInputTextPromptCacheBreakpointParam] to initialize the constant
+// fields.
 type ResponseInputTextPromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -18034,15 +18150,21 @@ func (r *ResponseInputTextPromptCacheBreakpointParam) UnmarshalJSON(data []byte)
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputTextPromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
+}
+
 // A text input to the model.
 type ResponseInputTextContent struct {
 	// The text input to the model.
 	Text string `json:"text" api:"required"`
 	// The type of the input item. Always `input_text`.
 	Type constant.InputText `json:"type" default:"input_text"`
-	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-	// token block.
+	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+	// not rounded to a token block.
 	PromptCacheBreakpoint ResponseInputTextContentPromptCacheBreakpoint `json:"prompt_cache_breakpoint" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -18070,15 +18192,20 @@ func (r ResponseInputTextContent) ToParam() ResponseInputTextContentParam {
 	return param.Override[ResponseInputTextContentParam](json.RawMessage(r.RawJSON()))
 }
 
-// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-// token block.
+// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+// not rounded to a token block.
 type ResponseInputTextContentPromptCacheBreakpoint struct {
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
+		Ttl         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -18096,9 +18223,9 @@ func (r *ResponseInputTextContentPromptCacheBreakpoint) UnmarshalJSON(data []byt
 type ResponseInputTextContentParam struct {
 	// The text input to the model.
 	Text string `json:"text" api:"required"`
-	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-	// token block.
+	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+	// not rounded to a token block.
 	PromptCacheBreakpoint ResponseInputTextContentPromptCacheBreakpointParam `json:"prompt_cache_breakpoint,omitzero"`
 	// The type of the input item. Always `input_text`.
 	//
@@ -18121,13 +18248,17 @@ func NewResponseInputTextContentPromptCacheBreakpointParam() ResponseInputTextCo
 	}
 }
 
-// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
-// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
-// token block.
+// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
+// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
+// not rounded to a token block.
 //
-// This struct has a constant value, construct it with
-// [NewResponseInputTextContentPromptCacheBreakpointParam].
+// Use [NewResponseInputTextContentPromptCacheBreakpointParam] to initialize the
+// constant fields.
 type ResponseInputTextContentPromptCacheBreakpointParam struct {
+	// The minimum lifetime of this cache breakpoint. Defaults to the request TTL.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
 	// The breakpoint mode. Always `explicit`.
 	Mode constant.Explicit `json:"mode" default:"explicit"`
 	paramObj
@@ -18141,22 +18272,28 @@ func (r *ResponseInputTextContentPromptCacheBreakpointParam) UnmarshalJSON(data 
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputTextContentPromptCacheBreakpointParam](
+		"ttl", "30m", "12h",
+	)
+}
+
 // ResponseItemUnion contains all possible properties and values from
-// [ResponseInputMessageItem], [ResponseOutputMessage],
-// [ResponseFileSearchToolCall], [ResponseComputerToolCall],
-// [ResponseComputerToolCallOutputItem], [ResponseFunctionWebSearch],
-// [ResponseFunctionToolCallItem], [ResponseFunctionToolCallOutputItem],
-// [ResponseToolSearchCall], [ResponseToolSearchOutputItem],
-// [ResponseItemAdditionalTools], [ResponseConfigurationUpdateItem],
-// [ResponseReasoningItem], [ResponseItemProgram], [ResponseItemProgramOutput],
-// [ResponseCompactionItem], [ResponseItemImageGenerationCall],
-// [ResponseCodeInterpreterToolCall], [ResponseItemLocalShellCall],
-// [ResponseItemLocalShellCallOutput], [ResponseFunctionShellToolCall],
-// [ResponseFunctionShellToolCallOutput], [ResponseApplyPatchToolCall],
-// [ResponseApplyPatchToolCallOutput], [ResponseItemMcpListTools],
-// [ResponseItemMcpApprovalRequest], [ResponseItemMcpApprovalResponse],
-// [ResponseItemMcpCall], [ResponseCustomToolCallItem],
-// [ResponseCustomToolCallOutputItem].
+// [ResponseInputMessageItem], [ResponseFileSearchToolCall],
+// [ResponseComputerToolCall], [ResponseComputerToolCallOutputItem],
+// [ResponseFunctionWebSearch], [ResponseFunctionToolCallItem],
+// [ResponseFunctionToolCallOutputItem], [ResponseToolSearchCall],
+// [ResponseToolSearchOutputItem], [ResponseItemAdditionalTools],
+// [ResponseConfigurationUpdateItem], [ResponseReasoningItem],
+// [ResponseItemProgram], [ResponseItemProgramOutput], [ResponseCompactionItem],
+// [ResponseItemImageGenerationCall], [ResponseCodeInterpreterToolCall],
+// [ResponseItemLocalShellCall], [ResponseItemLocalShellCallOutput],
+// [ResponseFunctionShellToolCall], [ResponseFunctionShellToolCallOutput],
+// [ResponseApplyPatchToolCall], [ResponseApplyPatchToolCallOutput],
+// [ResponseItemMcpListTools], [ResponseItemMcpApprovalRequest],
+// [ResponseItemMcpApprovalResponse], [ResponseItemMcpCall],
+// [ResponseCustomToolCallItem], [ResponseCustomToolCallOutputItem],
+// [ResponseOutputMessage].
 //
 // Use the [ResponseItemUnion.AsAny] method to switch on the variant.
 //
@@ -18314,7 +18451,6 @@ type anyResponseItem interface {
 }
 
 func (ResponseInputMessageItem) implResponseItemUnion()            {}
-func (ResponseOutputMessage) implResponseItemUnion()               {}
 func (ResponseFileSearchToolCall) implResponseItemUnion()          {}
 func (ResponseComputerToolCall) implResponseItemUnion()            {}
 func (ResponseComputerToolCallOutputItem) implResponseItemUnion()  {}
@@ -18343,12 +18479,12 @@ func (ResponseItemMcpApprovalResponse) implResponseItemUnion()     {}
 func (ResponseItemMcpCall) implResponseItemUnion()                 {}
 func (ResponseCustomToolCallItem) implResponseItemUnion()          {}
 func (ResponseCustomToolCallOutputItem) implResponseItemUnion()    {}
+func (ResponseOutputMessage) implResponseItemUnion()               {}
 
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseItemUnion.AsAny().(type) {
 //	case responses.ResponseInputMessageItem:
-//	case responses.ResponseOutputMessage:
 //	case responses.ResponseFileSearchToolCall:
 //	case responses.ResponseComputerToolCall:
 //	case responses.ResponseComputerToolCallOutputItem:
@@ -18377,13 +18513,12 @@ func (ResponseCustomToolCallOutputItem) implResponseItemUnion()    {}
 //	case responses.ResponseItemMcpCall:
 //	case responses.ResponseCustomToolCallItem:
 //	case responses.ResponseCustomToolCallOutputItem:
+//	case responses.ResponseOutputMessage:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
 func (u ResponseItemUnion) AsAny() anyResponseItem {
 	switch u.Type {
-	case "message":
-		return u.AsOutputMessage()
 	case "file_search_call":
 		return u.AsFileSearchCall()
 	case "computer_call":
@@ -18440,16 +18575,13 @@ func (u ResponseItemUnion) AsAny() anyResponseItem {
 		return u.AsCustomToolCall()
 	case "custom_tool_call_output":
 		return u.AsCustomToolCallOutput()
+	case "message":
+		return u.AsOutputMessage()
 	}
 	return nil
 }
 
 func (u ResponseItemUnion) AsMessage() (v ResponseInputMessageItem) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u ResponseItemUnion) AsOutputMessage() (v ResponseOutputMessage) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -18594,6 +18726,11 @@ func (u ResponseItemUnion) AsCustomToolCallOutput() (v ResponseCustomToolCallOut
 	return
 }
 
+func (u ResponseItemUnion) AsOutputMessage() (v ResponseOutputMessage) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
 // Returns the unmodified JSON received from the API
 func (u ResponseItemUnion) RawJSON() string { return u.JSON.raw }
 
@@ -18734,7 +18871,8 @@ func (r *ResponseItemUnionAction) UnmarshalJSON(data []byte) error {
 //
 // If the underlying value is not a json object, one of the following properties
 // will be valid: OfString OfOutputContentList
-// OfResponseFunctionShellToolCallOutputOutputArray]
+// OfResponseFunctionShellToolCallOutputOutputArray
+// OfOutputContentListResponseCustomToolCallOutputOutputOutputContentListItemUnion]
 type ResponseItemUnionOutput struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
@@ -18745,6 +18883,10 @@ type ResponseItemUnionOutput struct {
 	// This field will be present if the value is a
 	// [[]ResponseFunctionShellToolCallOutputOutput] instead of an object.
 	OfResponseFunctionShellToolCallOutputOutputArray []ResponseFunctionShellToolCallOutputOutput `json:",inline"`
+	// This field will be present if the value is a
+	// [[]ResponseCustomToolCallOutputOutputOutputContentListItemUnion] instead of an
+	// object.
+	OfOutputContentListResponseCustomToolCallOutputOutputOutputContentListItemUnion []ResponseCustomToolCallOutputOutputOutputContentListItemUnion `json:",inline"`
 	// This field is from variant [ResponseComputerToolCallOutputScreenshot].
 	Type constant.ComputerScreenshot `json:"type"`
 	// This field is from variant [ResponseComputerToolCallOutputScreenshot].
@@ -18752,13 +18894,14 @@ type ResponseItemUnionOutput struct {
 	// This field is from variant [ResponseComputerToolCallOutputScreenshot].
 	ImageURL string `json:"image_url"`
 	JSON     struct {
-		OfString                                         respjson.Field
-		OfOutputContentList                              respjson.Field
-		OfResponseFunctionShellToolCallOutputOutputArray respjson.Field
-		Type                                             respjson.Field
-		FileID                                           respjson.Field
-		ImageURL                                         respjson.Field
-		raw                                              string
+		OfString                                                                        respjson.Field
+		OfOutputContentList                                                             respjson.Field
+		OfResponseFunctionShellToolCallOutputOutputArray                                respjson.Field
+		OfOutputContentListResponseCustomToolCallOutputOutputOutputContentListItemUnion respjson.Field
+		Type                                                                            respjson.Field
+		FileID                                                                          respjson.Field
+		ImageURL                                                                        respjson.Field
+		raw                                                                             string
 	} `json:"-"`
 }
 
@@ -18771,7 +18914,8 @@ func (r *ResponseItemUnionOutput) UnmarshalJSON(data []byte) error {
 	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
 		if decoded.JSON.OfString.Valid() ||
 			decoded.JSON.OfOutputContentList.Valid() ||
-			decoded.JSON.OfResponseFunctionShellToolCallOutputOutputArray.Valid() {
+			decoded.JSON.OfResponseFunctionShellToolCallOutputOutputArray.Valid() ||
+			decoded.JSON.OfOutputContentListResponseCustomToolCallOutputOutputOutputContentListItemUnion.Valid() {
 			*r = decoded
 			return nil
 		}
@@ -20089,7 +20233,8 @@ func (r *ResponseOutputItemUnionCaller) UnmarshalJSON(data []byte) error {
 //
 // If the underlying value is not a json object, one of the following properties
 // will be valid: OfString OfOutputContentList
-// OfResponseFunctionShellToolCallOutputOutputArray]
+// OfResponseFunctionShellToolCallOutputOutputArray
+// OfOutputContentListResponseCustomToolCallOutputOutputOutputContentListItemUnion]
 type ResponseOutputItemUnionOutput struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
@@ -20100,6 +20245,10 @@ type ResponseOutputItemUnionOutput struct {
 	// This field will be present if the value is a
 	// [[]ResponseFunctionShellToolCallOutputOutput] instead of an object.
 	OfResponseFunctionShellToolCallOutputOutputArray []ResponseFunctionShellToolCallOutputOutput `json:",inline"`
+	// This field will be present if the value is a
+	// [[]ResponseCustomToolCallOutputOutputOutputContentListItemUnion] instead of an
+	// object.
+	OfOutputContentListResponseCustomToolCallOutputOutputOutputContentListItemUnion []ResponseCustomToolCallOutputOutputOutputContentListItemUnion `json:",inline"`
 	// This field is from variant [ResponseComputerToolCallOutputScreenshot].
 	Type constant.ComputerScreenshot `json:"type"`
 	// This field is from variant [ResponseComputerToolCallOutputScreenshot].
@@ -20107,13 +20256,14 @@ type ResponseOutputItemUnionOutput struct {
 	// This field is from variant [ResponseComputerToolCallOutputScreenshot].
 	ImageURL string `json:"image_url"`
 	JSON     struct {
-		OfString                                         respjson.Field
-		OfOutputContentList                              respjson.Field
-		OfResponseFunctionShellToolCallOutputOutputArray respjson.Field
-		Type                                             respjson.Field
-		FileID                                           respjson.Field
-		ImageURL                                         respjson.Field
-		raw                                              string
+		OfString                                                                        respjson.Field
+		OfOutputContentList                                                             respjson.Field
+		OfResponseFunctionShellToolCallOutputOutputArray                                respjson.Field
+		OfOutputContentListResponseCustomToolCallOutputOutputOutputContentListItemUnion respjson.Field
+		Type                                                                            respjson.Field
+		FileID                                                                          respjson.Field
+		ImageURL                                                                        respjson.Field
+		raw                                                                             string
 	} `json:"-"`
 }
 
@@ -20126,7 +20276,8 @@ func (r *ResponseOutputItemUnionOutput) UnmarshalJSON(data []byte) error {
 	if len(trimmed) > 0 && trimmed[0] != '{' && !bytes.Equal(trimmed, []byte("null")) {
 		if decoded.JSON.OfString.Valid() ||
 			decoded.JSON.OfOutputContentList.Valid() ||
-			decoded.JSON.OfResponseFunctionShellToolCallOutputOutputArray.Valid() {
+			decoded.JSON.OfResponseFunctionShellToolCallOutputOutputArray.Valid() ||
+			decoded.JSON.OfOutputContentListResponseCustomToolCallOutputOutputOutputContentListItemUnion.Valid() {
 			*r = decoded
 			return nil
 		}
@@ -22079,8 +22230,10 @@ func (r *ResponsePromptVariableUnion) UnmarshalJSON(data []byte) error {
 type ResponsePromptVariableUnionPromptCacheBreakpoint struct {
 	// This field is from variant [ResponseInputTextPromptCacheBreakpoint].
 	Mode constant.Explicit `json:"mode"`
+	Ttl  string            `json:"ttl"`
 	JSON struct {
 		Mode respjson.Field
+		Ttl  respjson.Field
 		raw  string
 	} `json:"-"`
 }
@@ -22242,6 +22395,19 @@ func (u responsePromptVariableUnionParamPromptCacheBreakpoint) GetMode() *string
 		return (*string)(&vt.Mode)
 	case *ResponseInputFilePromptCacheBreakpointParam:
 		return (*string)(&vt.Mode)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u responsePromptVariableUnionParamPromptCacheBreakpoint) GetTtl() *string {
+	switch vt := u.any.(type) {
+	case *ResponseInputTextPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *ResponseInputImagePromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *ResponseInputFilePromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
 	}
 	return nil
 }
@@ -23642,13 +23808,18 @@ func (r *ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputOutpu
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ResponseSteerInputResponseSteerInputItemListItemFunctionCallOutputCallerUnion struct {
-	OfResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect  ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect  `json:",inline"`
-	OfResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram `json:",inline"`
+	OfResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect `json:",inline"`
+	// Any of "direct", "program".
 	Type                                                                          string                                                                      `json:"type"`
-	JSON                                                                          struct {
+	OfResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram `json:",inline"`
+	// This field is from variant
+	// [ResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram].
+	CallerID string `json:"caller_id"`
+	JSON     struct {
 		OfResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerDirect  respjson.Field
-		OfResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram respjson.Field
 		Type                                                                          respjson.Field
+		OfResponseSteerInputResponseSteerInputItemListFunctionCallOutputCallerProgram respjson.Field
+		CallerID                                                                      respjson.Field
 		raw                                                                           string
 	} `json:"-"`
 }
@@ -24173,8 +24344,10 @@ func (r *ResponseSteerInputContentUnion) UnmarshalJSON(data []byte) error {
 type ResponseSteerInputContentUnionPromptCacheBreakpoint struct {
 	// This field is from variant [ResponseInputTextContentPromptCacheBreakpoint].
 	Mode constant.Explicit `json:"mode"`
+	Ttl  string            `json:"ttl"`
 	JSON struct {
 		Mode respjson.Field
+		Ttl  respjson.Field
 		raw  string
 	} `json:"-"`
 }
@@ -24328,6 +24501,19 @@ func (u responseSteerInputContentUnionParamPromptCacheBreakpoint) GetMode() *str
 		return (*string)(&vt.Mode)
 	case *ResponseInputFileContentPromptCacheBreakpointParam:
 		return (*string)(&vt.Mode)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u responseSteerInputContentUnionParamPromptCacheBreakpoint) GetTtl() *string {
+	switch vt := u.any.(type) {
+	case *ResponseInputTextContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *ResponseInputImageContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
+	case *ResponseInputFileContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Ttl)
 	}
 	return nil
 }
@@ -24754,6 +24940,7 @@ type ResponseStreamEventUnion struct {
 	// "response.file_search_call.searching", "response.function_call_arguments.delta",
 	// "response.function_call_arguments.done", "response.shell_call_command.added",
 	// "response.shell_call_command.delta", "response.shell_call_command.done",
+	// "response.shell_call_output_content.delta",
 	// "response.shell_call_output_content.done", "response.in_progress",
 	// "response.failed", "response.incomplete", "response.output_item.added",
 	// "response.output_item.done", "response.reasoning_summary_part.added",
@@ -26798,11 +26985,14 @@ type ResponseToolSearchOutputItemParamToolImageGeneration struct {
 	// Optional mask for inpainting. Contains `image_url` (string, optional) and
 	// `file_id` (string, optional).
 	InputImageMask ResponseToolSearchOutputItemParamToolImageGenerationInputImageMaskResp `json:"input_image_mask"`
-	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
-	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`,
-	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
-	// `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, or
-	// `chatgpt-image-latest`. Default: `gpt-image-1`.
+	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
+	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
+	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
+	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2`.
+	//
+	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
+	// `gpt-image-2.5-flare` instead.
 	Model string `json:"model"`
 	// Moderation level for the generated image. Default: `auto`.
 	//
@@ -28060,11 +28250,14 @@ type ResponseToolSearchOutputItemParamToolImageGenerationParam struct {
 	// Optional mask for inpainting. Contains `image_url` (string, optional) and
 	// `file_id` (string, optional).
 	InputImageMask ResponseToolSearchOutputItemParamToolImageGenerationInputImageMask `json:"input_image_mask,omitzero"`
-	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
-	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`,
-	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
-	// `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, or
-	// `chatgpt-image-latest`. Default: `gpt-image-1`.
+	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
+	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
+	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
+	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2`.
+	//
+	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
+	// `gpt-image-2.5-flare` instead.
 	Model string `json:"model,omitzero"`
 	// Moderation level for the generated image. Default: `auto`.
 	//
@@ -30076,9 +30269,9 @@ func (r *ResponsesServerEventUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// unmarshalWebsocketEvent decodes only the event selected by its type. Public
+// unmarshalWebsocketEventWithRawType decodes only the event selected by its type. Public
 // UnmarshalJSON keeps the existing general-purpose union decoding behavior.
-func (r *ResponsesServerEventUnion) unmarshalWebsocketEvent(data []byte) error {
+func (r *ResponsesServerEventUnion) unmarshalWebsocketEventWithRawType(data []byte) error {
 	var envelope struct {
 		Type json.RawMessage `json:"type"`
 	}
@@ -33267,11 +33460,14 @@ type ToolImageGeneration struct {
 	// Optional mask for inpainting. Contains `image_url` (string, optional) and
 	// `file_id` (string, optional).
 	InputImageMask ToolImageGenerationInputImageMask `json:"input_image_mask"`
-	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
-	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`,
-	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
-	// `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, or
-	// `chatgpt-image-latest`. Default: `gpt-image-1`.
+	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
+	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
+	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
+	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2`.
+	//
+	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
+	// `gpt-image-2.5-flare` instead.
 	Model string `json:"model"`
 	// Moderation level for the generated image. Default: `auto`.
 	//
@@ -34461,11 +34657,14 @@ type ToolImageGenerationParam struct {
 	// Optional mask for inpainting. Contains `image_url` (string, optional) and
 	// `file_id` (string, optional).
 	InputImageMask ToolImageGenerationInputImageMaskParam `json:"input_image_mask,omitzero"`
-	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
-	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`,
-	// `gpt-image-2.5-sunburst`, `gpt-image-2.5-sunburst-2026-09-08`,
-	// `gpt-image-2.5-flare`, `gpt-image-2.5-flare-2026-09-08`, or
-	// `chatgpt-image-latest`. Default: `gpt-image-1`.
+	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
+	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
+	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
+	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2`.
+	//
+	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
+	// `gpt-image-2.5-flare` instead.
 	Model string `json:"model,omitzero"`
 	// Moderation level for the generated image. Default: `auto`.
 	//
@@ -36602,6 +36801,7 @@ type ResponseCompactParamsModel string
 const (
 	ResponseCompactParamsModelGPT6Astra         ResponseCompactParamsModel = "gpt-6-astra"
 	ResponseCompactParamsModelGPT6_1Sol         ResponseCompactParamsModel = "gpt-6.1-sol"
+	ResponseCompactParamsModelGPT6_1Terra       ResponseCompactParamsModel = "gpt-6.1-terra"
 	ResponseCompactParamsModelGPT6Sol           ResponseCompactParamsModel = "gpt-6-sol"
 	ResponseCompactParamsModelGPT6Luna          ResponseCompactParamsModel = "gpt-6-luna"
 	ResponseCompactParamsModelGPT5_6Sol         ResponseCompactParamsModel = "gpt-5.6-sol"

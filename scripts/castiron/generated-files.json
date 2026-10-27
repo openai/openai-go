@@ -3,11 +3,11 @@
   "files": {
     ".github/workflows/castiron-custom-code-comment.yml": {
       "mode": "100644",
-      "sha256": "a896f4bac69c6f8debe7b4bf540129466be04cb62b75c60f5f80a37f5739b0a5"
+      "sha256": "ec43a2286a8f61efc2bfade540b4ccf572aac51fe0d2796121700f64f5bfce9b"
     },
     ".github/workflows/castiron-custom-code.yml": {
       "mode": "100644",
-      "sha256": "2760a19c1e05a2a01d73a679dac9d59ba7cfee2faa2fe426182f740ae1603202"
+      "sha256": "b52dcb3feb424790aff1f6f7cff7f385bd921369257b8e59be2e3860ec1f4926"
     },
     "admin.go": {
       "mode": "100644",
@@ -99,11 +99,11 @@
     },
     "adminorganizationprojectapikey.go": {
       "mode": "100644",
-      "sha256": "71595b36e2232e49c203df7750ea6a3e0d40e248c1bff27f1adf145f6341e0c2"
+      "sha256": "29911ea2957cff4a897f6f09635d3735f9a6d3fe7f4094773f2908edb01cf031"
     },
     "adminorganizationprojectapikey_test.go": {
       "mode": "100644",
-      "sha256": "ca563ed5f130392836367faf804c068753bbab00c4d1f4b018801b4ce0744537"
+      "sha256": "744c085c7709451f6d60dc591a407aa8aa950ca9ca95c01b71aa383404599b21"
     },
     "adminorganizationprojectcertificate.go": {
       "mode": "100644",
@@ -267,11 +267,11 @@
     },
     "aliases.go": {
       "mode": "100644",
-      "sha256": "fedb45ab9f0544fa6438782e12b56c9d7117205b9c2016d2bb977d81b5aee355"
+      "sha256": "5bb9eaa63e8f945982d2abbd46028fe27b1b3c1661ce8b754dbe5347fa78a79e"
     },
     "api.md": {
       "mode": "100644",
-      "sha256": "ec4e8c9b9007fca202e990db4c2426227984db7a9b3e44e407103715fb8e150a"
+      "sha256": "387abb2e1ac8dfd6091334a6d9083a10fd8fd265bd4bc6c32b3c015cff44ae3b"
     },
     "audio.go": {
       "mode": "100644",
@@ -287,7 +287,7 @@
     },
     "audiotranscription.go": {
       "mode": "100644",
-      "sha256": "155645806b2b6f5c1964cfbe475dbac2c9f5a459417ed10ec28a1477e5c87f1c"
+      "sha256": "4705074fa419a06c9429fc81a3d803d24297a6161aa19142232075bd9d1561bf"
     },
     "audiotranscription_test.go": {
       "mode": "100644",
@@ -303,11 +303,11 @@
     },
     "audiovoice.go": {
       "mode": "100644",
-      "sha256": "23f70bee478b83577fc81205b30f973fcc3d1b74506eed61a3e0d55fd95db9cf"
+      "sha256": "f786b4156b1d0aa3067e939873d8029e2075b1ca7a3d20ee6bd4ea6d9ffc98d5"
     },
     "audiovoice_test.go": {
       "mode": "100644",
-      "sha256": "22078968f7a948860fbc970dbb4f772c19cb1fdefb420890866eb63b8fcf0c10"
+      "sha256": "e966559c7c39aa07634e04b8a407da60e1b1c2ab4ff96b18f6cd57af2b1d1790"
     },
     "audiovoiceconsent.go": {
       "mode": "100644",
@@ -339,7 +339,7 @@
     },
     "betaagent.go": {
       "mode": "100644",
-      "sha256": "38bd0d95d0c7d511c9e96788834023b0e0a506083c57396e9463f548520cb309"
+      "sha256": "98bed1bc6ed6beebe406077cb37e0d57fb802c4853720e15ca9889866413bfe7"
     },
     "betaagent_test.go": {
       "mode": "100644",
@@ -371,7 +371,7 @@
     },
     "betaagentsession.go": {
       "mode": "100644",
-      "sha256": "938bcd048d0bd7a77fd21c8f31bc76454a1a55e87a656c6e821cb64d08851120"
+      "sha256": "06758d2b68f41e235c215a94a437b75beb175b50ef99cbc4e0819a3c192cbbba"
     },
     "betaagentsession_test.go": {
       "mode": "100644",
@@ -503,7 +503,7 @@
     },
     "betaresponse.go": {
       "mode": "100644",
-      "sha256": "253cd91234cd87946175c6dac27fe09f750fb1545608d74154bbfad644b18da1"
+      "sha256": "8a49bc5e4dcb96ceb3dd693848488c5fbd600ba244b5c361a8e844a299768e6f"
     },
     "betaresponse_test.go": {
       "mode": "100644",
@@ -535,7 +535,7 @@
     },
     "betathreadmessage.go": {
       "mode": "100644",
-      "sha256": "27a323ed012f9c18f5ab61eaed74cc71d61dbee988e69c514e52a75a69d1fde4"
+      "sha256": "fb0de42d250bb558e04b575374187dc822d8b80f6f594c871ff45a487dede026"
     },
     "betathreadmessage_test.go": {
       "mode": "100644",
@@ -563,7 +563,7 @@
     },
     "chatcompletion.go": {
       "mode": "100644",
-      "sha256": "e93b053a0fb8b072cbd6439131b121764ef850624b59f1988ba9c1112fd64f00"
+      "sha256": "d8c44c94fb0f59211c031581c8db53e148cd523a293687aff15ad2e3feff5be6"
     },
     "chatcompletion_test.go": {
       "mode": "100644",
@@ -579,7 +579,7 @@
     },
     "client.go": {
       "mode": "100644",
-      "sha256": "464f078b03a631bf723399a152fecb7d00d4546cf4156b7cb2f247059a920898"
+      "sha256": "67847b9c6fc60e8e9e9789c27fbb85c4265db633305e7789358bb396c3c68eb7"
     },
     "client_test.go": {
       "mode": "100644",
@@ -627,7 +627,7 @@
     },
     "conversations/aliases.go": {
       "mode": "100644",
-      "sha256": "99cb95c6020e0007b25af19e6322fe291b56f6593ce8d6c1a2c5998d7a2b0b7a"
+      "sha256": "f12d4b43a127e426911f02103b31f0049c91bc42817088e296b707fa8bc81849"
     },
     "conversations/api.md": {
       "mode": "100644",
@@ -635,7 +635,7 @@
     },
     "conversations/conversation.go": {
       "mode": "100644",
-      "sha256": "e5782473a0d4f2cd571320ee1c9c2f7dc2b53c8c9cec945f3781a85b2ebee401"
+      "sha256": "fd31c2e017768742c2ab4ea3614a8564b615394b4a98096949b17c27aa063470"
     },
     "conversations/conversation_test.go": {
       "mode": "100644",
@@ -643,7 +643,7 @@
     },
     "conversations/item.go": {
       "mode": "100644",
-      "sha256": "5676178b94715e3481e800166a47ae317026f36ac5dd9baaf0367d81c98c04e4"
+      "sha256": "fa91de7046c69fafabfaac181f5d32717ef3cdcf09e7d0e813e274c377e8e621"
     },
     "conversations/item_test.go": {
       "mode": "100644",
@@ -655,7 +655,7 @@
     },
     "decision.go": {
       "mode": "100644",
-      "sha256": "a74af153f321975f266fa470e0b7f1c716054aa57e8b03804050acfb5620af1a"
+      "sha256": "13d81dc73614eacfd0c32fed2e8d47c2ff735ce03c7f552721e4a687d38ff8f6"
     },
     "decision_test.go": {
       "mode": "100644",
@@ -663,7 +663,7 @@
     },
     "embedding.go": {
       "mode": "100644",
-      "sha256": "04f4d93299a6352ff68a25ec692cc1d032cfbed5ed5a081a36594271b0a689bd"
+      "sha256": "a0559c3e7b9f6666902c5856721386f35d4b3df90a724c047830f88340652eda"
     },
     "embedding_test.go": {
       "mode": "100644",
@@ -699,7 +699,7 @@
     },
     "finetuningcheckpointpermission.go": {
       "mode": "100644",
-      "sha256": "eaec79154892e19ac294bc65bdc02a84feb217bdc1e5b277cf2114ff9b6c2f73"
+      "sha256": "b127b76b57616a0b91e25991334f5440857683b497a97d5afb5c43ce6c95ebbc"
     },
     "finetuningcheckpointpermission_test.go": {
       "mode": "100644",
@@ -735,7 +735,7 @@
     },
     "image.go": {
       "mode": "100644",
-      "sha256": "787d260e3736069bb7c373fb1654a589e5bd7c8569222aa053e5f6b6fdf5e7bb"
+      "sha256": "0ba8acfc6c226fe8cfb3e8842118ff5aa4523a2e9edc41ed6f8fcd59dce7de1d"
     },
     "image_test.go": {
       "mode": "100644",
@@ -755,7 +755,7 @@
     },
     "live/aliases.go": {
       "mode": "100644",
-      "sha256": "9ee0a9f25957bfb7baa9c4dd16267d05fb20ade607702bdc5547ac143d483450"
+      "sha256": "b680d46419c6e1447bdf9c01c52777615144285e7819a5789dfe9207eb449864"
     },
     "live/api.md": {
       "mode": "100644",
@@ -763,15 +763,15 @@
     },
     "live/fork.go": {
       "mode": "100644",
-      "sha256": "23e674cf66981b30eb40425b677af7a1bd563483353ca964c78df43620f57270"
+      "sha256": "e51a7e7aab757d9ac569bd45a1bfde54bbe12469b6b296dc3d1a5cb7602a3fdc"
     },
     "live/live.go": {
       "mode": "100644",
-      "sha256": "8c1d556fa22ad837eec63ce14fc711300dfe2a309a96323933c7f133d10e2336"
+      "sha256": "1377969904e84762aac90aec620ad6bbae0fe38278e36791204c0a7e4a0646c0"
     },
     "live/live_forks_websocket.go": {
       "mode": "100644",
-      "sha256": "a670cf7704dad241f81272edf6a6007ea2847482428ce54e16cecf251abdd95d"
+      "sha256": "d66a24cd6ca989523ff7c61fe37c4671cde8f8f99ce070b1a1eef36f971d0ab6"
     },
     "live/live_forks_websocket_binding.go": {
       "mode": "100644",
@@ -779,7 +779,7 @@
     },
     "live/live_sideband_websocket.go": {
       "mode": "100644",
-      "sha256": "5487581cbd5b8c33ec3645e8c26d1e042a3b4780c9edd7356dc0cd56ab49803f"
+      "sha256": "62c46c8daf831f1ad1c3342ba1d30d3c5be56fd98ee6ef89fcc49500129c566a"
     },
     "live/live_sideband_websocket_binding.go": {
       "mode": "100644",
@@ -787,11 +787,11 @@
     },
     "live/live_test.go": {
       "mode": "100644",
-      "sha256": "d60468bddd2de3000c39cf63c4f09458cc400d25f414ec8823c83793a616bcfa"
+      "sha256": "2fdc790da41eb4d25c411c165a052ad5cc8d889c2e4434aa2928a6afb379ab15"
     },
     "live/live_websocket.go": {
       "mode": "100644",
-      "sha256": "358c28eccb36815a70dd8a3d49c141b8880582830ba1055e7aebbaf9058504bf"
+      "sha256": "0e0f2bd65facd3efca985f0a7242eec718d197e3ebf074cae8e68861371c88b3"
     },
     "live/live_websocket_binding.go": {
       "mode": "100644",
@@ -799,15 +799,15 @@
     },
     "live/session.go": {
       "mode": "100644",
-      "sha256": "f25cf748a47ef678f6bba0f8508bc86a8e9711884bc668bcbee8a80ba17d66eb"
+      "sha256": "b449fa52ffd05f63dda5a44e08cc4b118fce12ead6514df61f6582baad30fea6"
     },
     "live/session_test.go": {
       "mode": "100644",
-      "sha256": "e54e07f72715644a437518063ca72bb4a28ab71ebf8b75a14f63419feea5e6e0"
+      "sha256": "6f7730c4d8c48c743e55fc4997784626e5c1c761bc044738e54fc5ca48e7c9bc"
     },
     "live/sideband.go": {
       "mode": "100644",
-      "sha256": "7859eba83ef8c87f54c9ca73979f77f027b2b13d5aabc4f7dc93d6edbc6f45c6"
+      "sha256": "b6b755b6f0bd685d5b1debd90eee187a7cd86aa5fb0d5ad7d3afa6f928296fa1"
     },
     "model.go": {
       "mode": "100644",
@@ -839,7 +839,7 @@
     },
     "realtime/aliases.go": {
       "mode": "100644",
-      "sha256": "6431ab27e1b2112f72e8c7fdfd11a0acaee4a5ec1c3e982ee8bf9bfa0e62022d"
+      "sha256": "b092a76fd4f3028767be0112edcf68b00fd0a9a5765c046fed0d5ba01a33eced"
     },
     "realtime/api.md": {
       "mode": "100644",
@@ -863,7 +863,7 @@
     },
     "realtime/realtime.go": {
       "mode": "100644",
-      "sha256": "07cc8de6d676555ae77bdf851eccb20a43525b793e13c9defcafb0982d2961c9"
+      "sha256": "8be06f3f8275acad1042eb272fab94d797110f6c80e1d85d10f941ab75a191c0"
     },
     "realtime/realtime_translations_websocket.go": {
       "mode": "100644",
@@ -899,7 +899,7 @@
     },
     "responses/aliases.go": {
       "mode": "100644",
-      "sha256": "ce583905a2470a2b9493ac93e8c5a4706d99b7a6c6f676c97d0ef318096e94f0"
+      "sha256": "5ebabca05a7c23b8dcac1943902d5289ac3794d368ed4725c1c82a64927defe1"
     },
     "responses/api.md": {
       "mode": "100644",
@@ -923,7 +923,7 @@
     },
     "responses/response.go": {
       "mode": "100644",
-      "sha256": "54fb06e038f5acc78acf17389e3ce6deef71d29476f23b13762ecd5afe9fb371"
+      "sha256": "840b6bfc08b87cea5dfc30adea5a36a220f1cf6a4bf54bc81446f1fcae658a3f"
     },
     "responses/response_test.go": {
       "mode": "100644",
@@ -931,7 +931,7 @@
     },
     "responses/responses_websocket.go": {
       "mode": "100644",
-      "sha256": "37ab198b948fa2883fd71e4861fbe4823766b0b8169e9989b0d26df514f6f800"
+      "sha256": "0ffaccec2fb756e449d0fd0bb7eaab3a722dbe0bae58422372fc1d3d982d6f61"
     },
     "responses/responses_websocket_binding.go": {
       "mode": "100644",
@@ -963,7 +963,7 @@
     },
     "scripts/castiron/CUSTOM_CODE.md": {
       "mode": "100644",
-      "sha256": "e7ac634501e8f21144cc5678539282b50b64830a0455b5b840f8ca4010033d3b"
+      "sha256": "c2b12719937fa007d65bea7429962f2b674c531a8c284cc6e5e51c2a526ae351"
     },
     "scripts/castiron/README.md": {
       "mode": "100644",
@@ -971,23 +971,23 @@
     },
     "scripts/castiron/custom_code_budget.py": {
       "mode": "100755",
-      "sha256": "3c96300546afb5e57fbfb596d4e1bde90821928e44904c4aeb91e2d7e4e27ff5"
+      "sha256": "b85ae4eab2a84dfbcd1f197f87077f686bc4f3347dbf74cca3abb1f99ab50b9a"
     },
     "scripts/castiron/custom_code_policy.py": {
       "mode": "100755",
-      "sha256": "c0c4d5191b90880c881675816ec18ea0bd4b078838ef663513159b2d157edb47"
+      "sha256": "890ecfc963b8a2461e7e801c9071735a975ed9876de89c80323da10960965295"
     },
     "scripts/castiron/custom_code_report.py": {
       "mode": "100755",
-      "sha256": "a52a1aabf4047f4c20e96d1d788c25a4aa78c1987b4fa73a13d22c92ef213a3f"
+      "sha256": "ddb15c9a162d26a6c9abf1b4fefcd80f2e685d9d255af729863258b7ecd08e2d"
     },
     "scripts/castiron/custom_code_test_support.py": {
       "mode": "100644",
-      "sha256": "15b2c1243f1cbec53b73707e5806a8566d40f78763fe85c4ab7dc48bc1405a6c"
+      "sha256": "b90c31b6b7347a3bc254b9fec228d5ccad3025306c60465a027a239420276671"
     },
     "scripts/castiron/fixtures/github_publisher.cjs": {
       "mode": "100644",
-      "sha256": "7cd554d124da0ae9eb7fac3c4bbb1c8129f0d6868e442698105fe4945f6ee814"
+      "sha256": "c84bd86518a70a5b7bbf877d8c13129debface0c220e5118510b0ef17d9ab707"
     },
     "scripts/castiron/ruff.toml": {
       "mode": "100644",
@@ -995,31 +995,47 @@
     },
     "scripts/castiron/test_custom_code_budget.py": {
       "mode": "100644",
-      "sha256": "feaf35f7f30deecb89d95b31b8a325033180c64650e1d965cbdee486ab11f16d"
+      "sha256": "7fdb3a9282978e6b1c0d84d73c43bb4adf96ff035663e77bc8e45f0fe082be7d"
     },
     "scripts/castiron/test_custom_code_github.py": {
       "mode": "100644",
-      "sha256": "f0f3fa6810ef73b0656d722e65125003a5685b61324dda6c93d1d0dbf619df37"
+      "sha256": "815e8db60dd81f69895696813f6b612856eb899803e3e9b85df22ec688073b87"
     },
     "scripts/castiron/test_custom_code_policy.py": {
       "mode": "100644",
-      "sha256": "22405957bac59e79943a3ea5c72a5657cea5ae3b3b7a5d9ed80966edf2e94b23"
+      "sha256": "fd503013d604cf9659df95a3a47cecfc17da364397625d95ef6121aa790e6a05"
+    },
+    "scripts/castiron/test_custom_code_policy_source.py": {
+      "mode": "100644",
+      "sha256": "dcb0be5e8157791dc02d1ae1d6b82cc703d4bc7b3c4797bc00bd9d2672ad13a2"
     },
     "scripts/castiron/test_custom_code_publication.py": {
       "mode": "100644",
-      "sha256": "8548acaf8958bf745759ba5c7a08791cb72793aa0a780d027a2a686e0464ac8e"
+      "sha256": "4533c8c852d590446180715adbd00a63c12af29c53316d3e91d129890ccadbc6"
     },
     "scripts/castiron/test_custom_code_report.py": {
       "mode": "100644",
-      "sha256": "f4d90fd38b17aac59096488391b65ef9da5493d2049d4c038d5926a960257ca7"
+      "sha256": "e1fbafb5242cac6128757339d78902b12e7658c82e5f157cc2ca7bef80347838"
+    },
+    "scripts/castiron/test_custom_code_review_revocation.py": {
+      "mode": "100644",
+      "sha256": "d7f309e2324f48f62f9f7f90c2e82f31354e414a20e3ddb0da724b60adeff7a3"
+    },
+    "scripts/castiron/test_custom_code_status_publication.py": {
+      "mode": "100644",
+      "sha256": "7398877d4ec209d0cd40e0d83f8e4482b6de5bef95f1711c9905d6a97a3791d3"
+    },
+    "scripts/castiron/test_custom_code_strict.py": {
+      "mode": "100644",
+      "sha256": "20684147ec37f8233798a46aef8b618a2bbf2c8b507605a959d644fce163d73d"
     },
     "shared/constant/constants.go": {
       "mode": "100644",
-      "sha256": "2d53e9c311dc1dcaa6c2997af7b4617c6408090b86dff810aee1f3e62578027d"
+      "sha256": "946811fbe1d0ec6f629aac1658de2d4d2cb6b8ff576fbec3e8b231f9c61a922a"
     },
     "shared/shared.go": {
       "mode": "100644",
-      "sha256": "ae6dddaad12df2fd76eadefdeed8c1791274533623f68b91f4e6ac9045603d75"
+      "sha256": "6744ea1919b784b54dd5688c76b280c979fdb40e7e81e7b07bea65ee69fa9f98"
     },
     "skill.go": {
       "mode": "100644",
@@ -1031,7 +1047,7 @@
     },
     "skillcontent.go": {
       "mode": "100644",
-      "sha256": "0d17285da7dddb8d4148c1e89920874940c496ab96954f047b1a63a2e2ecb0ec"
+      "sha256": "68838b31c585846b3638d7653886bf97beddc1ba4e788e51460e94c7a3556428"
     },
     "skillcontent_test.go": {
       "mode": "100644",
@@ -1047,7 +1063,7 @@
     },
     "skillversioncontent.go": {
       "mode": "100644",
-      "sha256": "66cc3d3a172f4413aa884b05cf7b917988511aca2581ce557437f3faf230629a"
+      "sha256": "c14cdb1a700d74c5c3f09e6a6b0edfec6754bce9280234e75164088492437ae3"
     },
     "skillversioncontent_test.go": {
       "mode": "100644",
@@ -1079,7 +1095,7 @@
     },
     "vectorstore.go": {
       "mode": "100644",
-      "sha256": "51668144774c221ead933f4bae2e92088f473a79d6b6f067c559c0402366d2e6"
+      "sha256": "3b6ebc074ad9a4133a0e04efd3e3d4ff8c4b41f1207088cffa821746a6c0716c"
     },
     "vectorstore_test.go": {
       "mode": "100644",
@@ -1095,7 +1111,7 @@
     },
     "vectorstorefilebatch.go": {
       "mode": "100644",
-      "sha256": "b6e106026a5404fdccf9ff06fe4e96a52c9a5744bb020f62df6f2c12e9ed0c61"
+      "sha256": "353a6645d38512097010b657c470fecd371f51f4196dc3364a27c06dac886404"
     },
     "vectorstorefilebatch_test.go": {
       "mode": "100644",
@@ -1103,7 +1119,7 @@
     },
     "video.go": {
       "mode": "100644",
-      "sha256": "f6b0973331086e1021333666f115c62c6c291ee057f4f7196fc1a1104044d0b0"
+      "sha256": "5401da9db1300a02b914b012d0bf8024d273ee29602f8c668b0a4bc7310c7c45"
     },
     "video_test.go": {
       "mode": "100644",
@@ -1111,11 +1127,11 @@
     },
     "webhooks/aliases.go": {
       "mode": "100644",
-      "sha256": "4fb0e4ff61ea3c4640e1f5c7a67f5ac93383ac2698e658fee14c9c50192207c1"
+      "sha256": "33cccb14b2df03f4af0e50ea19322554faf524c665885dd9e78a4284f5257dec"
     },
     "webhooks/api.md": {
       "mode": "100644",
-      "sha256": "fd8ed1c542ab154e6e4534b9f1d5257cd3adb0b5ea58de295d7072e61be825a4"
+      "sha256": "21fa4d1f529bc4692c26b3eb36cbb6096d02c5b7f548cf438e9e6e070870e4b7"
     },
     "webhooks/eventtype.go": {
       "mode": "100644",
@@ -1127,7 +1143,7 @@
     },
     "webhooks/webhook.go": {
       "mode": "100644",
-      "sha256": "9a254ea968ff9734d985311233019d05d81ec478c0edabb6ee50d28da36adf1f"
+      "sha256": "2f0f144b32146a50f0d5cde6391600aff5d718b9c5fc2fc2fb6968d0b56ee803"
     }
   }
 }

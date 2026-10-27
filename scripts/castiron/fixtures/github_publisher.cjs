@@ -8,8 +8,10 @@ const github = {
     actions: {
       getWorkflowRun: async ({ run_id }) => {
         if (data.run_errors?.[run_id])
-          throw Object.assign(new Error('Workflow run lookup failed'), { status: data.run_errors[run_id] });
-        return { data: data.runs_by_id?.[run_id] || data.run };
+          throw Object.assign(new Error('Workflow run lookup failed'), {
+            status: data.run_errors[run_id],
+          });
+        return { data: data.runs_by_id?.[run_id] || data.run || data.context?.payload?.workflow_run };
       },
       getWorkflow: async ({ workflow_id }) => ({
         data: {
@@ -39,29 +41,36 @@ const github = {
               ? data.merge_sha
               : ref === 'heads/main' && (data.main_sha_sequence?.length || data.main_sha)
                 ? data.main_sha_sequence?.shift() || data.main_sha
-                : data.current.base.sha,
+                : ref === 'heads/next' && (data.target_sha_sequence?.length || data.target_sha)
+                  ? data.target_sha_sequence?.shift() || data.target_sha
+                  : data.current.base.sha,
           },
         },
       }),
     },
     repos: {
-      getCommit: async () => ({ data: data.merge_commit }),
-      compareCommitsWithBasehead: async ({ basehead }) => ({
-        data: data.comparisons?.[basehead] || { merge_base_commit: { sha: basehead.split('...')[0] } },
-      }),
       getContent: async ({ path, ref }) => {
-        if (path !== '.castiron-ratchet.json' || !data.policies_by_sha?.[ref])
-          throw new Error('Unexpected policy lookup');
-        const content = Buffer.from(JSON.stringify(data.policies_by_sha[ref]));
+        if (
+          !['scripts/castiron/custom_code_policy.py', 'scripts/castiron/custom_code_report.py'].includes(path)
+        )
+          throw new Error('Unexpected trusted policy path');
+        const content = Buffer.from(JSON.stringify({ ref, path }));
         return {
           data: {
             type: 'file',
             encoding: 'base64',
             size: content.length,
             content: content.toString('base64'),
+            ...(data.policy_file_override || {}),
           },
         };
       },
+      getCommit: async () => ({ data: data.merge_commit }),
+      compareCommitsWithBasehead: async ({ basehead }) => ({
+        data: data.comparisons?.[basehead] || {
+          merge_base_commit: { sha: basehead.split('...')[0] },
+        },
+      }),
       createCommitStatus: async (value) => {
         writes.push(value);
         data.statuses_by_sha ||= {};
@@ -83,6 +92,7 @@ const github = {
     if (_query.includes('reviews(first:100')) {
       const page = data.review_pages?.shift();
       if (page && page.expected_cursor !== cursor) throw new Error('Wrong review cursor');
+      if (page?.after_read) Object.assign(data, page.after_read);
       return {
         repository: {
           pullRequest: {
@@ -115,7 +125,7 @@ const github = {
     if (method === 'workflow-runs') return data.runs_by_sha?.[params.head_sha] || [];
     if (method === 'reviews') return data.reviews_by_number?.[params.pull_number] || data.reviews || [];
     if (method === 'statuses') return data.statuses_by_sha?.[params.ref] || data.previous_statuses || [];
-    if (method === 'comments') return data.comments || [];
+    if (method === 'comments') return data.comments_by_number?.[params.issue_number] || data.comments || [];
     if (method === 'associations') return data.associated_pulls || [];
     if (method === 'pulls' && params.head === 'contributor:sdk' && params.state === 'open') {
       return data.fallback_pulls || [];
@@ -123,12 +133,47 @@ const github = {
     throw new Error(`Unexpected GitHub lookup: ${method}`);
   },
 };
+const exec = {
+  getExecOutput: async (command, args) => {
+    if (
+      command !== 'python3' ||
+      args[0] !== '-I' ||
+      require('node:path').basename(args[1]) !== 'custom_code_policy.py' ||
+      args[2] !== 'review-required' ||
+      args[3] !== '--repository' ||
+      args[4] !== 'openai/example' ||
+      args[5] !== '--repo' ||
+      args[7] !== '--base' ||
+      args[9] !== '--head' ||
+      args[11] !== '--main' ||
+      ![args[8], args[10], args[12]].every((value) => /^[0-9a-f]{40}$/.test(value))
+    ) {
+      throw new Error('Unexpected trusted policy invocation');
+    }
+    for (const name of ['custom_code_policy.py', 'custom_code_report.py']) {
+      const file = require('node:path').join(require('node:path').dirname(args[1]), name);
+      const source = JSON.parse(fs.readFileSync(file, 'utf8'));
+      if (source.ref !== args[12] || source.path !== `scripts/castiron/${name}`)
+        throw new Error('Executed stale or mismatched trusted policy');
+    }
+    if (data.policy_error_sequence?.shift() || data.policy_error)
+      throw new Error('Trusted policy evaluation failed');
+    const expectedBase = data.expected_policy_bases?.shift() || data.expected_policy_base;
+    if (expectedBase && args[8] !== expectedBase) throw new Error('Evaluated stale target policy');
+    return {
+      stdout: JSON.stringify({
+        requires_human: data.requires_human_by_main?.[args[12]] ?? data.requires_human ?? true,
+      }),
+    };
+  },
+};
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
-new AsyncFunction('github', 'context', 'process', 'require', data.script)(
+new AsyncFunction('github', 'context', 'process', 'require', 'exec', data.script)(
   github,
   data.context,
-  { env: data.env || {} },
+  { env: { RUNNER_TEMP: require('node:os').tmpdir(), ...(data.env || {}) } },
   require,
+  exec,
 )
   .then(() => process.stdout.write(JSON.stringify(writes)))
   .catch((error) => {
