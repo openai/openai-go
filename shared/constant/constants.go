@@ -256,6 +256,7 @@ type InputJSON string                                         // Always "input_j
 type InputText string                                         // Always "input_text"
 type InterruptSubagentCall string                             // Always "interrupt_subagent_call"
 type InvalidRequestError string                               // Always "invalid_request_error"
+type ItemReference string                                     // Always "item_reference"
 type JSONObject string                                        // Always "json_object"
 type JSONSchema string                                        // Always "json_schema"
 type Keypress string                                          // Always "keypress"
@@ -955,6 +956,7 @@ func (c InputJSON) Default() InputJSON                           { return "input
 func (c InputText) Default() InputText                           { return "input_text" }
 func (c InterruptSubagentCall) Default() InterruptSubagentCall   { return "interrupt_subagent_call" }
 func (c InvalidRequestError) Default() InvalidRequestError       { return "invalid_request_error" }
+func (c ItemReference) Default() ItemReference                   { return "item_reference" }
 func (c JSONObject) Default() JSONObject                         { return "json_object" }
 func (c JSONSchema) Default() JSONSchema                         { return "json_schema" }
 func (c Keypress) Default() Keypress                             { return "keypress" }
@@ -1784,6 +1786,7 @@ func (c InputJSON) MarshalJSON() ([]byte, error)                           { ret
 func (c InputText) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c InterruptSubagentCall) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c InvalidRequestError) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c ItemReference) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
 func (c JSONObject) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c JSONSchema) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c Keypress) MarshalJSON() ([]byte, error)                            { return marshalString(c) }

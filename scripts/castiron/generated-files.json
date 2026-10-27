@@ -843,7 +843,7 @@
     },
     "realtime/api.md": {
       "mode": "100644",
-      "sha256": "8f43d95da2f4497f8a788525ebfa9675878551fcc4132ec8b3a998a8ed9d03fb"
+      "sha256": "1c63876893e6495a1331528565e553194ef6527573e79744bba4635c3132e89c"
     },
     "realtime/call.go": {
       "mode": "100644",
@@ -863,7 +863,7 @@
     },
     "realtime/realtime.go": {
       "mode": "100644",
-      "sha256": "8be06f3f8275acad1042eb272fab94d797110f6c80e1d85d10f941ab75a191c0"
+      "sha256": "44a58e4f601f0d457634c9a05abbb93a7feef39bae03b3bfe2b707ec64e6e603"
     },
     "realtime/realtime_translations_websocket.go": {
       "mode": "100644",
@@ -1019,7 +1019,7 @@
     },
     "shared/constant/constants.go": {
       "mode": "100644",
-      "sha256": "946811fbe1d0ec6f629aac1658de2d4d2cb6b8ff576fbec3e8b231f9c61a922a"
+      "sha256": "1a5e42268f59e32af37e6ee98841db84446dc5f330d78070a63affadf2c5a621"
     },
     "shared/shared.go": {
       "mode": "100644",
