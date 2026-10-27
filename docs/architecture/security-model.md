@@ -1,5 +1,10 @@
 # Security Model
 
+Generated files are updated through authoritative inputs or the compiler and
+regeneration; handwritten edits to them are forbidden. Code review enforces this
+ownership rule. The customization-budget reporter and publishers are retired
+and are not part of the active CI or security controls.
+
 This is the repository's canonical detailed threat model for Codex Security
 scans and security review. Read it from the scanned revision.
 [SECURITY.md](../../SECURITY.md) remains the disclosure and reportability entry
@@ -16,6 +21,11 @@ enforcement evidence rather than competing threat-model authority. The Codex
 Security cloud scan field is external configuration, not repository guidance,
 and should contain only a short pointer to this file once the scanned revision
 includes it.
+
+Generated-file ownership currently relies on `AGENTS.md`, contributor guidance,
+and ordinary SDK code review. There is no dedicated generated-file edit check or
+required gate. Review generated output and inventory changes together; fix
+violations in the inputs/compiler and regenerate.
 
 ## 1. Overview
 
@@ -41,7 +51,7 @@ API spend.
 | auth/ | Obtains and exchanges workload identity, manages short-lived bearers, and enforces X.509 transport constraints. | auth/subjecttokenprovider.go:1-113; auth/x509transport.go:1-120; option/x509workloadidentity.go:18-55 |
 | webhooks/ | Authenticates webhook bytes before callers decode or act on events. | webhooks/webhook.go:1-44; webhooks/webhook_helpers.go:1-143; webhooks/webhook_secret.go:1-34 |
 | internal/apijson/, internal/apiform/, packages/ssestream/, streamaccumulator* | Parses attacker-influenced API data, serializes caller input, and accumulates streaming output. | internal/apijson/decoder.go:1-120; internal/apiform/encoder.go:1-180; packages/ssestream/ssestream.go:1-170; streamaccumulator.go:1-120 |
-| .github/workflows/, scripts/, tools/ | Builds, tests, scans, and publishes the repository; privileged publication must remain isolated from pull-request-controlled execution. | .github/workflows/ci.yml:1-183; .github/workflows/codeql.yml:1-72; .github/workflows/castiron-custom-code-comment.yml:1-237; .github/workflows/create-releases.yml:1-55; .github/workflows/go-version-review.yml:200-411; scripts/castiron/CUSTOM_CODE.md:24-78 |
+| .github/workflows/, scripts/, tools/ | Builds, tests, scans, and publishes the repository; privileged publication must remain isolated from pull-request-controlled execution. | .github/workflows/ci.yml:1-183; .github/workflows/codeql.yml:1-72; .github/workflows/create-releases.yml:1-55; .github/workflows/go-version-review.yml:200-411 |
 
 | Deployment or workflow | Resource or capability | Configuration and precedence | Safe effective value or location | Readers, writers, or recipients | Enforcing control | Evidence or unknowns |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -50,7 +60,7 @@ API spend.
 | Azure or Bedrock client | Provider credentials and endpoint | Provider options override or suppress ambient OpenAI defaults | Configured Azure or Bedrock origin; authenticated redirects constrained | Azure or AWS endpoint selected by operator | Provider finalizers, HTTPS and origin checks, per-attempt authentication or signing | azure/azure.go:164-184, azure/azure.go:286-307; bedrock/auth.go:97-114, bedrock/auth.go:462-577 |
 | Workload identity and X.509 | Subject tokens, exchanged bearer tokens, client certificates and private keys | Operator-selected token source, issuer, signer, and transport | Fixed metadata or exchange endpoints and attested OpenAI mTLS origins | Cloud metadata service, issuer, OpenAI endpoint | Issuer and origin checks, TLS constraints, bounded responses, refresh bookkeeping | auth/subjecttokenprovider.go:1-113; auth/x509transport.go:1-120; option/x509workloadidentity.go:18-55 |
 | Webhook verification | Webhook secret and raw request bytes | Caller supplies secret and exact body; default tolerance may be overridden | In-process verification before event decoding | Caller process only until verification succeeds | HMAC verification, timestamp window, canonical secret parsing | webhooks/webhook_helpers.go:1-143; webhooks/webhook_secret.go:1-34 |
-| Pull request CI and release | Read-only test execution versus protected publication credentials | Workflow event, job permissions, and protected environments | PR jobs without release credentials; release job only on main in the release environment | GitHub Actions jobs, release app, package consumers | Pinned actions, minimal permissions, trusted recomputation and publisher separation | .github/workflows/ci.yml:1-183; .github/workflows/codeql.yml:1-72; .github/workflows/castiron-custom-code-comment.yml:1-237; .github/workflows/create-releases.yml:1-55; .github/workflows/go-version-review.yml:200-411; scripts/castiron/CUSTOM_CODE.md:24-78 |
+| Pull request CI and release | Read-only test execution versus protected publication credentials | Workflow event, job permissions, and protected environments | PR jobs without release credentials; release job only on main in the release environment | GitHub Actions jobs, release app, package consumers | Pinned actions, minimal permissions, trusted recomputation and publisher separation | .github/workflows/ci.yml:1-183; .github/workflows/codeql.yml:1-72; .github/workflows/create-releases.yml:1-55; .github/workflows/go-version-review.yml:200-411 |
 
 ## 2. Threat Model, Trust Boundaries, and Assumptions
 
@@ -127,10 +137,8 @@ influencing trusted publication or protected credentials.
    source, filenames, artifacts, reports, and patches must not be evaluated by
    a job holding write or release credentials unless independently constrained
    and validated by trusted code. (.github/workflows/codeql.yml:1-72,
-   .github/workflows/castiron-custom-code-comment.yml:1-237,
    .github/workflows/create-releases.yml:1-55,
-   .github/workflows/go-version-review.yml:200-411,
-   scripts/castiron/CUSTOM_CODE.md:24-78)
+   .github/workflows/go-version-review.yml:200-411)
 
 ### Assumptions, exclusions, and caller obligations
 
@@ -168,7 +176,7 @@ confirmed findings.
 | High | Workload or X.509 exchange leaks or mints a bearer through an unsafe destination, redirect, TLS policy, or refresh race. | Supported identity configuration plus a concrete bypass; not simply an operator-selected malicious signer or path. | Credential theft or unauthorized API access. | Fixed or validated destinations, redirect restrictions, TLS constraints, bounded issuer parsing, bearer history. | Review lifecycle, cancellation, rotation, replay, and concurrent refresh paths. | auth/subjecttokenprovider.go:1-113; auth/x509transport.go:1-120; option/x509workloadidentity.go:18-55 |
 | Medium | Hostile JSON, SSE, error, cursor, or retry data causes disproportionate resource use, parser disagreement, or sensitive leakage. | Malicious compatible endpoint, compromised proxy, or attacker-influenced legitimate response reaches parser or diagnostic sink. | Process availability loss or limited disclosure. | SSE token limit, context cancellation, retry caps, typed decoding, safe debug logger. | Preserve large-payload compatibility; examine unbounded aggregation and explicit raw dump sinks separately. | packages/ssestream/ssestream.go:1-170; default_http_client.go:8-31; internal/apierror/apierror.go:1-56; option/middleware.go:1-114 |
 | Medium | Caller passes end-user maps or model output into raw JSON or extra-field APIs or then dispatches a tool, renderer, or shell sink. | Embedding application exposes a trusted escape hatch or unsafe downstream sink. | Application-specific policy bypass or injection. | Typed APIs and explicit escape-hatch naming; SDK itself does not execute returned tools. | Require a demonstrated SDK-owned sink before reporting as an SDK flaw; otherwise document caller obligation. | README.md:163-219; option/requestoption.go:197-244; packages/param/param.go:25-55; packages/param/param.go:141-159 |
-| Critical | Candidate PR source, artifact, report, or patch reaches a write token or release credential and alters official artifacts. | A concrete workflow path crosses from candidate-controlled execution or data into a protected job. | Supply-chain compromise of official SDK releases. | SHA-pinned actions, minimal permissions, protected release environment, trusted recomputation and publisher validation. | Trace event, artifact provenance, permissions, checkout, and shell evaluation end to end. | .github/workflows/codeql.yml:1-72; .github/workflows/castiron-custom-code-comment.yml:1-237; .github/workflows/create-releases.yml:1-55; .github/workflows/go-version-review.yml:200-411; scripts/castiron/CUSTOM_CODE.md:24-78 |
+| Critical | Candidate PR source, artifact, report, or patch reaches a write token or release credential and alters official artifacts. | A concrete workflow path crosses from candidate-controlled execution or data into a protected job. | Supply-chain compromise of official SDK releases. | SHA-pinned actions, minimal permissions, protected release environment, trusted recomputation and publisher validation. | Trace event, artifact provenance, permissions, checkout, and shell evaluation end to end. | .github/workflows/codeql.yml:1-72; .github/workflows/create-releases.yml:1-55; .github/workflows/go-version-review.yml:200-411 |
 | Not a boundary by itself | A contributor edits a checked-in test, fixture, example, build script, or generator and candidate-safe CI deliberately executes that tracked file. | Contributor already has authority to propose that repository-code change. | No new capability solely from execution as repository code. | Code review and ordinary CI treat the candidate tree as the proposed program. | Reclassify only if lower-trust mutable data is parsed or evaluated, runtime data reaches a sensitive sink, or PR code reaches protected credentials; do not execute untrusted checkouts locally. | CONTRIBUTING.md:20-53; .github/workflows/ci.yml:1-183; .github/workflows/go-version-review.yml:200-411 |
 
 ## 4. Severity Calibration (Critical, High, Medium, Low)
