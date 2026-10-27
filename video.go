@@ -143,7 +143,7 @@ func (r *VideoService) NewCharacter(ctx context.Context, body VideoNewCharacterP
 func (r *VideoService) DownloadContent(ctx context.Context, videoID string, query VideoDownloadContentParams, opts ...option.RequestOption) (res *http.Response, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "application/binary")}, opts...)
+	opts = append([]option.RequestOption{option.WithHeader("Accept", "application/json, image/webp, video/mp4")}, opts...)
 	if videoID == "" {
 		err = errors.New("missing required video_id parameter")
 		return nil, err
