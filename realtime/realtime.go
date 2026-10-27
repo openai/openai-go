@@ -225,7 +225,8 @@ func (r *ConversationCreatedEventConversation) UnmarshalJSON(data []byte) error 
 // [RealtimeConversationItemAssistantMessage],
 // [RealtimeConversationItemFunctionCall],
 // [RealtimeConversationItemFunctionCallOutput], [RealtimeMcpApprovalResponse],
-// [RealtimeMcpListTools], [RealtimeMcpToolCall], [RealtimeMcpApprovalRequest].
+// [RealtimeMcpListTools], [RealtimeMcpToolCall], [RealtimeMcpApprovalRequest],
+// [ResponseItemReference].
 //
 // Use the [ConversationItemUnion.AsAny] method to switch on the variant.
 //
@@ -241,6 +242,7 @@ type ConversationItemUnion struct {
 	OfRealtimeMcpListTools                       RealtimeMcpListTools                       `json:",inline"`
 	OfRealtimeMcpToolCall                        RealtimeMcpToolCall                        `json:",inline"`
 	OfRealtimeMcpApprovalRequest                 RealtimeMcpApprovalRequest                 `json:",inline"`
+	OfResponseItemReference                      ResponseItemReference                      `json:",inline"`
 	JSON                                         struct {
 		Type                                         respjson.Field
 		OfRealtimeConversationItemSystemMessage      respjson.Field
@@ -252,6 +254,7 @@ type ConversationItemUnion struct {
 		OfRealtimeMcpListTools                       respjson.Field
 		OfRealtimeMcpToolCall                        respjson.Field
 		OfRealtimeMcpApprovalRequest                 respjson.Field
+		OfResponseItemReference                      respjson.Field
 		raw                                          string
 	} `json:"-"`
 }
@@ -271,6 +274,7 @@ func (RealtimeMcpApprovalResponse) implConversationItemUnion()                {}
 func (RealtimeMcpListTools) implConversationItemUnion()                       {}
 func (RealtimeMcpToolCall) implConversationItemUnion()                        {}
 func (RealtimeMcpApprovalRequest) implConversationItemUnion()                 {}
+func (ResponseItemReference) implConversationItemUnion()                      {}
 
 // Use the following switch statement to find the correct variant
 //
@@ -284,6 +288,7 @@ func (RealtimeMcpApprovalRequest) implConversationItemUnion()                 {}
 //	case realtime.RealtimeMcpListTools:
 //	case realtime.RealtimeMcpToolCall:
 //	case realtime.RealtimeMcpApprovalRequest:
+//	case realtime.ResponseItemReference:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -314,6 +319,8 @@ func (u ConversationItemUnion) AsAny() anyConversationItem {
 		return u.AsRealtimeMcpToolCall()
 	case "mcp_approval_request":
 		return u.AsRealtimeMcpApprovalRequest()
+	case "item_reference":
+		return u.AsResponseItemReference()
 	}
 	return nil
 }
@@ -359,6 +366,11 @@ func (u ConversationItemUnion) AsRealtimeMcpToolCall() (v RealtimeMcpToolCall) {
 }
 
 func (u ConversationItemUnion) AsRealtimeMcpApprovalRequest() (v RealtimeMcpApprovalRequest) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConversationItemUnion) AsResponseItemReference() (v ResponseItemReference) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -426,6 +438,12 @@ func ConversationItemParamOfMcpListTools(serverLabel string, tools []RealtimeMcp
 	return ConversationItemUnionParam{OfMcpListTools: &mcpListTools}
 }
 
+func ConversationItemParamOfItemReference(id string) ConversationItemUnionParam {
+	var itemReference ResponseItemReferenceParam
+	itemReference.ID = id
+	return ConversationItemUnionParam{OfItemReference: &itemReference}
+}
+
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -439,6 +457,7 @@ type ConversationItemUnionParam struct {
 	OfMcpListTools                 *RealtimeMcpListToolsParam                       `json:",omitzero,inline"`
 	OfMcpCall                      *RealtimeMcpToolCallParam                        `json:",omitzero,inline"`
 	OfMcpApprovalRequest           *RealtimeMcpApprovalRequestParam                 `json:",omitzero,inline"`
+	OfItemReference                *ResponseItemReferenceParam                      `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -451,7 +470,8 @@ func (u ConversationItemUnionParam) MarshalJSON() ([]byte, error) {
 		u.OfMcpApprovalResponse,
 		u.OfMcpListTools,
 		u.OfMcpCall,
-		u.OfMcpApprovalRequest)
+		u.OfMcpApprovalRequest,
+		u.OfItemReference)
 }
 func (u *ConversationItemUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -521,6 +541,8 @@ func (u ConversationItemUnionParam) GetType() *string {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfMcpApprovalRequest; vt != nil {
 		return (*string)(&vt.Type)
+	} else if vt := u.OfItemReference; vt != nil {
+		return (*string)(&vt.Type)
 	}
 	return nil
 }
@@ -544,6 +566,8 @@ func (u ConversationItemUnionParam) GetID() *string {
 	} else if vt := u.OfMcpCall; vt != nil {
 		return (*string)(&vt.ID)
 	} else if vt := u.OfMcpApprovalRequest; vt != nil {
+		return (*string)(&vt.ID)
+	} else if vt := u.OfItemReference; vt != nil {
 		return (*string)(&vt.ID)
 	}
 	return nil
@@ -690,6 +714,7 @@ func init() {
 		apijson.Discriminator[RealtimeMcpListToolsParam]("mcp_list_tools"),
 		apijson.Discriminator[RealtimeMcpToolCallParam]("mcp_call"),
 		apijson.Discriminator[RealtimeMcpApprovalRequestParam]("mcp_approval_request"),
+		apijson.Discriminator[ResponseItemReferenceParam]("item_reference"),
 	)
 }
 
@@ -9802,6 +9827,61 @@ type ResponseFunctionCallArgumentsDoneEvent struct {
 // Returns the unmodified JSON received from the API
 func (r ResponseFunctionCallArgumentsDoneEvent) RawJSON() string { return r.JSON.raw }
 func (r *ResponseFunctionCallArgumentsDoneEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Reference an existing item in this Realtime session as response.create input.
+// Item references are only accepted in the response input array, not as new
+// conversation items.
+type ResponseItemReference struct {
+	// The ID of an existing item in the same Realtime session.
+	ID string `json:"id" api:"required"`
+	// The type of this item. Always `item_reference`.
+	Type constant.ItemReference `json:"type" default:"item_reference"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseItemReference) RawJSON() string { return r.JSON.raw }
+func (r *ResponseItemReference) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this ResponseItemReference to a ResponseItemReferenceParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ResponseItemReferenceParam.Overrides()
+func (r ResponseItemReference) ToParam() ResponseItemReferenceParam {
+	return param.Override[ResponseItemReferenceParam](json.RawMessage(r.RawJSON()))
+}
+
+// Reference an existing item in this Realtime session as response.create input.
+// Item references are only accepted in the response input array, not as new
+// conversation items.
+//
+// The properties ID, Type are required.
+type ResponseItemReferenceParam struct {
+	// The ID of an existing item in the same Realtime session.
+	ID string `json:"id" api:"required"`
+	// The type of this item. Always `item_reference`.
+	//
+	// This field can be elided, and will marshal its zero value as "item_reference".
+	Type constant.ItemReference `json:"type" default:"item_reference"`
+	paramObj
+}
+
+func (r ResponseItemReferenceParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseItemReferenceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseItemReferenceParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
