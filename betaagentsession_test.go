@@ -165,7 +165,10 @@ func TestBetaAgentSessionListWithOptionalParams(t *testing.T) {
 		After:   openai.String("after"),
 		AgentID: openai.String("agent_id"),
 		Limit:   openai.Int(1),
-		Order:   openai.BetaAgentSessionListParamsOrderAsc,
+		Metadata: &map[string]string{
+			"foo": "string",
+		},
+		Order: openai.BetaAgentSessionListParamsOrderAsc,
 	})
 	if err != nil {
 		var apierr *openai.Error

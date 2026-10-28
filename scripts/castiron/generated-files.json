@@ -363,11 +363,11 @@
     },
     "betaagentsession.go": {
       "mode": "100644",
-      "sha256": "06758d2b68f41e235c215a94a437b75beb175b50ef99cbc4e0819a3c192cbbba"
+      "sha256": "b384e888a7b82b4f8f42a8a7bfae23e44e79b36453504581c297af047356f76c"
     },
     "betaagentsession_test.go": {
       "mode": "100644",
-      "sha256": "4a6c8d5ed05dc827e9ee9040ec88c2ba73089fd20b68682514299a26350b1ede"
+      "sha256": "c6cc4e4971db45060b4d62cca844b3a248c91937e5ae8fccc3c808a0a146d3e0"
     },
     "betaagentsessionartifact.go": {
       "mode": "100644",
