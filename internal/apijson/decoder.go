@@ -294,6 +294,10 @@ func (d *decoderBuilder) newMapDecoder(t reflect.Type) decoderFunc {
 	itemDecoder := d.typeDecoder(itemType)
 
 	return func(node gjson.Result, value reflect.Value, state *decoderState) (err error) {
+		if !node.IsObject() && node.Type != gjson.Null {
+			return fmt.Errorf("apijson: could not deserialize to an object")
+		}
+
 		mapValue := reflect.MakeMapWithSize(t, len(node.Map()))
 
 		node.ForEach(func(key, value gjson.Result) bool {
