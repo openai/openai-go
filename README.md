@@ -1724,12 +1724,15 @@ including custom headers. Pass the Azure credential on each `Connect` call.
 Supply any intended transport settings as service or connection options.
 
 For Responses, construct a service with
-`responses.NewResponseService(option.WithBaseURL(endpoint+"/openai/v1/"))`.
+`responses.NewResponseService(option.WithBaseURL(strings.TrimRight(endpoint, "/")+"/openai/v1/"))`.
 Pass `option.WithAPIKey(key)` to that service's
 `Connect(ctx, responses.ResponseConnectionOptions{}, ...)`,
 then set your Azure deployment name in `ResponsesClientEventResponseCreateParam.Model`.
-Follow the [Responses WebSocket lifecycle](#responses-websockets) to send,
-read and check a terminal response. A successful upgrade alone is not a completed response.
+Use the default stream and wait for each response to finish before sending the
+next request. Azure does not support multiplexing responses on one connection.
+Follow the send, read, and terminal-response steps in the
+[Responses WebSocket lifecycle](#responses-websockets). A successful upgrade
+alone is not a completed response.
 
 The following program opens Realtime and verifies its initial session-ready event.
 It sends no application request. Set
