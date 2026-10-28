@@ -21,6 +21,10 @@ func main() {
 func run() error {
 	// OPENAI_API_KEY supplies Authorization independently of custom headers.
 	client := openai.NewClient(option.WithHeader("X-Application", "my-application"))
+	return runWithClient(client)
+}
+
+func runWithClient(client openai.Client) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	connection, err := client.Responses.Connect(ctx, responses.ResponseConnectionOptions{},
