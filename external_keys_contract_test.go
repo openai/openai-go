@@ -28,8 +28,8 @@ func TestExternalKeysProviders(t *testing.T) {
 				if r.Method != "POST" || r.URL.Path != "/v1/organization/external_keys" {
 					t.Errorf("unexpected route: %s %s", r.Method, r.URL.Path)
 				}
-				if got := r.Header.Get("Authorization"); got != "Bearer admin-test" {
-					t.Errorf("authorization = %q", got)
+				if got := r.Header.Values("Authorization"); len(got) != 1 || got[0] != "Bearer admin-test" {
+					t.Error("unexpected Authorization header values")
 				}
 				var got map[string]string
 				if err := json.NewDecoder(r.Body).Decode(&got); err != nil {
@@ -83,8 +83,8 @@ func TestExternalKeysLifecycle(t *testing.T) {
 		{http.MethodGet, "/v1/organization/external_keys"},
 	}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if got := r.Header.Get("Authorization"); got != "Bearer admin-test" {
-			t.Errorf("authorization = %q", got)
+		if got := r.Header.Values("Authorization"); len(got) != 1 || got[0] != "Bearer admin-test" {
+			t.Error("unexpected Authorization header values")
 		}
 		call := calls.Add(1)
 		if call > int64(len(expected)) {
