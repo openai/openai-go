@@ -14,16 +14,16 @@ import (
 
 func TestEmbeddingResponseDecoding(t *testing.T) {
 	cases := []struct {
-		name   string
-		format openai.EmbeddingNewParamsEncodingFormat
-		value  []float64
-		valid  bool
-		raw    string
+		name    string
+		format  openai.EmbeddingNewParamsEncodingFormat
+		value   []float64
+		encoded string
+		raw     string
 	}{
-		{"float", openai.EmbeddingNewParamsEncodingFormatFloat, []float64{0.5, -0.25}, true, `[0.5,-0.25]`},
-		{"base64", openai.EmbeddingNewParamsEncodingFormatBase64, []float64{0.5, -0.25}, true, `"AAAAPwAAgL4="`},
-		{"invalid base64", openai.EmbeddingNewParamsEncodingFormatBase64, nil, false, `"invalid base64"`},
-		{"incomplete float32", openai.EmbeddingNewParamsEncodingFormatBase64, nil, false, `"AQ=="`},
+		{"float", openai.EmbeddingNewParamsEncodingFormatFloat, []float64{0.5, -0.25}, "", `[0.5,-0.25]`},
+		{"base64", openai.EmbeddingNewParamsEncodingFormatBase64, nil, "AAAAPwAAgL4=", `"AAAAPwAAgL4="`},
+		{"invalid base64", openai.EmbeddingNewParamsEncodingFormatBase64, nil, "invalid base64", `"invalid base64"`},
+		{"incomplete float32", openai.EmbeddingNewParamsEncodingFormatBase64, nil, "AQ==", `"AQ=="`},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -50,9 +50,20 @@ func TestEmbeddingResponseDecoding(t *testing.T) {
 				t.Fatalf("got %d embeddings, want 1", len(response.Data))
 			}
 			got := response.Data[0]
-			if !slices.Equal(got.Embedding, tc.value) || got.JSON.Embedding.Valid() != tc.valid || got.JSON.Embedding.Raw() != tc.raw {
-				t.Errorf("embedding = %v, valid = %t, raw = %q; want %v, %t, %q", got.Embedding, got.JSON.Embedding.Valid(), got.JSON.Embedding.Raw(), tc.value, tc.valid, tc.raw)
+			if !slices.Equal(got.Embedding.OfEmbeddingEmbeddingArray, tc.value) || got.Embedding.OfString != tc.encoded {
+				t.Errorf("embedding union = %#v; want floats %v or encoded %q", got.Embedding, tc.value, tc.encoded)
 			}
+			if tc.value != nil {
+				if !slices.Equal(got.Embedding.AsEmbeddingEmbeddingArray(), tc.value) || !got.Embedding.JSON.OfEmbeddingEmbeddingArray.Valid() {
+					t.Fatal("float variant did not preserve its values")
+				}
+			} else if got.Embedding.AsString() != tc.encoded || !got.Embedding.JSON.OfString.Valid() {
+				t.Fatal("string variant did not preserve its encoded payload")
+			}
+			if !got.JSON.Embedding.Valid() || got.JSON.Embedding.Raw() != tc.raw || got.Embedding.RawJSON() != tc.raw {
+				t.Errorf("embedding raw = %q, valid = %t; want %q", got.Embedding.RawJSON(), got.JSON.Embedding.Valid(), tc.raw)
+			}
+
 		})
 	}
 }

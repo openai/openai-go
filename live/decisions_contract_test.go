@@ -43,8 +43,10 @@ func TestDecisionsPreserveResponseItemGetters(t *testing.T) {
 
 func TestDecisionsConcreteItemsRetainWireBody(t *testing.T) {
 	item := &live.DecisionItemCreateEventParam{
-		Item: live.DecisionItemCreateEventItemParam{
-			Content: live.DecisionItemCreateEventItemContentUnionParam{OfString: openai.String("synthetic input")},
+		Item: live.DecisionItemCreateEventItemUnionParam{
+			OfUserMessage: &live.DecisionUserMessageParam{
+				Content: live.DecisionUserMessageContentUnionParam{OfString: openai.String("synthetic input")},
+			},
 		},
 	}
 	for _, event := range []responseItemGetter{

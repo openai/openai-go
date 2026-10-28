@@ -259,11 +259,11 @@
     },
     "aliases.go": {
       "mode": "100644",
-      "sha256": "5bb9eaa63e8f945982d2abbd46028fe27b1b3c1661ce8b754dbe5347fa78a79e"
+      "sha256": "1527fb732e3f7976178ed7a5ce3de0976264fdbecd557acc5f831bb166cd814e"
     },
     "api.md": {
       "mode": "100644",
-      "sha256": "387abb2e1ac8dfd6091334a6d9083a10fd8fd265bd4bc6c32b3c015cff44ae3b"
+      "sha256": "67510eb68ebf23603d58bdc0d8c76350779d14f31f44c94f7795cf3a189c198e"
     },
     "audio.go": {
       "mode": "100644",
@@ -495,7 +495,7 @@
     },
     "betaresponse.go": {
       "mode": "100644",
-      "sha256": "8a49bc5e4dcb96ceb3dd693848488c5fbd600ba244b5c361a8e844a299768e6f"
+      "sha256": "65d092e3473c8d3fc5ae480e52c79c9f04e4e81e38df8460055a17484966f2bb"
     },
     "betaresponse_test.go": {
       "mode": "100644",
@@ -619,7 +619,7 @@
     },
     "conversations/aliases.go": {
       "mode": "100644",
-      "sha256": "f12d4b43a127e426911f02103b31f0049c91bc42817088e296b707fa8bc81849"
+      "sha256": "0985b798fc62dd9cf35e661cf197eec9bb6c5bdeb6b1800d567479117ae1294d"
     },
     "conversations/api.md": {
       "mode": "100644",
@@ -655,7 +655,7 @@
     },
     "embedding.go": {
       "mode": "100644",
-      "sha256": "a0559c3e7b9f6666902c5856721386f35d4b3df90a724c047830f88340652eda"
+      "sha256": "8f1ba64a42f0f8315b95d99c69ca94a8d7af58d3c1baa1c1863276a53c34b8dc"
     },
     "embedding_test.go": {
       "mode": "100644",
@@ -747,19 +747,19 @@
     },
     "live/aliases.go": {
       "mode": "100644",
-      "sha256": "b680d46419c6e1447bdf9c01c52777615144285e7819a5789dfe9207eb449864"
+      "sha256": "a44dc12fa901eeb33dee74b14037283f95d94109d45107c1f1de47adcc76b32a"
     },
     "live/api.md": {
       "mode": "100644",
-      "sha256": "f33ce27755cbf3f7d652140cd64b6311c9893104fabe95e5a606f0ae111cd872"
+      "sha256": "2b4e72bc9a3077f84f9e8d391acf9063c054224e311e0d456114b104d662f925"
     },
     "live/fork.go": {
       "mode": "100644",
-      "sha256": "e51a7e7aab757d9ac569bd45a1bfde54bbe12469b6b296dc3d1a5cb7602a3fdc"
+      "sha256": "45ceb4788fcee527c991e7ddf34ff8de1a8a0bc00cc6dbf06f512ba94a8d40a2"
     },
     "live/live.go": {
       "mode": "100644",
-      "sha256": "1377969904e84762aac90aec620ad6bbae0fe38278e36791204c0a7e4a0646c0"
+      "sha256": "e224d92cda356c8a53ce0da68db6d2bfdb9492826582bfd603844fd6db5d2610"
     },
     "live/live_forks_websocket.go": {
       "mode": "100644",
@@ -779,7 +779,7 @@
     },
     "live/live_test.go": {
       "mode": "100644",
-      "sha256": "2fdc790da41eb4d25c411c165a052ad5cc8d889c2e4434aa2928a6afb379ab15"
+      "sha256": "14e1ffd1382f0ecaa26bd3f51b01ee60d5ce1347143969ad86f9c21ebbe660c2"
     },
     "live/live_websocket.go": {
       "mode": "100644",
@@ -795,11 +795,11 @@
     },
     "live/session_test.go": {
       "mode": "100644",
-      "sha256": "6f7730c4d8c48c743e55fc4997784626e5c1c761bc044738e54fc5ca48e7c9bc"
+      "sha256": "93888caaa5380ed3d643b5eaaeaa98be2699c6467905955f91490fa4ed87cec6"
     },
     "live/sideband.go": {
       "mode": "100644",
-      "sha256": "b6b755b6f0bd685d5b1debd90eee187a7cd86aa5fb0d5ad7d3afa6f928296fa1"
+      "sha256": "747b7211a1890410755f70bec6f3b51cefc8b86df74cc359480dcd638354cafb"
     },
     "model.go": {
       "mode": "100644",
@@ -831,7 +831,7 @@
     },
     "realtime/aliases.go": {
       "mode": "100644",
-      "sha256": "b092a76fd4f3028767be0112edcf68b00fd0a9a5765c046fed0d5ba01a33eced"
+      "sha256": "f73a9ddb19042380d8a674dd5ed363cdcff9e24da1ef12decc936b207d05b4e4"
     },
     "realtime/api.md": {
       "mode": "100644",
@@ -891,7 +891,7 @@
     },
     "responses/aliases.go": {
       "mode": "100644",
-      "sha256": "5ebabca05a7c23b8dcac1943902d5289ac3794d368ed4725c1c82a64927defe1"
+      "sha256": "e8e579bacd18a761862796cdfa8ea40de1c55f3f786a213f78d52ac044155ba2"
     },
     "responses/api.md": {
       "mode": "100644",
@@ -915,7 +915,7 @@
     },
     "responses/response.go": {
       "mode": "100644",
-      "sha256": "840b6bfc08b87cea5dfc30adea5a36a220f1cf6a4bf54bc81446f1fcae658a3f"
+      "sha256": "e9f965177358b543b04b7095ca17647b889262f2c5a547551d3cde96fa57cdd8"
     },
     "responses/response_test.go": {
       "mode": "100644",
@@ -955,11 +955,11 @@
     },
     "shared/constant/constants.go": {
       "mode": "100644",
-      "sha256": "946811fbe1d0ec6f629aac1658de2d4d2cb6b8ff576fbec3e8b231f9c61a922a"
+      "sha256": "2ae90c4336ff8fec47a331a280ef1264cc2387452e454a7473a17816b884515b"
     },
     "shared/shared.go": {
       "mode": "100644",
-      "sha256": "6744ea1919b784b54dd5688c76b280c979fdb40e7e81e7b07bea65ee69fa9f98"
+      "sha256": "7fc8b2622c5ed1f902c44b4f3e628751178a9c4cf690c2174cf75eecb5feb1cc"
     },
     "skill.go": {
       "mode": "100644",
@@ -1051,7 +1051,7 @@
     },
     "webhooks/aliases.go": {
       "mode": "100644",
-      "sha256": "33cccb14b2df03f4af0e50ea19322554faf524c665885dd9e78a4284f5257dec"
+      "sha256": "d14575db7b2f2887ea10b9a3644232317534c251051bafd8b1da00901c9f33f6"
     },
     "webhooks/api.md": {
       "mode": "100644",

@@ -4,6 +4,7 @@ package openai
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"slices"
 
@@ -95,10 +96,11 @@ func (r *CreateEmbeddingResponseUsage) UnmarshalJSON(data []byte) error {
 
 // Represents an embedding vector returned by embedding endpoint.
 type Embedding struct {
-	// The embedding vector, which is a list of floats. The length of vector depends on
-	// the model as listed in the
+	// The embedding vector, returned as a list of floats when `encoding_format` is
+	// `float` (the default), or as a base64-encoded string when `encoding_format` is
+	// `base64`. The length of the vector depends on the model as listed in the
 	// [embedding guide](https://developers.openai.com/api/docs/guides/embeddings).
-	Embedding []float64 `json:"embedding" api:"required"`
+	Embedding EmbeddingEmbeddingUnion `json:"embedding" api:"required"`
 	// The index of the embedding in the list of embeddings.
 	Index int64 `json:"index" api:"required"`
 	// The object type, which is always "embedding".
@@ -116,7 +118,43 @@ type Embedding struct {
 // Returns the unmodified JSON received from the API
 func (r Embedding) RawJSON() string { return r.JSON.raw }
 func (r *Embedding) UnmarshalJSON(data []byte) error {
-	return r.unmarshalEmbedding(data)
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// EmbeddingEmbeddingUnion contains all possible properties and values from
+// [[]float64], [string].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfEmbeddingEmbeddingArray OfString]
+type EmbeddingEmbeddingUnion struct {
+	// This field will be present if the value is a [[]float64] instead of an object.
+	OfEmbeddingEmbeddingArray []float64 `json:",inline"`
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	JSON     struct {
+		OfEmbeddingEmbeddingArray respjson.Field
+		OfString                  respjson.Field
+		raw                       string
+	} `json:"-"`
+}
+
+func (u EmbeddingEmbeddingUnion) AsEmbeddingEmbeddingArray() (v []float64) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u EmbeddingEmbeddingUnion) AsString() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u EmbeddingEmbeddingUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *EmbeddingEmbeddingUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type EmbeddingModel = string

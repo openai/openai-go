@@ -69,9 +69,20 @@ func TestLiveNewWithOptionalParams(t *testing.T) {
 			Store:        openai.Bool(true),
 			Triggers: []live.DecisionTriggerParam{{
 				Decisions: live.DecisionTriggerDecisionsParam{
-					Questions: []live.DecisionTriggerDecisionsQuestionUnionParam{{
-						OfPredicate: &live.DecisionTriggerDecisionsQuestionPredicateParam{
-							Instructions: live.DecisionTriggerDecisionsQuestionPredicateInstructionsUnionParam{
+					Questions: []live.DecisionQuestionUnionParam{{
+						OfChoice: &live.DecisionQuestionChoiceParam{
+							Choices: []live.DecisionChoiceOptionParam{{
+								Value: live.DecisionChoiceOptionValueUnionParam{
+									OfBool: openai.Bool(false),
+								},
+								Description: openai.String("description"),
+							}, {
+								Value: live.DecisionChoiceOptionValueUnionParam{
+									OfBool: openai.Bool(true),
+								},
+								Description: openai.String("description"),
+							}},
+							Instructions: live.DecisionQuestionChoiceInstructionsUnionParam{
 								OfString: openai.String("string"),
 							},
 							Name: openai.String("name"),

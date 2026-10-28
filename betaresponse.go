@@ -259,7 +259,7 @@ type BetaCompactedResponse struct {
 	Object constant.ResponseCompaction `json:"object" default:"response.compaction"`
 	// The compacted list of output items. This is a list of all user messages,
 	// followed by a single compaction item.
-	Output []BetaResponseOutputItemUnion `json:"output" api:"required"`
+	Output []BetaResponseItemUnion `json:"output" api:"required"`
 	// Token accounting for the compaction pass, including cached, reasoning, and total
 	// tokens.
 	Usage BetaResponseUsage `json:"usage" api:"required"`

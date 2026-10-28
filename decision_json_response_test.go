@@ -5,38 +5,38 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/openai/openai-go/v3/shared"
+	"github.com/openai/openai-go/v3/live"
 )
 
-func TestDecisionJSONResponsePreservesShape(t *testing.T) {
+func TestLiveDecisionJSONResponsePreservesShape(t *testing.T) {
 	for _, tc := range []struct {
 		name      string
 		data      string
-		wantMap   map[string]any
-		wantArray []map[string]any
+		wantMap   live.DecisionJSONObject
+		wantArray []live.DecisionJSONObject
 	}{
-		{"empty object", `{}`, map[string]any{}, nil},
-		{"object", `{"ok":true}`, map[string]any{"ok": true}, nil},
-		{"empty array", `[]`, nil, []map[string]any{}},
-		{"array", `[{"ok":true}]`, nil, []map[string]any{{"ok": true}}},
-		{"array of empty objects", `[{}]`, nil, []map[string]any{{}}},
+		{"empty object", `{}`, live.DecisionJSONObject{}, nil},
+		{"object", `{"ok":true}`, live.DecisionJSONObject{"ok": true}, nil},
+		{"empty array", `[]`, nil, []live.DecisionJSONObject{}},
+		{"array", `[{"ok":true}]`, nil, []live.DecisionJSONObject{{"ok": true}}},
+		{"array of empty objects", `[{}]`, nil, []live.DecisionJSONObject{{}}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			var got shared.DecisionInputJSON
+			var got live.DecisionQuestionChoiceInstructionsPartInputJSON
 			raw := `{"type":"input_json","data":` + tc.data + `}`
 			if err := json.Unmarshal([]byte(raw), &got); err != nil {
 				t.Fatal(err)
 			}
-			if got.Data.JSON.OfDecisionInputJSONDataMapItem.Valid() != (tc.wantMap != nil) ||
-				got.Data.JSON.OfArrayOfMap.Valid() != (tc.wantArray != nil) {
+			if got.Data.JSON.OfLiveDecisionJSONObject.Valid() != (tc.wantMap != nil) ||
+				got.Data.JSON.OfArrayOfDecisionJSONObject.Valid() != (tc.wantArray != nil) {
 				t.Fatalf("wrong variant presence for %s", tc.data)
 			}
-			if !reflect.DeepEqual(got.Data.OfDecisionInputJSONDataMapItem, tc.wantMap) ||
-				!reflect.DeepEqual(got.Data.AsMap(), tc.wantMap) {
+			if !reflect.DeepEqual(got.Data.OfLiveDecisionJSONObject, tc.wantMap) ||
+				!reflect.DeepEqual(got.Data.AsLiveDecisionJSONObject(), tc.wantMap) {
 				t.Fatalf("object data changed for %s", tc.data)
 			}
-			if !reflect.DeepEqual(got.Data.OfArrayOfMap, tc.wantArray) ||
-				!reflect.DeepEqual(got.Data.AsArrayOfMap(), tc.wantArray) {
+			if !reflect.DeepEqual(got.Data.OfArrayOfDecisionJSONObject, tc.wantArray) ||
+				!reflect.DeepEqual(got.Data.AsArrayOfDecisionJSONObject(), tc.wantArray) {
 				t.Fatalf("array data changed for %s", tc.data)
 			}
 			if got.Data.RawJSON() != tc.data || got.RawJSON() != raw {

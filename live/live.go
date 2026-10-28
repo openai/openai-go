@@ -15,7 +15,6 @@ import (
 	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/packages/respjson"
 	"github.com/openai/openai-go/v3/responses"
-	"github.com/openai/openai-go/v3/shared"
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
@@ -533,9 +532,28 @@ func ClientEventParamOfDecisionCreate(eventID string) ClientEventUnionParam {
 	return ClientEventUnionParam{OfDecisionCreate: &decisionCreate}
 }
 
-func ClientEventParamOfDecisionItemCreate(item DecisionItemCreateEventItemParam) ClientEventUnionParam {
+func ClientEventParamOfDecisionItemCreate[
+	T DecisionUserMessageParam | DecisionDeveloperMessageParam | DecisionSystemMessageParam | DecisionAssistantMessageParam | DecisionItemCreateEventItemFunctionCallParam | DecisionItemCreateEventItemFunctionCallOutputParam | DecisionItemCreateEventItemCustomToolCallParam | DecisionItemCreateEventItemCustomToolCallOutputParam,
+](item T) ClientEventUnionParam {
 	var decisionItemCreate DecisionItemCreateEventParam
-	decisionItemCreate.Item = item
+	switch v := any(item).(type) {
+	case DecisionUserMessageParam:
+		decisionItemCreate.Item.OfUserMessage = &v
+	case DecisionDeveloperMessageParam:
+		decisionItemCreate.Item.OfDeveloperMessage = &v
+	case DecisionSystemMessageParam:
+		decisionItemCreate.Item.OfSystemMessage = &v
+	case DecisionAssistantMessageParam:
+		decisionItemCreate.Item.OfAssistantMessage = &v
+	case DecisionItemCreateEventItemFunctionCallParam:
+		decisionItemCreate.Item.OfFunctionCall = &v
+	case DecisionItemCreateEventItemFunctionCallOutputParam:
+		decisionItemCreate.Item.OfFunctionCallOutput = &v
+	case DecisionItemCreateEventItemCustomToolCallParam:
+		decisionItemCreate.Item.OfCustomToolCall = &v
+	case DecisionItemCreateEventItemCustomToolCallOutputParam:
+		decisionItemCreate.Item.OfCustomToolCallOutput = &v
+	}
 	return ClientEventUnionParam{OfDecisionItemCreate: &decisionItemCreate}
 }
 
@@ -1666,6 +1684,254 @@ func (r *DecisionUsageOutputTokensDetails) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The properties Content, Role are required.
+type DecisionAssistantMessageParam struct {
+	// The text input to the model.
+	Content DecisionAssistantMessageContentUnionParam `json:"content,omitzero" api:"required"`
+	// The unique ID of this message item.
+	ID param.Opt[string] `json:"id,omitzero"`
+	// Labels an `assistant` message as intermediate commentary (`commentary`) or the
+	// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
+	// sending follow-up requests, preserve and resend phase on all assistant messages
+	// — dropping it can degrade performance. Not used for user messages.
+	//
+	// Any of "commentary", "final_answer".
+	Phase DecisionAssistantMessagePhase `json:"phase,omitzero"`
+	// Any of "message".
+	Type DecisionAssistantMessageType `json:"type,omitzero"`
+	// This field can be elided, and will marshal its zero value as "assistant".
+	Role constant.Assistant `json:"role" default:"assistant"`
+	paramObj
+}
+
+func (r DecisionAssistantMessageParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionAssistantMessageParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionAssistantMessageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionAssistantMessageContentUnionParam struct {
+	OfString param.Opt[string]                               `json:",omitzero,inline"`
+	OfParts  []DecisionAssistantMessageContentPartUnionParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionAssistantMessageContentUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfParts)
+}
+func (u *DecisionAssistantMessageContentUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionAssistantMessageContentUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfParts) {
+		return &u.OfParts
+	}
+	return nil
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionAssistantMessageContentPartUnionParam struct {
+	OfOutputText *DecisionAssistantMessageContentPartOutputTextParam `json:",omitzero,inline"`
+	OfRefusal    *DecisionAssistantMessageContentPartRefusalParam    `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionAssistantMessageContentPartUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfOutputText, u.OfRefusal)
+}
+func (u *DecisionAssistantMessageContentPartUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionAssistantMessageContentPartUnionParam) GetText() *string {
+	if vt := u.OfOutputText; vt != nil {
+		return &vt.Text
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionAssistantMessageContentPartUnionParam) GetRefusal() *string {
+	if vt := u.OfRefusal; vt != nil {
+		return &vt.Refusal
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionAssistantMessageContentPartUnionParam) GetType() *string {
+	if vt := u.OfOutputText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfRefusal; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[DecisionAssistantMessageContentPartUnionParam](
+		"type",
+		apijson.Discriminator[DecisionAssistantMessageContentPartOutputTextParam]("output_text"),
+		apijson.Discriminator[DecisionAssistantMessageContentPartRefusalParam]("refusal"),
+	)
+}
+
+// The properties Text, Type are required.
+type DecisionAssistantMessageContentPartOutputTextParam struct {
+	// The text content.
+	Text string `json:"text" api:"required"`
+	// This field can be elided, and will marshal its zero value as "output_text".
+	Type constant.OutputText `json:"type" default:"output_text"`
+	paramObj
+}
+
+func (r DecisionAssistantMessageContentPartOutputTextParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionAssistantMessageContentPartOutputTextParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionAssistantMessageContentPartOutputTextParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Refusal, Type are required.
+type DecisionAssistantMessageContentPartRefusalParam struct {
+	// The refusal text.
+	Refusal string `json:"refusal" api:"required"`
+	// This field can be elided, and will marshal its zero value as "refusal".
+	Type constant.Refusal `json:"type" default:"refusal"`
+	paramObj
+}
+
+func (r DecisionAssistantMessageContentPartRefusalParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionAssistantMessageContentPartRefusalParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionAssistantMessageContentPartRefusalParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Labels an `assistant` message as intermediate commentary (`commentary`) or the
+// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
+// sending follow-up requests, preserve and resend phase on all assistant messages
+// — dropping it can degrade performance. Not used for user messages.
+type DecisionAssistantMessagePhase string
+
+const (
+	DecisionAssistantMessagePhaseCommentary  DecisionAssistantMessagePhase = "commentary"
+	DecisionAssistantMessagePhaseFinalAnswer DecisionAssistantMessagePhase = "final_answer"
+)
+
+type DecisionAssistantMessageType string
+
+const (
+	DecisionAssistantMessageTypeMessage DecisionAssistantMessageType = "message"
+)
+
+type DecisionChoiceOption struct {
+	Value       DecisionChoiceOptionValueUnion `json:"value" api:"required"`
+	Description string                         `json:"description"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Value       respjson.Field
+		Description respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionChoiceOption) RawJSON() string { return r.JSON.raw }
+func (r *DecisionChoiceOption) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this DecisionChoiceOption to a DecisionChoiceOptionParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// DecisionChoiceOptionParam.Overrides()
+func (r DecisionChoiceOption) ToParam() DecisionChoiceOptionParam {
+	return param.Override[DecisionChoiceOptionParam](json.RawMessage(r.RawJSON()))
+}
+
+// DecisionChoiceOptionValueUnion contains all possible properties and values from
+// [string], [bool].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfBool]
+type DecisionChoiceOptionValueUnion struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a [bool] instead of an object.
+	OfBool bool `json:",inline"`
+	JSON   struct {
+		OfString respjson.Field
+		OfBool   respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (u DecisionChoiceOptionValueUnion) AsString() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionChoiceOptionValueUnion) AsBool() (v bool) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionChoiceOptionValueUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionChoiceOptionValueUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The property Value is required.
+type DecisionChoiceOptionParam struct {
+	Value       DecisionChoiceOptionValueUnionParam `json:"value,omitzero" api:"required"`
+	Description param.Opt[string]                   `json:"description,omitzero"`
+	paramObj
+}
+
+func (r DecisionChoiceOptionParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionChoiceOptionParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionChoiceOptionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionChoiceOptionValueUnionParam struct {
+	OfString param.Opt[string] `json:",omitzero,inline"`
+	OfBool   param.Opt[bool]   `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionChoiceOptionValueUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfBool)
+}
+func (u *DecisionChoiceOptionValueUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
 // Evaluate the configured questions using the current conversation and Decision
 // inputs. Reusing an event_id is rejected for the lifetime of the session.
 //
@@ -1684,6 +1950,58 @@ func (r DecisionCreateEventParam) MarshalJSON() (data []byte, err error) {
 func (r *DecisionCreateEventParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+// The properties Content, Role are required.
+type DecisionDeveloperMessageParam struct {
+	// The text input to the model.
+	Content DecisionDeveloperMessageContentUnionParam `json:"content,omitzero" api:"required"`
+	// The unique ID of this message item.
+	ID param.Opt[string] `json:"id,omitzero"`
+	// Any of "message".
+	Type DecisionDeveloperMessageType `json:"type,omitzero"`
+	// This field can be elided, and will marshal its zero value as "developer".
+	Role constant.Developer `json:"role" default:"developer"`
+	paramObj
+}
+
+func (r DecisionDeveloperMessageParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionDeveloperMessageParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionDeveloperMessageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionDeveloperMessageContentUnionParam struct {
+	OfString param.Opt[string]        `json:",omitzero,inline"`
+	OfParts  []DecisionInputTextParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionDeveloperMessageContentUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfParts)
+}
+func (u *DecisionDeveloperMessageContentUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionDeveloperMessageContentUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfParts) {
+		return &u.OfParts
+	}
+	return nil
+}
+
+type DecisionDeveloperMessageType string
+
+const (
+	DecisionDeveloperMessageTypeMessage DecisionDeveloperMessageType = "message"
+)
 
 // A Decision API event for a Live delegation or transcript trigger. For a trigger,
 // source_event_id identifies the transcript delta that caused this evaluation.
@@ -1742,12 +2060,57 @@ func (r *DecisionEventEvent) UnmarshalJSON(data []byte) error {
 
 type DecisionEventSourceEventTypeString string
 
+type DecisionInputText struct {
+	// The text input to the model.
+	Text string             `json:"text" api:"required"`
+	Type constant.InputText `json:"type" default:"input_text"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Text        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionInputText) RawJSON() string { return r.JSON.raw }
+func (r *DecisionInputText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this DecisionInputText to a DecisionInputTextParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// DecisionInputTextParam.Overrides()
+func (r DecisionInputText) ToParam() DecisionInputTextParam {
+	return param.Override[DecisionInputTextParam](json.RawMessage(r.RawJSON()))
+}
+
+// The properties Text, Type are required.
+type DecisionInputTextParam struct {
+	// The text input to the model.
+	Text string `json:"text" api:"required"`
+	// This field can be elided, and will marshal its zero value as "input_text".
+	Type constant.InputText `json:"type" default:"input_text"`
+	paramObj
+}
+
+func (r DecisionInputTextParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionInputTextParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionInputTextParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Append an input item for future decisions without starting an evaluation or
 // changing Live voice context.
 //
 // The properties Item, Type are required.
 type DecisionItemCreateEventParam struct {
-	Item DecisionItemCreateEventItemParam `json:"item" api:"required"`
+	Item DecisionItemCreateEventItemUnionParam `json:"item,omitzero" api:"required"`
 	// Optional client identifier for correlating this command with a server event's
 	// client_event_id or error.client_event_id.
 	EventID param.Opt[string] `json:"event_id,omitzero"`
@@ -1765,69 +2128,365 @@ func (r *DecisionItemCreateEventParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The properties Content, Role are required.
-type DecisionItemCreateEventItemParam struct {
-	// The text input to the model.
-	Content DecisionItemCreateEventItemContentUnionParam `json:"content,omitzero" api:"required"`
-	// The unique ID of this message item.
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionItemCreateEventItemUnionParam struct {
+	OfUserMessage          *DecisionUserMessageParam                             `json:",omitzero,inline"`
+	OfDeveloperMessage     *DecisionDeveloperMessageParam                        `json:",omitzero,inline"`
+	OfSystemMessage        *DecisionSystemMessageParam                           `json:",omitzero,inline"`
+	OfAssistantMessage     *DecisionAssistantMessageParam                        `json:",omitzero,inline"`
+	OfFunctionCall         *DecisionItemCreateEventItemFunctionCallParam         `json:",omitzero,inline"`
+	OfFunctionCallOutput   *DecisionItemCreateEventItemFunctionCallOutputParam   `json:",omitzero,inline"`
+	OfCustomToolCall       *DecisionItemCreateEventItemCustomToolCallParam       `json:",omitzero,inline"`
+	OfCustomToolCallOutput *DecisionItemCreateEventItemCustomToolCallOutputParam `json:",omitzero,inline"`
+	paramUnion             `default:"message"`
+}
+
+func (u DecisionItemCreateEventItemUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfUserMessage,
+		u.OfDeveloperMessage,
+		u.OfSystemMessage,
+		u.OfAssistantMessage,
+		u.OfFunctionCall,
+		u.OfFunctionCallOutput,
+		u.OfCustomToolCall,
+		u.OfCustomToolCallOutput)
+}
+func (u *DecisionItemCreateEventItemUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionItemCreateEventItemUnionParam) GetPhase() *string {
+	if vt := u.OfAssistantMessage; vt != nil {
+		return (*string)(&vt.Phase)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionItemCreateEventItemUnionParam) GetArguments() *string {
+	if vt := u.OfFunctionCall; vt != nil {
+		return &vt.Arguments
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionItemCreateEventItemUnionParam) GetInput() *string {
+	if vt := u.OfCustomToolCall; vt != nil {
+		return &vt.Input
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionItemCreateEventItemUnionParam) GetRole() *string {
+	if vt := u.OfUserMessage; vt != nil {
+		return (*string)(&vt.Role)
+	} else if vt := u.OfDeveloperMessage; vt != nil {
+		return (*string)(&vt.Role)
+	} else if vt := u.OfSystemMessage; vt != nil {
+		return (*string)(&vt.Role)
+	} else if vt := u.OfAssistantMessage; vt != nil {
+		return (*string)(&vt.Role)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionItemCreateEventItemUnionParam) GetID() *string {
+	if vt := u.OfUserMessage; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
+	} else if vt := u.OfDeveloperMessage; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
+	} else if vt := u.OfSystemMessage; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
+	} else if vt := u.OfAssistantMessage; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
+	} else if vt := u.OfFunctionCall; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
+	} else if vt := u.OfFunctionCallOutput; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
+	} else if vt := u.OfCustomToolCall; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
+	} else if vt := u.OfCustomToolCallOutput; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionItemCreateEventItemUnionParam) GetType() *string {
+	if vt := u.OfUserMessage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfDeveloperMessage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfSystemMessage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfAssistantMessage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFunctionCall; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFunctionCallOutput; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCustomToolCall; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCustomToolCallOutput; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionItemCreateEventItemUnionParam) GetCallID() *string {
+	if vt := u.OfFunctionCall; vt != nil {
+		return (*string)(&vt.CallID)
+	} else if vt := u.OfFunctionCallOutput; vt != nil {
+		return (*string)(&vt.CallID)
+	} else if vt := u.OfCustomToolCall; vt != nil {
+		return (*string)(&vt.CallID)
+	} else if vt := u.OfCustomToolCallOutput; vt != nil {
+		return (*string)(&vt.CallID)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionItemCreateEventItemUnionParam) GetName() *string {
+	if vt := u.OfFunctionCall; vt != nil {
+		return (*string)(&vt.Name)
+	} else if vt := u.OfCustomToolCall; vt != nil {
+		return (*string)(&vt.Name)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionItemCreateEventItemUnionParam) GetNamespace() *string {
+	if vt := u.OfFunctionCall; vt != nil && vt.Namespace.Valid() {
+		return &vt.Namespace.Value
+	} else if vt := u.OfCustomToolCall; vt != nil && vt.Namespace.Valid() {
+		return &vt.Namespace.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionItemCreateEventItemUnionParam) GetStatus() *string {
+	if vt := u.OfFunctionCall; vt != nil {
+		return (*string)(&vt.Status)
+	} else if vt := u.OfFunctionCallOutput; vt != nil {
+		return (*string)(&vt.Status)
+	} else if vt := u.OfCustomToolCall; vt != nil {
+		return (*string)(&vt.Status)
+	} else if vt := u.OfCustomToolCallOutput; vt != nil {
+		return (*string)(&vt.Status)
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u DecisionItemCreateEventItemUnionParam) GetContent() (res decisionItemCreateEventItemUnionParamContent) {
+	if vt := u.OfUserMessage; vt != nil {
+		res.any = vt.Content.asAny()
+	} else if vt := u.OfDeveloperMessage; vt != nil {
+		res.any = vt.Content.asAny()
+	} else if vt := u.OfSystemMessage; vt != nil {
+		res.any = vt.Content.asAny()
+	} else if vt := u.OfAssistantMessage; vt != nil {
+		res.any = vt.Content.asAny()
+	}
+	return
+}
+
+// Can have the runtime types [*string],
+// [_[]DecisionUserMessageContentPartUnionParam], [_[]DecisionInputTextParam],
+// [\*[]DecisionAssistantMessageContentPartUnionParam]
+type decisionItemCreateEventItemUnionParamContent struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *string:
+//	case *[]live.DecisionUserMessageContentPartUnionParam:
+//	case *[]live.DecisionInputTextParam:
+//	case *[]live.DecisionAssistantMessageContentPartUnionParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u decisionItemCreateEventItemUnionParamContent) AsAny() any { return u.any }
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u DecisionItemCreateEventItemUnionParam) GetOutput() (res decisionItemCreateEventItemUnionParamOutput) {
+	if vt := u.OfFunctionCallOutput; vt != nil {
+		res.any = vt.Output.asAny()
+	} else if vt := u.OfCustomToolCallOutput; vt != nil {
+		res.any = vt.Output.asAny()
+	}
+	return
+}
+
+// Can have the runtime types [*string],
+// [_[]DecisionItemCreateEventItemFunctionCallOutputOutputPartsItemUnionParam],
+// [_[]DecisionItemCreateEventItemCustomToolCallOutputOutputPartsItemUnionParam]
+type decisionItemCreateEventItemUnionParamOutput struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *string:
+//	case *[]live.DecisionItemCreateEventItemFunctionCallOutputOutputPartsItemUnionParam:
+//	case *[]live.DecisionItemCreateEventItemCustomToolCallOutputOutputPartsItemUnionParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u decisionItemCreateEventItemUnionParamOutput) AsAny() any { return u.any }
+
+func init() {
+	apijson.RegisterUnion[DecisionItemCreateEventItemUnionParam](
+		"type",
+		apijson.Discriminator[DecisionUserMessageParam]("message"),
+		apijson.Discriminator[DecisionDeveloperMessageParam]("message"),
+		apijson.Discriminator[DecisionSystemMessageParam]("message"),
+		apijson.Discriminator[DecisionAssistantMessageParam]("message"),
+		apijson.Discriminator[DecisionItemCreateEventItemFunctionCallParam]("function_call"),
+		apijson.Discriminator[DecisionItemCreateEventItemFunctionCallOutputParam]("function_call_output"),
+		apijson.Discriminator[DecisionItemCreateEventItemCustomToolCallParam]("custom_tool_call"),
+		apijson.Discriminator[DecisionItemCreateEventItemCustomToolCallOutputParam]("custom_tool_call_output"),
+		apijson.Discriminator[DecisionUserMessageParam](nil),
+		apijson.Discriminator[DecisionDeveloperMessageParam](nil),
+		apijson.Discriminator[DecisionSystemMessageParam](nil),
+		apijson.Discriminator[DecisionAssistantMessageParam](nil),
+	)
+}
+
+// The properties Arguments, CallID, Name, Type are required.
+type DecisionItemCreateEventItemFunctionCallParam struct {
+	// The function arguments as a JSON string.
+	Arguments string `json:"arguments" api:"required"`
+	// The unique ID of the function tool call generated by the model.
+	CallID string `json:"call_id" api:"required"`
+	Name   string `json:"name" api:"required"`
+	// The local Decision item ID.
 	ID param.Opt[string] `json:"id,omitzero"`
-	// Any of "message".
-	Type string `json:"type,omitzero"`
-	// The message role. Always `user`.
+	// The namespace of the function to call.
+	Namespace param.Opt[string] `json:"namespace,omitzero"`
+	// Any of "in_progress", "completed", "incomplete".
+	Status string `json:"status,omitzero"`
+	// The item type. Always `function_call`.
 	//
-	// This field can be elided, and will marshal its zero value as "user".
-	Role constant.User `json:"role" default:"user"`
+	// This field can be elided, and will marshal its zero value as "function_call".
+	Type constant.FunctionCall `json:"type" default:"function_call"`
 	paramObj
 }
 
-func (r DecisionItemCreateEventItemParam) MarshalJSON() (data []byte, err error) {
-	type shadow DecisionItemCreateEventItemParam
+func (r DecisionItemCreateEventItemFunctionCallParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionItemCreateEventItemFunctionCallParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *DecisionItemCreateEventItemParam) UnmarshalJSON(data []byte) error {
+func (r *DecisionItemCreateEventItemFunctionCallParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
 func init() {
-	apijson.RegisterFieldValidator[DecisionItemCreateEventItemParam](
-		"type", "message",
+	apijson.RegisterFieldValidator[DecisionItemCreateEventItemFunctionCallParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
+}
+
+// The properties CallID, Output, Type are required.
+type DecisionItemCreateEventItemFunctionCallOutputParam struct {
+	// The unique ID of the function tool call generated by the model.
+	CallID string `json:"call_id" api:"required"`
+	// The text input to the model.
+	Output DecisionItemCreateEventItemFunctionCallOutputOutputUnionParam `json:"output,omitzero" api:"required"`
+	// The local Decision item ID.
+	ID param.Opt[string] `json:"id,omitzero"`
+	// Any of "in_progress", "completed", "incomplete".
+	Status string `json:"status,omitzero"`
+	// The type of the function tool call output. Always `function_call_output`.
+	//
+	// This field can be elided, and will marshal its zero value as
+	// "function_call_output".
+	Type constant.FunctionCallOutput `json:"type" default:"function_call_output"`
+	paramObj
+}
+
+func (r DecisionItemCreateEventItemFunctionCallOutputParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionItemCreateEventItemFunctionCallOutputParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionItemCreateEventItemFunctionCallOutputParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionItemCreateEventItemFunctionCallOutputParam](
+		"status", "in_progress", "completed", "incomplete",
 	)
 }
 
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
-type DecisionItemCreateEventItemContentUnionParam struct {
-	OfString param.Opt[string]                                       `json:",omitzero,inline"`
-	OfParts  []DecisionItemCreateEventItemContentPartsItemUnionParam `json:",omitzero,inline"`
+type DecisionItemCreateEventItemFunctionCallOutputOutputUnionParam struct {
+	OfString param.Opt[string]                                                        `json:",omitzero,inline"`
+	OfParts  []DecisionItemCreateEventItemFunctionCallOutputOutputPartsItemUnionParam `json:",omitzero,inline"`
 	paramUnion
 }
 
-func (u DecisionItemCreateEventItemContentUnionParam) MarshalJSON() ([]byte, error) {
+func (u DecisionItemCreateEventItemFunctionCallOutputOutputUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion(u, u.OfString, u.OfParts)
 }
-func (u *DecisionItemCreateEventItemContentUnionParam) UnmarshalJSON(data []byte) error {
+func (u *DecisionItemCreateEventItemFunctionCallOutputOutputUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionItemCreateEventItemFunctionCallOutputOutputUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfParts) {
+		return &u.OfParts
+	}
+	return nil
+}
+
+func DecisionItemCreateEventItemFunctionCallOutputOutputPartsItemParamOfInputText(text string) DecisionItemCreateEventItemFunctionCallOutputOutputPartsItemUnionParam {
+	var inputText DecisionInputTextParam
+	inputText.Text = text
+	return DecisionItemCreateEventItemFunctionCallOutputOutputPartsItemUnionParam{OfInputText: &inputText}
+}
+
+func DecisionItemCreateEventItemFunctionCallOutputOutputPartsItemParamOfDecisionItemCreateEventItemFunctionCallOutputOutputPartInputImage(imageURL string) DecisionItemCreateEventItemFunctionCallOutputOutputPartsItemUnionParam {
+	var decisionItemCreateEventItemFunctionCallOutputOutputPartInputImage DecisionItemCreateEventItemFunctionCallOutputOutputPartInputImageParam
+	decisionItemCreateEventItemFunctionCallOutputOutputPartInputImage.ImageURL = imageURL
+	return DecisionItemCreateEventItemFunctionCallOutputOutputPartsItemUnionParam{OfDecisionItemCreateEventItemFunctionCallOutputOutputPartInputImage: &decisionItemCreateEventItemFunctionCallOutputOutputPartInputImage}
 }
 
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
-type DecisionItemCreateEventItemContentPartsItemUnionParam struct {
-	OfInputText  *DecisionItemCreateEventItemContentPartInputTextParam  `json:",omitzero,inline"`
-	OfInputImage *DecisionItemCreateEventItemContentPartInputImageParam `json:",omitzero,inline"`
+type DecisionItemCreateEventItemFunctionCallOutputOutputPartsItemUnionParam struct {
+	OfInputText                                                         *DecisionInputTextParam                                                 `json:",omitzero,inline"`
+	OfDecisionItemCreateEventItemFunctionCallOutputOutputPartInputImage *DecisionItemCreateEventItemFunctionCallOutputOutputPartInputImageParam `json:",omitzero,inline"`
 	paramUnion
 }
 
-func (u DecisionItemCreateEventItemContentPartsItemUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfInputText, u.OfInputImage)
+func (u DecisionItemCreateEventItemFunctionCallOutputOutputPartsItemUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfInputText, u.OfDecisionItemCreateEventItemFunctionCallOutputOutputPartInputImage)
 }
-func (u *DecisionItemCreateEventItemContentPartsItemUnionParam) UnmarshalJSON(data []byte) error {
+func (u *DecisionItemCreateEventItemFunctionCallOutputOutputPartsItemUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u DecisionItemCreateEventItemContentPartsItemUnionParam) GetText() *string {
+func (u DecisionItemCreateEventItemFunctionCallOutputOutputPartsItemUnionParam) GetText() *string {
 	if vt := u.OfInputText; vt != nil {
 		return &vt.Text
 	}
@@ -1835,58 +2494,41 @@ func (u DecisionItemCreateEventItemContentPartsItemUnionParam) GetText() *string
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u DecisionItemCreateEventItemContentPartsItemUnionParam) GetImageURL() *string {
-	if vt := u.OfInputImage; vt != nil {
+func (u DecisionItemCreateEventItemFunctionCallOutputOutputPartsItemUnionParam) GetImageURL() *string {
+	if vt := u.OfDecisionItemCreateEventItemFunctionCallOutputOutputPartInputImage; vt != nil {
 		return &vt.ImageURL
 	}
 	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u DecisionItemCreateEventItemContentPartsItemUnionParam) GetDetail() *string {
-	if vt := u.OfInputImage; vt != nil {
+func (u DecisionItemCreateEventItemFunctionCallOutputOutputPartsItemUnionParam) GetDetail() *string {
+	if vt := u.OfDecisionItemCreateEventItemFunctionCallOutputOutputPartInputImage; vt != nil {
 		return &vt.Detail
 	}
 	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u DecisionItemCreateEventItemContentPartsItemUnionParam) GetType() *string {
+func (u DecisionItemCreateEventItemFunctionCallOutputOutputPartsItemUnionParam) GetType() *string {
 	if vt := u.OfInputText; vt != nil {
 		return (*string)(&vt.Type)
-	} else if vt := u.OfInputImage; vt != nil {
+	} else if vt := u.OfDecisionItemCreateEventItemFunctionCallOutputOutputPartInputImage; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
 }
 
 func init() {
-	apijson.RegisterUnion[DecisionItemCreateEventItemContentPartsItemUnionParam](
+	apijson.RegisterUnion[DecisionItemCreateEventItemFunctionCallOutputOutputPartsItemUnionParam](
 		"type",
-		apijson.Discriminator[DecisionItemCreateEventItemContentPartInputTextParam]("input_text"),
-		apijson.Discriminator[DecisionItemCreateEventItemContentPartInputImageParam]("input_image"),
+		apijson.Discriminator[DecisionInputTextParam]("input_text"),
+		apijson.Discriminator[DecisionItemCreateEventItemFunctionCallOutputOutputPartInputImageParam]("input_image"),
 	)
 }
 
-// The properties Text, Type are required.
-type DecisionItemCreateEventItemContentPartInputTextParam struct {
-	// The text input to the model.
-	Text string `json:"text" api:"required"`
-	// This field can be elided, and will marshal its zero value as "input_text".
-	Type constant.InputText `json:"type" default:"input_text"`
-	paramObj
-}
-
-func (r DecisionItemCreateEventItemContentPartInputTextParam) MarshalJSON() (data []byte, err error) {
-	type shadow DecisionItemCreateEventItemContentPartInputTextParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *DecisionItemCreateEventItemContentPartInputTextParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 // The properties ImageURL, Type are required.
-type DecisionItemCreateEventItemContentPartInputImageParam struct {
+type DecisionItemCreateEventItemFunctionCallOutputOutputPartInputImageParam struct {
 	// A base64-encoded image data URL or a publicly accessible HTTP(S) image URL.
 	ImageURL string `json:"image_url" api:"required"`
 	// The detail level of the image to be sent to the model. One of `high`, `low`,
@@ -1899,16 +2541,204 @@ type DecisionItemCreateEventItemContentPartInputImageParam struct {
 	paramObj
 }
 
-func (r DecisionItemCreateEventItemContentPartInputImageParam) MarshalJSON() (data []byte, err error) {
-	type shadow DecisionItemCreateEventItemContentPartInputImageParam
+func (r DecisionItemCreateEventItemFunctionCallOutputOutputPartInputImageParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionItemCreateEventItemFunctionCallOutputOutputPartInputImageParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *DecisionItemCreateEventItemContentPartInputImageParam) UnmarshalJSON(data []byte) error {
+func (r *DecisionItemCreateEventItemFunctionCallOutputOutputPartInputImageParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
 func init() {
-	apijson.RegisterFieldValidator[DecisionItemCreateEventItemContentPartInputImageParam](
+	apijson.RegisterFieldValidator[DecisionItemCreateEventItemFunctionCallOutputOutputPartInputImageParam](
+		"detail", "low", "high", "auto", "original",
+	)
+}
+
+// The properties CallID, Input, Name, Type are required.
+type DecisionItemCreateEventItemCustomToolCallParam struct {
+	// The unique ID of the function tool call generated by the model.
+	CallID string `json:"call_id" api:"required"`
+	// The input to the custom tool call.
+	Input string `json:"input" api:"required"`
+	// The name of the custom tool to call.
+	Name string `json:"name" api:"required"`
+	// The local Decision item ID.
+	ID param.Opt[string] `json:"id,omitzero"`
+	// The namespace of the function to call.
+	Namespace param.Opt[string] `json:"namespace,omitzero"`
+	// Any of "in_progress", "completed", "incomplete".
+	Status string `json:"status,omitzero"`
+	// The item type. Always `custom_tool_call`.
+	//
+	// This field can be elided, and will marshal its zero value as "custom_tool_call".
+	Type constant.CustomToolCall `json:"type" default:"custom_tool_call"`
+	paramObj
+}
+
+func (r DecisionItemCreateEventItemCustomToolCallParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionItemCreateEventItemCustomToolCallParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionItemCreateEventItemCustomToolCallParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionItemCreateEventItemCustomToolCallParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
+}
+
+// The properties CallID, Output, Type are required.
+type DecisionItemCreateEventItemCustomToolCallOutputParam struct {
+	// The unique ID of the function tool call generated by the model.
+	CallID string `json:"call_id" api:"required"`
+	// The text input to the model.
+	Output DecisionItemCreateEventItemCustomToolCallOutputOutputUnionParam `json:"output,omitzero" api:"required"`
+	// The local Decision item ID.
+	ID param.Opt[string] `json:"id,omitzero"`
+	// Any of "in_progress", "completed", "incomplete".
+	Status string `json:"status,omitzero"`
+	// This field can be elided, and will marshal its zero value as
+	// "custom_tool_call_output".
+	Type constant.CustomToolCallOutput `json:"type" default:"custom_tool_call_output"`
+	paramObj
+}
+
+func (r DecisionItemCreateEventItemCustomToolCallOutputParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionItemCreateEventItemCustomToolCallOutputParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionItemCreateEventItemCustomToolCallOutputParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionItemCreateEventItemCustomToolCallOutputParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionItemCreateEventItemCustomToolCallOutputOutputUnionParam struct {
+	OfString param.Opt[string]                                                          `json:",omitzero,inline"`
+	OfParts  []DecisionItemCreateEventItemCustomToolCallOutputOutputPartsItemUnionParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionItemCreateEventItemCustomToolCallOutputOutputUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfParts)
+}
+func (u *DecisionItemCreateEventItemCustomToolCallOutputOutputUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionItemCreateEventItemCustomToolCallOutputOutputUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfParts) {
+		return &u.OfParts
+	}
+	return nil
+}
+
+func DecisionItemCreateEventItemCustomToolCallOutputOutputPartsItemParamOfInputText(text string) DecisionItemCreateEventItemCustomToolCallOutputOutputPartsItemUnionParam {
+	var inputText DecisionInputTextParam
+	inputText.Text = text
+	return DecisionItemCreateEventItemCustomToolCallOutputOutputPartsItemUnionParam{OfInputText: &inputText}
+}
+
+func DecisionItemCreateEventItemCustomToolCallOutputOutputPartsItemParamOfDecisionItemCreateEventItemCustomToolCallOutputOutputPartInputImage(imageURL string) DecisionItemCreateEventItemCustomToolCallOutputOutputPartsItemUnionParam {
+	var decisionItemCreateEventItemCustomToolCallOutputOutputPartInputImage DecisionItemCreateEventItemCustomToolCallOutputOutputPartInputImageParam
+	decisionItemCreateEventItemCustomToolCallOutputOutputPartInputImage.ImageURL = imageURL
+	return DecisionItemCreateEventItemCustomToolCallOutputOutputPartsItemUnionParam{OfDecisionItemCreateEventItemCustomToolCallOutputOutputPartInputImage: &decisionItemCreateEventItemCustomToolCallOutputOutputPartInputImage}
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionItemCreateEventItemCustomToolCallOutputOutputPartsItemUnionParam struct {
+	OfInputText                                                           *DecisionInputTextParam                                                   `json:",omitzero,inline"`
+	OfDecisionItemCreateEventItemCustomToolCallOutputOutputPartInputImage *DecisionItemCreateEventItemCustomToolCallOutputOutputPartInputImageParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionItemCreateEventItemCustomToolCallOutputOutputPartsItemUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfInputText, u.OfDecisionItemCreateEventItemCustomToolCallOutputOutputPartInputImage)
+}
+func (u *DecisionItemCreateEventItemCustomToolCallOutputOutputPartsItemUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionItemCreateEventItemCustomToolCallOutputOutputPartsItemUnionParam) GetText() *string {
+	if vt := u.OfInputText; vt != nil {
+		return &vt.Text
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionItemCreateEventItemCustomToolCallOutputOutputPartsItemUnionParam) GetImageURL() *string {
+	if vt := u.OfDecisionItemCreateEventItemCustomToolCallOutputOutputPartInputImage; vt != nil {
+		return &vt.ImageURL
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionItemCreateEventItemCustomToolCallOutputOutputPartsItemUnionParam) GetDetail() *string {
+	if vt := u.OfDecisionItemCreateEventItemCustomToolCallOutputOutputPartInputImage; vt != nil {
+		return &vt.Detail
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionItemCreateEventItemCustomToolCallOutputOutputPartsItemUnionParam) GetType() *string {
+	if vt := u.OfInputText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfDecisionItemCreateEventItemCustomToolCallOutputOutputPartInputImage; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[DecisionItemCreateEventItemCustomToolCallOutputOutputPartsItemUnionParam](
+		"type",
+		apijson.Discriminator[DecisionInputTextParam]("input_text"),
+		apijson.Discriminator[DecisionItemCreateEventItemCustomToolCallOutputOutputPartInputImageParam]("input_image"),
+	)
+}
+
+// The properties ImageURL, Type are required.
+type DecisionItemCreateEventItemCustomToolCallOutputOutputPartInputImageParam struct {
+	// A base64-encoded image data URL or a publicly accessible HTTP(S) image URL.
+	ImageURL string `json:"image_url" api:"required"`
+	// The detail level of the image to be sent to the model. One of `high`, `low`,
+	// `auto`, or `original`. Defaults to `auto`.
+	//
+	// Any of "low", "high", "auto", "original".
+	Detail string `json:"detail,omitzero"`
+	// This field can be elided, and will marshal its zero value as "input_image".
+	Type constant.InputImage `json:"type" default:"input_image"`
+	paramObj
+}
+
+func (r DecisionItemCreateEventItemCustomToolCallOutputOutputPartInputImageParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionItemCreateEventItemCustomToolCallOutputOutputPartInputImageParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionItemCreateEventItemCustomToolCallOutputOutputPartInputImageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionItemCreateEventItemCustomToolCallOutputOutputPartInputImageParam](
 		"detail", "low", "high", "auto", "original",
 	)
 }
@@ -1916,9 +2746,9 @@ func init() {
 // An input item was appended for future decisions.
 type DecisionItemCreatedEvent struct {
 	// The unique ID of the Live server event.
-	EventID string                       `json:"event_id" api:"required"`
-	Item    DecisionItemCreatedEventItem `json:"item" api:"required"`
-	Type    constant.DecisionItemCreated `json:"type" default:"decision.item.created"`
+	EventID string                            `json:"event_id" api:"required"`
+	Item    DecisionItemCreatedEventItemUnion `json:"item" api:"required"`
+	Type    constant.DecisionItemCreated      `json:"type" default:"decision.item.created"`
 	// The event_id of the client command associated with this server event, when
 	// supplied.
 	ClientEventID string `json:"client_event_id"`
@@ -1939,20 +2769,209 @@ func (r *DecisionItemCreatedEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type DecisionItemCreatedEventItem struct {
-	// The ID of the stored Decision input item.
-	ID string `json:"id" api:"required"`
-	// The text input to the model.
-	Content DecisionItemCreatedEventItemContentUnion `json:"content" api:"required"`
-	// The message role. Always `user`.
-	Role constant.User `json:"role" default:"user"`
-	// Any of "message".
-	Type string `json:"type"`
+// DecisionItemCreatedEventItemUnion contains all possible properties and values
+// from [DecisionStoredUserMessage], [DecisionStoredDeveloperMessage],
+// [DecisionStoredSystemMessage], [DecisionStoredAssistantMessage],
+// [DecisionItemCreatedEventItemFunctionCall],
+// [DecisionItemCreatedEventItemFunctionCallOutput],
+// [DecisionItemCreatedEventItemCustomToolCall],
+// [DecisionItemCreatedEventItemCustomToolCallOutput].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type DecisionItemCreatedEventItemUnion struct {
+	OfDecisionStoredUserMessage DecisionStoredUserMessage `json:",inline"`
+	ID                          string                    `json:"id"`
+	// This field is a union of [DecisionStoredUserMessageContentUnion],
+	// [DecisionStoredDeveloperMessageContentUnion],
+	// [DecisionStoredSystemMessageContentUnion],
+	// [DecisionStoredAssistantMessageContentUnion]
+	Content DecisionItemCreatedEventItemUnionContent `json:"content"`
+	Role    string                                   `json:"role"`
+	// Any of "message", "message", "message", "message", "function_call",
+	// "function_call_output", "custom_tool_call", "custom_tool_call_output".
+	Type                             string                         `json:"type"`
+	OfDecisionStoredDeveloperMessage DecisionStoredDeveloperMessage `json:",inline"`
+	OfDecisionStoredSystemMessage    DecisionStoredSystemMessage    `json:",inline"`
+	OfDecisionStoredAssistantMessage DecisionStoredAssistantMessage `json:",inline"`
+	// This field is from variant [DecisionStoredAssistantMessage].
+	Phase                                      DecisionStoredAssistantMessagePhase      `json:"phase"`
+	OfDecisionItemCreatedEventItemFunctionCall DecisionItemCreatedEventItemFunctionCall `json:",inline"`
+	// This field is from variant [DecisionItemCreatedEventItemFunctionCall].
+	Arguments                                        string                                         `json:"arguments"`
+	CallID                                           string                                         `json:"call_id"`
+	Name                                             string                                         `json:"name"`
+	Namespace                                        string                                         `json:"namespace"`
+	Status                                           string                                         `json:"status"`
+	OfDecisionItemCreatedEventItemFunctionCallOutput DecisionItemCreatedEventItemFunctionCallOutput `json:",inline"`
+	// This field is a union of
+	// [DecisionItemCreatedEventItemFunctionCallOutputOutputUnion],
+	// [DecisionItemCreatedEventItemCustomToolCallOutputOutputUnion]
+	Output                                       DecisionItemCreatedEventItemUnionOutput    `json:"output"`
+	OfDecisionItemCreatedEventItemCustomToolCall DecisionItemCreatedEventItemCustomToolCall `json:",inline"`
+	// This field is from variant [DecisionItemCreatedEventItemCustomToolCall].
+	Input                                              string                                           `json:"input"`
+	OfDecisionItemCreatedEventItemCustomToolCallOutput DecisionItemCreatedEventItemCustomToolCallOutput `json:",inline"`
+	JSON                                               struct {
+		OfDecisionStoredUserMessage                        respjson.Field
+		ID                                                 respjson.Field
+		Content                                            respjson.Field
+		Role                                               respjson.Field
+		Type                                               respjson.Field
+		OfDecisionStoredDeveloperMessage                   respjson.Field
+		OfDecisionStoredSystemMessage                      respjson.Field
+		OfDecisionStoredAssistantMessage                   respjson.Field
+		Phase                                              respjson.Field
+		OfDecisionItemCreatedEventItemFunctionCall         respjson.Field
+		Arguments                                          respjson.Field
+		CallID                                             respjson.Field
+		Name                                               respjson.Field
+		Namespace                                          respjson.Field
+		Status                                             respjson.Field
+		OfDecisionItemCreatedEventItemFunctionCallOutput   respjson.Field
+		Output                                             respjson.Field
+		OfDecisionItemCreatedEventItemCustomToolCall       respjson.Field
+		Input                                              respjson.Field
+		OfDecisionItemCreatedEventItemCustomToolCallOutput respjson.Field
+		raw                                                string
+	} `json:"-"`
+}
+
+func (u DecisionItemCreatedEventItemUnion) AsDecisionStoredUserMessage() (v DecisionStoredUserMessage) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionItemCreatedEventItemUnion) AsDecisionStoredDeveloperMessage() (v DecisionStoredDeveloperMessage) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionItemCreatedEventItemUnion) AsDecisionStoredSystemMessage() (v DecisionStoredSystemMessage) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionItemCreatedEventItemUnion) AsDecisionStoredAssistantMessage() (v DecisionStoredAssistantMessage) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionItemCreatedEventItemUnion) AsDecisionItemCreatedEventItemFunctionCall() (v DecisionItemCreatedEventItemFunctionCall) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionItemCreatedEventItemUnion) AsDecisionItemCreatedEventItemFunctionCallOutput() (v DecisionItemCreatedEventItemFunctionCallOutput) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionItemCreatedEventItemUnion) AsDecisionItemCreatedEventItemCustomToolCall() (v DecisionItemCreatedEventItemCustomToolCall) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionItemCreatedEventItemUnion) AsDecisionItemCreatedEventItemCustomToolCallOutput() (v DecisionItemCreatedEventItemCustomToolCallOutput) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionItemCreatedEventItemUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionItemCreatedEventItemUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionItemCreatedEventItemUnionContent is an implicit subunion of
+// [DecisionItemCreatedEventItemUnion]. DecisionItemCreatedEventItemUnionContent
+// provides convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [DecisionItemCreatedEventItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfParts OfPartsDecisionInputText
+// OfPartsDecisionStoredAssistantMessageContentPartUnion]
+type DecisionItemCreatedEventItemUnionContent struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a
+	// [[]DecisionStoredUserMessageContentPartUnion] instead of an object.
+	OfParts []DecisionStoredUserMessageContentPartUnion `json:",inline"`
+	// This field will be present if the value is a [[]DecisionInputText] instead of an
+	// object.
+	OfPartsDecisionInputText []DecisionInputText `json:",inline"`
+	// This field will be present if the value is a
+	// [[]DecisionStoredAssistantMessageContentPartUnion] instead of an object.
+	OfPartsDecisionStoredAssistantMessageContentPartUnion []DecisionStoredAssistantMessageContentPartUnion `json:",inline"`
+	JSON                                                  struct {
+		OfString                                              respjson.Field
+		OfParts                                               respjson.Field
+		OfPartsDecisionInputText                              respjson.Field
+		OfPartsDecisionStoredAssistantMessageContentPartUnion respjson.Field
+		raw                                                   string
+	} `json:"-"`
+}
+
+func (r *DecisionItemCreatedEventItemUnionContent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionItemCreatedEventItemUnionOutput is an implicit subunion of
+// [DecisionItemCreatedEventItemUnion]. DecisionItemCreatedEventItemUnionOutput
+// provides convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [DecisionItemCreatedEventItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfParts
+// OfPartsDecisionItemCreatedEventItemCustomToolCallOutputOutputPartsItemUnion]
+type DecisionItemCreatedEventItemUnionOutput struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a
+	// [[]DecisionItemCreatedEventItemFunctionCallOutputOutputPartsItemUnion] instead
+	// of an object.
+	OfParts []DecisionItemCreatedEventItemFunctionCallOutputOutputPartsItemUnion `json:",inline"`
+	// This field will be present if the value is a
+	// [[]DecisionItemCreatedEventItemCustomToolCallOutputOutputPartsItemUnion] instead
+	// of an object.
+	OfPartsDecisionItemCreatedEventItemCustomToolCallOutputOutputPartsItemUnion []DecisionItemCreatedEventItemCustomToolCallOutputOutputPartsItemUnion `json:",inline"`
+	JSON                                                                        struct {
+		OfString                                                                    respjson.Field
+		OfParts                                                                     respjson.Field
+		OfPartsDecisionItemCreatedEventItemCustomToolCallOutputOutputPartsItemUnion respjson.Field
+		raw                                                                         string
+	} `json:"-"`
+}
+
+func (r *DecisionItemCreatedEventItemUnionOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionItemCreatedEventItemFunctionCall struct {
+	// The function arguments as a JSON string.
+	Arguments string `json:"arguments" api:"required"`
+	// The unique ID of the function tool call generated by the model.
+	CallID string `json:"call_id" api:"required"`
+	ID     string `json:"id" api:"required"`
+	Name   string `json:"name" api:"required"`
+	// The namespace of the function to call.
+	Namespace string `json:"namespace" api:"nullable"`
+	// Any of "in_progress", "completed", "incomplete".
+	Status string `json:"status" api:"nullable"`
+	// The item type. Always `function_call`.
+	Type constant.FunctionCall `json:"type" default:"function_call"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		Arguments   respjson.Field
+		CallID      respjson.Field
 		ID          respjson.Field
-		Content     respjson.Field
-		Role        respjson.Field
+		Name        respjson.Field
+		Namespace   respjson.Field
+		Status      respjson.Field
 		Type        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -1960,24 +2979,54 @@ type DecisionItemCreatedEventItem struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r DecisionItemCreatedEventItem) RawJSON() string { return r.JSON.raw }
-func (r *DecisionItemCreatedEventItem) UnmarshalJSON(data []byte) error {
+func (r DecisionItemCreatedEventItemFunctionCall) RawJSON() string { return r.JSON.raw }
+func (r *DecisionItemCreatedEventItemFunctionCall) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// DecisionItemCreatedEventItemContentUnion contains all possible properties and
-// values from [string], [[]DecisionItemCreatedEventItemContentPartsItemUnion].
+type DecisionItemCreatedEventItemFunctionCallOutput struct {
+	// The unique ID of the function tool call generated by the model.
+	CallID string `json:"call_id" api:"required"`
+	ID     string `json:"id" api:"required"`
+	// The text input to the model.
+	Output DecisionItemCreatedEventItemFunctionCallOutputOutputUnion `json:"output" api:"required"`
+	// Any of "in_progress", "completed", "incomplete".
+	Status string `json:"status" api:"nullable"`
+	// The type of the function tool call output. Always `function_call_output`.
+	Type constant.FunctionCallOutput `json:"type" default:"function_call_output"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CallID      respjson.Field
+		ID          respjson.Field
+		Output      respjson.Field
+		Status      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionItemCreatedEventItemFunctionCallOutput) RawJSON() string { return r.JSON.raw }
+func (r *DecisionItemCreatedEventItemFunctionCallOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionItemCreatedEventItemFunctionCallOutputOutputUnion contains all possible
+// properties and values from [string],
+// [[]DecisionItemCreatedEventItemFunctionCallOutputOutputPartsItemUnion].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 //
 // If the underlying value is not a json object, one of the following properties
 // will be valid: OfString OfParts]
-type DecisionItemCreatedEventItemContentUnion struct {
+type DecisionItemCreatedEventItemFunctionCallOutputOutputUnion struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
 	// This field will be present if the value is a
-	// [[]DecisionItemCreatedEventItemContentPartsItemUnion] instead of an object.
-	OfParts []DecisionItemCreatedEventItemContentPartsItemUnion `json:",inline"`
+	// [[]DecisionItemCreatedEventItemFunctionCallOutputOutputPartsItemUnion] instead
+	// of an object.
+	OfParts []DecisionItemCreatedEventItemFunctionCallOutputOutputPartsItemUnion `json:",inline"`
 	JSON    struct {
 		OfString respjson.Field
 		OfParts  respjson.Field
@@ -1985,75 +3034,60 @@ type DecisionItemCreatedEventItemContentUnion struct {
 	} `json:"-"`
 }
 
-func (u DecisionItemCreatedEventItemContentUnion) AsString() (v string) {
+func (u DecisionItemCreatedEventItemFunctionCallOutputOutputUnion) AsString() (v string) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u DecisionItemCreatedEventItemContentUnion) AsParts() (v []DecisionItemCreatedEventItemContentPartsItemUnion) {
+func (u DecisionItemCreatedEventItemFunctionCallOutputOutputUnion) AsParts() (v []DecisionItemCreatedEventItemFunctionCallOutputOutputPartsItemUnion) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 // Returns the unmodified JSON received from the API
-func (u DecisionItemCreatedEventItemContentUnion) RawJSON() string { return u.JSON.raw }
+func (u DecisionItemCreatedEventItemFunctionCallOutputOutputUnion) RawJSON() string {
+	return u.JSON.raw
+}
 
-func (r *DecisionItemCreatedEventItemContentUnion) UnmarshalJSON(data []byte) error {
+func (r *DecisionItemCreatedEventItemFunctionCallOutputOutputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// DecisionItemCreatedEventItemContentPartsItemUnion contains all possible
-// properties and values from [DecisionItemCreatedEventItemContentPartInputText],
-// [DecisionItemCreatedEventItemContentPartInputImage].
+// DecisionItemCreatedEventItemFunctionCallOutputOutputPartsItemUnion contains all
+// possible properties and values from [DecisionInputText],
+// [DecisionItemCreatedEventItemFunctionCallOutputOutputPartInputImage].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
-type DecisionItemCreatedEventItemContentPartsItemUnion struct {
-	OfDecisionItemCreatedEventItemContentPartInputText  DecisionItemCreatedEventItemContentPartInputText  `json:",inline"`
-	OfDecisionItemCreatedEventItemContentPartInputImage DecisionItemCreatedEventItemContentPartInputImage `json:",inline"`
-	JSON                                                struct {
-		OfDecisionItemCreatedEventItemContentPartInputText  respjson.Field
-		OfDecisionItemCreatedEventItemContentPartInputImage respjson.Field
-		raw                                                 string
+type DecisionItemCreatedEventItemFunctionCallOutputOutputPartsItemUnion struct {
+	OfDecisionInputText                                                  DecisionInputText                                                  `json:",inline"`
+	OfDecisionItemCreatedEventItemFunctionCallOutputOutputPartInputImage DecisionItemCreatedEventItemFunctionCallOutputOutputPartInputImage `json:",inline"`
+	JSON                                                                 struct {
+		OfDecisionInputText                                                  respjson.Field
+		OfDecisionItemCreatedEventItemFunctionCallOutputOutputPartInputImage respjson.Field
+		raw                                                                  string
 	} `json:"-"`
 }
 
-func (u DecisionItemCreatedEventItemContentPartsItemUnion) AsDecisionItemCreatedEventItemContentPartInputText() (v DecisionItemCreatedEventItemContentPartInputText) {
+func (u DecisionItemCreatedEventItemFunctionCallOutputOutputPartsItemUnion) AsDecisionInputText() (v DecisionInputText) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u DecisionItemCreatedEventItemContentPartsItemUnion) AsDecisionItemCreatedEventItemContentPartInputImage() (v DecisionItemCreatedEventItemContentPartInputImage) {
+func (u DecisionItemCreatedEventItemFunctionCallOutputOutputPartsItemUnion) AsDecisionItemCreatedEventItemFunctionCallOutputOutputPartInputImage() (v DecisionItemCreatedEventItemFunctionCallOutputOutputPartInputImage) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 // Returns the unmodified JSON received from the API
-func (u DecisionItemCreatedEventItemContentPartsItemUnion) RawJSON() string { return u.JSON.raw }
+func (u DecisionItemCreatedEventItemFunctionCallOutputOutputPartsItemUnion) RawJSON() string {
+	return u.JSON.raw
+}
 
-func (r *DecisionItemCreatedEventItemContentPartsItemUnion) UnmarshalJSON(data []byte) error {
+func (r *DecisionItemCreatedEventItemFunctionCallOutputOutputPartsItemUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type DecisionItemCreatedEventItemContentPartInputText struct {
-	// The text input to the model.
-	Text string             `json:"text" api:"required"`
-	Type constant.InputText `json:"type" default:"input_text"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Text        respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r DecisionItemCreatedEventItemContentPartInputText) RawJSON() string { return r.JSON.raw }
-func (r *DecisionItemCreatedEventItemContentPartInputText) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type DecisionItemCreatedEventItemContentPartInputImage struct {
+type DecisionItemCreatedEventItemFunctionCallOutputOutputPartInputImage struct {
 	// The detail level of the image to be sent to the model. One of `high`, `low`,
 	// `auto`, or `original`. Defaults to `auto`.
 	//
@@ -2073,8 +3107,173 @@ type DecisionItemCreatedEventItemContentPartInputImage struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r DecisionItemCreatedEventItemContentPartInputImage) RawJSON() string { return r.JSON.raw }
-func (r *DecisionItemCreatedEventItemContentPartInputImage) UnmarshalJSON(data []byte) error {
+func (r DecisionItemCreatedEventItemFunctionCallOutputOutputPartInputImage) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *DecisionItemCreatedEventItemFunctionCallOutputOutputPartInputImage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionItemCreatedEventItemCustomToolCall struct {
+	// The unique ID of the function tool call generated by the model.
+	CallID string `json:"call_id" api:"required"`
+	ID     string `json:"id" api:"required"`
+	// The input to the custom tool call.
+	Input string `json:"input" api:"required"`
+	// The name of the custom tool to call.
+	Name string `json:"name" api:"required"`
+	// The namespace of the function to call.
+	Namespace string `json:"namespace" api:"nullable"`
+	// Any of "in_progress", "completed", "incomplete".
+	Status string `json:"status" api:"nullable"`
+	// The item type. Always `custom_tool_call`.
+	Type constant.CustomToolCall `json:"type" default:"custom_tool_call"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CallID      respjson.Field
+		ID          respjson.Field
+		Input       respjson.Field
+		Name        respjson.Field
+		Namespace   respjson.Field
+		Status      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionItemCreatedEventItemCustomToolCall) RawJSON() string { return r.JSON.raw }
+func (r *DecisionItemCreatedEventItemCustomToolCall) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionItemCreatedEventItemCustomToolCallOutput struct {
+	// The unique ID of the function tool call generated by the model.
+	CallID string `json:"call_id" api:"required"`
+	ID     string `json:"id" api:"required"`
+	// The text input to the model.
+	Output DecisionItemCreatedEventItemCustomToolCallOutputOutputUnion `json:"output" api:"required"`
+	// Any of "in_progress", "completed", "incomplete".
+	Status string                        `json:"status" api:"nullable"`
+	Type   constant.CustomToolCallOutput `json:"type" default:"custom_tool_call_output"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CallID      respjson.Field
+		ID          respjson.Field
+		Output      respjson.Field
+		Status      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionItemCreatedEventItemCustomToolCallOutput) RawJSON() string { return r.JSON.raw }
+func (r *DecisionItemCreatedEventItemCustomToolCallOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionItemCreatedEventItemCustomToolCallOutputOutputUnion contains all
+// possible properties and values from [string],
+// [[]DecisionItemCreatedEventItemCustomToolCallOutputOutputPartsItemUnion].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfParts]
+type DecisionItemCreatedEventItemCustomToolCallOutputOutputUnion struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a
+	// [[]DecisionItemCreatedEventItemCustomToolCallOutputOutputPartsItemUnion] instead
+	// of an object.
+	OfParts []DecisionItemCreatedEventItemCustomToolCallOutputOutputPartsItemUnion `json:",inline"`
+	JSON    struct {
+		OfString respjson.Field
+		OfParts  respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (u DecisionItemCreatedEventItemCustomToolCallOutputOutputUnion) AsString() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionItemCreatedEventItemCustomToolCallOutputOutputUnion) AsParts() (v []DecisionItemCreatedEventItemCustomToolCallOutputOutputPartsItemUnion) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionItemCreatedEventItemCustomToolCallOutputOutputUnion) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *DecisionItemCreatedEventItemCustomToolCallOutputOutputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionItemCreatedEventItemCustomToolCallOutputOutputPartsItemUnion contains
+// all possible properties and values from [DecisionInputText],
+// [DecisionItemCreatedEventItemCustomToolCallOutputOutputPartInputImage].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type DecisionItemCreatedEventItemCustomToolCallOutputOutputPartsItemUnion struct {
+	OfDecisionInputText                                                    DecisionInputText                                                    `json:",inline"`
+	OfDecisionItemCreatedEventItemCustomToolCallOutputOutputPartInputImage DecisionItemCreatedEventItemCustomToolCallOutputOutputPartInputImage `json:",inline"`
+	JSON                                                                   struct {
+		OfDecisionInputText                                                    respjson.Field
+		OfDecisionItemCreatedEventItemCustomToolCallOutputOutputPartInputImage respjson.Field
+		raw                                                                    string
+	} `json:"-"`
+}
+
+func (u DecisionItemCreatedEventItemCustomToolCallOutputOutputPartsItemUnion) AsDecisionInputText() (v DecisionInputText) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionItemCreatedEventItemCustomToolCallOutputOutputPartsItemUnion) AsDecisionItemCreatedEventItemCustomToolCallOutputOutputPartInputImage() (v DecisionItemCreatedEventItemCustomToolCallOutputOutputPartInputImage) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionItemCreatedEventItemCustomToolCallOutputOutputPartsItemUnion) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *DecisionItemCreatedEventItemCustomToolCallOutputOutputPartsItemUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionItemCreatedEventItemCustomToolCallOutputOutputPartInputImage struct {
+	// The detail level of the image to be sent to the model. One of `high`, `low`,
+	// `auto`, or `original`. Defaults to `auto`.
+	//
+	// Any of "low", "high", "auto", "original".
+	Detail string `json:"detail" api:"nullable"`
+	// A base64-encoded image data URL or a publicly accessible HTTP(S) image URL.
+	ImageURL string              `json:"image_url" api:"required"`
+	Type     constant.InputImage `json:"type" default:"input_image"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Detail      respjson.Field
+		ImageURL    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionItemCreatedEventItemCustomToolCallOutputOutputPartInputImage) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *DecisionItemCreatedEventItemCustomToolCallOutputOutputPartInputImage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -2127,6 +3326,1940 @@ func (r *DecisionItemDeletedEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type DecisionJSONObject map[string]any
+
+// DecisionQuestionUnion contains all possible properties and values from
+// [DecisionQuestionChoice], [DecisionQuestionPredicate], [DecisionQuestionScore].
+//
+// Use the [DecisionQuestionUnion.AsAny] method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type DecisionQuestionUnion struct {
+	OfDecisionQuestionChoice    DecisionQuestionChoice    `json:",inline"`
+	OfDecisionQuestionPredicate DecisionQuestionPredicate `json:",inline"`
+	OfDecisionQuestionScore     DecisionQuestionScore     `json:",inline"`
+	Type                        string                    `json:"type"`
+	JSON                        struct {
+		OfDecisionQuestionChoice    respjson.Field
+		OfDecisionQuestionPredicate respjson.Field
+		OfDecisionQuestionScore     respjson.Field
+		Type                        respjson.Field
+		raw                         string
+	} `json:"-"`
+}
+
+// anyDecisionQuestion is implemented by each variant of [DecisionQuestionUnion] to
+// add type safety for the return type of [DecisionQuestionUnion.AsAny]
+type anyDecisionQuestion interface {
+	implDecisionQuestionUnion()
+}
+
+func (DecisionQuestionChoice) implDecisionQuestionUnion()    {}
+func (DecisionQuestionPredicate) implDecisionQuestionUnion() {}
+func (DecisionQuestionScore) implDecisionQuestionUnion()     {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := DecisionQuestionUnion.AsAny().(type) {
+//	case live.DecisionQuestionChoice:
+//	case live.DecisionQuestionPredicate:
+//	case live.DecisionQuestionScore:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u DecisionQuestionUnion) AsAny() anyDecisionQuestion {
+	switch u.Type {
+	case "choice":
+		return u.AsDecisionQuestionChoice()
+	case "predicate":
+		return u.AsDecisionQuestionPredicate()
+	case "score":
+		return u.AsDecisionQuestionScore()
+	}
+	return nil
+}
+
+func (u DecisionQuestionUnion) AsDecisionQuestionChoice() (v DecisionQuestionChoice) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionQuestionUnion) AsDecisionQuestionPredicate() (v DecisionQuestionPredicate) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionQuestionUnion) AsDecisionQuestionScore() (v DecisionQuestionScore) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionQuestionUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionQuestionUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this DecisionQuestionUnion to a DecisionQuestionUnionParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// DecisionQuestionUnionParam.Overrides()
+func (r DecisionQuestionUnion) ToParam() DecisionQuestionUnionParam {
+	return param.Override[DecisionQuestionUnionParam](json.RawMessage(r.RawJSON()))
+}
+
+type DecisionQuestionChoice struct {
+	Choices      []DecisionChoiceOption                  `json:"choices" api:"required"`
+	Instructions DecisionQuestionChoiceInstructionsUnion `json:"instructions" api:"required"`
+	Name         string                                  `json:"name"`
+	Type         constant.Choice                         `json:"type" default:"choice"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Choices      respjson.Field
+		Instructions respjson.Field
+		Name         respjson.Field
+		Type         respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionQuestionChoice) RawJSON() string { return r.JSON.raw }
+func (r *DecisionQuestionChoice) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionQuestionChoiceInstructionsUnion contains all possible properties and
+// values from [string], [[]DecisionQuestionChoiceInstructionsPartsItemUnion].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfParts]
+type DecisionQuestionChoiceInstructionsUnion struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a
+	// [[]DecisionQuestionChoiceInstructionsPartsItemUnion] instead of an object.
+	OfParts []DecisionQuestionChoiceInstructionsPartsItemUnion `json:",inline"`
+	JSON    struct {
+		OfString respjson.Field
+		OfParts  respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (u DecisionQuestionChoiceInstructionsUnion) AsString() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionQuestionChoiceInstructionsUnion) AsParts() (v []DecisionQuestionChoiceInstructionsPartsItemUnion) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionQuestionChoiceInstructionsUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionQuestionChoiceInstructionsUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionQuestionChoiceInstructionsPartsItemUnion contains all possible
+// properties and values from [DecisionInputText],
+// [DecisionQuestionChoiceInstructionsPartInputImage],
+// [DecisionQuestionChoiceInstructionsPartInputJSON].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type DecisionQuestionChoiceInstructionsPartsItemUnion struct {
+	OfDecisionInputText                                DecisionInputText                                `json:",inline"`
+	OfDecisionQuestionChoiceInstructionsPartInputImage DecisionQuestionChoiceInstructionsPartInputImage `json:",inline"`
+	OfDecisionQuestionChoiceInstructionsPartInputJSON  DecisionQuestionChoiceInstructionsPartInputJSON  `json:",inline"`
+	JSON                                               struct {
+		OfDecisionInputText                                respjson.Field
+		OfDecisionQuestionChoiceInstructionsPartInputImage respjson.Field
+		OfDecisionQuestionChoiceInstructionsPartInputJSON  respjson.Field
+		raw                                                string
+	} `json:"-"`
+}
+
+func (u DecisionQuestionChoiceInstructionsPartsItemUnion) AsDecisionInputText() (v DecisionInputText) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionQuestionChoiceInstructionsPartsItemUnion) AsDecisionQuestionChoiceInstructionsPartInputImage() (v DecisionQuestionChoiceInstructionsPartInputImage) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionQuestionChoiceInstructionsPartsItemUnion) AsDecisionQuestionChoiceInstructionsPartInputJSON() (v DecisionQuestionChoiceInstructionsPartInputJSON) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionQuestionChoiceInstructionsPartsItemUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionQuestionChoiceInstructionsPartsItemUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionQuestionChoiceInstructionsPartInputImage struct {
+	// The detail level of the image to be sent to the model. One of `high`, `low`,
+	// `auto`, or `original`. Defaults to `auto`.
+	//
+	// Any of "low", "high", "auto", "original".
+	Detail string `json:"detail" api:"nullable"`
+	// A base64-encoded image data URL or a publicly accessible HTTP(S) image URL.
+	ImageURL string              `json:"image_url" api:"required"`
+	Type     constant.InputImage `json:"type" default:"input_image"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Detail      respjson.Field
+		ImageURL    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionQuestionChoiceInstructionsPartInputImage) RawJSON() string { return r.JSON.raw }
+func (r *DecisionQuestionChoiceInstructionsPartInputImage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionQuestionChoiceInstructionsPartInputJSON struct {
+	Data DecisionQuestionChoiceInstructionsPartInputJSONDataUnion `json:"data" api:"required"`
+	Type constant.InputJSON                                       `json:"type" default:"input_json"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionQuestionChoiceInstructionsPartInputJSON) RawJSON() string { return r.JSON.raw }
+func (r *DecisionQuestionChoiceInstructionsPartInputJSON) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionQuestionChoiceInstructionsPartInputJSONDataUnion contains all possible
+// properties and values from [DecisionJSONObject], [[]DecisionJSONObject].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfArrayOfDecisionJSONObject]
+type DecisionQuestionChoiceInstructionsPartInputJSONDataUnion struct {
+	OfLiveDecisionJSONObject DecisionJSONObject `json:",inline"`
+	// This field will be present if the value is a [[]DecisionJSONObject] instead of
+	// an object.
+	OfArrayOfDecisionJSONObject []DecisionJSONObject `json:",inline"`
+	JSON                        struct {
+		OfLiveDecisionJSONObject    respjson.Field
+		OfArrayOfDecisionJSONObject respjson.Field
+		raw                         string
+	} `json:"-"`
+}
+
+func (u DecisionQuestionChoiceInstructionsPartInputJSONDataUnion) AsLiveDecisionJSONObject() (v DecisionJSONObject) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionQuestionChoiceInstructionsPartInputJSONDataUnion) AsArrayOfDecisionJSONObject() (v []DecisionJSONObject) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionQuestionChoiceInstructionsPartInputJSONDataUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionQuestionChoiceInstructionsPartInputJSONDataUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type LiveDecisionJSONObject DecisionJSONObject
+
+type DecisionQuestionPredicate struct {
+	Instructions DecisionQuestionPredicateInstructionsUnion `json:"instructions" api:"required"`
+	Name         string                                     `json:"name"`
+	Type         constant.Predicate                         `json:"type" default:"predicate"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Instructions respjson.Field
+		Name         respjson.Field
+		Type         respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionQuestionPredicate) RawJSON() string { return r.JSON.raw }
+func (r *DecisionQuestionPredicate) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionQuestionPredicateInstructionsUnion contains all possible properties and
+// values from [string], [[]DecisionQuestionPredicateInstructionsPartsItemUnion].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfParts]
+type DecisionQuestionPredicateInstructionsUnion struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a
+	// [[]DecisionQuestionPredicateInstructionsPartsItemUnion] instead of an object.
+	OfParts []DecisionQuestionPredicateInstructionsPartsItemUnion `json:",inline"`
+	JSON    struct {
+		OfString respjson.Field
+		OfParts  respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (u DecisionQuestionPredicateInstructionsUnion) AsString() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionQuestionPredicateInstructionsUnion) AsParts() (v []DecisionQuestionPredicateInstructionsPartsItemUnion) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionQuestionPredicateInstructionsUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionQuestionPredicateInstructionsUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionQuestionPredicateInstructionsPartsItemUnion contains all possible
+// properties and values from [DecisionInputText],
+// [DecisionQuestionPredicateInstructionsPartInputImage],
+// [DecisionQuestionPredicateInstructionsPartInputJSON].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type DecisionQuestionPredicateInstructionsPartsItemUnion struct {
+	OfDecisionInputText                                   DecisionInputText                                   `json:",inline"`
+	OfDecisionQuestionPredicateInstructionsPartInputImage DecisionQuestionPredicateInstructionsPartInputImage `json:",inline"`
+	OfDecisionQuestionPredicateInstructionsPartInputJSON  DecisionQuestionPredicateInstructionsPartInputJSON  `json:",inline"`
+	JSON                                                  struct {
+		OfDecisionInputText                                   respjson.Field
+		OfDecisionQuestionPredicateInstructionsPartInputImage respjson.Field
+		OfDecisionQuestionPredicateInstructionsPartInputJSON  respjson.Field
+		raw                                                   string
+	} `json:"-"`
+}
+
+func (u DecisionQuestionPredicateInstructionsPartsItemUnion) AsDecisionInputText() (v DecisionInputText) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionQuestionPredicateInstructionsPartsItemUnion) AsDecisionQuestionPredicateInstructionsPartInputImage() (v DecisionQuestionPredicateInstructionsPartInputImage) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionQuestionPredicateInstructionsPartsItemUnion) AsDecisionQuestionPredicateInstructionsPartInputJSON() (v DecisionQuestionPredicateInstructionsPartInputJSON) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionQuestionPredicateInstructionsPartsItemUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionQuestionPredicateInstructionsPartsItemUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionQuestionPredicateInstructionsPartInputImage struct {
+	// The detail level of the image to be sent to the model. One of `high`, `low`,
+	// `auto`, or `original`. Defaults to `auto`.
+	//
+	// Any of "low", "high", "auto", "original".
+	Detail string `json:"detail" api:"nullable"`
+	// A base64-encoded image data URL or a publicly accessible HTTP(S) image URL.
+	ImageURL string              `json:"image_url" api:"required"`
+	Type     constant.InputImage `json:"type" default:"input_image"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Detail      respjson.Field
+		ImageURL    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionQuestionPredicateInstructionsPartInputImage) RawJSON() string { return r.JSON.raw }
+func (r *DecisionQuestionPredicateInstructionsPartInputImage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionQuestionPredicateInstructionsPartInputJSON struct {
+	Data DecisionQuestionPredicateInstructionsPartInputJSONDataUnion `json:"data" api:"required"`
+	Type constant.InputJSON                                          `json:"type" default:"input_json"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionQuestionPredicateInstructionsPartInputJSON) RawJSON() string { return r.JSON.raw }
+func (r *DecisionQuestionPredicateInstructionsPartInputJSON) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionQuestionPredicateInstructionsPartInputJSONDataUnion contains all
+// possible properties and values from [DecisionJSONObject],
+// [[]DecisionJSONObject].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfArrayOfDecisionJSONObject]
+type DecisionQuestionPredicateInstructionsPartInputJSONDataUnion struct {
+	OfLiveDecisionJSONObject DecisionJSONObject `json:",inline"`
+	// This field will be present if the value is a [[]DecisionJSONObject] instead of
+	// an object.
+	OfArrayOfDecisionJSONObject []DecisionJSONObject `json:",inline"`
+	JSON                        struct {
+		OfLiveDecisionJSONObject    respjson.Field
+		OfArrayOfDecisionJSONObject respjson.Field
+		raw                         string
+	} `json:"-"`
+}
+
+func (u DecisionQuestionPredicateInstructionsPartInputJSONDataUnion) AsLiveDecisionJSONObject() (v DecisionJSONObject) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionQuestionPredicateInstructionsPartInputJSONDataUnion) AsArrayOfDecisionJSONObject() (v []DecisionJSONObject) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionQuestionPredicateInstructionsPartInputJSONDataUnion) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *DecisionQuestionPredicateInstructionsPartInputJSONDataUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionQuestionScore struct {
+	Instructions DecisionQuestionScoreInstructionsUnion `json:"instructions" api:"required"`
+	Levels       []DecisionQuestionScoreLevel           `json:"levels" api:"required"`
+	Name         string                                 `json:"name"`
+	Type         constant.Score                         `json:"type" default:"score"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Instructions respjson.Field
+		Levels       respjson.Field
+		Name         respjson.Field
+		Type         respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionQuestionScore) RawJSON() string { return r.JSON.raw }
+func (r *DecisionQuestionScore) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionQuestionScoreInstructionsUnion contains all possible properties and
+// values from [string], [[]DecisionQuestionScoreInstructionsPartsItemUnion].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfParts]
+type DecisionQuestionScoreInstructionsUnion struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a
+	// [[]DecisionQuestionScoreInstructionsPartsItemUnion] instead of an object.
+	OfParts []DecisionQuestionScoreInstructionsPartsItemUnion `json:",inline"`
+	JSON    struct {
+		OfString respjson.Field
+		OfParts  respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (u DecisionQuestionScoreInstructionsUnion) AsString() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionQuestionScoreInstructionsUnion) AsParts() (v []DecisionQuestionScoreInstructionsPartsItemUnion) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionQuestionScoreInstructionsUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionQuestionScoreInstructionsUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionQuestionScoreInstructionsPartsItemUnion contains all possible properties
+// and values from [DecisionInputText],
+// [DecisionQuestionScoreInstructionsPartInputImage],
+// [DecisionQuestionScoreInstructionsPartInputJSON].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type DecisionQuestionScoreInstructionsPartsItemUnion struct {
+	OfDecisionInputText                               DecisionInputText                               `json:",inline"`
+	OfDecisionQuestionScoreInstructionsPartInputImage DecisionQuestionScoreInstructionsPartInputImage `json:",inline"`
+	OfDecisionQuestionScoreInstructionsPartInputJSON  DecisionQuestionScoreInstructionsPartInputJSON  `json:",inline"`
+	JSON                                              struct {
+		OfDecisionInputText                               respjson.Field
+		OfDecisionQuestionScoreInstructionsPartInputImage respjson.Field
+		OfDecisionQuestionScoreInstructionsPartInputJSON  respjson.Field
+		raw                                               string
+	} `json:"-"`
+}
+
+func (u DecisionQuestionScoreInstructionsPartsItemUnion) AsDecisionInputText() (v DecisionInputText) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionQuestionScoreInstructionsPartsItemUnion) AsDecisionQuestionScoreInstructionsPartInputImage() (v DecisionQuestionScoreInstructionsPartInputImage) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionQuestionScoreInstructionsPartsItemUnion) AsDecisionQuestionScoreInstructionsPartInputJSON() (v DecisionQuestionScoreInstructionsPartInputJSON) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionQuestionScoreInstructionsPartsItemUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionQuestionScoreInstructionsPartsItemUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionQuestionScoreInstructionsPartInputImage struct {
+	// The detail level of the image to be sent to the model. One of `high`, `low`,
+	// `auto`, or `original`. Defaults to `auto`.
+	//
+	// Any of "low", "high", "auto", "original".
+	Detail string `json:"detail" api:"nullable"`
+	// A base64-encoded image data URL or a publicly accessible HTTP(S) image URL.
+	ImageURL string              `json:"image_url" api:"required"`
+	Type     constant.InputImage `json:"type" default:"input_image"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Detail      respjson.Field
+		ImageURL    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionQuestionScoreInstructionsPartInputImage) RawJSON() string { return r.JSON.raw }
+func (r *DecisionQuestionScoreInstructionsPartInputImage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionQuestionScoreInstructionsPartInputJSON struct {
+	Data DecisionQuestionScoreInstructionsPartInputJSONDataUnion `json:"data" api:"required"`
+	Type constant.InputJSON                                      `json:"type" default:"input_json"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionQuestionScoreInstructionsPartInputJSON) RawJSON() string { return r.JSON.raw }
+func (r *DecisionQuestionScoreInstructionsPartInputJSON) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionQuestionScoreInstructionsPartInputJSONDataUnion contains all possible
+// properties and values from [DecisionJSONObject], [[]DecisionJSONObject].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfArrayOfDecisionJSONObject]
+type DecisionQuestionScoreInstructionsPartInputJSONDataUnion struct {
+	OfLiveDecisionJSONObject DecisionJSONObject `json:",inline"`
+	// This field will be present if the value is a [[]DecisionJSONObject] instead of
+	// an object.
+	OfArrayOfDecisionJSONObject []DecisionJSONObject `json:",inline"`
+	JSON                        struct {
+		OfLiveDecisionJSONObject    respjson.Field
+		OfArrayOfDecisionJSONObject respjson.Field
+		raw                         string
+	} `json:"-"`
+}
+
+func (u DecisionQuestionScoreInstructionsPartInputJSONDataUnion) AsLiveDecisionJSONObject() (v DecisionJSONObject) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionQuestionScoreInstructionsPartInputJSONDataUnion) AsArrayOfDecisionJSONObject() (v []DecisionJSONObject) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionQuestionScoreInstructionsPartInputJSONDataUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionQuestionScoreInstructionsPartInputJSONDataUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionQuestionScoreLevel struct {
+	Label       string `json:"label" api:"required"`
+	Description string `json:"description"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Label       respjson.Field
+		Description respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionQuestionScoreLevel) RawJSON() string { return r.JSON.raw }
+func (r *DecisionQuestionScoreLevel) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func DecisionQuestionParamOfChoice[
+	T string | []DecisionQuestionChoiceInstructionsPartsItemUnionParam,
+](choices []DecisionChoiceOptionParam, instructions T) DecisionQuestionUnionParam {
+	var choice DecisionQuestionChoiceParam
+	choice.Choices = choices
+	switch v := any(instructions).(type) {
+	case string:
+		choice.Instructions.OfString = param.NewOpt(v)
+	case []DecisionQuestionChoiceInstructionsPartsItemUnionParam:
+		choice.Instructions.OfParts = v
+	}
+	return DecisionQuestionUnionParam{OfChoice: &choice}
+}
+
+func DecisionQuestionParamOfPredicate[
+	T string | []DecisionQuestionPredicateInstructionsPartsItemUnionParam,
+](instructions T) DecisionQuestionUnionParam {
+	var predicate DecisionQuestionPredicateParam
+	switch v := any(instructions).(type) {
+	case string:
+		predicate.Instructions.OfString = param.NewOpt(v)
+	case []DecisionQuestionPredicateInstructionsPartsItemUnionParam:
+		predicate.Instructions.OfParts = v
+	}
+	return DecisionQuestionUnionParam{OfPredicate: &predicate}
+}
+
+func DecisionQuestionParamOfScore[
+	T string | []DecisionQuestionScoreInstructionsPartsItemUnionParam,
+](instructions T, levels []DecisionQuestionScoreLevelParam) DecisionQuestionUnionParam {
+	var score DecisionQuestionScoreParam
+	switch v := any(instructions).(type) {
+	case string:
+		score.Instructions.OfString = param.NewOpt(v)
+	case []DecisionQuestionScoreInstructionsPartsItemUnionParam:
+		score.Instructions.OfParts = v
+	}
+	score.Levels = levels
+	return DecisionQuestionUnionParam{OfScore: &score}
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionQuestionUnionParam struct {
+	OfChoice    *DecisionQuestionChoiceParam    `json:",omitzero,inline"`
+	OfPredicate *DecisionQuestionPredicateParam `json:",omitzero,inline"`
+	OfScore     *DecisionQuestionScoreParam     `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionQuestionUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfChoice, u.OfPredicate, u.OfScore)
+}
+func (u *DecisionQuestionUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionUnionParam) GetChoices() []DecisionChoiceOptionParam {
+	if vt := u.OfChoice; vt != nil {
+		return vt.Choices
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionUnionParam) GetLevels() []DecisionQuestionScoreLevelParam {
+	if vt := u.OfScore; vt != nil {
+		return vt.Levels
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionUnionParam) GetType() *string {
+	if vt := u.OfChoice; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfPredicate; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfScore; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionUnionParam) GetName() *string {
+	if vt := u.OfChoice; vt != nil && vt.Name.Valid() {
+		return &vt.Name.Value
+	} else if vt := u.OfPredicate; vt != nil && vt.Name.Valid() {
+		return &vt.Name.Value
+	} else if vt := u.OfScore; vt != nil && vt.Name.Valid() {
+		return &vt.Name.Value
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u DecisionQuestionUnionParam) GetInstructions() (res decisionQuestionUnionParamInstructions) {
+	if vt := u.OfChoice; vt != nil {
+		res.any = vt.Instructions.asAny()
+	} else if vt := u.OfPredicate; vt != nil {
+		res.any = vt.Instructions.asAny()
+	} else if vt := u.OfScore; vt != nil {
+		res.any = vt.Instructions.asAny()
+	}
+	return
+}
+
+// Can have the runtime types [*string],
+// [_[]DecisionQuestionChoiceInstructionsPartsItemUnionParam],
+// [_[]DecisionQuestionPredicateInstructionsPartsItemUnionParam],
+// [\*[]DecisionQuestionScoreInstructionsPartsItemUnionParam]
+type decisionQuestionUnionParamInstructions struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *string:
+//	case *[]live.DecisionQuestionChoiceInstructionsPartsItemUnionParam:
+//	case *[]live.DecisionQuestionPredicateInstructionsPartsItemUnionParam:
+//	case *[]live.DecisionQuestionScoreInstructionsPartsItemUnionParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u decisionQuestionUnionParamInstructions) AsAny() any { return u.any }
+
+func init() {
+	apijson.RegisterUnion[DecisionQuestionUnionParam](
+		"type",
+		apijson.Discriminator[DecisionQuestionChoiceParam]("choice"),
+		apijson.Discriminator[DecisionQuestionPredicateParam]("predicate"),
+		apijson.Discriminator[DecisionQuestionScoreParam]("score"),
+	)
+}
+
+// The properties Choices, Instructions, Type are required.
+type DecisionQuestionChoiceParam struct {
+	Choices      []DecisionChoiceOptionParam                  `json:"choices,omitzero" api:"required"`
+	Instructions DecisionQuestionChoiceInstructionsUnionParam `json:"instructions,omitzero" api:"required"`
+	Name         param.Opt[string]                            `json:"name,omitzero"`
+	// This field can be elided, and will marshal its zero value as "choice".
+	Type constant.Choice `json:"type" default:"choice"`
+	paramObj
+}
+
+func (r DecisionQuestionChoiceParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionQuestionChoiceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionQuestionChoiceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionQuestionChoiceInstructionsUnionParam struct {
+	OfString param.Opt[string]                                       `json:",omitzero,inline"`
+	OfParts  []DecisionQuestionChoiceInstructionsPartsItemUnionParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionQuestionChoiceInstructionsUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfParts)
+}
+func (u *DecisionQuestionChoiceInstructionsUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionQuestionChoiceInstructionsUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfParts) {
+		return &u.OfParts
+	}
+	return nil
+}
+
+func DecisionQuestionChoiceInstructionsPartsItemParamOfInputText(text string) DecisionQuestionChoiceInstructionsPartsItemUnionParam {
+	var inputText DecisionInputTextParam
+	inputText.Text = text
+	return DecisionQuestionChoiceInstructionsPartsItemUnionParam{OfInputText: &inputText}
+}
+
+func DecisionQuestionChoiceInstructionsPartsItemParamOfDecisionQuestionChoiceInstructionsPartInputImage(imageURL string) DecisionQuestionChoiceInstructionsPartsItemUnionParam {
+	var decisionQuestionChoiceInstructionsPartInputImage DecisionQuestionChoiceInstructionsPartInputImageParam
+	decisionQuestionChoiceInstructionsPartInputImage.ImageURL = imageURL
+	return DecisionQuestionChoiceInstructionsPartsItemUnionParam{OfDecisionQuestionChoiceInstructionsPartInputImage: &decisionQuestionChoiceInstructionsPartInputImage}
+}
+
+func DecisionQuestionChoiceInstructionsPartsItemParamOfDecisionQuestionChoiceInstructionsPartInputJSON[
+	T DecisionJSONObject | []DecisionJSONObject,
+](data T) DecisionQuestionChoiceInstructionsPartsItemUnionParam {
+	var decisionQuestionChoiceInstructionsPartInputJSON DecisionQuestionChoiceInstructionsPartInputJSONParam
+	switch v := any(data).(type) {
+	case DecisionJSONObject:
+		decisionQuestionChoiceInstructionsPartInputJSON.Data.OfLiveDecisionJSONObject = &v
+	case []DecisionJSONObject:
+		decisionQuestionChoiceInstructionsPartInputJSON.Data.OfArrayOfJSONObjects = v
+	}
+	return DecisionQuestionChoiceInstructionsPartsItemUnionParam{OfDecisionQuestionChoiceInstructionsPartInputJSON: &decisionQuestionChoiceInstructionsPartInputJSON}
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionQuestionChoiceInstructionsPartsItemUnionParam struct {
+	OfInputText                                        *DecisionInputTextParam                                `json:",omitzero,inline"`
+	OfDecisionQuestionChoiceInstructionsPartInputImage *DecisionQuestionChoiceInstructionsPartInputImageParam `json:",omitzero,inline"`
+	OfDecisionQuestionChoiceInstructionsPartInputJSON  *DecisionQuestionChoiceInstructionsPartInputJSONParam  `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionQuestionChoiceInstructionsPartsItemUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfInputText, u.OfDecisionQuestionChoiceInstructionsPartInputImage, u.OfDecisionQuestionChoiceInstructionsPartInputJSON)
+}
+func (u *DecisionQuestionChoiceInstructionsPartsItemUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionChoiceInstructionsPartsItemUnionParam) GetText() *string {
+	if vt := u.OfInputText; vt != nil {
+		return &vt.Text
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionChoiceInstructionsPartsItemUnionParam) GetImageURL() *string {
+	if vt := u.OfDecisionQuestionChoiceInstructionsPartInputImage; vt != nil {
+		return &vt.ImageURL
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionChoiceInstructionsPartsItemUnionParam) GetDetail() *string {
+	if vt := u.OfDecisionQuestionChoiceInstructionsPartInputImage; vt != nil {
+		return &vt.Detail
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionChoiceInstructionsPartsItemUnionParam) GetData() *DecisionQuestionChoiceInstructionsPartInputJSONDataUnionParam {
+	if vt := u.OfDecisionQuestionChoiceInstructionsPartInputJSON; vt != nil {
+		return &vt.Data
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionChoiceInstructionsPartsItemUnionParam) GetType() *string {
+	if vt := u.OfInputText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfDecisionQuestionChoiceInstructionsPartInputImage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfDecisionQuestionChoiceInstructionsPartInputJSON; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[DecisionQuestionChoiceInstructionsPartsItemUnionParam](
+		"type",
+		apijson.Discriminator[DecisionInputTextParam]("input_text"),
+		apijson.Discriminator[DecisionQuestionChoiceInstructionsPartInputImageParam]("input_image"),
+		apijson.Discriminator[DecisionQuestionChoiceInstructionsPartInputJSONParam]("input_json"),
+	)
+}
+
+// The properties ImageURL, Type are required.
+type DecisionQuestionChoiceInstructionsPartInputImageParam struct {
+	// A base64-encoded image data URL or a publicly accessible HTTP(S) image URL.
+	ImageURL string `json:"image_url" api:"required"`
+	// The detail level of the image to be sent to the model. One of `high`, `low`,
+	// `auto`, or `original`. Defaults to `auto`.
+	//
+	// Any of "low", "high", "auto", "original".
+	Detail string `json:"detail,omitzero"`
+	// This field can be elided, and will marshal its zero value as "input_image".
+	Type constant.InputImage `json:"type" default:"input_image"`
+	paramObj
+}
+
+func (r DecisionQuestionChoiceInstructionsPartInputImageParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionQuestionChoiceInstructionsPartInputImageParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionQuestionChoiceInstructionsPartInputImageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionQuestionChoiceInstructionsPartInputImageParam](
+		"detail", "low", "high", "auto", "original",
+	)
+}
+
+// The properties Data, Type are required.
+type DecisionQuestionChoiceInstructionsPartInputJSONParam struct {
+	Data DecisionQuestionChoiceInstructionsPartInputJSONDataUnionParam `json:"data,omitzero" api:"required"`
+	// This field can be elided, and will marshal its zero value as "input_json".
+	Type constant.InputJSON `json:"type" default:"input_json"`
+	paramObj
+}
+
+func (r DecisionQuestionChoiceInstructionsPartInputJSONParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionQuestionChoiceInstructionsPartInputJSONParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionQuestionChoiceInstructionsPartInputJSONParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionQuestionChoiceInstructionsPartInputJSONDataUnionParam struct {
+	OfLiveDecisionJSONObject *DecisionJSONObject  `json:",omitzero,inline"`
+	OfArrayOfJSONObjects     []DecisionJSONObject `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionQuestionChoiceInstructionsPartInputJSONDataUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfLiveDecisionJSONObject, u.OfArrayOfJSONObjects)
+}
+func (u *DecisionQuestionChoiceInstructionsPartInputJSONDataUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// The properties Instructions, Type are required.
+type DecisionQuestionPredicateParam struct {
+	Instructions DecisionQuestionPredicateInstructionsUnionParam `json:"instructions,omitzero" api:"required"`
+	Name         param.Opt[string]                               `json:"name,omitzero"`
+	// This field can be elided, and will marshal its zero value as "predicate".
+	Type constant.Predicate `json:"type" default:"predicate"`
+	paramObj
+}
+
+func (r DecisionQuestionPredicateParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionQuestionPredicateParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionQuestionPredicateParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionQuestionPredicateInstructionsUnionParam struct {
+	OfString param.Opt[string]                                          `json:",omitzero,inline"`
+	OfParts  []DecisionQuestionPredicateInstructionsPartsItemUnionParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionQuestionPredicateInstructionsUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfParts)
+}
+func (u *DecisionQuestionPredicateInstructionsUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionQuestionPredicateInstructionsUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfParts) {
+		return &u.OfParts
+	}
+	return nil
+}
+
+func DecisionQuestionPredicateInstructionsPartsItemParamOfInputText(text string) DecisionQuestionPredicateInstructionsPartsItemUnionParam {
+	var inputText DecisionInputTextParam
+	inputText.Text = text
+	return DecisionQuestionPredicateInstructionsPartsItemUnionParam{OfInputText: &inputText}
+}
+
+func DecisionQuestionPredicateInstructionsPartsItemParamOfDecisionQuestionPredicateInstructionsPartInputImage(imageURL string) DecisionQuestionPredicateInstructionsPartsItemUnionParam {
+	var decisionQuestionPredicateInstructionsPartInputImage DecisionQuestionPredicateInstructionsPartInputImageParam
+	decisionQuestionPredicateInstructionsPartInputImage.ImageURL = imageURL
+	return DecisionQuestionPredicateInstructionsPartsItemUnionParam{OfDecisionQuestionPredicateInstructionsPartInputImage: &decisionQuestionPredicateInstructionsPartInputImage}
+}
+
+func DecisionQuestionPredicateInstructionsPartsItemParamOfDecisionQuestionPredicateInstructionsPartInputJSON[
+	T DecisionJSONObject | []DecisionJSONObject,
+](data T) DecisionQuestionPredicateInstructionsPartsItemUnionParam {
+	var decisionQuestionPredicateInstructionsPartInputJSON DecisionQuestionPredicateInstructionsPartInputJSONParam
+	switch v := any(data).(type) {
+	case DecisionJSONObject:
+		decisionQuestionPredicateInstructionsPartInputJSON.Data.OfLiveDecisionJSONObject = &v
+	case []DecisionJSONObject:
+		decisionQuestionPredicateInstructionsPartInputJSON.Data.OfArrayOfJSONObjects = v
+	}
+	return DecisionQuestionPredicateInstructionsPartsItemUnionParam{OfDecisionQuestionPredicateInstructionsPartInputJSON: &decisionQuestionPredicateInstructionsPartInputJSON}
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionQuestionPredicateInstructionsPartsItemUnionParam struct {
+	OfInputText                                           *DecisionInputTextParam                                   `json:",omitzero,inline"`
+	OfDecisionQuestionPredicateInstructionsPartInputImage *DecisionQuestionPredicateInstructionsPartInputImageParam `json:",omitzero,inline"`
+	OfDecisionQuestionPredicateInstructionsPartInputJSON  *DecisionQuestionPredicateInstructionsPartInputJSONParam  `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionQuestionPredicateInstructionsPartsItemUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfInputText, u.OfDecisionQuestionPredicateInstructionsPartInputImage, u.OfDecisionQuestionPredicateInstructionsPartInputJSON)
+}
+func (u *DecisionQuestionPredicateInstructionsPartsItemUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionPredicateInstructionsPartsItemUnionParam) GetText() *string {
+	if vt := u.OfInputText; vt != nil {
+		return &vt.Text
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionPredicateInstructionsPartsItemUnionParam) GetImageURL() *string {
+	if vt := u.OfDecisionQuestionPredicateInstructionsPartInputImage; vt != nil {
+		return &vt.ImageURL
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionPredicateInstructionsPartsItemUnionParam) GetDetail() *string {
+	if vt := u.OfDecisionQuestionPredicateInstructionsPartInputImage; vt != nil {
+		return &vt.Detail
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionPredicateInstructionsPartsItemUnionParam) GetData() *DecisionQuestionPredicateInstructionsPartInputJSONDataUnionParam {
+	if vt := u.OfDecisionQuestionPredicateInstructionsPartInputJSON; vt != nil {
+		return &vt.Data
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionPredicateInstructionsPartsItemUnionParam) GetType() *string {
+	if vt := u.OfInputText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfDecisionQuestionPredicateInstructionsPartInputImage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfDecisionQuestionPredicateInstructionsPartInputJSON; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[DecisionQuestionPredicateInstructionsPartsItemUnionParam](
+		"type",
+		apijson.Discriminator[DecisionInputTextParam]("input_text"),
+		apijson.Discriminator[DecisionQuestionPredicateInstructionsPartInputImageParam]("input_image"),
+		apijson.Discriminator[DecisionQuestionPredicateInstructionsPartInputJSONParam]("input_json"),
+	)
+}
+
+// The properties ImageURL, Type are required.
+type DecisionQuestionPredicateInstructionsPartInputImageParam struct {
+	// A base64-encoded image data URL or a publicly accessible HTTP(S) image URL.
+	ImageURL string `json:"image_url" api:"required"`
+	// The detail level of the image to be sent to the model. One of `high`, `low`,
+	// `auto`, or `original`. Defaults to `auto`.
+	//
+	// Any of "low", "high", "auto", "original".
+	Detail string `json:"detail,omitzero"`
+	// This field can be elided, and will marshal its zero value as "input_image".
+	Type constant.InputImage `json:"type" default:"input_image"`
+	paramObj
+}
+
+func (r DecisionQuestionPredicateInstructionsPartInputImageParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionQuestionPredicateInstructionsPartInputImageParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionQuestionPredicateInstructionsPartInputImageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionQuestionPredicateInstructionsPartInputImageParam](
+		"detail", "low", "high", "auto", "original",
+	)
+}
+
+// The properties Data, Type are required.
+type DecisionQuestionPredicateInstructionsPartInputJSONParam struct {
+	Data DecisionQuestionPredicateInstructionsPartInputJSONDataUnionParam `json:"data,omitzero" api:"required"`
+	// This field can be elided, and will marshal its zero value as "input_json".
+	Type constant.InputJSON `json:"type" default:"input_json"`
+	paramObj
+}
+
+func (r DecisionQuestionPredicateInstructionsPartInputJSONParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionQuestionPredicateInstructionsPartInputJSONParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionQuestionPredicateInstructionsPartInputJSONParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionQuestionPredicateInstructionsPartInputJSONDataUnionParam struct {
+	OfLiveDecisionJSONObject *DecisionJSONObject  `json:",omitzero,inline"`
+	OfArrayOfJSONObjects     []DecisionJSONObject `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionQuestionPredicateInstructionsPartInputJSONDataUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfLiveDecisionJSONObject, u.OfArrayOfJSONObjects)
+}
+func (u *DecisionQuestionPredicateInstructionsPartInputJSONDataUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// The properties Instructions, Levels, Type are required.
+type DecisionQuestionScoreParam struct {
+	Instructions DecisionQuestionScoreInstructionsUnionParam `json:"instructions,omitzero" api:"required"`
+	Levels       []DecisionQuestionScoreLevelParam           `json:"levels,omitzero" api:"required"`
+	Name         param.Opt[string]                           `json:"name,omitzero"`
+	// This field can be elided, and will marshal its zero value as "score".
+	Type constant.Score `json:"type" default:"score"`
+	paramObj
+}
+
+func (r DecisionQuestionScoreParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionQuestionScoreParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionQuestionScoreParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionQuestionScoreInstructionsUnionParam struct {
+	OfString param.Opt[string]                                      `json:",omitzero,inline"`
+	OfParts  []DecisionQuestionScoreInstructionsPartsItemUnionParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionQuestionScoreInstructionsUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfParts)
+}
+func (u *DecisionQuestionScoreInstructionsUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionQuestionScoreInstructionsUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfParts) {
+		return &u.OfParts
+	}
+	return nil
+}
+
+func DecisionQuestionScoreInstructionsPartsItemParamOfInputText(text string) DecisionQuestionScoreInstructionsPartsItemUnionParam {
+	var inputText DecisionInputTextParam
+	inputText.Text = text
+	return DecisionQuestionScoreInstructionsPartsItemUnionParam{OfInputText: &inputText}
+}
+
+func DecisionQuestionScoreInstructionsPartsItemParamOfDecisionQuestionScoreInstructionsPartInputImage(imageURL string) DecisionQuestionScoreInstructionsPartsItemUnionParam {
+	var decisionQuestionScoreInstructionsPartInputImage DecisionQuestionScoreInstructionsPartInputImageParam
+	decisionQuestionScoreInstructionsPartInputImage.ImageURL = imageURL
+	return DecisionQuestionScoreInstructionsPartsItemUnionParam{OfDecisionQuestionScoreInstructionsPartInputImage: &decisionQuestionScoreInstructionsPartInputImage}
+}
+
+func DecisionQuestionScoreInstructionsPartsItemParamOfDecisionQuestionScoreInstructionsPartInputJSON[
+	T DecisionJSONObject | []DecisionJSONObject,
+](data T) DecisionQuestionScoreInstructionsPartsItemUnionParam {
+	var decisionQuestionScoreInstructionsPartInputJSON DecisionQuestionScoreInstructionsPartInputJSONParam
+	switch v := any(data).(type) {
+	case DecisionJSONObject:
+		decisionQuestionScoreInstructionsPartInputJSON.Data.OfLiveDecisionJSONObject = &v
+	case []DecisionJSONObject:
+		decisionQuestionScoreInstructionsPartInputJSON.Data.OfArrayOfJSONObjects = v
+	}
+	return DecisionQuestionScoreInstructionsPartsItemUnionParam{OfDecisionQuestionScoreInstructionsPartInputJSON: &decisionQuestionScoreInstructionsPartInputJSON}
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionQuestionScoreInstructionsPartsItemUnionParam struct {
+	OfInputText                                       *DecisionInputTextParam                               `json:",omitzero,inline"`
+	OfDecisionQuestionScoreInstructionsPartInputImage *DecisionQuestionScoreInstructionsPartInputImageParam `json:",omitzero,inline"`
+	OfDecisionQuestionScoreInstructionsPartInputJSON  *DecisionQuestionScoreInstructionsPartInputJSONParam  `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionQuestionScoreInstructionsPartsItemUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfInputText, u.OfDecisionQuestionScoreInstructionsPartInputImage, u.OfDecisionQuestionScoreInstructionsPartInputJSON)
+}
+func (u *DecisionQuestionScoreInstructionsPartsItemUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionScoreInstructionsPartsItemUnionParam) GetText() *string {
+	if vt := u.OfInputText; vt != nil {
+		return &vt.Text
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionScoreInstructionsPartsItemUnionParam) GetImageURL() *string {
+	if vt := u.OfDecisionQuestionScoreInstructionsPartInputImage; vt != nil {
+		return &vt.ImageURL
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionScoreInstructionsPartsItemUnionParam) GetDetail() *string {
+	if vt := u.OfDecisionQuestionScoreInstructionsPartInputImage; vt != nil {
+		return &vt.Detail
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionScoreInstructionsPartsItemUnionParam) GetData() *DecisionQuestionScoreInstructionsPartInputJSONDataUnionParam {
+	if vt := u.OfDecisionQuestionScoreInstructionsPartInputJSON; vt != nil {
+		return &vt.Data
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionQuestionScoreInstructionsPartsItemUnionParam) GetType() *string {
+	if vt := u.OfInputText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfDecisionQuestionScoreInstructionsPartInputImage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfDecisionQuestionScoreInstructionsPartInputJSON; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[DecisionQuestionScoreInstructionsPartsItemUnionParam](
+		"type",
+		apijson.Discriminator[DecisionInputTextParam]("input_text"),
+		apijson.Discriminator[DecisionQuestionScoreInstructionsPartInputImageParam]("input_image"),
+		apijson.Discriminator[DecisionQuestionScoreInstructionsPartInputJSONParam]("input_json"),
+	)
+}
+
+// The properties ImageURL, Type are required.
+type DecisionQuestionScoreInstructionsPartInputImageParam struct {
+	// A base64-encoded image data URL or a publicly accessible HTTP(S) image URL.
+	ImageURL string `json:"image_url" api:"required"`
+	// The detail level of the image to be sent to the model. One of `high`, `low`,
+	// `auto`, or `original`. Defaults to `auto`.
+	//
+	// Any of "low", "high", "auto", "original".
+	Detail string `json:"detail,omitzero"`
+	// This field can be elided, and will marshal its zero value as "input_image".
+	Type constant.InputImage `json:"type" default:"input_image"`
+	paramObj
+}
+
+func (r DecisionQuestionScoreInstructionsPartInputImageParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionQuestionScoreInstructionsPartInputImageParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionQuestionScoreInstructionsPartInputImageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionQuestionScoreInstructionsPartInputImageParam](
+		"detail", "low", "high", "auto", "original",
+	)
+}
+
+// The properties Data, Type are required.
+type DecisionQuestionScoreInstructionsPartInputJSONParam struct {
+	Data DecisionQuestionScoreInstructionsPartInputJSONDataUnionParam `json:"data,omitzero" api:"required"`
+	// This field can be elided, and will marshal its zero value as "input_json".
+	Type constant.InputJSON `json:"type" default:"input_json"`
+	paramObj
+}
+
+func (r DecisionQuestionScoreInstructionsPartInputJSONParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionQuestionScoreInstructionsPartInputJSONParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionQuestionScoreInstructionsPartInputJSONParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionQuestionScoreInstructionsPartInputJSONDataUnionParam struct {
+	OfLiveDecisionJSONObject *DecisionJSONObject  `json:",omitzero,inline"`
+	OfArrayOfJSONObjects     []DecisionJSONObject `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionQuestionScoreInstructionsPartInputJSONDataUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfLiveDecisionJSONObject, u.OfArrayOfJSONObjects)
+}
+func (u *DecisionQuestionScoreInstructionsPartInputJSONDataUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// The property Label is required.
+type DecisionQuestionScoreLevelParam struct {
+	Label       string            `json:"label" api:"required"`
+	Description param.Opt[string] `json:"description,omitzero"`
+	paramObj
+}
+
+func (r DecisionQuestionScoreLevelParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionQuestionScoreLevelParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionQuestionScoreLevelParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionStoredAssistantMessage struct {
+	ID string `json:"id" api:"required"`
+	// The text input to the model.
+	Content DecisionStoredAssistantMessageContentUnion `json:"content" api:"required"`
+	Role    constant.Assistant                         `json:"role" default:"assistant"`
+	// Labels an `assistant` message as intermediate commentary (`commentary`) or the
+	// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
+	// sending follow-up requests, preserve and resend phase on all assistant messages
+	// — dropping it can degrade performance. Not used for user messages.
+	//
+	// Any of "commentary", "final_answer".
+	Phase DecisionStoredAssistantMessagePhase `json:"phase" api:"nullable"`
+	// Any of "message".
+	Type DecisionStoredAssistantMessageType `json:"type"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Content     respjson.Field
+		Role        respjson.Field
+		Phase       respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionStoredAssistantMessage) RawJSON() string { return r.JSON.raw }
+func (r *DecisionStoredAssistantMessage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionStoredAssistantMessageContentUnion contains all possible properties and
+// values from [string], [[]DecisionStoredAssistantMessageContentPartUnion].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfParts]
+type DecisionStoredAssistantMessageContentUnion struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a
+	// [[]DecisionStoredAssistantMessageContentPartUnion] instead of an object.
+	OfParts []DecisionStoredAssistantMessageContentPartUnion `json:",inline"`
+	JSON    struct {
+		OfString respjson.Field
+		OfParts  respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (u DecisionStoredAssistantMessageContentUnion) AsString() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionStoredAssistantMessageContentUnion) AsParts() (v []DecisionStoredAssistantMessageContentPartUnion) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionStoredAssistantMessageContentUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionStoredAssistantMessageContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionStoredAssistantMessageContentPartUnion contains all possible properties
+// and values from [DecisionStoredAssistantMessageContentPartOutputText],
+// [DecisionStoredAssistantMessageContentPartRefusal].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type DecisionStoredAssistantMessageContentPartUnion struct {
+	OfDecisionStoredAssistantMessageContentPartOutputText DecisionStoredAssistantMessageContentPartOutputText `json:",inline"`
+	OfDecisionStoredAssistantMessageContentPartRefusal    DecisionStoredAssistantMessageContentPartRefusal    `json:",inline"`
+	JSON                                                  struct {
+		OfDecisionStoredAssistantMessageContentPartOutputText respjson.Field
+		OfDecisionStoredAssistantMessageContentPartRefusal    respjson.Field
+		raw                                                   string
+	} `json:"-"`
+}
+
+func (u DecisionStoredAssistantMessageContentPartUnion) AsDecisionStoredAssistantMessageContentPartOutputText() (v DecisionStoredAssistantMessageContentPartOutputText) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionStoredAssistantMessageContentPartUnion) AsDecisionStoredAssistantMessageContentPartRefusal() (v DecisionStoredAssistantMessageContentPartRefusal) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionStoredAssistantMessageContentPartUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionStoredAssistantMessageContentPartUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionStoredAssistantMessageContentPartOutputText struct {
+	// The text content.
+	Text string              `json:"text" api:"required"`
+	Type constant.OutputText `json:"type" default:"output_text"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Text        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionStoredAssistantMessageContentPartOutputText) RawJSON() string { return r.JSON.raw }
+func (r *DecisionStoredAssistantMessageContentPartOutputText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionStoredAssistantMessageContentPartRefusal struct {
+	// The refusal text.
+	Refusal string           `json:"refusal" api:"required"`
+	Type    constant.Refusal `json:"type" default:"refusal"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Refusal     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionStoredAssistantMessageContentPartRefusal) RawJSON() string { return r.JSON.raw }
+func (r *DecisionStoredAssistantMessageContentPartRefusal) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Labels an `assistant` message as intermediate commentary (`commentary`) or the
+// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
+// sending follow-up requests, preserve and resend phase on all assistant messages
+// — dropping it can degrade performance. Not used for user messages.
+type DecisionStoredAssistantMessagePhase string
+
+const (
+	DecisionStoredAssistantMessagePhaseCommentary  DecisionStoredAssistantMessagePhase = "commentary"
+	DecisionStoredAssistantMessagePhaseFinalAnswer DecisionStoredAssistantMessagePhase = "final_answer"
+)
+
+type DecisionStoredAssistantMessageType string
+
+const (
+	DecisionStoredAssistantMessageTypeMessage DecisionStoredAssistantMessageType = "message"
+)
+
+type DecisionStoredDeveloperMessage struct {
+	ID string `json:"id" api:"required"`
+	// The text input to the model.
+	Content DecisionStoredDeveloperMessageContentUnion `json:"content" api:"required"`
+	Role    constant.Developer                         `json:"role" default:"developer"`
+	// Any of "message".
+	Type DecisionStoredDeveloperMessageType `json:"type"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Content     respjson.Field
+		Role        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionStoredDeveloperMessage) RawJSON() string { return r.JSON.raw }
+func (r *DecisionStoredDeveloperMessage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionStoredDeveloperMessageContentUnion contains all possible properties and
+// values from [string], [[]DecisionInputText].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfParts]
+type DecisionStoredDeveloperMessageContentUnion struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a [[]DecisionInputText] instead of an
+	// object.
+	OfParts []DecisionInputText `json:",inline"`
+	JSON    struct {
+		OfString respjson.Field
+		OfParts  respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (u DecisionStoredDeveloperMessageContentUnion) AsString() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionStoredDeveloperMessageContentUnion) AsParts() (v []DecisionInputText) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionStoredDeveloperMessageContentUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionStoredDeveloperMessageContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionStoredDeveloperMessageType string
+
+const (
+	DecisionStoredDeveloperMessageTypeMessage DecisionStoredDeveloperMessageType = "message"
+)
+
+type DecisionStoredSystemMessage struct {
+	ID string `json:"id" api:"required"`
+	// The text input to the model.
+	Content DecisionStoredSystemMessageContentUnion `json:"content" api:"required"`
+	Role    constant.System                         `json:"role" default:"system"`
+	// Any of "message".
+	Type DecisionStoredSystemMessageType `json:"type"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Content     respjson.Field
+		Role        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionStoredSystemMessage) RawJSON() string { return r.JSON.raw }
+func (r *DecisionStoredSystemMessage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionStoredSystemMessageContentUnion contains all possible properties and
+// values from [string], [[]DecisionInputText].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfParts]
+type DecisionStoredSystemMessageContentUnion struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a [[]DecisionInputText] instead of an
+	// object.
+	OfParts []DecisionInputText `json:",inline"`
+	JSON    struct {
+		OfString respjson.Field
+		OfParts  respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (u DecisionStoredSystemMessageContentUnion) AsString() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionStoredSystemMessageContentUnion) AsParts() (v []DecisionInputText) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionStoredSystemMessageContentUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionStoredSystemMessageContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionStoredSystemMessageType string
+
+const (
+	DecisionStoredSystemMessageTypeMessage DecisionStoredSystemMessageType = "message"
+)
+
+type DecisionStoredUserMessage struct {
+	ID string `json:"id" api:"required"`
+	// The text input to the model.
+	Content DecisionStoredUserMessageContentUnion `json:"content" api:"required"`
+	// The message role. Always `user`.
+	Role constant.User `json:"role" default:"user"`
+	// Any of "message".
+	Type DecisionStoredUserMessageType `json:"type"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Content     respjson.Field
+		Role        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionStoredUserMessage) RawJSON() string { return r.JSON.raw }
+func (r *DecisionStoredUserMessage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionStoredUserMessageContentUnion contains all possible properties and
+// values from [string], [[]DecisionStoredUserMessageContentPartUnion].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfParts]
+type DecisionStoredUserMessageContentUnion struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a
+	// [[]DecisionStoredUserMessageContentPartUnion] instead of an object.
+	OfParts []DecisionStoredUserMessageContentPartUnion `json:",inline"`
+	JSON    struct {
+		OfString respjson.Field
+		OfParts  respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (u DecisionStoredUserMessageContentUnion) AsString() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionStoredUserMessageContentUnion) AsParts() (v []DecisionStoredUserMessageContentPartUnion) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionStoredUserMessageContentUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionStoredUserMessageContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionStoredUserMessageContentPartUnion contains all possible properties and
+// values from [DecisionStoredUserMessageContentPartInputText],
+// [DecisionStoredUserMessageContentPartInputImage],
+// [DecisionStoredUserMessageContentPartInputJSON].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type DecisionStoredUserMessageContentPartUnion struct {
+	OfDecisionStoredUserMessageContentPartInputText  DecisionStoredUserMessageContentPartInputText  `json:",inline"`
+	OfDecisionStoredUserMessageContentPartInputImage DecisionStoredUserMessageContentPartInputImage `json:",inline"`
+	OfDecisionStoredUserMessageContentPartInputJSON  DecisionStoredUserMessageContentPartInputJSON  `json:",inline"`
+	JSON                                             struct {
+		OfDecisionStoredUserMessageContentPartInputText  respjson.Field
+		OfDecisionStoredUserMessageContentPartInputImage respjson.Field
+		OfDecisionStoredUserMessageContentPartInputJSON  respjson.Field
+		raw                                              string
+	} `json:"-"`
+}
+
+func (u DecisionStoredUserMessageContentPartUnion) AsDecisionStoredUserMessageContentPartInputText() (v DecisionStoredUserMessageContentPartInputText) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionStoredUserMessageContentPartUnion) AsDecisionStoredUserMessageContentPartInputImage() (v DecisionStoredUserMessageContentPartInputImage) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionStoredUserMessageContentPartUnion) AsDecisionStoredUserMessageContentPartInputJSON() (v DecisionStoredUserMessageContentPartInputJSON) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionStoredUserMessageContentPartUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionStoredUserMessageContentPartUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionStoredUserMessageContentPartInputText struct {
+	// The text input to the model.
+	Text string             `json:"text" api:"required"`
+	Type constant.InputText `json:"type" default:"input_text"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Text        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionStoredUserMessageContentPartInputText) RawJSON() string { return r.JSON.raw }
+func (r *DecisionStoredUserMessageContentPartInputText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionStoredUserMessageContentPartInputImage struct {
+	// The detail level of the image to be sent to the model. One of `high`, `low`,
+	// `auto`, or `original`. Defaults to `auto`.
+	//
+	// Any of "low", "high", "auto", "original".
+	Detail string `json:"detail" api:"nullable"`
+	// A base64-encoded image data URL or a publicly accessible HTTP(S) image URL.
+	ImageURL string              `json:"image_url" api:"required"`
+	Type     constant.InputImage `json:"type" default:"input_image"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Detail      respjson.Field
+		ImageURL    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionStoredUserMessageContentPartInputImage) RawJSON() string { return r.JSON.raw }
+func (r *DecisionStoredUserMessageContentPartInputImage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionStoredUserMessageContentPartInputJSON struct {
+	Data DecisionStoredUserMessageContentPartInputJSONDataUnion `json:"data" api:"required"`
+	Type constant.InputJSON                                     `json:"type" default:"input_json"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r DecisionStoredUserMessageContentPartInputJSON) RawJSON() string { return r.JSON.raw }
+func (r *DecisionStoredUserMessageContentPartInputJSON) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// DecisionStoredUserMessageContentPartInputJSONDataUnion contains all possible
+// properties and values from [DecisionJSONObject], [[]DecisionJSONObject].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfArrayOfDecisionJSONObject]
+type DecisionStoredUserMessageContentPartInputJSONDataUnion struct {
+	OfLiveDecisionJSONObject DecisionJSONObject `json:",inline"`
+	// This field will be present if the value is a [[]DecisionJSONObject] instead of
+	// an object.
+	OfArrayOfDecisionJSONObject []DecisionJSONObject `json:",inline"`
+	JSON                        struct {
+		OfLiveDecisionJSONObject    respjson.Field
+		OfArrayOfDecisionJSONObject respjson.Field
+		raw                         string
+	} `json:"-"`
+}
+
+func (u DecisionStoredUserMessageContentPartInputJSONDataUnion) AsLiveDecisionJSONObject() (v DecisionJSONObject) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u DecisionStoredUserMessageContentPartInputJSONDataUnion) AsArrayOfDecisionJSONObject() (v []DecisionJSONObject) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u DecisionStoredUserMessageContentPartInputJSONDataUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *DecisionStoredUserMessageContentPartInputJSONDataUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type DecisionStoredUserMessageType string
+
+const (
+	DecisionStoredUserMessageTypeMessage DecisionStoredUserMessageType = "message"
+)
+
+// The properties Content, Role are required.
+type DecisionSystemMessageParam struct {
+	// The text input to the model.
+	Content DecisionSystemMessageContentUnionParam `json:"content,omitzero" api:"required"`
+	// The unique ID of this message item.
+	ID param.Opt[string] `json:"id,omitzero"`
+	// Any of "message".
+	Type DecisionSystemMessageType `json:"type,omitzero"`
+	// This field can be elided, and will marshal its zero value as "system".
+	Role constant.System `json:"role" default:"system"`
+	paramObj
+}
+
+func (r DecisionSystemMessageParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionSystemMessageParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionSystemMessageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionSystemMessageContentUnionParam struct {
+	OfString param.Opt[string]        `json:",omitzero,inline"`
+	OfParts  []DecisionInputTextParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionSystemMessageContentUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfParts)
+}
+func (u *DecisionSystemMessageContentUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionSystemMessageContentUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfParts) {
+		return &u.OfParts
+	}
+	return nil
+}
+
+type DecisionSystemMessageType string
+
+const (
+	DecisionSystemMessageTypeMessage DecisionSystemMessageType = "message"
+)
+
 type DecisionTrigger struct {
 	// Questions evaluated using the current transcript and the session's shared
 	// Decision items.
@@ -2163,7 +5296,7 @@ func (r DecisionTrigger) ToParam() DecisionTriggerParam {
 // Decision items.
 type DecisionTriggerDecisions struct {
 	// Native Decision API questions evaluated together, in order.
-	Questions []DecisionTriggerDecisionsQuestionUnion `json:"questions" api:"required"`
+	Questions []DecisionQuestionUnion `json:"questions" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Questions   respjson.Field
@@ -2175,340 +5308,6 @@ type DecisionTriggerDecisions struct {
 // Returns the unmodified JSON received from the API
 func (r DecisionTriggerDecisions) RawJSON() string { return r.JSON.raw }
 func (r *DecisionTriggerDecisions) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// DecisionTriggerDecisionsQuestionUnion contains all possible properties and
-// values from [DecisionTriggerDecisionsQuestionPredicate],
-// [DecisionTriggerDecisionsQuestionChoice],
-// [DecisionTriggerDecisionsQuestionScore].
-//
-// Use the [DecisionTriggerDecisionsQuestionUnion.AsAny] method to switch on the
-// variant.
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-type DecisionTriggerDecisionsQuestionUnion struct {
-	OfDecisionTriggerDecisionsQuestionPredicate DecisionTriggerDecisionsQuestionPredicate `json:",inline"`
-	OfDecisionTriggerDecisionsQuestionChoice    DecisionTriggerDecisionsQuestionChoice    `json:",inline"`
-	OfDecisionTriggerDecisionsQuestionScore     DecisionTriggerDecisionsQuestionScore     `json:",inline"`
-	Type                                        string                                    `json:"type"`
-	JSON                                        struct {
-		OfDecisionTriggerDecisionsQuestionPredicate respjson.Field
-		OfDecisionTriggerDecisionsQuestionChoice    respjson.Field
-		OfDecisionTriggerDecisionsQuestionScore     respjson.Field
-		Type                                        respjson.Field
-		raw                                         string
-	} `json:"-"`
-}
-
-// anyDecisionTriggerDecisionsQuestion is implemented by each variant of
-// [DecisionTriggerDecisionsQuestionUnion] to add type safety for the return type
-// of [DecisionTriggerDecisionsQuestionUnion.AsAny]
-type anyDecisionTriggerDecisionsQuestion interface {
-	implDecisionTriggerDecisionsQuestionUnion()
-}
-
-func (DecisionTriggerDecisionsQuestionPredicate) implDecisionTriggerDecisionsQuestionUnion() {}
-func (DecisionTriggerDecisionsQuestionChoice) implDecisionTriggerDecisionsQuestionUnion()    {}
-func (DecisionTriggerDecisionsQuestionScore) implDecisionTriggerDecisionsQuestionUnion()     {}
-
-// Use the following switch statement to find the correct variant
-//
-//	switch variant := DecisionTriggerDecisionsQuestionUnion.AsAny().(type) {
-//	case live.DecisionTriggerDecisionsQuestionPredicate:
-//	case live.DecisionTriggerDecisionsQuestionChoice:
-//	case live.DecisionTriggerDecisionsQuestionScore:
-//	default:
-//	  fmt.Errorf("no variant present")
-//	}
-func (u DecisionTriggerDecisionsQuestionUnion) AsAny() anyDecisionTriggerDecisionsQuestion {
-	switch u.Type {
-	case "predicate":
-		return u.AsDecisionTriggerDecisionsQuestionPredicate()
-	case "choice":
-		return u.AsDecisionTriggerDecisionsQuestionChoice()
-	case "score":
-		return u.AsDecisionTriggerDecisionsQuestionScore()
-	}
-	return nil
-}
-
-func (u DecisionTriggerDecisionsQuestionUnion) AsDecisionTriggerDecisionsQuestionPredicate() (v DecisionTriggerDecisionsQuestionPredicate) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u DecisionTriggerDecisionsQuestionUnion) AsDecisionTriggerDecisionsQuestionChoice() (v DecisionTriggerDecisionsQuestionChoice) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u DecisionTriggerDecisionsQuestionUnion) AsDecisionTriggerDecisionsQuestionScore() (v DecisionTriggerDecisionsQuestionScore) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u DecisionTriggerDecisionsQuestionUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *DecisionTriggerDecisionsQuestionUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Estimate how likely it is that a statement about the input is true.
-type DecisionTriggerDecisionsQuestionPredicate struct {
-	Instructions DecisionTriggerDecisionsQuestionPredicateInstructionsUnion `json:"instructions" api:"required"`
-	Name         string                                                     `json:"name"`
-	// The type of the object. Always `predicate`.
-	Type constant.Predicate `json:"type" default:"predicate"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Instructions respjson.Field
-		Name         respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r DecisionTriggerDecisionsQuestionPredicate) RawJSON() string { return r.JSON.raw }
-func (r *DecisionTriggerDecisionsQuestionPredicate) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// DecisionTriggerDecisionsQuestionPredicateInstructionsUnion contains all possible
-// properties and values from [string], [[]shared.DecisionQuestionInputPartUnion].
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfArrayOfDecisionQuestionInputPartUnion]
-type DecisionTriggerDecisionsQuestionPredicateInstructionsUnion struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field will be present if the value is a
-	// [[]shared.DecisionQuestionInputPartUnion] instead of an object.
-	OfArrayOfDecisionQuestionInputPartUnion []shared.DecisionQuestionInputPartUnion `json:",inline"`
-	JSON                                    struct {
-		OfString                                respjson.Field
-		OfArrayOfDecisionQuestionInputPartUnion respjson.Field
-		raw                                     string
-	} `json:"-"`
-}
-
-func (u DecisionTriggerDecisionsQuestionPredicateInstructionsUnion) AsString() (v string) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u DecisionTriggerDecisionsQuestionPredicateInstructionsUnion) AsArrayOfDecisionQuestionInputPartUnion() (v []shared.DecisionQuestionInputPartUnion) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u DecisionTriggerDecisionsQuestionPredicateInstructionsUnion) RawJSON() string {
-	return u.JSON.raw
-}
-
-func (r *DecisionTriggerDecisionsQuestionPredicateInstructionsUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Choose from the supplied options based on the input.
-type DecisionTriggerDecisionsQuestionChoice struct {
-	// Provide between 2 and 255 choices. Each choice must be unique.
-	Choices      []DecisionTriggerDecisionsQuestionChoiceChoice          `json:"choices" api:"required"`
-	Instructions DecisionTriggerDecisionsQuestionChoiceInstructionsUnion `json:"instructions" api:"required"`
-	Name         string                                                  `json:"name"`
-	// The type of the object. Always `choice`.
-	Type constant.Choice `json:"type" default:"choice"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Choices      respjson.Field
-		Instructions respjson.Field
-		Name         respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r DecisionTriggerDecisionsQuestionChoice) RawJSON() string { return r.JSON.raw }
-func (r *DecisionTriggerDecisionsQuestionChoice) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type DecisionTriggerDecisionsQuestionChoiceChoice struct {
-	// Choice values are typed: a string and a boolean with the same text are distinct.
-	Value       DecisionTriggerDecisionsQuestionChoiceChoiceValueUnion `json:"value" api:"required"`
-	Description string                                                 `json:"description"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Value       respjson.Field
-		Description respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r DecisionTriggerDecisionsQuestionChoiceChoice) RawJSON() string { return r.JSON.raw }
-func (r *DecisionTriggerDecisionsQuestionChoiceChoice) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// DecisionTriggerDecisionsQuestionChoiceChoiceValueUnion contains all possible
-// properties and values from [string], [bool].
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfBool]
-type DecisionTriggerDecisionsQuestionChoiceChoiceValueUnion struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field will be present if the value is a [bool] instead of an object.
-	OfBool bool `json:",inline"`
-	JSON   struct {
-		OfString respjson.Field
-		OfBool   respjson.Field
-		raw      string
-	} `json:"-"`
-}
-
-func (u DecisionTriggerDecisionsQuestionChoiceChoiceValueUnion) AsString() (v string) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u DecisionTriggerDecisionsQuestionChoiceChoiceValueUnion) AsBool() (v bool) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u DecisionTriggerDecisionsQuestionChoiceChoiceValueUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *DecisionTriggerDecisionsQuestionChoiceChoiceValueUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// DecisionTriggerDecisionsQuestionChoiceInstructionsUnion contains all possible
-// properties and values from [string], [[]shared.DecisionQuestionInputPartUnion].
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfArrayOfDecisionQuestionInputPartUnion]
-type DecisionTriggerDecisionsQuestionChoiceInstructionsUnion struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field will be present if the value is a
-	// [[]shared.DecisionQuestionInputPartUnion] instead of an object.
-	OfArrayOfDecisionQuestionInputPartUnion []shared.DecisionQuestionInputPartUnion `json:",inline"`
-	JSON                                    struct {
-		OfString                                respjson.Field
-		OfArrayOfDecisionQuestionInputPartUnion respjson.Field
-		raw                                     string
-	} `json:"-"`
-}
-
-func (u DecisionTriggerDecisionsQuestionChoiceInstructionsUnion) AsString() (v string) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u DecisionTriggerDecisionsQuestionChoiceInstructionsUnion) AsArrayOfDecisionQuestionInputPartUnion() (v []shared.DecisionQuestionInputPartUnion) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u DecisionTriggerDecisionsQuestionChoiceInstructionsUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *DecisionTriggerDecisionsQuestionChoiceInstructionsUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Rate the input against the supplied ordered levels.
-type DecisionTriggerDecisionsQuestionScore struct {
-	Instructions DecisionTriggerDecisionsQuestionScoreInstructionsUnion `json:"instructions" api:"required"`
-	Levels       []DecisionTriggerDecisionsQuestionScoreLevel           `json:"levels" api:"required"`
-	Name         string                                                 `json:"name"`
-	// The type of the object. Always `score`.
-	Type constant.Score `json:"type" default:"score"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Instructions respjson.Field
-		Levels       respjson.Field
-		Name         respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r DecisionTriggerDecisionsQuestionScore) RawJSON() string { return r.JSON.raw }
-func (r *DecisionTriggerDecisionsQuestionScore) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// DecisionTriggerDecisionsQuestionScoreInstructionsUnion contains all possible
-// properties and values from [string], [[]shared.DecisionQuestionInputPartUnion].
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfArrayOfDecisionQuestionInputPartUnion]
-type DecisionTriggerDecisionsQuestionScoreInstructionsUnion struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field will be present if the value is a
-	// [[]shared.DecisionQuestionInputPartUnion] instead of an object.
-	OfArrayOfDecisionQuestionInputPartUnion []shared.DecisionQuestionInputPartUnion `json:",inline"`
-	JSON                                    struct {
-		OfString                                respjson.Field
-		OfArrayOfDecisionQuestionInputPartUnion respjson.Field
-		raw                                     string
-	} `json:"-"`
-}
-
-func (u DecisionTriggerDecisionsQuestionScoreInstructionsUnion) AsString() (v string) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u DecisionTriggerDecisionsQuestionScoreInstructionsUnion) AsArrayOfDecisionQuestionInputPartUnion() (v []shared.DecisionQuestionInputPartUnion) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u DecisionTriggerDecisionsQuestionScoreInstructionsUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *DecisionTriggerDecisionsQuestionScoreInstructionsUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type DecisionTriggerDecisionsQuestionScoreLevel struct {
-	Label       string `json:"label" api:"required"`
-	Description string `json:"description"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Label       respjson.Field
-		Description respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r DecisionTriggerDecisionsQuestionScoreLevel) RawJSON() string { return r.JSON.raw }
-func (r *DecisionTriggerDecisionsQuestionScoreLevel) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -2545,7 +5344,7 @@ func (r *DecisionTriggerParam) UnmarshalJSON(data []byte) error {
 // The property Questions is required.
 type DecisionTriggerDecisionsParam struct {
 	// Native Decision API questions evaluated together, in order.
-	Questions []DecisionTriggerDecisionsQuestionUnionParam `json:"questions,omitzero" api:"required"`
+	Questions []DecisionQuestionUnionParam `json:"questions,omitzero" api:"required"`
 	paramObj
 }
 
@@ -2557,292 +5356,211 @@ func (r *DecisionTriggerDecisionsParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The properties Content, Role are required.
+type DecisionUserMessageParam struct {
+	// The text input to the model.
+	Content DecisionUserMessageContentUnionParam `json:"content,omitzero" api:"required"`
+	// The unique ID of this message item.
+	ID param.Opt[string] `json:"id,omitzero"`
+	// Any of "message".
+	Type DecisionUserMessageType `json:"type,omitzero"`
+	// The message role. Always `user`.
+	//
+	// This field can be elided, and will marshal its zero value as "user".
+	Role constant.User `json:"role" default:"user"`
+	paramObj
+}
+
+func (r DecisionUserMessageParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionUserMessageParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionUserMessageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
-type DecisionTriggerDecisionsQuestionUnionParam struct {
-	OfPredicate *DecisionTriggerDecisionsQuestionPredicateParam `json:",omitzero,inline"`
-	OfChoice    *DecisionTriggerDecisionsQuestionChoiceParam    `json:",omitzero,inline"`
-	OfScore     *DecisionTriggerDecisionsQuestionScoreParam     `json:",omitzero,inline"`
+type DecisionUserMessageContentUnionParam struct {
+	OfString param.Opt[string]                          `json:",omitzero,inline"`
+	OfParts  []DecisionUserMessageContentPartUnionParam `json:",omitzero,inline"`
 	paramUnion
 }
 
-func (u DecisionTriggerDecisionsQuestionUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfPredicate, u.OfChoice, u.OfScore)
+func (u DecisionUserMessageContentUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfParts)
 }
-func (u *DecisionTriggerDecisionsQuestionUnionParam) UnmarshalJSON(data []byte) error {
+func (u *DecisionUserMessageContentUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *DecisionUserMessageContentUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfParts) {
+		return &u.OfParts
+	}
+	return nil
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type DecisionUserMessageContentPartUnionParam struct {
+	OfInputText  *DecisionUserMessageContentPartInputTextParam  `json:",omitzero,inline"`
+	OfInputImage *DecisionUserMessageContentPartInputImageParam `json:",omitzero,inline"`
+	OfInputJSON  *DecisionUserMessageContentPartInputJSONParam  `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u DecisionUserMessageContentPartUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfInputText, u.OfInputImage, u.OfInputJSON)
+}
+func (u *DecisionUserMessageContentPartUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u DecisionTriggerDecisionsQuestionUnionParam) GetChoices() []DecisionTriggerDecisionsQuestionChoiceChoiceParam {
-	if vt := u.OfChoice; vt != nil {
-		return vt.Choices
+func (u DecisionUserMessageContentPartUnionParam) GetText() *string {
+	if vt := u.OfInputText; vt != nil {
+		return &vt.Text
 	}
 	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u DecisionTriggerDecisionsQuestionUnionParam) GetLevels() []DecisionTriggerDecisionsQuestionScoreLevelParam {
-	if vt := u.OfScore; vt != nil {
-		return vt.Levels
+func (u DecisionUserMessageContentPartUnionParam) GetImageURL() *string {
+	if vt := u.OfInputImage; vt != nil {
+		return &vt.ImageURL
 	}
 	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u DecisionTriggerDecisionsQuestionUnionParam) GetType() *string {
-	if vt := u.OfPredicate; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfChoice; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfScore; vt != nil {
-		return (*string)(&vt.Type)
+func (u DecisionUserMessageContentPartUnionParam) GetDetail() *string {
+	if vt := u.OfInputImage; vt != nil {
+		return &vt.Detail
 	}
 	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u DecisionTriggerDecisionsQuestionUnionParam) GetName() *string {
-	if vt := u.OfPredicate; vt != nil && vt.Name.Valid() {
-		return &vt.Name.Value
-	} else if vt := u.OfChoice; vt != nil && vt.Name.Valid() {
-		return &vt.Name.Value
-	} else if vt := u.OfScore; vt != nil && vt.Name.Valid() {
-		return &vt.Name.Value
+func (u DecisionUserMessageContentPartUnionParam) GetData() *DecisionUserMessageContentPartInputJSONDataUnionParam {
+	if vt := u.OfInputJSON; vt != nil {
+		return &vt.Data
 	}
 	return nil
 }
 
-// Returns a subunion which exports methods to access subproperties
-//
-// Or use AsAny() to get the underlying value
-func (u DecisionTriggerDecisionsQuestionUnionParam) GetInstructions() (res decisionTriggerDecisionsQuestionUnionParamInstructions) {
-	if vt := u.OfPredicate; vt != nil {
-		res.any = vt.Instructions.asAny()
-	} else if vt := u.OfChoice; vt != nil {
-		res.any = vt.Instructions.asAny()
-	} else if vt := u.OfScore; vt != nil {
-		res.any = vt.Instructions.asAny()
+// Returns a pointer to the underlying variant's property, if present.
+func (u DecisionUserMessageContentPartUnionParam) GetType() *string {
+	if vt := u.OfInputText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfInputImage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfInputJSON; vt != nil {
+		return (*string)(&vt.Type)
 	}
-	return
+	return nil
 }
-
-// Can have the runtime types [*string],
-// [\*[]shared.DecisionQuestionInputPartUnionParam]
-type decisionTriggerDecisionsQuestionUnionParamInstructions struct{ any }
-
-// Use the following switch statement to get the type of the union:
-//
-//	switch u.AsAny().(type) {
-//	case *string:
-//	case *[]shared.DecisionQuestionInputPartUnionParam:
-//	default:
-//	    fmt.Errorf("not present")
-//	}
-func (u decisionTriggerDecisionsQuestionUnionParamInstructions) AsAny() any { return u.any }
 
 func init() {
-	apijson.RegisterUnion[DecisionTriggerDecisionsQuestionUnionParam](
+	apijson.RegisterUnion[DecisionUserMessageContentPartUnionParam](
 		"type",
-		apijson.Discriminator[DecisionTriggerDecisionsQuestionPredicateParam]("predicate"),
-		apijson.Discriminator[DecisionTriggerDecisionsQuestionChoiceParam]("choice"),
-		apijson.Discriminator[DecisionTriggerDecisionsQuestionScoreParam]("score"),
+		apijson.Discriminator[DecisionUserMessageContentPartInputTextParam]("input_text"),
+		apijson.Discriminator[DecisionUserMessageContentPartInputImageParam]("input_image"),
+		apijson.Discriminator[DecisionUserMessageContentPartInputJSONParam]("input_json"),
 	)
 }
 
-// Estimate how likely it is that a statement about the input is true.
-//
-// The properties Instructions, Type are required.
-type DecisionTriggerDecisionsQuestionPredicateParam struct {
-	Instructions DecisionTriggerDecisionsQuestionPredicateInstructionsUnionParam `json:"instructions,omitzero" api:"required"`
-	Name         param.Opt[string]                                               `json:"name,omitzero"`
-	// The type of the object. Always `predicate`.
+// The properties Text, Type are required.
+type DecisionUserMessageContentPartInputTextParam struct {
+	// The text input to the model.
+	Text string `json:"text" api:"required"`
+	// This field can be elided, and will marshal its zero value as "input_text".
+	Type constant.InputText `json:"type" default:"input_text"`
+	paramObj
+}
+
+func (r DecisionUserMessageContentPartInputTextParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionUserMessageContentPartInputTextParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionUserMessageContentPartInputTextParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties ImageURL, Type are required.
+type DecisionUserMessageContentPartInputImageParam struct {
+	// A base64-encoded image data URL or a publicly accessible HTTP(S) image URL.
+	ImageURL string `json:"image_url" api:"required"`
+	// The detail level of the image to be sent to the model. One of `high`, `low`,
+	// `auto`, or `original`. Defaults to `auto`.
 	//
-	// This field can be elided, and will marshal its zero value as "predicate".
-	Type constant.Predicate `json:"type" default:"predicate"`
+	// Any of "low", "high", "auto", "original".
+	Detail string `json:"detail,omitzero"`
+	// This field can be elided, and will marshal its zero value as "input_image".
+	Type constant.InputImage `json:"type" default:"input_image"`
 	paramObj
 }
 
-func (r DecisionTriggerDecisionsQuestionPredicateParam) MarshalJSON() (data []byte, err error) {
-	type shadow DecisionTriggerDecisionsQuestionPredicateParam
+func (r DecisionUserMessageContentPartInputImageParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionUserMessageContentPartInputImageParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *DecisionTriggerDecisionsQuestionPredicateParam) UnmarshalJSON(data []byte) error {
+func (r *DecisionUserMessageContentPartInputImageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[DecisionUserMessageContentPartInputImageParam](
+		"detail", "low", "high", "auto", "original",
+	)
+}
+
+// The properties Data, Type are required.
+type DecisionUserMessageContentPartInputJSONParam struct {
+	Data DecisionUserMessageContentPartInputJSONDataUnionParam `json:"data,omitzero" api:"required"`
+	// This field can be elided, and will marshal its zero value as "input_json".
+	Type constant.InputJSON `json:"type" default:"input_json"`
+	paramObj
+}
+
+func (r DecisionUserMessageContentPartInputJSONParam) MarshalJSON() (data []byte, err error) {
+	type shadow DecisionUserMessageContentPartInputJSONParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *DecisionUserMessageContentPartInputJSONParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
-type DecisionTriggerDecisionsQuestionPredicateInstructionsUnionParam struct {
-	OfString                    param.Opt[string]                            `json:",omitzero,inline"`
-	OfArrayOfQuestionInputParts []shared.DecisionQuestionInputPartUnionParam `json:",omitzero,inline"`
+type DecisionUserMessageContentPartInputJSONDataUnionParam struct {
+	OfLiveDecisionJSONObject *DecisionJSONObject  `json:",omitzero,inline"`
+	OfArrayOfJSONObjects     []DecisionJSONObject `json:",omitzero,inline"`
 	paramUnion
 }
 
-func (u DecisionTriggerDecisionsQuestionPredicateInstructionsUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfArrayOfQuestionInputParts)
+func (u DecisionUserMessageContentPartInputJSONDataUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfLiveDecisionJSONObject, u.OfArrayOfJSONObjects)
 }
-func (u *DecisionTriggerDecisionsQuestionPredicateInstructionsUnionParam) UnmarshalJSON(data []byte) error {
+func (u *DecisionUserMessageContentPartInputJSONDataUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *DecisionTriggerDecisionsQuestionPredicateInstructionsUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfQuestionInputParts) {
-		return &u.OfArrayOfQuestionInputParts
-	}
-	return nil
-}
+type DecisionUserMessageType string
 
-// Choose from the supplied options based on the input.
-//
-// The properties Choices, Instructions, Type are required.
-type DecisionTriggerDecisionsQuestionChoiceParam struct {
-	// Provide between 2 and 255 choices. Each choice must be unique.
-	Choices      []DecisionTriggerDecisionsQuestionChoiceChoiceParam          `json:"choices,omitzero" api:"required"`
-	Instructions DecisionTriggerDecisionsQuestionChoiceInstructionsUnionParam `json:"instructions,omitzero" api:"required"`
-	Name         param.Opt[string]                                            `json:"name,omitzero"`
-	// The type of the object. Always `choice`.
-	//
-	// This field can be elided, and will marshal its zero value as "choice".
-	Type constant.Choice `json:"type" default:"choice"`
-	paramObj
-}
-
-func (r DecisionTriggerDecisionsQuestionChoiceParam) MarshalJSON() (data []byte, err error) {
-	type shadow DecisionTriggerDecisionsQuestionChoiceParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *DecisionTriggerDecisionsQuestionChoiceParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The property Value is required.
-type DecisionTriggerDecisionsQuestionChoiceChoiceParam struct {
-	// Choice values are typed: a string and a boolean with the same text are distinct.
-	Value       DecisionTriggerDecisionsQuestionChoiceChoiceValueUnionParam `json:"value,omitzero" api:"required"`
-	Description param.Opt[string]                                           `json:"description,omitzero"`
-	paramObj
-}
-
-func (r DecisionTriggerDecisionsQuestionChoiceChoiceParam) MarshalJSON() (data []byte, err error) {
-	type shadow DecisionTriggerDecisionsQuestionChoiceChoiceParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *DecisionTriggerDecisionsQuestionChoiceChoiceParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type DecisionTriggerDecisionsQuestionChoiceChoiceValueUnionParam struct {
-	OfString param.Opt[string] `json:",omitzero,inline"`
-	OfBool   param.Opt[bool]   `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u DecisionTriggerDecisionsQuestionChoiceChoiceValueUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfBool)
-}
-func (u *DecisionTriggerDecisionsQuestionChoiceChoiceValueUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type DecisionTriggerDecisionsQuestionChoiceInstructionsUnionParam struct {
-	OfString                    param.Opt[string]                            `json:",omitzero,inline"`
-	OfArrayOfQuestionInputParts []shared.DecisionQuestionInputPartUnionParam `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u DecisionTriggerDecisionsQuestionChoiceInstructionsUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfArrayOfQuestionInputParts)
-}
-func (u *DecisionTriggerDecisionsQuestionChoiceInstructionsUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *DecisionTriggerDecisionsQuestionChoiceInstructionsUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfQuestionInputParts) {
-		return &u.OfArrayOfQuestionInputParts
-	}
-	return nil
-}
-
-// Rate the input against the supplied ordered levels.
-//
-// The properties Instructions, Levels, Type are required.
-type DecisionTriggerDecisionsQuestionScoreParam struct {
-	Instructions DecisionTriggerDecisionsQuestionScoreInstructionsUnionParam `json:"instructions,omitzero" api:"required"`
-	Levels       []DecisionTriggerDecisionsQuestionScoreLevelParam           `json:"levels,omitzero" api:"required"`
-	Name         param.Opt[string]                                           `json:"name,omitzero"`
-	// The type of the object. Always `score`.
-	//
-	// This field can be elided, and will marshal its zero value as "score".
-	Type constant.Score `json:"type" default:"score"`
-	paramObj
-}
-
-func (r DecisionTriggerDecisionsQuestionScoreParam) MarshalJSON() (data []byte, err error) {
-	type shadow DecisionTriggerDecisionsQuestionScoreParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *DecisionTriggerDecisionsQuestionScoreParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type DecisionTriggerDecisionsQuestionScoreInstructionsUnionParam struct {
-	OfString                    param.Opt[string]                            `json:",omitzero,inline"`
-	OfArrayOfQuestionInputParts []shared.DecisionQuestionInputPartUnionParam `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u DecisionTriggerDecisionsQuestionScoreInstructionsUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfArrayOfQuestionInputParts)
-}
-func (u *DecisionTriggerDecisionsQuestionScoreInstructionsUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *DecisionTriggerDecisionsQuestionScoreInstructionsUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfQuestionInputParts) {
-		return &u.OfArrayOfQuestionInputParts
-	}
-	return nil
-}
-
-// The property Label is required.
-type DecisionTriggerDecisionsQuestionScoreLevelParam struct {
-	Label       string            `json:"label" api:"required"`
-	Description param.Opt[string] `json:"description,omitzero"`
-	paramObj
-}
-
-func (r DecisionTriggerDecisionsQuestionScoreLevelParam) MarshalJSON() (data []byte, err error) {
-	type shadow DecisionTriggerDecisionsQuestionScoreLevelParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *DecisionTriggerDecisionsQuestionScoreLevelParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
+const (
+	DecisionUserMessageTypeMessage DecisionUserMessageType = "message"
+)
 
 type DecisionsDelegationConfig struct {
 	Model string `json:"model" api:"required"`
 	// Native Decision API questions evaluated together, in order.
-	Questions []DecisionsDelegationConfigQuestionUnion `json:"questions" api:"required"`
+	Questions []DecisionQuestionUnion `json:"questions" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Model       respjson.Field
@@ -2868,346 +5586,11 @@ func (r DecisionsDelegationConfig) ToParam() DecisionsDelegationConfigParam {
 	return param.Override[DecisionsDelegationConfigParam](json.RawMessage(r.RawJSON()))
 }
 
-// DecisionsDelegationConfigQuestionUnion contains all possible properties and
-// values from [DecisionsDelegationConfigQuestionPredicate],
-// [DecisionsDelegationConfigQuestionChoice],
-// [DecisionsDelegationConfigQuestionScore].
-//
-// Use the [DecisionsDelegationConfigQuestionUnion.AsAny] method to switch on the
-// variant.
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-type DecisionsDelegationConfigQuestionUnion struct {
-	OfDecisionsDelegationConfigQuestionPredicate DecisionsDelegationConfigQuestionPredicate `json:",inline"`
-	OfDecisionsDelegationConfigQuestionChoice    DecisionsDelegationConfigQuestionChoice    `json:",inline"`
-	OfDecisionsDelegationConfigQuestionScore     DecisionsDelegationConfigQuestionScore     `json:",inline"`
-	Type                                         string                                     `json:"type"`
-	JSON                                         struct {
-		OfDecisionsDelegationConfigQuestionPredicate respjson.Field
-		OfDecisionsDelegationConfigQuestionChoice    respjson.Field
-		OfDecisionsDelegationConfigQuestionScore     respjson.Field
-		Type                                         respjson.Field
-		raw                                          string
-	} `json:"-"`
-}
-
-// anyDecisionsDelegationConfigQuestion is implemented by each variant of
-// [DecisionsDelegationConfigQuestionUnion] to add type safety for the return type
-// of [DecisionsDelegationConfigQuestionUnion.AsAny]
-type anyDecisionsDelegationConfigQuestion interface {
-	implDecisionsDelegationConfigQuestionUnion()
-}
-
-func (DecisionsDelegationConfigQuestionPredicate) implDecisionsDelegationConfigQuestionUnion() {}
-func (DecisionsDelegationConfigQuestionChoice) implDecisionsDelegationConfigQuestionUnion()    {}
-func (DecisionsDelegationConfigQuestionScore) implDecisionsDelegationConfigQuestionUnion()     {}
-
-// Use the following switch statement to find the correct variant
-//
-//	switch variant := DecisionsDelegationConfigQuestionUnion.AsAny().(type) {
-//	case live.DecisionsDelegationConfigQuestionPredicate:
-//	case live.DecisionsDelegationConfigQuestionChoice:
-//	case live.DecisionsDelegationConfigQuestionScore:
-//	default:
-//	  fmt.Errorf("no variant present")
-//	}
-func (u DecisionsDelegationConfigQuestionUnion) AsAny() anyDecisionsDelegationConfigQuestion {
-	switch u.Type {
-	case "predicate":
-		return u.AsDecisionsDelegationConfigQuestionPredicate()
-	case "choice":
-		return u.AsDecisionsDelegationConfigQuestionChoice()
-	case "score":
-		return u.AsDecisionsDelegationConfigQuestionScore()
-	}
-	return nil
-}
-
-func (u DecisionsDelegationConfigQuestionUnion) AsDecisionsDelegationConfigQuestionPredicate() (v DecisionsDelegationConfigQuestionPredicate) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u DecisionsDelegationConfigQuestionUnion) AsDecisionsDelegationConfigQuestionChoice() (v DecisionsDelegationConfigQuestionChoice) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u DecisionsDelegationConfigQuestionUnion) AsDecisionsDelegationConfigQuestionScore() (v DecisionsDelegationConfigQuestionScore) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u DecisionsDelegationConfigQuestionUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *DecisionsDelegationConfigQuestionUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Estimate how likely it is that a statement about the input is true.
-type DecisionsDelegationConfigQuestionPredicate struct {
-	Instructions DecisionsDelegationConfigQuestionPredicateInstructionsUnion `json:"instructions" api:"required"`
-	Name         string                                                      `json:"name"`
-	// The type of the object. Always `predicate`.
-	Type constant.Predicate `json:"type" default:"predicate"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Instructions respjson.Field
-		Name         respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r DecisionsDelegationConfigQuestionPredicate) RawJSON() string { return r.JSON.raw }
-func (r *DecisionsDelegationConfigQuestionPredicate) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// DecisionsDelegationConfigQuestionPredicateInstructionsUnion contains all
-// possible properties and values from [string],
-// [[]shared.DecisionQuestionInputPartUnion].
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfArrayOfDecisionQuestionInputPartUnion]
-type DecisionsDelegationConfigQuestionPredicateInstructionsUnion struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field will be present if the value is a
-	// [[]shared.DecisionQuestionInputPartUnion] instead of an object.
-	OfArrayOfDecisionQuestionInputPartUnion []shared.DecisionQuestionInputPartUnion `json:",inline"`
-	JSON                                    struct {
-		OfString                                respjson.Field
-		OfArrayOfDecisionQuestionInputPartUnion respjson.Field
-		raw                                     string
-	} `json:"-"`
-}
-
-func (u DecisionsDelegationConfigQuestionPredicateInstructionsUnion) AsString() (v string) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u DecisionsDelegationConfigQuestionPredicateInstructionsUnion) AsArrayOfDecisionQuestionInputPartUnion() (v []shared.DecisionQuestionInputPartUnion) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u DecisionsDelegationConfigQuestionPredicateInstructionsUnion) RawJSON() string {
-	return u.JSON.raw
-}
-
-func (r *DecisionsDelegationConfigQuestionPredicateInstructionsUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Choose from the supplied options based on the input.
-type DecisionsDelegationConfigQuestionChoice struct {
-	// Provide between 2 and 255 choices. Each choice must be unique.
-	Choices      []DecisionsDelegationConfigQuestionChoiceChoice          `json:"choices" api:"required"`
-	Instructions DecisionsDelegationConfigQuestionChoiceInstructionsUnion `json:"instructions" api:"required"`
-	Name         string                                                   `json:"name"`
-	// The type of the object. Always `choice`.
-	Type constant.Choice `json:"type" default:"choice"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Choices      respjson.Field
-		Instructions respjson.Field
-		Name         respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r DecisionsDelegationConfigQuestionChoice) RawJSON() string { return r.JSON.raw }
-func (r *DecisionsDelegationConfigQuestionChoice) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type DecisionsDelegationConfigQuestionChoiceChoice struct {
-	// Choice values are typed: a string and a boolean with the same text are distinct.
-	Value       DecisionsDelegationConfigQuestionChoiceChoiceValueUnion `json:"value" api:"required"`
-	Description string                                                  `json:"description"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Value       respjson.Field
-		Description respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r DecisionsDelegationConfigQuestionChoiceChoice) RawJSON() string { return r.JSON.raw }
-func (r *DecisionsDelegationConfigQuestionChoiceChoice) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// DecisionsDelegationConfigQuestionChoiceChoiceValueUnion contains all possible
-// properties and values from [string], [bool].
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfBool]
-type DecisionsDelegationConfigQuestionChoiceChoiceValueUnion struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field will be present if the value is a [bool] instead of an object.
-	OfBool bool `json:",inline"`
-	JSON   struct {
-		OfString respjson.Field
-		OfBool   respjson.Field
-		raw      string
-	} `json:"-"`
-}
-
-func (u DecisionsDelegationConfigQuestionChoiceChoiceValueUnion) AsString() (v string) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u DecisionsDelegationConfigQuestionChoiceChoiceValueUnion) AsBool() (v bool) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u DecisionsDelegationConfigQuestionChoiceChoiceValueUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *DecisionsDelegationConfigQuestionChoiceChoiceValueUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// DecisionsDelegationConfigQuestionChoiceInstructionsUnion contains all possible
-// properties and values from [string], [[]shared.DecisionQuestionInputPartUnion].
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfArrayOfDecisionQuestionInputPartUnion]
-type DecisionsDelegationConfigQuestionChoiceInstructionsUnion struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field will be present if the value is a
-	// [[]shared.DecisionQuestionInputPartUnion] instead of an object.
-	OfArrayOfDecisionQuestionInputPartUnion []shared.DecisionQuestionInputPartUnion `json:",inline"`
-	JSON                                    struct {
-		OfString                                respjson.Field
-		OfArrayOfDecisionQuestionInputPartUnion respjson.Field
-		raw                                     string
-	} `json:"-"`
-}
-
-func (u DecisionsDelegationConfigQuestionChoiceInstructionsUnion) AsString() (v string) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u DecisionsDelegationConfigQuestionChoiceInstructionsUnion) AsArrayOfDecisionQuestionInputPartUnion() (v []shared.DecisionQuestionInputPartUnion) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u DecisionsDelegationConfigQuestionChoiceInstructionsUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *DecisionsDelegationConfigQuestionChoiceInstructionsUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Rate the input against the supplied ordered levels.
-type DecisionsDelegationConfigQuestionScore struct {
-	Instructions DecisionsDelegationConfigQuestionScoreInstructionsUnion `json:"instructions" api:"required"`
-	Levels       []DecisionsDelegationConfigQuestionScoreLevel           `json:"levels" api:"required"`
-	Name         string                                                  `json:"name"`
-	// The type of the object. Always `score`.
-	Type constant.Score `json:"type" default:"score"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Instructions respjson.Field
-		Levels       respjson.Field
-		Name         respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r DecisionsDelegationConfigQuestionScore) RawJSON() string { return r.JSON.raw }
-func (r *DecisionsDelegationConfigQuestionScore) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// DecisionsDelegationConfigQuestionScoreInstructionsUnion contains all possible
-// properties and values from [string], [[]shared.DecisionQuestionInputPartUnion].
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfArrayOfDecisionQuestionInputPartUnion]
-type DecisionsDelegationConfigQuestionScoreInstructionsUnion struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field will be present if the value is a
-	// [[]shared.DecisionQuestionInputPartUnion] instead of an object.
-	OfArrayOfDecisionQuestionInputPartUnion []shared.DecisionQuestionInputPartUnion `json:",inline"`
-	JSON                                    struct {
-		OfString                                respjson.Field
-		OfArrayOfDecisionQuestionInputPartUnion respjson.Field
-		raw                                     string
-	} `json:"-"`
-}
-
-func (u DecisionsDelegationConfigQuestionScoreInstructionsUnion) AsString() (v string) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u DecisionsDelegationConfigQuestionScoreInstructionsUnion) AsArrayOfDecisionQuestionInputPartUnion() (v []shared.DecisionQuestionInputPartUnion) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u DecisionsDelegationConfigQuestionScoreInstructionsUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *DecisionsDelegationConfigQuestionScoreInstructionsUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type DecisionsDelegationConfigQuestionScoreLevel struct {
-	Label       string `json:"label" api:"required"`
-	Description string `json:"description"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Label       respjson.Field
-		Description respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r DecisionsDelegationConfigQuestionScoreLevel) RawJSON() string { return r.JSON.raw }
-func (r *DecisionsDelegationConfigQuestionScoreLevel) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 // The properties Model, Questions are required.
 type DecisionsDelegationConfigParam struct {
 	// Native Decision API questions evaluated together, in order.
-	Questions []DecisionsDelegationConfigQuestionUnionParam `json:"questions,omitzero" api:"required"`
-	Model     string                                        `json:"model" api:"required"`
+	Questions []DecisionQuestionUnionParam `json:"questions,omitzero" api:"required"`
+	Model     string                       `json:"model" api:"required"`
 	paramObj
 }
 
@@ -3219,292 +5602,10 @@ func (r *DecisionsDelegationConfigParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type DecisionsDelegationConfigQuestionUnionParam struct {
-	OfPredicate *DecisionsDelegationConfigQuestionPredicateParam `json:",omitzero,inline"`
-	OfChoice    *DecisionsDelegationConfigQuestionChoiceParam    `json:",omitzero,inline"`
-	OfScore     *DecisionsDelegationConfigQuestionScoreParam     `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u DecisionsDelegationConfigQuestionUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfPredicate, u.OfChoice, u.OfScore)
-}
-func (u *DecisionsDelegationConfigQuestionUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u DecisionsDelegationConfigQuestionUnionParam) GetChoices() []DecisionsDelegationConfigQuestionChoiceChoiceParam {
-	if vt := u.OfChoice; vt != nil {
-		return vt.Choices
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u DecisionsDelegationConfigQuestionUnionParam) GetLevels() []DecisionsDelegationConfigQuestionScoreLevelParam {
-	if vt := u.OfScore; vt != nil {
-		return vt.Levels
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u DecisionsDelegationConfigQuestionUnionParam) GetType() *string {
-	if vt := u.OfPredicate; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfChoice; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfScore; vt != nil {
-		return (*string)(&vt.Type)
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u DecisionsDelegationConfigQuestionUnionParam) GetName() *string {
-	if vt := u.OfPredicate; vt != nil && vt.Name.Valid() {
-		return &vt.Name.Value
-	} else if vt := u.OfChoice; vt != nil && vt.Name.Valid() {
-		return &vt.Name.Value
-	} else if vt := u.OfScore; vt != nil && vt.Name.Valid() {
-		return &vt.Name.Value
-	}
-	return nil
-}
-
-// Returns a subunion which exports methods to access subproperties
-//
-// Or use AsAny() to get the underlying value
-func (u DecisionsDelegationConfigQuestionUnionParam) GetInstructions() (res decisionsDelegationConfigQuestionUnionParamInstructions) {
-	if vt := u.OfPredicate; vt != nil {
-		res.any = vt.Instructions.asAny()
-	} else if vt := u.OfChoice; vt != nil {
-		res.any = vt.Instructions.asAny()
-	} else if vt := u.OfScore; vt != nil {
-		res.any = vt.Instructions.asAny()
-	}
-	return
-}
-
-// Can have the runtime types [*string],
-// [\*[]shared.DecisionQuestionInputPartUnionParam]
-type decisionsDelegationConfigQuestionUnionParamInstructions struct{ any }
-
-// Use the following switch statement to get the type of the union:
-//
-//	switch u.AsAny().(type) {
-//	case *string:
-//	case *[]shared.DecisionQuestionInputPartUnionParam:
-//	default:
-//	    fmt.Errorf("not present")
-//	}
-func (u decisionsDelegationConfigQuestionUnionParamInstructions) AsAny() any { return u.any }
-
-func init() {
-	apijson.RegisterUnion[DecisionsDelegationConfigQuestionUnionParam](
-		"type",
-		apijson.Discriminator[DecisionsDelegationConfigQuestionPredicateParam]("predicate"),
-		apijson.Discriminator[DecisionsDelegationConfigQuestionChoiceParam]("choice"),
-		apijson.Discriminator[DecisionsDelegationConfigQuestionScoreParam]("score"),
-	)
-}
-
-// Estimate how likely it is that a statement about the input is true.
-//
-// The properties Instructions, Type are required.
-type DecisionsDelegationConfigQuestionPredicateParam struct {
-	Instructions DecisionsDelegationConfigQuestionPredicateInstructionsUnionParam `json:"instructions,omitzero" api:"required"`
-	Name         param.Opt[string]                                                `json:"name,omitzero"`
-	// The type of the object. Always `predicate`.
-	//
-	// This field can be elided, and will marshal its zero value as "predicate".
-	Type constant.Predicate `json:"type" default:"predicate"`
-	paramObj
-}
-
-func (r DecisionsDelegationConfigQuestionPredicateParam) MarshalJSON() (data []byte, err error) {
-	type shadow DecisionsDelegationConfigQuestionPredicateParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *DecisionsDelegationConfigQuestionPredicateParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type DecisionsDelegationConfigQuestionPredicateInstructionsUnionParam struct {
-	OfString                            param.Opt[string]                            `json:",omitzero,inline"`
-	OfArrayOfDecisionQuestionInputParts []shared.DecisionQuestionInputPartUnionParam `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u DecisionsDelegationConfigQuestionPredicateInstructionsUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfArrayOfDecisionQuestionInputParts)
-}
-func (u *DecisionsDelegationConfigQuestionPredicateInstructionsUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *DecisionsDelegationConfigQuestionPredicateInstructionsUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfDecisionQuestionInputParts) {
-		return &u.OfArrayOfDecisionQuestionInputParts
-	}
-	return nil
-}
-
-// Choose from the supplied options based on the input.
-//
-// The properties Choices, Instructions, Type are required.
-type DecisionsDelegationConfigQuestionChoiceParam struct {
-	// Provide between 2 and 255 choices. Each choice must be unique.
-	Choices      []DecisionsDelegationConfigQuestionChoiceChoiceParam          `json:"choices,omitzero" api:"required"`
-	Instructions DecisionsDelegationConfigQuestionChoiceInstructionsUnionParam `json:"instructions,omitzero" api:"required"`
-	Name         param.Opt[string]                                             `json:"name,omitzero"`
-	// The type of the object. Always `choice`.
-	//
-	// This field can be elided, and will marshal its zero value as "choice".
-	Type constant.Choice `json:"type" default:"choice"`
-	paramObj
-}
-
-func (r DecisionsDelegationConfigQuestionChoiceParam) MarshalJSON() (data []byte, err error) {
-	type shadow DecisionsDelegationConfigQuestionChoiceParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *DecisionsDelegationConfigQuestionChoiceParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The property Value is required.
-type DecisionsDelegationConfigQuestionChoiceChoiceParam struct {
-	// Choice values are typed: a string and a boolean with the same text are distinct.
-	Value       DecisionsDelegationConfigQuestionChoiceChoiceValueUnionParam `json:"value,omitzero" api:"required"`
-	Description param.Opt[string]                                            `json:"description,omitzero"`
-	paramObj
-}
-
-func (r DecisionsDelegationConfigQuestionChoiceChoiceParam) MarshalJSON() (data []byte, err error) {
-	type shadow DecisionsDelegationConfigQuestionChoiceChoiceParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *DecisionsDelegationConfigQuestionChoiceChoiceParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type DecisionsDelegationConfigQuestionChoiceChoiceValueUnionParam struct {
-	OfString param.Opt[string] `json:",omitzero,inline"`
-	OfBool   param.Opt[bool]   `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u DecisionsDelegationConfigQuestionChoiceChoiceValueUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfBool)
-}
-func (u *DecisionsDelegationConfigQuestionChoiceChoiceValueUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type DecisionsDelegationConfigQuestionChoiceInstructionsUnionParam struct {
-	OfString                            param.Opt[string]                            `json:",omitzero,inline"`
-	OfArrayOfDecisionQuestionInputParts []shared.DecisionQuestionInputPartUnionParam `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u DecisionsDelegationConfigQuestionChoiceInstructionsUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfArrayOfDecisionQuestionInputParts)
-}
-func (u *DecisionsDelegationConfigQuestionChoiceInstructionsUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *DecisionsDelegationConfigQuestionChoiceInstructionsUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfDecisionQuestionInputParts) {
-		return &u.OfArrayOfDecisionQuestionInputParts
-	}
-	return nil
-}
-
-// Rate the input against the supplied ordered levels.
-//
-// The properties Instructions, Levels, Type are required.
-type DecisionsDelegationConfigQuestionScoreParam struct {
-	Instructions DecisionsDelegationConfigQuestionScoreInstructionsUnionParam `json:"instructions,omitzero" api:"required"`
-	Levels       []DecisionsDelegationConfigQuestionScoreLevelParam           `json:"levels,omitzero" api:"required"`
-	Name         param.Opt[string]                                            `json:"name,omitzero"`
-	// The type of the object. Always `score`.
-	//
-	// This field can be elided, and will marshal its zero value as "score".
-	Type constant.Score `json:"type" default:"score"`
-	paramObj
-}
-
-func (r DecisionsDelegationConfigQuestionScoreParam) MarshalJSON() (data []byte, err error) {
-	type shadow DecisionsDelegationConfigQuestionScoreParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *DecisionsDelegationConfigQuestionScoreParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type DecisionsDelegationConfigQuestionScoreInstructionsUnionParam struct {
-	OfString                            param.Opt[string]                            `json:",omitzero,inline"`
-	OfArrayOfDecisionQuestionInputParts []shared.DecisionQuestionInputPartUnionParam `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u DecisionsDelegationConfigQuestionScoreInstructionsUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfArrayOfDecisionQuestionInputParts)
-}
-func (u *DecisionsDelegationConfigQuestionScoreInstructionsUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *DecisionsDelegationConfigQuestionScoreInstructionsUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfDecisionQuestionInputParts) {
-		return &u.OfArrayOfDecisionQuestionInputParts
-	}
-	return nil
-}
-
-// The property Label is required.
-type DecisionsDelegationConfigQuestionScoreLevelParam struct {
-	Label       string            `json:"label" api:"required"`
-	Description param.Opt[string] `json:"description,omitzero"`
-	paramObj
-}
-
-func (r DecisionsDelegationConfigQuestionScoreLevelParam) MarshalJSON() (data []byte, err error) {
-	type shadow DecisionsDelegationConfigQuestionScoreLevelParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *DecisionsDelegationConfigQuestionScoreLevelParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type DecisionsDelegationUpdateConfigParam struct {
 	Model param.Opt[string] `json:"model,omitzero"`
 	// Native Decision API questions evaluated together, in order.
-	Questions []DecisionsDelegationUpdateConfigQuestionUnionParam `json:"questions,omitzero"`
+	Questions []DecisionQuestionUnionParam `json:"questions,omitzero"`
 	paramObj
 }
 
@@ -3513,288 +5614,6 @@ func (r DecisionsDelegationUpdateConfigParam) MarshalJSON() (data []byte, err er
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *DecisionsDelegationUpdateConfigParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type DecisionsDelegationUpdateConfigQuestionUnionParam struct {
-	OfPredicate *DecisionsDelegationUpdateConfigQuestionPredicateParam `json:",omitzero,inline"`
-	OfChoice    *DecisionsDelegationUpdateConfigQuestionChoiceParam    `json:",omitzero,inline"`
-	OfScore     *DecisionsDelegationUpdateConfigQuestionScoreParam     `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u DecisionsDelegationUpdateConfigQuestionUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfPredicate, u.OfChoice, u.OfScore)
-}
-func (u *DecisionsDelegationUpdateConfigQuestionUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u DecisionsDelegationUpdateConfigQuestionUnionParam) GetChoices() []DecisionsDelegationUpdateConfigQuestionChoiceChoiceParam {
-	if vt := u.OfChoice; vt != nil {
-		return vt.Choices
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u DecisionsDelegationUpdateConfigQuestionUnionParam) GetLevels() []DecisionsDelegationUpdateConfigQuestionScoreLevelParam {
-	if vt := u.OfScore; vt != nil {
-		return vt.Levels
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u DecisionsDelegationUpdateConfigQuestionUnionParam) GetType() *string {
-	if vt := u.OfPredicate; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfChoice; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfScore; vt != nil {
-		return (*string)(&vt.Type)
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u DecisionsDelegationUpdateConfigQuestionUnionParam) GetName() *string {
-	if vt := u.OfPredicate; vt != nil && vt.Name.Valid() {
-		return &vt.Name.Value
-	} else if vt := u.OfChoice; vt != nil && vt.Name.Valid() {
-		return &vt.Name.Value
-	} else if vt := u.OfScore; vt != nil && vt.Name.Valid() {
-		return &vt.Name.Value
-	}
-	return nil
-}
-
-// Returns a subunion which exports methods to access subproperties
-//
-// Or use AsAny() to get the underlying value
-func (u DecisionsDelegationUpdateConfigQuestionUnionParam) GetInstructions() (res decisionsDelegationUpdateConfigQuestionUnionParamInstructions) {
-	if vt := u.OfPredicate; vt != nil {
-		res.any = vt.Instructions.asAny()
-	} else if vt := u.OfChoice; vt != nil {
-		res.any = vt.Instructions.asAny()
-	} else if vt := u.OfScore; vt != nil {
-		res.any = vt.Instructions.asAny()
-	}
-	return
-}
-
-// Can have the runtime types [*string],
-// [\*[]shared.DecisionQuestionInputPartUnionParam]
-type decisionsDelegationUpdateConfigQuestionUnionParamInstructions struct{ any }
-
-// Use the following switch statement to get the type of the union:
-//
-//	switch u.AsAny().(type) {
-//	case *string:
-//	case *[]shared.DecisionQuestionInputPartUnionParam:
-//	default:
-//	    fmt.Errorf("not present")
-//	}
-func (u decisionsDelegationUpdateConfigQuestionUnionParamInstructions) AsAny() any { return u.any }
-
-func init() {
-	apijson.RegisterUnion[DecisionsDelegationUpdateConfigQuestionUnionParam](
-		"type",
-		apijson.Discriminator[DecisionsDelegationUpdateConfigQuestionPredicateParam]("predicate"),
-		apijson.Discriminator[DecisionsDelegationUpdateConfigQuestionChoiceParam]("choice"),
-		apijson.Discriminator[DecisionsDelegationUpdateConfigQuestionScoreParam]("score"),
-	)
-}
-
-// Estimate how likely it is that a statement about the input is true.
-//
-// The properties Instructions, Type are required.
-type DecisionsDelegationUpdateConfigQuestionPredicateParam struct {
-	Instructions DecisionsDelegationUpdateConfigQuestionPredicateInstructionsUnionParam `json:"instructions,omitzero" api:"required"`
-	Name         param.Opt[string]                                                      `json:"name,omitzero"`
-	// The type of the object. Always `predicate`.
-	//
-	// This field can be elided, and will marshal its zero value as "predicate".
-	Type constant.Predicate `json:"type" default:"predicate"`
-	paramObj
-}
-
-func (r DecisionsDelegationUpdateConfigQuestionPredicateParam) MarshalJSON() (data []byte, err error) {
-	type shadow DecisionsDelegationUpdateConfigQuestionPredicateParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *DecisionsDelegationUpdateConfigQuestionPredicateParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type DecisionsDelegationUpdateConfigQuestionPredicateInstructionsUnionParam struct {
-	OfString                            param.Opt[string]                            `json:",omitzero,inline"`
-	OfArrayOfDecisionQuestionInputParts []shared.DecisionQuestionInputPartUnionParam `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u DecisionsDelegationUpdateConfigQuestionPredicateInstructionsUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfArrayOfDecisionQuestionInputParts)
-}
-func (u *DecisionsDelegationUpdateConfigQuestionPredicateInstructionsUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *DecisionsDelegationUpdateConfigQuestionPredicateInstructionsUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfDecisionQuestionInputParts) {
-		return &u.OfArrayOfDecisionQuestionInputParts
-	}
-	return nil
-}
-
-// Choose from the supplied options based on the input.
-//
-// The properties Choices, Instructions, Type are required.
-type DecisionsDelegationUpdateConfigQuestionChoiceParam struct {
-	// Provide between 2 and 255 choices. Each choice must be unique.
-	Choices      []DecisionsDelegationUpdateConfigQuestionChoiceChoiceParam          `json:"choices,omitzero" api:"required"`
-	Instructions DecisionsDelegationUpdateConfigQuestionChoiceInstructionsUnionParam `json:"instructions,omitzero" api:"required"`
-	Name         param.Opt[string]                                                   `json:"name,omitzero"`
-	// The type of the object. Always `choice`.
-	//
-	// This field can be elided, and will marshal its zero value as "choice".
-	Type constant.Choice `json:"type" default:"choice"`
-	paramObj
-}
-
-func (r DecisionsDelegationUpdateConfigQuestionChoiceParam) MarshalJSON() (data []byte, err error) {
-	type shadow DecisionsDelegationUpdateConfigQuestionChoiceParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *DecisionsDelegationUpdateConfigQuestionChoiceParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The property Value is required.
-type DecisionsDelegationUpdateConfigQuestionChoiceChoiceParam struct {
-	// Choice values are typed: a string and a boolean with the same text are distinct.
-	Value       DecisionsDelegationUpdateConfigQuestionChoiceChoiceValueUnionParam `json:"value,omitzero" api:"required"`
-	Description param.Opt[string]                                                  `json:"description,omitzero"`
-	paramObj
-}
-
-func (r DecisionsDelegationUpdateConfigQuestionChoiceChoiceParam) MarshalJSON() (data []byte, err error) {
-	type shadow DecisionsDelegationUpdateConfigQuestionChoiceChoiceParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *DecisionsDelegationUpdateConfigQuestionChoiceChoiceParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type DecisionsDelegationUpdateConfigQuestionChoiceChoiceValueUnionParam struct {
-	OfString param.Opt[string] `json:",omitzero,inline"`
-	OfBool   param.Opt[bool]   `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u DecisionsDelegationUpdateConfigQuestionChoiceChoiceValueUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfBool)
-}
-func (u *DecisionsDelegationUpdateConfigQuestionChoiceChoiceValueUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type DecisionsDelegationUpdateConfigQuestionChoiceInstructionsUnionParam struct {
-	OfString                            param.Opt[string]                            `json:",omitzero,inline"`
-	OfArrayOfDecisionQuestionInputParts []shared.DecisionQuestionInputPartUnionParam `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u DecisionsDelegationUpdateConfigQuestionChoiceInstructionsUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfArrayOfDecisionQuestionInputParts)
-}
-func (u *DecisionsDelegationUpdateConfigQuestionChoiceInstructionsUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *DecisionsDelegationUpdateConfigQuestionChoiceInstructionsUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfDecisionQuestionInputParts) {
-		return &u.OfArrayOfDecisionQuestionInputParts
-	}
-	return nil
-}
-
-// Rate the input against the supplied ordered levels.
-//
-// The properties Instructions, Levels, Type are required.
-type DecisionsDelegationUpdateConfigQuestionScoreParam struct {
-	Instructions DecisionsDelegationUpdateConfigQuestionScoreInstructionsUnionParam `json:"instructions,omitzero" api:"required"`
-	Levels       []DecisionsDelegationUpdateConfigQuestionScoreLevelParam           `json:"levels,omitzero" api:"required"`
-	Name         param.Opt[string]                                                  `json:"name,omitzero"`
-	// The type of the object. Always `score`.
-	//
-	// This field can be elided, and will marshal its zero value as "score".
-	Type constant.Score `json:"type" default:"score"`
-	paramObj
-}
-
-func (r DecisionsDelegationUpdateConfigQuestionScoreParam) MarshalJSON() (data []byte, err error) {
-	type shadow DecisionsDelegationUpdateConfigQuestionScoreParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *DecisionsDelegationUpdateConfigQuestionScoreParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type DecisionsDelegationUpdateConfigQuestionScoreInstructionsUnionParam struct {
-	OfString                            param.Opt[string]                            `json:",omitzero,inline"`
-	OfArrayOfDecisionQuestionInputParts []shared.DecisionQuestionInputPartUnionParam `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u DecisionsDelegationUpdateConfigQuestionScoreInstructionsUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfArrayOfDecisionQuestionInputParts)
-}
-func (u *DecisionsDelegationUpdateConfigQuestionScoreInstructionsUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *DecisionsDelegationUpdateConfigQuestionScoreInstructionsUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfDecisionQuestionInputParts) {
-		return &u.OfArrayOfDecisionQuestionInputParts
-	}
-	return nil
-}
-
-// The property Label is required.
-type DecisionsDelegationUpdateConfigQuestionScoreLevelParam struct {
-	Label       string            `json:"label" api:"required"`
-	Description param.Opt[string] `json:"description,omitzero"`
-	paramObj
-}
-
-func (r DecisionsDelegationUpdateConfigQuestionScoreLevelParam) MarshalJSON() (data []byte, err error) {
-	type shadow DecisionsDelegationUpdateConfigQuestionScoreLevelParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *DecisionsDelegationUpdateConfigQuestionScoreLevelParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -5731,9 +7550,19 @@ func (r *ResponsesDelegationConfigText) UnmarshalJSON(data []byte) error {
 }
 
 // ResponsesDelegationConfigToolChoiceUnion contains all possible properties and
-// values from [string],
-// [ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam],
-// [ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam].
+// values from [string], [ResponsesDelegationConfigToolChoiceFunction],
+// [ResponsesDelegationConfigToolChoiceMcp],
+// [ResponsesDelegationConfigToolChoiceFileSearch],
+// [ResponsesDelegationConfigToolChoiceWebSearch],
+// [ResponsesDelegationConfigToolChoiceWebSearchPreview],
+// [ResponsesDelegationConfigToolChoiceImageGeneration],
+// [ResponsesDelegationConfigToolChoiceComputer],
+// [ResponsesDelegationConfigToolChoiceCodeInterpreter],
+// [ResponsesDelegationConfigToolChoiceProgrammaticToolCalling],
+// [ResponsesDelegationConfigToolChoiceShell],
+// [ResponsesDelegationConfigToolChoiceCustom],
+// [ResponsesDelegationConfigToolChoiceApplyPatch],
+// [ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParam].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 //
@@ -5742,12 +7571,34 @@ func (r *ResponsesDelegationConfigText) UnmarshalJSON(data []byte) error {
 type ResponsesDelegationConfigToolChoiceUnion struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString                                                         string                                                         `json:",inline"`
-	OfResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam `json:",inline"`
-	OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam      ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam      `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceFunction                    ResponsesDelegationConfigToolChoiceFunction                    `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceMcp                         ResponsesDelegationConfigToolChoiceMcp                         `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceFileSearch                  ResponsesDelegationConfigToolChoiceFileSearch                  `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceWebSearch                   ResponsesDelegationConfigToolChoiceWebSearch                   `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceWebSearchPreview            ResponsesDelegationConfigToolChoiceWebSearchPreview            `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceImageGeneration             ResponsesDelegationConfigToolChoiceImageGeneration             `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceComputer                    ResponsesDelegationConfigToolChoiceComputer                    `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceCodeInterpreter             ResponsesDelegationConfigToolChoiceCodeInterpreter             `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceProgrammaticToolCalling     ResponsesDelegationConfigToolChoiceProgrammaticToolCalling     `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceShell                       ResponsesDelegationConfigToolChoiceShell                       `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceCustom                      ResponsesDelegationConfigToolChoiceCustom                      `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceApplyPatch                  ResponsesDelegationConfigToolChoiceApplyPatch                  `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParam ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParam `json:",inline"`
 	JSON                                                             struct {
 		OfString                                                         respjson.Field
-		OfResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam respjson.Field
-		OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam      respjson.Field
+		OfResponsesDelegationConfigToolChoiceFunction                    respjson.Field
+		OfResponsesDelegationConfigToolChoiceMcp                         respjson.Field
+		OfResponsesDelegationConfigToolChoiceFileSearch                  respjson.Field
+		OfResponsesDelegationConfigToolChoiceWebSearch                   respjson.Field
+		OfResponsesDelegationConfigToolChoiceWebSearchPreview            respjson.Field
+		OfResponsesDelegationConfigToolChoiceImageGeneration             respjson.Field
+		OfResponsesDelegationConfigToolChoiceComputer                    respjson.Field
+		OfResponsesDelegationConfigToolChoiceCodeInterpreter             respjson.Field
+		OfResponsesDelegationConfigToolChoiceProgrammaticToolCalling     respjson.Field
+		OfResponsesDelegationConfigToolChoiceShell                       respjson.Field
+		OfResponsesDelegationConfigToolChoiceCustom                      respjson.Field
+		OfResponsesDelegationConfigToolChoiceApplyPatch                  respjson.Field
+		OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParam respjson.Field
 		raw                                                              string
 	} `json:"-"`
 }
@@ -5757,12 +7608,67 @@ func (u ResponsesDelegationConfigToolChoiceUnion) AsString() (v string) {
 	return
 }
 
-func (u ResponsesDelegationConfigToolChoiceUnion) AsResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam() (v ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam) {
+func (u ResponsesDelegationConfigToolChoiceUnion) AsResponsesDelegationConfigToolChoiceFunction() (v ResponsesDelegationConfigToolChoiceFunction) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u ResponsesDelegationConfigToolChoiceUnion) AsResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam() (v ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam) {
+func (u ResponsesDelegationConfigToolChoiceUnion) AsResponsesDelegationConfigToolChoiceMcp() (v ResponsesDelegationConfigToolChoiceMcp) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceUnion) AsResponsesDelegationConfigToolChoiceFileSearch() (v ResponsesDelegationConfigToolChoiceFileSearch) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceUnion) AsResponsesDelegationConfigToolChoiceWebSearch() (v ResponsesDelegationConfigToolChoiceWebSearch) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceUnion) AsResponsesDelegationConfigToolChoiceWebSearchPreview() (v ResponsesDelegationConfigToolChoiceWebSearchPreview) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceUnion) AsResponsesDelegationConfigToolChoiceImageGeneration() (v ResponsesDelegationConfigToolChoiceImageGeneration) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceUnion) AsResponsesDelegationConfigToolChoiceComputer() (v ResponsesDelegationConfigToolChoiceComputer) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceUnion) AsResponsesDelegationConfigToolChoiceCodeInterpreter() (v ResponsesDelegationConfigToolChoiceCodeInterpreter) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceUnion) AsResponsesDelegationConfigToolChoiceProgrammaticToolCalling() (v ResponsesDelegationConfigToolChoiceProgrammaticToolCalling) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceUnion) AsResponsesDelegationConfigToolChoiceShell() (v ResponsesDelegationConfigToolChoiceShell) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceUnion) AsResponsesDelegationConfigToolChoiceCustom() (v ResponsesDelegationConfigToolChoiceCustom) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceUnion) AsResponsesDelegationConfigToolChoiceApplyPatch() (v ResponsesDelegationConfigToolChoiceApplyPatch) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceUnion) AsResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParam() (v ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParam) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -5782,22 +7688,632 @@ const (
 	ResponsesDelegationConfigToolChoiceLiveToolChoiceEnumRequired ResponsesDelegationConfigToolChoiceLiveToolChoiceEnum = "required"
 )
 
+// Forces the model to call the shell tool when a tool call is required.
+type ResponsesDelegationConfigToolChoiceFunction struct {
+	// The name of the function tool to call.
+	Name string `json:"name" api:"required"`
+	// The tool to call. Always `function`.
+	Type constant.Function `json:"type" default:"function"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Name        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceFunction) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolChoiceFunction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceMcp struct {
+	// The name of the MCP tool to call. If omitted, the server may choose a default.
+	Name string `json:"name" api:"nullable"`
+	// The label of the MCP server to call.
+	ServerLabel string `json:"server_label" api:"required"`
+	// The tool to call. Always `mcp`.
+	Type constant.Mcp `json:"type" default:"mcp"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Name        respjson.Field
+		ServerLabel respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceMcp) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolChoiceMcp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceFileSearch struct {
+	// The tool to call. Always `file_search`.
+	Type constant.FileSearch `json:"type" default:"file_search"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceFileSearch) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolChoiceFileSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceWebSearch struct {
+	// The tool to call. Always `web_search`.
+	Type constant.WebSearch `json:"type" default:"web_search"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceWebSearch) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolChoiceWebSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceWebSearchPreview struct {
+	// The tool to call. Always `web_search_preview`.
+	Type constant.WebSearchPreview `json:"type" default:"web_search_preview"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceWebSearchPreview) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolChoiceWebSearchPreview) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceImageGeneration struct {
+	// The tool to call. Always `image_generation`.
+	Type constant.ImageGeneration `json:"type" default:"image_generation"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceImageGeneration) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolChoiceImageGeneration) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceComputer struct {
+	// The tool to call. Always `computer`.
+	Type constant.Computer `json:"type" default:"computer"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceComputer) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolChoiceComputer) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceCodeInterpreter struct {
+	// The tool to call. Always `code_interpreter`.
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceCodeInterpreter) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolChoiceCodeInterpreter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceProgrammaticToolCalling struct {
+	// The tool to call. Always `programmatic_tool_calling`.
+	Type constant.ProgrammaticToolCalling `json:"type" default:"programmatic_tool_calling"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceProgrammaticToolCalling) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolChoiceProgrammaticToolCalling) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Forces the model to call the shell tool when a tool call is required.
+type ResponsesDelegationConfigToolChoiceShell struct {
+	// The tool to call. Always `shell`.
+	Type constant.Shell `json:"type" default:"shell"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceShell) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolChoiceShell) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceCustom struct {
+	// The name of the custom tool to call.
+	Name string `json:"name" api:"required"`
+	// The tool to call. Always `custom`.
+	Type constant.Custom `json:"type" default:"custom"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Name        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceCustom) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolChoiceCustom) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Forces the model to call the apply_patch tool when executing a tool call.
+type ResponsesDelegationConfigToolChoiceApplyPatch struct {
+	// The tool to call. Always `apply_patch`.
+	Type constant.ApplyPatch `json:"type" default:"apply_patch"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceApplyPatch) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolChoiceApplyPatch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnion contains
+// all possible properties and values from
+// [ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFunction],
+// [ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolMcp],
+// [ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearch],
+// [ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearch],
+// [ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreview],
+// [ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGeneration],
+// [ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolComputer],
+// [ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreter],
+// [ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCalling],
+// [ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolShell],
+// [ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCustom],
+// [ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatch].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnion struct {
+	OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFunction                ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFunction                `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolMcp                     ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolMcp                     `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearch              ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearch              `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearch               ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearch               `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreview        ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreview        `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGeneration         ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGeneration         `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolComputer                ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolComputer                `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreter         ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreter         `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCalling ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCalling `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolShell                   ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolShell                   `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCustom                  ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCustom                  `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatch              ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatch              `json:",inline"`
+	JSON                                                                                        struct {
+		OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFunction                respjson.Field
+		OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolMcp                     respjson.Field
+		OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearch              respjson.Field
+		OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearch               respjson.Field
+		OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreview        respjson.Field
+		OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGeneration         respjson.Field
+		OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolComputer                respjson.Field
+		OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreter         respjson.Field
+		OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCalling respjson.Field
+		OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolShell                   respjson.Field
+		OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCustom                  respjson.Field
+		OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatch              respjson.Field
+		raw                                                                                         string
+	} `json:"-"`
+}
+
+func (u ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnion) AsResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFunction() (v ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFunction) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnion) AsResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolMcp() (v ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolMcp) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnion) AsResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearch() (v ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearch) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnion) AsResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearch() (v ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearch) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnion) AsResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreview() (v ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreview) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnion) AsResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGeneration() (v ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGeneration) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnion) AsResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolComputer() (v ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolComputer) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnion) AsResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreter() (v ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreter) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnion) AsResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCalling() (v ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCalling) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnion) AsResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolShell() (v ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolShell) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnion) AsResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCustom() (v ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCustom) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnion) AsResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatch() (v ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatch) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnion) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFunction struct {
+	// The name of the function tool to call.
+	Name string `json:"name" api:"required"`
+	// The tool to call. Always `function`.
+	Type constant.Function `json:"type" default:"function"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Name        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFunction) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFunction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolMcp struct {
+	// The name of the MCP tool to call. If omitted, the server may choose a default.
+	Name string `json:"name" api:"nullable"`
+	// The label of the MCP server to call.
+	ServerLabel string `json:"server_label" api:"required"`
+	// The tool to call. Always `mcp`.
+	Type constant.Mcp `json:"type" default:"mcp"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Name        respjson.Field
+		ServerLabel respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolMcp) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolMcp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearch struct {
+	// The tool to call. Always `file_search`.
+	Type constant.FileSearch `json:"type" default:"file_search"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearch) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearch struct {
+	// The tool to call. Always `web_search`.
+	Type constant.WebSearch `json:"type" default:"web_search"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearch) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreview struct {
+	// The tool to call. Always `web_search_preview`.
+	Type constant.WebSearchPreview `json:"type" default:"web_search_preview"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreview) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreview) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGeneration struct {
+	// The tool to call. Always `image_generation`.
+	Type constant.ImageGeneration `json:"type" default:"image_generation"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGeneration) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGeneration) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolComputer struct {
+	// The tool to call. Always `computer`.
+	Type constant.Computer `json:"type" default:"computer"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolComputer) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolComputer) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreter struct {
+	// The tool to call. Always `code_interpreter`.
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreter) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCalling struct {
+	// The tool to call. Always `programmatic_tool_calling`.
+	Type constant.ProgrammaticToolCalling `json:"type" default:"programmatic_tool_calling"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCalling) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCalling) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Forces the model to call the shell tool when a tool call is required.
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolShell struct {
+	// The tool to call. Always `shell`.
+	Type constant.Shell `json:"type" default:"shell"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolShell) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolShell) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCustom struct {
+	// The name of the custom tool to call.
+	Name string `json:"name" api:"required"`
+	// The tool to call. Always `custom`.
+	Type constant.Custom `json:"type" default:"custom"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Name        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCustom) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCustom) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Forces the model to call the apply_patch tool when executing a tool call.
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatch struct {
+	// The tool to call. Always `apply_patch`.
+	Type constant.ApplyPatch `json:"type" default:"apply_patch"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatch) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // ResponsesDelegationConfigToolUnion contains all possible properties and values
-// from [FunctionTool], [ResponsesDelegationConfigToolWebSearch].
+// from [FunctionTool], [ResponsesDelegationConfigToolWebSearch],
+// [ResponsesDelegationConfigToolFileSearch],
+// [ResponsesDelegationConfigToolCodeInterpreter],
+// [ResponsesDelegationConfigToolShell],
+// [ResponsesDelegationConfigToolImageGeneration],
+// [ResponsesDelegationConfigToolMcp], [ResponsesDelegationConfigToolCustom],
+// [ResponsesDelegationConfigToolNamespace],
+// [ResponsesDelegationConfigToolToolSearch],
+// [ResponsesDelegationConfigToolProgrammaticToolCalling],
+// [ResponsesDelegationConfigToolComputer],
+// [ResponsesDelegationConfigToolApplyPatch].
 //
 // Use the [ResponsesDelegationConfigToolUnion.AsAny] method to switch on the
 // variant.
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ResponsesDelegationConfigToolUnion struct {
-	OfFunctionTool                           FunctionTool                           `json:",inline"`
-	OfResponsesDelegationConfigToolWebSearch ResponsesDelegationConfigToolWebSearch `json:",inline"`
-	Type                                     string                                 `json:"type"`
-	JSON                                     struct {
-		OfFunctionTool                           respjson.Field
-		OfResponsesDelegationConfigToolWebSearch respjson.Field
-		Type                                     respjson.Field
-		raw                                      string
+	OfFunctionTool                                         FunctionTool                                         `json:",inline"`
+	OfResponsesDelegationConfigToolWebSearch               ResponsesDelegationConfigToolWebSearch               `json:",inline"`
+	OfResponsesDelegationConfigToolFileSearch              ResponsesDelegationConfigToolFileSearch              `json:",inline"`
+	OfResponsesDelegationConfigToolCodeInterpreter         ResponsesDelegationConfigToolCodeInterpreter         `json:",inline"`
+	OfResponsesDelegationConfigToolShell                   ResponsesDelegationConfigToolShell                   `json:",inline"`
+	OfResponsesDelegationConfigToolImageGeneration         ResponsesDelegationConfigToolImageGeneration         `json:",inline"`
+	OfResponsesDelegationConfigToolMcp                     ResponsesDelegationConfigToolMcp                     `json:",inline"`
+	OfResponsesDelegationConfigToolCustom                  ResponsesDelegationConfigToolCustom                  `json:",inline"`
+	OfResponsesDelegationConfigToolNamespace               ResponsesDelegationConfigToolNamespace               `json:",inline"`
+	OfResponsesDelegationConfigToolToolSearch              ResponsesDelegationConfigToolToolSearch              `json:",inline"`
+	OfResponsesDelegationConfigToolProgrammaticToolCalling ResponsesDelegationConfigToolProgrammaticToolCalling `json:",inline"`
+	OfResponsesDelegationConfigToolComputer                ResponsesDelegationConfigToolComputer                `json:",inline"`
+	OfResponsesDelegationConfigToolApplyPatch              ResponsesDelegationConfigToolApplyPatch              `json:",inline"`
+	Type                                                   string                                               `json:"type"`
+	JSON                                                   struct {
+		OfFunctionTool                                         respjson.Field
+		OfResponsesDelegationConfigToolWebSearch               respjson.Field
+		OfResponsesDelegationConfigToolFileSearch              respjson.Field
+		OfResponsesDelegationConfigToolCodeInterpreter         respjson.Field
+		OfResponsesDelegationConfigToolShell                   respjson.Field
+		OfResponsesDelegationConfigToolImageGeneration         respjson.Field
+		OfResponsesDelegationConfigToolMcp                     respjson.Field
+		OfResponsesDelegationConfigToolCustom                  respjson.Field
+		OfResponsesDelegationConfigToolNamespace               respjson.Field
+		OfResponsesDelegationConfigToolToolSearch              respjson.Field
+		OfResponsesDelegationConfigToolProgrammaticToolCalling respjson.Field
+		OfResponsesDelegationConfigToolComputer                respjson.Field
+		OfResponsesDelegationConfigToolApplyPatch              respjson.Field
+		Type                                                   respjson.Field
+		raw                                                    string
 	} `json:"-"`
 }
 
@@ -5808,14 +8324,37 @@ type anyResponsesDelegationConfigTool interface {
 	implResponsesDelegationConfigToolUnion()
 }
 
-func (FunctionTool) implResponsesDelegationConfigToolUnion()                           {}
-func (ResponsesDelegationConfigToolWebSearch) implResponsesDelegationConfigToolUnion() {}
+func (FunctionTool) implResponsesDelegationConfigToolUnion()                                 {}
+func (ResponsesDelegationConfigToolWebSearch) implResponsesDelegationConfigToolUnion()       {}
+func (ResponsesDelegationConfigToolFileSearch) implResponsesDelegationConfigToolUnion()      {}
+func (ResponsesDelegationConfigToolCodeInterpreter) implResponsesDelegationConfigToolUnion() {}
+func (ResponsesDelegationConfigToolShell) implResponsesDelegationConfigToolUnion()           {}
+func (ResponsesDelegationConfigToolImageGeneration) implResponsesDelegationConfigToolUnion() {}
+func (ResponsesDelegationConfigToolMcp) implResponsesDelegationConfigToolUnion()             {}
+func (ResponsesDelegationConfigToolCustom) implResponsesDelegationConfigToolUnion()          {}
+func (ResponsesDelegationConfigToolNamespace) implResponsesDelegationConfigToolUnion()       {}
+func (ResponsesDelegationConfigToolToolSearch) implResponsesDelegationConfigToolUnion()      {}
+func (ResponsesDelegationConfigToolProgrammaticToolCalling) implResponsesDelegationConfigToolUnion() {
+}
+func (ResponsesDelegationConfigToolComputer) implResponsesDelegationConfigToolUnion()   {}
+func (ResponsesDelegationConfigToolApplyPatch) implResponsesDelegationConfigToolUnion() {}
 
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponsesDelegationConfigToolUnion.AsAny().(type) {
 //	case live.FunctionTool:
 //	case live.ResponsesDelegationConfigToolWebSearch:
+//	case live.ResponsesDelegationConfigToolFileSearch:
+//	case live.ResponsesDelegationConfigToolCodeInterpreter:
+//	case live.ResponsesDelegationConfigToolShell:
+//	case live.ResponsesDelegationConfigToolImageGeneration:
+//	case live.ResponsesDelegationConfigToolMcp:
+//	case live.ResponsesDelegationConfigToolCustom:
+//	case live.ResponsesDelegationConfigToolNamespace:
+//	case live.ResponsesDelegationConfigToolToolSearch:
+//	case live.ResponsesDelegationConfigToolProgrammaticToolCalling:
+//	case live.ResponsesDelegationConfigToolComputer:
+//	case live.ResponsesDelegationConfigToolApplyPatch:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -5825,6 +8364,28 @@ func (u ResponsesDelegationConfigToolUnion) AsAny() anyResponsesDelegationConfig
 		return u.AsFunctionTool()
 	case "web_search":
 		return u.AsResponsesDelegationConfigToolWebSearch()
+	case "file_search":
+		return u.AsResponsesDelegationConfigToolFileSearch()
+	case "code_interpreter":
+		return u.AsResponsesDelegationConfigToolCodeInterpreter()
+	case "shell":
+		return u.AsResponsesDelegationConfigToolShell()
+	case "image_generation":
+		return u.AsResponsesDelegationConfigToolImageGeneration()
+	case "mcp":
+		return u.AsResponsesDelegationConfigToolMcp()
+	case "custom":
+		return u.AsResponsesDelegationConfigToolCustom()
+	case "namespace":
+		return u.AsResponsesDelegationConfigToolNamespace()
+	case "tool_search":
+		return u.AsResponsesDelegationConfigToolToolSearch()
+	case "programmatic_tool_calling":
+		return u.AsResponsesDelegationConfigToolProgrammaticToolCalling()
+	case "computer":
+		return u.AsResponsesDelegationConfigToolComputer()
+	case "apply_patch":
+		return u.AsResponsesDelegationConfigToolApplyPatch()
 	}
 	return nil
 }
@@ -5835,6 +8396,61 @@ func (u ResponsesDelegationConfigToolUnion) AsFunctionTool() (v FunctionTool) {
 }
 
 func (u ResponsesDelegationConfigToolUnion) AsResponsesDelegationConfigToolWebSearch() (v ResponsesDelegationConfigToolWebSearch) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolUnion) AsResponsesDelegationConfigToolFileSearch() (v ResponsesDelegationConfigToolFileSearch) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolUnion) AsResponsesDelegationConfigToolCodeInterpreter() (v ResponsesDelegationConfigToolCodeInterpreter) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolUnion) AsResponsesDelegationConfigToolShell() (v ResponsesDelegationConfigToolShell) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolUnion) AsResponsesDelegationConfigToolImageGeneration() (v ResponsesDelegationConfigToolImageGeneration) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolUnion) AsResponsesDelegationConfigToolMcp() (v ResponsesDelegationConfigToolMcp) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolUnion) AsResponsesDelegationConfigToolCustom() (v ResponsesDelegationConfigToolCustom) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolUnion) AsResponsesDelegationConfigToolNamespace() (v ResponsesDelegationConfigToolNamespace) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolUnion) AsResponsesDelegationConfigToolToolSearch() (v ResponsesDelegationConfigToolToolSearch) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolUnion) AsResponsesDelegationConfigToolProgrammaticToolCalling() (v ResponsesDelegationConfigToolProgrammaticToolCalling) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolUnion) AsResponsesDelegationConfigToolComputer() (v ResponsesDelegationConfigToolComputer) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolUnion) AsResponsesDelegationConfigToolApplyPatch() (v ResponsesDelegationConfigToolApplyPatch) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -5861,6 +8477,652 @@ type ResponsesDelegationConfigToolWebSearch struct {
 // Returns the unmodified JSON received from the API
 func (r ResponsesDelegationConfigToolWebSearch) RawJSON() string { return r.JSON.raw }
 func (r *ResponsesDelegationConfigToolWebSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolFileSearch struct {
+	Type constant.FileSearch `json:"type" default:"file_search"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolFileSearch) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolFileSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolCodeInterpreter struct {
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolCodeInterpreter) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolCodeInterpreter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A Responses shell tool. Use a hosted container or return local shell results
+// with response.item.create. Domain secrets are not supported.
+type ResponsesDelegationConfigToolShell struct {
+	Environment ResponsesDelegationConfigToolShellEnvironmentUnion `json:"environment" api:"nullable"`
+	Type        constant.Shell                                     `json:"type" default:"shell"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Environment respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolShell) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolShell) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponsesDelegationConfigToolShellEnvironmentUnion contains all possible
+// properties and values from
+// [ResponsesDelegationConfigToolShellEnvironmentContainerAuto],
+// [ResponsesDelegationConfigToolShellEnvironmentContainerReference],
+// [ResponsesDelegationConfigToolShellEnvironmentLocal].
+//
+// Use the [ResponsesDelegationConfigToolShellEnvironmentUnion.AsAny] method to
+// switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ResponsesDelegationConfigToolShellEnvironmentUnion struct {
+	OfResponsesDelegationConfigToolShellEnvironmentContainerAuto ResponsesDelegationConfigToolShellEnvironmentContainerAuto `json:",inline"`
+	// Any of "container_auto", "container_reference", "local".
+	Type string `json:"type"`
+	// This field is from variant
+	// [ResponsesDelegationConfigToolShellEnvironmentContainerAuto].
+	FileIDs []string `json:"file_ids"`
+	// This field is from variant
+	// [ResponsesDelegationConfigToolShellEnvironmentContainerAuto].
+	MemoryLimit string `json:"memory_limit"`
+	// This field is from variant
+	// [ResponsesDelegationConfigToolShellEnvironmentContainerAuto].
+	NetworkPolicy ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnion `json:"network_policy"`
+	// This field is a union of
+	// [[]ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnion],
+	// [[]ResponsesDelegationConfigToolShellEnvironmentLocalSkill]
+	Skills                                                            ResponsesDelegationConfigToolShellEnvironmentUnionSkills        `json:"skills"`
+	OfResponsesDelegationConfigToolShellEnvironmentContainerReference ResponsesDelegationConfigToolShellEnvironmentContainerReference `json:",inline"`
+	// This field is from variant
+	// [ResponsesDelegationConfigToolShellEnvironmentContainerReference].
+	ContainerID                                          string                                             `json:"container_id"`
+	OfResponsesDelegationConfigToolShellEnvironmentLocal ResponsesDelegationConfigToolShellEnvironmentLocal `json:",inline"`
+	JSON                                                 struct {
+		OfResponsesDelegationConfigToolShellEnvironmentContainerAuto      respjson.Field
+		Type                                                              respjson.Field
+		FileIDs                                                           respjson.Field
+		MemoryLimit                                                       respjson.Field
+		NetworkPolicy                                                     respjson.Field
+		Skills                                                            respjson.Field
+		OfResponsesDelegationConfigToolShellEnvironmentContainerReference respjson.Field
+		ContainerID                                                       respjson.Field
+		OfResponsesDelegationConfigToolShellEnvironmentLocal              respjson.Field
+		raw                                                               string
+	} `json:"-"`
+}
+
+// anyResponsesDelegationConfigToolShellEnvironment is implemented by each variant
+// of [ResponsesDelegationConfigToolShellEnvironmentUnion] to add type safety for
+// the return type of [ResponsesDelegationConfigToolShellEnvironmentUnion.AsAny]
+type anyResponsesDelegationConfigToolShellEnvironment interface {
+	implResponsesDelegationConfigToolShellEnvironmentUnion()
+}
+
+func (ResponsesDelegationConfigToolShellEnvironmentContainerAuto) implResponsesDelegationConfigToolShellEnvironmentUnion() {
+}
+func (ResponsesDelegationConfigToolShellEnvironmentContainerReference) implResponsesDelegationConfigToolShellEnvironmentUnion() {
+}
+func (ResponsesDelegationConfigToolShellEnvironmentLocal) implResponsesDelegationConfigToolShellEnvironmentUnion() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ResponsesDelegationConfigToolShellEnvironmentUnion.AsAny().(type) {
+//	case live.ResponsesDelegationConfigToolShellEnvironmentContainerAuto:
+//	case live.ResponsesDelegationConfigToolShellEnvironmentContainerReference:
+//	case live.ResponsesDelegationConfigToolShellEnvironmentLocal:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ResponsesDelegationConfigToolShellEnvironmentUnion) AsAny() anyResponsesDelegationConfigToolShellEnvironment {
+	switch u.Type {
+	case "container_auto":
+		return u.AsResponsesDelegationConfigToolShellEnvironmentContainerAuto()
+	case "container_reference":
+		return u.AsResponsesDelegationConfigToolShellEnvironmentContainerReference()
+	case "local":
+		return u.AsResponsesDelegationConfigToolShellEnvironmentLocal()
+	}
+	return nil
+}
+
+func (u ResponsesDelegationConfigToolShellEnvironmentUnion) AsResponsesDelegationConfigToolShellEnvironmentContainerAuto() (v ResponsesDelegationConfigToolShellEnvironmentContainerAuto) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolShellEnvironmentUnion) AsResponsesDelegationConfigToolShellEnvironmentContainerReference() (v ResponsesDelegationConfigToolShellEnvironmentContainerReference) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolShellEnvironmentUnion) AsResponsesDelegationConfigToolShellEnvironmentLocal() (v ResponsesDelegationConfigToolShellEnvironmentLocal) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponsesDelegationConfigToolShellEnvironmentUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ResponsesDelegationConfigToolShellEnvironmentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponsesDelegationConfigToolShellEnvironmentUnionSkills is an implicit subunion
+// of [ResponsesDelegationConfigToolShellEnvironmentUnion].
+// ResponsesDelegationConfigToolShellEnvironmentUnionSkills provides convenient
+// access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [ResponsesDelegationConfigToolShellEnvironmentUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid:
+// OfResponsesDelegationConfigToolShellEnvironmentContainerAutoSkills
+// OfResponsesDelegationConfigToolShellEnvironmentLocalSkills]
+type ResponsesDelegationConfigToolShellEnvironmentUnionSkills struct {
+	// This field will be present if the value is a
+	// [[]ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnion] instead
+	// of an object.
+	OfResponsesDelegationConfigToolShellEnvironmentContainerAutoSkills []ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnion `json:",inline"`
+	// This field will be present if the value is a
+	// [[]ResponsesDelegationConfigToolShellEnvironmentLocalSkill] instead of an
+	// object.
+	OfResponsesDelegationConfigToolShellEnvironmentLocalSkills []ResponsesDelegationConfigToolShellEnvironmentLocalSkill `json:",inline"`
+	JSON                                                       struct {
+		OfResponsesDelegationConfigToolShellEnvironmentContainerAutoSkills respjson.Field
+		OfResponsesDelegationConfigToolShellEnvironmentLocalSkills         respjson.Field
+		raw                                                                string
+	} `json:"-"`
+}
+
+func (r *ResponsesDelegationConfigToolShellEnvironmentUnionSkills) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolShellEnvironmentContainerAuto struct {
+	// An optional list of uploaded files to make available to your code.
+	FileIDs []string `json:"file_ids" api:"nullable"`
+	// The memory limit for the container.
+	//
+	// Any of "1g", "4g", "16g", "64g".
+	MemoryLimit string `json:"memory_limit" api:"nullable"`
+	// Network access policy for the container.
+	NetworkPolicy ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnion `json:"network_policy" api:"nullable"`
+	// An optional list of skills referenced by id or inline data.
+	Skills []ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnion `json:"skills" api:"nullable"`
+	// Automatically creates a container for this request
+	Type constant.ContainerAuto `json:"type" default:"container_auto"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		FileIDs       respjson.Field
+		MemoryLimit   respjson.Field
+		NetworkPolicy respjson.Field
+		Skills        respjson.Field
+		Type          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolShellEnvironmentContainerAuto) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAuto) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnion
+// contains all possible properties and values from
+// [ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabled],
+// [ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlist].
+//
+// Use the
+// [ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnion.AsAny]
+// method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnion struct {
+	OfResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabled ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabled `json:",inline"`
+	// Any of "disabled", "allowlist".
+	Type                                                                               string                                                                           `json:"type"`
+	OfResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlist ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlist `json:",inline"`
+	// This field is from variant
+	// [ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlist].
+	AllowedDomains []string `json:"allowed_domains"`
+	JSON           struct {
+		OfResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabled  respjson.Field
+		Type                                                                               respjson.Field
+		OfResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlist respjson.Field
+		AllowedDomains                                                                     respjson.Field
+		raw                                                                                string
+	} `json:"-"`
+}
+
+// anyResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicy is
+// implemented by each variant of
+// [ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnion]
+// to add type safety for the return type of
+// [ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnion.AsAny]
+type anyResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicy interface {
+	implResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnion()
+}
+
+func (ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabled) implResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnion() {
+}
+func (ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlist) implResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnion() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnion.AsAny().(type) {
+//	case live.ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabled:
+//	case live.ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlist:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnion) AsAny() anyResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicy {
+	switch u.Type {
+	case "disabled":
+		return u.AsResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabled()
+	case "allowlist":
+		return u.AsResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlist()
+	}
+	return nil
+}
+
+func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnion) AsResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabled() (v ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabled) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnion) AsResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlist() (v ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlist) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnion) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabled struct {
+	// Disable outbound network access. Always `disabled`.
+	Type constant.Disabled `json:"type" default:"disabled"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabled) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabled) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlist struct {
+	// A list of allowed domains when type is `allowlist`.
+	AllowedDomains []string `json:"allowed_domains" api:"required"`
+	// Allow outbound network access only to specified domains. Always `allowlist`.
+	Type constant.Allowlist `json:"type" default:"allowlist"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AllowedDomains respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlist) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlist) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnion contains
+// all possible properties and values from
+// [ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReference],
+// [ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInline].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnion struct {
+	OfResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReference ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReference `json:",inline"`
+	OfResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInline         ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInline         `json:",inline"`
+	JSON                                                                            struct {
+		OfResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReference respjson.Field
+		OfResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInline         respjson.Field
+		raw                                                                             string
+	} `json:"-"`
+}
+
+func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnion) AsResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReference() (v ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReference) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnion) AsResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInline() (v ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInline) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnion) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReference struct {
+	// The ID of the referenced skill.
+	SkillID string `json:"skill_id" api:"required"`
+	// References a skill created with the /v1/skills endpoint.
+	Type constant.SkillReference `json:"type" default:"skill_reference"`
+	// Optional skill version. Use a positive integer or 'latest'. Omit for default.
+	Version string `json:"version" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		SkillID     respjson.Field
+		Type        respjson.Field
+		Version     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReference) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReference) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInline struct {
+	// The description of the skill.
+	Description string `json:"description" api:"required"`
+	// The name of the skill.
+	Name string `json:"name" api:"required"`
+	// Inline skill payload
+	Source ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineSource `json:"source" api:"required"`
+	// Defines an inline skill for this request.
+	Type constant.Inline `json:"type" default:"inline"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Description respjson.Field
+		Name        respjson.Field
+		Source      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInline) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInline) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Inline skill payload
+type ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineSource struct {
+	// Base64-encoded skill zip bundle.
+	Data string `json:"data" api:"required"`
+	// The media type of the inline skill payload. Must be `application/zip`.
+	MediaType constant.ApplicationZip `json:"media_type" default:"application/zip"`
+	// The type of the inline skill source. Must be `base64`.
+	Type constant.Base64 `json:"type" default:"base64"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		MediaType   respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineSource) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineSource) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolShellEnvironmentContainerReference struct {
+	// The ID of the referenced container.
+	ContainerID string `json:"container_id" api:"required"`
+	// References a container created with the /v1/containers endpoint
+	Type constant.ContainerReference `json:"type" default:"container_reference"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ContainerID respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolShellEnvironmentContainerReference) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponsesDelegationConfigToolShellEnvironmentContainerReference) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolShellEnvironmentLocal struct {
+	// An optional list of skills.
+	Skills []ResponsesDelegationConfigToolShellEnvironmentLocalSkill `json:"skills" api:"nullable"`
+	// Use a local computer environment.
+	Type constant.Local `json:"type" default:"local"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Skills      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolShellEnvironmentLocal) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolShellEnvironmentLocal) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolShellEnvironmentLocalSkill struct {
+	// The description of the skill.
+	Description string `json:"description" api:"required"`
+	// The name of the skill.
+	Name string `json:"name" api:"required"`
+	// The path to the directory containing the skill.
+	Path string `json:"path" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Description respjson.Field
+		Name        respjson.Field
+		Path        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolShellEnvironmentLocalSkill) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolShellEnvironmentLocalSkill) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolImageGeneration struct {
+	Type constant.ImageGeneration `json:"type" default:"image_generation"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolImageGeneration) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolImageGeneration) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolMcp struct {
+	Type constant.Mcp `json:"type" default:"mcp"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolMcp) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolMcp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolCustom struct {
+	Type constant.Custom `json:"type" default:"custom"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolCustom) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolCustom) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolNamespace struct {
+	Type constant.Namespace `json:"type" default:"namespace"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolNamespace) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolNamespace) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolToolSearch struct {
+	Type constant.ToolSearch `json:"type" default:"tool_search"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolToolSearch) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolToolSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolProgrammaticToolCalling struct {
+	Type constant.ProgrammaticToolCalling `json:"type" default:"programmatic_tool_calling"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolProgrammaticToolCalling) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolProgrammaticToolCalling) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolComputer struct {
+	Type constant.Computer `json:"type" default:"computer"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolComputer) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolComputer) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolApplyPatch struct {
+	Type constant.ApplyPatch `json:"type" default:"apply_patch"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolApplyPatch) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolApplyPatch) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -5967,14 +9229,38 @@ func init() {
 // Use [param.IsOmitted] to confirm if a field is set.
 type ResponsesDelegationConfigToolChoiceUnionParam struct {
 	// Check if union is this variant with !param.IsOmitted(union.OfLiveToolChoiceEnum)
-	OfLiveToolChoiceEnum                                             param.Opt[string]                                               `json:",omitzero,inline"`
-	OfResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam *ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam `json:",omitzero,inline"`
-	OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam      *ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam      `json:",omitzero,inline"`
+	OfLiveToolChoiceEnum                                             param.Opt[string]                                                `json:",omitzero,inline"`
+	OfResponsesDelegationConfigToolChoiceFunction                    *ResponsesDelegationConfigToolChoiceFunctionParam                `json:",omitzero,inline"`
+	OfResponsesDelegationConfigToolChoiceMcp                         *ResponsesDelegationConfigToolChoiceMcpParam                     `json:",omitzero,inline"`
+	OfResponsesDelegationConfigToolChoiceFileSearch                  *ResponsesDelegationConfigToolChoiceFileSearchParam              `json:",omitzero,inline"`
+	OfResponsesDelegationConfigToolChoiceWebSearch                   *ResponsesDelegationConfigToolChoiceWebSearchParam               `json:",omitzero,inline"`
+	OfResponsesDelegationConfigToolChoiceWebSearchPreview            *ResponsesDelegationConfigToolChoiceWebSearchPreviewParam        `json:",omitzero,inline"`
+	OfResponsesDelegationConfigToolChoiceImageGeneration             *ResponsesDelegationConfigToolChoiceImageGenerationParam         `json:",omitzero,inline"`
+	OfResponsesDelegationConfigToolChoiceComputer                    *ResponsesDelegationConfigToolChoiceComputerParam                `json:",omitzero,inline"`
+	OfResponsesDelegationConfigToolChoiceCodeInterpreter             *ResponsesDelegationConfigToolChoiceCodeInterpreterParam         `json:",omitzero,inline"`
+	OfResponsesDelegationConfigToolChoiceProgrammaticToolCalling     *ResponsesDelegationConfigToolChoiceProgrammaticToolCallingParam `json:",omitzero,inline"`
+	OfResponsesDelegationConfigToolChoiceShell                       *ResponsesDelegationConfigToolChoiceShellParam                   `json:",omitzero,inline"`
+	OfResponsesDelegationConfigToolChoiceCustom                      *ResponsesDelegationConfigToolChoiceCustomParam                  `json:",omitzero,inline"`
+	OfResponsesDelegationConfigToolChoiceApplyPatch                  *ResponsesDelegationConfigToolChoiceApplyPatchParam              `json:",omitzero,inline"`
+	OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParam *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParam  `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ResponsesDelegationConfigToolChoiceUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfLiveToolChoiceEnum, u.OfResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam, u.OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam)
+	return param.MarshalUnion(u, u.OfLiveToolChoiceEnum,
+		u.OfResponsesDelegationConfigToolChoiceFunction,
+		u.OfResponsesDelegationConfigToolChoiceMcp,
+		u.OfResponsesDelegationConfigToolChoiceFileSearch,
+		u.OfResponsesDelegationConfigToolChoiceWebSearch,
+		u.OfResponsesDelegationConfigToolChoiceWebSearchPreview,
+		u.OfResponsesDelegationConfigToolChoiceImageGeneration,
+		u.OfResponsesDelegationConfigToolChoiceComputer,
+		u.OfResponsesDelegationConfigToolChoiceCodeInterpreter,
+		u.OfResponsesDelegationConfigToolChoiceProgrammaticToolCalling,
+		u.OfResponsesDelegationConfigToolChoiceShell,
+		u.OfResponsesDelegationConfigToolChoiceCustom,
+		u.OfResponsesDelegationConfigToolChoiceApplyPatch,
+		u.OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParam)
 }
 func (u *ResponsesDelegationConfigToolChoiceUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -5982,17 +9268,35 @@ func (u *ResponsesDelegationConfigToolChoiceUnionParam) UnmarshalJSON(data []byt
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationConfigToolChoiceUnionParam) GetServerLabel() *string {
-	if vt := u.OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam; vt != nil {
+	if vt := u.OfResponsesDelegationConfigToolChoiceMcp; vt != nil {
 		return &vt.ServerLabel
 	}
 	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolChoiceUnionParam) GetTools() []ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam {
+	if vt := u.OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParam; vt != nil {
+		return vt.Tools
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolChoiceUnionParam) GetMode() *string {
+	if vt := u.OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParam; vt != nil {
+		return &vt.Mode
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationConfigToolChoiceUnionParam) GetName() *string {
-	if vt := u.OfResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam; vt != nil {
+	if vt := u.OfResponsesDelegationConfigToolChoiceFunction; vt != nil {
 		return (*string)(&vt.Name)
-	} else if vt := u.OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam; vt != nil {
+	} else if vt := u.OfResponsesDelegationConfigToolChoiceMcp; vt != nil && vt.Name.Valid() {
+		return &vt.Name.Value
+	} else if vt := u.OfResponsesDelegationConfigToolChoiceCustom; vt != nil {
 		return (*string)(&vt.Name)
 	}
 	return nil
@@ -6000,44 +9304,691 @@ func (u ResponsesDelegationConfigToolChoiceUnionParam) GetName() *string {
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationConfigToolChoiceUnionParam) GetType() *string {
-	if vt := u.OfResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam; vt != nil {
+	if vt := u.OfResponsesDelegationConfigToolChoiceFunction; vt != nil {
 		return (*string)(&vt.Type)
-	} else if vt := u.OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam; vt != nil {
+	} else if vt := u.OfResponsesDelegationConfigToolChoiceMcp; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationConfigToolChoiceFileSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationConfigToolChoiceWebSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationConfigToolChoiceWebSearchPreview; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationConfigToolChoiceImageGeneration; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationConfigToolChoiceComputer; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationConfigToolChoiceCodeInterpreter; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationConfigToolChoiceProgrammaticToolCalling; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationConfigToolChoiceShell; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationConfigToolChoiceCustom; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationConfigToolChoiceApplyPatch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParam; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
 }
 
+// Forces the model to call the shell tool when a tool call is required.
+//
 // The properties Name, Type are required.
-type ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam struct {
+type ResponsesDelegationConfigToolChoiceFunctionParam struct {
+	// The name of the function tool to call.
 	Name string `json:"name" api:"required"`
+	// The tool to call. Always `function`.
+	//
 	// This field can be elided, and will marshal its zero value as "function".
 	Type constant.Function `json:"type" default:"function"`
 	paramObj
 }
 
-func (r ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam
+func (r ResponsesDelegationConfigToolChoiceFunctionParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceFunctionParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam) UnmarshalJSON(data []byte) error {
+func (r *ResponsesDelegationConfigToolChoiceFunctionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The properties Name, ServerLabel, Type are required.
-type ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam struct {
-	Name        string `json:"name" api:"required"`
+// The properties ServerLabel, Type are required.
+type ResponsesDelegationConfigToolChoiceMcpParam struct {
+	// The label of the MCP server to call.
 	ServerLabel string `json:"server_label" api:"required"`
+	// The name of the MCP tool to call. If omitted, the server may choose a default.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// The tool to call. Always `mcp`.
+	//
 	// This field can be elided, and will marshal its zero value as "mcp".
 	Type constant.Mcp `json:"type" default:"mcp"`
 	paramObj
 }
 
-func (r ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam
+func (r ResponsesDelegationConfigToolChoiceMcpParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceMcpParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam) UnmarshalJSON(data []byte) error {
+func (r *ResponsesDelegationConfigToolChoiceMcpParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolChoiceFileSearchParam() ResponsesDelegationConfigToolChoiceFileSearchParam {
+	return ResponsesDelegationConfigToolChoiceFileSearchParam{
+		Type: "file_search",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolChoiceFileSearchParam].
+type ResponsesDelegationConfigToolChoiceFileSearchParam struct {
+	// The tool to call. Always `file_search`.
+	Type constant.FileSearch `json:"type" default:"file_search"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceFileSearchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceFileSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceFileSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolChoiceWebSearchParam() ResponsesDelegationConfigToolChoiceWebSearchParam {
+	return ResponsesDelegationConfigToolChoiceWebSearchParam{
+		Type: "web_search",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolChoiceWebSearchParam].
+type ResponsesDelegationConfigToolChoiceWebSearchParam struct {
+	// The tool to call. Always `web_search`.
+	Type constant.WebSearch `json:"type" default:"web_search"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceWebSearchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceWebSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceWebSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolChoiceWebSearchPreviewParam() ResponsesDelegationConfigToolChoiceWebSearchPreviewParam {
+	return ResponsesDelegationConfigToolChoiceWebSearchPreviewParam{
+		Type: "web_search_preview",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolChoiceWebSearchPreviewParam].
+type ResponsesDelegationConfigToolChoiceWebSearchPreviewParam struct {
+	// The tool to call. Always `web_search_preview`.
+	Type constant.WebSearchPreview `json:"type" default:"web_search_preview"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceWebSearchPreviewParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceWebSearchPreviewParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceWebSearchPreviewParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolChoiceImageGenerationParam() ResponsesDelegationConfigToolChoiceImageGenerationParam {
+	return ResponsesDelegationConfigToolChoiceImageGenerationParam{
+		Type: "image_generation",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolChoiceImageGenerationParam].
+type ResponsesDelegationConfigToolChoiceImageGenerationParam struct {
+	// The tool to call. Always `image_generation`.
+	Type constant.ImageGeneration `json:"type" default:"image_generation"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceImageGenerationParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceImageGenerationParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceImageGenerationParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolChoiceComputerParam() ResponsesDelegationConfigToolChoiceComputerParam {
+	return ResponsesDelegationConfigToolChoiceComputerParam{
+		Type: "computer",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolChoiceComputerParam].
+type ResponsesDelegationConfigToolChoiceComputerParam struct {
+	// The tool to call. Always `computer`.
+	Type constant.Computer `json:"type" default:"computer"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceComputerParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceComputerParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceComputerParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolChoiceCodeInterpreterParam() ResponsesDelegationConfigToolChoiceCodeInterpreterParam {
+	return ResponsesDelegationConfigToolChoiceCodeInterpreterParam{
+		Type: "code_interpreter",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolChoiceCodeInterpreterParam].
+type ResponsesDelegationConfigToolChoiceCodeInterpreterParam struct {
+	// The tool to call. Always `code_interpreter`.
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceCodeInterpreterParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceCodeInterpreterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceCodeInterpreterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolChoiceProgrammaticToolCallingParam() ResponsesDelegationConfigToolChoiceProgrammaticToolCallingParam {
+	return ResponsesDelegationConfigToolChoiceProgrammaticToolCallingParam{
+		Type: "programmatic_tool_calling",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolChoiceProgrammaticToolCallingParam].
+type ResponsesDelegationConfigToolChoiceProgrammaticToolCallingParam struct {
+	// The tool to call. Always `programmatic_tool_calling`.
+	Type constant.ProgrammaticToolCalling `json:"type" default:"programmatic_tool_calling"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceProgrammaticToolCallingParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceProgrammaticToolCallingParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceProgrammaticToolCallingParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolChoiceShellParam() ResponsesDelegationConfigToolChoiceShellParam {
+	return ResponsesDelegationConfigToolChoiceShellParam{
+		Type: "shell",
+	}
+}
+
+// Forces the model to call the shell tool when a tool call is required.
+//
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolChoiceShellParam].
+type ResponsesDelegationConfigToolChoiceShellParam struct {
+	// The tool to call. Always `shell`.
+	Type constant.Shell `json:"type" default:"shell"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceShellParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceShellParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceShellParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Name, Type are required.
+type ResponsesDelegationConfigToolChoiceCustomParam struct {
+	// The name of the custom tool to call.
+	Name string `json:"name" api:"required"`
+	// The tool to call. Always `custom`.
+	//
+	// This field can be elided, and will marshal its zero value as "custom".
+	Type constant.Custom `json:"type" default:"custom"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceCustomParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceCustomParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceCustomParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolChoiceApplyPatchParam() ResponsesDelegationConfigToolChoiceApplyPatchParam {
+	return ResponsesDelegationConfigToolChoiceApplyPatchParam{
+		Type: "apply_patch",
+	}
+}
+
+// Forces the model to call the apply_patch tool when executing a tool call.
+//
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolChoiceApplyPatchParam].
+type ResponsesDelegationConfigToolChoiceApplyPatchParam struct {
+	// The tool to call. Always `apply_patch`.
+	Type constant.ApplyPatch `json:"type" default:"apply_patch"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceApplyPatchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceApplyPatchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceApplyPatchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Tools, Type are required.
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParam struct {
+	// The tools that the delegated Responses model may call.
+	Tools []ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam `json:"tools,omitzero" api:"required"`
+	// How to select a tool from the allowed set.
+	//
+	// Any of "none", "auto", "required".
+	Mode string `json:"mode,omitzero"`
+	// The tool choice type. Always `allowed_tools`.
+	//
+	// This field can be elided, and will marshal its zero value as "allowed_tools".
+	Type constant.AllowedTools `json:"type" default:"allowed_tools"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParam](
+		"mode", "none", "auto", "required",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam struct {
+	OfFunction                *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFunctionParam                `json:",omitzero,inline"`
+	OfMcp                     *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolMcpParam                     `json:",omitzero,inline"`
+	OfFileSearch              *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam              `json:",omitzero,inline"`
+	OfWebSearch               *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam               `json:",omitzero,inline"`
+	OfWebSearchPreview        *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam        `json:",omitzero,inline"`
+	OfImageGeneration         *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam         `json:",omitzero,inline"`
+	OfComputer                *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam                `json:",omitzero,inline"`
+	OfCodeInterpreter         *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam         `json:",omitzero,inline"`
+	OfProgrammaticToolCalling *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam `json:",omitzero,inline"`
+	OfShell                   *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam                   `json:",omitzero,inline"`
+	OfCustom                  *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCustomParam                  `json:",omitzero,inline"`
+	OfApplyPatch              *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam              `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfFunction,
+		u.OfMcp,
+		u.OfFileSearch,
+		u.OfWebSearch,
+		u.OfWebSearchPreview,
+		u.OfImageGeneration,
+		u.OfComputer,
+		u.OfCodeInterpreter,
+		u.OfProgrammaticToolCalling,
+		u.OfShell,
+		u.OfCustom,
+		u.OfApplyPatch)
+}
+func (u *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam) GetServerLabel() *string {
+	if vt := u.OfMcp; vt != nil {
+		return &vt.ServerLabel
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam) GetName() *string {
+	if vt := u.OfFunction; vt != nil {
+		return (*string)(&vt.Name)
+	} else if vt := u.OfMcp; vt != nil && vt.Name.Valid() {
+		return &vt.Name.Value
+	} else if vt := u.OfCustom; vt != nil {
+		return (*string)(&vt.Name)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam) GetType() *string {
+	if vt := u.OfFunction; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfMcp; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFileSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfWebSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfWebSearchPreview; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfImageGeneration; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfComputer; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCodeInterpreter; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfProgrammaticToolCalling; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfShell; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCustom; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfApplyPatch; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam](
+		"type",
+		apijson.Discriminator[ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFunctionParam]("function"),
+		apijson.Discriminator[ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolMcpParam]("mcp"),
+		apijson.Discriminator[ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam]("file_search"),
+		apijson.Discriminator[ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam]("web_search"),
+		apijson.Discriminator[ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam]("web_search_preview"),
+		apijson.Discriminator[ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam]("image_generation"),
+		apijson.Discriminator[ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam]("computer"),
+		apijson.Discriminator[ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam]("code_interpreter"),
+		apijson.Discriminator[ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam]("programmatic_tool_calling"),
+		apijson.Discriminator[ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam]("shell"),
+		apijson.Discriminator[ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCustomParam]("custom"),
+		apijson.Discriminator[ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam]("apply_patch"),
+	)
+}
+
+// The properties Name, Type are required.
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFunctionParam struct {
+	// The name of the function tool to call.
+	Name string `json:"name" api:"required"`
+	// The tool to call. Always `function`.
+	//
+	// This field can be elided, and will marshal its zero value as "function".
+	Type constant.Function `json:"type" default:"function"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFunctionParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFunctionParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFunctionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties ServerLabel, Type are required.
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolMcpParam struct {
+	// The label of the MCP server to call.
+	ServerLabel string `json:"server_label" api:"required"`
+	// The name of the MCP tool to call. If omitted, the server may choose a default.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// The tool to call. Always `mcp`.
+	//
+	// This field can be elided, and will marshal its zero value as "mcp".
+	Type constant.Mcp `json:"type" default:"mcp"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolMcpParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolMcpParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolMcpParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam() ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam {
+	return ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam{
+		Type: "file_search",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam].
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam struct {
+	// The tool to call. Always `file_search`.
+	Type constant.FileSearch `json:"type" default:"file_search"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam() ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam {
+	return ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam{
+		Type: "web_search",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam].
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam struct {
+	// The tool to call. Always `web_search`.
+	Type constant.WebSearch `json:"type" default:"web_search"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam() ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam {
+	return ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam{
+		Type: "web_search_preview",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam].
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam struct {
+	// The tool to call. Always `web_search_preview`.
+	Type constant.WebSearchPreview `json:"type" default:"web_search_preview"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam() ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam {
+	return ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam{
+		Type: "image_generation",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam].
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam struct {
+	// The tool to call. Always `image_generation`.
+	Type constant.ImageGeneration `json:"type" default:"image_generation"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam() ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam {
+	return ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam{
+		Type: "computer",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam].
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam struct {
+	// The tool to call. Always `computer`.
+	Type constant.Computer `json:"type" default:"computer"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam() ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam {
+	return ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam{
+		Type: "code_interpreter",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam].
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam struct {
+	// The tool to call. Always `code_interpreter`.
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam() ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam {
+	return ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam{
+		Type: "programmatic_tool_calling",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam].
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam struct {
+	// The tool to call. Always `programmatic_tool_calling`.
+	Type constant.ProgrammaticToolCalling `json:"type" default:"programmatic_tool_calling"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam() ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam {
+	return ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam{
+		Type: "shell",
+	}
+}
+
+// Forces the model to call the shell tool when a tool call is required.
+//
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam].
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam struct {
+	// The tool to call. Always `shell`.
+	Type constant.Shell `json:"type" default:"shell"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Name, Type are required.
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCustomParam struct {
+	// The name of the custom tool to call.
+	Name string `json:"name" api:"required"`
+	// The tool to call. Always `custom`.
+	//
+	// This field can be elided, and will marshal its zero value as "custom".
+	Type constant.Custom `json:"type" default:"custom"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCustomParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCustomParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolCustomParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam() ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam {
+	return ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam{
+		Type: "apply_patch",
+	}
+}
+
+// Forces the model to call the apply_patch tool when executing a tool call.
+//
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam].
+type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam struct {
+	// The tool to call. Always `apply_patch`.
+	Type constant.ApplyPatch `json:"type" default:"apply_patch"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -6045,13 +9996,36 @@ func (r *ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam) UnmarshalJSO
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ResponsesDelegationConfigToolUnionParam struct {
-	OfFunction  *FunctionToolParam                           `json:",omitzero,inline"`
-	OfWebSearch *ResponsesDelegationConfigToolWebSearchParam `json:",omitzero,inline"`
+	OfFunction                *FunctionToolParam                                         `json:",omitzero,inline"`
+	OfWebSearch               *ResponsesDelegationConfigToolWebSearchParam               `json:",omitzero,inline"`
+	OfFileSearch              *ResponsesDelegationConfigToolFileSearchParam              `json:",omitzero,inline"`
+	OfCodeInterpreter         *ResponsesDelegationConfigToolCodeInterpreterParam         `json:",omitzero,inline"`
+	OfShell                   *ResponsesDelegationConfigToolShellParam                   `json:",omitzero,inline"`
+	OfImageGeneration         *ResponsesDelegationConfigToolImageGenerationParam         `json:",omitzero,inline"`
+	OfMcp                     *ResponsesDelegationConfigToolMcpParam                     `json:",omitzero,inline"`
+	OfCustom                  *ResponsesDelegationConfigToolCustomParam                  `json:",omitzero,inline"`
+	OfNamespace               *ResponsesDelegationConfigToolNamespaceParam               `json:",omitzero,inline"`
+	OfToolSearch              *ResponsesDelegationConfigToolToolSearchParam              `json:",omitzero,inline"`
+	OfProgrammaticToolCalling *ResponsesDelegationConfigToolProgrammaticToolCallingParam `json:",omitzero,inline"`
+	OfComputer                *ResponsesDelegationConfigToolComputerParam                `json:",omitzero,inline"`
+	OfApplyPatch              *ResponsesDelegationConfigToolApplyPatchParam              `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ResponsesDelegationConfigToolUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfFunction, u.OfWebSearch)
+	return param.MarshalUnion(u, u.OfFunction,
+		u.OfWebSearch,
+		u.OfFileSearch,
+		u.OfCodeInterpreter,
+		u.OfShell,
+		u.OfImageGeneration,
+		u.OfMcp,
+		u.OfCustom,
+		u.OfNamespace,
+		u.OfToolSearch,
+		u.OfProgrammaticToolCalling,
+		u.OfComputer,
+		u.OfApplyPatch)
 }
 func (u *ResponsesDelegationConfigToolUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -6090,10 +10064,40 @@ func (u ResponsesDelegationConfigToolUnionParam) GetStrict() *bool {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolUnionParam) GetEnvironment() *ResponsesDelegationConfigToolShellEnvironmentUnionParam {
+	if vt := u.OfShell; vt != nil {
+		return &vt.Environment
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationConfigToolUnionParam) GetType() *string {
 	if vt := u.OfFunction; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfWebSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFileSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCodeInterpreter; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfShell; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfImageGeneration; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfMcp; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCustom; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfNamespace; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfToolSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfProgrammaticToolCalling; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfComputer; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfApplyPatch; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -6104,6 +10108,17 @@ func init() {
 		"type",
 		apijson.Discriminator[FunctionToolParam]("function"),
 		apijson.Discriminator[ResponsesDelegationConfigToolWebSearchParam]("web_search"),
+		apijson.Discriminator[ResponsesDelegationConfigToolFileSearchParam]("file_search"),
+		apijson.Discriminator[ResponsesDelegationConfigToolCodeInterpreterParam]("code_interpreter"),
+		apijson.Discriminator[ResponsesDelegationConfigToolShellParam]("shell"),
+		apijson.Discriminator[ResponsesDelegationConfigToolImageGenerationParam]("image_generation"),
+		apijson.Discriminator[ResponsesDelegationConfigToolMcpParam]("mcp"),
+		apijson.Discriminator[ResponsesDelegationConfigToolCustomParam]("custom"),
+		apijson.Discriminator[ResponsesDelegationConfigToolNamespaceParam]("namespace"),
+		apijson.Discriminator[ResponsesDelegationConfigToolToolSearchParam]("tool_search"),
+		apijson.Discriminator[ResponsesDelegationConfigToolProgrammaticToolCallingParam]("programmatic_tool_calling"),
+		apijson.Discriminator[ResponsesDelegationConfigToolComputerParam]("computer"),
+		apijson.Discriminator[ResponsesDelegationConfigToolApplyPatchParam]("apply_patch"),
 	)
 }
 
@@ -6128,6 +10143,649 @@ func (r ResponsesDelegationConfigToolWebSearchParam) MarshalJSON() (data []byte,
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *ResponsesDelegationConfigToolWebSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolFileSearchParam() ResponsesDelegationConfigToolFileSearchParam {
+	return ResponsesDelegationConfigToolFileSearchParam{
+		Type: "file_search",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolFileSearchParam].
+type ResponsesDelegationConfigToolFileSearchParam struct {
+	Type constant.FileSearch `json:"type" default:"file_search"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolFileSearchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolFileSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolFileSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolCodeInterpreterParam() ResponsesDelegationConfigToolCodeInterpreterParam {
+	return ResponsesDelegationConfigToolCodeInterpreterParam{
+		Type: "code_interpreter",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolCodeInterpreterParam].
+type ResponsesDelegationConfigToolCodeInterpreterParam struct {
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolCodeInterpreterParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolCodeInterpreterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolCodeInterpreterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A Responses shell tool. Use a hosted container or return local shell results
+// with response.item.create. Domain secrets are not supported.
+//
+// The property Type is required.
+type ResponsesDelegationConfigToolShellParam struct {
+	Environment ResponsesDelegationConfigToolShellEnvironmentUnionParam `json:"environment,omitzero"`
+	// This field can be elided, and will marshal its zero value as "shell".
+	Type constant.Shell `json:"type" default:"shell"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolShellParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolShellParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolShellParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponsesDelegationConfigToolShellEnvironmentUnionParam struct {
+	OfContainerAuto      *ResponsesDelegationConfigToolShellEnvironmentContainerAutoParam      `json:",omitzero,inline"`
+	OfContainerReference *ResponsesDelegationConfigToolShellEnvironmentContainerReferenceParam `json:",omitzero,inline"`
+	OfLocal              *ResponsesDelegationConfigToolShellEnvironmentLocalParam              `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponsesDelegationConfigToolShellEnvironmentUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfContainerAuto, u.OfContainerReference, u.OfLocal)
+}
+func (u *ResponsesDelegationConfigToolShellEnvironmentUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolShellEnvironmentUnionParam) GetFileIDs() []string {
+	if vt := u.OfContainerAuto; vt != nil {
+		return vt.FileIDs
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolShellEnvironmentUnionParam) GetMemoryLimit() *string {
+	if vt := u.OfContainerAuto; vt != nil {
+		return &vt.MemoryLimit
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolShellEnvironmentUnionParam) GetNetworkPolicy() *ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam {
+	if vt := u.OfContainerAuto; vt != nil {
+		return &vt.NetworkPolicy
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolShellEnvironmentUnionParam) GetContainerID() *string {
+	if vt := u.OfContainerReference; vt != nil {
+		return &vt.ContainerID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolShellEnvironmentUnionParam) GetType() *string {
+	if vt := u.OfContainerAuto; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfContainerReference; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfLocal; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u ResponsesDelegationConfigToolShellEnvironmentUnionParam) GetSkills() (res responsesDelegationConfigToolShellEnvironmentUnionParamSkills) {
+	if vt := u.OfContainerAuto; vt != nil {
+		res.any = &vt.Skills
+	} else if vt := u.OfLocal; vt != nil {
+		res.any = &vt.Skills
+	}
+	return
+}
+
+// Can have the runtime types
+// [_[]ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam],
+// [_[]ResponsesDelegationConfigToolShellEnvironmentLocalSkillParam]
+type responsesDelegationConfigToolShellEnvironmentUnionParamSkills struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *[]live.ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam:
+//	case *[]live.ResponsesDelegationConfigToolShellEnvironmentLocalSkillParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u responsesDelegationConfigToolShellEnvironmentUnionParamSkills) AsAny() any { return u.any }
+
+func init() {
+	apijson.RegisterUnion[ResponsesDelegationConfigToolShellEnvironmentUnionParam](
+		"type",
+		apijson.Discriminator[ResponsesDelegationConfigToolShellEnvironmentContainerAutoParam]("container_auto"),
+		apijson.Discriminator[ResponsesDelegationConfigToolShellEnvironmentContainerReferenceParam]("container_reference"),
+		apijson.Discriminator[ResponsesDelegationConfigToolShellEnvironmentLocalParam]("local"),
+	)
+}
+
+// The property Type is required.
+type ResponsesDelegationConfigToolShellEnvironmentContainerAutoParam struct {
+	// An optional list of uploaded files to make available to your code.
+	FileIDs []string `json:"file_ids,omitzero"`
+	// The memory limit for the container.
+	//
+	// Any of "1g", "4g", "16g", "64g".
+	MemoryLimit string `json:"memory_limit,omitzero"`
+	// Network access policy for the container.
+	NetworkPolicy ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam `json:"network_policy,omitzero"`
+	// An optional list of skills referenced by id or inline data.
+	Skills []ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam `json:"skills,omitzero"`
+	// Automatically creates a container for this request
+	//
+	// This field can be elided, and will marshal its zero value as "container_auto".
+	Type constant.ContainerAuto `json:"type" default:"container_auto"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolShellEnvironmentContainerAutoParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolShellEnvironmentContainerAutoParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAutoParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponsesDelegationConfigToolShellEnvironmentContainerAutoParam](
+		"memory_limit", "1g", "4g", "16g", "64g",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam struct {
+	OfDisabled  *ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam  `json:",omitzero,inline"`
+	OfAllowlist *ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfDisabled, u.OfAllowlist)
+}
+func (u *ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam) GetAllowedDomains() []string {
+	if vt := u.OfAllowlist; vt != nil {
+		return vt.AllowedDomains
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam) GetType() *string {
+	if vt := u.OfDisabled; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfAllowlist; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam](
+		"type",
+		apijson.Discriminator[ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam]("disabled"),
+		apijson.Discriminator[ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam]("allowlist"),
+	)
+}
+
+func NewResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam() ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam {
+	return ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam{
+		Type: "disabled",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam].
+type ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam struct {
+	// Disable outbound network access. Always `disabled`.
+	Type constant.Disabled `json:"type" default:"disabled"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties AllowedDomains, Type are required.
+type ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam struct {
+	// A list of allowed domains when type is `allowlist`.
+	AllowedDomains []string `json:"allowed_domains,omitzero" api:"required"`
+	// Allow outbound network access only to specified domains. Always `allowlist`.
+	//
+	// This field can be elided, and will marshal its zero value as "allowlist".
+	Type constant.Allowlist `json:"type" default:"allowlist"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam struct {
+	OfSkillReference *ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam `json:",omitzero,inline"`
+	OfInline         *ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineParam         `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfSkillReference, u.OfInline)
+}
+func (u *ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetSkillID() *string {
+	if vt := u.OfSkillReference; vt != nil {
+		return &vt.SkillID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetVersion() *string {
+	if vt := u.OfSkillReference; vt != nil && vt.Version.Valid() {
+		return &vt.Version.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetDescription() *string {
+	if vt := u.OfInline; vt != nil {
+		return &vt.Description
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetName() *string {
+	if vt := u.OfInline; vt != nil {
+		return &vt.Name
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetSource() *ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam {
+	if vt := u.OfInline; vt != nil {
+		return &vt.Source
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetType() *string {
+	if vt := u.OfSkillReference; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfInline; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam](
+		"type",
+		apijson.Discriminator[ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam]("skill_reference"),
+		apijson.Discriminator[ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineParam]("inline"),
+	)
+}
+
+// The properties SkillID, Type are required.
+type ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam struct {
+	// The ID of the referenced skill.
+	SkillID string `json:"skill_id" api:"required"`
+	// Optional skill version. Use a positive integer or 'latest'. Omit for default.
+	Version param.Opt[string] `json:"version,omitzero"`
+	// References a skill created with the /v1/skills endpoint.
+	//
+	// This field can be elided, and will marshal its zero value as "skill_reference".
+	Type constant.SkillReference `json:"type" default:"skill_reference"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Description, Name, Source, Type are required.
+type ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineParam struct {
+	// The description of the skill.
+	Description string `json:"description" api:"required"`
+	// The name of the skill.
+	Name string `json:"name" api:"required"`
+	// Inline skill payload
+	Source ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam `json:"source" api:"required"`
+	// Defines an inline skill for this request.
+	//
+	// This field can be elided, and will marshal its zero value as "inline".
+	Type constant.Inline `json:"type" default:"inline"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Inline skill payload
+//
+// The properties Data, MediaType, Type are required.
+type ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam struct {
+	// Base64-encoded skill zip bundle.
+	Data string `json:"data" api:"required"`
+	// The media type of the inline skill payload. Must be `application/zip`.
+	//
+	// This field can be elided, and will marshal its zero value as "application/zip".
+	MediaType constant.ApplicationZip `json:"media_type" default:"application/zip"`
+	// The type of the inline skill source. Must be `base64`.
+	//
+	// This field can be elided, and will marshal its zero value as "base64".
+	Type constant.Base64 `json:"type" default:"base64"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties ContainerID, Type are required.
+type ResponsesDelegationConfigToolShellEnvironmentContainerReferenceParam struct {
+	// The ID of the referenced container.
+	ContainerID string `json:"container_id" api:"required"`
+	// References a container created with the /v1/containers endpoint
+	//
+	// This field can be elided, and will marshal its zero value as
+	// "container_reference".
+	Type constant.ContainerReference `json:"type" default:"container_reference"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolShellEnvironmentContainerReferenceParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolShellEnvironmentContainerReferenceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolShellEnvironmentContainerReferenceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The property Type is required.
+type ResponsesDelegationConfigToolShellEnvironmentLocalParam struct {
+	// An optional list of skills.
+	Skills []ResponsesDelegationConfigToolShellEnvironmentLocalSkillParam `json:"skills,omitzero"`
+	// Use a local computer environment.
+	//
+	// This field can be elided, and will marshal its zero value as "local".
+	Type constant.Local `json:"type" default:"local"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolShellEnvironmentLocalParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolShellEnvironmentLocalParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolShellEnvironmentLocalParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Description, Name, Path are required.
+type ResponsesDelegationConfigToolShellEnvironmentLocalSkillParam struct {
+	// The description of the skill.
+	Description string `json:"description" api:"required"`
+	// The name of the skill.
+	Name string `json:"name" api:"required"`
+	// The path to the directory containing the skill.
+	Path string `json:"path" api:"required"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolShellEnvironmentLocalSkillParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolShellEnvironmentLocalSkillParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolShellEnvironmentLocalSkillParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolImageGenerationParam() ResponsesDelegationConfigToolImageGenerationParam {
+	return ResponsesDelegationConfigToolImageGenerationParam{
+		Type: "image_generation",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolImageGenerationParam].
+type ResponsesDelegationConfigToolImageGenerationParam struct {
+	Type constant.ImageGeneration `json:"type" default:"image_generation"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolImageGenerationParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolImageGenerationParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolImageGenerationParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolMcpParam() ResponsesDelegationConfigToolMcpParam {
+	return ResponsesDelegationConfigToolMcpParam{
+		Type: "mcp",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolMcpParam].
+type ResponsesDelegationConfigToolMcpParam struct {
+	Type constant.Mcp `json:"type" default:"mcp"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolMcpParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolMcpParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolMcpParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolCustomParam() ResponsesDelegationConfigToolCustomParam {
+	return ResponsesDelegationConfigToolCustomParam{
+		Type: "custom",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolCustomParam].
+type ResponsesDelegationConfigToolCustomParam struct {
+	Type constant.Custom `json:"type" default:"custom"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolCustomParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolCustomParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolCustomParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolNamespaceParam() ResponsesDelegationConfigToolNamespaceParam {
+	return ResponsesDelegationConfigToolNamespaceParam{
+		Type: "namespace",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolNamespaceParam].
+type ResponsesDelegationConfigToolNamespaceParam struct {
+	Type constant.Namespace `json:"type" default:"namespace"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolNamespaceParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolNamespaceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolNamespaceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolToolSearchParam() ResponsesDelegationConfigToolToolSearchParam {
+	return ResponsesDelegationConfigToolToolSearchParam{
+		Type: "tool_search",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolToolSearchParam].
+type ResponsesDelegationConfigToolToolSearchParam struct {
+	Type constant.ToolSearch `json:"type" default:"tool_search"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolToolSearchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolToolSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolToolSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolProgrammaticToolCallingParam() ResponsesDelegationConfigToolProgrammaticToolCallingParam {
+	return ResponsesDelegationConfigToolProgrammaticToolCallingParam{
+		Type: "programmatic_tool_calling",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolProgrammaticToolCallingParam].
+type ResponsesDelegationConfigToolProgrammaticToolCallingParam struct {
+	Type constant.ProgrammaticToolCalling `json:"type" default:"programmatic_tool_calling"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolProgrammaticToolCallingParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolProgrammaticToolCallingParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolProgrammaticToolCallingParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolComputerParam() ResponsesDelegationConfigToolComputerParam {
+	return ResponsesDelegationConfigToolComputerParam{
+		Type: "computer",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolComputerParam].
+type ResponsesDelegationConfigToolComputerParam struct {
+	Type constant.Computer `json:"type" default:"computer"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolComputerParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolComputerParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolComputerParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationConfigToolApplyPatchParam() ResponsesDelegationConfigToolApplyPatchParam {
+	return ResponsesDelegationConfigToolApplyPatchParam{
+		Type: "apply_patch",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationConfigToolApplyPatchParam].
+type ResponsesDelegationConfigToolApplyPatchParam struct {
+	Type constant.ApplyPatch `json:"type" default:"apply_patch"`
+	paramObj
+}
+
+func (r ResponsesDelegationConfigToolApplyPatchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolApplyPatchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationConfigToolApplyPatchParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -6245,14 +10903,38 @@ func init() {
 // Use [param.IsOmitted] to confirm if a field is set.
 type ResponsesDelegationUpdateConfigToolChoiceUnionParam struct {
 	// Check if union is this variant with !param.IsOmitted(union.OfLiveToolChoiceEnum)
-	OfLiveToolChoiceEnum                                                   param.Opt[string]                                                     `json:",omitzero,inline"`
-	OfResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam *ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam `json:",omitzero,inline"`
-	OfResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam      *ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam      `json:",omitzero,inline"`
+	OfLiveToolChoiceEnum                                                   param.Opt[string]                                                      `json:",omitzero,inline"`
+	OfResponsesDelegationUpdateConfigToolChoiceFunction                    *ResponsesDelegationUpdateConfigToolChoiceFunctionParam                `json:",omitzero,inline"`
+	OfResponsesDelegationUpdateConfigToolChoiceMcp                         *ResponsesDelegationUpdateConfigToolChoiceMcpParam                     `json:",omitzero,inline"`
+	OfResponsesDelegationUpdateConfigToolChoiceFileSearch                  *ResponsesDelegationUpdateConfigToolChoiceFileSearchParam              `json:",omitzero,inline"`
+	OfResponsesDelegationUpdateConfigToolChoiceWebSearch                   *ResponsesDelegationUpdateConfigToolChoiceWebSearchParam               `json:",omitzero,inline"`
+	OfResponsesDelegationUpdateConfigToolChoiceWebSearchPreview            *ResponsesDelegationUpdateConfigToolChoiceWebSearchPreviewParam        `json:",omitzero,inline"`
+	OfResponsesDelegationUpdateConfigToolChoiceImageGeneration             *ResponsesDelegationUpdateConfigToolChoiceImageGenerationParam         `json:",omitzero,inline"`
+	OfResponsesDelegationUpdateConfigToolChoiceComputer                    *ResponsesDelegationUpdateConfigToolChoiceComputerParam                `json:",omitzero,inline"`
+	OfResponsesDelegationUpdateConfigToolChoiceCodeInterpreter             *ResponsesDelegationUpdateConfigToolChoiceCodeInterpreterParam         `json:",omitzero,inline"`
+	OfResponsesDelegationUpdateConfigToolChoiceProgrammaticToolCalling     *ResponsesDelegationUpdateConfigToolChoiceProgrammaticToolCallingParam `json:",omitzero,inline"`
+	OfResponsesDelegationUpdateConfigToolChoiceShell                       *ResponsesDelegationUpdateConfigToolChoiceShellParam                   `json:",omitzero,inline"`
+	OfResponsesDelegationUpdateConfigToolChoiceCustom                      *ResponsesDelegationUpdateConfigToolChoiceCustomParam                  `json:",omitzero,inline"`
+	OfResponsesDelegationUpdateConfigToolChoiceApplyPatch                  *ResponsesDelegationUpdateConfigToolChoiceApplyPatchParam              `json:",omitzero,inline"`
+	OfResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParam *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParam  `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ResponsesDelegationUpdateConfigToolChoiceUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfLiveToolChoiceEnum, u.OfResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam, u.OfResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam)
+	return param.MarshalUnion(u, u.OfLiveToolChoiceEnum,
+		u.OfResponsesDelegationUpdateConfigToolChoiceFunction,
+		u.OfResponsesDelegationUpdateConfigToolChoiceMcp,
+		u.OfResponsesDelegationUpdateConfigToolChoiceFileSearch,
+		u.OfResponsesDelegationUpdateConfigToolChoiceWebSearch,
+		u.OfResponsesDelegationUpdateConfigToolChoiceWebSearchPreview,
+		u.OfResponsesDelegationUpdateConfigToolChoiceImageGeneration,
+		u.OfResponsesDelegationUpdateConfigToolChoiceComputer,
+		u.OfResponsesDelegationUpdateConfigToolChoiceCodeInterpreter,
+		u.OfResponsesDelegationUpdateConfigToolChoiceProgrammaticToolCalling,
+		u.OfResponsesDelegationUpdateConfigToolChoiceShell,
+		u.OfResponsesDelegationUpdateConfigToolChoiceCustom,
+		u.OfResponsesDelegationUpdateConfigToolChoiceApplyPatch,
+		u.OfResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParam)
 }
 func (u *ResponsesDelegationUpdateConfigToolChoiceUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -6260,17 +10942,35 @@ func (u *ResponsesDelegationUpdateConfigToolChoiceUnionParam) UnmarshalJSON(data
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationUpdateConfigToolChoiceUnionParam) GetServerLabel() *string {
-	if vt := u.OfResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam; vt != nil {
+	if vt := u.OfResponsesDelegationUpdateConfigToolChoiceMcp; vt != nil {
 		return &vt.ServerLabel
 	}
 	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolChoiceUnionParam) GetTools() []ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam {
+	if vt := u.OfResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParam; vt != nil {
+		return vt.Tools
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolChoiceUnionParam) GetMode() *string {
+	if vt := u.OfResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParam; vt != nil {
+		return &vt.Mode
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationUpdateConfigToolChoiceUnionParam) GetName() *string {
-	if vt := u.OfResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam; vt != nil {
+	if vt := u.OfResponsesDelegationUpdateConfigToolChoiceFunction; vt != nil {
 		return (*string)(&vt.Name)
-	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam; vt != nil {
+	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceMcp; vt != nil && vt.Name.Valid() {
+		return &vt.Name.Value
+	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceCustom; vt != nil {
 		return (*string)(&vt.Name)
 	}
 	return nil
@@ -6278,9 +10978,31 @@ func (u ResponsesDelegationUpdateConfigToolChoiceUnionParam) GetName() *string {
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationUpdateConfigToolChoiceUnionParam) GetType() *string {
-	if vt := u.OfResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam; vt != nil {
+	if vt := u.OfResponsesDelegationUpdateConfigToolChoiceFunction; vt != nil {
 		return (*string)(&vt.Type)
-	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam; vt != nil {
+	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceMcp; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceFileSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceWebSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceWebSearchPreview; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceImageGeneration; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceComputer; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceCodeInterpreter; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceProgrammaticToolCalling; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceShell; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceCustom; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceApplyPatch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParam; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -6294,36 +11016,661 @@ const (
 	ResponsesDelegationUpdateConfigToolChoiceLiveToolChoiceEnumRequired ResponsesDelegationUpdateConfigToolChoiceLiveToolChoiceEnum = "required"
 )
 
+// Forces the model to call the shell tool when a tool call is required.
+//
 // The properties Name, Type are required.
-type ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam struct {
+type ResponsesDelegationUpdateConfigToolChoiceFunctionParam struct {
+	// The name of the function tool to call.
 	Name string `json:"name" api:"required"`
+	// The tool to call. Always `function`.
+	//
 	// This field can be elided, and will marshal its zero value as "function".
 	Type constant.Function `json:"type" default:"function"`
 	paramObj
 }
 
-func (r ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam
+func (r ResponsesDelegationUpdateConfigToolChoiceFunctionParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceFunctionParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam) UnmarshalJSON(data []byte) error {
+func (r *ResponsesDelegationUpdateConfigToolChoiceFunctionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The properties Name, ServerLabel, Type are required.
-type ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam struct {
-	Name        string `json:"name" api:"required"`
+// The properties ServerLabel, Type are required.
+type ResponsesDelegationUpdateConfigToolChoiceMcpParam struct {
+	// The label of the MCP server to call.
 	ServerLabel string `json:"server_label" api:"required"`
+	// The name of the MCP tool to call. If omitted, the server may choose a default.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// The tool to call. Always `mcp`.
+	//
 	// This field can be elided, and will marshal its zero value as "mcp".
 	Type constant.Mcp `json:"type" default:"mcp"`
 	paramObj
 }
 
-func (r ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam
+func (r ResponsesDelegationUpdateConfigToolChoiceMcpParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceMcpParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam) UnmarshalJSON(data []byte) error {
+func (r *ResponsesDelegationUpdateConfigToolChoiceMcpParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolChoiceFileSearchParam() ResponsesDelegationUpdateConfigToolChoiceFileSearchParam {
+	return ResponsesDelegationUpdateConfigToolChoiceFileSearchParam{
+		Type: "file_search",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolChoiceFileSearchParam].
+type ResponsesDelegationUpdateConfigToolChoiceFileSearchParam struct {
+	// The tool to call. Always `file_search`.
+	Type constant.FileSearch `json:"type" default:"file_search"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceFileSearchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceFileSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceFileSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolChoiceWebSearchParam() ResponsesDelegationUpdateConfigToolChoiceWebSearchParam {
+	return ResponsesDelegationUpdateConfigToolChoiceWebSearchParam{
+		Type: "web_search",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolChoiceWebSearchParam].
+type ResponsesDelegationUpdateConfigToolChoiceWebSearchParam struct {
+	// The tool to call. Always `web_search`.
+	Type constant.WebSearch `json:"type" default:"web_search"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceWebSearchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceWebSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceWebSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolChoiceWebSearchPreviewParam() ResponsesDelegationUpdateConfigToolChoiceWebSearchPreviewParam {
+	return ResponsesDelegationUpdateConfigToolChoiceWebSearchPreviewParam{
+		Type: "web_search_preview",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolChoiceWebSearchPreviewParam].
+type ResponsesDelegationUpdateConfigToolChoiceWebSearchPreviewParam struct {
+	// The tool to call. Always `web_search_preview`.
+	Type constant.WebSearchPreview `json:"type" default:"web_search_preview"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceWebSearchPreviewParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceWebSearchPreviewParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceWebSearchPreviewParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolChoiceImageGenerationParam() ResponsesDelegationUpdateConfigToolChoiceImageGenerationParam {
+	return ResponsesDelegationUpdateConfigToolChoiceImageGenerationParam{
+		Type: "image_generation",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolChoiceImageGenerationParam].
+type ResponsesDelegationUpdateConfigToolChoiceImageGenerationParam struct {
+	// The tool to call. Always `image_generation`.
+	Type constant.ImageGeneration `json:"type" default:"image_generation"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceImageGenerationParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceImageGenerationParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceImageGenerationParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolChoiceComputerParam() ResponsesDelegationUpdateConfigToolChoiceComputerParam {
+	return ResponsesDelegationUpdateConfigToolChoiceComputerParam{
+		Type: "computer",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolChoiceComputerParam].
+type ResponsesDelegationUpdateConfigToolChoiceComputerParam struct {
+	// The tool to call. Always `computer`.
+	Type constant.Computer `json:"type" default:"computer"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceComputerParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceComputerParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceComputerParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolChoiceCodeInterpreterParam() ResponsesDelegationUpdateConfigToolChoiceCodeInterpreterParam {
+	return ResponsesDelegationUpdateConfigToolChoiceCodeInterpreterParam{
+		Type: "code_interpreter",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolChoiceCodeInterpreterParam].
+type ResponsesDelegationUpdateConfigToolChoiceCodeInterpreterParam struct {
+	// The tool to call. Always `code_interpreter`.
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceCodeInterpreterParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceCodeInterpreterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceCodeInterpreterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolChoiceProgrammaticToolCallingParam() ResponsesDelegationUpdateConfigToolChoiceProgrammaticToolCallingParam {
+	return ResponsesDelegationUpdateConfigToolChoiceProgrammaticToolCallingParam{
+		Type: "programmatic_tool_calling",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolChoiceProgrammaticToolCallingParam].
+type ResponsesDelegationUpdateConfigToolChoiceProgrammaticToolCallingParam struct {
+	// The tool to call. Always `programmatic_tool_calling`.
+	Type constant.ProgrammaticToolCalling `json:"type" default:"programmatic_tool_calling"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceProgrammaticToolCallingParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceProgrammaticToolCallingParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceProgrammaticToolCallingParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolChoiceShellParam() ResponsesDelegationUpdateConfigToolChoiceShellParam {
+	return ResponsesDelegationUpdateConfigToolChoiceShellParam{
+		Type: "shell",
+	}
+}
+
+// Forces the model to call the shell tool when a tool call is required.
+//
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolChoiceShellParam].
+type ResponsesDelegationUpdateConfigToolChoiceShellParam struct {
+	// The tool to call. Always `shell`.
+	Type constant.Shell `json:"type" default:"shell"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceShellParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceShellParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceShellParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Name, Type are required.
+type ResponsesDelegationUpdateConfigToolChoiceCustomParam struct {
+	// The name of the custom tool to call.
+	Name string `json:"name" api:"required"`
+	// The tool to call. Always `custom`.
+	//
+	// This field can be elided, and will marshal its zero value as "custom".
+	Type constant.Custom `json:"type" default:"custom"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceCustomParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceCustomParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceCustomParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolChoiceApplyPatchParam() ResponsesDelegationUpdateConfigToolChoiceApplyPatchParam {
+	return ResponsesDelegationUpdateConfigToolChoiceApplyPatchParam{
+		Type: "apply_patch",
+	}
+}
+
+// Forces the model to call the apply_patch tool when executing a tool call.
+//
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolChoiceApplyPatchParam].
+type ResponsesDelegationUpdateConfigToolChoiceApplyPatchParam struct {
+	// The tool to call. Always `apply_patch`.
+	Type constant.ApplyPatch `json:"type" default:"apply_patch"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceApplyPatchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceApplyPatchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceApplyPatchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Tools, Type are required.
+type ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParam struct {
+	// The tools that the delegated Responses model may call.
+	Tools []ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam `json:"tools,omitzero" api:"required"`
+	// How to select a tool from the allowed set.
+	//
+	// Any of "none", "auto", "required".
+	Mode string `json:"mode,omitzero"`
+	// The tool choice type. Always `allowed_tools`.
+	//
+	// This field can be elided, and will marshal its zero value as "allowed_tools".
+	Type constant.AllowedTools `json:"type" default:"allowed_tools"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParam](
+		"mode", "none", "auto", "required",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam struct {
+	OfFunction                *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolFunctionParam                `json:",omitzero,inline"`
+	OfMcp                     *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolMcpParam                     `json:",omitzero,inline"`
+	OfFileSearch              *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam              `json:",omitzero,inline"`
+	OfWebSearch               *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam               `json:",omitzero,inline"`
+	OfWebSearchPreview        *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam        `json:",omitzero,inline"`
+	OfImageGeneration         *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam         `json:",omitzero,inline"`
+	OfComputer                *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam                `json:",omitzero,inline"`
+	OfCodeInterpreter         *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam         `json:",omitzero,inline"`
+	OfProgrammaticToolCalling *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam `json:",omitzero,inline"`
+	OfShell                   *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam                   `json:",omitzero,inline"`
+	OfCustom                  *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolCustomParam                  `json:",omitzero,inline"`
+	OfApplyPatch              *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam              `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfFunction,
+		u.OfMcp,
+		u.OfFileSearch,
+		u.OfWebSearch,
+		u.OfWebSearchPreview,
+		u.OfImageGeneration,
+		u.OfComputer,
+		u.OfCodeInterpreter,
+		u.OfProgrammaticToolCalling,
+		u.OfShell,
+		u.OfCustom,
+		u.OfApplyPatch)
+}
+func (u *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam) GetServerLabel() *string {
+	if vt := u.OfMcp; vt != nil {
+		return &vt.ServerLabel
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam) GetName() *string {
+	if vt := u.OfFunction; vt != nil {
+		return (*string)(&vt.Name)
+	} else if vt := u.OfMcp; vt != nil && vt.Name.Valid() {
+		return &vt.Name.Value
+	} else if vt := u.OfCustom; vt != nil {
+		return (*string)(&vt.Name)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam) GetType() *string {
+	if vt := u.OfFunction; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfMcp; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFileSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfWebSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfWebSearchPreview; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfImageGeneration; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfComputer; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCodeInterpreter; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfProgrammaticToolCalling; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfShell; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCustom; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfApplyPatch; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam](
+		"type",
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolFunctionParam]("function"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolMcpParam]("mcp"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam]("file_search"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam]("web_search"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam]("web_search_preview"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam]("image_generation"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam]("computer"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam]("code_interpreter"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam]("programmatic_tool_calling"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam]("shell"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolCustomParam]("custom"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam]("apply_patch"),
+	)
+}
+
+// The properties Name, Type are required.
+type ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolFunctionParam struct {
+	// The name of the function tool to call.
+	Name string `json:"name" api:"required"`
+	// The tool to call. Always `function`.
+	//
+	// This field can be elided, and will marshal its zero value as "function".
+	Type constant.Function `json:"type" default:"function"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolFunctionParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolFunctionParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolFunctionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties ServerLabel, Type are required.
+type ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolMcpParam struct {
+	// The label of the MCP server to call.
+	ServerLabel string `json:"server_label" api:"required"`
+	// The name of the MCP tool to call. If omitted, the server may choose a default.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// The tool to call. Always `mcp`.
+	//
+	// This field can be elided, and will marshal its zero value as "mcp".
+	Type constant.Mcp `json:"type" default:"mcp"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolMcpParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolMcpParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolMcpParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam() ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam {
+	return ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam{
+		Type: "file_search",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam].
+type ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam struct {
+	// The tool to call. Always `file_search`.
+	Type constant.FileSearch `json:"type" default:"file_search"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolFileSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam() ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam {
+	return ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam{
+		Type: "web_search",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam].
+type ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam struct {
+	// The tool to call. Always `web_search`.
+	Type constant.WebSearch `json:"type" default:"web_search"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam() ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam {
+	return ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam{
+		Type: "web_search_preview",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam].
+type ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam struct {
+	// The tool to call. Always `web_search_preview`.
+	Type constant.WebSearchPreview `json:"type" default:"web_search_preview"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolWebSearchPreviewParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam() ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam {
+	return ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam{
+		Type: "image_generation",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam].
+type ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam struct {
+	// The tool to call. Always `image_generation`.
+	Type constant.ImageGeneration `json:"type" default:"image_generation"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolImageGenerationParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam() ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam {
+	return ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam{
+		Type: "computer",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam].
+type ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam struct {
+	// The tool to call. Always `computer`.
+	Type constant.Computer `json:"type" default:"computer"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolComputerParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam() ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam {
+	return ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam{
+		Type: "code_interpreter",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam].
+type ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam struct {
+	// The tool to call. Always `code_interpreter`.
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolCodeInterpreterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam() ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam {
+	return ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam{
+		Type: "programmatic_tool_calling",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam].
+type ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam struct {
+	// The tool to call. Always `programmatic_tool_calling`.
+	Type constant.ProgrammaticToolCalling `json:"type" default:"programmatic_tool_calling"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolProgrammaticToolCallingParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam() ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam {
+	return ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam{
+		Type: "shell",
+	}
+}
+
+// Forces the model to call the shell tool when a tool call is required.
+//
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam].
+type ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam struct {
+	// The tool to call. Always `shell`.
+	Type constant.Shell `json:"type" default:"shell"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolShellParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Name, Type are required.
+type ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolCustomParam struct {
+	// The name of the custom tool to call.
+	Name string `json:"name" api:"required"`
+	// The tool to call. Always `custom`.
+	//
+	// This field can be elided, and will marshal its zero value as "custom".
+	Type constant.Custom `json:"type" default:"custom"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolCustomParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolCustomParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolCustomParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam() ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam {
+	return ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam{
+		Type: "apply_patch",
+	}
+}
+
+// Forces the model to call the apply_patch tool when executing a tool call.
+//
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam].
+type ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam struct {
+	// The tool to call. Always `apply_patch`.
+	Type constant.ApplyPatch `json:"type" default:"apply_patch"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolApplyPatchParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -6331,13 +11678,36 @@ func (r *ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam) Unmars
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ResponsesDelegationUpdateConfigToolUnionParam struct {
-	OfFunction  *FunctionToolParam                                 `json:",omitzero,inline"`
-	OfWebSearch *ResponsesDelegationUpdateConfigToolWebSearchParam `json:",omitzero,inline"`
+	OfFunction                *FunctionToolParam                                               `json:",omitzero,inline"`
+	OfWebSearch               *ResponsesDelegationUpdateConfigToolWebSearchParam               `json:",omitzero,inline"`
+	OfFileSearch              *ResponsesDelegationUpdateConfigToolFileSearchParam              `json:",omitzero,inline"`
+	OfCodeInterpreter         *ResponsesDelegationUpdateConfigToolCodeInterpreterParam         `json:",omitzero,inline"`
+	OfShell                   *ResponsesDelegationUpdateConfigToolShellParam                   `json:",omitzero,inline"`
+	OfImageGeneration         *ResponsesDelegationUpdateConfigToolImageGenerationParam         `json:",omitzero,inline"`
+	OfMcp                     *ResponsesDelegationUpdateConfigToolMcpParam                     `json:",omitzero,inline"`
+	OfCustom                  *ResponsesDelegationUpdateConfigToolCustomParam                  `json:",omitzero,inline"`
+	OfNamespace               *ResponsesDelegationUpdateConfigToolNamespaceParam               `json:",omitzero,inline"`
+	OfToolSearch              *ResponsesDelegationUpdateConfigToolToolSearchParam              `json:",omitzero,inline"`
+	OfProgrammaticToolCalling *ResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam `json:",omitzero,inline"`
+	OfComputer                *ResponsesDelegationUpdateConfigToolComputerParam                `json:",omitzero,inline"`
+	OfApplyPatch              *ResponsesDelegationUpdateConfigToolApplyPatchParam              `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ResponsesDelegationUpdateConfigToolUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfFunction, u.OfWebSearch)
+	return param.MarshalUnion(u, u.OfFunction,
+		u.OfWebSearch,
+		u.OfFileSearch,
+		u.OfCodeInterpreter,
+		u.OfShell,
+		u.OfImageGeneration,
+		u.OfMcp,
+		u.OfCustom,
+		u.OfNamespace,
+		u.OfToolSearch,
+		u.OfProgrammaticToolCalling,
+		u.OfComputer,
+		u.OfApplyPatch)
 }
 func (u *ResponsesDelegationUpdateConfigToolUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -6376,10 +11746,40 @@ func (u ResponsesDelegationUpdateConfigToolUnionParam) GetStrict() *bool {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolUnionParam) GetEnvironment() *ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam {
+	if vt := u.OfShell; vt != nil {
+		return &vt.Environment
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationUpdateConfigToolUnionParam) GetType() *string {
 	if vt := u.OfFunction; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfWebSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFileSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCodeInterpreter; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfShell; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfImageGeneration; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfMcp; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCustom; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfNamespace; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfToolSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfProgrammaticToolCalling; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfComputer; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfApplyPatch; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -6390,6 +11790,17 @@ func init() {
 		"type",
 		apijson.Discriminator[FunctionToolParam]("function"),
 		apijson.Discriminator[ResponsesDelegationUpdateConfigToolWebSearchParam]("web_search"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolFileSearchParam]("file_search"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolCodeInterpreterParam]("code_interpreter"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolShellParam]("shell"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolImageGenerationParam]("image_generation"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolMcpParam]("mcp"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolCustomParam]("custom"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolNamespaceParam]("namespace"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolToolSearchParam]("tool_search"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam]("programmatic_tool_calling"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolComputerParam]("computer"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolApplyPatchParam]("apply_patch"),
 	)
 }
 
@@ -6414,6 +11825,651 @@ func (r ResponsesDelegationUpdateConfigToolWebSearchParam) MarshalJSON() (data [
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *ResponsesDelegationUpdateConfigToolWebSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolFileSearchParam() ResponsesDelegationUpdateConfigToolFileSearchParam {
+	return ResponsesDelegationUpdateConfigToolFileSearchParam{
+		Type: "file_search",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolFileSearchParam].
+type ResponsesDelegationUpdateConfigToolFileSearchParam struct {
+	Type constant.FileSearch `json:"type" default:"file_search"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolFileSearchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolFileSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolFileSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolCodeInterpreterParam() ResponsesDelegationUpdateConfigToolCodeInterpreterParam {
+	return ResponsesDelegationUpdateConfigToolCodeInterpreterParam{
+		Type: "code_interpreter",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolCodeInterpreterParam].
+type ResponsesDelegationUpdateConfigToolCodeInterpreterParam struct {
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolCodeInterpreterParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolCodeInterpreterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolCodeInterpreterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A Responses shell tool. Use a hosted container or return local shell results
+// with response.item.create. Domain secrets are not supported.
+//
+// The property Type is required.
+type ResponsesDelegationUpdateConfigToolShellParam struct {
+	Environment ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam `json:"environment,omitzero"`
+	// This field can be elided, and will marshal its zero value as "shell".
+	Type constant.Shell `json:"type" default:"shell"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolShellParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolShellParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolShellParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam struct {
+	OfContainerAuto      *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoParam      `json:",omitzero,inline"`
+	OfContainerReference *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerReferenceParam `json:",omitzero,inline"`
+	OfLocal              *ResponsesDelegationUpdateConfigToolShellEnvironmentLocalParam              `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfContainerAuto, u.OfContainerReference, u.OfLocal)
+}
+func (u *ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam) GetFileIDs() []string {
+	if vt := u.OfContainerAuto; vt != nil {
+		return vt.FileIDs
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam) GetMemoryLimit() *string {
+	if vt := u.OfContainerAuto; vt != nil {
+		return &vt.MemoryLimit
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam) GetNetworkPolicy() *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam {
+	if vt := u.OfContainerAuto; vt != nil {
+		return &vt.NetworkPolicy
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam) GetContainerID() *string {
+	if vt := u.OfContainerReference; vt != nil {
+		return &vt.ContainerID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam) GetType() *string {
+	if vt := u.OfContainerAuto; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfContainerReference; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfLocal; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam) GetSkills() (res responsesDelegationUpdateConfigToolShellEnvironmentUnionParamSkills) {
+	if vt := u.OfContainerAuto; vt != nil {
+		res.any = &vt.Skills
+	} else if vt := u.OfLocal; vt != nil {
+		res.any = &vt.Skills
+	}
+	return
+}
+
+// Can have the runtime types
+// [_[]ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam],
+// [_[]ResponsesDelegationUpdateConfigToolShellEnvironmentLocalSkillParam]
+type responsesDelegationUpdateConfigToolShellEnvironmentUnionParamSkills struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *[]live.ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam:
+//	case *[]live.ResponsesDelegationUpdateConfigToolShellEnvironmentLocalSkillParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u responsesDelegationUpdateConfigToolShellEnvironmentUnionParamSkills) AsAny() any {
+	return u.any
+}
+
+func init() {
+	apijson.RegisterUnion[ResponsesDelegationUpdateConfigToolShellEnvironmentUnionParam](
+		"type",
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoParam]("container_auto"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolShellEnvironmentContainerReferenceParam]("container_reference"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolShellEnvironmentLocalParam]("local"),
+	)
+}
+
+// The property Type is required.
+type ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoParam struct {
+	// An optional list of uploaded files to make available to your code.
+	FileIDs []string `json:"file_ids,omitzero"`
+	// The memory limit for the container.
+	//
+	// Any of "1g", "4g", "16g", "64g".
+	MemoryLimit string `json:"memory_limit,omitzero"`
+	// Network access policy for the container.
+	NetworkPolicy ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam `json:"network_policy,omitzero"`
+	// An optional list of skills referenced by id or inline data.
+	Skills []ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam `json:"skills,omitzero"`
+	// Automatically creates a container for this request
+	//
+	// This field can be elided, and will marshal its zero value as "container_auto".
+	Type constant.ContainerAuto `json:"type" default:"container_auto"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoParam](
+		"memory_limit", "1g", "4g", "16g", "64g",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam struct {
+	OfDisabled  *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam  `json:",omitzero,inline"`
+	OfAllowlist *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfDisabled, u.OfAllowlist)
+}
+func (u *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam) GetAllowedDomains() []string {
+	if vt := u.OfAllowlist; vt != nil {
+		return vt.AllowedDomains
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam) GetType() *string {
+	if vt := u.OfDisabled; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfAllowlist; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam](
+		"type",
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam]("disabled"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam]("allowlist"),
+	)
+}
+
+func NewResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam() ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam {
+	return ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam{
+		Type: "disabled",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam].
+type ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam struct {
+	// Disable outbound network access. Always `disabled`.
+	Type constant.Disabled `json:"type" default:"disabled"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyDisabledParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties AllowedDomains, Type are required.
+type ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam struct {
+	// A list of allowed domains when type is `allowlist`.
+	AllowedDomains []string `json:"allowed_domains,omitzero" api:"required"`
+	// Allow outbound network access only to specified domains. Always `allowlist`.
+	//
+	// This field can be elided, and will marshal its zero value as "allowlist".
+	Type constant.Allowlist `json:"type" default:"allowlist"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyAllowlistParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam struct {
+	OfSkillReference *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam `json:",omitzero,inline"`
+	OfInline         *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineParam         `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfSkillReference, u.OfInline)
+}
+func (u *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetSkillID() *string {
+	if vt := u.OfSkillReference; vt != nil {
+		return &vt.SkillID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetVersion() *string {
+	if vt := u.OfSkillReference; vt != nil && vt.Version.Valid() {
+		return &vt.Version.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetDescription() *string {
+	if vt := u.OfInline; vt != nil {
+		return &vt.Description
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetName() *string {
+	if vt := u.OfInline; vt != nil {
+		return &vt.Name
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetSource() *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam {
+	if vt := u.OfInline; vt != nil {
+		return &vt.Source
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam) GetType() *string {
+	if vt := u.OfSkillReference; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfInline; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam](
+		"type",
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam]("skill_reference"),
+		apijson.Discriminator[ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineParam]("inline"),
+	)
+}
+
+// The properties SkillID, Type are required.
+type ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam struct {
+	// The ID of the referenced skill.
+	SkillID string `json:"skill_id" api:"required"`
+	// Optional skill version. Use a positive integer or 'latest'. Omit for default.
+	Version param.Opt[string] `json:"version,omitzero"`
+	// References a skill created with the /v1/skills endpoint.
+	//
+	// This field can be elided, and will marshal its zero value as "skill_reference".
+	Type constant.SkillReference `json:"type" default:"skill_reference"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillSkillReferenceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Description, Name, Source, Type are required.
+type ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineParam struct {
+	// The description of the skill.
+	Description string `json:"description" api:"required"`
+	// The name of the skill.
+	Name string `json:"name" api:"required"`
+	// Inline skill payload
+	Source ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam `json:"source" api:"required"`
+	// Defines an inline skill for this request.
+	//
+	// This field can be elided, and will marshal its zero value as "inline".
+	Type constant.Inline `json:"type" default:"inline"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Inline skill payload
+//
+// The properties Data, MediaType, Type are required.
+type ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam struct {
+	// Base64-encoded skill zip bundle.
+	Data string `json:"data" api:"required"`
+	// The media type of the inline skill payload. Must be `application/zip`.
+	//
+	// This field can be elided, and will marshal its zero value as "application/zip".
+	MediaType constant.ApplicationZip `json:"media_type" default:"application/zip"`
+	// The type of the inline skill source. Must be `base64`.
+	//
+	// This field can be elided, and will marshal its zero value as "base64".
+	Type constant.Base64 `json:"type" default:"base64"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillInlineSourceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties ContainerID, Type are required.
+type ResponsesDelegationUpdateConfigToolShellEnvironmentContainerReferenceParam struct {
+	// The ID of the referenced container.
+	ContainerID string `json:"container_id" api:"required"`
+	// References a container created with the /v1/containers endpoint
+	//
+	// This field can be elided, and will marshal its zero value as
+	// "container_reference".
+	Type constant.ContainerReference `json:"type" default:"container_reference"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolShellEnvironmentContainerReferenceParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolShellEnvironmentContainerReferenceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolShellEnvironmentContainerReferenceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The property Type is required.
+type ResponsesDelegationUpdateConfigToolShellEnvironmentLocalParam struct {
+	// An optional list of skills.
+	Skills []ResponsesDelegationUpdateConfigToolShellEnvironmentLocalSkillParam `json:"skills,omitzero"`
+	// Use a local computer environment.
+	//
+	// This field can be elided, and will marshal its zero value as "local".
+	Type constant.Local `json:"type" default:"local"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolShellEnvironmentLocalParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolShellEnvironmentLocalParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolShellEnvironmentLocalParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Description, Name, Path are required.
+type ResponsesDelegationUpdateConfigToolShellEnvironmentLocalSkillParam struct {
+	// The description of the skill.
+	Description string `json:"description" api:"required"`
+	// The name of the skill.
+	Name string `json:"name" api:"required"`
+	// The path to the directory containing the skill.
+	Path string `json:"path" api:"required"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolShellEnvironmentLocalSkillParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolShellEnvironmentLocalSkillParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolShellEnvironmentLocalSkillParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolImageGenerationParam() ResponsesDelegationUpdateConfigToolImageGenerationParam {
+	return ResponsesDelegationUpdateConfigToolImageGenerationParam{
+		Type: "image_generation",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolImageGenerationParam].
+type ResponsesDelegationUpdateConfigToolImageGenerationParam struct {
+	Type constant.ImageGeneration `json:"type" default:"image_generation"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolImageGenerationParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolImageGenerationParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolImageGenerationParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolMcpParam() ResponsesDelegationUpdateConfigToolMcpParam {
+	return ResponsesDelegationUpdateConfigToolMcpParam{
+		Type: "mcp",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolMcpParam].
+type ResponsesDelegationUpdateConfigToolMcpParam struct {
+	Type constant.Mcp `json:"type" default:"mcp"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolMcpParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolMcpParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolMcpParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolCustomParam() ResponsesDelegationUpdateConfigToolCustomParam {
+	return ResponsesDelegationUpdateConfigToolCustomParam{
+		Type: "custom",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolCustomParam].
+type ResponsesDelegationUpdateConfigToolCustomParam struct {
+	Type constant.Custom `json:"type" default:"custom"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolCustomParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolCustomParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolCustomParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolNamespaceParam() ResponsesDelegationUpdateConfigToolNamespaceParam {
+	return ResponsesDelegationUpdateConfigToolNamespaceParam{
+		Type: "namespace",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolNamespaceParam].
+type ResponsesDelegationUpdateConfigToolNamespaceParam struct {
+	Type constant.Namespace `json:"type" default:"namespace"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolNamespaceParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolNamespaceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolNamespaceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolToolSearchParam() ResponsesDelegationUpdateConfigToolToolSearchParam {
+	return ResponsesDelegationUpdateConfigToolToolSearchParam{
+		Type: "tool_search",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolToolSearchParam].
+type ResponsesDelegationUpdateConfigToolToolSearchParam struct {
+	Type constant.ToolSearch `json:"type" default:"tool_search"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolToolSearchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolToolSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolToolSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam() ResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam {
+	return ResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam{
+		Type: "programmatic_tool_calling",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam].
+type ResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam struct {
+	Type constant.ProgrammaticToolCalling `json:"type" default:"programmatic_tool_calling"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolProgrammaticToolCallingParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolComputerParam() ResponsesDelegationUpdateConfigToolComputerParam {
+	return ResponsesDelegationUpdateConfigToolComputerParam{
+		Type: "computer",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolComputerParam].
+type ResponsesDelegationUpdateConfigToolComputerParam struct {
+	Type constant.Computer `json:"type" default:"computer"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolComputerParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolComputerParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolComputerParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewResponsesDelegationUpdateConfigToolApplyPatchParam() ResponsesDelegationUpdateConfigToolApplyPatchParam {
+	return ResponsesDelegationUpdateConfigToolApplyPatchParam{
+		Type: "apply_patch",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponsesDelegationUpdateConfigToolApplyPatchParam].
+type ResponsesDelegationUpdateConfigToolApplyPatchParam struct {
+	Type constant.ApplyPatch `json:"type" default:"apply_patch"`
+	paramObj
+}
+
+func (r ResponsesDelegationUpdateConfigToolApplyPatchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolApplyPatchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesDelegationUpdateConfigToolApplyPatchParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
