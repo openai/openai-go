@@ -31,7 +31,7 @@ func TestAudioTranslationNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Audio.Translations.New(context.TODO(), openai.AudioTranslationNewParams{
 		File:           io.Reader(bytes.NewBuffer([]byte("Example data"))),
-		Model:          openai.AudioModelWhisper1,
+		Model:          openai.AudioModel("whisper-1"),
 		Prompt:         openai.String("prompt"),
 		ResponseFormat: openai.AudioTranslationNewParamsResponseFormatJSON,
 		Temperature:    openai.Float(0),
