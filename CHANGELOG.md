@@ -1,5 +1,26 @@
 # Changelog
 
+## [3.90.0](https://github.com/openai/openai-go/compare/v3.89.0...v3.90.0) (2026-10-28)
+
+
+### Features
+
+* **api:** add image and web search usage to responses ([#1179](https://github.com/openai/openai-go/issues/1179)) ([59cb4a5](https://github.com/openai/openai-go/commit/59cb4a5c12e4bcb31c13571406e65ff33c304239))
+* **api:** add organization external key management ([#1180](https://github.com/openai/openai-go/issues/1180)) ([bcf55b4](https://github.com/openai/openai-go/commit/bcf55b48b7eb99db59a7aa90c80080033e131475))
+* **api:** filter agent sessions by metadata ([#1178](https://github.com/openai/openai-go/issues/1178)) ([0819c8b](https://github.com/openai/openai-go/commit/0819c8bc538bebc6829798a7d09aae5d79c572d3))
+
+
+### Bug Fixes
+
+* **examples:** check each WebSocket response before continuing ([#1161](https://github.com/openai/openai-go/issues/1161)) ([2638013](https://github.com/openai/openai-go/commit/26380134f82098ed5066e4a1f4162a680f913595))
+
+
+### Chores
+
+* **api:** document upcoming model shutdowns ([#1177](https://github.com/openai/openai-go/issues/1177)) ([af9a64a](https://github.com/openai/openai-go/commit/af9a64a871c214afd477d0e536f91031d960fcea))
+* **api:** update image-model documentation ([#1175](https://github.com/openai/openai-go/issues/1175)) ([071de86](https://github.com/openai/openai-go/commit/071de8692d9ab4e362d20a15bce9d5d363fa28b8))
+* enforce generated-file ownership ([#1169](https://github.com/openai/openai-go/issues/1169)) ([8bfabbe](https://github.com/openai/openai-go/commit/8bfabbe62b3d81493f77e5a828731b68bc5a6367))
+
 ## [3.89.0](https://github.com/openai/openai-go/compare/v3.88.0...v3.89.0) (2026-10-27)
 
 
