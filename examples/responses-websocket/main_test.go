@@ -33,7 +33,7 @@ func TestRunRequiresCompletedResponses(t *testing.T) {
 					t.Errorf("upgrade: %v", err)
 					return
 				}
-				defer socket.CloseNow()
+				defer func() { _ = socket.CloseNow() }()
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
 				var received []map[string]any
