@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/openai/openai-go/v3/realtime"
+	"github.com/openai/openai-go/v4/realtime"
 )
 
 func TestConversationItemMessageDispatch(t *testing.T) {

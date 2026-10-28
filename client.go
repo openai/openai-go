@@ -9,13 +9,13 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/openai/openai-go/v3/conversations"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
-	"github.com/openai/openai-go/v3/live"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/realtime"
-	"github.com/openai/openai-go/v3/responses"
-	"github.com/openai/openai-go/v3/webhooks"
+	"github.com/openai/openai-go/v4/conversations"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
+	"github.com/openai/openai-go/v4/live"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/realtime"
+	"github.com/openai/openai-go/v4/responses"
+	"github.com/openai/openai-go/v4/webhooks"
 )
 
 // Client creates a struct with services and top level methods that help with

@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/option"
 )
 
 func TestExternalStorageOCIContract(t *testing.T) {

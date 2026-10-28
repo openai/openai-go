@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v4/packages/param"
 )
 
 func P[T any](v T) *T { return &v }

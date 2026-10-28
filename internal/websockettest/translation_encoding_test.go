@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	wire "github.com/coder/websocket"
-	"github.com/openai/openai-go/v3/packages/param"
-	"github.com/openai/openai-go/v3/realtime"
+	"github.com/openai/openai-go/v4/packages/param"
+	"github.com/openai/openai-go/v4/realtime"
 )
 
 var translationEncodingFailure = errors.New("synthetic translation encoder failure")

@@ -8,9 +8,9 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/conversations"
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/conversations"
+	"github.com/openai/openai-go/v4/option"
 )
 
 func TestPaginationRejectsNonReplayableStreamingBodies(t *testing.T) {

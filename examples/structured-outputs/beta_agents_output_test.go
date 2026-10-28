@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v4"
 )
 
 func TestBetaAgentOutputUsesExistingGeneratedSchema(t *testing.T) {

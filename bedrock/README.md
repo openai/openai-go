@@ -16,8 +16,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/bedrock"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/bedrock"
 )
 
 client, err := bedrock.NewClient(context.Background(), bedrock.Config{

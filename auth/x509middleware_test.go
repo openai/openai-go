@@ -9,7 +9,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
 )
 
 func TestX509WorkloadIdentityMiddlewareRejectsMalformedRequestsBeforeExchange(t *testing.T) {

@@ -3,7 +3,7 @@ package auth_test
 import (
 	"testing"
 
-	"github.com/openai/openai-go/v3/auth"
+	"github.com/openai/openai-go/v4/auth"
 )
 
 func TestOAuthErrorFormattingPreservesEmptyDescriptionCompatibility(t *testing.T) {

@@ -5,8 +5,8 @@ package live
 import (
 	"context"
 	"errors"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
+	"github.com/openai/openai-go/v4/option"
 	"net/http"
 	"slices"
 )

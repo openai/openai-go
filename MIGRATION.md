@@ -1,5 +1,22 @@
 # OpenAI Go Migration Guide
 
+## Moving from v3 to the v4 preview
+
+Update SDK imports from `github.com/openai/openai-go/v3` to
+`github.com/openai/openai-go/v4`. The `next` branch is an unreleased preview;
+released v3 applications can keep using their existing module and version.
+
+`Embedding.Embedding` now represents either a float vector or an encoded string.
+Use `embedding.Embedding.OfEmbeddingEmbeddingArray` for vector values and
+`embedding.Embedding.OfString` for the base64 wire value. Base64 responses are no longer automatically decoded into
+float vectors. Request `encoding_format: "float"` when you need a vector, or
+decode the encoded representation explicitly in your application.
+
+The separately versioned `github.com/openai/openai-go/v3/vertex` module continues
+to use v3. Do not mix its v3 client options with a v4 client.
+
+## Earlier parameter and response migrations
+
 <a href="https://pkg.go.dev/github.com/openai/openai-go/v3"><img src="https://pkg.go.dev/badge/github.com/openai/openai-go.svg" alt="Go Reference"></a>
 
 This SDK includes breaking changes to improve the ergonomics of constructing parameters and accessing responses.

@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/openai/openai-go/examples/internal/errutil"
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/option"
 )
 
 const responseHeaderTimeout = 10 * time.Minute

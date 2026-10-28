@@ -5,8 +5,8 @@ import (
 	"maps"
 	"slices"
 
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/packages/ssestream"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/packages/ssestream"
 )
 
 func betaAgentCreationStream(ctx context.Context, cancel context.CancelFunc, sessions *BetaAgentSessionService, stream *ssestream.Stream[AgentSessionEventUnion], handlers map[string]AgentToolHandler, opts []option.RequestOption) *ssestream.Stream[AgentSessionEventUnion] {

@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/openai/openai-go/v3/internal/requestconfig"
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
+	"github.com/openai/openai-go/v4/option"
 )
 
 func unwrapWebhook(r *WebhookService, body []byte, headers http.Header, opts ...option.RequestOption) (*UnwrapWebhookEventUnion, error) {

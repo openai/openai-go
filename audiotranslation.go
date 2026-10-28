@@ -10,12 +10,12 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/openai/openai-go/v3/internal/apiform"
-	"github.com/openai/openai-go/v3/internal/apijson"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/packages/param"
-	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v4/internal/apiform"
+	"github.com/openai/openai-go/v4/internal/apijson"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/packages/param"
+	"github.com/openai/openai-go/v4/packages/respjson"
 )
 
 // Turn audio into text or text into audio.
@@ -40,6 +40,14 @@ func NewAudioTranslationService(opts ...option.RequestOption) (r AudioTranslatio
 }
 
 // Translates audio into English.
+//
+// This endpoint supports only `whisper-1`. The endpoint and model are deprecated
+// and scheduled to shut down on February 26, 2027. Migrate to
+// `/v1/realtime/translations`, which requires a separate integration. See the
+// [deprecation schedule](https://developers.openai.com/api/docs/deprecations) for
+// details.
+//
+// Deprecated: deprecated
 func (r *AudioTranslationService) New(ctx context.Context, body AudioTranslationNewParams, opts ...option.RequestOption) (res *Translation, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)

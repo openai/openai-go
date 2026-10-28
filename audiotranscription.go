@@ -11,14 +11,14 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/openai/openai-go/v3/internal/apiform"
-	"github.com/openai/openai-go/v3/internal/apijson"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/packages/param"
-	"github.com/openai/openai-go/v3/packages/respjson"
-	"github.com/openai/openai-go/v3/packages/ssestream"
-	"github.com/openai/openai-go/v3/shared/constant"
+	"github.com/openai/openai-go/v4/internal/apiform"
+	"github.com/openai/openai-go/v4/internal/apijson"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/packages/param"
+	"github.com/openai/openai-go/v4/packages/respjson"
+	"github.com/openai/openai-go/v4/packages/ssestream"
+	"github.com/openai/openai-go/v4/shared/constant"
 )
 
 // Turn audio into text or text into audio.

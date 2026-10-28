@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/responses"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/responses"
 )
 
 // High memory use is intentional: these historically supported payloads must

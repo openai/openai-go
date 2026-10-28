@@ -9,7 +9,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/openai/openai-go/v3/packages/ssestream"
+	"github.com/openai/openai-go/v4/packages/ssestream"
 )
 
 // BetaAgentOutput binds an Agents output schema to the application's typed parser.

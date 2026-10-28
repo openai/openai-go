@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	openai "github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
+	openai "github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/option"
 )
 
 type vectorFileDoer func(*http.Request) (*http.Response, error)

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	openai "github.com/openai/openai-go/v3"
+	openai "github.com/openai/openai-go/v4"
 )
 
 func TestAccumulatorRejectsInvalidIndicesWithoutMutation(t *testing.T) {

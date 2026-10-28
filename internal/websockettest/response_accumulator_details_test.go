@@ -8,7 +8,7 @@ import (
 	"time"
 
 	wire "github.com/coder/websocket"
-	"github.com/openai/openai-go/v3/responses"
+	"github.com/openai/openai-go/v4/responses"
 )
 
 func TestResponsesAccumulatorDetailsCarryWireProgressWithoutBecomingAResponse(t *testing.T) {

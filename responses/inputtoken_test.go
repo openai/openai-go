@@ -8,11 +8,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/internal/testutil"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/responses"
-	"github.com/openai/openai-go/v3/shared"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/internal/testutil"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/responses"
+	"github.com/openai/openai-go/v4/shared"
 )
 
 func TestInputTokenCountWithOptionalParams(t *testing.T) {

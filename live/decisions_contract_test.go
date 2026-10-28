@@ -12,10 +12,10 @@ import (
 
 	wire "github.com/coder/websocket"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/live"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/responses"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/live"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/responses"
 )
 
 type responseItemGetter interface {
@@ -43,8 +43,10 @@ func TestDecisionsPreserveResponseItemGetters(t *testing.T) {
 
 func TestDecisionsConcreteItemsRetainWireBody(t *testing.T) {
 	item := &live.DecisionItemCreateEventParam{
-		Item: live.DecisionItemCreateEventItemParam{
-			Content: live.DecisionItemCreateEventItemContentUnionParam{OfString: openai.String("synthetic input")},
+		Item: live.DecisionItemCreateEventItemUnionParam{
+			OfUserMessage: &live.DecisionUserMessageParam{
+				Content: live.DecisionUserMessageContentUnionParam{OfString: openai.String("synthetic input")},
+			},
 		},
 	}
 	for _, event := range []responseItemGetter{

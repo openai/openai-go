@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4/option"
 )
 
 // Create a vector store file batch and polls the API until the task is complete.

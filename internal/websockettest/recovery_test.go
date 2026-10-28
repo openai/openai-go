@@ -10,9 +10,9 @@ import (
 	"time"
 
 	wire "github.com/coder/websocket"
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/responses"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/responses"
 )
 
 func TestResponsesRecoveryExhaustion(t *testing.T) {

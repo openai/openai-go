@@ -9,11 +9,11 @@ import (
 	"net/url"
 	"slices"
 
-	"github.com/openai/openai-go/v3/internal/apiquery"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/packages/pagination"
-	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v4/internal/apiquery"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/packages/pagination"
+	"github.com/openai/openai-go/v4/packages/param"
 )
 
 // BetaAgentSessionSubagentService contains methods and other services that help

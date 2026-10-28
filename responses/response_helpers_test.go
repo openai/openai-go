@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/openai/openai-go/v3/responses"
+	"github.com/openai/openai-go/v4/responses"
 )
 
 func TestResponseOutputTextAggregation(t *testing.T) {

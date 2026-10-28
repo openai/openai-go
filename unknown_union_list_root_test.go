@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"testing"
 
-	openai "github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/realtime"
-	"github.com/openai/openai-go/v3/responses"
+	openai "github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/realtime"
+	"github.com/openai/openai-go/v4/responses"
 )
 
 type unionListItem interface {

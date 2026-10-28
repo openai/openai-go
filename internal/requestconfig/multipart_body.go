@@ -6,8 +6,8 @@ import (
 	"mime/multipart"
 	"net/url"
 
-	"github.com/openai/openai-go/v3/internal/apiform"
-	"github.com/openai/openai-go/v3/internal/apiquery"
+	"github.com/openai/openai-go/v4/internal/apiform"
+	"github.com/openai/openai-go/v4/internal/apiquery"
 )
 
 // Keep legacy marshaling available until the SDK runtime supports writer-based

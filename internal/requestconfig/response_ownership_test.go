@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/realtime"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/realtime"
 )
 
 type responseTransport func(*http.Request) (*http.Response, error)

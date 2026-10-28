@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"testing"
 
-	openai "github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/conversations"
-	"github.com/openai/openai-go/v3/live"
-	"github.com/openai/openai-go/v3/packages/param"
-	"github.com/openai/openai-go/v3/realtime"
-	"github.com/openai/openai-go/v3/responses"
-	"github.com/openai/openai-go/v3/shared"
-	"github.com/openai/openai-go/v3/webhooks"
+	openai "github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/conversations"
+	"github.com/openai/openai-go/v4/live"
+	"github.com/openai/openai-go/v4/packages/param"
+	"github.com/openai/openai-go/v4/realtime"
+	"github.com/openai/openai-go/v4/responses"
+	"github.com/openai/openai-go/v4/shared"
+	"github.com/openai/openai-go/v4/webhooks"
 )
 
 func TestReleasedCompoundFiltersPreserveNestedValues(t *testing.T) {

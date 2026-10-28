@@ -10,10 +10,10 @@ import (
 	"time"
 
 	wire "github.com/coder/websocket"
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/live"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/realtime"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/live"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/realtime"
 )
 
 type closeableConnection interface{ Close() error }

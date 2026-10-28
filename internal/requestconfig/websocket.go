@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/openai/openai-go/v3/internal/websockettransport"
+	"github.com/openai/openai-go/v4/internal/websockettransport"
 )
 
 // WebSocketHTTPClient is an optional capability for bespoke HTTPDoers. The

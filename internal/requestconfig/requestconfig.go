@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/openai/openai-go/v3/packages/websocket"
+	"github.com/openai/openai-go/v4/packages/websocket"
 	"io"
 	"math"
 	"math/rand"
@@ -19,10 +19,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/openai/openai-go/v3/internal"
-	"github.com/openai/openai-go/v3/internal/apierror"
-	"github.com/openai/openai-go/v3/internal/apiform"
-	"github.com/openai/openai-go/v3/internal/apiquery"
+	"github.com/openai/openai-go/v4/internal"
+	"github.com/openai/openai-go/v4/internal/apierror"
+	"github.com/openai/openai-go/v4/internal/apiform"
+	"github.com/openai/openai-go/v4/internal/apiquery"
 	"github.com/tidwall/gjson"
 )
 

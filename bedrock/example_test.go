@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/openai/openai-go/v3/bedrock"
+	"github.com/openai/openai-go/v4/bedrock"
 )
 
 var exampleAWSEnvironment = []string{

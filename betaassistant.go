@@ -10,15 +10,15 @@ import (
 	"net/url"
 	"slices"
 
-	"github.com/openai/openai-go/v3/internal/apijson"
-	"github.com/openai/openai-go/v3/internal/apiquery"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/packages/pagination"
-	"github.com/openai/openai-go/v3/packages/param"
-	"github.com/openai/openai-go/v3/packages/respjson"
-	"github.com/openai/openai-go/v3/shared"
-	"github.com/openai/openai-go/v3/shared/constant"
+	"github.com/openai/openai-go/v4/internal/apijson"
+	"github.com/openai/openai-go/v4/internal/apiquery"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/packages/pagination"
+	"github.com/openai/openai-go/v4/packages/param"
+	"github.com/openai/openai-go/v4/packages/respjson"
+	"github.com/openai/openai-go/v4/shared"
+	"github.com/openai/openai-go/v4/shared/constant"
 )
 
 // Build Assistants that can call models and use tools.
@@ -2118,11 +2118,29 @@ func (r *BetaAssistantUpdateParams) UnmarshalJSON(data []byte) error {
 type BetaAssistantUpdateParamsModel string
 
 const (
-	BetaAssistantUpdateParamsModelGPT5               BetaAssistantUpdateParamsModel = "gpt-5"
-	BetaAssistantUpdateParamsModelGPT5Mini           BetaAssistantUpdateParamsModel = "gpt-5-mini"
-	BetaAssistantUpdateParamsModelGPT5Nano           BetaAssistantUpdateParamsModel = "gpt-5-nano"
-	BetaAssistantUpdateParamsModelGPT5_2025_08_07    BetaAssistantUpdateParamsModel = "gpt-5-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaAssistantUpdateParamsModelGPT5 BetaAssistantUpdateParamsModel = "gpt-5"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaAssistantUpdateParamsModelGPT5Mini BetaAssistantUpdateParamsModel = "gpt-5-mini"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaAssistantUpdateParamsModelGPT5Nano BetaAssistantUpdateParamsModel = "gpt-5-nano"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	BetaAssistantUpdateParamsModelGPT5_2025_08_07 BetaAssistantUpdateParamsModel = "gpt-5-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaAssistantUpdateParamsModelGPT5Mini2025_08_07 BetaAssistantUpdateParamsModel = "gpt-5-mini-2025-08-07"
+	// Deprecated: Announced shutdown date: 2026-12-11. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaAssistantUpdateParamsModelGPT5Nano2025_08_07 BetaAssistantUpdateParamsModel = "gpt-5-nano-2025-08-07"
 	// Deprecated: Announced shutdown date: 2027-01-14. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended

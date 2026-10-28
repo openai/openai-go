@@ -13,7 +13,7 @@ import (
 
 	"github.com/tidwall/sjson"
 
-	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
+	shimjson "github.com/openai/openai-go/v4/internal/encoding/json"
 )
 
 var encoders sync.Map // map[encoderEntry]encoderFunc

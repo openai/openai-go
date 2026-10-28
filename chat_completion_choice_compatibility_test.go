@@ -1,6 +1,6 @@
 package openai_test
 
-import openai "github.com/openai/openai-go/v3"
+import openai "github.com/openai/openai-go/v4"
 
 // Existing consumers may use the published positional field order.
 var releasedChoice openai.ChatCompletionChunkChoice

@@ -11,9 +11,9 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/webhooks"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/webhooks"
 )
 
 func TestWebhookManagementRequestContract(t *testing.T) {

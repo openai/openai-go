@@ -7,8 +7,8 @@ import (
 
 	"github.com/invopop/jsonschema"
 	"github.com/openai/openai-go/examples/internal/errutil"
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/responses"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/responses"
 )
 
 // A struct that will be converted to a Structured Outputs response schema.

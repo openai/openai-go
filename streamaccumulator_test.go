@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/internal/testutil"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/shared"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/internal/testutil"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/shared"
 )
 
 // Since the streamed response is hardcoded, we can hardcode the expected tool call

@@ -14,10 +14,10 @@ import (
 	"time"
 
 	wire "github.com/coder/websocket"
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/packages/websocket"
-	"github.com/openai/openai-go/v3/responses"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/packages/websocket"
+	"github.com/openai/openai-go/v4/responses"
 )
 
 func laneTestConnection(t *testing.T, options responses.ResponseConnectionOptions, handle func(context.Context, *wire.Conn)) *responses.ResponseConnection {

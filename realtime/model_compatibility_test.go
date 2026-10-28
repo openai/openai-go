@@ -3,7 +3,7 @@ package realtime_test
 import (
 	"testing"
 
-	"github.com/openai/openai-go/v3/realtime"
+	"github.com/openai/openai-go/v4/realtime"
 )
 
 // Existing callers can choose a model dynamically and consume it as a string.

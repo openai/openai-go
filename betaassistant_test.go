@@ -8,11 +8,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/internal/testutil"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/shared"
-	"github.com/openai/openai-go/v3/shared/constant"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/internal/testutil"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/shared"
+	"github.com/openai/openai-go/v4/shared/constant"
 )
 
 func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
@@ -120,7 +120,7 @@ func TestBetaAssistantUpdateWithOptionalParams(t *testing.T) {
 			Metadata: shared.Metadata{
 				"foo": "string",
 			},
-			Model:           openai.BetaAssistantUpdateParamsModelGPT5,
+			Model:           openai.BetaAssistantUpdateParamsModel("gpt-5"),
 			Name:            openai.String("name"),
 			ReasoningEffort: shared.ReasoningEffortNone,
 			ResponseFormat: openai.AssistantResponseFormatOptionUnionParam{

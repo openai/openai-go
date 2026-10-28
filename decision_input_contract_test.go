@@ -8,9 +8,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/shared"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/live"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/shared"
 )
 
 func TestDecisionExpandedInputWireContract(t *testing.T) {
@@ -84,14 +85,14 @@ func TestDecisionExpandedInputWireContract(t *testing.T) {
 	}
 }
 
-func TestDecisionQuestionInputPartResponseVariant(t *testing.T) {
-	var part openai.DecisionQuestionInputPartUnion
+func TestLiveDecisionQuestionInputPartResponseVariant(t *testing.T) {
+	var part live.DecisionQuestionChoiceInstructionsPartsItemUnion
 	if err := json.Unmarshal([]byte(`{"type":"input_text","text":"review"}`), &part); err != nil {
 		t.Fatal(err)
 	}
-	text, ok := part.AsAny().(openai.DecisionQuestionInputText)
-	if !ok || text.Text != "review" {
-		t.Fatalf("question input = %#v", part.AsAny())
+	text := part.AsDecisionInputText()
+	if !part.JSON.OfDecisionInputText.Valid() || text.Text != "review" {
+		t.Fatalf("question input = %#v", part)
 	}
 }
 
@@ -132,20 +133,20 @@ func TestDecisionMessageHelpersAsRequestInput(t *testing.T) {
 	}
 }
 
-func TestDecisionInputJSONResponseShapes(t *testing.T) {
-	var object shared.DecisionInputJSON
+func TestLiveDecisionInputJSONResponseShapes(t *testing.T) {
+	var object live.DecisionQuestionChoiceInstructionsPartInputJSON
 	if err := json.Unmarshal([]byte(`{"type":"input_json","data":{"key":"value"}}`), &object); err != nil {
 		t.Fatal(err)
 	}
-	if object.Data.OfDecisionInputJSONDataMapItem["key"] != "value" || object.Data.OfArrayOfMap != nil {
+	if object.Data.OfLiveDecisionJSONObject["key"] != "value" || object.Data.OfArrayOfDecisionJSONObject != nil {
 		t.Fatalf("object data = %#v", object.Data)
 	}
 
-	var array shared.DecisionInputJSON
+	var array live.DecisionQuestionChoiceInstructionsPartInputJSON
 	if err := json.Unmarshal([]byte(`{"type":"input_json","data":[{"key":"value"}]}`), &array); err != nil {
 		t.Fatal(err)
 	}
-	if len(array.Data.OfArrayOfMap) != 1 || array.Data.OfArrayOfMap[0]["key"] != "value" || array.Data.OfDecisionInputJSONDataMapItem != nil {
+	if len(array.Data.OfArrayOfDecisionJSONObject) != 1 || array.Data.OfArrayOfDecisionJSONObject[0]["key"] != "value" || array.Data.OfLiveDecisionJSONObject != nil {
 		t.Fatalf("array data = %#v", array.Data)
 	}
 }

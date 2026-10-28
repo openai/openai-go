@@ -1,8 +1,8 @@
 package option
 
 import (
-	"github.com/openai/openai-go/v3/internal/requestconfig"
-	"github.com/openai/openai-go/v3/packages/websocket"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
+	"github.com/openai/openai-go/v4/packages/websocket"
 	"net/http"
 )
 

@@ -5,14 +5,14 @@ package live
 import (
 	"encoding/json"
 
-	"github.com/openai/openai-go/v3/internal/apijson"
-	"github.com/openai/openai-go/v3/internal/paramutil"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/packages/param"
-	"github.com/openai/openai-go/v3/packages/respjson"
-	"github.com/openai/openai-go/v3/responses"
-	"github.com/openai/openai-go/v3/shared/constant"
+	"github.com/openai/openai-go/v4/internal/apijson"
+	"github.com/openai/openai-go/v4/internal/paramutil"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/packages/param"
+	"github.com/openai/openai-go/v4/packages/respjson"
+	"github.com/openai/openai-go/v4/responses"
+	"github.com/openai/openai-go/v4/shared/constant"
 )
 
 // ForkService contains methods and other services that help with interacting with
@@ -85,9 +85,28 @@ func ForkClientEventParamOfDecisionCreate(eventID string) ForkClientEventUnionPa
 	return ForkClientEventUnionParam{OfDecisionCreate: &decisionCreate}
 }
 
-func ForkClientEventParamOfDecisionItemCreate(item DecisionItemCreateEventItemParam) ForkClientEventUnionParam {
+func ForkClientEventParamOfDecisionItemCreate[
+	T DecisionUserMessageParam | DecisionDeveloperMessageParam | DecisionSystemMessageParam | DecisionAssistantMessageParam | DecisionItemCreateEventItemFunctionCallParam | DecisionItemCreateEventItemFunctionCallOutputParam | DecisionItemCreateEventItemCustomToolCallParam | DecisionItemCreateEventItemCustomToolCallOutputParam,
+](item T) ForkClientEventUnionParam {
 	var decisionItemCreate DecisionItemCreateEventParam
-	decisionItemCreate.Item = item
+	switch v := any(item).(type) {
+	case DecisionUserMessageParam:
+		decisionItemCreate.Item.OfUserMessage = &v
+	case DecisionDeveloperMessageParam:
+		decisionItemCreate.Item.OfDeveloperMessage = &v
+	case DecisionSystemMessageParam:
+		decisionItemCreate.Item.OfSystemMessage = &v
+	case DecisionAssistantMessageParam:
+		decisionItemCreate.Item.OfAssistantMessage = &v
+	case DecisionItemCreateEventItemFunctionCallParam:
+		decisionItemCreate.Item.OfFunctionCall = &v
+	case DecisionItemCreateEventItemFunctionCallOutputParam:
+		decisionItemCreate.Item.OfFunctionCallOutput = &v
+	case DecisionItemCreateEventItemCustomToolCallParam:
+		decisionItemCreate.Item.OfCustomToolCall = &v
+	case DecisionItemCreateEventItemCustomToolCallOutputParam:
+		decisionItemCreate.Item.OfCustomToolCallOutput = &v
+	}
 	return ForkClientEventUnionParam{OfDecisionItemCreate: &decisionItemCreate}
 }
 

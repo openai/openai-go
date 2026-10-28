@@ -4,9 +4,9 @@ package openai_test
 
 import (
 	"context"
-	sdk "github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
-	"github.com/openai/openai-go/v3/option"
+	sdk "github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
+	"github.com/openai/openai-go/v4/option"
 	"io"
 	"net/http"
 	"net/url"

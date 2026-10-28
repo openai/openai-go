@@ -9,15 +9,15 @@ import (
 	"net/url"
 	"slices"
 
-	"github.com/openai/openai-go/v3/internal/apijson"
-	"github.com/openai/openai-go/v3/internal/apiquery"
-	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/packages/pagination"
-	"github.com/openai/openai-go/v3/packages/param"
-	"github.com/openai/openai-go/v3/packages/respjson"
-	"github.com/openai/openai-go/v3/shared/constant"
+	"github.com/openai/openai-go/v4/internal/apijson"
+	"github.com/openai/openai-go/v4/internal/apiquery"
+	shimjson "github.com/openai/openai-go/v4/internal/encoding/json"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/packages/pagination"
+	"github.com/openai/openai-go/v4/packages/param"
+	"github.com/openai/openai-go/v4/packages/respjson"
+	"github.com/openai/openai-go/v4/shared/constant"
 )
 
 // BetaAgentEnvironmentFileService contains methods and other services that help

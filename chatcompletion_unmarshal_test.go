@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v4"
 )
 
 func TestChatCompletionChunkUnmarshalValidatesTopLevelShape(t *testing.T) {

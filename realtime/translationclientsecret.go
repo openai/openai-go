@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/openai/openai-go/v3/internal/apijson"
-	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4/internal/apijson"
+	shimjson "github.com/openai/openai-go/v4/internal/encoding/json"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
+	"github.com/openai/openai-go/v4/option"
 )
 
 // TranslationClientSecretService contains methods and other services that help

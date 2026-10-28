@@ -16,9 +16,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/auth"
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/auth"
+	"github.com/openai/openai-go/v4/option"
 )
 
 func TestX509WorkloadIdentityRejectsAzureBeforeExchange(t *testing.T) {

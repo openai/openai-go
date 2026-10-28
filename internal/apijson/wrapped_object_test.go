@@ -8,10 +8,10 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/packages/param"
-	"github.com/openai/openai-go/v3/realtime"
-	"github.com/openai/openai-go/v3/responses"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/packages/param"
+	"github.com/openai/openai-go/v4/realtime"
+	"github.com/openai/openai-go/v4/responses"
 	"github.com/tidwall/gjson"
 )
 

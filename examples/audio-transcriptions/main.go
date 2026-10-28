@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/openai/openai-go/examples/internal/errutil"
-	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v4"
 )
 
 func main() {
@@ -18,7 +18,7 @@ func main() {
 	}
 
 	transcription, err := client.Audio.Transcriptions.New(ctx, openai.AudioTranscriptionNewParams{
-		Model: openai.AudioModelWhisper1,
+		Model: openai.AudioModelGPTTranscribe,
 		File:  file,
 	})
 	if err != nil {

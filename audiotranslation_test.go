@@ -10,9 +10,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/internal/testutil"
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/internal/testutil"
+	"github.com/openai/openai-go/v4/option"
 )
 
 func TestAudioTranslationNewWithOptionalParams(t *testing.T) {
@@ -31,7 +31,7 @@ func TestAudioTranslationNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Audio.Translations.New(context.TODO(), openai.AudioTranslationNewParams{
 		File:           io.Reader(bytes.NewBuffer([]byte("Example data"))),
-		Model:          openai.AudioModelWhisper1,
+		Model:          openai.AudioModel("whisper-1"),
 		Prompt:         openai.String("prompt"),
 		ResponseFormat: openai.AudioTranslationNewParamsResponseFormatJSON,
 		Temperature:    openai.Float(0),

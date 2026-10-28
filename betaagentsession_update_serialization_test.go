@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/packages/param"
 )
 
 func TestBetaAgentSessionUpdateSerialization(t *testing.T) {

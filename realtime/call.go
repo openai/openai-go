@@ -10,12 +10,12 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/openai/openai-go/v3/internal/apiform"
-	"github.com/openai/openai-go/v3/internal/apijson"
-	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v4/internal/apiform"
+	"github.com/openai/openai-go/v4/internal/apijson"
+	shimjson "github.com/openai/openai-go/v4/internal/encoding/json"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/packages/param"
 )
 
 // CallService contains methods and other services that help with interacting with

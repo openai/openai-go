@@ -1,4 +1,4 @@
-module github.com/openai/openai-go/v3/tools
+module github.com/openai/openai-go/v4/tools
 
 go 1.26.0
 

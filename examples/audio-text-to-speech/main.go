@@ -8,15 +8,18 @@ import (
 
 	"github.com/ebitengine/oto/v3"
 	"github.com/openai/openai-go/examples/internal/errutil"
-	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v4"
 )
 
 func main() {
 	client := openai.NewClient()
 	ctx := context.Background()
 
+	// This example demonstrates the legacy Speech endpoint. Its TTS models shut
+	// down on January 6, 2027; new integrations should use the Realtime API.
+	// See https://developers.openai.com/api/docs/deprecations for migration details.
 	res, err := client.Audio.Speech.New(ctx, openai.AudioSpeechNewParams{
-		Model:          openai.SpeechModelTTS1,
+		Model:          openai.SpeechModel("tts-1"),
 		Input:          `Why did the chicken cross the road? To get to the other side.`,
 		ResponseFormat: openai.AudioSpeechNewParamsResponseFormatPCM,
 		Voice: openai.AudioSpeechNewParamsVoiceUnion{

@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	openai "github.com/openai/openai-go/v3"
+	openai "github.com/openai/openai-go/v4"
 )
 
 func checkChatCompletionMessageConversion(t *testing.T, message openai.ChatCompletionMessage, want openai.ChatCompletionAssistantMessageParam, wantJSON string) {

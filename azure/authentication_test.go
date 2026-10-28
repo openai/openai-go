@@ -13,9 +13,9 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/fake"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
-	"github.com/openai/openai-go/v3"
-	openaiauth "github.com/openai/openai-go/v3/auth"
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4"
+	openaiauth "github.com/openai/openai-go/v4/auth"
+	"github.com/openai/openai-go/v4/option"
 )
 
 func TestEndpointRequiresExplicitAzureAuthentication(t *testing.T) {

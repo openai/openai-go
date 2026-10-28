@@ -2,13 +2,14 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
 	"github.com/openai/openai-go/examples/internal/errutil"
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/responses"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/responses"
 )
 
 func main() {
@@ -20,6 +21,10 @@ func main() {
 func run() error {
 	// OPENAI_API_KEY supplies Authorization independently of custom headers.
 	client := openai.NewClient(option.WithHeader("X-Application", "my-application"))
+	return runWithClient(client)
+}
+
+func runWithClient(client openai.Client) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	connection, err := client.Responses.Connect(ctx, responses.ResponseConnectionOptions{},
@@ -42,6 +47,9 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	if response.Status != responses.ResponseStatusCompleted {
+		return errors.New("first response did not complete")
+	}
 	// Every turn is response.create. Send only new input with the previous ID.
 	if err = connection.Create(ctx, responses.ResponsesClientEventResponseCreateParam{
 		Model:              openai.ChatModelGPT5_2,
@@ -53,6 +61,9 @@ func run() error {
 	response, err = connection.FinalResponse(ctx)
 	if err != nil {
 		return err
+	}
+	if response.Status != responses.ResponseStatusCompleted {
+		return errors.New("continuation did not complete")
 	}
 	log.Printf("Continuation finished with status %s", errutil.Status(string(response.Status)))
 	return nil

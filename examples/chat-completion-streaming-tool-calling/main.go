@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/openai/openai-go/examples/internal/errutil"
-	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v4"
 )
 
 func main() {

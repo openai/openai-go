@@ -12,15 +12,15 @@ import (
 	"net/url"
 	"slices"
 
-	"github.com/openai/openai-go/v3/internal/apijson"
-	"github.com/openai/openai-go/v3/internal/apiquery"
-	"github.com/openai/openai-go/v3/internal/paramutil"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/packages/param"
-	"github.com/openai/openai-go/v3/packages/respjson"
-	"github.com/openai/openai-go/v3/packages/ssestream"
-	"github.com/openai/openai-go/v3/shared/constant"
+	"github.com/openai/openai-go/v4/internal/apijson"
+	"github.com/openai/openai-go/v4/internal/apiquery"
+	"github.com/openai/openai-go/v4/internal/paramutil"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/packages/param"
+	"github.com/openai/openai-go/v4/packages/respjson"
+	"github.com/openai/openai-go/v4/packages/ssestream"
+	"github.com/openai/openai-go/v4/shared/constant"
 )
 
 // Create and manage model responses.
@@ -259,7 +259,7 @@ type BetaCompactedResponse struct {
 	Object constant.ResponseCompaction `json:"object" default:"response.compaction"`
 	// The compacted list of output items. This is a list of all user messages,
 	// followed by a single compaction item.
-	Output []BetaResponseOutputItemUnion `json:"output" api:"required"`
+	Output []BetaResponseItemUnion `json:"output" api:"required"`
 	// Token accounting for the compaction pass, including cached, reasoning, and total
 	// tokens.
 	Usage BetaResponseUsage `json:"usage" api:"required"`
@@ -4777,6 +4777,9 @@ const (
 	// replacements.
 	BetaResponseModelGPT5_4Nano           BetaResponseModel = "gpt-5.4-nano"
 	BetaResponseModelGPT5_4Mini2026_03_17 BetaResponseModel = "gpt-5.4-mini-2026-03-17"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponseModelGPT5_4Nano2026_03_17 BetaResponseModel = "gpt-5.4-nano-2026-03-17"
 	// Deprecated: Announced shutdown date: 2026-08-10. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -4793,7 +4796,10 @@ const (
 	// Deprecated: Announced shutdown date: 2027-04-01. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
-	BetaResponseModelGPT5_1            BetaResponseModel = "gpt-5.1"
+	BetaResponseModelGPT5_1 BetaResponseModel = "gpt-5.1"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponseModelGPT5_1_2025_11_13 BetaResponseModel = "gpt-5.1-2025-11-13"
 	// Deprecated: Announced shutdown date: 2026-07-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -35891,6 +35897,9 @@ const (
 	// replacements.
 	BetaResponsesClientEventResponseCreateModelGPT5_4Nano           BetaResponsesClientEventResponseCreateModel = "gpt-5.4-nano"
 	BetaResponsesClientEventResponseCreateModelGPT5_4Mini2026_03_17 BetaResponsesClientEventResponseCreateModel = "gpt-5.4-mini-2026-03-17"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponsesClientEventResponseCreateModelGPT5_4Nano2026_03_17 BetaResponsesClientEventResponseCreateModel = "gpt-5.4-nano-2026-03-17"
 	// Deprecated: Announced shutdown date: 2026-08-10. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -35907,7 +35916,10 @@ const (
 	// Deprecated: Announced shutdown date: 2027-04-01. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
-	BetaResponsesClientEventResponseCreateModelGPT5_1            BetaResponsesClientEventResponseCreateModel = "gpt-5.1"
+	BetaResponsesClientEventResponseCreateModelGPT5_1 BetaResponsesClientEventResponseCreateModel = "gpt-5.1"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponsesClientEventResponseCreateModelGPT5_1_2025_11_13 BetaResponsesClientEventResponseCreateModel = "gpt-5.1-2025-11-13"
 	// Deprecated: Announced shutdown date: 2026-07-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -44030,6 +44042,9 @@ const (
 	// replacements.
 	BetaResponseNewParamsModelGPT5_4Nano           BetaResponseNewParamsModel = "gpt-5.4-nano"
 	BetaResponseNewParamsModelGPT5_4Mini2026_03_17 BetaResponseNewParamsModel = "gpt-5.4-mini-2026-03-17"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponseNewParamsModelGPT5_4Nano2026_03_17 BetaResponseNewParamsModel = "gpt-5.4-nano-2026-03-17"
 	// Deprecated: Announced shutdown date: 2026-08-10. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -44046,7 +44061,10 @@ const (
 	// Deprecated: Announced shutdown date: 2027-04-01. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
-	BetaResponseNewParamsModelGPT5_1            BetaResponseNewParamsModel = "gpt-5.1"
+	BetaResponseNewParamsModelGPT5_1 BetaResponseNewParamsModel = "gpt-5.1"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponseNewParamsModelGPT5_1_2025_11_13 BetaResponseNewParamsModel = "gpt-5.1-2025-11-13"
 	// Deprecated: Announced shutdown date: 2026-07-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -44944,6 +44962,9 @@ const (
 	// replacements.
 	BetaResponseCompactParamsModelGPT5_4Nano           BetaResponseCompactParamsModel = "gpt-5.4-nano"
 	BetaResponseCompactParamsModelGPT5_4Mini2026_03_17 BetaResponseCompactParamsModel = "gpt-5.4-mini-2026-03-17"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponseCompactParamsModelGPT5_4Nano2026_03_17 BetaResponseCompactParamsModel = "gpt-5.4-nano-2026-03-17"
 	// Deprecated: Announced shutdown date: 2026-08-10. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -44960,7 +44981,10 @@ const (
 	// Deprecated: Announced shutdown date: 2027-04-01. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
-	BetaResponseCompactParamsModelGPT5_1            BetaResponseCompactParamsModel = "gpt-5.1"
+	BetaResponseCompactParamsModelGPT5_1 BetaResponseCompactParamsModel = "gpt-5.1"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponseCompactParamsModelGPT5_1_2025_11_13 BetaResponseCompactParamsModel = "gpt-5.1-2025-11-13"
 	// Deprecated: Announced shutdown date: 2026-07-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended

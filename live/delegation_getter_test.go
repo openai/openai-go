@@ -3,7 +3,7 @@ package live_test
 import (
 	"testing"
 
-	"github.com/openai/openai-go/v3/live"
+	"github.com/openai/openai-go/v4/live"
 )
 
 func TestNestedDelegationGetters(t *testing.T) {

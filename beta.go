@@ -3,8 +3,8 @@
 package openai
 
 import (
-	"github.com/openai/openai-go/v3/internal/requestconfig"
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
+	"github.com/openai/openai-go/v4/option"
 )
 
 // BetaService contains methods and other services that help with interacting with

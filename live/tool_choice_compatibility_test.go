@@ -5,14 +5,14 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/openai/openai-go/v3/live"
-	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v4/live"
+	"github.com/openai/openai-go/v4/packages/param"
 )
 
 func TestLiveToolChoiceParamsCompatibility(t *testing.T) {
-	function := live.ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam{Name: "function"}
+	function := live.ResponsesDelegationConfigToolChoiceFunctionParam{Name: "function"}
 	function.SetExtraFields(map[string]any{"future": "function-value"})
-	mcp := live.ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam{Name: "tool", ServerLabel: "box"}
+	mcp := live.ResponsesDelegationConfigToolChoiceMcpParam{Name: param.NewOpt("tool"), ServerLabel: "box"}
 	mcp.SetExtraFields(map[string]any{"future": "mcp-value"})
 
 	for _, tt := range []struct {
@@ -32,13 +32,13 @@ func TestLiveToolChoiceParamsCompatibility(t *testing.T) {
 		},
 		{
 			name: "function override",
-			param: param.Override[live.ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam](
+			param: param.Override[live.ResponsesDelegationConfigToolChoiceFunctionParam](
 				json.RawMessage(`{"name":"function","type":"function","future":"raw-function"}`)),
 			want: map[string]any{"name": "function", "type": "function", "future": "raw-function"},
 		},
 		{
 			name: "mcp override",
-			param: param.Override[live.ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam](
+			param: param.Override[live.ResponsesDelegationConfigToolChoiceMcpParam](
 				json.RawMessage(`{"name":"tool","type":"mcp","server_label":"box","future":"raw-mcp"}`)),
 			want: map[string]any{"name": "tool", "server_label": "box", "type": "mcp", "future": "raw-mcp"},
 		},

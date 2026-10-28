@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v4/packages/param"
 )
 
 // ErrTranscriptBackpressure means a slow callback has left at least 1024

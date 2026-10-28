@@ -10,10 +10,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/internal/testutil"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/shared/constant"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/internal/testutil"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/shared/constant"
 )
 
 func TestAudioTranscriptionNewWithOptionalParams(t *testing.T) {
@@ -32,7 +32,7 @@ func TestAudioTranscriptionNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Audio.Transcriptions.New(context.TODO(), openai.AudioTranscriptionNewParams{
 		File:  io.Reader(bytes.NewBuffer([]byte("Example data"))),
-		Model: openai.AudioModelGPT4oTranscribe,
+		Model: openai.AudioModel("gpt-4o-transcribe"),
 		ChunkingStrategy: openai.AudioTranscriptionNewParamsChunkingStrategyUnion{
 			OfAuto: constant.ValueOf[constant.Auto](),
 		},

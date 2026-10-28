@@ -14,11 +14,11 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	azpolicy "github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/auth"
-	"github.com/openai/openai-go/v3/azure"
-	"github.com/openai/openai-go/v3/bedrock"
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/auth"
+	"github.com/openai/openai-go/v4/azure"
+	"github.com/openai/openai-go/v4/bedrock"
+	"github.com/openai/openai-go/v4/option"
 )
 
 type originTestRoundTripper func(*http.Request) (*http.Response, error)
