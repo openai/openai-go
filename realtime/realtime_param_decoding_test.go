@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v4/internal/apijson"
 )
 
 func TestConversationItemDecodingUsesMessageRole(t *testing.T) {

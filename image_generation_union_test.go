@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	openai "github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/conversations"
-	"github.com/openai/openai-go/v3/packages/respjson"
-	"github.com/openai/openai-go/v3/responses"
+	openai "github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/conversations"
+	"github.com/openai/openai-go/v4/packages/respjson"
+	"github.com/openai/openai-go/v4/responses"
 )
 
 // Keep malformed actions in field metadata without treating them as decoded

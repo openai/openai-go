@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
 )
 
 // X509WorkloadIdentityMiddleware authenticates a request using its attested

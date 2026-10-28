@@ -3,7 +3,7 @@ package openai_test
 import (
 	"testing"
 
-	openai "github.com/openai/openai-go/v3"
+	openai "github.com/openai/openai-go/v4"
 )
 
 const (

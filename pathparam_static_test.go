@@ -21,7 +21,7 @@ const (
 	requestPathUnknown
 )
 
-const requestconfigImportPath = "github.com/openai/openai-go/v3/internal/requestconfig"
+const requestconfigImportPath = "github.com/openai/openai-go/v4/internal/requestconfig"
 
 func TestGeneratedPathsUseFormatPath(t *testing.T) {
 	var violations []string

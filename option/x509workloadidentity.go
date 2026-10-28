@@ -8,8 +8,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/openai/openai-go/v3/auth"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v4/auth"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
 )
 
 const x509WorkloadAPIBaseURL = "https://mtls.api.openai.com/v1/"

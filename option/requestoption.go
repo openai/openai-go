@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/openai/openai-go/v3/auth"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v4/auth"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
 	"github.com/tidwall/sjson"
 )
 

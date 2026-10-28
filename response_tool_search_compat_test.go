@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	openai "github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/responses"
+	openai "github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/responses"
 )
 
 func TestReleasedToolSearchOutputSlices(t *testing.T) {

@@ -17,8 +17,8 @@ import (
 	"testing"
 	"time"
 
-	openai "github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
+	openai "github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/option"
 )
 
 func betaLocalFile(t *testing.T, name, contents string) string {

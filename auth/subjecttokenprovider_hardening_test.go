@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/openai/openai-go/v3/auth"
+	"github.com/openai/openai-go/v4/auth"
 )
 
 func TestCloudSubjectTokenProvidersBoundAndRedactMetadataResponses(t *testing.T) {

@@ -4,7 +4,7 @@ package openai
 
 import (
 	"bytes"
-	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v4/internal/apijson"
 )
 
 func (r *BetaComputerActionListParam) UnmarshalJSON(data []byte) error {

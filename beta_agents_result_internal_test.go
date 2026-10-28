@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4/option"
 
 	"encoding/json"
 	"fmt"

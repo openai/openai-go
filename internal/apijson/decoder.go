@@ -16,8 +16,8 @@ import (
 
 	"github.com/tidwall/gjson"
 
-	"github.com/openai/openai-go/v3/internal/encoding/json/sentinel"
-	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v4/internal/encoding/json/sentinel"
+	"github.com/openai/openai-go/v4/packages/param"
 )
 
 // decoders is a synchronized map with roughly the following type:

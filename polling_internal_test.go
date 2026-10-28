@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
 )
 
 func TestGetPollIntervalValidatesRemoteDelay(t *testing.T) {

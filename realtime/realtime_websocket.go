@@ -6,8 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/packages/websocket"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/packages/websocket"
 	"github.com/tidwall/gjson"
 )
 

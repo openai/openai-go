@@ -14,12 +14,12 @@ import (
 	"time"
 
 	wire "github.com/coder/websocket"
-	openai "github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/azure"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/packages/respjson"
-	"github.com/openai/openai-go/v3/packages/websocket"
-	"github.com/openai/openai-go/v3/realtime"
+	openai "github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/azure"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/packages/respjson"
+	"github.com/openai/openai-go/v4/packages/websocket"
+	"github.com/openai/openai-go/v4/realtime"
 )
 
 type realtimePeer struct {

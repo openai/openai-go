@@ -12,16 +12,16 @@ import (
 	"net/url"
 	"slices"
 
-	"github.com/openai/openai-go/v3/internal/apijson"
-	"github.com/openai/openai-go/v3/internal/apiquery"
-	"github.com/openai/openai-go/v3/internal/paramutil"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/packages/param"
-	"github.com/openai/openai-go/v3/packages/respjson"
-	"github.com/openai/openai-go/v3/packages/ssestream"
-	"github.com/openai/openai-go/v3/shared"
-	"github.com/openai/openai-go/v3/shared/constant"
+	"github.com/openai/openai-go/v4/internal/apijson"
+	"github.com/openai/openai-go/v4/internal/apiquery"
+	"github.com/openai/openai-go/v4/internal/paramutil"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/packages/param"
+	"github.com/openai/openai-go/v4/packages/respjson"
+	"github.com/openai/openai-go/v4/packages/ssestream"
+	"github.com/openai/openai-go/v4/shared"
+	"github.com/openai/openai-go/v4/shared/constant"
 )
 
 // Create and manage model responses.
@@ -232,7 +232,7 @@ type CompactedResponse struct {
 	Object constant.ResponseCompaction `json:"object" default:"response.compaction"`
 	// The compacted list of output items. This is a list of all user messages,
 	// followed by a single compaction item.
-	Output []ResponseOutputItemUnion `json:"output" api:"required"`
+	Output []ResponseItemUnion `json:"output" api:"required"`
 	// Token accounting for the compaction pass, including cached, reasoning, and total
 	// tokens.
 	Usage ResponseUsage `json:"usage" api:"required"`
@@ -36816,6 +36816,9 @@ const (
 	// replacements.
 	ResponseCompactParamsModelGPT5_4Nano           ResponseCompactParamsModel = "gpt-5.4-nano"
 	ResponseCompactParamsModelGPT5_4Mini2026_03_17 ResponseCompactParamsModel = "gpt-5.4-mini-2026-03-17"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	ResponseCompactParamsModelGPT5_4Nano2026_03_17 ResponseCompactParamsModel = "gpt-5.4-nano-2026-03-17"
 	// Deprecated: Announced shutdown date: 2026-08-10. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -36832,7 +36835,10 @@ const (
 	// Deprecated: Announced shutdown date: 2027-04-01. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
-	ResponseCompactParamsModelGPT5_1            ResponseCompactParamsModel = "gpt-5.1"
+	ResponseCompactParamsModelGPT5_1 ResponseCompactParamsModel = "gpt-5.1"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	ResponseCompactParamsModelGPT5_1_2025_11_13 ResponseCompactParamsModel = "gpt-5.1-2025-11-13"
 	// Deprecated: Announced shutdown date: 2026-07-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended

@@ -1,13 +1,14 @@
 module github.com/openai/openai-go/examples
 
-replace github.com/openai/openai-go/v3 => ../
+replace github.com/openai/openai-go/v4 => ../
 
 go 1.26.0
 
 require (
+	github.com/coder/websocket v1.8.15
 	github.com/ebitengine/oto/v3 v3.5.1
 	github.com/invopop/jsonschema v0.14.0
-	github.com/openai/openai-go/v3 v3.0.0
+	github.com/openai/openai-go/v4 v4.0.0
 )
 
 require (
@@ -29,7 +30,6 @@ require (
 	github.com/aws/smithy-go v1.28.5 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.1.2 // indirect
-	github.com/coder/websocket v1.8.15 // indirect
 	github.com/ebitengine/purego v0.11.0 // indirect
 	github.com/jfreymuth/pulse v0.1.3 // indirect
 	github.com/pb33f/ordered-map/v2 v2.3.1 // indirect

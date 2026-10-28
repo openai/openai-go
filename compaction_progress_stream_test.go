@@ -6,9 +6,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	openai "github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/responses"
+	openai "github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/responses"
 )
 
 func compactionProgressClient(t *testing.T) openai.Client {

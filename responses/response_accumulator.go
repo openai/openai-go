@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v4/packages/respjson"
 	"github.com/tidwall/gjson"
 )
 

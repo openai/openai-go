@@ -3,7 +3,7 @@ package openai
 import (
 	"context"
 
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4/option"
 )
 
 // Create Video and Poll for Completion

@@ -12,12 +12,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/internal/testutil"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/realtime"
-	"github.com/openai/openai-go/v3/responses"
-	"github.com/openai/openai-go/v3/shared/constant"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/internal/testutil"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/realtime"
+	"github.com/openai/openai-go/v4/responses"
+	"github.com/openai/openai-go/v4/shared/constant"
 )
 
 func TestCallNewWithOptionalParams(t *testing.T) {
@@ -54,7 +54,7 @@ func TestCallNewWithOptionalParams(t *testing.T) {
 						Keywords:  []string{"string"},
 						Language:  openai.String("language"),
 						Languages: []string{"string"},
-						Model:     realtime.AudioTranscriptionModelWhisper1,
+						Model:     realtime.AudioTranscriptionModel("whisper-1"),
 						Prompt:    openai.String("prompt"),
 					},
 					TurnDetection: realtime.RealtimeAudioInputTurnDetectionUnionParam{
@@ -86,7 +86,7 @@ func TestCallNewWithOptionalParams(t *testing.T) {
 			MaxOutputTokens: realtime.RealtimeSessionCreateRequestMaxOutputTokensUnionParam{
 				OfInf: constant.ValueOf[constant.Inf](),
 			},
-			Model:             realtime.RealtimeSessionCreateRequestModelGPTRealtime,
+			Model:             realtime.RealtimeSessionCreateRequestModel("gpt-realtime"),
 			OutputModalities:  []string{"text"},
 			ParallelToolCalls: openai.Bool(true),
 			Prompt: responses.ResponsePromptParam{
@@ -181,7 +181,7 @@ func TestCallAcceptWithOptionalParams(t *testing.T) {
 							Keywords:  []string{"string"},
 							Language:  openai.String("language"),
 							Languages: []string{"string"},
-							Model:     realtime.AudioTranscriptionModelWhisper1,
+							Model:     realtime.AudioTranscriptionModel("whisper-1"),
 							Prompt:    openai.String("prompt"),
 						},
 						TurnDetection: realtime.RealtimeAudioInputTurnDetectionUnionParam{
@@ -213,7 +213,7 @@ func TestCallAcceptWithOptionalParams(t *testing.T) {
 				MaxOutputTokens: realtime.RealtimeSessionCreateRequestMaxOutputTokensUnionParam{
 					OfInf: constant.ValueOf[constant.Inf](),
 				},
-				Model:             realtime.RealtimeSessionCreateRequestModelGPTRealtime,
+				Model:             realtime.RealtimeSessionCreateRequestModel("gpt-realtime"),
 				OutputModalities:  []string{"text"},
 				ParallelToolCalls: openai.Bool(true),
 				Prompt: responses.ResponsePromptParam{

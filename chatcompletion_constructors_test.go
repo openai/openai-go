@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	openai "github.com/openai/openai-go/v3"
+	openai "github.com/openai/openai-go/v4"
 )
 
 func checkAssistantMessageConstructor[T string | []openai.ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion](

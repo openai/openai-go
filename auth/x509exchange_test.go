@@ -27,7 +27,7 @@ import (
 	"testing/iotest"
 	"time"
 
-	"github.com/openai/openai-go/v3/shared"
+	"github.com/openai/openai-go/v4/shared"
 )
 
 const x509ExchangeSyntheticToken = "synthetic-workload.token_123+/="

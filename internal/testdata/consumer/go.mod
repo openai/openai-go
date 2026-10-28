@@ -2,7 +2,7 @@ module example.com/openai-go-consumer
 
 go 1.26.0
 
-require github.com/openai/openai-go/v3 v3.0.0
+require github.com/openai/openai-go/v4 v4.0.0
 
 require (
 	github.com/coder/websocket v1.8.15 // indirect
@@ -12,4 +12,4 @@ require (
 	github.com/tidwall/sjson v1.2.5 // indirect
 )
 
-replace github.com/openai/openai-go/v3 => ../../..
+replace github.com/openai/openai-go/v4 => ../../..

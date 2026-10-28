@@ -11,8 +11,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/option"
 )
 
 func TestAudioSpeechNewWithOptionalParams(t *testing.T) {
@@ -32,7 +32,7 @@ func TestAudioSpeechNewWithOptionalParams(t *testing.T) {
 	)
 	resp, err := client.Audio.Speech.New(context.TODO(), openai.AudioSpeechNewParams{
 		Input: "input",
-		Model: openai.SpeechModelTTS1,
+		Model: openai.SpeechModel("tts-1"),
 		Voice: openai.AudioSpeechNewParamsVoiceUnion{
 			OfAudioSpeechNewsVoiceString2: openai.String("alloy"),
 		},

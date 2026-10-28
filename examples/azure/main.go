@@ -5,9 +5,9 @@ import (
 	"os"
 
 	"github.com/openai/openai-go/examples/internal/errutil"
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/azure"
-	"github.com/openai/openai-go/v3/responses"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/azure"
+	"github.com/openai/openai-go/v4/responses"
 )
 
 func main() {

@@ -2,7 +2,7 @@
 
 <!-- x-release-please-start-version -->
 
-<a href="https://pkg.go.dev/github.com/openai/openai-go/v3"><img src="https://pkg.go.dev/badge/github.com/openai/openai-go.svg" alt="Go Reference"></a>
+<a href="https://pkg.go.dev/github.com/openai/openai-go/v4"><img src="https://pkg.go.dev/badge/github.com/openai/openai-go.svg" alt="Go Reference"></a>
 
 <!-- x-release-please-end -->
 
@@ -19,18 +19,18 @@ from applications written in Go.
 
 ```go
 import (
-	"github.com/openai/openai-go/v3" // imported as openai
+	"github.com/openai/openai-go/v4" // imported as openai
 )
 ```
 
 <!-- x-release-please-end -->
 
-Or to pin an SDK version (see the Go compatibility note below):
+This branch previews the next major version and is not a published release. To try it:
 
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/openai/openai-go/v3@v3.89.0'
+go get -u 'github.com/openai/openai-go/v4@next'
 ```
 
 <!-- x-release-please-end -->
@@ -62,9 +62,9 @@ package main
 import (
 	"context"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/responses"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/responses"
 )
 
 func main() {
@@ -582,7 +582,7 @@ package main
 import (
 	"context"
 
-	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v4"
 )
 
 func main() {
@@ -1014,9 +1014,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/webhooks"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/webhooks"
 )
 
 const maxWebhookBodySize = 1 << 20 // 1 MiB
@@ -1095,8 +1095,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/option"
 )
 
 const maxWebhookBodySize = 1 << 20 // 1 MiB
@@ -1379,9 +1379,9 @@ For cloud workloads (Kubernetes, Azure, Google Cloud Platform), you can use work
 
 ```go
 import (
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/auth"
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/auth"
+	"github.com/openai/openai-go/v4/option"
 )
 
 client := openai.NewClient(
@@ -1433,9 +1433,9 @@ You can implement your own subject token provider:
 import (
 	"context"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/auth"
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/auth"
+	"github.com/openai/openai-go/v4/option"
 )
 
 type customTokenProvider struct{}
@@ -1486,9 +1486,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/auth"
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/auth"
+	"github.com/openai/openai-go/v4/option"
 )
 
 certificate, err := tls.LoadX509KeyPair("workload.crt", "workload.key")
@@ -1615,7 +1615,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/openai/openai-go/v3/bedrock"
+	"github.com/openai/openai-go/v4/bedrock"
 )
 
 func main() {
@@ -1680,8 +1680,8 @@ package main
 
 import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/azure"
+	"github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/azure"
 )
 
 func main() {

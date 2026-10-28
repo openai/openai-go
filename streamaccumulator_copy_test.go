@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	openai "github.com/openai/openai-go/v3"
+	openai "github.com/openai/openai-go/v4"
 )
 
 func TestAccumulatorValueCopyDoesNotRetainSource(t *testing.T) {

@@ -13,7 +13,7 @@ import (
 	"time"
 
 	wire "github.com/coder/websocket"
-	"github.com/openai/openai-go/v3/internal/websockettransport"
+	"github.com/openai/openai-go/v4/internal/websockettransport"
 )
 
 var (

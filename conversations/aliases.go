@@ -3,9 +3,9 @@
 package conversations
 
 import (
-	"github.com/openai/openai-go/v3/internal/apierror"
-	"github.com/openai/openai-go/v3/packages/param"
-	"github.com/openai/openai-go/v3/shared"
+	"github.com/openai/openai-go/v4/internal/apierror"
+	"github.com/openai/openai-go/v4/packages/param"
+	"github.com/openai/openai-go/v4/shared"
 )
 
 // aliased to make [param.APIObject] private when embedding
@@ -212,6 +212,12 @@ const ChatModelGPT5_4Nano = shared.ChatModelGPT5_4Nano
 const ChatModelGPT5_4Mini2026_03_17 = shared.ChatModelGPT5_4Mini2026_03_17
 
 // Equals "gpt-5.4-nano-2026-03-17"
+//
+// Deprecated: Announced shutdown date: 2027-04-01. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT5_4Nano2026_03_17 = shared.ChatModelGPT5_4Nano2026_03_17
 
 // Equals "gpt-5.3-chat-latest"
@@ -254,6 +260,12 @@ const ChatModelGPT5_2Pro2025_12_11 = shared.ChatModelGPT5_2Pro2025_12_11
 const ChatModelGPT5_1 = shared.ChatModelGPT5_1
 
 // Equals "gpt-5.1-2025-11-13"
+//
+// Deprecated: Announced shutdown date: 2027-04-01. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT5_1_2025_11_13 = shared.ChatModelGPT5_1_2025_11_13
 
 // Equals "gpt-5.1-codex"
@@ -994,16 +1006,6 @@ type CustomToolInputFormatGrammarParam = shared.CustomToolInputFormatGrammarPara
 // compact UTF-8 JSON.
 //
 // This is an alias to an internal type.
-type DecisionInputJSON = shared.DecisionInputJSON
-
-// This is an alias to an internal type.
-type DecisionInputJSONDataUnion = shared.DecisionInputJSONDataUnion
-
-// A JSON object or an array of objects rendered as text. Nested values may be any
-// JSON value. Limited to 32 container levels, 10,000 values, and 256 KiB of
-// compact UTF-8 JSON.
-//
-// This is an alias to an internal type.
 type DecisionInputJSONParam = shared.DecisionInputJSONParam
 
 // This is an alias to an internal type.
@@ -1013,7 +1015,7 @@ type DecisionInputJSONDataUnionParam = shared.DecisionInputJSONDataUnionParam
 // File IDs are not supported.
 //
 // This is an alias to an internal type.
-type DecisionQuestionInputImage = shared.DecisionQuestionInputImage
+type DecisionQuestionInputImageParam = shared.DecisionQuestionInputImageParam
 
 // The image detail level, using the selected model's image profile. Defaults to
 // auto.
@@ -1033,24 +1035,10 @@ const DecisionQuestionInputImageDetailAuto = shared.DecisionQuestionInputImageDe
 // Equals "original"
 const DecisionQuestionInputImageDetailOriginal = shared.DecisionQuestionInputImageDetailOriginal
 
-// An image provided as a base64 data URL or a publicly accessible HTTP(S) URL.
-// File IDs are not supported.
-//
-// This is an alias to an internal type.
-type DecisionQuestionInputImageParam = shared.DecisionQuestionInputImageParam
-
-// A text, image, or JSON content part in a question instruction.
-//
-// This is an alias to an internal type.
-type DecisionQuestionInputPartUnion = shared.DecisionQuestionInputPartUnion
-
 // A text, image, or JSON content part in a question instruction.
 //
 // This is an alias to an internal type.
 type DecisionQuestionInputPartUnionParam = shared.DecisionQuestionInputPartUnionParam
-
-// This is an alias to an internal type.
-type DecisionQuestionInputText = shared.DecisionQuestionInputText
 
 // This is an alias to an internal type.
 type DecisionQuestionInputTextParam = shared.DecisionQuestionInputTextParam

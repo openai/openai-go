@@ -8,7 +8,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/openai/openai-go/v3/packages/ssestream"
+	"github.com/openai/openai-go/v4/packages/ssestream"
 )
 
 // BetaAgentTurnResult is the completed root turn and its final assistant messages.

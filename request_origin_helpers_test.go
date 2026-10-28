@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/openai/openai-go/v3/auth"
+	"github.com/openai/openai-go/v4/auth"
 )
 
 type originTestRoundTripper func(*http.Request) (*http.Response, error)

@@ -12,9 +12,9 @@ import (
 	"time"
 
 	wire "github.com/coder/websocket"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
-	"github.com/openai/openai-go/v3/option"
-	transport "github.com/openai/openai-go/v3/packages/websocket"
+	"github.com/openai/openai-go/v4/internal/requestconfig"
+	"github.com/openai/openai-go/v4/option"
+	transport "github.com/openai/openai-go/v4/packages/websocket"
 )
 
 func dialPrepared(t *testing.T, opts ...option.RequestOption) (*transport.Connection[string], error) {

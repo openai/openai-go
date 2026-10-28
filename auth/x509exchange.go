@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/openai/openai-go/v3/shared"
+	"github.com/openai/openai-go/v4/shared"
 )
 
 const (

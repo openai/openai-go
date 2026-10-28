@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/openai/openai-go/v3/auth"
+	"github.com/openai/openai-go/v4/auth"
 )
 
 func TestX509TransportRejectsTunnelsAndAmbiguousFramingBeforeDial(t *testing.T) {

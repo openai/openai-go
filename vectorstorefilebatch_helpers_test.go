@@ -17,8 +17,8 @@ import (
 	"testing"
 	"testing/synctest"
 
-	openai "github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
+	openai "github.com/openai/openai-go/v4"
+	"github.com/openai/openai-go/v4/option"
 )
 
 type vectorBatchDoer func(*http.Request) (*http.Response, error)

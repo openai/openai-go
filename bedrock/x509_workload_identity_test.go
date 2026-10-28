@@ -15,8 +15,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/openai/openai-go/v3/auth"
-	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v4/auth"
+	"github.com/openai/openai-go/v4/option"
 )
 
 func TestSkipAuthRejectsX509WorkloadIdentityBeforeNetwork(t *testing.T) {

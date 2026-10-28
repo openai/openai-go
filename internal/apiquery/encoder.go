@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v4/packages/param"
 )
 
 var encoders sync.Map // map[reflect.Type]encoderFunc

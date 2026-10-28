@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/webhooks"
+	"github.com/openai/openai-go/v4/option"
+	"github.com/openai/openai-go/v4/webhooks"
 )
 
 const webhookHelperSecret = "synthetic-webhook-helper-secret"

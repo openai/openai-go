@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
-	"github.com/openai/openai-go/v3/packages/param"
+	shimjson "github.com/openai/openai-go/v4/internal/encoding/json"
+	"github.com/openai/openai-go/v4/packages/param"
 )
 
 type Struct struct {

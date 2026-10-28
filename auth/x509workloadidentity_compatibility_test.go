@@ -1,6 +1,6 @@
 package auth_test
 
-import "github.com/openai/openai-go/v3/auth"
+import "github.com/openai/openai-go/v4/auth"
 
 // Lock the released field order and arity against accidental changes.
 var _ = auth.X509WorkloadIdentity{"identity-provider", "service-account", 0, nil}
