@@ -39,7 +39,11 @@ func TestExternalKeysProviders(t *testing.T) {
 					t.Errorf("body = %#v, want %#v", got, tc.want)
 				}
 				w.Header().Set("Content-Type", "application/json")
-				if err := json.NewEncoder(w).Encode(map[string]any{"id": "key-test", "object": "organization.external_key", "type": tc.name, "name": "test", "api_project_ids": []string{}, "workspace_id": "", "created_at": 1}); err != nil {
+				response := map[string]any{"id": "key-test", "object": "organization.external_key", "api_project_ids": []string{"project-test"}, "workspace_id": "org-test", "created_at": 123}
+				for field, value := range tc.want {
+					response[field] = value
+				}
+				if err := json.NewEncoder(w).Encode(response); err != nil {
 					t.Error(err)
 				}
 			}))
@@ -49,8 +53,21 @@ func TestExternalKeysProviders(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if key.ID != "key-test" {
-				t.Errorf("ID = %q", key.ID)
+			if key.ID != "key-test" || key.Object != "organization.external_key" || key.WorkspaceID != "org-test" || key.CreatedAt != 123 || !reflect.DeepEqual(key.APIProjectIDs, []string{"project-test"}) {
+				t.Errorf("registration response = %#v", key)
+			}
+			encoded, err := json.Marshal(key)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var decoded map[string]any
+			if err := json.Unmarshal(encoded, &decoded); err != nil {
+				t.Fatal(err)
+			}
+			for field, want := range tc.want {
+				if decoded[field] != want {
+					t.Errorf("decoded %s = %#v, want %q", field, decoded[field], want)
+				}
 			}
 		})
 	}
@@ -58,17 +75,31 @@ func TestExternalKeysProviders(t *testing.T) {
 
 func TestExternalKeysLifecycle(t *testing.T) {
 	var calls atomic.Int64
+	expected := [...]struct{ method, path string }{
+		{http.MethodGet, "/v1/organization/external_keys/key-test"},
+		{http.MethodDelete, "/v1/organization/external_keys/key-test"},
+		{http.MethodPost, "/v1/organization/external_keys/key-test/validate"},
+		{http.MethodGet, "/v1/organization/external_keys"},
+		{http.MethodGet, "/v1/organization/external_keys"},
+	}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if got := r.Header.Get("Authorization"); got != "Bearer admin-test" {
 			t.Errorf("authorization = %q", got)
 		}
-		if calls.Add(1) > 5 {
+		call := calls.Add(1)
+		if call > int64(len(expected)) {
 			t.Error("unexpected extra request")
 			http.Error(w, "unexpected extra request", http.StatusBadRequest)
 			return
 		}
+		want := expected[call-1]
+		if r.Method != want.method || r.URL.Path != want.path {
+			t.Errorf("request %d = %s %s, want %s %s", call, r.Method, r.URL.Path, want.method, want.path)
+			http.Error(w, "unexpected request", http.StatusBadRequest)
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
-		var body any = map[string]any{"id": "key-test", "object": "organization.external_key", "type": "aws", "name": "test", "api_project_ids": []string{}, "workspace_id": "", "created_at": 1}
+		var body any = map[string]any{"id": "key-test", "object": "organization.external_key", "type": "aws", "name": "test", "api_project_ids": []string{"project-test"}, "workspace_id": "org-test", "created_at": 123, "purpose": "ekm", "external_id": "org-test", "role_arn": "arn:aws:iam::123456789012:role/test", "kms_arn": "arn:aws:kms:us-east-1:123456789012:key/test"}
 		switch {
 		case r.Method == http.MethodGet && r.URL.Path == "/v1/organization/external_keys":
 			if r.URL.Query().Get("purpose") != "ekm" || r.URL.Query().Get("limit") != "1" {
@@ -101,15 +132,17 @@ func TestExternalKeysLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if retrieved.ID != "key-test" {
-		t.Errorf("retrieved ID = %q", retrieved.ID)
-	}
 	deleted, err := keys.Delete(ctx, "key-test")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if deleted.ID != "key-test" || deleted.Object != "organization.external_key" || deleted.Name != "test" {
-		t.Errorf("delete response = %#v", deleted)
+	for _, key := range []*openai.ExternalKey{retrieved, deleted} {
+		if key.ID != "key-test" || key.Object != "organization.external_key" || key.Type != "aws" || key.Name != "test" || key.WorkspaceID != "org-test" || key.CreatedAt != 123 || !reflect.DeepEqual(key.APIProjectIDs, []string{"project-test"}) {
+			t.Errorf("lifecycle response = %#v", key)
+		}
+		if key.Purpose != openai.ExternalKeyPurposeEkm || key.ExternalID != "org-test" || key.RoleArn != "arn:aws:iam::123456789012:role/test" || key.KmsArn != "arn:aws:kms:us-east-1:123456789012:key/test" {
+			t.Errorf("provider response = %#v", key)
+		}
 	}
 	validated, err := keys.Validate(ctx, "key-test")
 	if err != nil {
