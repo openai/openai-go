@@ -37,6 +37,14 @@ func NewAudioSpeechService(opts ...option.RequestOption) (r AudioSpeechService) 
 // Generates audio from the input text.
 //
 // Returns the audio file content, or a stream of audio events.
+//
+// The `tts-1`, `tts-1-hd`, `gpt-4o-mini-tts`, `gpt-4o-mini-tts-2025-03-20`, and
+// `gpt-4o-mini-tts-2025-12-15` models are deprecated and scheduled to shut down on
+// January 6, 2027. These examples use the existing Speech API; for new
+// integrations, migrate to `gpt-realtime-2.1-mini` through the
+// [Realtime API](https://developers.openai.com/api/docs/guides/realtime). See the
+// [deprecation schedule](https://developers.openai.com/api/docs/deprecations) for
+// migration details.
 func (r *AudioSpeechService) New(ctx context.Context, body AudioSpeechNewParams, opts ...option.RequestOption) (res *http.Response, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -49,9 +57,21 @@ func (r *AudioSpeechService) New(ctx context.Context, body AudioSpeechNewParams,
 type SpeechModel = string
 
 const (
-	SpeechModelTTS1                   SpeechModel = "tts-1"
-	SpeechModelTTS1HD                 SpeechModel = "tts-1-hd"
-	SpeechModelGPT4oMiniTTS           SpeechModel = "gpt-4o-mini-tts"
+	// Deprecated: Announced shutdown date: 2027-01-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	SpeechModelTTS1 SpeechModel = "tts-1"
+	// Deprecated: Announced shutdown date: 2027-01-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	SpeechModelTTS1HD SpeechModel = "tts-1-hd"
+	// Deprecated: Announced shutdown date: 2027-01-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	SpeechModelGPT4oMiniTTS SpeechModel = "gpt-4o-mini-tts"
+	// Deprecated: Announced shutdown date: 2027-01-06. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	SpeechModelGPT4oMiniTTS2025_12_15 SpeechModel = "gpt-4o-mini-tts-2025-12-15"
 )
 

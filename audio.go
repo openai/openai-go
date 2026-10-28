@@ -44,12 +44,27 @@ func NewAudioService(opts ...option.RequestOption) (r AudioService) {
 type AudioModel = string
 
 const (
-	AudioModelWhisper1                      AudioModel = "whisper-1"
-	AudioModelGPTTranscribe                 AudioModel = "gpt-transcribe"
-	AudioModelGPT4oTranscribe               AudioModel = "gpt-4o-transcribe"
-	AudioModelGPT4oMiniTranscribe           AudioModel = "gpt-4o-mini-transcribe"
+	// Deprecated: Announced shutdown date: 2027-02-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AudioModelWhisper1      AudioModel = "whisper-1"
+	AudioModelGPTTranscribe AudioModel = "gpt-transcribe"
+	// Deprecated: Announced shutdown date: 2027-02-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AudioModelGPT4oTranscribe AudioModel = "gpt-4o-transcribe"
+	// Deprecated: Announced shutdown date: 2027-02-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AudioModelGPT4oMiniTranscribe AudioModel = "gpt-4o-mini-transcribe"
+	// Deprecated: Announced shutdown date: 2027-02-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	AudioModelGPT4oMiniTranscribe2025_12_15 AudioModel = "gpt-4o-mini-transcribe-2025-12-15"
-	AudioModelGPT4oTranscribeDiarize        AudioModel = "gpt-4o-transcribe-diarize"
+	// Deprecated: Announced shutdown date: 2027-02-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AudioModelGPT4oTranscribeDiarize AudioModel = "gpt-4o-transcribe-diarize"
 )
 
 // The format of the output, in one of these options: `json`, `text`, `srt`,

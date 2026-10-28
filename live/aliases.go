@@ -215,6 +215,12 @@ const ChatModelGPT5_4Nano = shared.ChatModelGPT5_4Nano
 const ChatModelGPT5_4Mini2026_03_17 = shared.ChatModelGPT5_4Mini2026_03_17
 
 // Equals "gpt-5.4-nano-2026-03-17"
+//
+// Deprecated: Announced shutdown date: 2027-04-01. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT5_4Nano2026_03_17 = shared.ChatModelGPT5_4Nano2026_03_17
 
 // Equals "gpt-5.3-chat-latest"
@@ -257,6 +263,12 @@ const ChatModelGPT5_2Pro2025_12_11 = shared.ChatModelGPT5_2Pro2025_12_11
 const ChatModelGPT5_1 = shared.ChatModelGPT5_1
 
 // Equals "gpt-5.1-2025-11-13"
+//
+// Deprecated: Announced shutdown date: 2027-04-01. See
+// https://developers.openai.com/api/docs/deprecations for details and recommended
+// replacements.
+//
+//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT5_1_2025_11_13 = shared.ChatModelGPT5_1_2025_11_13
 
 // Equals "gpt-5.1-codex"
