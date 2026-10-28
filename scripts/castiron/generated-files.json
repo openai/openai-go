@@ -7,7 +7,7 @@
     },
     "adminorganization.go": {
       "mode": "100644",
-      "sha256": "ddf97c90b0e865e9373bcdf5de79c74ab09360c44643597e8f2bb0dde94f8e85"
+      "sha256": "233f172f273ead3828c46281638339ce82f274c818e32b6e3228cc8156133b48"
     },
     "adminorganizationadminapikey.go": {
       "mode": "100644",
@@ -40,6 +40,14 @@
     "adminorganizationdataretention_test.go": {
       "mode": "100644",
       "sha256": "32ff6c2ced00903ff06a73285268edd4830e1f7421d6b4caff24397d7df29f46"
+    },
+    "adminorganizationexternalkey.go": {
+      "mode": "100644",
+      "sha256": "e2a8f2d58a7210675dba278c8aa21e1752bbed02f838bf82eb37bb8366538ec7"
+    },
+    "adminorganizationexternalkey_test.go": {
+      "mode": "100644",
+      "sha256": "852a87c306d54bbf7074614c2d7a151f769a76d8bb17df9421a6584cc15e6ded"
     },
     "adminorganizationexternalstorage.go": {
       "mode": "100644",
@@ -263,7 +271,7 @@
     },
     "api.md": {
       "mode": "100644",
-      "sha256": "387abb2e1ac8dfd6091334a6d9083a10fd8fd265bd4bc6c32b3c015cff44ae3b"
+      "sha256": "477f46701b0c99c58d7a33b72d76fc1cae10f656ba73db5764ab031ff987a5cf"
     },
     "audio.go": {
       "mode": "100644",

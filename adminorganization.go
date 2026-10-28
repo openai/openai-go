@@ -29,6 +29,7 @@ type AdminOrganizationService struct {
 	SpendAlerts     AdminOrganizationSpendAlertService
 	Certificates    AdminOrganizationCertificateService
 	Projects        AdminOrganizationProjectService
+	ExternalKeys    AdminOrganizationExternalKeyService
 }
 
 // NewAdminOrganizationService generates a new service that applies the given
@@ -50,5 +51,6 @@ func NewAdminOrganizationService(opts ...option.RequestOption) (r AdminOrganizat
 	r.SpendAlerts = NewAdminOrganizationSpendAlertService(opts...)
 	r.Certificates = NewAdminOrganizationCertificateService(opts...)
 	r.Projects = NewAdminOrganizationProjectService(opts...)
+	r.ExternalKeys = NewAdminOrganizationExternalKeyService(opts...)
 	return
 }
