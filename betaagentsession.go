@@ -217,6 +217,10 @@ type BetaAgentSessionNewParamsAgent struct {
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
 	// The model to use for the agent. The requested model name is preserved.
 	Model param.Opt[string] `json:"model,omitzero"`
+	// Context compaction settings. Omit to keep the current settings. A supplied
+	// object replaces the settings; null or an empty object enables background
+	// compaction.
+	Compaction BetaAgentSessionNewParamsAgentCompaction `json:"compaction,omitzero"`
 	// The service tier used for model requests.
 	//
 	// Any of "auto", "default", "flex", "priority", "fast", "ultrafast".
@@ -247,6 +251,25 @@ func init() {
 	apijson.RegisterFieldValidator[BetaAgentSessionNewParamsAgent](
 		"service_tier", "auto", "default", "flex", "priority", "fast", "ultrafast",
 	)
+}
+
+// Context compaction settings. Omit to keep the current settings. A supplied
+// object replaces the settings; null or an empty object enables background
+// compaction.
+type BetaAgentSessionNewParamsAgentCompaction struct {
+	// Whether to compact context in the background. Omission or null defaults to true.
+	// Set to false to use blocking compaction. Background compaction may increase
+	// token usage.
+	Async param.Opt[bool] `json:"async,omitzero"`
+	paramObj
+}
+
+func (r BetaAgentSessionNewParamsAgentCompaction) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentSessionNewParamsAgentCompaction
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentSessionNewParamsAgentCompaction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Only one field can be non-zero.

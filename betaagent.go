@@ -160,6 +160,8 @@ type Agent struct {
 	Tools []PersistedAgentToolUnion `json:"tools" api:"required"`
 	// The Unix timestamp, in seconds, when the agent was last updated.
 	UpdatedAt int64 `json:"updated_at" api:"required"`
+	// The effective context compaction settings.
+	Compaction AgentCompaction `json:"compaction"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID           respjson.Field
@@ -175,6 +177,7 @@ type Agent struct {
 		Text         respjson.Field
 		Tools        respjson.Field
 		UpdatedAt    respjson.Field
+		Compaction   respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -197,6 +200,24 @@ const (
 	AgentServiceTierFast      AgentServiceTier = "fast"
 	AgentServiceTierUltrafast AgentServiceTier = "ultrafast"
 )
+
+// The effective context compaction settings.
+type AgentCompaction struct {
+	// Whether context is compacted in the background. Defaults to true.
+	Async bool `json:"async" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Async       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentCompaction) RawJSON() string { return r.JSON.raw }
+func (r *AgentCompaction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 func NewAgentBrowserAuthenticationCancelParam() AgentBrowserAuthenticationCancelParam {
 	return AgentBrowserAuthenticationCancelParam{
@@ -1503,6 +1524,8 @@ type AgentSessionAgent struct {
 	Text AgentText `json:"text" api:"required"`
 	// Tools available to the agent.
 	Tools []AgentToolUnion `json:"tools" api:"required"`
+	// The effective context compaction settings.
+	Compaction AgentSessionAgentCompaction `json:"compaction"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID           respjson.Field
@@ -1514,6 +1537,7 @@ type AgentSessionAgent struct {
 		ServiceTier  respjson.Field
 		Text         respjson.Field
 		Tools        respjson.Field
+		Compaction   respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -1522,6 +1546,24 @@ type AgentSessionAgent struct {
 // Returns the unmodified JSON received from the API
 func (r AgentSessionAgent) RawJSON() string { return r.JSON.raw }
 func (r *AgentSessionAgent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The effective context compaction settings.
+type AgentSessionAgentCompaction struct {
+	// Whether context is compacted in the background. Defaults to true.
+	Async bool `json:"async" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Async       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionAgentCompaction) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionAgentCompaction) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -9488,6 +9530,8 @@ type BetaAgentNewParams struct {
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
 	// A human-readable name for the agent. Omission or null leaves the agent unnamed.
 	Name param.Opt[string] `json:"name,omitzero"`
+	// Context compaction settings. Omission or null enables background compaction.
+	Compaction BetaAgentNewParamsCompaction `json:"compaction,omitzero"`
 	// Up to 16 string key-value pairs, with keys up to 64 and values up to 512
 	// characters. Omission or null defaults to an empty map.
 	Metadata map[string]string `json:"metadata,omitzero"`
@@ -9517,6 +9561,23 @@ func (r *BetaAgentNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Context compaction settings. Omission or null enables background compaction.
+type BetaAgentNewParamsCompaction struct {
+	// Whether to compact context in the background. Omission or null defaults to true.
+	// Set to false to use blocking compaction. Background compaction may increase
+	// token usage.
+	Async param.Opt[bool] `json:"async,omitzero"`
+	paramObj
+}
+
+func (r BetaAgentNewParamsCompaction) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentNewParamsCompaction
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentNewParamsCompaction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The service tier used for model requests. Defaults to `auto`.
 type BetaAgentNewParamsServiceTier string
 
@@ -9537,6 +9598,10 @@ type BetaAgentUpdateParams struct {
 	Name param.Opt[string] `json:"name,omitzero"`
 	// The model to use for the agent. The requested model name is preserved.
 	Model param.Opt[string] `json:"model,omitzero"`
+	// Context compaction settings. Omit to keep the current settings. A supplied
+	// object replaces the settings; null or an empty object enables background
+	// compaction.
+	Compaction BetaAgentUpdateParamsCompaction `json:"compaction,omitzero"`
 	// Replaces all metadata. Omit to leave unchanged, or pass null or {} to clear it.
 	// Up to 16 string key-value pairs, with keys up to 64 and values up to 512
 	// characters.
@@ -9563,6 +9628,25 @@ func (r BetaAgentUpdateParams) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *BetaAgentUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Context compaction settings. Omit to keep the current settings. A supplied
+// object replaces the settings; null or an empty object enables background
+// compaction.
+type BetaAgentUpdateParamsCompaction struct {
+	// Whether to compact context in the background. Omission or null defaults to true.
+	// Set to false to use blocking compaction. Background compaction may increase
+	// token usage.
+	Async param.Opt[bool] `json:"async,omitzero"`
+	paramObj
+}
+
+func (r BetaAgentUpdateParamsCompaction) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentUpdateParamsCompaction
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentUpdateParamsCompaction) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

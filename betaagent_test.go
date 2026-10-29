@@ -28,7 +28,10 @@ func TestBetaAgentNewWithOptionalParams(t *testing.T) {
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Agents.New(context.TODO(), openai.BetaAgentNewParams{
-		Model:        "model",
+		Model: "model",
+		Compaction: openai.BetaAgentNewParamsCompaction{
+			Async: openai.Bool(true),
+		},
 		Instructions: openai.String("instructions"),
 		Metadata: map[string]string{
 			"foo": "string",
@@ -111,6 +114,9 @@ func TestBetaAgentUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"agent_id",
 		openai.BetaAgentUpdateParams{
+			Compaction: openai.BetaAgentUpdateParamsCompaction{
+				Async: openai.Bool(true),
+			},
 			Instructions: openai.String("instructions"),
 			Metadata: map[string]string{
 				"foo": "string",
