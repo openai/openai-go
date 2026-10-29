@@ -67,6 +67,7 @@ func TestImageEditWithOptionalParams(t *testing.T) {
 		Prompt:            "A cute baby sea otter wearing a beret",
 		Background:        openai.ImageEditParamsBackgroundTransparent,
 		InputFidelity:     openai.ImageEditParamsInputFidelityHigh,
+		Markup:            io.Reader(bytes.NewBuffer([]byte("Example data"))),
 		Mask:              io.Reader(bytes.NewBuffer([]byte("Example data"))),
 		Model:             openai.ImageModelGPTImage1_5,
 		N:                 openai.Int(1),

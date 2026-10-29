@@ -1106,6 +1106,10 @@ type ImageEditParams struct {
 	// `1024x1536` are supported by the GPT image models; `auto` is supported for
 	// models that allow automatic sizing.
 	Size ImageEditParamsSize `json:"size,omitzero"`
+	// A transparent PNG overlaid on the first image to guide the edit. Must match that
+	// image's dimensions after orientation and contain transparent pixels. Supports
+	// GPT Image 2.5 and 2.6. Cannot be combined with mask.
+	Markup io.Reader `json:"markup,omitzero" format:"binary"`
 	// An additional image whose fully transparent areas (e.g. where alpha is zero)
 	// indicate where `image` should be edited. If there are multiple images provided,
 	// the mask will be applied on the first image. Must be a valid PNG file, less than
