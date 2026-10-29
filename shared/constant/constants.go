@@ -562,6 +562,7 @@ type Translation string                                       // Always "transla
 type TransportAnswered string                                 // Always "transport.answered"
 type TransportDtmfReceived string                             // Always "transport.dtmf.received"
 type TransportDtmfSend string                                 // Always "transport.dtmf.send"
+type TransportDtmfSent string                                 // Always "transport.dtmf.sent"
 type TransportFailed string                                   // Always "transport.failed"
 type TransportRinging string                                  // Always "transport.ringing"
 type Type string                                              // Always "type"
@@ -1487,6 +1488,7 @@ func (c Translation) Default() Translation                       { return "trans
 func (c TransportAnswered) Default() TransportAnswered           { return "transport.answered" }
 func (c TransportDtmfReceived) Default() TransportDtmfReceived   { return "transport.dtmf.received" }
 func (c TransportDtmfSend) Default() TransportDtmfSend           { return "transport.dtmf.send" }
+func (c TransportDtmfSent) Default() TransportDtmfSent           { return "transport.dtmf.sent" }
 func (c TransportFailed) Default() TransportFailed               { return "transport.failed" }
 func (c TransportRinging) Default() TransportRinging             { return "transport.ringing" }
 func (c Type) Default() Type                                     { return "type" }
@@ -2106,6 +2108,7 @@ func (c Translation) MarshalJSON() ([]byte, error)                         { ret
 func (c TransportAnswered) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
 func (c TransportDtmfReceived) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c TransportDtmfSend) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
+func (c TransportDtmfSent) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
 func (c TransportFailed) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c TransportRinging) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c Type) MarshalJSON() ([]byte, error)                                { return marshalString(c) }

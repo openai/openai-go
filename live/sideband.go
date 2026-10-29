@@ -45,6 +45,12 @@ func ConnectClientEventParamOfSessionOutputAudioFixturePlay(audio string) Connec
 	return ConnectClientEventUnionParam{OfSessionOutputAudioFixturePlay: &sessionOutputAudioFixturePlay}
 }
 
+func ConnectClientEventParamOfTransportDtmfSend(event string) ConnectClientEventUnionParam {
+	var transportDtmfSend ConnectClientEventTransportDtmfSendParam
+	transportDtmfSend.Event = event
+	return ConnectClientEventUnionParam{OfTransportDtmfSend: &transportDtmfSend}
+}
+
 func ConnectClientEventParamOfSessionInstructionsAppend(content string, delegationID string) ConnectClientEventUnionParam {
 	var sessionInstructionsAppend InstructionsAppendEventParam
 	sessionInstructionsAppend.Content = content
@@ -163,19 +169,20 @@ func ConnectClientEventParamOfResponseItemCreate[
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ConnectClientEventUnionParam struct {
-	OfSessionUpdate                 *SessionUpdateEventParam          `json:",omitzero,inline"`
-	OfSessionInputAudioMute         *InputAudioMuteEventParam         `json:",omitzero,inline"`
-	OfSessionInputAudioUnmute       *InputAudioUnmuteEventParam       `json:",omitzero,inline"`
-	OfSessionOutputAudioFixturePlay *OutputAudioFixturePlayEventParam `json:",omitzero,inline"`
-	OfSessionInstructionsAppend     *InstructionsAppendEventParam     `json:",omitzero,inline"`
-	OfSessionThinkingAppend         *ThinkingAppendEventParam         `json:",omitzero,inline"`
-	OfSessionCommentaryAppend       *CommentaryAppendEventParam       `json:",omitzero,inline"`
-	OfDecisionCreate                *DecisionCreateEventParam         `json:",omitzero,inline"`
-	OfDecisionItemCreate            *DecisionItemCreateEventParam     `json:",omitzero,inline"`
-	OfDecisionItemDelete            *DecisionItemDeleteEventParam     `json:",omitzero,inline"`
-	OfResponseItemCreate            *ResponseItemCreateEventParam     `json:",omitzero,inline"`
-	OfResponseCreate                *ResponseCreateEventParam         `json:",omitzero,inline"`
-	OfSessionClose                  *SessionCloseEventParam           `json:",omitzero,inline"`
+	OfSessionUpdate                 *SessionUpdateEventParam                  `json:",omitzero,inline"`
+	OfSessionInputAudioMute         *InputAudioMuteEventParam                 `json:",omitzero,inline"`
+	OfSessionInputAudioUnmute       *InputAudioUnmuteEventParam               `json:",omitzero,inline"`
+	OfSessionOutputAudioFixturePlay *OutputAudioFixturePlayEventParam         `json:",omitzero,inline"`
+	OfTransportDtmfSend             *ConnectClientEventTransportDtmfSendParam `json:",omitzero,inline"`
+	OfSessionInstructionsAppend     *InstructionsAppendEventParam             `json:",omitzero,inline"`
+	OfSessionThinkingAppend         *ThinkingAppendEventParam                 `json:",omitzero,inline"`
+	OfSessionCommentaryAppend       *CommentaryAppendEventParam               `json:",omitzero,inline"`
+	OfDecisionCreate                *DecisionCreateEventParam                 `json:",omitzero,inline"`
+	OfDecisionItemCreate            *DecisionItemCreateEventParam             `json:",omitzero,inline"`
+	OfDecisionItemDelete            *DecisionItemDeleteEventParam             `json:",omitzero,inline"`
+	OfResponseItemCreate            *ResponseItemCreateEventParam             `json:",omitzero,inline"`
+	OfResponseCreate                *ResponseCreateEventParam                 `json:",omitzero,inline"`
+	OfSessionClose                  *SessionCloseEventParam                   `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -184,6 +191,7 @@ func (u ConnectClientEventUnionParam) MarshalJSON() ([]byte, error) {
 		u.OfSessionInputAudioMute,
 		u.OfSessionInputAudioUnmute,
 		u.OfSessionOutputAudioFixturePlay,
+		u.OfTransportDtmfSend,
 		u.OfSessionInstructionsAppend,
 		u.OfSessionThinkingAppend,
 		u.OfSessionCommentaryAppend,
@@ -215,6 +223,14 @@ func (u ConnectClientEventUnionParam) GetAudio() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ConnectClientEventUnionParam) GetEvent() *string {
+	if vt := u.OfTransportDtmfSend; vt != nil {
+		return &vt.Event
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ConnectClientEventUnionParam) GetItemID() *string {
 	if vt := u.OfDecisionItemDelete; vt != nil {
 		return &vt.ItemID
@@ -239,6 +255,8 @@ func (u ConnectClientEventUnionParam) GetType() *string {
 	} else if vt := u.OfSessionInputAudioUnmute; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfSessionOutputAudioFixturePlay; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfTransportDtmfSend; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfSessionInstructionsAppend; vt != nil {
 		return (*string)(&vt.Type)
@@ -271,6 +289,8 @@ func (u ConnectClientEventUnionParam) GetEventID() *string {
 	} else if vt := u.OfSessionInputAudioUnmute; vt != nil && vt.EventID.Valid() {
 		return &vt.EventID.Value
 	} else if vt := u.OfSessionOutputAudioFixturePlay; vt != nil && vt.EventID.Valid() {
+		return &vt.EventID.Value
+	} else if vt := u.OfTransportDtmfSend; vt != nil && vt.EventID.Valid() {
 		return &vt.EventID.Value
 	} else if vt := u.OfSessionInstructionsAppend; vt != nil && vt.EventID.Valid() {
 		return &vt.EventID.Value
@@ -325,6 +345,7 @@ func init() {
 		apijson.Discriminator[InputAudioMuteEventParam]("session.input_audio.mute"),
 		apijson.Discriminator[InputAudioUnmuteEventParam]("session.input_audio.unmute"),
 		apijson.Discriminator[OutputAudioFixturePlayEventParam]("session.output_audio.fixture.play"),
+		apijson.Discriminator[ConnectClientEventTransportDtmfSendParam]("transport.dtmf.send"),
 		apijson.Discriminator[InstructionsAppendEventParam]("session.instructions.append"),
 		apijson.Discriminator[ThinkingAppendEventParam]("session.thinking.append"),
 		apijson.Discriminator[CommentaryAppendEventParam]("session.commentary.append"),
@@ -337,6 +358,33 @@ func init() {
 	)
 }
 
+// Send one DTMF keypress to the SIP trunk through a Live sideband connection. This
+// command is supported only for SIP calls. A successful send emits
+// `transport.dtmf.sent` on sideband. If you provide `event_id`, the success
+// notification includes it as `client_event_id`; a failure includes it as
+// `error.client_event_id`. Send separate events for multiple keypresses.
+//
+// The properties Event, Type are required.
+type ConnectClientEventTransportDtmfSendParam struct {
+	// The DTMF key to send: one of `0`–`9`, `A`–`D`, `*`, or `#`.
+	Event string `json:"event" api:"required"`
+	// Optional client identifier for correlating this command with a server event's
+	// client_event_id or error.client_event_id.
+	EventID param.Opt[string] `json:"event_id,omitzero"`
+	// This field can be elided, and will marshal its zero value as
+	// "transport.dtmf.send".
+	Type constant.TransportDtmfSend `json:"type" default:"transport.dtmf.send"`
+	paramObj
+}
+
+func (r ConnectClientEventTransportDtmfSendParam) MarshalJSON() (data []byte, err error) {
+	type shadow ConnectClientEventTransportDtmfSendParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ConnectClientEventTransportDtmfSendParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // ConnectServerEventUnion contains all possible properties and values from
 // [SessionStartedEvent], [SessionUpdatedEvent], [InputAudioMutedEvent],
 // [InputAudioUnmutedEvent], [OutputAudioFixturePlayingEvent],
@@ -347,8 +395,9 @@ func init() {
 // [SessionUsageUpdatedEvent], [SessionClosedEvent], [ErrorEvent], [InfoEvent],
 // [ConnectServerEventSessionInputAudioAppend], [OutputAudioDeltaEvent],
 // [ConnectServerEventTransportDtmfReceived],
-// [ConnectServerEventTransportDtmfSend], [ConnectServerEventTransportRinging],
-// [ConnectServerEventTransportAnswered], [ConnectServerEventTransportFailed].
+// [ConnectServerEventTransportDtmfSend], [ConnectServerEventTransportDtmfSent],
+// [ConnectServerEventTransportRinging], [ConnectServerEventTransportAnswered],
+// [ConnectServerEventTransportFailed].
 //
 // Use the [ConnectServerEventUnion.AsAny] method to switch on the variant.
 //
@@ -378,6 +427,7 @@ type ConnectServerEventUnion struct {
 	OfOutputAudioDeltaEvent                     OutputAudioDeltaEvent                     `json:",inline"`
 	OfConnectServerEventTransportDtmfReceived   ConnectServerEventTransportDtmfReceived   `json:",inline"`
 	OfConnectServerEventTransportDtmfSend       ConnectServerEventTransportDtmfSend       `json:",inline"`
+	OfConnectServerEventTransportDtmfSent       ConnectServerEventTransportDtmfSent       `json:",inline"`
 	OfConnectServerEventTransportRinging        ConnectServerEventTransportRinging        `json:",inline"`
 	OfConnectServerEventTransportAnswered       ConnectServerEventTransportAnswered       `json:",inline"`
 	OfConnectServerEventTransportFailed         ConnectServerEventTransportFailed         `json:",inline"`
@@ -407,6 +457,7 @@ type ConnectServerEventUnion struct {
 		OfOutputAudioDeltaEvent                     respjson.Field
 		OfConnectServerEventTransportDtmfReceived   respjson.Field
 		OfConnectServerEventTransportDtmfSend       respjson.Field
+		OfConnectServerEventTransportDtmfSent       respjson.Field
 		OfConnectServerEventTransportRinging        respjson.Field
 		OfConnectServerEventTransportAnswered       respjson.Field
 		OfConnectServerEventTransportFailed         respjson.Field
@@ -446,6 +497,7 @@ func (ConnectServerEventSessionInputAudioAppend) implConnectServerEventUnion() {
 func (OutputAudioDeltaEvent) implConnectServerEventUnion()                     {}
 func (ConnectServerEventTransportDtmfReceived) implConnectServerEventUnion()   {}
 func (ConnectServerEventTransportDtmfSend) implConnectServerEventUnion()       {}
+func (ConnectServerEventTransportDtmfSent) implConnectServerEventUnion()       {}
 func (ConnectServerEventTransportRinging) implConnectServerEventUnion()        {}
 func (ConnectServerEventTransportAnswered) implConnectServerEventUnion()       {}
 func (ConnectServerEventTransportFailed) implConnectServerEventUnion()         {}
@@ -477,6 +529,7 @@ func (ConnectServerEventTransportFailed) implConnectServerEventUnion()         {
 //	case live.OutputAudioDeltaEvent:
 //	case live.ConnectServerEventTransportDtmfReceived:
 //	case live.ConnectServerEventTransportDtmfSend:
+//	case live.ConnectServerEventTransportDtmfSent:
 //	case live.ConnectServerEventTransportRinging:
 //	case live.ConnectServerEventTransportAnswered:
 //	case live.ConnectServerEventTransportFailed:
@@ -533,6 +586,8 @@ func (u ConnectServerEventUnion) AsAny() anyConnectServerEvent {
 		return u.AsConnectServerEventTransportDtmfReceived()
 	case "transport.dtmf.send":
 		return u.AsConnectServerEventTransportDtmfSend()
+	case "transport.dtmf.sent":
+		return u.AsConnectServerEventTransportDtmfSent()
 	case "transport.ringing":
 		return u.AsConnectServerEventTransportRinging()
 	case "transport.answered":
@@ -659,6 +714,11 @@ func (u ConnectServerEventUnion) AsConnectServerEventTransportDtmfReceived() (v 
 }
 
 func (u ConnectServerEventUnion) AsConnectServerEventTransportDtmfSend() (v ConnectServerEventTransportDtmfSend) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConnectServerEventUnion) AsConnectServerEventTransportDtmfSent() (v ConnectServerEventTransportDtmfSent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -822,6 +882,11 @@ func (r *ConnectServerEventUnion) unmarshalWebsocketEventWithRawType(data []byte
 			return err
 		}
 		r.JSON.OfConnectServerEventTransportDtmfSend = respjson.NewField(r.JSON.raw)
+	case "transport.dtmf.sent":
+		if err := apijson.UnmarshalRoot(data, &r.OfConnectServerEventTransportDtmfSent); err != nil {
+			return err
+		}
+		r.JSON.OfConnectServerEventTransportDtmfSent = respjson.NewField(r.JSON.raw)
 	case "transport.ringing":
 		if err := apijson.UnmarshalRoot(data, &r.OfConnectServerEventTransportRinging); err != nil {
 			return err
@@ -887,8 +952,9 @@ func (r *ConnectServerEventTransportDtmfReceived) UnmarshalJSON(data []byte) err
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// A SIP DTMF keypress successfully sent to the SIP trunk. Delivered only to
-// sideband observers; this is not a client command.
+// Legacy SIP DTMF delivery notification retained for SDK compatibility and saved
+// events. Current servers confirm delivery with transport.dtmf.sent;
+// transport.dtmf.send is now the client command.
 type ConnectServerEventTransportDtmfSend struct {
 	// The event_id of the client command, when supplied.
 	ClientEventID string                     `json:"client_event_id"`
@@ -909,6 +975,31 @@ type ConnectServerEventTransportDtmfSend struct {
 // Returns the unmodified JSON received from the API
 func (r ConnectServerEventTransportDtmfSend) RawJSON() string { return r.JSON.raw }
 func (r *ConnectServerEventTransportDtmfSend) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A SIP DTMF keypress successfully sent to the SIP trunk. Delivered only to
+// sideband observers; this is not a client command.
+type ConnectServerEventTransportDtmfSent struct {
+	// The event_id of the client command, when supplied.
+	ClientEventID string                     `json:"client_event_id"`
+	Event         string                     `json:"event" api:"required"`
+	EventID       string                     `json:"event_id" api:"required"`
+	Type          constant.TransportDtmfSent `json:"type" default:"transport.dtmf.sent"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ClientEventID respjson.Field
+		Event         respjson.Field
+		EventID       respjson.Field
+		Type          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ConnectServerEventTransportDtmfSent) RawJSON() string { return r.JSON.raw }
+func (r *ConnectServerEventTransportDtmfSent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
