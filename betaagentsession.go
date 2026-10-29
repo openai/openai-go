@@ -229,6 +229,9 @@ type BetaAgentSessionNewParamsAgent struct {
 	// resolved tool list must fit within 3 MiB (3,145,728 bytes) of compact UTF-8
 	// JSON.
 	Tools []AgentToolParamUnion `json:"tools,omitzero"`
+	// Experimental settings to merge by key. Omitted settings keep their current
+	// values.
+	Experimental BetaAgentSessionNewParamsAgentExperimental `json:"experimental,omitzero"`
 	// Configuration for creating and coordinating subagents.
 	MultiAgent MultiAgentConfigParam `json:"multi_agent,omitzero"`
 	// Configuration for model reasoning. Omit to keep the current settings; pass
@@ -269,6 +272,23 @@ func (r BetaAgentSessionNewParamsAgentCompaction) MarshalJSON() (data []byte, er
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *BetaAgentSessionNewParamsAgentCompaction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Experimental settings to merge by key. Omitted settings keep their current
+// values.
+type BetaAgentSessionNewParamsAgentExperimental struct {
+	// Whether to give the model periodic current-time reminders. Omit to keep the
+	// current setting.
+	TimeAwareness param.Opt[bool] `json:"time_awareness,omitzero"`
+	paramObj
+}
+
+func (r BetaAgentSessionNewParamsAgentExperimental) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentSessionNewParamsAgentExperimental
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentSessionNewParamsAgentExperimental) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

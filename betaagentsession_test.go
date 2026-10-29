@@ -35,6 +35,9 @@ func TestBetaAgentSessionNewWithOptionalParams(t *testing.T) {
 			Compaction: openai.BetaAgentSessionNewParamsAgentCompaction{
 				Async: openai.Bool(true),
 			},
+			Experimental: openai.BetaAgentSessionNewParamsAgentExperimental{
+				TimeAwareness: openai.Bool(true),
+			},
 			Instructions: openai.String("instructions"),
 			Model:        openai.String("model"),
 			MultiAgent: openai.MultiAgentConfigParam{
