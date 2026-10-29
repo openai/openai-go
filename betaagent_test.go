@@ -32,6 +32,9 @@ func TestBetaAgentNewWithOptionalParams(t *testing.T) {
 		Compaction: openai.BetaAgentNewParamsCompaction{
 			Async: openai.Bool(true),
 		},
+		Experimental: openai.BetaAgentNewParamsExperimental{
+			TimeAwareness: openai.Bool(true),
+		},
 		Instructions: openai.String("instructions"),
 		Metadata: map[string]string{
 			"foo": "string",
@@ -116,6 +119,9 @@ func TestBetaAgentUpdateWithOptionalParams(t *testing.T) {
 		openai.BetaAgentUpdateParams{
 			Compaction: openai.BetaAgentUpdateParamsCompaction{
 				Async: openai.Bool(true),
+			},
+			Experimental: openai.BetaAgentUpdateParamsExperimental{
+				TimeAwareness: openai.Bool(true),
 			},
 			Instructions: openai.String("instructions"),
 			Metadata: map[string]string{

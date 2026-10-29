@@ -162,6 +162,8 @@ type Agent struct {
 	UpdatedAt int64 `json:"updated_at" api:"required"`
 	// The effective context compaction settings.
 	Compaction AgentCompaction `json:"compaction"`
+	// The effective experimental settings for the agent.
+	Experimental AgentExperimental `json:"experimental"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID           respjson.Field
@@ -178,6 +180,7 @@ type Agent struct {
 		Tools        respjson.Field
 		UpdatedAt    respjson.Field
 		Compaction   respjson.Field
+		Experimental respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -216,6 +219,24 @@ type AgentCompaction struct {
 // Returns the unmodified JSON received from the API
 func (r AgentCompaction) RawJSON() string { return r.JSON.raw }
 func (r *AgentCompaction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The effective experimental settings for the agent.
+type AgentExperimental struct {
+	// Whether the model receives periodic current-time reminders.
+	TimeAwareness bool `json:"time_awareness" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		TimeAwareness respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentExperimental) RawJSON() string { return r.JSON.raw }
+func (r *AgentExperimental) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -1526,6 +1547,8 @@ type AgentSessionAgent struct {
 	Tools []AgentToolUnion `json:"tools" api:"required"`
 	// The effective context compaction settings.
 	Compaction AgentSessionAgentCompaction `json:"compaction"`
+	// The effective experimental settings for the agent.
+	Experimental AgentSessionAgentExperimental `json:"experimental"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID           respjson.Field
@@ -1538,6 +1561,7 @@ type AgentSessionAgent struct {
 		Text         respjson.Field
 		Tools        respjson.Field
 		Compaction   respjson.Field
+		Experimental respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -1564,6 +1588,24 @@ type AgentSessionAgentCompaction struct {
 // Returns the unmodified JSON received from the API
 func (r AgentSessionAgentCompaction) RawJSON() string { return r.JSON.raw }
 func (r *AgentSessionAgentCompaction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The effective experimental settings for the agent.
+type AgentSessionAgentExperimental struct {
+	// Whether the model receives periodic current-time reminders.
+	TimeAwareness bool `json:"time_awareness" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		TimeAwareness respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionAgentExperimental) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionAgentExperimental) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -9542,6 +9584,8 @@ type BetaAgentNewParams struct {
 	// Tools available to the agent. Defaults to an empty list. The tool list must fit
 	// within 3 MiB (3,145,728 bytes) of compact UTF-8 JSON.
 	Tools []PersistedAgentToolParamUnion `json:"tools,omitzero"`
+	// Experimental agent settings. All experimental features default to disabled.
+	Experimental BetaAgentNewParamsExperimental `json:"experimental,omitzero"`
 	// Configuration for creating and coordinating subagents. Subagent tools are
 	// disabled by default.
 	MultiAgent MultiAgentConfigParam `json:"multi_agent,omitzero"`
@@ -9575,6 +9619,21 @@ func (r BetaAgentNewParamsCompaction) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *BetaAgentNewParamsCompaction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Experimental agent settings. All experimental features default to disabled.
+type BetaAgentNewParamsExperimental struct {
+	// Whether to give the model periodic current-time reminders. Defaults to false.
+	TimeAwareness param.Opt[bool] `json:"time_awareness,omitzero"`
+	paramObj
+}
+
+func (r BetaAgentNewParamsExperimental) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentNewParamsExperimental
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentNewParamsExperimental) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -9613,6 +9672,9 @@ type BetaAgentUpdateParams struct {
 	// Replaces the tool list. Omit to leave it unchanged, or pass null to clear it.
 	// The replacement must fit within 3 MiB (3,145,728 bytes) of compact UTF-8 JSON.
 	Tools []PersistedAgentToolParamUnion `json:"tools,omitzero"`
+	// Experimental settings to merge by key. Omitted settings keep their current
+	// values.
+	Experimental BetaAgentUpdateParamsExperimental `json:"experimental,omitzero"`
 	// Configuration for creating and coordinating subagents.
 	MultiAgent MultiAgentConfigParam `json:"multi_agent,omitzero"`
 	// Configuration for model reasoning. Omit to keep the current settings; pass
@@ -9647,6 +9709,23 @@ func (r BetaAgentUpdateParamsCompaction) MarshalJSON() (data []byte, err error) 
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *BetaAgentUpdateParamsCompaction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Experimental settings to merge by key. Omitted settings keep their current
+// values.
+type BetaAgentUpdateParamsExperimental struct {
+	// Whether to give the model periodic current-time reminders. Omit to keep the
+	// current setting.
+	TimeAwareness param.Opt[bool] `json:"time_awareness,omitzero"`
+	paramObj
+}
+
+func (r BetaAgentUpdateParamsExperimental) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentUpdateParamsExperimental
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentUpdateParamsExperimental) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
