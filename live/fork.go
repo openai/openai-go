@@ -511,8 +511,8 @@ func init() {
 // [DecisionItemDeletedEvent], [ResponseEvent], [SessionUsageUpdatedEvent],
 // [SessionClosedEvent], [ErrorEvent], [InfoEvent],
 // [ForkServerEventTransportDtmfReceived], [ForkServerEventTransportDtmfSend],
-// [ForkServerEventTransportRinging], [ForkServerEventTransportAnswered],
-// [ForkServerEventTransportFailed].
+// [ForkServerEventTransportDtmfSent], [ForkServerEventTransportRinging],
+// [ForkServerEventTransportAnswered], [ForkServerEventTransportFailed].
 //
 // Use the [ForkServerEventUnion.AsAny] method to switch on the variant.
 //
@@ -542,6 +542,7 @@ type ForkServerEventUnion struct {
 	OfInfoEvent                              InfoEvent                              `json:",inline"`
 	OfForkServerEventTransportDtmfReceived   ForkServerEventTransportDtmfReceived   `json:",inline"`
 	OfForkServerEventTransportDtmfSend       ForkServerEventTransportDtmfSend       `json:",inline"`
+	OfForkServerEventTransportDtmfSent       ForkServerEventTransportDtmfSent       `json:",inline"`
 	OfForkServerEventTransportRinging        ForkServerEventTransportRinging        `json:",inline"`
 	OfForkServerEventTransportAnswered       ForkServerEventTransportAnswered       `json:",inline"`
 	OfForkServerEventTransportFailed         ForkServerEventTransportFailed         `json:",inline"`
@@ -571,6 +572,7 @@ type ForkServerEventUnion struct {
 		OfInfoEvent                              respjson.Field
 		OfForkServerEventTransportDtmfReceived   respjson.Field
 		OfForkServerEventTransportDtmfSend       respjson.Field
+		OfForkServerEventTransportDtmfSent       respjson.Field
 		OfForkServerEventTransportRinging        respjson.Field
 		OfForkServerEventTransportAnswered       respjson.Field
 		OfForkServerEventTransportFailed         respjson.Field
@@ -609,6 +611,7 @@ func (ErrorEvent) implForkServerEventUnion()                             {}
 func (InfoEvent) implForkServerEventUnion()                              {}
 func (ForkServerEventTransportDtmfReceived) implForkServerEventUnion()   {}
 func (ForkServerEventTransportDtmfSend) implForkServerEventUnion()       {}
+func (ForkServerEventTransportDtmfSent) implForkServerEventUnion()       {}
 func (ForkServerEventTransportRinging) implForkServerEventUnion()        {}
 func (ForkServerEventTransportAnswered) implForkServerEventUnion()       {}
 func (ForkServerEventTransportFailed) implForkServerEventUnion()         {}
@@ -640,6 +643,7 @@ func (ForkServerEventTransportFailed) implForkServerEventUnion()         {}
 //	case live.InfoEvent:
 //	case live.ForkServerEventTransportDtmfReceived:
 //	case live.ForkServerEventTransportDtmfSend:
+//	case live.ForkServerEventTransportDtmfSent:
 //	case live.ForkServerEventTransportRinging:
 //	case live.ForkServerEventTransportAnswered:
 //	case live.ForkServerEventTransportFailed:
@@ -696,6 +700,8 @@ func (u ForkServerEventUnion) AsAny() anyForkServerEvent {
 		return u.AsTransportDtmfReceived()
 	case "transport.dtmf.send":
 		return u.AsTransportDtmfSend()
+	case "transport.dtmf.sent":
+		return u.AsTransportDtmfSent()
 	case "transport.ringing":
 		return u.AsTransportRinging()
 	case "transport.answered":
@@ -822,6 +828,11 @@ func (u ForkServerEventUnion) AsTransportDtmfReceived() (v ForkServerEventTransp
 }
 
 func (u ForkServerEventUnion) AsTransportDtmfSend() (v ForkServerEventTransportDtmfSend) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ForkServerEventUnion) AsTransportDtmfSent() (v ForkServerEventTransportDtmfSent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -985,6 +996,11 @@ func (r *ForkServerEventUnion) unmarshalWebsocketEventWithRawType(data []byte) e
 			return err
 		}
 		r.JSON.OfForkServerEventTransportDtmfSend = respjson.NewField(r.JSON.raw)
+	case "transport.dtmf.sent":
+		if err := apijson.UnmarshalRoot(data, &r.OfForkServerEventTransportDtmfSent); err != nil {
+			return err
+		}
+		r.JSON.OfForkServerEventTransportDtmfSent = respjson.NewField(r.JSON.raw)
 	case "transport.ringing":
 		if err := apijson.UnmarshalRoot(data, &r.OfForkServerEventTransportRinging); err != nil {
 			return err
@@ -1050,8 +1066,9 @@ func (r *ForkServerEventTransportDtmfReceived) UnmarshalJSON(data []byte) error 
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// A SIP DTMF keypress successfully sent to the SIP trunk. Delivered only to
-// sideband observers; this is not a client command.
+// Legacy SIP DTMF delivery notification retained for SDK compatibility and saved
+// events. Current servers confirm delivery with transport.dtmf.sent;
+// transport.dtmf.send is now the client command.
 type ForkServerEventTransportDtmfSend struct {
 	// The event_id of the client command, when supplied.
 	ClientEventID string                     `json:"client_event_id"`
@@ -1072,6 +1089,31 @@ type ForkServerEventTransportDtmfSend struct {
 // Returns the unmodified JSON received from the API
 func (r ForkServerEventTransportDtmfSend) RawJSON() string { return r.JSON.raw }
 func (r *ForkServerEventTransportDtmfSend) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A SIP DTMF keypress successfully sent to the SIP trunk. Delivered only to
+// sideband observers; this is not a client command.
+type ForkServerEventTransportDtmfSent struct {
+	// The event_id of the client command, when supplied.
+	ClientEventID string                     `json:"client_event_id"`
+	Event         string                     `json:"event" api:"required"`
+	EventID       string                     `json:"event_id" api:"required"`
+	Type          constant.TransportDtmfSent `json:"type" default:"transport.dtmf.sent"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ClientEventID respjson.Field
+		Event         respjson.Field
+		EventID       respjson.Field
+		Type          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ForkServerEventTransportDtmfSent) RawJSON() string { return r.JSON.raw }
+func (r *ForkServerEventTransportDtmfSent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
