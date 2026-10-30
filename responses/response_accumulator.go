@@ -16,6 +16,8 @@ import (
 // and custom-tool input from one Responses WebSocket turn. Feed it events from
 // ResponseConnection.Recv or ResponseLane.Recv; it never reads or owns the
 // socket. Use a separate accumulator per lane and Reset before the next turn.
+// DetailedSnapshot also collects incremental refusal content; Snapshot's text
+// projection does not treat a refusal as output text.
 // Its zero value is ready to use. Like a strings.Builder, do not copy an
 // accumulator after first use or call its methods concurrently.
 type ResponseAccumulator struct {
@@ -133,6 +135,7 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 		"response.output_item.added", "response.output_item.done",
 		"response.content_part.added", "response.content_part.done",
 		"response.output_text.delta", "response.output_text.done",
+		"response.refusal.delta", "response.refusal.done",
 		"response.function_call_arguments.delta", "response.function_call_arguments.done",
 		"response.custom_tool_call_input.delta", "response.custom_tool_call_input.done", "error":
 	default:
@@ -265,6 +268,40 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 		}
 		replaceAccumulatedText(a.text(e.OutputIndex, e.ItemID, e.ContentIndex), e.Text)
 		a.output[e.OutputIndex].part(e.ContentIndex).addLogprobs(e.JSON.Logprobs.Raw(), true)
+	case "response.refusal.delta":
+		e := &event.OfResponsesServerEventResponseRefusalWsDelta
+		if !accumulatorIndicesValid(e.JSON.OutputIndex, e.JSON.ContentIndex) ||
+			!accumulatorStringsValid(e.JSON.ItemID, e.JSON.Delta) {
+			return invalid
+		}
+		// Previously raw refusal parts remain accepted until an update needs
+		// their string. Validate that seed before changing an item's identity.
+		var seed string
+		if item := a.output[e.OutputIndex]; item != nil && (item.id == "" || item.id == e.ItemID) {
+			if part := item.parts[e.ContentIndex]; part != nil && !part.refusalPresent &&
+				gjson.Get(part.raw, "type").Str == "refusal" {
+				value := gjson.Get(part.raw, "refusal")
+				if value.Type != gjson.String {
+					return invalid
+				}
+				seed = value.Str
+			}
+		}
+		part := a.item(e.OutputIndex, e.ItemID).part(e.ContentIndex)
+		if !part.refusalPresent {
+			part.refusal.WriteString(seed)
+			part.refusalPresent = true
+		}
+		part.refusal.WriteString(e.Delta)
+	case "response.refusal.done":
+		e := &event.OfResponsesServerEventResponseRefusalWsDone
+		if !accumulatorIndicesValid(e.JSON.OutputIndex, e.JSON.ContentIndex) ||
+			!accumulatorStringsValid(e.JSON.ItemID, e.JSON.Refusal) {
+			return invalid
+		}
+		part := a.item(e.OutputIndex, e.ItemID).part(e.ContentIndex)
+		replaceAccumulatedText(&part.refusal, e.Refusal)
+		part.refusalPresent = true
 	case "response.function_call_arguments.delta":
 		e := &event.OfResponsesServerEventResponseFunctionCallArgumentsWsDelta
 		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !accumulatorStringsValid(e.JSON.ItemID, e.JSON.Delta) {

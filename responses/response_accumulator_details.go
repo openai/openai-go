@@ -36,10 +36,12 @@ type ResponseAccumulatedDetails struct {
 }
 
 type responseAccumulatedPart struct {
-	raw           string
-	logprobs      []string
-	logprobsValue string
-	annotations   map[int64]string
+	raw            string
+	logprobs       []string
+	logprobsValue  string
+	annotations    map[int64]string
+	refusal        strings.Builder
+	refusalPresent bool
 }
 
 func (item *responseAccumulatedOutput) part(index int64) *responseAccumulatedPart {
@@ -85,6 +87,8 @@ func (part *responseAccumulatedPart) addLogprobs(raw string, replace bool) {
 // all retained data. Read a full snapshot on demand rather than on each delta;
 // original events are available directly to the caller for incremental progress.
 // Annotation-only events never bind a lane or replace an unrelated item.
+// Refusal deltas and done values enrich refusal parts, but never output text or
+// unknown part kinds. A supplied full part or item supersedes prior deltas.
 // The original Snapshot and FinalResponse contracts remain unchanged.
 func (a *ResponseAccumulator) DetailedSnapshot() ResponseAccumulatorDetails {
 	result := ResponseAccumulatorDetails{
@@ -120,6 +124,11 @@ func (a *ResponseAccumulator) DetailedSnapshot() ResponseAccumulatorDetails {
 				exclude = "annotations"
 			}
 			fields := accumulatedFields(part.raw, exclude)
+			if part.refusalPresent {
+				if kind := gjson.ParseBytes(fields["type"]); !kind.Exists() || kind.Str == "refusal" {
+					fields["refusal"] = accumulatedJSONString(part.refusal.String())
+				}
+			}
 			if part.logprobsValue == "[]" {
 				fields["logprobs"] = json.RawMessage("[" + strings.Join(part.logprobs, ",") + "]")
 			} else if part.logprobsValue != "" {
