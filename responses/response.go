@@ -7033,8 +7033,8 @@ func (r *ResponseComputerToolCallOutputScreenshotParam) UnmarshalJSON(data []byt
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// A configuration update that applies to subsequent responses until it is replaced
-// by another configuration update.
+// A configuration update for subsequent responses. Each setting stays in effect
+// until a later update replaces that setting.
 type ResponseConfigurationUpdateItem struct {
 	// The unique ID of the configuration update item.
 	ID string `json:"id" api:"required"`
@@ -7042,11 +7042,14 @@ type ResponseConfigurationUpdateItem struct {
 	Type constant.ConfigurationUpdate `json:"type" default:"configuration_update"`
 	// The reasoning configuration applied by this update.
 	Reasoning ResponseConfigurationUpdateItemReasoning `json:"reasoning"`
+	// The text output configuration for subsequent responses.
+	Text ResponseConfigurationUpdateItemText `json:"text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
 		Type        respjson.Field
 		Reasoning   respjson.Field
+		Text        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -7081,9 +7084,99 @@ func (r *ResponseConfigurationUpdateItemReasoning) UnmarshalJSON(data []byte) er
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// An update to the conversation's response configuration. The configuration
-// remains in effect for subsequent responses until it is replaced by another
-// configuration update.
+// The text output configuration for subsequent responses.
+type ResponseConfigurationUpdateItemText struct {
+	// Use a JSON schema for structured output or text to return to plain text.
+	Format ResponseConfigurationUpdateItemTextFormatUnion `json:"format" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Format      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseConfigurationUpdateItemText) RawJSON() string { return r.JSON.raw }
+func (r *ResponseConfigurationUpdateItemText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponseConfigurationUpdateItemTextFormatUnion contains all possible properties
+// and values from [shared.ResponseFormatText],
+// [ResponseFormatTextJSONSchemaConfig].
+//
+// Use the [ResponseConfigurationUpdateItemTextFormatUnion.AsAny] method to switch
+// on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ResponseConfigurationUpdateItemTextFormatUnion struct {
+	// Any of "text", "json_schema".
+	Type string `json:"type"`
+	// This field is from variant [ResponseFormatTextJSONSchemaConfig].
+	Name string `json:"name"`
+	// This field is from variant [ResponseFormatTextJSONSchemaConfig].
+	Schema map[string]any `json:"schema"`
+	// This field is from variant [ResponseFormatTextJSONSchemaConfig].
+	Description string `json:"description"`
+	// This field is from variant [ResponseFormatTextJSONSchemaConfig].
+	Strict bool `json:"strict"`
+	JSON   struct {
+		Type        respjson.Field
+		Name        respjson.Field
+		Schema      respjson.Field
+		Description respjson.Field
+		Strict      respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// anyResponseConfigurationUpdateItemTextFormat is implemented by each variant of
+// [ResponseConfigurationUpdateItemTextFormatUnion] to add type safety for the
+// return type of [ResponseConfigurationUpdateItemTextFormatUnion.AsAny]
+type anyResponseConfigurationUpdateItemTextFormat interface {
+	ImplResponseConfigurationUpdateItemTextFormatUnion()
+}
+
+func (ResponseFormatTextJSONSchemaConfig) ImplResponseConfigurationUpdateItemTextFormatUnion() {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ResponseConfigurationUpdateItemTextFormatUnion.AsAny().(type) {
+//	case shared.ResponseFormatText:
+//	case responses.ResponseFormatTextJSONSchemaConfig:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ResponseConfigurationUpdateItemTextFormatUnion) AsAny() anyResponseConfigurationUpdateItemTextFormat {
+	switch u.Type {
+	case "text":
+		return u.AsText()
+	case "json_schema":
+		return u.AsJSONSchema()
+	}
+	return nil
+}
+
+func (u ResponseConfigurationUpdateItemTextFormatUnion) AsText() (v shared.ResponseFormatText) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseConfigurationUpdateItemTextFormatUnion) AsJSONSchema() (v ResponseFormatTextJSONSchemaConfig) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponseConfigurationUpdateItemTextFormatUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ResponseConfigurationUpdateItemTextFormatUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An update to the conversation's response configuration. Supply reasoning, text,
+// or both. Each setting stays in effect until a later update replaces it.
 type ResponseConfigurationUpdateItemParamResp struct {
 	// The item type. Always `configuration_update`.
 	Type constant.ConfigurationUpdate `json:"type" default:"configuration_update"`
@@ -7091,11 +7184,14 @@ type ResponseConfigurationUpdateItemParamResp struct {
 	ID string `json:"id" api:"nullable"`
 	// Updates to reasoning configuration. Only effort is supported.
 	Reasoning ResponseConfigurationUpdateItemParamReasoningResp `json:"reasoning"`
+	// The text output configuration for subsequent responses.
+	Text ResponseConfigurationUpdateItemParamTextResp `json:"text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
 		ID          respjson.Field
 		Reasoning   respjson.Field
+		Text        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -7138,9 +7234,101 @@ func (r *ResponseConfigurationUpdateItemParamReasoningResp) UnmarshalJSON(data [
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// An update to the conversation's response configuration. The configuration
-// remains in effect for subsequent responses until it is replaced by another
-// configuration update.
+// The text output configuration for subsequent responses.
+type ResponseConfigurationUpdateItemParamTextResp struct {
+	// Use a JSON schema for structured output or text to return to plain text.
+	Format ResponseConfigurationUpdateItemParamTextFormatUnionResp `json:"format" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Format      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseConfigurationUpdateItemParamTextResp) RawJSON() string { return r.JSON.raw }
+func (r *ResponseConfigurationUpdateItemParamTextResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponseConfigurationUpdateItemParamTextFormatUnionResp contains all possible
+// properties and values from [shared.ResponseFormatText],
+// [ResponseFormatTextJSONSchemaConfig].
+//
+// Use the [ResponseConfigurationUpdateItemParamTextFormatUnionResp.AsAny] method
+// to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ResponseConfigurationUpdateItemParamTextFormatUnionResp struct {
+	// Any of "text", "json_schema".
+	Type string `json:"type"`
+	// This field is from variant [ResponseFormatTextJSONSchemaConfig].
+	Name string `json:"name"`
+	// This field is from variant [ResponseFormatTextJSONSchemaConfig].
+	Schema map[string]any `json:"schema"`
+	// This field is from variant [ResponseFormatTextJSONSchemaConfig].
+	Description string `json:"description"`
+	// This field is from variant [ResponseFormatTextJSONSchemaConfig].
+	Strict bool `json:"strict"`
+	JSON   struct {
+		Type        respjson.Field
+		Name        respjson.Field
+		Schema      respjson.Field
+		Description respjson.Field
+		Strict      respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// anyResponseConfigurationUpdateItemParamTextFormatResp is implemented by each
+// variant of [ResponseConfigurationUpdateItemParamTextFormatUnionResp] to add type
+// safety for the return type of
+// [ResponseConfigurationUpdateItemParamTextFormatUnionResp.AsAny]
+type anyResponseConfigurationUpdateItemParamTextFormatResp interface {
+	ImplResponseConfigurationUpdateItemParamTextFormatUnionResp()
+}
+
+func (ResponseFormatTextJSONSchemaConfig) ImplResponseConfigurationUpdateItemParamTextFormatUnionResp() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ResponseConfigurationUpdateItemParamTextFormatUnionResp.AsAny().(type) {
+//	case shared.ResponseFormatText:
+//	case responses.ResponseFormatTextJSONSchemaConfig:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ResponseConfigurationUpdateItemParamTextFormatUnionResp) AsAny() anyResponseConfigurationUpdateItemParamTextFormatResp {
+	switch u.Type {
+	case "text":
+		return u.AsText()
+	case "json_schema":
+		return u.AsJSONSchema()
+	}
+	return nil
+}
+
+func (u ResponseConfigurationUpdateItemParamTextFormatUnionResp) AsText() (v shared.ResponseFormatText) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseConfigurationUpdateItemParamTextFormatUnionResp) AsJSONSchema() (v ResponseFormatTextJSONSchemaConfig) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponseConfigurationUpdateItemParamTextFormatUnionResp) RawJSON() string { return u.JSON.raw }
+
+func (r *ResponseConfigurationUpdateItemParamTextFormatUnionResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An update to the conversation's response configuration. Supply reasoning, text,
+// or both. Each setting stays in effect until a later update replaces it.
 //
 // The property Type is required.
 type ResponseConfigurationUpdateItemParam struct {
@@ -7148,6 +7336,8 @@ type ResponseConfigurationUpdateItemParam struct {
 	ID param.Opt[string] `json:"id,omitzero"`
 	// Updates to reasoning configuration. Only effort is supported.
 	Reasoning ResponseConfigurationUpdateItemParamReasoning `json:"reasoning,omitzero"`
+	// The text output configuration for subsequent responses.
+	Text ResponseConfigurationUpdateItemParamText `json:"text,omitzero"`
 	// The item type. Always `configuration_update`.
 	//
 	// This field can be elided, and will marshal its zero value as
@@ -7180,6 +7370,89 @@ func (r ResponseConfigurationUpdateItemParamReasoning) MarshalJSON() (data []byt
 }
 func (r *ResponseConfigurationUpdateItemParamReasoning) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// The text output configuration for subsequent responses.
+//
+// The property Format is required.
+type ResponseConfigurationUpdateItemParamText struct {
+	// Use a JSON schema for structured output or text to return to plain text.
+	Format ResponseConfigurationUpdateItemParamTextFormatUnion `json:"format,omitzero" api:"required"`
+	paramObj
+}
+
+func (r ResponseConfigurationUpdateItemParamText) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseConfigurationUpdateItemParamText
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseConfigurationUpdateItemParamText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponseConfigurationUpdateItemParamTextFormatUnion struct {
+	OfText       *shared.ResponseFormatTextParam          `json:",omitzero,inline"`
+	OfJSONSchema *ResponseFormatTextJSONSchemaConfigParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponseConfigurationUpdateItemParamTextFormatUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfText, u.OfJSONSchema)
+}
+func (u *ResponseConfigurationUpdateItemParamTextFormatUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseConfigurationUpdateItemParamTextFormatUnion) GetName() *string {
+	if vt := u.OfJSONSchema; vt != nil {
+		return &vt.Name
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseConfigurationUpdateItemParamTextFormatUnion) GetSchema() map[string]any {
+	if vt := u.OfJSONSchema; vt != nil {
+		return vt.Schema
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseConfigurationUpdateItemParamTextFormatUnion) GetDescription() *string {
+	if vt := u.OfJSONSchema; vt != nil && vt.Description.Valid() {
+		return &vt.Description.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseConfigurationUpdateItemParamTextFormatUnion) GetStrict() *bool {
+	if vt := u.OfJSONSchema; vt != nil && vt.Strict.Valid() {
+		return &vt.Strict.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseConfigurationUpdateItemParamTextFormatUnion) GetType() *string {
+	if vt := u.OfText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfJSONSchema; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseConfigurationUpdateItemParamTextFormatUnion](
+		"type",
+		apijson.Discriminator[shared.ResponseFormatTextParam]("text"),
+		apijson.Discriminator[ResponseFormatTextJSONSchemaConfigParam]("json_schema"),
+	)
 }
 
 // Represents a container created with /v1/containers.
@@ -12778,6 +13051,8 @@ type ResponseInputItemUnion struct {
 	Tools ResponseInputItemUnionTools `json:"tools"`
 	// This field is from variant [ResponseConfigurationUpdateItemParamResp].
 	Reasoning ResponseConfigurationUpdateItemParamReasoningResp `json:"reasoning"`
+	// This field is from variant [ResponseConfigurationUpdateItemParamResp].
+	Text ResponseConfigurationUpdateItemParamTextResp `json:"text"`
 	// This field is from variant [ResponseReasoningItem].
 	Summary          []ResponseReasoningItemSummary `json:"summary"`
 	EncryptedContent string                         `json:"encrypted_content"`
@@ -12838,6 +13113,7 @@ type ResponseInputItemUnion struct {
 		Execution                respjson.Field
 		Tools                    respjson.Field
 		Reasoning                respjson.Field
+		Text                     respjson.Field
 		Summary                  respjson.Field
 		EncryptedContent         respjson.Field
 		Result                   respjson.Field
@@ -15458,6 +15734,14 @@ func (u ResponseInputItemUnionParam) GetAcknowledgedSafetyChecks() []ResponseInp
 func (u ResponseInputItemUnionParam) GetReasoning() *ResponseConfigurationUpdateItemParamReasoning {
 	if vt := u.OfConfigurationUpdate; vt != nil {
 		return &vt.Reasoning
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemUnionParam) GetText() *ResponseConfigurationUpdateItemParamText {
+	if vt := u.OfConfigurationUpdate; vt != nil {
+		return &vt.Text
 	}
 	return nil
 }
@@ -18516,6 +18800,8 @@ type ResponseItemUnion struct {
 	Tools ResponseItemUnionTools `json:"tools"`
 	// This field is from variant [ResponseConfigurationUpdateItem].
 	Reasoning ResponseConfigurationUpdateItemReasoning `json:"reasoning"`
+	// This field is from variant [ResponseConfigurationUpdateItem].
+	Text ResponseConfigurationUpdateItemText `json:"text"`
 	// This field is from variant [ResponseReasoningItem].
 	Summary          []ResponseReasoningItemSummary `json:"summary"`
 	EncryptedContent string                         `json:"encrypted_content"`
@@ -18577,6 +18863,7 @@ type ResponseItemUnion struct {
 		Execution                respjson.Field
 		Tools                    respjson.Field
 		Reasoning                respjson.Field
+		Text                     respjson.Field
 		Summary                  respjson.Field
 		EncryptedContent         respjson.Field
 		Code                     respjson.Field

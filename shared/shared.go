@@ -1967,7 +1967,9 @@ func (r *ResponseFormatText) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (ResponseFormatText) ImplResponseFormatTextConfigUnion() {}
+func (ResponseFormatText) ImplResponseConfigurationUpdateItemTextFormatUnion()          {}
+func (ResponseFormatText) ImplResponseConfigurationUpdateItemParamTextFormatUnionResp() {}
+func (ResponseFormatText) ImplResponseFormatTextConfigUnion()                           {}
 
 // ToParam converts this ResponseFormatText to a ResponseFormatTextParam.
 //

@@ -503,7 +503,7 @@
     },
     "betaresponse.go": {
       "mode": "100644",
-      "sha256": "a7a805d2d54b955b80053f2d7c321691d1955fc2ece6dbe1a4338233ed94ecc3"
+      "sha256": "1fee34ce030207fa06c340f5ea75c67d7a712f69971325b0f9c3cdaeed7148c5"
     },
     "betaresponse_test.go": {
       "mode": "100644",
@@ -643,7 +643,7 @@
     },
     "conversations/item.go": {
       "mode": "100644",
-      "sha256": "fa91de7046c69fafabfaac181f5d32717ef3cdcf09e7d0e813e274c377e8e621"
+      "sha256": "2497b6bee5f03c29fe5b2d671a90fe3999aae2df245975c38b8316f6b6f00dee"
     },
     "conversations/item_test.go": {
       "mode": "100644",
@@ -923,7 +923,7 @@
     },
     "responses/response.go": {
       "mode": "100644",
-      "sha256": "4a0d36dfff6d41c4fcb8b5bcaaa323ad79022f7501e524463dd369711027448f"
+      "sha256": "57316fe926f12a17c360a6faee4b656f7f26194aec9a029579264b505b3c5f85"
     },
     "responses/response_test.go": {
       "mode": "100644",
@@ -967,7 +967,7 @@
     },
     "shared/shared.go": {
       "mode": "100644",
-      "sha256": "ca86a956f5ce0319358737466d3a3c125b79f7fe36d42fb93edc35f0f35a27e5"
+      "sha256": "4c1453c609988cc30fe84af9afa73e2b812fb410693926599663fc8b642f2297"
     },
     "skill.go": {
       "mode": "100644",
