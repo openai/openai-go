@@ -1493,6 +1493,11 @@ type AgentSession struct {
 	Usage TokenUsage `json:"usage" api:"required"`
 	// The IDs of vaults made available to the session.
 	VaultIDs []string `json:"vault_ids" api:"required"`
+	// Review applied to eligible actions in this session. Omitted when review is none
+	// and automatic review is not enabled. Omission means none.
+	//
+	// Any of "none", "auto_review".
+	Review AgentSessionReview `json:"review"`
 	// Configured spending limit and best-effort consumption, in USD cents. Unlimited
 	// sessions omit this object.
 	SpendControl AgentSessionSpendControl `json:"spend_control"`
@@ -1510,6 +1515,7 @@ type AgentSession struct {
 		Status          respjson.Field
 		Usage           respjson.Field
 		VaultIDs        respjson.Field
+		Review          respjson.Field
 		SpendControl    respjson.Field
 		ExtraFields     map[string]respjson.Field
 		raw             string
@@ -1989,6 +1995,15 @@ const (
 	AgentSessionStatusInProgress     AgentSessionStatus = "in_progress"
 	AgentSessionStatusRequiresAction AgentSessionStatus = "requires_action"
 	AgentSessionStatusFailed         AgentSessionStatus = "failed"
+)
+
+// Review applied to eligible actions in this session. Omitted when review is none
+// and automatic review is not enabled. Omission means none.
+type AgentSessionReview string
+
+const (
+	AgentSessionReviewNone       AgentSessionReview = "none"
+	AgentSessionReviewAutoReview AgentSessionReview = "auto_review"
 )
 
 // Configured spending limit and best-effort consumption, in USD cents. Unlimited
