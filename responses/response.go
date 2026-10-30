@@ -29024,6 +29024,14 @@ func (u ResponsesClientEventUnionParam) GetConversation() *ResponsesClientEventR
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetGenerate() *bool {
+	if vt := u.OfResponseCreate; vt != nil && vt.Generate.Valid() {
+		return &vt.Generate.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesClientEventUnionParam) GetInclude() []ResponseIncludable {
 	if vt := u.OfResponseCreate; vt != nil {
 		return vt.Include
@@ -29369,6 +29377,10 @@ type ResponsesClientEventResponseCreateParam struct {
 	// [Streaming section below](https://developers.openai.com/api/reference/resources/responses/streaming-events)
 	// for more information.
 	Stream param.Opt[bool] `json:"stream,omitzero"`
+	// Whether to generate output for this response. Defaults to true when omitted. Set
+	// to false to prepare request state without model output; the response ID can be
+	// used as previous_response_id on a later turn.
+	Generate param.Opt[bool] `json:"generate,omitzero"`
 	// Specify additional output data to include in the model response. Currently
 	// supported values are:
 	//
