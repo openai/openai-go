@@ -767,7 +767,7 @@
     },
     "live/live.go": {
       "mode": "100644",
-      "sha256": "711aa20842f1a14fe64b24780265ba83069cfe5bf2e9fcb2735d1fefbd70b11b"
+      "sha256": "d4fdeef206e9204c070d4f6b4ae99031ea2a743e8be838dd2823b008072c5b2e"
     },
     "live/live_forks_websocket.go": {
       "mode": "100644",
