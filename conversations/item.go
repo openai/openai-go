@@ -215,6 +215,8 @@ type ConversationItemUnion struct {
 	Tools ConversationItemUnionTools `json:"tools"`
 	// This field is from variant [responses.ResponseConfigurationUpdateItem].
 	Reasoning responses.ResponseConfigurationUpdateItemReasoning `json:"reasoning"`
+	// This field is from variant [responses.ResponseConfigurationUpdateItem].
+	Text responses.ResponseConfigurationUpdateItemText `json:"text"`
 	// This field is from variant [responses.ResponseReasoningItem].
 	Summary          []responses.ResponseReasoningItemSummary `json:"summary"`
 	EncryptedContent string                                   `json:"encrypted_content"`
@@ -271,6 +273,7 @@ type ConversationItemUnion struct {
 		Execution                respjson.Field
 		Tools                    respjson.Field
 		Reasoning                respjson.Field
+		Text                     respjson.Field
 		Summary                  respjson.Field
 		EncryptedContent         respjson.Field
 		Code                     respjson.Field

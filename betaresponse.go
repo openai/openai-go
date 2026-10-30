@@ -7898,8 +7898,8 @@ func (r *BetaResponseComputerToolCallOutputScreenshotParam) UnmarshalJSON(data [
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// A configuration update that applies to subsequent responses until it is replaced
-// by another configuration update.
+// A configuration update for subsequent responses. Each setting stays in effect
+// until a later update replaces that setting.
 type BetaResponseConfigurationUpdateItem struct {
 	// The unique ID of the configuration update item.
 	ID string `json:"id" api:"required"`
@@ -7909,12 +7909,15 @@ type BetaResponseConfigurationUpdateItem struct {
 	Agent BetaResponseConfigurationUpdateItemAgent `json:"agent"`
 	// The reasoning configuration applied by this update.
 	Reasoning BetaResponseConfigurationUpdateItemReasoning `json:"reasoning"`
+	// The text output configuration for subsequent responses.
+	Text BetaResponseConfigurationUpdateItemText `json:"text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
 		Type        respjson.Field
 		Agent       respjson.Field
 		Reasoning   respjson.Field
+		Text        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -7965,9 +7968,120 @@ func (r *BetaResponseConfigurationUpdateItemReasoning) UnmarshalJSON(data []byte
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// An update to the conversation's response configuration. The configuration
-// remains in effect for subsequent responses until it is replaced by another
-// configuration update.
+// The text output configuration for subsequent responses.
+type BetaResponseConfigurationUpdateItemText struct {
+	// Use a JSON schema for structured output or text to return to plain text.
+	Format BetaResponseConfigurationUpdateItemTextFormatUnion `json:"format" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Format      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseConfigurationUpdateItemText) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseConfigurationUpdateItemText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseConfigurationUpdateItemTextFormatUnion contains all possible
+// properties and values from [BetaResponseConfigurationUpdateItemTextFormatText],
+// [BetaResponseFormatTextJSONSchemaConfig].
+//
+// Use the [BetaResponseConfigurationUpdateItemTextFormatUnion.AsAny] method to
+// switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaResponseConfigurationUpdateItemTextFormatUnion struct {
+	// Any of "text", "json_schema".
+	Type string `json:"type"`
+	// This field is from variant [BetaResponseFormatTextJSONSchemaConfig].
+	Name string `json:"name"`
+	// This field is from variant [BetaResponseFormatTextJSONSchemaConfig].
+	Schema map[string]any `json:"schema"`
+	// This field is from variant [BetaResponseFormatTextJSONSchemaConfig].
+	Description string `json:"description"`
+	// This field is from variant [BetaResponseFormatTextJSONSchemaConfig].
+	Strict bool `json:"strict"`
+	JSON   struct {
+		Type        respjson.Field
+		Name        respjson.Field
+		Schema      respjson.Field
+		Description respjson.Field
+		Strict      respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// anyBetaResponseConfigurationUpdateItemTextFormat is implemented by each variant
+// of [BetaResponseConfigurationUpdateItemTextFormatUnion] to add type safety for
+// the return type of [BetaResponseConfigurationUpdateItemTextFormatUnion.AsAny]
+type anyBetaResponseConfigurationUpdateItemTextFormat interface {
+	implBetaResponseConfigurationUpdateItemTextFormatUnion()
+}
+
+func (BetaResponseConfigurationUpdateItemTextFormatText) implBetaResponseConfigurationUpdateItemTextFormatUnion() {
+}
+func (BetaResponseFormatTextJSONSchemaConfig) implBetaResponseConfigurationUpdateItemTextFormatUnion() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := BetaResponseConfigurationUpdateItemTextFormatUnion.AsAny().(type) {
+//	case openai.BetaResponseConfigurationUpdateItemTextFormatText:
+//	case openai.BetaResponseFormatTextJSONSchemaConfig:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u BetaResponseConfigurationUpdateItemTextFormatUnion) AsAny() anyBetaResponseConfigurationUpdateItemTextFormat {
+	switch u.Type {
+	case "text":
+		return u.AsText()
+	case "json_schema":
+		return u.AsJSONSchema()
+	}
+	return nil
+}
+
+func (u BetaResponseConfigurationUpdateItemTextFormatUnion) AsText() (v BetaResponseConfigurationUpdateItemTextFormatText) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseConfigurationUpdateItemTextFormatUnion) AsJSONSchema() (v BetaResponseFormatTextJSONSchemaConfig) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseConfigurationUpdateItemTextFormatUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *BetaResponseConfigurationUpdateItemTextFormatUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Default response format. Used to generate text responses.
+type BetaResponseConfigurationUpdateItemTextFormatText struct {
+	// The type of response format being defined. Always `text`.
+	Type constant.Text `json:"type" default:"text"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseConfigurationUpdateItemTextFormatText) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseConfigurationUpdateItemTextFormatText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An update to the conversation's response configuration. Supply reasoning, text,
+// or both. Each setting stays in effect until a later update replaces it.
 type BetaResponseConfigurationUpdateItemParamResp struct {
 	// The item type. Always `configuration_update`.
 	Type constant.ConfigurationUpdate `json:"type" default:"configuration_update"`
@@ -7977,12 +8091,15 @@ type BetaResponseConfigurationUpdateItemParamResp struct {
 	Agent BetaResponseConfigurationUpdateItemParamAgentResp `json:"agent" api:"nullable"`
 	// Updates to reasoning configuration. Only effort is supported.
 	Reasoning BetaResponseConfigurationUpdateItemParamReasoningResp `json:"reasoning"`
+	// The text output configuration for subsequent responses.
+	Text BetaResponseConfigurationUpdateItemParamTextResp `json:"text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
 		ID          respjson.Field
 		Agent       respjson.Field
 		Reasoning   respjson.Field
+		Text        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -8043,9 +8160,124 @@ func (r *BetaResponseConfigurationUpdateItemParamReasoningResp) UnmarshalJSON(da
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// An update to the conversation's response configuration. The configuration
-// remains in effect for subsequent responses until it is replaced by another
-// configuration update.
+// The text output configuration for subsequent responses.
+type BetaResponseConfigurationUpdateItemParamTextResp struct {
+	// Use a JSON schema for structured output or text to return to plain text.
+	Format BetaResponseConfigurationUpdateItemParamTextFormatUnionResp `json:"format" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Format      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseConfigurationUpdateItemParamTextResp) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseConfigurationUpdateItemParamTextResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseConfigurationUpdateItemParamTextFormatUnionResp contains all
+// possible properties and values from
+// [BetaResponseConfigurationUpdateItemParamTextFormatText],
+// [BetaResponseFormatTextJSONSchemaConfig].
+//
+// Use the [BetaResponseConfigurationUpdateItemParamTextFormatUnionResp.AsAny]
+// method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaResponseConfigurationUpdateItemParamTextFormatUnionResp struct {
+	// Any of "text", "json_schema".
+	Type string `json:"type"`
+	// This field is from variant [BetaResponseFormatTextJSONSchemaConfig].
+	Name string `json:"name"`
+	// This field is from variant [BetaResponseFormatTextJSONSchemaConfig].
+	Schema map[string]any `json:"schema"`
+	// This field is from variant [BetaResponseFormatTextJSONSchemaConfig].
+	Description string `json:"description"`
+	// This field is from variant [BetaResponseFormatTextJSONSchemaConfig].
+	Strict bool `json:"strict"`
+	JSON   struct {
+		Type        respjson.Field
+		Name        respjson.Field
+		Schema      respjson.Field
+		Description respjson.Field
+		Strict      respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// anyBetaResponseConfigurationUpdateItemParamTextFormatResp is implemented by each
+// variant of [BetaResponseConfigurationUpdateItemParamTextFormatUnionResp] to add
+// type safety for the return type of
+// [BetaResponseConfigurationUpdateItemParamTextFormatUnionResp.AsAny]
+type anyBetaResponseConfigurationUpdateItemParamTextFormatResp interface {
+	implBetaResponseConfigurationUpdateItemParamTextFormatUnionResp()
+}
+
+func (BetaResponseConfigurationUpdateItemParamTextFormatText) implBetaResponseConfigurationUpdateItemParamTextFormatUnionResp() {
+}
+func (BetaResponseFormatTextJSONSchemaConfig) implBetaResponseConfigurationUpdateItemParamTextFormatUnionResp() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := BetaResponseConfigurationUpdateItemParamTextFormatUnionResp.AsAny().(type) {
+//	case openai.BetaResponseConfigurationUpdateItemParamTextFormatText:
+//	case openai.BetaResponseFormatTextJSONSchemaConfig:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnionResp) AsAny() anyBetaResponseConfigurationUpdateItemParamTextFormatResp {
+	switch u.Type {
+	case "text":
+		return u.AsText()
+	case "json_schema":
+		return u.AsJSONSchema()
+	}
+	return nil
+}
+
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnionResp) AsText() (v BetaResponseConfigurationUpdateItemParamTextFormatText) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnionResp) AsJSONSchema() (v BetaResponseFormatTextJSONSchemaConfig) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnionResp) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *BetaResponseConfigurationUpdateItemParamTextFormatUnionResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Default response format. Used to generate text responses.
+type BetaResponseConfigurationUpdateItemParamTextFormatText struct {
+	// The type of response format being defined. Always `text`.
+	Type constant.Text `json:"type" default:"text"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseConfigurationUpdateItemParamTextFormatText) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseConfigurationUpdateItemParamTextFormatText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An update to the conversation's response configuration. Supply reasoning, text,
+// or both. Each setting stays in effect until a later update replaces it.
 //
 // The property Type is required.
 type BetaResponseConfigurationUpdateItemParam struct {
@@ -8055,6 +8287,8 @@ type BetaResponseConfigurationUpdateItemParam struct {
 	Agent BetaResponseConfigurationUpdateItemParamAgent `json:"agent,omitzero"`
 	// Updates to reasoning configuration. Only effort is supported.
 	Reasoning BetaResponseConfigurationUpdateItemParamReasoning `json:"reasoning,omitzero"`
+	// The text output configuration for subsequent responses.
+	Text BetaResponseConfigurationUpdateItemParamText `json:"text,omitzero"`
 	// The item type. Always `configuration_update`.
 	//
 	// This field can be elided, and will marshal its zero value as
@@ -8110,6 +8344,113 @@ func init() {
 	apijson.RegisterFieldValidator[BetaResponseConfigurationUpdateItemParamReasoning](
 		"effort", "none", "minimal", "low", "medium", "high", "xhigh", "max",
 	)
+}
+
+// The text output configuration for subsequent responses.
+//
+// The property Format is required.
+type BetaResponseConfigurationUpdateItemParamText struct {
+	// Use a JSON schema for structured output or text to return to plain text.
+	Format BetaResponseConfigurationUpdateItemParamTextFormatUnion `json:"format,omitzero" api:"required"`
+	paramObj
+}
+
+func (r BetaResponseConfigurationUpdateItemParamText) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseConfigurationUpdateItemParamText
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseConfigurationUpdateItemParamText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponseConfigurationUpdateItemParamTextFormatUnion struct {
+	OfText       *BetaResponseConfigurationUpdateItemParamTextFormatTextParam `json:",omitzero,inline"`
+	OfJSONSchema *BetaResponseFormatTextJSONSchemaConfigParam                 `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfText, u.OfJSONSchema)
+}
+func (u *BetaResponseConfigurationUpdateItemParamTextFormatUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnion) GetName() *string {
+	if vt := u.OfJSONSchema; vt != nil {
+		return &vt.Name
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnion) GetSchema() map[string]any {
+	if vt := u.OfJSONSchema; vt != nil {
+		return vt.Schema
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnion) GetDescription() *string {
+	if vt := u.OfJSONSchema; vt != nil && vt.Description.Valid() {
+		return &vt.Description.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnion) GetStrict() *bool {
+	if vt := u.OfJSONSchema; vt != nil && vt.Strict.Valid() {
+		return &vt.Strict.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnion) GetType() *string {
+	if vt := u.OfText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfJSONSchema; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[BetaResponseConfigurationUpdateItemParamTextFormatUnion](
+		"type",
+		apijson.Discriminator[BetaResponseConfigurationUpdateItemParamTextFormatTextParam]("text"),
+		apijson.Discriminator[BetaResponseFormatTextJSONSchemaConfigParam]("json_schema"),
+	)
+}
+
+func NewBetaResponseConfigurationUpdateItemParamTextFormatTextParam() BetaResponseConfigurationUpdateItemParamTextFormatTextParam {
+	return BetaResponseConfigurationUpdateItemParamTextFormatTextParam{
+		Type: "text",
+	}
+}
+
+// Default response format. Used to generate text responses.
+//
+// This struct has a constant value, construct it with
+// [NewBetaResponseConfigurationUpdateItemParamTextFormatTextParam].
+type BetaResponseConfigurationUpdateItemParamTextFormatTextParam struct {
+	// The type of response format being defined. Always `text`.
+	Type constant.Text `json:"type" default:"text"`
+	paramObj
+}
+
+func (r BetaResponseConfigurationUpdateItemParamTextFormatTextParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseConfigurationUpdateItemParamTextFormatTextParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseConfigurationUpdateItemParamTextFormatTextParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Represents a container created with /v1/containers.
@@ -14508,6 +14849,8 @@ type BetaResponseInputItemUnion struct {
 	Tools BetaResponseInputItemUnionTools `json:"tools"`
 	// This field is from variant [BetaResponseConfigurationUpdateItemParamResp].
 	Reasoning BetaResponseConfigurationUpdateItemParamReasoningResp `json:"reasoning"`
+	// This field is from variant [BetaResponseConfigurationUpdateItemParamResp].
+	Text BetaResponseConfigurationUpdateItemParamTextResp `json:"text"`
 	// This field is from variant [BetaResponseReasoningItem].
 	Summary          []BetaResponseReasoningItemSummary `json:"summary"`
 	EncryptedContent string                             `json:"encrypted_content"`
@@ -14571,6 +14914,7 @@ type BetaResponseInputItemUnion struct {
 		Execution                respjson.Field
 		Tools                    respjson.Field
 		Reasoning                respjson.Field
+		Text                     respjson.Field
 		Summary                  respjson.Field
 		EncryptedContent         respjson.Field
 		Result                   respjson.Field
@@ -18240,6 +18584,14 @@ func (u BetaResponseInputItemUnionParam) GetRecipient() *string {
 func (u BetaResponseInputItemUnionParam) GetReasoning() *BetaResponseConfigurationUpdateItemParamReasoning {
 	if vt := u.OfConfigurationUpdate; vt != nil {
 		return &vt.Reasoning
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemUnionParam) GetText() *BetaResponseConfigurationUpdateItemParamText {
+	if vt := u.OfConfigurationUpdate; vt != nil {
+		return &vt.Text
 	}
 	return nil
 }
@@ -22506,6 +22858,8 @@ type BetaResponseItemUnion struct {
 	Tools BetaResponseItemUnionTools `json:"tools"`
 	// This field is from variant [BetaResponseConfigurationUpdateItem].
 	Reasoning BetaResponseConfigurationUpdateItemReasoning `json:"reasoning"`
+	// This field is from variant [BetaResponseConfigurationUpdateItem].
+	Text BetaResponseConfigurationUpdateItemText `json:"text"`
 	// This field is from variant [BetaResponseReasoningItem].
 	Summary          []BetaResponseReasoningItemSummary `json:"summary"`
 	EncryptedContent string                             `json:"encrypted_content"`
@@ -22570,6 +22924,7 @@ type BetaResponseItemUnion struct {
 		Execution                respjson.Field
 		Tools                    respjson.Field
 		Reasoning                respjson.Field
+		Text                     respjson.Field
 		Summary                  respjson.Field
 		EncryptedContent         respjson.Field
 		Code                     respjson.Field
