@@ -110,7 +110,7 @@ func (r *BetaAgentSessionService) Get(ctx context.Context, sessionID string, opt
 	return res, err
 }
 
-// Updates session metadata, model, reasoning effort, or service tier. Model
+// Updates session tools, metadata, model, reasoning effort, or service tier. Model
 // settings apply to subsequent turns. Omitted fields are unchanged. See
 // [managing sessions](https://developers.openai.com/api/docs/guides/agents-api/sessions/manage).
 func (r *BetaAgentSessionService) Update(ctx context.Context, sessionID string, body BetaAgentSessionUpdateParams, opts ...option.RequestOption) (res *AgentSession, err error) {
@@ -198,6 +198,10 @@ type BetaAgentSessionNewParams struct {
 	// Agent configuration. With `agent_id`, supplied fields override the saved agent
 	// for this session. Without `agent_id`, `model` is required.
 	Agent BetaAgentSessionNewParamsAgent `json:"agent,omitzero"`
+	// Action review mode. Omit to use none.
+	//
+	// Any of "none", "auto_review".
+	Review BetaAgentSessionNewParamsReview `json:"review,omitzero"`
 	paramObj
 }
 
@@ -308,6 +312,14 @@ func (u *BetaAgentSessionNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
+// Action review mode. Omit to use none.
+type BetaAgentSessionNewParamsReview string
+
+const (
+	BetaAgentSessionNewParamsReviewNone       BetaAgentSessionNewParamsReview = "none"
+	BetaAgentSessionNewParamsReviewAutoReview BetaAgentSessionNewParamsReview = "auto_review"
+)
+
 // Optional spending limit in USD cents. Omission or null creates an unlimited
 // session.
 //
@@ -334,8 +346,13 @@ type BetaAgentSessionUpdateParams struct {
 	// Omit to retain the limit; null or a null limit removes it without resetting
 	// spend.
 	SpendControl BetaAgentSessionUpdateParamsSpendControl `json:"spend_control,omitzero"`
-	// Model settings for subsequent turns. Omitted fields stay unchanged.
+	// Agent settings to update on this session. Omitted fields stay unchanged.
 	Agent BetaAgentSessionUpdateParamsAgent `json:"agent,omitzero"`
+	// Default action review for new root turns. Existing turns and their subagents
+	// keep their review mode.
+	//
+	// Any of "none", "auto_review".
+	Review BetaAgentSessionUpdateParamsReview `json:"review,omitzero"`
 	paramObj
 }
 
@@ -347,7 +364,7 @@ func (r *BetaAgentSessionUpdateParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Model settings for subsequent turns. Omitted fields stay unchanged.
+// Agent settings to update on this session. Omitted fields stay unchanged.
 type BetaAgentSessionUpdateParamsAgent struct {
 	// The model for subsequent turns. Omit to keep the current model.
 	Model param.Opt[string] `json:"model,omitzero"`
@@ -355,6 +372,10 @@ type BetaAgentSessionUpdateParamsAgent struct {
 	//
 	// Any of "auto", "default", "flex", "priority", "fast", "ultrafast".
 	ServiceTier param.Opt[string] `json:"service_tier,omitzero"`
+	// Replaces the session tools. Functions and MCP servers change on the next model
+	// call. Built-in tools change by the next turn. Omit to keep the current tools, or
+	// pass null or an empty array to clear them.
+	Tools *[]AgentToolParamUnion `json:"tools,omitzero"`
 	// Reasoning settings to update. Omit to keep the current effort.
 	Reasoning BetaAgentSessionUpdateParamsAgentReasoning `json:"reasoning,omitzero"`
 	paramObj
@@ -384,6 +405,15 @@ func (r BetaAgentSessionUpdateParamsAgentReasoning) MarshalJSON() (data []byte, 
 func (r *BetaAgentSessionUpdateParamsAgentReasoning) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+// Default action review for new root turns. Existing turns and their subagents
+// keep their review mode.
+type BetaAgentSessionUpdateParamsReview string
+
+const (
+	BetaAgentSessionUpdateParamsReviewNone       BetaAgentSessionUpdateParamsReview = "none"
+	BetaAgentSessionUpdateParamsReviewAutoReview BetaAgentSessionUpdateParamsReview = "auto_review"
+)
 
 // Omit to retain the limit; null or a null limit removes it without resetting
 // spend.

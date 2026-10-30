@@ -339,7 +339,7 @@
     },
     "betaagent.go": {
       "mode": "100644",
-      "sha256": "03cbcf8c0920362d66b9cc6ffbbcba0c3f13afd7dd3ce444b45652b409abc92c"
+      "sha256": "a58669ae633d448462e9c8b9cf90b067c5643afef7a061ad6fcfce20d66b792b"
     },
     "betaagent_test.go": {
       "mode": "100644",
@@ -371,11 +371,11 @@
     },
     "betaagentsession.go": {
       "mode": "100644",
-      "sha256": "f79b7bcc53eb495483468450db993a940caf0f1b36d2bf1a1b474a1ca8d0d695"
+      "sha256": "b5bd0dea4c0a25cf0da607778298b68a4de04809b08ffacc3b3b1725be222abb"
     },
     "betaagentsession_test.go": {
       "mode": "100644",
-      "sha256": "4aa83b5c0dc521d1c48f379ac619f96144aaeb1791ede88c59a45c0dd71eeebc"
+      "sha256": "1cdb8ccb1aa4da6883a09f432710b8ae53f8ef58b060315db31eae827886e836"
     },
     "betaagentsessionartifact.go": {
       "mode": "100644",

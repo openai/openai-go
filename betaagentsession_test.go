@@ -73,6 +73,7 @@ func TestBetaAgentSessionNewWithOptionalParams(t *testing.T) {
 		Metadata: map[string]string{
 			"foo": "string",
 		},
+		Review: openai.BetaAgentSessionNewParamsReviewNone,
 		SpendControl: openai.BetaAgentSessionNewParamsSpendControl{
 			Limit: openai.Int(1),
 		},
@@ -135,10 +136,21 @@ func TestBetaAgentSessionUpdateWithOptionalParams(t *testing.T) {
 					Effort: openai.String("none"),
 				},
 				ServiceTier: openai.String("auto"),
+				Tools: &[]openai.AgentToolParamUnion{{
+					OfParamFunction: &openai.AgentToolParamFunction{
+						Description: "description",
+						Name:        "name",
+						Parameters: map[string]any{
+							"foo": "bar",
+						},
+						DeferLoading: openai.Bool(true),
+					},
+				}},
 			},
 			Metadata: map[string]string{
 				"foo": "string",
 			},
+			Review: openai.BetaAgentSessionUpdateParamsReviewNone,
 			SpendControl: openai.BetaAgentSessionUpdateParamsSpendControl{
 				Limit: openai.Int(1),
 			},
