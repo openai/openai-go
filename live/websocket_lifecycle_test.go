@@ -59,6 +59,7 @@ func TestLivePrimaryAndForkStartupAndDrain(t *testing.T) {
 					`{"type":"session.started","event_id":"start","session":{"id":"live_new","model":"synthetic","expires_at":2000000000,"status":"active"}}`,
 					`{"type":"session.output_transcript.delta","event_id":"text","delta":"hello","start_ms":0,"end_ms":20}`,
 					`{"type":"transport.ringing","event_id":"ring","session_id":"live_new"}`,
+					`{"type":"error","event_id":"storage-error","client_event_id":"close-envelope","error":{"type":"server_error","code":"session_storage_failed","message":"synthetic storage failure","client_event_id":"close"}}`,
 					`{"type":"session.closed","event_id":"end"}`,
 					`{"type":"future.live.event","marker":42}`,
 				} {
@@ -93,6 +94,14 @@ func TestLivePrimaryAndForkStartupAndDrain(t *testing.T) {
 					if e.Type == "transport.ringing" && e.AsServerEventTransportRinging().SessionID != "live_new" {
 						t.Error("primary ringing session lost")
 					}
+					if e.Type == "error" {
+						failure := e.AsErrorEvent()
+						if failure.ClientEventID != "close-envelope" || failure.Error.Code != "session_storage_failed" ||
+							failure.Error.Type != "server_error" || failure.Error.Message != "synthetic storage failure" ||
+							failure.Error.ClientEventID != "close" {
+							t.Error("primary storage error fields lost")
+						}
+					}
 					return e.Type, e.AsOutputTranscriptDeltaEvent().Delta, err
 				}
 				closeConnection = connection.Close
@@ -114,11 +123,19 @@ func TestLivePrimaryAndForkStartupAndDrain(t *testing.T) {
 					if e.Type == "transport.ringing" && e.AsTransportRinging().SessionID != "live_new" {
 						t.Error("fork ringing session lost")
 					}
+					if e.Type == "error" {
+						failure := e.AsError()
+						if failure.ClientEventID != "close-envelope" || failure.Error.Code != "session_storage_failed" ||
+							failure.Error.Type != "server_error" || failure.Error.Message != "synthetic storage failure" ||
+							failure.Error.ClientEventID != "close" {
+							t.Error("fork storage error fields lost")
+						}
+					}
 					return e.Type, e.AsSessionOutputTranscriptDelta().Delta, err
 				}
 				closeConnection = connection.Close
 			}
-			for _, want := range []string{"session.started", "session.output_transcript.delta", "transport.ringing", "session.closed", "future.live.event"} {
+			for _, want := range []string{"session.started", "session.output_transcript.delta", "transport.ringing", "error", "session.closed", "future.live.event"} {
 				kind, text, err := recv()
 				if err != nil || kind != want {
 					t.Fatalf("event %s: got %s, %v", want, kind, err)
