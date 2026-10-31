@@ -6,7 +6,8 @@ existing session, and a fork of a stored session. Each provides typed `Send` and
 
 These snippets assume a configured `client`, a bounded `ctx`, and an accessible
 `model`. Import `github.com/openai/openai-go/v3/live`; the primary example also
-uses `errors`. `handleEvent` is application code that consumes typed Live events.
+uses `errors`, and the sideband example uses `github.com/openai/openai-go/v3/option`.
+`handleEvent` is application code that consumes typed Live events.
 
 ## Start and finish a primary session
 
@@ -65,10 +66,17 @@ The application owns audio capture/playback and handles API error events.
 
 ## Attach a sideband
 
-Use the ID of an existing session accessible to your project:
+Use the ID of an eligible signaling session, such as one created through the
+WebRTC signaling API, and the matching API key or bound observer credential.
+An arbitrary primary WebSocket session ID or membership in the same project is
+not enough. Set `graceful_close=false` so closing this observer's socket leaves
+the underlying session running:
 
 ```go
-conn, err := client.Live.Sideband.Connect(ctx, sessionID, live.SidebandConnectionOptions{})
+conn, err := client.Live.Sideband.Connect(
+	ctx, sessionID, live.SidebandConnectionOptions{},
+	option.WithQuery("graceful_close", "false"),
+)
 if err != nil {
 	return err
 }
