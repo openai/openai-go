@@ -240,10 +240,11 @@ func TestX509TransportCloseRejectsConnectionFromLateDialCompletion(t *testing.T)
 	if err := capability.Close(); err != nil {
 		t.Fatalf("close capability before late dial completion: %v", err)
 	}
-	close(releaseDial)
+	// Set the deadline before releasing the dial, which may immediately close the pipe.
 	if err := serverConnection.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
 		t.Fatalf("bound late-connection observation: %v", err)
 	}
+	close(releaseDial)
 	if _, err := serverConnection.Read(make([]byte, 1)); !errors.Is(err, io.EOF) {
 		t.Fatalf("connection returned after capability closure ended with %v, want EOF", err)
 	}
