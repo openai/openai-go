@@ -1,5 +1,24 @@
 # Changelog
 
+## [3.91.0](https://github.com/openai/openai-go/compare/v3.90.0...v3.91.0) (2026-10-31)
+
+
+### Features
+
+* **api:** add agent context compaction settings ([#1185](https://github.com/openai/openai-go/issues/1185)) ([62622e8](https://github.com/openai/openai-go/commit/62622e89022c50e2727055e619d718cdf3c1edaa))
+* **api:** add agent session review and tool settings ([#1192](https://github.com/openai/openai-go/issues/1192)) ([aaaead8](https://github.com/openai/openai-go/commit/aaaead871f1506ef48b04c82ccd087406b2505ce))
+* **api:** add experimental agent time awareness ([#1187](https://github.com/openai/openai-go/issues/1187)) ([8425357](https://github.com/openai/openai-go/commit/8425357977f434e6106621fefa27217c68ddca99))
+* **api:** add image edit markup overlays ([#1186](https://github.com/openai/openai-go/issues/1186)) ([ec997d4](https://github.com/openai/openai-go/commit/ec997d432ce984059935c76ac8780ee72717e2b5))
+* **api:** add SIP DTMF commands and delivery events ([#1183](https://github.com/openai/openai-go/issues/1183)) ([59bfd63](https://github.com/openai/openai-go/commit/59bfd63a94997c116f69a77e83a250d2d3afc565))
+* **api:** preserve Live Decision item fields ([#1189](https://github.com/openai/openai-go/issues/1189)) ([9c45f99](https://github.com/openai/openai-go/commit/9c45f995a60f1d47fff524c49f64ecfcc97ea87a))
+* **api:** support text formats on Responses configuration updates ([#1188](https://github.com/openai/openai-go/issues/1188)) ([381e5e4](https://github.com/openai/openai-go/commit/381e5e442f6a6dd4624fac82ac93ddb614d8c1fe))
+* **api:** support typed Responses WebSocket warmup ([#1191](https://github.com/openai/openai-go/issues/1191)) ([f9ea3da](https://github.com/openai/openai-go/commit/f9ea3dab7698247f9bc7ae985ef295d6e932b7ea))
+
+
+### Bug Fixes
+
+* preserve refusal deltas in Responses WebSocket snapshots ([#1190](https://github.com/openai/openai-go/issues/1190)) ([361a993](https://github.com/openai/openai-go/commit/361a99371e066a91d1be578a07a615b4eca08d40))
+
 ## [3.90.0](https://github.com/openai/openai-go/compare/v3.89.0...v3.90.0) (2026-10-28)
 
 
