@@ -361,6 +361,11 @@ func main() {
 
 </details>
 
+### WebSocket guides
+
+- [Live sessions, sideband connections, and stored-session forks](live/README.md)
+- [Realtime and Translation sessions](realtime/README.md)
+
 ### Responses WebSockets
 
 Use `client.Responses.Connect(ctx, responses.ResponseConnectionOptions{}, opts...)`
