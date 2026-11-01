@@ -2,6 +2,7 @@ package responses
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"maps"
 	"slices"
@@ -27,6 +28,9 @@ type ResponseAccumulator struct {
 	terminalEvent string
 	responseRaw   string
 	output        map[int64]*responseAccumulatedOutput
+	// Final records stay separate from the mutable provisional projection.
+	finalizedOutput   map[int64]string
+	reconstructionErr error
 }
 
 // ResponseAccumulatorSnapshot is a partial projection, not a server Response.
@@ -68,6 +72,50 @@ type responseAccumulatedOutput struct {
 // It never closes or changes the connection. Existing snapshots remain usable.
 func (a *ResponseAccumulator) Reset() { *a = ResponseAccumulator{} }
 
+// ReconstructedResponse returns an independent typed terminal response. When
+// terminal output is omitted or null, it fills output using only previously
+// received response.output_item.done records, sorted by output_index. Sparse
+// indices become an ordered array; no finalized records produces an empty array.
+// Supplied non-null output, including an empty array, remains authoritative.
+//
+// This optional compatibility view never promotes unfinished deltas. It returns
+// an error before a terminal event, or until Reset after a protocol error
+// observed before the terminal. Failed and incomplete responses retain their
+// status and error details.
+// It does not read the socket or change Snapshot, DetailedSnapshot, original
+// events, or ResponseConnection/ResponseLane.FinalResponse.
+func (a *ResponseAccumulator) ReconstructedResponse() (*Response, error) {
+	if a.reconstructionErr != nil {
+		return nil, a.reconstructionErr
+	}
+	if a.terminalEvent == "" {
+		return nil, errors.New("responses accumulator: no terminal response collected")
+	}
+	raw := a.responseRaw
+	if output := gjson.Get(raw, "output"); !output.Exists() || output.Type == gjson.Null {
+		items := make([]json.RawMessage, 0, len(a.finalizedOutput))
+		for _, index := range slices.Sorted(maps.Keys(a.finalizedOutput)) {
+			items = append(items, json.RawMessage(a.finalizedOutput[index]))
+		}
+		output, err := json.Marshal(items)
+		if err != nil {
+			return nil, err
+		}
+		fields := accumulatedFields(raw, "")
+		fields["output"] = output
+		data, err := json.Marshal(fields)
+		if err != nil {
+			return nil, err
+		}
+		raw = string(data)
+	}
+	var response Response
+	if err := json.Unmarshal([]byte(raw), &response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+}
+
 // Snapshot returns an independent view of the data collected so far. A missing
 // terminal response or a receive error never becomes a successful completion.
 func (a *ResponseAccumulator) Snapshot() ResponseAccumulatorSnapshot {
@@ -103,9 +151,10 @@ func (s ResponseAccumulatorSnapshot) OutputText() string {
 // AddEvent observes a typed event from Recv without modifying it. The helper
 // ignores unknown/unselected events; callers retain the original event and its
 // RawJSON. Done events and supplied final output (including an empty array)
-// override earlier deltas. When terminal output is omitted or null, only this
-// projection retains prior data; ResponseConnection.FinalResponse and
-// ResponseLane.FinalResponse are unchanged. A different lane or response
+// override earlier deltas. When terminal output is omitted or null, the
+// projections retain prior data; ReconstructedResponse can recover finalized
+// items. ResponseConnection.FinalResponse and ResponseLane.FinalResponse are
+// unchanged. A different lane or response
 // requires a separate accumulator or Reset. A new nonempty item ID starts a
 // fresh projection at that output index; it never appends to another item.
 func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
@@ -155,7 +204,9 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 		return errors.New("responses accumulator: turn ended; reset before adding another event")
 	}
 	if event.Type == "error" {
-		return &ResponseProtocolError{Event: event}
+		err := &ResponseProtocolError{Event: event}
+		a.reconstructionErr = err
+		return err
 	}
 	var response *Response
 	switch event.Type {
@@ -222,6 +273,10 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 			return invalid
 		}
 		a.addItem(e.OutputIndex, e.Item)
+		if a.finalizedOutput == nil {
+			a.finalizedOutput = make(map[int64]string)
+		}
+		a.finalizedOutput[e.OutputIndex] = strings.Clone(e.Item.RawJSON())
 	case "response.content_part.added":
 		e := &event.OfResponsesServerEventResponseContentPartWsAdded
 		if !accumulatorIndicesValid(e.JSON.OutputIndex, e.JSON.ContentIndex) ||
