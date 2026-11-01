@@ -449,6 +449,39 @@ for _, item := range details.Output {
 }
 ```
 
+`DetailedSnapshot()` also collects reasoning summary/text, code-interpreter code,
+shell commands and output, and code/search/image/MCP call status. Summary updates
+appear in `Item["summary"]`; other tool fields keep their existing wire-shaped
+locations in `Item`. Reasoning content is indexed in `Content` and reflected in
+an existing or contiguous `Item["content"]` array. Shell output content uses
+`Content` keyed by the event's `command_index` and a contiguous observed prefix
+in `Item["output"]`.
+Sparse parts stay indexed without fabricated array entries or shell outcomes.
+Reasoning text never becomes `OutputText()`.
+Full parts/items and supplied terminal output replace earlier progress.
+
+Sparse function, custom-tool and MCP argument events can be observed before an
+item arrives. They retain only supplied IDs and input; they do not invent tool
+names, server labels or a complete server item. A known different item kind or ID
+cannot be overwritten by MCP argument progress. Raw events remain available.
+
+For an optional typed result when terminal `output` is absent or null, call
+`ReconstructedResponse()` after feeding the accumulator a terminal event:
+
+```go
+response, err := acc.ReconstructedResponse()
+if err != nil { return err }
+// Inspect response.Status and response.Error before treating the result as success.
+fmt.Println(response.ID)
+```
+
+This accessor uses only finalized `response.output_item.done` records in output
+index order. It never promotes partial deltas or EOF. Supplied output, including
+`[]`, remains authoritative; failed/incomplete status, usage and metadata remain
+unchanged. A preceding API error blocks reconstruction until `Reset`.
+`FinalResponse()`, original events and the two snapshot views keep their existing
+contracts. Reset the accumulator before the next response.
+
 Streamed logprobs accumulate with deltas. Supplied text-done logprobs replace them
 (including empty or null); whole part/item replacements discard prior fields
 and citations at those positions. Annotations and non-text parts enrich a

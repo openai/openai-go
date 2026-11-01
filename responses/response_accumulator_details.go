@@ -27,7 +27,12 @@ type ResponseAccumulatorDetails struct {
 // Content fields exclude annotations when those are an indexed list; an
 // omitted or null annotations field remains omitted or null. Unrecognized
 // fields and incomplete streamed logprobs are provisional raw JSON, never
-// fabricated final-output models. Every map and RawMessage is owned by the caller.
+// fabricated final-output models. Reasoning summaries, tool code/status and shell
+// fields retain their wire-shaped locations in Item. Reasoning content also uses
+// Content. Shell output Content keys are observed command_index values;
+// Item.output includes its contiguous observed prefix. Sparse parts do not fabricate array
+// entries or outcomes. Every map and RawMessage
+// is owned by the caller.
 type ResponseAccumulatedDetails struct {
 	OutputIndex int64
 	Item        map[string]json.RawMessage
@@ -42,6 +47,8 @@ type responseAccumulatedPart struct {
 	annotations    map[int64]string
 	refusal        strings.Builder
 	refusalPresent bool
+	text           strings.Builder
+	textPresent    bool
 }
 
 func (item *responseAccumulatedOutput) part(index int64) *responseAccumulatedPart {
@@ -124,6 +131,9 @@ func (a *ResponseAccumulator) DetailedSnapshot() ResponseAccumulatorDetails {
 				exclude = "annotations"
 			}
 			fields := accumulatedFields(part.raw, exclude)
+			if part.textPresent {
+				fields["text"] = accumulatedJSONString(part.text.String())
+			}
 			if part.refusalPresent {
 				if kind := gjson.ParseBytes(fields["type"]); !kind.Exists() || kind.Str == "refusal" {
 					fields["refusal"] = accumulatedJSONString(part.refusal.String())
@@ -163,6 +173,7 @@ func (a *ResponseAccumulator) DetailedSnapshot() ResponseAccumulatorDetails {
 				fields["text"] = accumulatedJSONString(text.String())
 			}
 		}
+		item.renderProgress(&projected)
 		result.Output = append(result.Output, projected)
 	}
 	return result

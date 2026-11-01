@@ -8,7 +8,7 @@ import (
 	"github.com/openai/openai-go/v3/responses"
 )
 
-func addMCPProgressEvent(t *testing.T, a *responses.ResponseAccumulator, raw string) responses.ResponsesServerEventUnion {
+func addMCPProgressEvent(t testing.TB, a *responses.ResponseAccumulator, raw string) responses.ResponsesServerEventUnion {
 	t.Helper()
 	var event responses.ResponsesServerEventUnion
 	if err := json.Unmarshal([]byte(raw), &event); err != nil {
@@ -84,9 +84,8 @@ func TestResponsesAccumulatorMCPCompleteItemsAndTerminalAuthority(t *testing.T) 
 	}
 }
 
-func TestResponsesAccumulatorMCPProgressRequiresCurrentScaffold(t *testing.T) {
+func TestResponsesAccumulatorMCPProgressDoesNotReplaceAnotherKnownItem(t *testing.T) {
 	for _, tc := range []struct{ name, scaffold string }{
-		{"no scaffold", ""},
 		{"wrong kind", `{"type":"response.output_item.added","sequence_number":0,"output_index":0,"item":{"id":"mcp_fixture","type":"message","role":"assistant","status":"in_progress","content":[]}}`},
 		{"newer MCP item", `{"type":"response.output_item.added","sequence_number":0,"output_index":0,"item":{"id":"mcp_new","type":"mcp_call","name":"lookup","server_label":"new_fixture","arguments":"new","status":"in_progress"}}`},
 	} {

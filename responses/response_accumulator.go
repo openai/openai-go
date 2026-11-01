@@ -17,9 +17,9 @@ import (
 // and custom-tool input from one Responses WebSocket turn. Feed it events from
 // ResponseConnection.Recv or ResponseLane.Recv; it never reads or owns the
 // socket. Use a separate accumulator per lane and Reset before the next turn.
-// MCP argument progress requires an observed matching mcp_call item.
-// DetailedSnapshot also collects incremental refusal content; Snapshot's text
-// projection does not treat a refusal as output text.
+// Sparse tool progress retains only observed fields; it never invents a complete item.
+// DetailedSnapshot also collects reasoning, tool code/output and status progress.
+// Snapshot's text projection excludes refusal and reasoning content.
 // Its zero value is ready to use. Like a strings.Builder, do not copy an
 // accumulator after first use or call its methods concurrently.
 type ResponseAccumulator struct {
@@ -29,6 +29,7 @@ type ResponseAccumulator struct {
 	terminalEvent string
 	responseRaw   string
 	output        map[int64]*responseAccumulatedOutput
+	itemRevision  uint64
 	// Final records stay separate from the mutable provisional projection.
 	finalizedOutput   map[int64]string
 	reconstructionErr error
@@ -67,6 +68,8 @@ type responseAccumulatedOutput struct {
 	parts                      map[int64]*responseAccumulatedPart
 	argumentsPresent           bool
 	inputPresent               bool
+	progress                   *responseAccumulatedProgress
+	shellCommandCount          int64
 }
 
 // Reset releases only this helper's state, including its lane and turn binding.
@@ -181,7 +184,7 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 		return nil
 	}
 	switch event.Type {
-	case "response.created", "response.in_progress", "response.completed", "response.failed", "response.incomplete",
+	case "response.created", "response.queued", "response.in_progress", "response.completed", "response.failed", "response.incomplete",
 		"response.output_item.added", "response.output_item.done",
 		"response.content_part.added", "response.content_part.done",
 		"response.output_text.delta", "response.output_text.done",
@@ -190,7 +193,9 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 		"response.mcp_call_arguments.delta", "response.mcp_call_arguments.done",
 		"response.custom_tool_call_input.delta", "response.custom_tool_call_input.done", "error":
 	default:
-		return nil
+		if !accumulatorRichEvent(event.Type) {
+			return nil
+		}
 	}
 	// Bind to the same scope Recv used, including its permissive treatment of
 	// missing or invalid stream IDs. Never coerce a numeric ID into a named lane.
@@ -216,6 +221,8 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 		response = &event.OfResponsesServerEventResponseWsCreated.Response
 	case "response.in_progress":
 		response = &event.OfResponsesServerEventResponseInWsProgress.Response
+	case "response.queued":
+		response = &event.OfResponsesServerEventResponseWsQueued.Response
 	case "response.completed", "response.failed", "response.incomplete":
 		// Use the same missing/null/invalid terminal policy as FinalResponse.
 		var err error
@@ -381,9 +388,10 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 			return invalid
 		}
 		item := a.output[e.OutputIndex]
-		if item == nil || item.itemType != "mcp_call" || item.id != e.ItemID {
+		if item != nil && ((item.itemType != "" && item.itemType != "mcp_call") || (item.id != "" && item.id != e.ItemID)) {
 			return nil
 		}
+		item = a.item(e.OutputIndex, e.ItemID)
 		item.arguments.WriteString(e.Delta)
 		item.argumentsPresent = true
 	case "response.mcp_call_arguments.done":
@@ -392,9 +400,10 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 			return invalid
 		}
 		item := a.output[e.OutputIndex]
-		if item == nil || item.itemType != "mcp_call" || item.id != e.ItemID {
+		if item != nil && ((item.itemType != "" && item.itemType != "mcp_call") || (item.id != "" && item.id != e.ItemID)) {
 			return nil
 		}
+		item = a.item(e.OutputIndex, e.ItemID)
 		replaceAccumulatedText(&item.arguments, e.Arguments)
 		item.argumentsPresent = true
 	case "response.custom_tool_call_input.delta":
@@ -413,6 +422,13 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 		item := a.item(e.OutputIndex, e.ItemID)
 		replaceAccumulatedText(&item.input, e.Input)
 		item.inputPresent = true
+	default:
+		if a.output == nil {
+			return nil
+		}
+		if err := a.addRichEvent(event); err != nil {
+			return err
+		}
 	}
 	a.bound, a.streamID = true, streamID
 	return nil
@@ -475,6 +491,7 @@ func (a *ResponseAccumulator) item(index int64, id string) *responseAccumulatedO
 	if item == nil || (id != "" && item.id != "" && id != item.id) {
 		item = &responseAccumulatedOutput{text: make(map[int64]*strings.Builder)}
 		a.output[index] = item
+		a.itemRevision++
 	}
 	if id != "" {
 		item.id = id
@@ -507,6 +524,12 @@ func (a *ResponseAccumulator) addItem(index int64, source ResponseOutputItemUnio
 				replaceAccumulatedText(a.text(index, source.ID, int64(contentIndex)), part.Text)
 			}
 		}
+	case "reasoning":
+		for pos, part := range gjson.Get(item.raw, "content").Array() {
+			item.replacePart(int64(pos), part.Raw)
+		}
+	case "shell_call":
+		item.shellCommandCount = int64(len(gjson.Get(item.raw, "action.commands").Array()))
 	case "function_call":
 		replaceAccumulatedText(&item.arguments, source.Arguments.OfString)
 	case "mcp_call":
