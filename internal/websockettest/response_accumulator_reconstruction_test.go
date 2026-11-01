@@ -204,7 +204,7 @@ func TestResponsesAccumulatorReconstructionLaneErrorAndEOF(t *testing.T) {
 				if _, err = lane.Recv(receiveCtx); err == nil {
 					t.Fatal("receive unexpectedly succeeded")
 				}
-				if response, err := acc.ReconstructedResponse(); response != nil || err == nil {
+				if response, reconstructionErr := acc.ReconstructedResponse(); response != nil || reconstructionErr == nil {
 					t.Fatal("receive failure fabricated completion")
 				}
 				return
@@ -299,12 +299,12 @@ func TestResponsesAccumulatorReconstructedLargeResponse(t *testing.T) {
 	defer cancel()
 	var acc responses.ResponseAccumulator
 	for range 2 {
-		event, err := lane.Recv(ctx)
-		if err != nil {
-			t.Fatal(err)
+		event, receiveErr := lane.Recv(ctx)
+		if receiveErr != nil {
+			t.Fatal(receiveErr)
 		}
-		if err = acc.AddEvent(event); err != nil {
-			t.Fatal(err)
+		if addErr := acc.AddEvent(event); addErr != nil {
+			t.Fatal(addErr)
 		}
 	}
 	response, err := acc.ReconstructedResponse()
