@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.91.1](https://github.com/openai/openai-go/compare/v3.91.0...v3.91.1) (2026-11-01)
+
+
+### Documentation
+
+* add a Live WebSocket guide ([#1193](https://github.com/openai/openai-go/issues/1193)) ([326baf5](https://github.com/openai/openai-go/commit/326baf59ab934cd9fe1391f57e9b3757e1299ac9))
+
 ## [3.91.0](https://github.com/openai/openai-go/compare/v3.90.0...v3.91.0) (2026-10-31)
 
 
