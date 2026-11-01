@@ -12,10 +12,11 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// ResponseAccumulator optionally collects output text, function-call arguments
+// ResponseAccumulator optionally collects output text, function and MCP arguments
 // and custom-tool input from one Responses WebSocket turn. Feed it events from
 // ResponseConnection.Recv or ResponseLane.Recv; it never reads or owns the
 // socket. Use a separate accumulator per lane and Reset before the next turn.
+// MCP argument progress requires an observed matching mcp_call item.
 // DetailedSnapshot also collects incremental refusal content; Snapshot's text
 // projection does not treat a refusal as output text.
 // Its zero value is ready to use. Like a strings.Builder, do not copy an
@@ -137,6 +138,7 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 		"response.output_text.delta", "response.output_text.done",
 		"response.refusal.delta", "response.refusal.done",
 		"response.function_call_arguments.delta", "response.function_call_arguments.done",
+		"response.mcp_call_arguments.delta", "response.mcp_call_arguments.done",
 		"response.custom_tool_call_input.delta", "response.custom_tool_call_input.done", "error":
 	default:
 		return nil
@@ -318,6 +320,28 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 		item := a.item(e.OutputIndex, e.ItemID)
 		replaceAccumulatedText(&item.arguments, e.Arguments)
 		item.argumentsPresent = true
+	case "response.mcp_call_arguments.delta":
+		e := &event.OfResponsesServerEventResponseMcpCallArgumentsWsDelta
+		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !accumulatorStringsValid(e.JSON.ItemID, e.JSON.Delta) {
+			return invalid
+		}
+		item := a.output[e.OutputIndex]
+		if item == nil || item.itemType != "mcp_call" || item.id != e.ItemID {
+			return nil
+		}
+		item.arguments.WriteString(e.Delta)
+		item.argumentsPresent = true
+	case "response.mcp_call_arguments.done":
+		e := &event.OfResponsesServerEventResponseMcpCallArgumentsWsDone
+		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !accumulatorStringsValid(e.JSON.ItemID, e.JSON.Arguments) {
+			return invalid
+		}
+		item := a.output[e.OutputIndex]
+		if item == nil || item.itemType != "mcp_call" || item.id != e.ItemID {
+			return nil
+		}
+		replaceAccumulatedText(&item.arguments, e.Arguments)
+		item.argumentsPresent = true
 	case "response.custom_tool_call_input.delta":
 		e := &event.OfResponsesServerEventResponseCustomToolCallInputWsDelta
 		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !accumulatorStringsValid(e.JSON.ItemID, e.JSON.Delta) {
@@ -430,6 +454,12 @@ func (a *ResponseAccumulator) addItem(index int64, source ResponseOutputItemUnio
 		}
 	case "function_call":
 		replaceAccumulatedText(&item.arguments, source.Arguments.OfString)
+	case "mcp_call":
+		// Preserve previously accepted raw MCP items without coercing non-string arguments.
+		if arguments := gjson.Parse(source.JSON.Arguments.Raw()); arguments.Type == gjson.String {
+			replaceAccumulatedText(&item.arguments, arguments.Str)
+			item.argumentsPresent = true
+		}
 	case "custom_tool_call":
 		replaceAccumulatedText(&item.input, source.Input)
 	}
