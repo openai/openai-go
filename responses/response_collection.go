@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"sync/atomic"
-
-	"github.com/tidwall/gjson"
 )
 
 // ErrResponseCollectionLimit means a response exceeded its caller-selected
@@ -86,11 +84,26 @@ func (c *ResponseCollection) observe(event responseWebsocketEvent) {
 	if c.defaultLane && event.streamID != "" {
 		return
 	}
-	kind := gjson.GetBytes(event.data, "type").Str
+	// Match unmarshalWebsocketEventWithRawType exactly: encoding/json selects
+	// the last matching key, including case-folded and escaped aliases. Decode
+	// RawMessage into a fresh string so a trailing null does not retain an
+	// earlier discriminator. Budget/reset decisions must match retained events.
+	var envelope struct {
+		Type json.RawMessage `json:"type"`
+	}
+	var kind string
+	decodeErr := json.Unmarshal(event.data, &envelope)
+	if decodeErr == nil {
+		decodeErr = json.Unmarshal(envelope.Type, &kind)
+	}
 	if kind == "response.created" {
 		c.resetState()
 	}
 	if c.err != nil {
+		return
+	}
+	if decodeErr != nil {
+		c.fail(decodeErr)
 		return
 	}
 	switch kind {

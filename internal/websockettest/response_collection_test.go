@@ -426,3 +426,113 @@ func TestResponsesCollectionLargeFinal(t *testing.T) {
 		t.Fatalf("large collected final failed: %v", finalErr)
 	}
 }
+
+func TestResponsesCollectionDiscriminatorBudget(t *testing.T) {
+	for _, discriminator := range []string{
+		`"type":"error","type":"response.output_item.done"`,
+		`"type":"error","TYPE":"response.output_item.done"`,
+		`"type":"error","\u0074ype":"response.output_item.done"`,
+		`"type":"response.created","type":"response.output_item.done"`,
+	} {
+		t.Run(discriminator, func(t *testing.T) {
+			first := `{` + discriminator + `,"stream_id":"a","output_index":0,"item":{"type":"message","id":"m0","content":[]}}`
+			second := strings.ReplaceAll(first, `"output_index":0`, `"output_index":1`)
+			_, lane, other := collectionConnection(t, func(ctx context.Context, socket *wire.Conn) {
+				collectionWrite(t, ctx, socket, first, second, `{"type":"response.completed","stream_id":"b","response":{"id":"neighbor","status":"completed","output":[]}}`)
+			})
+			collection, err := lane.CollectResponse(int64(len(first) + len(second) - 1))
+			if err != nil {
+				t.Fatal(err)
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			for _, frame := range []string{first, second} {
+				raw, readErr := collection.RecvRaw(ctx)
+				if readErr != nil || string(raw) != frame {
+					t.Fatal("raw discriminator compatibility changed")
+				}
+			}
+			if !errors.Is(collection.Err(), responses.ErrResponseCollectionLimit) {
+				t.Fatal("typed discriminator bypassed cumulative byte budget")
+			}
+			neighbor, neighborErr := other.FinalResponse(ctx)
+			if neighborErr != nil || neighbor.ID != "neighbor" {
+				t.Fatal("collector failure affected neighbor")
+			}
+		})
+	}
+	for _, terminalType := range []string{"response.completed", "response.failed", "response.incomplete"} {
+		t.Run(terminalType, func(t *testing.T) {
+			frame := `{"type":"error","type":"` + terminalType + `","stream_id":"a","response":{"id":"r","output":[]}}`
+			_, lane, _ := collectionConnection(t, func(ctx context.Context, socket *wire.Conn) { collectionWrite(t, ctx, socket, frame) })
+			collection, err := lane.CollectResponse(int64(len(frame) - 1))
+			if err != nil {
+				t.Fatal(err)
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if raw, readErr := collection.RecvRaw(ctx); readErr != nil || string(raw) != frame {
+				t.Fatal("raw terminal changed")
+			}
+			if !errors.Is(collection.Err(), responses.ErrResponseCollectionLimit) {
+				t.Fatal("terminal discriminator bypassed byte budget")
+			}
+		})
+	}
+}
+
+func TestResponsesCollectionDiscriminatorResetAndMalformed(t *testing.T) {
+	t.Run("actual created resets", func(t *testing.T) {
+		created := `{"type":"error","TYPE":"response.created","stream_id":"a","response":{"id":"fresh","output":[]}}`
+		terminal := `{"type":"response.completed","stream_id":"a","response":{"id":"fresh","output":null}}`
+		_, lane, _ := collectionConnection(t, func(ctx context.Context, socket *wire.Conn) {
+			collectionWrite(t, ctx, socket, collectionDone, created, terminal)
+		})
+		collection, err := lane.CollectResponse(1 << 20)
+		if err != nil {
+			t.Fatal(err)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		response, finalErr := collection.FinalResponse(ctx)
+		if finalErr != nil || response.ID != "fresh" || len(response.Output) != 0 {
+			t.Fatal("actual created discriminator did not clear finalized state")
+		}
+	})
+	t.Run("trailing null does not reset", func(t *testing.T) {
+		frame := `{"type":"response.created","type":null,"stream_id":"a"}`
+		_, lane, _ := collectionConnection(t, func(ctx context.Context, socket *wire.Conn) {
+			collectionWrite(t, ctx, socket, collectionTerminal, frame)
+			_ = socket.Close(wire.StatusNormalClosure, "")
+		})
+		collection, err := lane.CollectResponse(1 << 20)
+		if err != nil {
+			t.Fatal(err)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		for range 2 {
+			if _, readErr := collection.RecvRaw(ctx); readErr != nil {
+				t.Fatal(readErr)
+			}
+		}
+		response, finalErr := collection.FinalResponse(ctx)
+		if finalErr != nil || response.ID != "r" {
+			t.Fatal("non-string final discriminator erased cached terminal")
+		}
+	})
+	t.Run("nonstring discriminator", func(t *testing.T) {
+		_, lane, _ := collectionConnection(t, func(ctx context.Context, socket *wire.Conn) {
+			collectionWrite(t, ctx, socket, `{"type":7,"stream_id":"a"}`)
+		})
+		collection, err := lane.CollectResponse(1 << 20)
+		if err != nil {
+			t.Fatal(err)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if response, finalErr := collection.FinalResponse(ctx); finalErr == nil || response != nil {
+			t.Fatal("malformed discriminator became final")
+		}
+	})
+}
