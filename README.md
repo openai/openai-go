@@ -384,10 +384,11 @@ after that interval. Always call `Close` or `Abort` when finished.
 
 Set `IsolateLaneOverflow: true` to keep the connection open on queue overflow.
 The helper fails the lane with the largest older backlog, breaking ties by
-registration order; with no older backlog, it fails the incoming lane. It releases
+registration order; with no older backlog, it fails the incoming lane. It repeats
+as needed until the queue fits within its budgets. It releases
 that lane's queue, retains its first error and reserved ID, and discards later
-frames for that ID. The default receiver can also be selected; other lanes keep
-working. An event larger than a positive `MaxBufferedBytes` fails only its
+frames for that ID. The default receiver can also be selected. Lanes not selected
+keep working. An event larger than a positive `MaxBufferedBytes` fails only its
 destination lane. Incoming message-size, decode and transport failures still fail the
 connection. Zero queue limits remain unlimited.
 
