@@ -2,6 +2,7 @@ package websockettest
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -517,5 +518,235 @@ func TestResponsesAccumulatorShellOutputKnownEmptyBound(t *testing.T) {
 	}
 	if !reflect.DeepEqual(prior, acc.DetailedSnapshot()) {
 		t.Fatal("rejected command changed snapshot")
+	}
+}
+
+func BenchmarkResponsesAccumulatorInterleavedToolItems(b *testing.B) {
+	for _, retained := range []int{1, 16384} {
+		b.Run(strconv.Itoa(retained), func(b *testing.B) {
+			var acc responses.ResponseAccumulator
+			richCreated(b, &acc)
+			richEvent(b, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 1, "output_index": 0, "item": map[string]any{"id": "shell_output", "type": "shell_call_output", "status": "in_progress", "max_output_length": 1000, "call_id": "unobserved_call", "output": []any{}}})
+			decode := func(raw string) *responses.ResponsesServerEventUnion {
+				event := new(responses.ResponsesServerEventUnion)
+				if err := json.Unmarshal([]byte(raw), event); err != nil {
+					b.Fatal(err)
+				}
+				return event
+			}
+			mcp := func(index, sequence int) *responses.ResponsesServerEventUnion {
+				return decode(fmt.Sprintf("{\"type\":\"response.mcp_call_arguments.delta\",\"sequence_number\":%d,\"output_index\":%d,\"item_id\":\"mcp_%d\",\"delta\":\"x\"}", sequence, index, index))
+			}
+			shell := func(sequence int) *responses.ResponsesServerEventUnion {
+				return decode(fmt.Sprintf("{\"type\":\"response.shell_call_output_content.delta\",\"sequence_number\":%d,\"output_index\":0,\"item_id\":\"shell_output\",\"command_index\":0,\"delta\":{\"stdout\":\"x\"}}", sequence))
+			}
+			add := func(event *responses.ResponsesServerEventUnion) {
+				if err := acc.AddEvent(*event); err != nil {
+					b.Fatal(err)
+				}
+			}
+			for i := 1; i <= retained; i++ {
+				add(mcp(i, i+1))
+			}
+			add(shell(retained + 2))
+			mcps := make([]*responses.ResponsesServerEventUnion, b.N)
+			shells := make([]*responses.ResponsesServerEventUnion, b.N)
+			for i := 0; i < b.N; i++ {
+				mcps[i] = mcp(retained+i+1, retained+3+2*i)
+				shells[i] = shell(retained + 4 + 2*i)
+			}
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				add(mcps[i])
+				add(shells[i])
+			}
+			b.StopTimer()
+			if got := acc.DetailedSnapshot().Output[0].Content[0]["stdout"]; len(got) != b.N+3 {
+				b.Fatal("lost shell fragments")
+			}
+		})
+	}
+}
+
+func TestResponsesAccumulatorShellBoundOwnership(t *testing.T) {
+	var acc responses.ResponseAccumulator
+	richCreated(t, &acc)
+	sequence := 1
+	add := func(index int, item map[string]any) {
+		richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": sequence, "output_index": index, "item": item})
+		sequence++
+	}
+	call := func(id string, commands []string) map[string]any {
+		return map[string]any{"id": "shell", "type": "shell_call", "call_id": id, "status": "in_progress", "action": map[string]any{"commands": commands, "timeout_ms": 1000, "max_output_length": 1000}, "environment": map[string]any{"type": "local"}}
+	}
+	output := func(id, callID string) map[string]any {
+		return map[string]any{"id": id, "type": "shell_call_output", "status": "in_progress", "max_output_length": 1000, "call_id": callID, "output": []any{}}
+	}
+	delta := func(index int, id string, command int, rejected bool) {
+		data, err := json.Marshal(map[string]any{"type": "response.shell_call_output_content.delta", "sequence_number": sequence, "output_index": index, "item_id": id, "command_index": command, "delta": map[string]any{"stdout": "observed"}})
+		sequence++
+		if err != nil {
+			t.Fatal(err)
+		}
+		var event responses.ResponsesServerEventUnion
+		if err = json.Unmarshal(data, &event); err != nil {
+			t.Fatal(err)
+		}
+		before := acc.DetailedSnapshot()
+		err = acc.AddEvent(event)
+		if rejected && err == nil {
+			t.Fatal("known command bound was lost")
+		}
+		if !rejected && err != nil {
+			t.Fatalf("unknown bound was retained: %v", err)
+		}
+		if rejected && !reflect.DeepEqual(before, acc.DetailedSnapshot()) {
+			t.Fatal("rejected event mutated projection")
+		}
+	}
+	add(0, call("call-a", []string{"one"}))
+	add(1, output("output-a", "call-a"))
+	delta(1, "output-a", 1, true)
+	add(0, call("call-b", []string{"one", "two"}))
+	delta(1, "output-a", 1, false)
+	add(2, output("output-b", "call-b"))
+	delta(2, "output-b", 2, true)
+	add(0, map[string]any{"id": "message", "type": "message", "role": "assistant", "status": "in_progress", "content": []any{}})
+	delta(2, "output-b", 2, false)
+	add(0, call("call-b", []string{"one"}))
+	richEvent(t, &acc, map[string]any{"type": "response.in_progress", "sequence_number": sequence, "response": richLifecycleResponse("in_progress", []any{})})
+	sequence++
+	add(0, output("after-full-output", "call-b"))
+	delta(0, "after-full-output", 7, false)
+	add(1, call("call-c", []string{"one"}))
+	acc.Reset()
+	richCreated(t, &acc)
+	sequence = 1
+	add(0, output("after-reset", "call-c"))
+	delta(0, "after-reset", 9, false)
+}
+
+func TestResponsesAccumulatorOptionalToolIdentity(t *testing.T) {
+	for _, tc := range []struct{ kind, prefix, field string }{{"function_call", "response.function_call_arguments", "arguments"}, {"custom_tool_call", "response.custom_tool_call_input", "input"}} {
+		for _, conflict := range []string{"delta", "done"} {
+			t.Run(tc.kind+"/"+conflict, func(t *testing.T) {
+				var acc responses.ResponseAccumulator
+				richCreated(t, &acc)
+				item := map[string]any{"type": tc.kind, "call_id": "call_fixture", "name": "fixture", "status": "in_progress", tc.field: "", "provider_metadata": true}
+				richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 1, "output_index": 0, "item": item})
+				richEvent(t, &acc, map[string]any{"type": tc.prefix + ".delta", "sequence_number": 2, "output_index": 0, "item_id": "observed", "delta": "{"})
+				before := acc.DetailedSnapshot()
+				if _, present := before.Output[0].Item["id"]; present {
+					t.Error("progress invented a full-item id")
+				}
+				if acc.Snapshot().Output[0].ItemID != "observed" || string(before.Output[0].Item[tc.field]) != `"{"` {
+					t.Error("missing initial observed identity/progress")
+				}
+				bad := map[string]any{"type": tc.prefix + "." + conflict, "sequence_number": 3, "output_index": 0, "item_id": "other", "delta": "wrong", tc.field: "wrong"}
+				richEvent(t, &acc, bad)
+				if !reflect.DeepEqual(before, acc.DetailedSnapshot()) || acc.Snapshot().Output[0].ItemID != "observed" {
+					t.Error("conflicting progress replaced the bound full item")
+				}
+				richEvent(t, &acc, map[string]any{"type": tc.prefix + ".done", "sequence_number": 4, "output_index": 0, "item_id": "observed", tc.field: "{}"})
+				got := acc.DetailedSnapshot().Output[0].Item
+				if _, present := got["id"]; present {
+					t.Error("done invented a full-item id")
+				}
+				if string(got[tc.field]) != `"{}"` || string(got["name"]) != `"fixture"` || string(got["provider_metadata"]) != "true" {
+					t.Errorf("valid done lost full fields: %#v", got)
+				}
+			})
+		}
+	}
+}
+
+func TestResponsesAccumulatorSparseToolIdentityReplacement(t *testing.T) {
+	for _, tc := range []struct{ prefix, field string }{{"response.function_call_arguments", "arguments"}, {"response.custom_tool_call_input", "input"}} {
+		t.Run(tc.prefix, func(t *testing.T) {
+			var acc responses.ResponseAccumulator
+			richEvent(t, &acc, map[string]any{"type": tc.prefix + ".delta", "sequence_number": 0, "output_index": 0, "item_id": "first", "delta": "old"})
+			richEvent(t, &acc, map[string]any{"type": tc.prefix + ".delta", "sequence_number": 1, "output_index": 0, "item_id": "second", "delta": "new"})
+			got := acc.DetailedSnapshot().Output[0].Item
+			if string(got["id"]) != `"second"` || string(got[tc.field]) != `"new"` {
+				t.Errorf("changed sparse identity contract: %#v", got)
+			}
+		})
+	}
+	var acc responses.ResponseAccumulator
+	richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 0, "output_index": 0, "item": map[string]any{"id": "message", "type": "message", "role": "assistant", "status": "in_progress", "content": []any{}}})
+	if string(acc.DetailedSnapshot().Output[0].Item["id"]) != `"message"` {
+		t.Fatal("required full-item id was lost")
+	}
+}
+
+func TestResponsesAccumulatorPresentToolIdentityReplacement(t *testing.T) {
+	for _, tc := range []struct{ kind, prefix, field, seed string }{{"function_call", "response.function_call_arguments", "arguments", "{}"}, {"custom_tool_call", "response.custom_tool_call_input", "input", "old"}} {
+		t.Run(tc.kind, func(t *testing.T) {
+			var acc responses.ResponseAccumulator
+			richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 0, "output_index": 0, "item": map[string]any{"id": "old", "type": tc.kind, "call_id": "call_fixture", "name": "fixture", "status": "in_progress", tc.field: tc.seed}})
+			richEvent(t, &acc, map[string]any{"type": tc.prefix + ".delta", "sequence_number": 1, "output_index": 0, "item_id": "new", "delta": "fresh"})
+			got := acc.DetailedSnapshot().Output[0].Item
+			if string(got["id"]) != `"new"` || string(got[tc.field]) != `"fresh"` {
+				t.Errorf("changed present-id replacement contract: %#v", got)
+			}
+		})
+	}
+}
+
+func TestResponsesAccumulatorOptionalToolDoneIdentity(t *testing.T) {
+	for _, tc := range []struct{ kind, prefix, field string }{{"function_call", "response.function_call_arguments", "arguments"}, {"custom_tool_call", "response.custom_tool_call_input", "input"}} {
+		t.Run(tc.kind, func(t *testing.T) {
+			var acc responses.ResponseAccumulator
+			richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 0, "output_index": 0, "item": map[string]any{"type": tc.kind, "call_id": "call_fixture", "name": "fixture", "status": "in_progress", tc.field: ""}})
+			richEvent(t, &acc, map[string]any{"type": tc.prefix + ".done", "sequence_number": 1, "output_index": 0, "item_id": "observed", tc.field: "{}"})
+			got := acc.DetailedSnapshot().Output[0].Item
+			if _, present := got["id"]; present {
+				t.Error("first done invented a full-item id")
+			}
+			if acc.Snapshot().Output[0].ItemID != "observed" || string(got[tc.field]) != `"{}"` || string(got["name"]) != `"fixture"` {
+				t.Errorf("first done lost observed identity or full fields: %#v", got)
+			}
+		})
+	}
+}
+
+func TestResponsesAccumulatorOptionalToolIgnoresOtherFamily(t *testing.T) {
+	for _, tc := range []struct{ kind, prefix, field, otherPrefix, otherField string }{
+		{"function_call", "response.function_call_arguments", "arguments", "response.custom_tool_call_input", "input"},
+		{"custom_tool_call", "response.custom_tool_call_input", "input", "response.function_call_arguments", "arguments"},
+	} {
+		for _, suffix := range []string{"delta", "done"} {
+			t.Run(tc.kind+"/"+suffix, func(t *testing.T) {
+				var acc responses.ResponseAccumulator
+				richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 0, "output_index": 0, "item": map[string]any{"type": tc.kind, "call_id": "call_fixture", "name": "fixture", "status": "in_progress", tc.field: "", "future": map[string]any{"n": 1}}})
+				wrong := map[string]any{"type": tc.otherPrefix + "." + suffix, "sequence_number": 1, "output_index": 0, "item_id": "foreign"}
+				if suffix == "delta" {
+					wrong["delta"] = `{"wrong":`
+				} else {
+					wrong[tc.otherField] = `{"wrong":true}`
+				}
+				richEvent(t, &acc, wrong)
+				if acc.Snapshot().Output[0].ItemID != "" {
+					t.Error("another tool family's progress bound the omitted identity")
+				}
+				richEvent(t, &acc, map[string]any{"type": tc.prefix + ".delta", "sequence_number": 2, "output_index": 0, "item_id": "observed", "delta": `{"ok":`})
+				got := acc.DetailedSnapshot().Output[0].Item
+				if acc.Snapshot().Output[0].ItemID != "observed" || string(got[tc.field]) != `"{\"ok\":"` {
+					t.Errorf("valid progress did not bind after another family: %#v", got)
+				}
+				richEvent(t, &acc, map[string]any{"type": tc.prefix + ".done", "sequence_number": 3, "output_index": 0, "item_id": "observed", tc.field: `{"ok":true}`})
+				got = acc.DetailedSnapshot().Output[0].Item
+				if string(got[tc.field]) != `"{\"ok\":true}"` || string(got["type"]) != `"`+tc.kind+`"` || string(got["future"]) != `{"n":1}` {
+					t.Errorf("valid completion or original fields were lost: %#v", got)
+				}
+				if _, present := got["id"]; present {
+					t.Error("progress invented a full-item id")
+				}
+				if _, present := got[tc.otherField]; present {
+					t.Error("another tool family changed the full item")
+				}
+			})
+		}
 	}
 }

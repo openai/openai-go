@@ -12,15 +12,12 @@ import (
 // Buffers belong to the existing item projection and are discarded with a full
 // item replacement. They are materialized only when a caller requests details.
 type responseAccumulatedProgress struct {
-	code              *strings.Builder
-	status            string
-	summary           map[int64]*responseAccumulatedPart
-	summaryChanged    bool
-	commands          map[int64]*strings.Builder
-	shellOutput       map[int64]*responseAccumulatedShellOutput
-	shellCallRevision uint64
-	shellCallKnown    bool
-	shellCommandBound int64
+	code           *strings.Builder
+	status         string
+	summary        map[int64]*responseAccumulatedPart
+	summaryChanged bool
+	commands       map[int64]*strings.Builder
+	shellOutput    map[int64]*responseAccumulatedShellOutput
 }
 
 type responseAccumulatedShellOutput struct {
@@ -215,8 +212,7 @@ func (a *ResponseAccumulator) addRichEvent(event ResponsesServerEventUnion) erro
 				return invalid
 			}
 			progress.commands[position] = &strings.Builder{}
-			item.shellCommandCount = int64(len(progress.commands))
-			a.itemRevision++
+			a.setShellCommandBound(item, int64(len(progress.commands)))
 		}
 		command := progress.commands[position]
 		if command == nil {
@@ -273,25 +269,26 @@ func (a *ResponseAccumulator) addRichEvent(event ResponsesServerEventUnion) erro
 }
 
 func (a *ResponseAccumulator) shellOutputIndexValid(item *responseAccumulatedOutput, index int64) bool {
-	progress := item.progress
-	if progress.shellCallRevision != a.itemRevision {
-		progress.shellCallKnown = false
-		for _, candidate := range a.output {
-			if item.callID == "" || candidate.itemType != "shell_call" || candidate.callID != item.callID {
-				continue
-			}
-			progress.shellCallKnown = candidate.shellCommandsKnown
-			if progress.shellCallKnown {
-				progress.shellCommandBound = candidate.shellCommandCount
-			}
-			break
-		}
-		progress.shellCallRevision = a.itemRevision
-	}
-	if progress.shellCallKnown {
-		return index < progress.shellCommandBound
+	if bound, known := a.shellCommandBounds[item.callID]; known {
+		return index < bound
 	}
 	return true
+}
+
+func (a *ResponseAccumulator) setShellCommandBound(item *responseAccumulatedOutput, count int64) {
+	if item.callID == "" {
+		return
+	}
+	if a.shellCommandBounds == nil {
+		a.shellCommandBounds = make(map[string]int64)
+	}
+	a.shellCommandBounds[item.callID] = count
+}
+
+func (a *ResponseAccumulator) forgetShellCommandBound(item *responseAccumulatedOutput) {
+	if item != nil && item.itemType == "shell_call" {
+		delete(a.shellCommandBounds, item.callID)
+	}
 }
 
 func appendReasoningText(part *responseAccumulatedPart, value string, replace bool) error {

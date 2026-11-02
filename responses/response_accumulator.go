@@ -23,13 +23,13 @@ import (
 // Its zero value is ready to use. Like a strings.Builder, do not copy an
 // accumulator after first use or call its methods concurrently.
 type ResponseAccumulator struct {
-	bound         bool
-	streamID      string
-	responseID    string
-	terminalEvent string
-	responseRaw   string
-	output        map[int64]*responseAccumulatedOutput
-	itemRevision  uint64
+	bound              bool
+	streamID           string
+	responseID         string
+	terminalEvent      string
+	responseRaw        string
+	output             map[int64]*responseAccumulatedOutput
+	shellCommandBounds map[string]int64
 	// Final records stay separate from the mutable provisional projection.
 	finalizedOutput   map[int64]string
 	reconstructionErr error
@@ -69,8 +69,7 @@ type responseAccumulatedOutput struct {
 	argumentsPresent           bool
 	inputPresent               bool
 	progress                   *responseAccumulatedProgress
-	shellCommandCount          int64
-	shellCommandsKnown         bool
+	idWasOmitted               bool
 }
 
 // Reset releases only this helper's state, including its lane and turn binding.
@@ -160,8 +159,8 @@ func (s ResponseAccumulatorSnapshot) OutputText() string {
 // projections retain prior data; ReconstructedResponse can recover finalized
 // items. ResponseConnection.FinalResponse and ResponseLane.FinalResponse are
 // unchanged. A different lane or response
-// requires a separate accumulator or Reset. A new nonempty item ID starts a
-// fresh projection at that output index; it never appends to another item.
+// requires a separate accumulator or Reset. Full-item snapshots replace earlier
+// records; progress never appends to another item's observed data.
 func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 	// Newly collected annotations only enrich a known item. Historically these
 	// events were ignored: they must not bind a lane or replace a different item,
@@ -260,6 +259,7 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 			// A supplied response output supersedes the entire earlier projection,
 			// including items and content absent from this newer snapshot.
 			a.output = nil
+			a.shellCommandBounds = nil
 			for index, item := range response.Output {
 				a.addItem(int64(index), item)
 			}
@@ -372,7 +372,11 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !accumulatorStringsValid(e.JSON.ItemID, e.JSON.Delta) {
 			return invalid
 		}
-		item := a.item(e.OutputIndex, e.ItemID)
+		item := a.output[e.OutputIndex]
+		if !item.acceptsToolProgress("function_call", e.ItemID) {
+			return nil
+		}
+		item = a.item(e.OutputIndex, e.ItemID)
 		item.arguments.WriteString(e.Delta)
 		item.argumentsPresent = true
 	case "response.function_call_arguments.done":
@@ -380,7 +384,11 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !accumulatorStringsValid(e.JSON.ItemID, e.JSON.Arguments) {
 			return invalid
 		}
-		item := a.item(e.OutputIndex, e.ItemID)
+		item := a.output[e.OutputIndex]
+		if !item.acceptsToolProgress("function_call", e.ItemID) {
+			return nil
+		}
+		item = a.item(e.OutputIndex, e.ItemID)
 		replaceAccumulatedText(&item.arguments, e.Arguments)
 		item.argumentsPresent = true
 	case "response.mcp_call_arguments.delta":
@@ -412,7 +420,11 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !accumulatorStringsValid(e.JSON.ItemID, e.JSON.Delta) {
 			return invalid
 		}
-		item := a.item(e.OutputIndex, e.ItemID)
+		item := a.output[e.OutputIndex]
+		if !item.acceptsToolProgress("custom_tool_call", e.ItemID) {
+			return nil
+		}
+		item = a.item(e.OutputIndex, e.ItemID)
 		item.input.WriteString(e.Delta)
 		item.inputPresent = true
 	case "response.custom_tool_call_input.done":
@@ -420,7 +432,11 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !accumulatorStringsValid(e.JSON.ItemID, e.JSON.Input) {
 			return invalid
 		}
-		item := a.item(e.OutputIndex, e.ItemID)
+		item := a.output[e.OutputIndex]
+		if !item.acceptsToolProgress("custom_tool_call", e.ItemID) {
+			return nil
+		}
+		item = a.item(e.OutputIndex, e.ItemID)
 		replaceAccumulatedText(&item.input, e.Input)
 		item.inputPresent = true
 	default:
@@ -484,15 +500,27 @@ func accumulatorItemValid(item ResponseOutputItemUnion) bool {
 	return true
 }
 
+func (item *responseAccumulatedOutput) acceptsToolProgress(kind, id string) bool {
+	if item == nil || item.raw == "" || !item.idWasOmitted {
+		return true
+	}
+	switch item.itemType {
+	case "function_call", "custom_tool_call":
+		return item.itemType == kind && (item.id == "" || item.id == id)
+	default:
+		return true
+	}
+}
+
 func (a *ResponseAccumulator) item(index int64, id string) *responseAccumulatedOutput {
 	if a.output == nil {
 		a.output = make(map[int64]*responseAccumulatedOutput)
 	}
 	item := a.output[index]
 	if item == nil || (id != "" && item.id != "" && id != item.id) {
+		a.forgetShellCommandBound(item)
 		item = &responseAccumulatedOutput{text: make(map[int64]*strings.Builder)}
 		a.output[index] = item
-		a.itemRevision++
 	}
 	if id != "" {
 		item.id = id
@@ -513,10 +541,12 @@ func (a *ResponseAccumulator) text(index int64, id string, contentIndex int64) *
 func (a *ResponseAccumulator) addItem(index int64, source ResponseOutputItemUnion) {
 	// Full item snapshots replace the entire projection, even when the new
 	// content is empty or the corrected item has a different type.
+	a.forgetShellCommandBound(a.output[index])
 	delete(a.output, index)
 	item := a.item(index, source.ID)
 	item.itemType, item.callID, item.name = source.Type, source.CallID, source.Name
 	item.raw = source.RawJSON()
+	item.idWasOmitted = source.JSON.ID.Raw() == respjson.Omitted
 	switch source.Type {
 	case "message":
 		for contentIndex, part := range source.Content {
@@ -531,9 +561,8 @@ func (a *ResponseAccumulator) addItem(index int64, source ResponseOutputItemUnio
 		}
 	case "shell_call":
 		commands := gjson.Get(item.raw, "action.commands")
-		item.shellCommandsKnown = commands.IsArray()
-		if item.shellCommandsKnown {
-			item.shellCommandCount = int64(len(commands.Array()))
+		if commands.IsArray() {
+			a.setShellCommandBound(item, int64(len(commands.Array())))
 		}
 	case "function_call":
 		replaceAccumulatedText(&item.arguments, source.Arguments.OfString)

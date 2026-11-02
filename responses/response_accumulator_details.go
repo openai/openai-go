@@ -116,7 +116,7 @@ func (a *ResponseAccumulator) DetailedSnapshot() ResponseAccumulatorDetails {
 			Content:     make(map[int64]map[string]json.RawMessage),
 			Annotations: make(map[int64]map[int64]json.RawMessage),
 		}
-		if item.id != "" {
+		if item.raw == "" && item.id != "" {
 			projected.Item["id"] = accumulatedJSONString(item.id)
 		}
 		if item.argumentsPresent {

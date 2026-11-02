@@ -466,6 +466,9 @@ Sparse function, custom-tool and MCP argument events can be observed before an
 item arrives. They retain only supplied IDs and input; they do not invent tool
 names, server labels or a complete server item. A known different item kind or ID
 cannot be overwritten by MCP argument progress. Raw events remain available.
+For full function/custom items that omit `id`, the helper binds later progress
+IDs for identity checks while preserving that absence in `Item`. Conflicting
+progress does not replace the observed full item.
 
 For an optional typed result when terminal `output` is absent or null, call
 `ReconstructedResponse()` after feeding the accumulator a terminal event:
