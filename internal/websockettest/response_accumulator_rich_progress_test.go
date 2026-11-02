@@ -750,3 +750,47 @@ func TestResponsesAccumulatorOptionalToolIgnoresOtherFamily(t *testing.T) {
 		}
 	}
 }
+
+func TestResponsesAccumulatorShellCommandGuardsPreserveSnapshot(t *testing.T) {
+	for _, tc := range []struct {
+		kind     string
+		index    int
+		rejected bool
+	}{{"added", 0, true}, {"added", 2, true}, {"delta", 1, false}, {"done", 1, false}} {
+		t.Run(tc.kind+"/"+strconv.Itoa(tc.index), func(t *testing.T) {
+			var acc responses.ResponseAccumulator
+			richCreated(t, &acc)
+			action := json.RawMessage(`{"timeout_ms":1000,"commands":["o\u006ee"],"max_output_length":1000,"future":{"kept":true}}`)
+			richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 1, "output_index": 0, "item": map[string]any{"id": "shell", "type": "shell_call", "call_id": "call", "status": "in_progress", "action": action, "environment": map[string]any{"type": "local"}}})
+			before := acc.DetailedSnapshot()
+			input := map[string]any{"type": "response.shell_call_command." + tc.kind, "sequence_number": 2, "output_index": 0, "command_index": tc.index, "command": "unapplied"}
+			if tc.kind == "delta" {
+				delete(input, "command")
+				input["delta"] = "unapplied"
+			}
+			for attempt := 0; attempt < 2; attempt++ {
+				input["sequence_number"] = attempt + 2
+				data, err := json.Marshal(input)
+				if err != nil {
+					t.Fatal(err)
+				}
+				var event responses.ResponsesServerEventUnion
+				if err = json.Unmarshal(data, &event); err != nil {
+					t.Fatal(err)
+				}
+				if err = acc.AddEvent(event); (err != nil) != tc.rejected {
+					t.Errorf("changed command admission result: %v", err)
+				}
+				if !reflect.DeepEqual(before, acc.DetailedSnapshot()) {
+					t.Error("unapplied command changed raw action fields or encoding")
+				}
+			}
+			richEvent(t, &acc, map[string]any{"type": "response.shell_call_command.added", "sequence_number": 4, "output_index": 0, "command_index": 1, "command": "new"})
+			richEvent(t, &acc, map[string]any{"type": "response.shell_call_command.delta", "sequence_number": 5, "output_index": 0, "command_index": 1, "delta": "+tail"})
+			got := gjson.ParseBytes(acc.DetailedSnapshot().Output[0].Item["action"])
+			if got.Get("commands.0").Str != "one" || got.Get("commands.1").Str != "new+tail" || !got.Get("future.kept").Bool() {
+				t.Errorf("valid append lost commands or metadata: %s", got.Raw)
+			}
+		})
+	}
+}

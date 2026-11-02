@@ -12,12 +12,13 @@ import (
 // Buffers belong to the existing item projection and are discarded with a full
 // item replacement. They are materialized only when a caller requests details.
 type responseAccumulatedProgress struct {
-	code           *strings.Builder
-	status         string
-	summary        map[int64]*responseAccumulatedPart
-	summaryChanged bool
-	commands       map[int64]*strings.Builder
-	shellOutput    map[int64]*responseAccumulatedShellOutput
+	code            *strings.Builder
+	status          string
+	summary         map[int64]*responseAccumulatedPart
+	summaryChanged  bool
+	commands        map[int64]*strings.Builder
+	commandsChanged bool
+	shellOutput     map[int64]*responseAccumulatedShellOutput
 }
 
 type responseAccumulatedShellOutput struct {
@@ -218,6 +219,7 @@ func (a *ResponseAccumulator) addRichEvent(event ResponsesServerEventUnion) erro
 		if command == nil {
 			return nil
 		}
+		progress.commandsChanged = true
 		if field == "command" {
 			replaceAccumulatedText(command, value.Str)
 		} else {
@@ -363,7 +365,7 @@ func (item *responseAccumulatedOutput) renderProgress(projected *ResponseAccumul
 		}
 		projected.Item["summary"] = accumulatedJSON(summary)
 	}
-	if progress.commands != nil {
+	if progress.commandsChanged {
 		commands := make([]string, len(progress.commands))
 		for i := range commands {
 			commands[i] = progress.commands[int64(i)].String()
