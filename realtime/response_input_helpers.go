@@ -51,7 +51,9 @@ type responseCreateInput struct {
 }
 
 func (request responseCreateInput) MarshalJSON() ([]byte, error) {
-	encoded, err := json.Marshal(request.event)
+	eventTemplate := request.event
+	eventTemplate.Response.Input = nil
+	encoded, err := json.Marshal(eventTemplate)
 	if err != nil {
 		return nil, err
 	}

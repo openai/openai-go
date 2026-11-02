@@ -234,19 +234,25 @@ func TestRealtimeResponseCreateRetainsPendingSendLimit(t *testing.T) {
 }
 
 func TestRealtimeResponseCreateEncodingFailureLeavesConnectionUsable(t *testing.T) {
-	ctx, connection, frames := connectRealtimeInputPeer(t, realtime.RealtimeConnectionOptions{})
-	cause := errors.New("synthetic input encoder failure")
-	probe := &realtimeInputEncodingProbe{err: cause}
-	err := connection.SendResponseCreate(ctx, param.Override[realtime.ResponseCreateEventParam](probe), nil)
-	if !errors.Is(err, cause) || probe.calls.Load() != 1 {
-		t.Fatalf("serialization cause was lost: calls=%d, err=%v", probe.calls.Load(), err)
-	}
-	requireRealtimeInputNotAttempted(t, err)
-	if err := connection.SendResponseCreate(ctx, realtime.ResponseCreateEventParam{}, nil); err != nil {
-		t.Fatal(err)
-	}
-	if first := readRealtimeInputFrame(t, ctx, frames); !reflect.DeepEqual(first["response"], map[string]any{"input": []any{}}) {
-		t.Fatalf("failed serialization wrote a command: %#v", first)
+	for _, nested := range []bool{false, true} {
+		ctx, connection, frames := connectRealtimeInputPeer(t, realtime.RealtimeConnectionOptions{})
+		cause := errors.New("synthetic input encoder failure")
+		probe := &realtimeInputEncodingProbe{err: cause}
+		event := param.Override[realtime.ResponseCreateEventParam](probe)
+		if nested {
+			event = realtime.ResponseCreateEventParam{Response: param.Override[realtime.RealtimeResponseCreateParams](probe)}
+		}
+		err := connection.SendResponseCreate(ctx, event, nil)
+		if !errors.Is(err, cause) || probe.calls.Load() != 1 {
+			t.Fatalf("serialization cause was lost: nested=%t, calls=%d, err=%v", nested, probe.calls.Load(), err)
+		}
+		requireRealtimeInputNotAttempted(t, err)
+		if err := connection.SendResponseCreate(ctx, realtime.ResponseCreateEventParam{}, nil); err != nil {
+			t.Fatal(err)
+		}
+		if first := readRealtimeInputFrame(t, ctx, frames); !reflect.DeepEqual(first["response"], map[string]any{"input": []any{}}) {
+			t.Fatalf("failed serialization wrote a command: %#v", first)
+		}
 	}
 }
 
@@ -284,5 +290,48 @@ func TestRealtimeResponseCreateCancellationDuringEncodingDoesNotWrite(t *testing
 	}
 	if first := readRealtimeInputFrame(t, ctx, frames); first["event_id"] != nil {
 		t.Fatalf("canceled command reached the peer: %#v", first)
+	}
+}
+
+func TestRealtimeResponseCreateSkipsSupersededTypedInput(t *testing.T) {
+	for _, failingEncoder := range []bool{false, true} {
+		name := "multiple legacy variants"
+		if failingEncoder {
+			name = "unused input encoder"
+		}
+		t.Run(name, func(t *testing.T) {
+			ctx, connection, frames := connectRealtimeInputPeer(t, realtime.RealtimeConnectionOptions{})
+			probe := &realtimeInputEncodingProbe{err: errors.New("unused input encoder")}
+			oldItem := realtime.ConversationItemParamOfFunctionCallOutput("old_call", "old output")
+			oldItem.OfRealtimeUserMessageItem = &realtime.RealtimeConversationItemUserMessageParam{}
+			if failingEncoder {
+				oldItem = param.Override[realtime.ConversationItemUnionParam](probe)
+			}
+			originalInput := []realtime.ConversationItemUnionParam{oldItem}
+			event := realtime.ResponseCreateEventParam{
+				EventID: param.NewOpt("evt_replaced"),
+				Response: realtime.RealtimeResponseCreateParams{
+					Instructions: param.NewOpt("retain"),
+					Input:        originalInput,
+				},
+			}
+			if sendErr := connection.SendResponseCreate(ctx, event, []realtime.ResponseInput{realtime.ResponseInputReference("item_prior-1")}); sendErr != nil {
+				t.Fatalf("superseded input blocked a valid replacement: %v", sendErr)
+			}
+			actual := readRealtimeInputFrame(t, ctx, frames)
+			want := map[string]any{
+				"type": "response.create", "event_id": "evt_replaced",
+				"response": map[string]any{
+					"instructions": "retain",
+					"input":        []any{map[string]any{"type": "item_reference", "id": "item_prior-1"}},
+				},
+			}
+			if !reflect.DeepEqual(actual, want) || probe.calls.Load() != 0 {
+				t.Fatalf("wrong replacement or unused encoding: event=%#v, calls=%d", actual, probe.calls.Load())
+			}
+			if !reflect.DeepEqual(event.Response.Input, []realtime.ConversationItemUnionParam{oldItem}) {
+				t.Fatal("helper changed the caller's original input")
+			}
+		})
 	}
 }
