@@ -112,17 +112,22 @@ func (a *ResponseAccumulator) addRichEvent(event ResponsesServerEventUnion) erro
 			if source.Exists() && !source.IsArray() {
 				return invalid
 			}
-			progress.summary = make(map[int64]*responseAccumulatedPart)
+			summary := make(map[int64]*responseAccumulatedPart)
 			for i, part := range source.Array() {
-				progress.summary[int64(i)] = accumulatedPart(part.Raw)
+				if !part.IsObject() {
+					return invalid
+				}
+				summary[int64(i)] = accumulatedPart(part.Raw)
 			}
+			progress.summary = summary
 		}
 		if group == "reasoning_summary_part" {
 			part := raw.Get("part")
 			if !part.IsObject() || part.Get("type").Str != "summary_text" || part.Get("text").Type != gjson.String {
 				return invalid
 			}
-			if position > int64(len(progress.summary)) {
+			partCount := int64(len(progress.summary))
+			if position > partCount || (strings.HasSuffix(kind, ".added") && position != partCount) {
 				return invalid
 			}
 			if strings.HasSuffix(kind, ".done") && progress.summary[position] == nil {

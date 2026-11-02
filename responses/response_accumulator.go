@@ -557,7 +557,9 @@ func (a *ResponseAccumulator) addItem(index int64, source ResponseOutputItemUnio
 		}
 	case "reasoning":
 		for pos, part := range gjson.Get(item.raw, "content").Array() {
-			item.replacePart(int64(pos), part.Raw)
+			if part.IsObject() {
+				item.replacePart(int64(pos), part.Raw)
+			}
 		}
 	case "shell_call":
 		commands := gjson.Get(item.raw, "action.commands")

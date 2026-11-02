@@ -825,3 +825,111 @@ func TestResponsesAccumulatorInvalidSummarySeedDoesNotChangeAdmission(t *testing
 		t.Errorf("corrected full item did not restore valid progress: %#v", got)
 	}
 }
+
+func TestResponsesAccumulatorOpaqueReasoningContentPreservesWireShape(t *testing.T) {
+	var acc responses.ResponseAccumulator
+	richCreated(t, &acc)
+	content := []any{"opaque", []any{"nested"}, nil, 17, true, map[string]any{"type": "reasoning_text", "text": "seed", "future_part": true}}
+	richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 1, "output_index": 0, "item": map[string]any{"id": "reasoning", "type": "reasoning", "status": "in_progress", "summary": []any{}, "content": content, "future_item": true}})
+	assertOpaque := func() {
+		t.Helper()
+		got := acc.DetailedSnapshot().Output[0]
+		values := gjson.ParseBytes(got.Item["content"]).Array()
+		if len(values) != len(content) {
+			t.Fatalf("changed content length: %s", got.Item["content"])
+		}
+		for i := 0; i < 5; i++ {
+			want, err := json.Marshal(content[i])
+			if err != nil {
+				t.Fatal(err)
+			}
+			if values[i].Raw != string(want) {
+				t.Errorf("changed opaque content %d: got %s, want %s", i, values[i].Raw, want)
+			}
+			if _, indexed := got.Content[int64(i)]; indexed {
+				t.Errorf("opaque content %d acquired an object projection", i)
+			}
+		}
+		if len(got.Content) != 1 || string(got.Item["future_item"]) != "true" {
+			t.Error("lost indexed object or item metadata")
+		}
+	}
+	assertOpaque()
+	detached := acc.DetailedSnapshot()
+	detached.Output[0].Item["content"][0] = '!'
+	assertOpaque()
+	richEvent(t, &acc, map[string]any{"type": "response.reasoning_text.delta", "sequence_number": 2, "output_index": 0, "item_id": "reasoning", "content_index": 5, "delta": " kept"})
+	assertOpaque()
+	got := acc.DetailedSnapshot().Output[0]
+	if string(got.Content[5]["text"]) != `"seed kept"` || string(got.Content[5]["future_part"]) != "true" || acc.Snapshot().OutputText() != "" {
+		t.Error("known reasoning progress or metadata changed")
+	}
+}
+
+func TestResponsesAccumulatorNonObjectSummarySeedDoesNotRewriteRaw(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		value any
+	}{{"scalar", "opaque"}, {"array", []any{"nested"}}, {"null", nil}} {
+		t.Run(tc.name, func(t *testing.T) {
+			var acc responses.ResponseAccumulator
+			richCreated(t, &acc)
+			part := map[string]any{"type": "summary_text", "text": "seed", "future": true}
+			item := map[string]any{"id": "reasoning", "type": "reasoning", "status": "in_progress", "summary": []any{part, tc.value}, "future_item": true}
+			richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 1, "output_index": 0, "item": item})
+			before := acc.DetailedSnapshot()
+			for sequence := 2; sequence <= 3; sequence++ {
+				data, err := json.Marshal(map[string]any{"type": "response.reasoning_summary_text.delta", "sequence_number": sequence, "output_index": 0, "item_id": "reasoning", "summary_index": 0, "delta": " kept"})
+				if err != nil {
+					t.Fatal(err)
+				}
+				var event responses.ResponsesServerEventUnion
+				if err = json.Unmarshal(data, &event); err != nil {
+					t.Fatal(err)
+				}
+				if err = acc.AddEvent(event); err == nil {
+					t.Error("accepted progress over a non-object summary seed")
+				}
+				if !reflect.DeepEqual(before, acc.DetailedSnapshot()) {
+					t.Error("summary progress rewrote opaque raw data")
+				}
+			}
+			item["summary"] = []any{part}
+			richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 4, "output_index": 0, "item": item})
+			richEvent(t, &acc, map[string]any{"type": "response.reasoning_summary_text.delta", "sequence_number": 5, "output_index": 0, "item_id": "reasoning", "summary_index": 0, "delta": " kept"})
+			got := acc.DetailedSnapshot().Output[0].Item
+			if gjson.GetBytes(got["summary"], "0.text").Str != "seed kept" || !gjson.GetBytes(got["summary"], "0.future").Bool() || string(got["future_item"]) != "true" {
+				t.Error("full-item correction lost valid progress or metadata")
+			}
+		})
+	}
+}
+
+func TestResponsesAccumulatorDuplicateSummaryAddedPreservesSnapshot(t *testing.T) {
+	var acc responses.ResponseAccumulator
+	richCreated(t, &acc)
+	richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 1, "output_index": 0, "item": map[string]any{"id": "reasoning", "type": "reasoning", "status": "in_progress", "summary": []any{map[string]any{"type": "summary_text", "text": "original", "future": true}}}})
+	before := acc.DetailedSnapshot()
+	for sequence := 2; sequence <= 3; sequence++ {
+		data, err := json.Marshal(map[string]any{"type": "response.reasoning_summary_part.added", "sequence_number": sequence, "output_index": 0, "item_id": "reasoning", "summary_index": 0, "part": map[string]any{"type": "summary_text", "text": "replacement"}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		var event responses.ResponsesServerEventUnion
+		if err = json.Unmarshal(data, &event); err != nil {
+			t.Fatal(err)
+		}
+		if err = acc.AddEvent(event); err == nil {
+			t.Error("accepted a duplicate summary addition")
+		}
+		if !reflect.DeepEqual(before, acc.DetailedSnapshot()) {
+			t.Error("duplicate summary addition replaced existing data")
+		}
+	}
+	richEvent(t, &acc, map[string]any{"type": "response.reasoning_summary_part.added", "sequence_number": 4, "output_index": 0, "item_id": "reasoning", "summary_index": 1, "part": map[string]any{"type": "summary_text", "text": "appended", "future": true}})
+	richEvent(t, &acc, map[string]any{"type": "response.reasoning_summary_part.done", "sequence_number": 5, "output_index": 0, "item_id": "reasoning", "summary_index": 0, "part": map[string]any{"type": "summary_text", "text": "done", "future_done": true}})
+	got := acc.DetailedSnapshot().Output[0].Item["summary"]
+	if gjson.GetBytes(got, "#").Int() != 2 || gjson.GetBytes(got, "0.text").Str != "done" || !gjson.GetBytes(got, "0.future_done").Bool() || gjson.GetBytes(got, "1.text").Str != "appended" || !gjson.GetBytes(got, "1.future").Bool() {
+		t.Errorf("valid append/done authority changed: %s", got)
+	}
+}
