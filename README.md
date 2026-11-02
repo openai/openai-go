@@ -588,7 +588,8 @@ if err != nil {
 defer conn.Abort()
 ```
 
-Use `Send` and `Recv` for typed commands and events. See the
+Use `Send` and `Recv` for typed commands and events, or `SendResponseCreate` to
+combine ordinary input items with references to existing session items. See the
 [Realtime and Translation guide](realtime/README.md) for event handling,
 connection ownership, and finishing a Translation session.
 
