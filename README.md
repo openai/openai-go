@@ -453,10 +453,12 @@ for _, item := range details.Output {
 shell commands and output, and code/search/image/MCP call status. Summary updates
 appear in `Item["summary"]`; other tool fields keep their existing wire-shaped
 locations in `Item`. Reasoning content is indexed in `Content` and reflected in
-an existing or contiguous `Item["content"]` array. Shell output content uses
-`Content` keyed by the event's `command_index` and a contiguous observed prefix
-in `Item["output"]`.
-Sparse parts stay indexed without fabricated array entries or shell outcomes.
+an existing or contiguous `Item["content"]` array. Shell output uses `Content`
+keyed by the event's `command_index`: deltas provide observed `stdout`/`stderr`,
+and done replaces them with `output`, the complete array of chunks for that
+command. `Item["output"]` stays the last full-item array; the helper does not guess
+how its flat entries group by command. Sparse facts do not invent array entries
+or shell outcomes. Missing command bounds remain unknown.
 Reasoning text never becomes `OutputText()`.
 Full parts/items and supplied terminal output replace earlier progress.
 

@@ -56,7 +56,7 @@ func TestResponsesAccumulatorRichProgress(t *testing.T) {
 		return map[string]any{"id": "item_fixture", "type": "shell_call", "call_id": "call_fixture", "status": "in_progress", "action": map[string]any{"commands": []any{"seed "}, "timeout_ms": 1000, "max_output_length": 1000}, "environment": map[string]any{"type": "local"}}
 	}
 	shellOutput := func() map[string]any {
-		return map[string]any{"id": "item_fixture", "type": "shell_call_output", "call_id": "call_fixture", "output": []any{map[string]any{"stdout": "seed ", "stderr": "old ", "outcome": map[string]any{"type": "exit", "exit_code": 0}, "provider_metadata": true}}}
+		return map[string]any{"id": "item_fixture", "type": "shell_call_output", "status": "in_progress", "max_output_length": 1000, "call_id": "call_fixture", "output": []any{map[string]any{"stdout": "seed ", "stderr": "old ", "outcome": map[string]any{"type": "exit", "exit_code": 0}, "provider_metadata": true}}}
 	}
 	type progressCase struct {
 		event      string
@@ -74,8 +74,8 @@ func TestResponsesAccumulatorRichProgress(t *testing.T) {
 		{"response.shell_call_command.added", shell, map[string]any{"command_index": 1, "command": "added"}, "Item.action.commands.1", "added"},
 		{"response.shell_call_command.delta", shell, map[string]any{"command_index": 0, "delta": "kept"}, "Item.action.commands.0", "seed kept"},
 		{"response.shell_call_command.done", shell, map[string]any{"command_index": 0, "command": "corrected"}, "Item.action.commands.0", "corrected"},
-		{"response.shell_call_output_content.delta", shellOutput, map[string]any{"command_index": 0, "delta": map[string]any{"stdout": "kept", "stderr": "err"}}, "Item.output.0.stdout", "seed kept"},
-		{"response.shell_call_output_content.done", shellOutput, map[string]any{"command_index": 0, "output": []any{map[string]any{"stdout": "corrected", "stderr": "final", "outcome": map[string]any{"type": "exit", "exit_code": 7}, "provider_metadata": true}}}, "Item.output.0.stdout", "corrected"},
+		{"response.shell_call_output_content.delta", shellOutput, map[string]any{"command_index": 0, "delta": map[string]any{"stdout": "kept", "stderr": "err"}}, "Content.0.stdout", "kept"},
+		{"response.shell_call_output_content.done", shellOutput, map[string]any{"command_index": 0, "output": []any{map[string]any{"stdout": "corrected", "stderr": "final", "outcome": map[string]any{"type": "exit", "exit_code": 7}, "provider_metadata": true}}}, "Content.0.output.0.stdout", "corrected"},
 		{"response.code_interpreter_call_code.delta", code, map[string]any{"delta": "kept"}, "Item.code", "seed kept"},
 		{"response.code_interpreter_call_code.done", code, map[string]any{"code": "corrected"}, "Item.code", "corrected"},
 	}
@@ -295,29 +295,26 @@ func TestResponsesAccumulatorSparseShellOutput(t *testing.T) {
 				var acc responses.ResponseAccumulator
 				richCreated(t, &acc)
 				richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 1, "output_index": 0, "item": map[string]any{"id": "shell", "type": "shell_call", "call_id": "call", "status": "in_progress", "action": map[string]any{"commands": []any{"one", "two"}, "timeout_ms": 1000, "max_output_length": 1000}, "environment": map[string]any{"type": "local"}}})
-				richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 2, "output_index": 1, "item": map[string]any{"id": "shell_output", "type": "shell_call_output", "call_id": "call", "output": []any{}}})
+				richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 2, "output_index": 1, "item": map[string]any{"id": "shell_output", "type": "shell_call_output", "status": "in_progress", "max_output_length": 1000, "call_id": "call", "output": []any{}}})
 				event := map[string]any{"type": "response.shell_call_output_content." + kind, "sequence_number": 3, "output_index": 1, "item_id": "shell_output", "command_index": index, "delta": map[string]any{"stdout": "observed"}, "output": []any{map[string]any{"stdout": "observed", "stderr": "", "outcome": map[string]any{"type": "exit", "exit_code": 7}, "future": true}}}
 				richEvent(t, &acc, event)
 				item := acc.DetailedSnapshot().Output[1]
 				row := item.Content[int64(index)]
-				if string(row["stdout"]) != `"observed"` {
-					t.Fatalf("missing indexed shell progress: %#v", item)
-				}
 				if kind == "delta" {
+					if string(row["stdout"]) != `"observed"` {
+						t.Fatalf("missing indexed shell progress: %#v", item)
+					}
 					for _, key := range []string{"stderr", "outcome"} {
 						if _, ok := row[key]; ok {
 							t.Fatalf("invented %s: %s", key, row[key])
 						}
 					}
-				} else if string(row["future"]) != "true" || gjson.GetBytes(row["outcome"], "exit_code").Int() != 7 {
+				} else if gjson.GetBytes(row["output"], "0.future").Bool() != true || gjson.GetBytes(row["output"], "0.outcome.exit_code").Int() != 7 {
 					t.Fatalf("lost full output metadata: %#v", row)
 				}
 				values := gjson.ParseBytes(item.Item["output"]).Array()
-				if index == 1 && len(values) != 0 {
-					t.Fatalf("invented output array holes: %s", item.Item["output"])
-				}
-				if index == 0 && (len(values) != 1 || values[0].Get("stdout").Str != "observed") {
-					t.Fatalf("contiguous output missing: %s", item.Item["output"])
+				if len(values) != 0 {
+					t.Fatalf("guessed flat output placement: %s", item.Item["output"])
 				}
 				before := acc.DetailedSnapshot()
 				for _, bad := range []int64{-1, 2, 1 << 40} {
@@ -339,16 +336,16 @@ func TestResponsesAccumulatorSparseShellOutput(t *testing.T) {
 	}
 }
 
-func TestResponsesAccumulatorShellOutputAppendExtent(t *testing.T) {
+func TestResponsesAccumulatorShellOutputWithoutKnownBound(t *testing.T) {
 	var acc responses.ResponseAccumulator
 	richCreated(t, &acc)
-	richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 1, "output_index": 0, "item": map[string]any{"id": "shell_output", "type": "shell_call_output", "call_id": "unobserved_call", "output": []any{}}})
-	for _, index := range []int{0, 1} {
+	richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 1, "output_index": 0, "item": map[string]any{"id": "shell_output", "type": "shell_call_output", "status": "in_progress", "max_output_length": 1000, "call_id": "unobserved_call", "output": []any{}}})
+	for _, index := range []int{0, 7} {
 		richEvent(t, &acc, map[string]any{"type": "response.shell_call_output_content.delta", "sequence_number": index + 2, "output_index": 0, "item_id": "shell_output", "command_index": index, "delta": map[string]any{"stderr": "observed"}})
 	}
 	item := acc.DetailedSnapshot().Output[0]
-	if len(item.Content) != 2 || len(gjson.ParseBytes(item.Item["output"]).Array()) != 2 {
-		t.Fatalf("missing append-only observed rows: %#v", item)
+	if len(item.Content) != 2 || len(gjson.ParseBytes(item.Item["output"]).Array()) != 0 {
+		t.Fatalf("missing sparse observations or guessed flat output: %#v", item)
 	}
 	for _, row := range item.Content {
 		if len(row) != 1 || string(row["stderr"]) != `"observed"` {
@@ -369,7 +366,7 @@ func BenchmarkResponsesAccumulatorShellFragments(b *testing.B) {
 				output[i] = map[string]any{"stdout": "", "stderr": "", "outcome": map[string]any{"type": "exit", "exit_code": 0}}
 			}
 			richEvent(b, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 1, "output_index": 0, "item": map[string]any{"id": "shell", "type": "shell_call", "call_id": "call", "status": "in_progress", "action": map[string]any{"commands": commands, "timeout_ms": 1000, "max_output_length": 1000}, "environment": map[string]any{"type": "local"}}})
-			richEvent(b, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 2, "output_index": 1, "item": map[string]any{"id": "shell_output", "type": "shell_call_output", "call_id": "call", "output": output}})
+			richEvent(b, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 2, "output_index": 1, "item": map[string]any{"id": "shell_output", "type": "shell_call_output", "status": "in_progress", "max_output_length": 1000, "call_id": "call", "output": output}})
 			raw := `{"type":"response.shell_call_output_content.delta","sequence_number":3,"output_index":1,"item_id":"shell_output","command_index":0,"delta":{"stdout":"x"}}`
 			var event responses.ResponsesServerEventUnion
 			if err := json.Unmarshal([]byte(raw), &event); err != nil {
@@ -400,7 +397,7 @@ func TestResponsesAccumulatorShellOutputRefreshesCommandBounds(t *testing.T) {
 		richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 1, "output_index": 0, "item": map[string]any{"id": "shell", "type": "shell_call", "call_id": "call", "status": "in_progress", "action": map[string]any{"commands": commands, "timeout_ms": 1000, "max_output_length": 1000}, "environment": map[string]any{"type": "local"}}})
 	}
 	addCall([]string{"one", "two"})
-	richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 2, "output_index": 1, "item": map[string]any{"id": "shell_output", "type": "shell_call_output", "call_id": "call", "output": []any{}}})
+	richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 2, "output_index": 1, "item": map[string]any{"id": "shell_output", "type": "shell_call_output", "status": "in_progress", "max_output_length": 1000, "call_id": "call", "output": []any{}}})
 	raw := `{"type":"response.shell_call_output_content.delta","sequence_number":3,"output_index":1,"item_id":"shell_output","command_index":1,"delta":{"stdout":"x"}}`
 	addMCPProgressEvent(t, &acc, raw)
 	addCall([]string{"one"})
@@ -422,9 +419,103 @@ func TestResponsesAccumulatorShellOutputRefreshesCommandBounds(t *testing.T) {
 	}
 	acc.Reset()
 	richCreated(t, &acc)
-	richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 1, "output_index": 0, "item": map[string]any{"id": "shell_output", "type": "shell_call_output", "call_id": "call", "output": []any{}}})
+	richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 1, "output_index": 0, "item": map[string]any{"id": "shell_output", "type": "shell_call_output", "status": "in_progress", "max_output_length": 1000, "call_id": "call", "output": []any{}}})
 	richEvent(t, &acc, map[string]any{"type": "response.shell_call_output_content.delta", "sequence_number": 2, "output_index": 0, "item_id": "shell_output", "command_index": 0, "delta": map[string]any{"stdout": "reset"}})
 	if got := richValue(t, &acc, "Content.0.stdout"); got != "reset" {
 		t.Fatalf("stale bounds after Reset: %q", got)
+	}
+}
+
+func TestResponsesAccumulatorShellOutputCommandContents(t *testing.T) {
+	var acc responses.ResponseAccumulator
+	richCreated(t, &acc)
+	richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 1, "output_index": 0, "item": map[string]any{"id": "shell", "type": "shell_call", "call_id": "call", "status": "in_progress", "action": map[string]any{"commands": []any{"one", "two"}, "timeout_ms": 1000, "max_output_length": 1000}, "environment": map[string]any{"type": "local"}}})
+	item := map[string]any{"id": "shell_output", "type": "shell_call_output", "status": "in_progress", "max_output_length": 1000, "call_id": "call", "output": []any{map[string]any{"stdout": "ungrouped", "stderr": "", "outcome": map[string]any{"type": "exit", "exit_code": 0}}}}
+	richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 2, "output_index": 1, "item": item})
+	original := acc.DetailedSnapshot().Output[1].Item["output"]
+	for i, step := range []struct {
+		index int
+		text  string
+	}{{1, "first"}, {0, "other"}, {1, "+tail"}} {
+		richEvent(t, &acc, map[string]any{"type": "response.shell_call_output_content.delta", "sequence_number": i + 3, "output_index": 1, "item_id": "shell_output", "command_index": step.index, "delta": map[string]any{"stdout": step.text}})
+	}
+	prior := acc.DetailedSnapshot()
+	if got := string(prior.Output[1].Content[1]["stdout"]); got != `"first+tail"` {
+		t.Fatalf("invented flat-to-command grouping: %s", got)
+	}
+	rows := []any{
+		map[string]any{"stdout": "chunk-one", "stderr": "", "outcome": map[string]any{"type": "exit", "exit_code": 7}, "created_by": "actor-one", "future": map[string]any{"kept": true}},
+		map[string]any{"stdout": "chunk-two", "stderr": "timeout", "outcome": map[string]any{"type": "timeout"}, "created_by": "actor-two"},
+	}
+	richEvent(t, &acc, map[string]any{"type": "response.shell_call_output_content.done", "sequence_number": 6, "output_index": 1, "item_id": "shell_output", "command_index": 1, "output": rows})
+	got := acc.DetailedSnapshot().Output[1]
+	want, err := json.Marshal(rows)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Content) != 2 || len(got.Content[1]) != 1 || string(got.Content[1]["output"]) != string(want) {
+		t.Fatalf("lost per-command chunks/metadata: %#v", got.Content)
+	}
+	if string(got.Content[0]["stdout"]) != `"other"` {
+		t.Fatal("one command replaced another command's progress")
+	}
+	if !reflect.DeepEqual(original, got.Item["output"]) {
+		t.Fatal("guessed placement in ungrouped flat output")
+	}
+	if string(prior.Output[1].Content[1]["stdout"]) != `"first+tail"` {
+		t.Fatal("done mutated earlier returned snapshot")
+	}
+	got.Content[1]["output"][0] = '!'
+	if string(acc.DetailedSnapshot().Output[1].Content[1]["output"]) != string(want) {
+		t.Fatal("caller mutation changed retained chunks")
+	}
+	richEvent(t, &acc, map[string]any{"type": "response.shell_call_output_content.done", "sequence_number": 7, "output_index": 1, "item_id": "shell_output", "command_index": 1, "output": []any{}})
+	if got := acc.DetailedSnapshot().Output[1].Content[1]; len(got) != 1 || string(got["output"]) != "[]" {
+		t.Fatalf("empty done did not replace command contents: %#v", got)
+	}
+	item["status"] = "completed"
+	item["output"] = rows
+	richEvent(t, &acc, map[string]any{"type": "response.output_item.done", "sequence_number": 8, "output_index": 1, "item": item})
+	if got := acc.DetailedSnapshot().Output[1]; len(got.Content) != 0 || string(got.Item["output"]) != string(want) {
+		t.Fatal("full item did not replace all command facts")
+	}
+	richEvent(t, &acc, map[string]any{"type": "response.completed", "sequence_number": 9, "response": richLifecycleResponse("completed", []any{})})
+	if len(acc.DetailedSnapshot().Output) != 0 {
+		t.Fatal("terminal empty output did not clear command facts")
+	}
+}
+
+func TestResponsesAccumulatorShellOutputUnknownBounds(t *testing.T) {
+	var acc responses.ResponseAccumulator
+	richCreated(t, &acc)
+	richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 1, "output_index": 0, "item": map[string]any{"id": "shell_output", "type": "shell_call_output", "status": "in_progress", "max_output_length": 1000, "call_id": "unobserved_call", "output": []any{}}})
+	index := int64(1) << 40
+	richEvent(t, &acc, map[string]any{"type": "response.shell_call_output_content.delta", "sequence_number": 2, "output_index": 0, "item_id": "shell_output", "command_index": index, "delta": map[string]any{"stderr": "observed"}})
+	got := acc.DetailedSnapshot().Output[0]
+	if len(got.Content) != 1 || len(got.Content[index]) != 1 || string(got.Content[index]["stderr"]) != `"observed"` || string(got.Item["output"]) != "[]" {
+		t.Fatalf("unknown bounds lost sparse facts or invented output: %#v", got)
+	}
+	richEvent(t, &acc, map[string]any{"type": "response.shell_call_output_content.done", "sequence_number": 3, "output_index": 0, "item_id": "shell_output", "command_index": index, "output": []any{}})
+	got = acc.DetailedSnapshot().Output[0]
+	if len(got.Content) != 1 || len(got.Content[index]) != 1 || string(got.Content[index]["output"]) != "[]" {
+		t.Fatalf("sparse empty command contents not retained: %#v", got)
+	}
+}
+
+func TestResponsesAccumulatorShellOutputKnownEmptyBound(t *testing.T) {
+	var acc responses.ResponseAccumulator
+	richCreated(t, &acc)
+	richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 1, "output_index": 0, "item": map[string]any{"id": "shell", "type": "shell_call", "call_id": "call", "status": "in_progress", "action": map[string]any{"commands": []any{}, "timeout_ms": 1000, "max_output_length": 1000}, "environment": map[string]any{"type": "local"}}})
+	richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 2, "output_index": 1, "item": map[string]any{"id": "shell_output", "type": "shell_call_output", "status": "in_progress", "max_output_length": 1000, "call_id": "call", "output": []any{}}})
+	prior := acc.DetailedSnapshot()
+	var event responses.ResponsesServerEventUnion
+	if err := json.Unmarshal([]byte(`{"type":"response.shell_call_output_content.delta","sequence_number":3,"output_index":1,"item_id":"shell_output","command_index":0,"delta":{"stdout":"rejected"}}`), &event); err != nil {
+		t.Fatal(err)
+	}
+	if err := acc.AddEvent(event); err == nil {
+		t.Fatal("explicit empty command array was treated as unknown")
+	}
+	if !reflect.DeepEqual(prior, acc.DetailedSnapshot()) {
+		t.Fatal("rejected command changed snapshot")
 	}
 }

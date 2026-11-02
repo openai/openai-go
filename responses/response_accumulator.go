@@ -70,6 +70,7 @@ type responseAccumulatedOutput struct {
 	inputPresent               bool
 	progress                   *responseAccumulatedProgress
 	shellCommandCount          int64
+	shellCommandsKnown         bool
 }
 
 // Reset releases only this helper's state, including its lane and turn binding.
@@ -529,7 +530,11 @@ func (a *ResponseAccumulator) addItem(index int64, source ResponseOutputItemUnio
 			item.replacePart(int64(pos), part.Raw)
 		}
 	case "shell_call":
-		item.shellCommandCount = int64(len(gjson.Get(item.raw, "action.commands").Array()))
+		commands := gjson.Get(item.raw, "action.commands")
+		item.shellCommandsKnown = commands.IsArray()
+		if item.shellCommandsKnown {
+			item.shellCommandCount = int64(len(commands.Array()))
+		}
 	case "function_call":
 		replaceAccumulatedText(&item.arguments, source.Arguments.OfString)
 	case "mcp_call":

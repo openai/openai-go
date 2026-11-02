@@ -12,21 +12,19 @@ import (
 // Buffers belong to the existing item projection and are discarded with a full
 // item replacement. They are materialized only when a caller requests details.
 type responseAccumulatedProgress struct {
-	code               *strings.Builder
-	status             string
-	summary            map[int64]*responseAccumulatedPart
-	summaryChanged     bool
-	commands           map[int64]*strings.Builder
-	shellOutput        map[int64]*responseAccumulatedShellOutput
-	shellOutputChanged bool
-	shellOutputExtent  int64
-	shellCallRevision  uint64
-	shellCallKnown     bool
-	shellCommandBound  int64
+	code              *strings.Builder
+	status            string
+	summary           map[int64]*responseAccumulatedPart
+	summaryChanged    bool
+	commands          map[int64]*strings.Builder
+	shellOutput       map[int64]*responseAccumulatedShellOutput
+	shellCallRevision uint64
+	shellCallKnown    bool
+	shellCommandBound int64
 }
 
 type responseAccumulatedShellOutput struct {
-	raw                          string
+	doneOutput                   string
 	stdout, stderr               strings.Builder
 	stdoutPresent, stderrPresent bool
 }
@@ -230,36 +228,18 @@ func (a *ResponseAccumulator) addRichEvent(event ResponsesServerEventUnion) erro
 			command.WriteString(value.Str)
 		}
 	case "shell_call_output_content":
-		if progress.shellOutput == nil {
-			source := gjson.Get(item.raw, "output")
-			if !source.IsArray() {
-				return invalid
-			}
-			output := make(map[int64]*responseAccumulatedShellOutput)
-			for i, value := range source.Array() {
-				row, err := accumulatedShellOutput(value)
-				if err != nil {
-					return err
-				}
-				output[int64(i)] = row
-			}
-			progress.shellOutput = output
-			progress.shellOutputExtent = int64(len(output))
-		}
-		output := progress.shellOutput[position]
 		if !a.shellOutputIndexValid(item, position) {
 			return invalid
 		}
 		if strings.HasSuffix(kind, ".done") {
 			values := raw.Get("output")
-			if !values.IsArray() || len(values.Array()) == 0 {
+			if !values.IsArray() {
 				return invalid
 			}
-			replacement, err := accumulatedShellOutput(values.Array()[0])
-			if err != nil {
-				return err
+			if progress.shellOutput == nil {
+				progress.shellOutput = make(map[int64]*responseAccumulatedShellOutput)
 			}
-			progress.shellOutput[position] = replacement
+			progress.shellOutput[position] = &responseAccumulatedShellOutput{doneOutput: strings.Clone(values.Raw)}
 		} else {
 			delta := raw.Get("delta")
 			if !delta.IsObject() {
@@ -269,6 +249,13 @@ func (a *ResponseAccumulator) addRichEvent(event ResponsesServerEventUnion) erro
 			if (stdout.Exists() && stdout.Type != gjson.String) || (stderr.Exists() && stderr.Type != gjson.String) {
 				return invalid
 			}
+			if progress.shellOutput == nil {
+				progress.shellOutput = make(map[int64]*responseAccumulatedShellOutput)
+			}
+			output := progress.shellOutput[position]
+			if output != nil && output.doneOutput != "" {
+				return nil
+			}
 			if output == nil {
 				output = &responseAccumulatedShellOutput{}
 				progress.shellOutput[position] = output
@@ -277,10 +264,6 @@ func (a *ResponseAccumulator) addRichEvent(event ResponsesServerEventUnion) erro
 			output.stderr.WriteString(stderr.Str)
 			output.stdoutPresent = output.stdoutPresent || stdout.Exists()
 			output.stderrPresent = output.stderrPresent || stderr.Exists()
-		}
-		progress.shellOutputChanged = true
-		if position >= progress.shellOutputExtent {
-			progress.shellOutputExtent = position + 1
 		}
 	default:
 		_, status, _ := strings.Cut(kind, ".")
@@ -297,8 +280,10 @@ func (a *ResponseAccumulator) shellOutputIndexValid(item *responseAccumulatedOut
 			if item.callID == "" || candidate.itemType != "shell_call" || candidate.callID != item.callID {
 				continue
 			}
-			progress.shellCallKnown = true
-			progress.shellCommandBound = candidate.shellCommandCount
+			progress.shellCallKnown = candidate.shellCommandsKnown
+			if progress.shellCallKnown {
+				progress.shellCommandBound = candidate.shellCommandCount
+			}
 			break
 		}
 		progress.shellCallRevision = a.itemRevision
@@ -306,7 +291,7 @@ func (a *ResponseAccumulator) shellOutputIndexValid(item *responseAccumulatedOut
 	if progress.shellCallKnown {
 		return index < progress.shellCommandBound
 	}
-	return index <= progress.shellOutputExtent
+	return true
 }
 
 func appendReasoningText(part *responseAccumulatedPart, value string, replace bool) error {
@@ -328,16 +313,6 @@ func appendReasoningText(part *responseAccumulatedPart, value string, replace bo
 		part.text.WriteString(value)
 	}
 	return nil
-}
-
-func accumulatedShellOutput(value gjson.Result) (*responseAccumulatedShellOutput, error) {
-	if !value.IsObject() || value.Get("stdout").Type != gjson.String || value.Get("stderr").Type != gjson.String {
-		return nil, errors.New("responses accumulator: invalid selected event fields")
-	}
-	result := &responseAccumulatedShellOutput{raw: strings.Clone(value.Raw), stdoutPresent: true, stderrPresent: true}
-	result.stdout.WriteString(value.Get("stdout").Str)
-	result.stderr.WriteString(value.Get("stderr").Str)
-	return result, nil
 }
 
 func accumulatedJSON(value any) json.RawMessage {
@@ -400,10 +375,12 @@ func (item *responseAccumulatedOutput) renderProgress(projected *ResponseAccumul
 		action["commands"] = accumulatedJSON(commands)
 		projected.Item["action"] = accumulatedJSON(action)
 	}
-	if progress.shellOutputChanged {
+	if progress.shellOutput != nil {
 		for index, part := range progress.shellOutput {
-			fields := accumulatedFields(part.raw, "")
-			if part.stdoutPresent {
+			fields := make(map[string]json.RawMessage)
+			if part.doneOutput != "" {
+				fields["output"] = json.RawMessage(part.doneOutput)
+			} else if part.stdoutPresent {
 				fields["stdout"] = accumulatedJSONString(part.stdout.String())
 			}
 			if part.stderrPresent {
@@ -411,14 +388,5 @@ func (item *responseAccumulatedOutput) renderProgress(projected *ResponseAccumul
 			}
 			projected.Content[index] = fields
 		}
-		output := make([]json.RawMessage, 0, len(progress.shellOutput))
-		for index := int64(0); ; index++ {
-			fields, ok := projected.Content[index]
-			if !ok {
-				break
-			}
-			output = append(output, accumulatedJSON(fields))
-		}
-		projected.Item["output"] = accumulatedJSON(output)
 	}
 }

@@ -28,11 +28,12 @@ type ResponseAccumulatorDetails struct {
 // omitted or null annotations field remains omitted or null. Unrecognized
 // fields and incomplete streamed logprobs are provisional raw JSON, never
 // fabricated final-output models. Reasoning summaries, tool code/status and shell
-// fields retain their wire-shaped locations in Item. Reasoning content also uses
-// Content. Shell output Content keys are observed command_index values;
-// Item.output includes its contiguous observed prefix. Sparse parts do not fabricate array
-// entries or outcomes. Every map and RawMessage
-// is owned by the caller.
+// commands retain their wire-shaped locations in Item. Reasoning content also
+// uses Content. Shell output Content keys are observed command_index values:
+// deltas supply stdout/stderr; done replaces them with an output array containing
+// all chunks for that command. Item.output remains the last full-item array;
+// command facts never guess its grouping or invent array entries or outcomes.
+// Every map and RawMessage is owned by the caller.
 type ResponseAccumulatedDetails struct {
 	OutputIndex int64
 	Item        map[string]json.RawMessage
