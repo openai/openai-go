@@ -108,11 +108,11 @@ func (a *ResponseAccumulator) addRichEvent(event ResponsesServerEventUnion) erro
 	switch group {
 	case "reasoning_summary_part", "reasoning_summary_text":
 		if progress.summary == nil {
-			progress.summary = make(map[int64]*responseAccumulatedPart)
 			source := gjson.Get(item.raw, "summary")
 			if source.Exists() && !source.IsArray() {
 				return invalid
 			}
+			progress.summary = make(map[int64]*responseAccumulatedPart)
 			for i, part := range source.Array() {
 				progress.summary[int64(i)] = accumulatedPart(part.Raw)
 			}

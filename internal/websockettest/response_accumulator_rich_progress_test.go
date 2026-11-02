@@ -794,3 +794,34 @@ func TestResponsesAccumulatorShellCommandGuardsPreserveSnapshot(t *testing.T) {
 		})
 	}
 }
+
+func TestResponsesAccumulatorInvalidSummarySeedDoesNotChangeAdmission(t *testing.T) {
+	var acc responses.ResponseAccumulator
+	richCreated(t, &acc)
+	item := map[string]any{"id": "reasoning", "type": "reasoning", "status": "in_progress", "summary": map[string]any{"unexpected": true}, "future": "kept"}
+	richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 1, "output_index": 0, "item": item})
+	before := acc.DetailedSnapshot()
+	for sequence := 2; sequence <= 3; sequence++ {
+		data, err := json.Marshal(map[string]any{"type": "response.reasoning_summary_part.added", "sequence_number": sequence, "output_index": 0, "item_id": "reasoning", "summary_index": 0, "part": map[string]any{"type": "summary_text", "text": "valid", "future": true}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		var event responses.ResponsesServerEventUnion
+		if err = json.Unmarshal(data, &event); err != nil {
+			t.Fatal(err)
+		}
+		if err = acc.AddEvent(event); err == nil {
+			t.Error("a rejected summary seed changed later admission")
+		}
+		if !reflect.DeepEqual(before, acc.DetailedSnapshot()) {
+			t.Error("summary progress replaced the malformed raw seed")
+		}
+	}
+	item["summary"] = []any{}
+	richEvent(t, &acc, map[string]any{"type": "response.output_item.added", "sequence_number": 4, "output_index": 0, "item": item})
+	richEvent(t, &acc, map[string]any{"type": "response.reasoning_summary_part.added", "sequence_number": 5, "output_index": 0, "item_id": "reasoning", "summary_index": 0, "part": map[string]any{"type": "summary_text", "text": "valid", "future": true}})
+	got := acc.DetailedSnapshot().Output[0].Item
+	if gjson.GetBytes(got["summary"], "0.text").Str != "valid" || !gjson.GetBytes(got["summary"], "0.future").Bool() || string(got["future"]) != `"kept"` {
+		t.Errorf("corrected full item did not restore valid progress: %#v", got)
+	}
+}
