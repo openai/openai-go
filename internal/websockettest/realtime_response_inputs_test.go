@@ -131,21 +131,34 @@ func requireRealtimeInputNotAttempted(t *testing.T, err error) {
 }
 
 func TestRealtimeResponseCreateRejectsMalformedValuesWithoutWriting(t *testing.T) {
+	checkRejected := func(t *testing.T, event realtime.ResponseCreateEventParam) {
+		t.Helper()
+		ctx, connection, frames := connectRealtimeInputPeer(t, realtime.RealtimeConnectionOptions{})
+		err := connection.SendResponseCreate(ctx, event, nil)
+		requireRealtimeInputNotAttempted(t, err)
+		// The next valid command must be the peer's first frame.
+		if err := connection.SendResponseCreate(ctx, realtime.ResponseCreateEventParam{}, nil); err != nil {
+			t.Fatal(err)
+		}
+		first := readRealtimeInputFrame(t, ctx, frames)
+		if first["type"] != "response.create" || !reflect.DeepEqual(first["response"], map[string]any{"input": []any{}}) {
+			t.Fatalf("rejected value reached the peer: %#v", first)
+		}
+	}
 	for _, raw := range []json.RawMessage{json.RawMessage(`null`), json.RawMessage(`[]`), json.RawMessage(`{"type":"response.create","response":null}`), json.RawMessage(`{"type":"response.create","response":[]}`)} {
 		t.Run(string(raw), func(t *testing.T) {
-			ctx, connection, frames := connectRealtimeInputPeer(t, realtime.RealtimeConnectionOptions{})
-			err := connection.SendResponseCreate(ctx, param.Override[realtime.ResponseCreateEventParam](raw), nil)
-			requireRealtimeInputNotAttempted(t, err)
-			// A following valid command is the peer's first frame, so a rejected
-			// value cannot pass merely because its delivery was delayed.
-			if err := connection.SendResponseCreate(ctx, realtime.ResponseCreateEventParam{}, nil); err != nil {
-				t.Fatal(err)
-			}
-			first := readRealtimeInputFrame(t, ctx, frames)
-			if first["type"] != "response.create" || !reflect.DeepEqual(first["response"], map[string]any{"input": []any{}}) {
-				t.Fatalf("rejected value reached the peer: %#v", first)
-			}
+			checkRejected(t, param.Override[realtime.ResponseCreateEventParam](raw))
 		})
+	}
+	for _, invalid := range []struct {
+		name  string
+		event realtime.ResponseCreateEventParam
+	}{
+		{"nil event map", param.Override[realtime.ResponseCreateEventParam]((*map[string]any)(nil))},
+		{"nil response map", param.Override[realtime.ResponseCreateEventParam](map[string]any{"type": "response.create", "response": (*map[string]any)(nil)})},
+		{"nil response params", param.Override[realtime.ResponseCreateEventParam](map[string]any{"type": "response.create", "response": (*realtime.RealtimeResponseCreateParams)(nil)})},
+	} {
+		t.Run(invalid.name, func(t *testing.T) { checkRejected(t, invalid.event) })
 	}
 	ctx, connection, frames := connectRealtimeInputPeer(t, realtime.RealtimeConnectionOptions{})
 	err := connection.SendResponseCreate(ctx, realtime.ResponseCreateEventParam{}, []realtime.ResponseInput{{}})
@@ -233,18 +246,29 @@ func TestRealtimeResponseCreateRetainsPendingSendLimit(t *testing.T) {
 	}
 }
 
+type realtimeInputOpaqueMap map[string]*realtimeInputEncodingProbe
+
+func (value realtimeInputOpaqueMap) MarshalJSON() ([]byte, error) {
+	return value["input"].MarshalJSON()
+}
+
 func TestRealtimeResponseCreateEncodingFailureLeavesConnectionUsable(t *testing.T) {
-	for _, nested := range []bool{false, true} {
+	for _, carrier := range []string{"event", "response", "unrelated response extra", "defined response map"} {
 		ctx, connection, frames := connectRealtimeInputPeer(t, realtime.RealtimeConnectionOptions{})
 		cause := errors.New("synthetic input encoder failure")
 		probe := &realtimeInputEncodingProbe{err: cause}
 		event := param.Override[realtime.ResponseCreateEventParam](probe)
-		if nested {
+		if carrier == "response" {
 			event = realtime.ResponseCreateEventParam{Response: param.Override[realtime.RealtimeResponseCreateParams](probe)}
+		} else if carrier == "defined response map" {
+			event = realtime.ResponseCreateEventParam{Response: param.Override[realtime.RealtimeResponseCreateParams](realtimeInputOpaqueMap{"input": probe})}
+		} else if carrier == "unrelated response extra" {
+			event = realtime.ResponseCreateEventParam{}
+			event.Response.SetExtraFields(map[string]any{"future": probe})
 		}
 		err := connection.SendResponseCreate(ctx, event, nil)
 		if !errors.Is(err, cause) || probe.calls.Load() != 1 {
-			t.Fatalf("serialization cause was lost: nested=%t, calls=%d, err=%v", nested, probe.calls.Load(), err)
+			t.Fatalf("serialization cause was lost: carrier=%s, calls=%d, err=%v", carrier, probe.calls.Load(), err)
 		}
 		requireRealtimeInputNotAttempted(t, err)
 		if err := connection.SendResponseCreate(ctx, realtime.ResponseCreateEventParam{}, nil); err != nil {
@@ -294,43 +318,68 @@ func TestRealtimeResponseCreateCancellationDuringEncodingDoesNotWrite(t *testing
 }
 
 func TestRealtimeResponseCreateSkipsSupersededTypedInput(t *testing.T) {
-	for _, failingEncoder := range []bool{false, true} {
-		name := "multiple legacy variants"
-		if failingEncoder {
-			name = "unused input encoder"
-		}
+	for _, name := range []string{
+		"multiple legacy variants", "unused input encoder", "response extra input",
+		"response override map", "response override map pointer", "event override map",
+		"event override map pointer", "event extra response map", "event extra response map pointer",
+		"event extra typed response", "event extra typed response pointer",
+	} {
 		t.Run(name, func(t *testing.T) {
 			ctx, connection, frames := connectRealtimeInputPeer(t, realtime.RealtimeConnectionOptions{})
 			probe := &realtimeInputEncodingProbe{err: errors.New("unused input encoder")}
-			oldItem := realtime.ConversationItemParamOfFunctionCallOutput("old_call", "old output")
-			oldItem.OfRealtimeUserMessageItem = &realtime.RealtimeConversationItemUserMessageParam{}
-			if failingEncoder {
-				oldItem = param.Override[realtime.ConversationItemUnionParam](probe)
+			makeEvent := func() realtime.ResponseCreateEventParam {
+				oldItem := realtime.ConversationItemParamOfFunctionCallOutput("old_call", "old output")
+				oldItem.OfRealtimeUserMessageItem = &realtime.RealtimeConversationItemUserMessageParam{}
+				if name == "unused input encoder" {
+					oldItem = param.Override[realtime.ConversationItemUnionParam](probe)
+				}
+				response := realtime.RealtimeResponseCreateParams{
+					Instructions: param.NewOpt("retain"), Input: []realtime.ConversationItemUnionParam{oldItem},
+				}
+				response.SetExtraFields(map[string]any{"future": map[string]any{"count": 3}})
+				responseMap := map[string]any{"instructions": "retain", "input": probe, "future": map[string]any{"count": 3}}
+				eventMap := map[string]any{"type": "response.create", "event_id": "evt_replaced", "response": responseMap, "future": map[string]any{"enabled": true}}
+				event := realtime.ResponseCreateEventParam{EventID: param.NewOpt("evt_replaced"), Response: response}
+				event.SetExtraFields(map[string]any{"future": map[string]any{"enabled": true}})
+				switch name {
+				case "response extra input":
+					event.Response.SetExtraFields(map[string]any{"input": probe, "future": map[string]any{"count": 3}, "omitted": param.Omit})
+				case "response override map":
+					event.Response = param.Override[realtime.RealtimeResponseCreateParams](responseMap)
+				case "response override map pointer":
+					event.Response = param.Override[realtime.RealtimeResponseCreateParams](&responseMap)
+				case "event override map":
+					event = param.Override[realtime.ResponseCreateEventParam](eventMap)
+				case "event override map pointer":
+					event = param.Override[realtime.ResponseCreateEventParam](&eventMap)
+				case "event extra response map":
+					event.SetExtraFields(map[string]any{"response": responseMap, "future": map[string]any{"enabled": true}})
+				case "event extra response map pointer":
+					event.SetExtraFields(map[string]any{"response": &responseMap, "future": map[string]any{"enabled": true}})
+				case "event extra typed response":
+					event.SetExtraFields(map[string]any{"response": response, "future": map[string]any{"enabled": true}})
+				case "event extra typed response pointer":
+					event.SetExtraFields(map[string]any{"response": &response, "future": map[string]any{"enabled": true}})
+				}
+				return event
 			}
-			originalInput := []realtime.ConversationItemUnionParam{oldItem}
-			event := realtime.ResponseCreateEventParam{
-				EventID: param.NewOpt("evt_replaced"),
-				Response: realtime.RealtimeResponseCreateParams{
-					Instructions: param.NewOpt("retain"),
-					Input:        originalInput,
-				},
-			}
+			event, expectedCaller := makeEvent(), makeEvent()
 			if sendErr := connection.SendResponseCreate(ctx, event, []realtime.ResponseInput{realtime.ResponseInputReference("item_prior-1")}); sendErr != nil {
 				t.Fatalf("superseded input blocked a valid replacement: %v", sendErr)
 			}
 			actual := readRealtimeInputFrame(t, ctx, frames)
 			want := map[string]any{
-				"type": "response.create", "event_id": "evt_replaced",
+				"type": "response.create", "event_id": "evt_replaced", "future": map[string]any{"enabled": true},
 				"response": map[string]any{
-					"instructions": "retain",
-					"input":        []any{map[string]any{"type": "item_reference", "id": "item_prior-1"}},
+					"instructions": "retain", "future": map[string]any{"count": float64(3)},
+					"input": []any{map[string]any{"type": "item_reference", "id": "item_prior-1"}},
 				},
 			}
 			if !reflect.DeepEqual(actual, want) || probe.calls.Load() != 0 {
 				t.Fatalf("wrong replacement or unused encoding: event=%#v, calls=%d", actual, probe.calls.Load())
 			}
-			if !reflect.DeepEqual(event.Response.Input, []realtime.ConversationItemUnionParam{oldItem}) {
-				t.Fatal("helper changed the caller's original input")
+			if !reflect.DeepEqual(event, expectedCaller) {
+				t.Fatal("helper changed caller input or metadata")
 			}
 		})
 	}

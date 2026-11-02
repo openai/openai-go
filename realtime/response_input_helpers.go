@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"maps"
+
+	"github.com/openai/openai-go/v3/packages/param"
 )
 
 // ResponseInput is a conversation item or existing-item reference for
@@ -40,6 +43,8 @@ func (input ResponseInput) MarshalJSON() ([]byte, error) {
 // SendResponseCreate sends response.create with typed ordinary items and existing
 // item references. inputs replaces only response.input; nil or empty inputs clear
 // the response context. Other effective event fields and caller values are kept.
+// Known input fields and plain map[string]any metadata are replaced before
+// encoding. Other encoders retain their normal error behavior.
 // Admission, cancellation, recovery queues and delivery errors follow Send.
 func (c *RealtimeConnection) SendResponseCreate(ctx context.Context, event ResponseCreateEventParam, inputs []ResponseInput) error {
 	return c.connection.SendJSON(ctx, responseCreateInput{event: event, inputs: inputs})
@@ -52,7 +57,25 @@ type responseCreateInput struct {
 
 func (request responseCreateInput) MarshalJSON() ([]byte, error) {
 	eventTemplate := request.event
-	eventTemplate.Response.Input = nil
+	eventTemplate.Response, _ = responseCreateInputParams(eventTemplate.Response)
+	if override, ok := eventTemplate.Overrides(); ok {
+		switch object := override.(type) {
+		case map[string]any:
+			if projected, changed := responseCreateInputEventObject(object); changed {
+				eventTemplate = param.Override[ResponseCreateEventParam](projected)
+			}
+		case *map[string]any:
+			if object != nil {
+				if projected, changed := responseCreateInputEventObject(*object); changed {
+					eventTemplate = param.Override[ResponseCreateEventParam](&projected)
+				}
+			}
+		}
+	} else if extras := eventTemplate.ExtraFields(); extras != nil {
+		if projected, changed := responseCreateInputEventObject(extras); changed {
+			eventTemplate.SetExtraFields(projected)
+		}
+	}
 	encoded, err := json.Marshal(eventTemplate)
 	if err != nil {
 		return nil, err
@@ -80,4 +103,72 @@ func (request responseCreateInput) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 	return json.Marshal(event)
+}
+
+func responseCreateInputEventObject(object map[string]any) (map[string]any, bool) {
+	projected, changed := responseCreateInputValue(object["response"])
+	if !changed {
+		return object, false
+	}
+	object = maps.Clone(object)
+	object["response"] = projected
+	return object, true
+}
+
+func responseCreateInputValue(value any) (any, bool) {
+	switch response := value.(type) {
+	case RealtimeResponseCreateParams:
+		return responseCreateInputParams(response)
+	case *RealtimeResponseCreateParams:
+		if response != nil {
+			if projected, changed := responseCreateInputParams(*response); changed {
+				return &projected, true
+			}
+		}
+	case map[string]any:
+		return responseCreateInputObject(response)
+	case *map[string]any:
+		if response != nil {
+			if projected, changed := responseCreateInputObject(*response); changed {
+				return &projected, true
+			}
+		}
+	}
+	return value, false
+}
+
+func responseCreateInputParams(response RealtimeResponseCreateParams) (RealtimeResponseCreateParams, bool) {
+	changed := response.Input != nil
+	response.Input = nil
+	if override, ok := response.Overrides(); ok {
+		switch object := override.(type) {
+		case map[string]any:
+			if projected, edited := responseCreateInputObject(object); edited {
+				response = param.Override[RealtimeResponseCreateParams](projected)
+				changed = true
+			}
+		case *map[string]any:
+			if object != nil {
+				if projected, edited := responseCreateInputObject(*object); edited {
+					response = param.Override[RealtimeResponseCreateParams](&projected)
+					changed = true
+				}
+			}
+		}
+	} else if extras := response.ExtraFields(); extras != nil {
+		if projected, edited := responseCreateInputObject(extras); edited {
+			response.SetExtraFields(projected)
+			changed = true
+		}
+	}
+	return response, changed
+}
+
+func responseCreateInputObject(object map[string]any) (map[string]any, bool) {
+	if _, exists := object["input"]; !exists {
+		return object, false
+	}
+	object = maps.Clone(object)
+	delete(object, "input")
+	return object, true
 }
