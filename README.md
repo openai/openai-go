@@ -377,10 +377,19 @@ The default options do not cap message size or the receive buffer. Set
 to opt into a receive limit. Connections default to 16 pending sends and 64
 distinct lane IDs over the connection's lifetime, including closed lanes.
 Reuse an open lane for sequential responses. Exceeding an explicit receive bound
-fails the connection without silently dropping events. Consume incoming events promptly or configure a buffer
+fails the connection by default. Consume incoming events promptly or configure a buffer
 limit appropriate for the application.
 `CloseTimeout` defaults to five seconds and tears down an unresponsive connection
 after that interval. Always call `Close` or `Abort` when finished.
+
+Set `IsolateLaneOverflow: true` to keep the connection open on queue overflow.
+The helper fails the lane with the largest older backlog, breaking ties by
+registration order; with no older backlog, it fails the incoming lane. It releases
+that lane's queue, retains its first error and reserved ID, and discards later
+frames for that ID. The default receiver can also be selected; other lanes keep
+working. An event larger than a positive `MaxBufferedBytes` fails only its
+destination lane. Incoming message-size, decode and transport failures still fail the
+connection. Zero queue limits remain unlimited.
 
 #### Turns, lanes, and recovery
 

@@ -40,6 +40,10 @@ type Options struct {
 	MaxBufferedBytes int64
 	// MaxBufferedEvents bounds queued events across all lanes. Zero means no event limit.
 	MaxBufferedEvents int
+	// IsolateLaneOverflow fails only a selected lane when a receive queue limit
+	// is exceeded, reclaiming the largest older backlog first. The default
+	// fails the connection. Zero receive limits remain unlimited.
+	IsolateLaneOverflow bool
 	// MaxPendingSends bounds admitted concurrent writes. Default: 16.
 	MaxPendingSends int
 	// MaxLanes bounds distinct lane keys over the connection's lifetime, including
@@ -84,6 +88,9 @@ type entry[T any] struct {
 type queue[T any] struct {
 	events []entry[T]
 	closed bool
+	bytes  int64
+	order  int
+	err    error
 }
 
 // upgradeTransport retains the upgraded stream so a close deadline can interrupt
@@ -255,21 +262,71 @@ func (c *Connection[T]) read(ctx context.Context, decode func([]byte) (T, error)
 			c.mu.Unlock()
 			return
 		}
-		if (c.options.MaxBufferedEvents > 0 && c.bufferedEvents >= c.options.MaxBufferedEvents) || (c.options.MaxBufferedBytes > 0 && int64(len(data)) > c.options.MaxBufferedBytes-c.bufferedBytes) {
+		if !c.options.IsolateLaneOverflow && ((c.options.MaxBufferedEvents > 0 && c.bufferedEvents >= c.options.MaxBufferedEvents) || (c.options.MaxBufferedBytes > 0 && int64(len(data)) > c.options.MaxBufferedBytes-c.bufferedBytes)) {
 			c.mu.Unlock()
 			c.fail(ErrBufferLimit)
 			return
 		}
 		q := c.queues[route(event)]
+		if q != nil && q.err != nil {
+			c.mu.Unlock()
+			continue
+		}
 		if q == nil || q.closed {
 			q = c.queues[""]
 		}
+		if q.err != nil {
+			c.mu.Unlock()
+			continue
+		}
+		if c.options.IsolateLaneOverflow && c.options.MaxBufferedBytes > 0 && int64(len(data)) > c.options.MaxBufferedBytes {
+			c.failQueue(q)
+			c.mu.Unlock()
+			continue
+		}
 		q.events = append(q.events, entry[T]{event: event, bytes: int64(len(data))})
+		q.bytes += int64(len(data))
 		c.bufferedEvents++
 		c.bufferedBytes += int64(len(data))
+		if c.options.IsolateLaneOverflow {
+			for (c.options.MaxBufferedEvents > 0 && c.bufferedEvents > c.options.MaxBufferedEvents) || (c.options.MaxBufferedBytes > 0 && c.bufferedBytes > c.options.MaxBufferedBytes) {
+				bytePressure := c.options.MaxBufferedBytes > 0 && c.bufferedBytes > c.options.MaxBufferedBytes
+				largest, largestSize := q, int64(0)
+				for _, candidate := range c.queues {
+					size := int64(len(candidate.events))
+					if bytePressure {
+						size = candidate.bytes
+					}
+					if candidate == q {
+						if bytePressure {
+							size -= int64(len(data))
+						} else {
+							size--
+						}
+					}
+					if size > largestSize || (size > 0 && size == largestSize && candidate.order < largest.order) {
+						largest, largestSize = candidate, size
+					}
+				}
+				c.failQueue(largest)
+			}
+		}
 		c.signal()
 		c.mu.Unlock()
 	}
+}
+
+// Caller holds mu. A failed lane remains reserved and drops later frames.
+func (c *Connection[T]) failQueue(q *queue[T]) {
+	if q.err != nil {
+		return
+	}
+	q.err = ErrBufferLimit
+	c.bufferedEvents -= len(q.events)
+	c.bufferedBytes -= q.bytes
+	q.events = nil
+	q.bytes = 0
+	c.signal()
 }
 
 // Send writes one text message. It serializes writers and never retries.
@@ -352,6 +409,11 @@ func (c *Connection[T]) recv(ctx context.Context, q *queue[T]) (T, error) {
 			c.mu.Unlock()
 			return zero, err
 		}
+		if q.err != nil {
+			err := q.err
+			c.mu.Unlock()
+			return zero, err
+		}
 		if q.closed {
 			c.mu.Unlock()
 			return zero, ErrLaneClosed
@@ -362,6 +424,7 @@ func (c *Connection[T]) recv(ctx context.Context, q *queue[T]) (T, error) {
 			q.events = q.events[1:]
 			c.bufferedEvents--
 			c.bufferedBytes -= item.bytes
+			q.bytes -= item.bytes
 			c.mu.Unlock()
 			return item.event, nil
 		}
@@ -405,7 +468,7 @@ func (c *Connection[T]) Lane(key string) (*Lane[T], error) {
 	if len(c.queues)-1 >= c.options.MaxLanes {
 		return nil, errors.New("websocket: lane limit exceeded")
 	}
-	q := &queue[T]{}
+	q := &queue[T]{order: len(c.queues)}
 	c.queues[key] = q
 	return &Lane[T]{connection: c, queue: q}, nil
 }
@@ -414,7 +477,8 @@ func (c *Connection[T]) Lane(key string) (*Lane[T], error) {
 func (l *Lane[T]) Recv(ctx context.Context) (T, error) { return l.connection.recv(ctx, l.queue) }
 
 // Close detaches this consumer, discarding its buffered events. It neither
-// cancels server work nor closes the connection. Later events use default Recv.
+// cancels server work nor closes the connection. Later events use default Recv
+// unless the lane overflowed; overflow failures keep dropping that lane's frames.
 // The key remains reserved because remote work can continue after detachment.
 func (l *Lane[T]) Close() {
 	c := l.connection
@@ -429,6 +493,7 @@ func (l *Lane[T]) Close() {
 		c.bufferedBytes -= item.bytes
 	}
 	l.queue.events = nil
+	l.queue.bytes = 0
 	c.signal()
 }
 
@@ -461,6 +526,7 @@ func (c *Connection[T]) close(userInitiated bool) error {
 		c.mu.Lock()
 		for _, q := range c.queues {
 			q.events = nil
+			q.bytes = 0
 		}
 		c.bufferedBytes = 0
 		c.bufferedEvents = 0
