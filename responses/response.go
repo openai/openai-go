@@ -4522,7 +4522,7 @@ type ResponsePromptCacheOptions struct {
 	Mode string `json:"mode" api:"required"`
 	// The minimum lifetime applied to each cache breakpoint.
 	//
-	// Any of "30m".
+	// Any of "30m", "12h".
 	Ttl string `json:"ttl" api:"required"`
 	// The response ID supplied as the prompt cache diagnostics comparison.
 	ComparisonResponseID string `json:"comparison_response_id" api:"nullable"`
@@ -28846,19 +28846,41 @@ type ResponseUsageInputTokensDetails struct {
 	CacheWriteTokens int64 `json:"cache_write_tokens" api:"required"`
 	// The number of tokens that were retrieved from the cache.
 	// [More on prompt caching](https://developers.openai.com/api/docs/guides/prompt-caching).
-	CachedTokens int64 `json:"cached_tokens" api:"required"`
+	CachedTokens            int64                                                  `json:"cached_tokens" api:"required"`
+	CacheWriteTokensDetails ResponseUsageInputTokensDetailsCacheWriteTokensDetails `json:"cache_write_tokens_details"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		CacheWriteTokens respjson.Field
-		CachedTokens     respjson.Field
-		ExtraFields      map[string]respjson.Field
-		raw              string
+		CacheWriteTokens        respjson.Field
+		CachedTokens            respjson.Field
+		CacheWriteTokensDetails respjson.Field
+		ExtraFields             map[string]respjson.Field
+		raw                     string
 	} `json:"-"`
 }
 
 // Returns the unmodified JSON received from the API
 func (r ResponseUsageInputTokensDetails) RawJSON() string { return r.JSON.raw }
 func (r *ResponseUsageInputTokensDetails) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponseUsageInputTokensDetailsCacheWriteTokensDetails struct {
+	// The number of input tokens written with 12-hour retention.
+	Ttl12hTokens int64 `json:"ttl_12h_tokens" api:"required"`
+	// The number of input tokens written with 30-minute retention.
+	Ttl30mTokens int64 `json:"ttl_30m_tokens" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Ttl12hTokens respjson.Field
+		Ttl30mTokens respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseUsageInputTokensDetailsCacheWriteTokensDetails) RawJSON() string { return r.JSON.raw }
+func (r *ResponseUsageInputTokensDetailsCacheWriteTokensDetails) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -29522,7 +29544,7 @@ type ResponsesClientEventResponseCreateParam struct {
 	// request can write up to four breakpoints. For cache matching, OpenAI considers
 	// up to the latest 80 breakpoints in the conversation, without a content-block
 	// lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
-	// `ttl` defaults to `30m`, which is currently the only supported value. See the
+	// `ttl` defaults to `30m`. Supported lifetimes depend on the API. See the
 	// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 	// for current details.
 	PromptCacheOptions ResponsesClientEventResponseCreatePromptCacheOptionsParam `json:"prompt_cache_options,omitzero"`
@@ -29766,7 +29788,7 @@ func init() {
 // request can write up to four breakpoints. For cache matching, OpenAI considers
 // up to the latest 80 breakpoints in the conversation, without a content-block
 // lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
-// `ttl` defaults to `30m`, which is currently the only supported value. See the
+// `ttl` defaults to `30m`. Supported lifetimes depend on the API. See the
 // [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 // for current details.
 type ResponsesClientEventResponseCreatePromptCacheOptionsParam struct {
@@ -29786,10 +29808,10 @@ type ResponsesClientEventResponseCreatePromptCacheOptionsParam struct {
 	// Any of "implicit", "explicit".
 	Mode string `json:"mode,omitzero"`
 	// The minimum lifetime applied to every implicit and explicit cache breakpoint
-	// written by the request. Defaults to `30m`, which is currently the only supported
-	// value. The backend may retain cache entries for longer.
+	// written by the request. Supported values are `30m` (the default) and `12h`. The
+	// backend may retain cache entries for longer.
 	//
-	// Any of "30m".
+	// Any of "30m", "12h".
 	Ttl string `json:"ttl,omitzero"`
 	paramObj
 }
@@ -29807,7 +29829,7 @@ func init() {
 		"mode", "implicit", "explicit",
 	)
 	apijson.RegisterFieldValidator[ResponsesClientEventResponseCreatePromptCacheOptionsParam](
-		"ttl", "30m",
+		"ttl", "30m", "12h",
 	)
 }
 
@@ -36687,7 +36709,7 @@ type ResponseNewParams struct {
 	// request can write up to four breakpoints. For cache matching, OpenAI considers
 	// up to the latest 80 breakpoints in the conversation, without a content-block
 	// lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
-	// `ttl` defaults to `30m`, which is currently the only supported value. See the
+	// `ttl` defaults to `30m`. Supported lifetimes depend on the API. See the
 	// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 	// for current details.
 	PromptCacheOptions ResponseNewParamsPromptCacheOptions `json:"prompt_cache_options,omitzero"`
@@ -36906,7 +36928,7 @@ func init() {
 // request can write up to four breakpoints. For cache matching, OpenAI considers
 // up to the latest 80 breakpoints in the conversation, without a content-block
 // lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
-// `ttl` defaults to `30m`, which is currently the only supported value. See the
+// `ttl` defaults to `30m`. Supported lifetimes depend on the API. See the
 // [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 // for current details.
 type ResponseNewParamsPromptCacheOptions struct {
@@ -36926,10 +36948,10 @@ type ResponseNewParamsPromptCacheOptions struct {
 	// Any of "implicit", "explicit".
 	Mode string `json:"mode,omitzero"`
 	// The minimum lifetime applied to every implicit and explicit cache breakpoint
-	// written by the request. Defaults to `30m`, which is currently the only supported
-	// value. The backend may retain cache entries for longer.
+	// written by the request. Supported values are `30m` (the default) and `12h`. The
+	// backend may retain cache entries for longer.
 	//
-	// Any of "30m".
+	// Any of "30m", "12h".
 	Ttl string `json:"ttl,omitzero"`
 	paramObj
 }
@@ -36947,7 +36969,7 @@ func init() {
 		"mode", "implicit", "explicit",
 	)
 	apijson.RegisterFieldValidator[ResponseNewParamsPromptCacheOptions](
-		"ttl", "30m",
+		"ttl", "30m", "12h",
 	)
 }
 
@@ -37210,7 +37232,7 @@ type ResponseCompactParams struct {
 	// request can write up to four breakpoints. For cache matching, OpenAI considers
 	// up to the latest 80 breakpoints in the conversation, without a content-block
 	// lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
-	// `ttl` defaults to `30m`, which is currently the only supported value. See the
+	// `ttl` defaults to `30m`. Supported lifetimes depend on the API. See the
 	// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 	// for current details.
 	PromptCacheOptions ResponseCompactParamsPromptCacheOptions `json:"prompt_cache_options,omitzero"`
@@ -37649,7 +37671,7 @@ func (u *ResponseCompactParamsInputUnion) UnmarshalJSON(data []byte) error {
 // request can write up to four breakpoints. For cache matching, OpenAI considers
 // up to the latest 80 breakpoints in the conversation, without a content-block
 // lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
-// `ttl` defaults to `30m`, which is currently the only supported value. See the
+// `ttl` defaults to `30m`. Supported lifetimes depend on the API. See the
 // [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 // for current details.
 type ResponseCompactParamsPromptCacheOptions struct {
