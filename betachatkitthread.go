@@ -424,13 +424,14 @@ func (r *ChatSessionWorkflowParam) UnmarshalJSON(data []byte) error {
 // Use [param.IsOmitted] to confirm if a field is set.
 type ChatSessionWorkflowParamStateVariableUnion struct {
 	OfString param.Opt[string]  `json:",omitzero,inline"`
+	OfInt    param.Opt[int64]   `json:",omitzero,inline"`
 	OfBool   param.Opt[bool]    `json:",omitzero,inline"`
 	OfFloat  param.Opt[float64] `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ChatSessionWorkflowParamStateVariableUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfBool, u.OfFloat)
+	return param.MarshalUnion(u, u.OfString, u.OfInt, u.OfBool, u.OfFloat)
 }
 func (u *ChatSessionWorkflowParamStateVariableUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
