@@ -767,7 +767,7 @@
     },
     "live/live.go": {
       "mode": "100644",
-      "sha256": "d4fdeef206e9204c070d4f6b4ae99031ea2a743e8be838dd2823b008072c5b2e"
+      "sha256": "8f8b1e70340738d92a8166a02c00f209c04eb0fe62fc814fcc27fb520e0c0482"
     },
     "live/live_forks_websocket.go": {
       "mode": "100644",
@@ -963,7 +963,7 @@
     },
     "shared/constant/constants.go": {
       "mode": "100644",
-      "sha256": "2ab78d4f552cdd26f75c12a20385c591a4876dda673f6308699b6924ddfad587"
+      "sha256": "ec8f188cad43224ac0fe559a692633952e9414c102bda266ea465586ddb89d03"
     },
     "shared/shared.go": {
       "mode": "100644",

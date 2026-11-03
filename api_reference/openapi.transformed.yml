@@ -80096,12 +80096,52 @@ components:
             anyOf:
             - $ref: '#/components/schemas/LiveFunctionToolInputParam'
             - $ref: '#/components/schemas/LiveWebSearchToolInputParam'
+            - $ref: '#/components/schemas/LiveFileSearchToolInputParam'
+            - $ref: '#/components/schemas/LiveCodeInterpreterToolInputParam'
+            - $ref: '#/components/schemas/LiveHostedShellToolInputParam'
+            - $ref: '#/components/schemas/LiveImageGenerationToolInputParam'
+            - $ref: '#/components/schemas/LiveMCPToolInputParam'
+            - $ref: '#/components/schemas/LiveCustomToolInputParam'
+            - $ref: '#/components/schemas/LiveNamespaceToolInputParam'
+            - $ref: '#/components/schemas/LiveToolSearchToolInputParam'
+            - $ref: '#/components/schemas/LiveProgrammaticToolInputParam'
+            - $ref: '#/components/schemas/LiveComputerToolInputParam'
+            - $ref: '#/components/schemas/LiveApplyPatchToolInputParam'
         tool_choice:
           description: Controls which tool the Responses backend uses when handling a task delegated by the Live model.
           anyOf:
           - $ref: '#/components/schemas/LiveToolChoiceEnum'
-          - $ref: '#/components/schemas/LiveFunctionToolChoiceParam'
-          - $ref: '#/components/schemas/LiveMCPToolChoiceParam'
+          - discriminator:
+              propertyName: type
+            anyOf:
+            - $ref: '#/components/schemas/LiveFunctionToolChoiceParam'
+              description: Selects a function tool by name.
+              x-openai-go-public-shape:
+                type_name: ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam
+              x-stainless-naming:
+                go:
+                  type_name: ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam
+            - $ref: '#/components/schemas/LiveMCPToolChoiceParam'
+              x-openai-go-public-shape:
+                type_name: ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam
+              x-stainless-naming:
+                go:
+                  type_name: ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam
+            - $ref: '#/components/schemas/LiveSpecificFileSearchParam'
+            - $ref: '#/components/schemas/LiveSpecificWebSearchParam'
+            - $ref: '#/components/schemas/LiveSpecificWebSearchPreviewParam'
+            - $ref: '#/components/schemas/LiveSpecificImageGenParam'
+            - $ref: '#/components/schemas/LiveSpecificComputerParam'
+            - $ref: '#/components/schemas/LiveSpecificCodeInterpreterParam'
+            - $ref: '#/components/schemas/LiveSpecificProgrammaticToolCallingParam'
+            - $ref: '#/components/schemas/LiveSpecificFunctionShellParam'
+            - $ref: '#/components/schemas/LiveSpecificCustomToolParam'
+            - $ref: '#/components/schemas/LiveSpecificApplyPatchParam'
+          - $ref: '#/components/schemas/LiveAllowedToolsChoiceParam'
+          x-openai-go-public-shape:
+            variant_names:
+              '#/components/schemas/LiveFunctionToolChoiceParam': ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam
+              '#/components/schemas/LiveMCPToolChoiceParam': ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam
         parallel_tool_calls:
           anyOf:
           - description: Whether the delegated Responses model may request multiple tool calls in a single response.
@@ -80683,12 +80723,52 @@ components:
             anyOf:
             - $ref: '#/components/schemas/LiveFunctionToolInputParam'
             - $ref: '#/components/schemas/LiveWebSearchToolInputParam'
+            - $ref: '#/components/schemas/LiveFileSearchToolInputParam'
+            - $ref: '#/components/schemas/LiveCodeInterpreterToolInputParam'
+            - $ref: '#/components/schemas/LiveHostedShellToolInputParam'
+            - $ref: '#/components/schemas/LiveImageGenerationToolInputParam'
+            - $ref: '#/components/schemas/LiveMCPToolInputParam'
+            - $ref: '#/components/schemas/LiveCustomToolInputParam'
+            - $ref: '#/components/schemas/LiveNamespaceToolInputParam'
+            - $ref: '#/components/schemas/LiveToolSearchToolInputParam'
+            - $ref: '#/components/schemas/LiveProgrammaticToolInputParam'
+            - $ref: '#/components/schemas/LiveComputerToolInputParam'
+            - $ref: '#/components/schemas/LiveApplyPatchToolInputParam'
         tool_choice:
           description: Controls which tool the Responses backend uses when handling a task delegated by the Live model.
           anyOf:
           - $ref: '#/components/schemas/LiveToolChoiceEnum'
-          - $ref: '#/components/schemas/LiveFunctionToolChoiceParam'
-          - $ref: '#/components/schemas/LiveMCPToolChoiceParam'
+          - discriminator:
+              propertyName: type
+            anyOf:
+            - $ref: '#/components/schemas/LiveFunctionToolChoiceParam'
+              description: Selects a function tool by name.
+              x-openai-go-public-shape:
+                type_name: ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam
+              x-stainless-naming:
+                go:
+                  type_name: ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam
+            - $ref: '#/components/schemas/LiveMCPToolChoiceParam'
+              x-openai-go-public-shape:
+                type_name: ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam
+              x-stainless-naming:
+                go:
+                  type_name: ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam
+            - $ref: '#/components/schemas/LiveSpecificFileSearchParam'
+            - $ref: '#/components/schemas/LiveSpecificWebSearchParam'
+            - $ref: '#/components/schemas/LiveSpecificWebSearchPreviewParam'
+            - $ref: '#/components/schemas/LiveSpecificImageGenParam'
+            - $ref: '#/components/schemas/LiveSpecificComputerParam'
+            - $ref: '#/components/schemas/LiveSpecificCodeInterpreterParam'
+            - $ref: '#/components/schemas/LiveSpecificProgrammaticToolCallingParam'
+            - $ref: '#/components/schemas/LiveSpecificFunctionShellParam'
+            - $ref: '#/components/schemas/LiveSpecificCustomToolParam'
+            - $ref: '#/components/schemas/LiveSpecificApplyPatchParam'
+          - $ref: '#/components/schemas/LiveAllowedToolsChoiceParam'
+          x-openai-go-public-shape:
+            variant_names:
+              '#/components/schemas/LiveFunctionToolChoiceParam': ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam
+              '#/components/schemas/LiveMCPToolChoiceParam': ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam
         parallel_tool_calls:
           anyOf:
           - description: Whether the delegated Responses model may request multiple tool calls in a single response.
