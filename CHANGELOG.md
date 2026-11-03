@@ -1,5 +1,23 @@
 # Changelog
 
+## [3.92.0](https://github.com/openai/openai-go/compare/v3.91.1...v3.92.0) (2026-11-03)
+
+
+### Features
+
+* **api:** expand Live Responses delegation tools ([#1208](https://github.com/openai/openai-go/issues/1208)) ([b587c9d](https://github.com/openai/openai-go/commit/b587c9d74994245db466f20c8d5011bb61b662d7))
+* **realtime:** support typed existing-item references ([#1202](https://github.com/openai/openai-go/issues/1202)) ([355b804](https://github.com/openai/openai-go/commit/355b8040e4886d9a3124e9b1145343d23c3558e7))
+* **responses:** add opt-in WebSocket final response reconstruction ([#1197](https://github.com/openai/openai-go/issues/1197)) ([cdd7106](https://github.com/openai/openai-go/commit/cdd7106aba2c2b773a38ebe20f6478b50c2d219f))
+* **responses:** collect MCP argument progress ([#1198](https://github.com/openai/openai-go/issues/1198)) ([e54229a](https://github.com/openai/openai-go/commit/e54229af78b2cfa71a0f3de3b025c5d9b1503e1e))
+
+
+### Build System
+
+* **deps:** bump github.com/aws/aws-sdk-go-v2 in / ([#1204](https://github.com/openai/openai-go/issues/1204)) ([5a39fe8](https://github.com/openai/openai-go/commit/5a39fe8886edd8c00b1aff99eed7889c93e72358))
+* **deps:** bump github.com/aws/aws-sdk-go-v2/config in / ([#1205](https://github.com/openai/openai-go/issues/1205)) ([80ff174](https://github.com/openai/openai-go/commit/80ff174acd1a50b69042c75befc50e3d5ed3bdee))
+* **deps:** bump github.com/tidwall/gjson in / ([#1053](https://github.com/openai/openai-go/issues/1053)) ([ee3b8fd](https://github.com/openai/openai-go/commit/ee3b8fdd1e4b968a1cc55db7e7b700d06a8ae1bd))
+* **deps:** bump the codeql group with 2 updates ([#1207](https://github.com/openai/openai-go/issues/1207)) ([82b0e09](https://github.com/openai/openai-go/commit/82b0e0925500fdf933b07f0cea6171f0ff79ab63))
+
 ## [3.91.1](https://github.com/openai/openai-go/compare/v3.91.0...v3.91.1) (2026-11-01)
 
 
