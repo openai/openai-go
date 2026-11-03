@@ -294,14 +294,15 @@ func TestResponsesAccumulatorReconstructedLargeResponse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, lane, _ := reconstructionConnection(t, []string{string(frame), `{"type":"response.completed","stream_id":"reconstruction","response":{"id":"r","status":"completed"}}`})
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	// Keep reconstruction coverage above 64 MiB without a socket deadline.
+	// TestResponsesWebSocketLargeFinalResponse covers the large-frame transport;
+	// the fixture tests above cover reconstruction through a real connection.
+	frames := [][]byte{frame, []byte(`{"type":"response.completed","stream_id":"reconstruction","response":{"id":"r","status":"completed"}}`)}
 	var acc responses.ResponseAccumulator
-	for range 2 {
-		event, receiveErr := lane.Recv(ctx)
-		if receiveErr != nil {
-			t.Fatal(receiveErr)
+	for _, raw := range frames {
+		var event responses.ResponsesServerEventUnion
+		if decodeErr := json.Unmarshal(raw, &event); decodeErr != nil {
+			t.Fatal(decodeErr)
 		}
 		if addErr := acc.AddEvent(event); addErr != nil {
 			t.Fatal(addErr)
