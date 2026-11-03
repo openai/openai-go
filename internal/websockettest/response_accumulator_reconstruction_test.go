@@ -301,8 +301,8 @@ func TestResponsesAccumulatorReconstructedLargeResponse(t *testing.T) {
 	var acc responses.ResponseAccumulator
 	for _, raw := range frames {
 		var event responses.ResponsesServerEventUnion
-		if err := json.Unmarshal(raw, &event); err != nil {
-			t.Fatal(err)
+		if decodeErr := json.Unmarshal(raw, &event); decodeErr != nil {
+			t.Fatal(decodeErr)
 		}
 		if addErr := acc.AddEvent(event); addErr != nil {
 			t.Fatal(addErr)
