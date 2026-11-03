@@ -186,6 +186,7 @@ type DeleteFile string                                        // Always "delete_
 type Developer string                                         // Always "developer"
 type Direct string                                            // Always "direct"
 type Disabled string                                          // Always "disabled"
+type Discovery string                                         // Always "discovery"
 type DoubleClick string                                       // Always "double_click"
 type Drag string                                              // Always "drag"
 type Duration string                                          // Always "duration"
@@ -295,6 +296,7 @@ type MultiAgentCallOutput string                              // Always "multi_a
 type Namespace string                                         // Always "namespace"
 type None string                                              // Always "none"
 type Oci string                                               // Always "oci"
+type Oidc string                                              // Always "oidc"
 type OpenPage string                                          // Always "open_page"
 type OpenAIHosted string                                      // Always "openai_hosted"
 type OrganizationAdminAPIKey string                           // Always "organization.admin_api_key"
@@ -336,6 +338,10 @@ type OrganizationUsageVectorStoresResult string               // Always "organiz
 type OrganizationUsageWebSearchesResult string                // Always "organization.usage.web_searches.result"
 type OrganizationUser string                                  // Always "organization.user"
 type OrganizationUserDeleted string                           // Always "organization.user.deleted"
+type OrganizationWorkloadIdentityFederationRule string        // Always "organization.workload_identity_federation_rule"
+type OrganizationWorkloadIdentityFederationRuleDeleted string // Always "organization.workload_identity_federation_rule.deleted"
+type OrganizationWorkloadIdentityProvider string              // Always "organization.workload_identity_provider"
+type OrganizationWorkloadIdentityProviderDeleted string       // Always "organization.workload_identity_provider.deleted"
 type Other string                                             // Always "other"
 type OutputAudio string                                       // Always "output_audio"
 type OutputAudioBufferClear string                            // Always "output_audio_buffer.clear"
@@ -447,6 +453,7 @@ type ResponseWebSearchCallCompleted string                    // Always "respons
 type ResponseWebSearchCallInProgress string                   // Always "response.web_search_call.in_progress"
 type ResponseWebSearchCallSearching string                    // Always "response.web_search_call.searching"
 type Responses string                                         // Always "responses"
+type Restricted string                                        // Always "restricted"
 type ResumeSubagentCall string                                // Always "resume_subagent_call"
 type RetentionRatio string                                    // Always "retention_ratio"
 type Role string                                              // Always "role"
@@ -466,6 +473,7 @@ type SelfHosted string                                        // Always "self_ho
 type SemanticVad string                                       // Always "semantic_vad"
 type SendSubagentInputCall string                             // Always "send_subagent_input_call"
 type ServerVad string                                         // Always "server_vad"
+type ServiceAccountDefault string                             // Always "service_account_default"
 type SessionClose string                                      // Always "session.close"
 type SessionClosed string                                     // Always "session.closed"
 type SessionCommentaryAppend string                           // Always "session.commentary.append"
@@ -571,6 +579,7 @@ type Unrestricted string                                      // Always "unrestr
 type UpdateFile string                                        // Always "update_file"
 type Upload string                                            // Always "upload"
 type UploadPart string                                        // Always "upload.part"
+type UploadedJwks string                                      // Always "uploaded_jwks"
 type URL string                                               // Always "url"
 type URLCitation string                                       // Always "url_citation"
 type User string                                              // Always "user"
@@ -869,6 +878,7 @@ func (c DeleteFile) Default() DeleteFile                         { return "delet
 func (c Developer) Default() Developer                           { return "developer" }
 func (c Direct) Default() Direct                                 { return "direct" }
 func (c Disabled) Default() Disabled                             { return "disabled" }
+func (c Discovery) Default() Discovery                           { return "discovery" }
 func (c DoubleClick) Default() DoubleClick                       { return "double_click" }
 func (c Drag) Default() Drag                                     { return "drag" }
 func (c Duration) Default() Duration                             { return "duration" }
@@ -996,6 +1006,7 @@ func (c MultiAgentCallOutput) Default() MultiAgentCallOutput     { return "multi
 func (c Namespace) Default() Namespace                           { return "namespace" }
 func (c None) Default() None                                     { return "none" }
 func (c Oci) Default() Oci                                       { return "oci" }
+func (c Oidc) Default() Oidc                                     { return "oidc" }
 func (c OpenPage) Default() OpenPage                             { return "open_page" }
 func (c OpenAIHosted) Default() OpenAIHosted                     { return "openai_hosted" }
 func (c OrganizationAdminAPIKey) Default() OrganizationAdminAPIKey {
@@ -1102,6 +1113,18 @@ func (c OrganizationUsageWebSearchesResult) Default() OrganizationUsageWebSearch
 func (c OrganizationUser) Default() OrganizationUser { return "organization.user" }
 func (c OrganizationUserDeleted) Default() OrganizationUserDeleted {
 	return "organization.user.deleted"
+}
+func (c OrganizationWorkloadIdentityFederationRule) Default() OrganizationWorkloadIdentityFederationRule {
+	return "organization.workload_identity_federation_rule"
+}
+func (c OrganizationWorkloadIdentityFederationRuleDeleted) Default() OrganizationWorkloadIdentityFederationRuleDeleted {
+	return "organization.workload_identity_federation_rule.deleted"
+}
+func (c OrganizationWorkloadIdentityProvider) Default() OrganizationWorkloadIdentityProvider {
+	return "organization.workload_identity_provider"
+}
+func (c OrganizationWorkloadIdentityProviderDeleted) Default() OrganizationWorkloadIdentityProviderDeleted {
+	return "organization.workload_identity_provider.deleted"
 }
 func (c Other) Default() Other                                   { return "other" }
 func (c OutputAudio) Default() OutputAudio                       { return "output_audio" }
@@ -1328,6 +1351,7 @@ func (c ResponseWebSearchCallSearching) Default() ResponseWebSearchCallSearching
 	return "response.web_search_call.searching"
 }
 func (c Responses) Default() Responses                   { return "responses" }
+func (c Restricted) Default() Restricted                 { return "restricted" }
 func (c ResumeSubagentCall) Default() ResumeSubagentCall { return "resume_subagent_call" }
 func (c RetentionRatio) Default() RetentionRatio         { return "retention_ratio" }
 func (c Role) Default() Role                             { return "role" }
@@ -1349,6 +1373,7 @@ func (c SelfHosted) Default() SelfHosted                       { return "self_ho
 func (c SemanticVad) Default() SemanticVad                     { return "semantic_vad" }
 func (c SendSubagentInputCall) Default() SendSubagentInputCall { return "send_subagent_input_call" }
 func (c ServerVad) Default() ServerVad                         { return "server_vad" }
+func (c ServiceAccountDefault) Default() ServiceAccountDefault { return "service_account_default" }
 func (c SessionClose) Default() SessionClose                   { return "session.close" }
 func (c SessionClosed) Default() SessionClosed                 { return "session.closed" }
 func (c SessionCommentaryAppend) Default() SessionCommentaryAppend {
@@ -1498,6 +1523,7 @@ func (c Unrestricted) Default() Unrestricted                     { return "unres
 func (c UpdateFile) Default() UpdateFile                         { return "update_file" }
 func (c Upload) Default() Upload                                 { return "upload" }
 func (c UploadPart) Default() UploadPart                         { return "upload.part" }
+func (c UploadedJwks) Default() UploadedJwks                     { return "uploaded_jwks" }
 func (c URL) Default() URL                                       { return "url" }
 func (c URLCitation) Default() URLCitation                       { return "url_citation" }
 func (c User) Default() User                                     { return "user" }
@@ -1718,6 +1744,7 @@ func (c DeleteFile) MarshalJSON() ([]byte, error)                          { ret
 func (c Developer) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c Direct) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c Disabled) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
+func (c Discovery) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c DoubleClick) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c Drag) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Duration) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
@@ -1827,6 +1854,7 @@ func (c MultiAgentCallOutput) MarshalJSON() ([]byte, error)                { ret
 func (c Namespace) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c None) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Oci) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
+func (c Oidc) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c OpenPage) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c OpenAIHosted) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c OrganizationAdminAPIKey) MarshalJSON() ([]byte, error)             { return marshalString(c) }
@@ -1870,16 +1898,26 @@ func (c OrganizationUsageAudioTranscriptionsResult) MarshalJSON() ([]byte, error
 func (c OrganizationUsageCodeInterpreterSessionsResult) MarshalJSON() ([]byte, error) {
 	return marshalString(c)
 }
-func (c OrganizationUsageCompletionsResult) MarshalJSON() ([]byte, error)    { return marshalString(c) }
-func (c OrganizationUsageDecisionsResult) MarshalJSON() ([]byte, error)      { return marshalString(c) }
-func (c OrganizationUsageEmbeddingsResult) MarshalJSON() ([]byte, error)     { return marshalString(c) }
-func (c OrganizationUsageFileSearchesResult) MarshalJSON() ([]byte, error)   { return marshalString(c) }
-func (c OrganizationUsageImagesResult) MarshalJSON() ([]byte, error)         { return marshalString(c) }
-func (c OrganizationUsageModerationsResult) MarshalJSON() ([]byte, error)    { return marshalString(c) }
-func (c OrganizationUsageVectorStoresResult) MarshalJSON() ([]byte, error)   { return marshalString(c) }
-func (c OrganizationUsageWebSearchesResult) MarshalJSON() ([]byte, error)    { return marshalString(c) }
-func (c OrganizationUser) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
-func (c OrganizationUserDeleted) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c OrganizationUsageCompletionsResult) MarshalJSON() ([]byte, error)  { return marshalString(c) }
+func (c OrganizationUsageDecisionsResult) MarshalJSON() ([]byte, error)    { return marshalString(c) }
+func (c OrganizationUsageEmbeddingsResult) MarshalJSON() ([]byte, error)   { return marshalString(c) }
+func (c OrganizationUsageFileSearchesResult) MarshalJSON() ([]byte, error) { return marshalString(c) }
+func (c OrganizationUsageImagesResult) MarshalJSON() ([]byte, error)       { return marshalString(c) }
+func (c OrganizationUsageModerationsResult) MarshalJSON() ([]byte, error)  { return marshalString(c) }
+func (c OrganizationUsageVectorStoresResult) MarshalJSON() ([]byte, error) { return marshalString(c) }
+func (c OrganizationUsageWebSearchesResult) MarshalJSON() ([]byte, error)  { return marshalString(c) }
+func (c OrganizationUser) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c OrganizationUserDeleted) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c OrganizationWorkloadIdentityFederationRule) MarshalJSON() ([]byte, error) {
+	return marshalString(c)
+}
+func (c OrganizationWorkloadIdentityFederationRuleDeleted) MarshalJSON() ([]byte, error) {
+	return marshalString(c)
+}
+func (c OrganizationWorkloadIdentityProvider) MarshalJSON() ([]byte, error) { return marshalString(c) }
+func (c OrganizationWorkloadIdentityProviderDeleted) MarshalJSON() ([]byte, error) {
+	return marshalString(c)
+}
 func (c Other) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
 func (c OutputAudio) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c OutputAudioBufferClear) MarshalJSON() ([]byte, error)                { return marshalString(c) }
@@ -1995,6 +2033,7 @@ func (c ResponseWebSearchCallCompleted) MarshalJSON() ([]byte, error)      { ret
 func (c ResponseWebSearchCallInProgress) MarshalJSON() ([]byte, error)     { return marshalString(c) }
 func (c ResponseWebSearchCallSearching) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c Responses) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
+func (c Restricted) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c ResumeSubagentCall) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c RetentionRatio) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c Role) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
@@ -2014,6 +2053,7 @@ func (c SelfHosted) MarshalJSON() ([]byte, error)                          { ret
 func (c SemanticVad) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c SendSubagentInputCall) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c ServerVad) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
+func (c ServiceAccountDefault) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c SessionClose) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c SessionClosed) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
 func (c SessionCommentaryAppend) MarshalJSON() ([]byte, error)             { return marshalString(c) }
@@ -2119,6 +2159,7 @@ func (c Unrestricted) MarshalJSON() ([]byte, error)                        { ret
 func (c UpdateFile) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c Upload) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c UploadPart) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
+func (c UploadedJwks) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c URL) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
 func (c URLCitation) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c User) MarshalJSON() ([]byte, error)                                { return marshalString(c) }

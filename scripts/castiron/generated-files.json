@@ -7,7 +7,7 @@
     },
     "adminorganization.go": {
       "mode": "100644",
-      "sha256": "233f172f273ead3828c46281638339ce82f274c818e32b6e3228cc8156133b48"
+      "sha256": "69d1636f9db5977f834f0549f07290ea686feebed383bf51274749902a1ef8ba"
     },
     "adminorganizationadminapikey.go": {
       "mode": "100644",
@@ -265,13 +265,29 @@
       "mode": "100644",
       "sha256": "e1b8230f79ec20e3227f7b09167e7449fb7462b2b711d899b86ee8ac2c9d0b00"
     },
+    "adminorganizationworkloadidentityprovider.go": {
+      "mode": "100644",
+      "sha256": "7655a6ec160227953fa919126197666c9100befa99d51a0b083b6e2ca62ba097"
+    },
+    "adminorganizationworkloadidentityprovider_test.go": {
+      "mode": "100644",
+      "sha256": "975f07fe0d7ff8983ba0694b95784a937026278a5f1ee9fa2ea0656fdaefe387"
+    },
+    "adminorganizationworkloadidentityproviderfederationrule.go": {
+      "mode": "100644",
+      "sha256": "9f18c2006222a752835a990252bebe84a6a8589f53b42ad934c3da203bf26b48"
+    },
+    "adminorganizationworkloadidentityproviderfederationrule_test.go": {
+      "mode": "100644",
+      "sha256": "01fc003d3b651f66319c35d3462405ce90e38b80f0c201ce1589a5cc285e2f44"
+    },
     "aliases.go": {
       "mode": "100644",
       "sha256": "5a15ef466b8569ac4481bfa1afc092e18a997819009af9b6bbd390be7bb4160c"
     },
     "api.md": {
       "mode": "100644",
-      "sha256": "477f46701b0c99c58d7a33b72d76fc1cae10f656ba73db5764ab031ff987a5cf"
+      "sha256": "00b29dde74a4ff5d4cc5c0bf311c492d022d8833fa47b540dc85ed28ada8055b"
     },
     "audio.go": {
       "mode": "100644",
@@ -483,7 +499,7 @@
     },
     "betachatkit.go": {
       "mode": "100644",
-      "sha256": "e063aa38a9729a5c73449910ae47645ccd2819f7c9dcd4ebe7139ee967978f65"
+      "sha256": "f4dccd5c80b6c6dbb0a9101cc2c0606b37ec42bfb5e3b8370eb441aa2b1b98b6"
     },
     "betachatkitsession.go": {
       "mode": "100644",
@@ -495,7 +511,7 @@
     },
     "betachatkitthread.go": {
       "mode": "100644",
-      "sha256": "7614a97fad852f0e2b65d3e663225e670e1e8c9ba36984a3f2dfaadb62ea1100"
+      "sha256": "270de6854efa330b1967c64c26a9ea8d7b87d7ca32accb7ca655f75250b9825b"
     },
     "betachatkitthread_test.go": {
       "mode": "100644",
@@ -963,7 +979,7 @@
     },
     "shared/constant/constants.go": {
       "mode": "100644",
-      "sha256": "ec8f188cad43224ac0fe559a692633952e9414c102bda266ea465586ddb89d03"
+      "sha256": "77c3546e3bea6f8bc93d1648a9962fb36b3cc1e39f8955bf5d3898c280a83c18"
     },
     "shared/shared.go": {
       "mode": "100644",
