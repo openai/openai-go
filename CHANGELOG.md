@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.93.0](https://github.com/openai/openai-go/compare/v3.92.0...v3.93.0) (2026-11-03)
+
+
+### Features
+
+* **api:** add workload identity providers and federation rules ([#1209](https://github.com/openai/openai-go/issues/1209)) ([6f36b01](https://github.com/openai/openai-go/commit/6f36b01a1f95584ba01debeaa7868d9b972fa338))
+
 ## [3.92.0](https://github.com/openai/openai-go/compare/v3.91.1...v3.92.0) (2026-11-03)
 
 
