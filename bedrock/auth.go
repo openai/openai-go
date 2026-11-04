@@ -354,7 +354,7 @@ func defaultEndpointURL(endpoint Endpoint, region string) string {
 		standardSuffix, _ := runtimeDNSSuffixes(region)
 		return fmt.Sprintf("https://bedrock-runtime.%s.%s/openai/v1/", region, standardSuffix)
 	}
-	return fmt.Sprintf("https://bedrock-mantle.%s.api.aws/openai/v1/", region)
+	return fmt.Sprintf("https://bedrock-mantle.%s.api.aws/v1/", region)
 }
 
 func runtimeDNSSuffixes(region string) (standard string, dualStack string) {
