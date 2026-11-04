@@ -291,7 +291,7 @@
     },
     "aliases.go": {
       "mode": "100644",
-      "sha256": "5a15ef466b8569ac4481bfa1afc092e18a997819009af9b6bbd390be7bb4160c"
+      "sha256": "2ef61ca1f5913ee80536c023150a0fcc48b202edf27d89e244a333de63948b07"
     },
     "api.md": {
       "mode": "100644",
@@ -651,7 +651,7 @@
     },
     "conversations/aliases.go": {
       "mode": "100644",
-      "sha256": "d105d27aa2a8618e12d28f992c3c90bc55fcf560feba574501742a491459afe7"
+      "sha256": "8153cb86009af4003ab3b1156ca008c378db7b3fc6c6954f2aa74b2e47181430"
     },
     "conversations/api.md": {
       "mode": "100644",
@@ -779,7 +779,7 @@
     },
     "live/aliases.go": {
       "mode": "100644",
-      "sha256": "381e9fc7908ec8d3d409cf1615b5813f10e05433128c293a93b80dbf2f6143bf"
+      "sha256": "a42af1f502ece6d8ddc005a1cedcf354ec630b0226bff54e5ed3b92b3eb23f56"
     },
     "live/api.md": {
       "mode": "100644",
@@ -863,7 +863,7 @@
     },
     "realtime/aliases.go": {
       "mode": "100644",
-      "sha256": "eea90c4e4253ca033fcee15124d5377c69e8d395db22e5078ab42204eeddd844"
+      "sha256": "5c26640c3049d67d03bf8c448f4c61be452c67e4a9820407cfa64761ca117e76"
     },
     "realtime/api.md": {
       "mode": "100644",
@@ -923,7 +923,7 @@
     },
     "responses/aliases.go": {
       "mode": "100644",
-      "sha256": "cbcf50fc0e83327cafbbf072c748706a8f56b84d0e1f43485f197d1de99f3ee9"
+      "sha256": "a98947e3b46c95edf1f2de7951b42ca2b5c0829672ca74f123e5ab6f633c8f82"
     },
     "responses/api.md": {
       "mode": "100644",
@@ -947,7 +947,7 @@
     },
     "responses/response.go": {
       "mode": "100644",
-      "sha256": "ee64d7ba1257d1bcbebeb70753878eda1f469ca64e2358929f2202a70b759fd8"
+      "sha256": "feb117975d74dfcb22784eb7a7bf5eb587e386ababa06089d410a1750d14061e"
     },
     "responses/response_test.go": {
       "mode": "100644",
@@ -991,7 +991,7 @@
     },
     "shared/shared.go": {
       "mode": "100644",
-      "sha256": "4c1453c609988cc30fe84af9afa73e2b812fb410693926599663fc8b642f2297"
+      "sha256": "6dfb5ed5dce1c28f61b21e00b52b0b389e48919c53fe5ad924cad5268dd4f0f5"
     },
     "skill.go": {
       "mode": "100644",
@@ -1083,7 +1083,7 @@
     },
     "webhooks/aliases.go": {
       "mode": "100644",
-      "sha256": "f4406c3b63fa5ce7767224016ae1921fb71b08e767480fd36913d1329261649b"
+      "sha256": "9c29181040bdf3089fc946512f4ba7d0b80388c68a85c4b923d3e61d10b0205c"
     },
     "webhooks/api.md": {
       "mode": "100644",
