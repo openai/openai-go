@@ -1,5 +1,23 @@
 # Changelog
 
+## [3.94.0](https://github.com/openai/openai-go/compare/v3.93.0...v3.94.0) (2026-11-04)
+
+
+### Features
+
+* **api:** add project service tier settings ([#1212](https://github.com/openai/openai-go/issues/1212)) ([90fa868](https://github.com/openai/openai-go/commit/90fa868bcc4e769e0fb242222b3fa088e800b224))
+* **api:** add Responses cache-write usage details ([#1213](https://github.com/openai/openai-go/issues/1213)) ([d3c5a9a](https://github.com/openai/openai-go/commit/d3c5a9a1669c3999fc99ea568d1c33d5abb7dc6c))
+
+
+### Documentation
+
+* clarify generated-file ownership ([#1214](https://github.com/openai/openai-go/issues/1214)) ([709822f](https://github.com/openai/openai-go/commit/709822fc83b994e9cddf7d48cec2d36280feea38))
+
+
+### Build System
+
+* **deps:** bump github.com/Azure/azure-sdk-for-go/sdk/azcore in / ([#1096](https://github.com/openai/openai-go/issues/1096)) ([74ab0b2](https://github.com/openai/openai-go/commit/74ab0b2f65999a5d3b62199b4e39e519543cc328))
+
 ## [3.93.0](https://github.com/openai/openai-go/compare/v3.92.0...v3.93.0) (2026-11-03)
 
 
