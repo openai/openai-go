@@ -360,6 +360,7 @@ type ProjectGroupDeleted string                               // Always "project
 type ProjectModelPermissions string                           // Always "project.model_permissions"
 type ProjectModelPermissionsDeleted string                    // Always "project.model_permissions.deleted"
 type ProjectRateLimit string                                  // Always "project.rate_limit"
+type ProjectServiceTierSettings string                        // Always "project.service_tier_settings"
 type ProjectSpendAlert string                                 // Always "project.spend_alert"
 type ProjectSpendAlertDeleted string                          // Always "project.spend_alert.deleted"
 type ProjectSpendLimit string                                 // Always "project.spend_limit"
@@ -1155,7 +1156,10 @@ func (c ProjectModelPermissions) Default() ProjectModelPermissions {
 func (c ProjectModelPermissionsDeleted) Default() ProjectModelPermissionsDeleted {
 	return "project.model_permissions.deleted"
 }
-func (c ProjectRateLimit) Default() ProjectRateLimit   { return "project.rate_limit" }
+func (c ProjectRateLimit) Default() ProjectRateLimit { return "project.rate_limit" }
+func (c ProjectServiceTierSettings) Default() ProjectServiceTierSettings {
+	return "project.service_tier_settings"
+}
 func (c ProjectSpendAlert) Default() ProjectSpendAlert { return "project.spend_alert" }
 func (c ProjectSpendAlertDeleted) Default() ProjectSpendAlertDeleted {
 	return "project.spend_alert.deleted"
@@ -1936,6 +1940,7 @@ func (c ProjectGroupDeleted) MarshalJSON() ([]byte, error)                   { r
 func (c ProjectModelPermissions) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c ProjectModelPermissionsDeleted) MarshalJSON() ([]byte, error)        { return marshalString(c) }
 func (c ProjectRateLimit) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c ProjectServiceTierSettings) MarshalJSON() ([]byte, error)            { return marshalString(c) }
 func (c ProjectSpendAlert) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c ProjectSpendAlertDeleted) MarshalJSON() ([]byte, error)              { return marshalString(c) }
 func (c ProjectSpendLimit) MarshalJSON() ([]byte, error)                     { return marshalString(c) }

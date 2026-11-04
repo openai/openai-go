@@ -91,7 +91,7 @@
     },
     "adminorganizationproject.go": {
       "mode": "100644",
-      "sha256": "3601bea8ef7016e33db89930967060103c77d29b0984599a79b9b4e50a6e0a13"
+      "sha256": "99ca08fba7ea31c028859a5e122a2de7c2c2bafb2d777098fc1d646342e2bc25"
     },
     "adminorganizationproject_test.go": {
       "mode": "100644",
@@ -184,6 +184,14 @@
     "adminorganizationprojectserviceaccountapikey_test.go": {
       "mode": "100644",
       "sha256": "42d01b2ba438abb772407b2549d3c1a3176add8a9470041b39a6fb016cfe7588"
+    },
+    "adminorganizationprojectservicetiersetting.go": {
+      "mode": "100644",
+      "sha256": "f78ee4ebd41235ee8f6e4e403289e037f3d80d447d1b1efb0c029e803d59fa4f"
+    },
+    "adminorganizationprojectservicetiersetting_test.go": {
+      "mode": "100644",
+      "sha256": "4c1f998db709a8333bd1d717c392ccdd20a8f8ae283aa46bdea7acd29c556808"
     },
     "adminorganizationprojectspendalert.go": {
       "mode": "100644",
@@ -287,7 +295,7 @@
     },
     "api.md": {
       "mode": "100644",
-      "sha256": "00b29dde74a4ff5d4cc5c0bf311c492d022d8833fa47b540dc85ed28ada8055b"
+      "sha256": "f56a330e32128638efd42ca7f2052a20a48e646e21df3d65c943ed614d999eac"
     },
     "audio.go": {
       "mode": "100644",
@@ -979,7 +987,7 @@
     },
     "shared/constant/constants.go": {
       "mode": "100644",
-      "sha256": "77c3546e3bea6f8bc93d1648a9962fb36b3cc1e39f8955bf5d3898c280a83c18"
+      "sha256": "c60542206498e8a24594a6adf6dc9f3d932d30b598b34384823bfd900c543947"
     },
     "shared/shared.go": {
       "mode": "100644",
