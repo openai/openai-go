@@ -527,7 +527,7 @@
     },
     "betaresponse.go": {
       "mode": "100644",
-      "sha256": "3ee65bcc9dadce76b71b335c30f516506563b3be7530933b06ba05a2d9c41261"
+      "sha256": "66876292831b0d6c64a889f4d3a1be523eabc546727c97c9c8442d5b8ff8511b"
     },
     "betaresponse_test.go": {
       "mode": "100644",
@@ -667,7 +667,7 @@
     },
     "conversations/item.go": {
       "mode": "100644",
-      "sha256": "2497b6bee5f03c29fe5b2d671a90fe3999aae2df245975c38b8316f6b6f00dee"
+      "sha256": "f3455c64daa9830de15b376e9e130db31a03bf14a7d9f02e5413ef8d9ab809e0"
     },
     "conversations/item_test.go": {
       "mode": "100644",
@@ -759,11 +759,11 @@
     },
     "image.go": {
       "mode": "100644",
-      "sha256": "5ee1a7b437b4330c2e0742d89687f3c8b6e573348e3cdf2d3e57cad73d9ce914"
+      "sha256": "b9e828313f67e0523b2c52e6ca119c0f35b98f254e5d16607b16c1ff463b5f46"
     },
     "image_test.go": {
       "mode": "100644",
-      "sha256": "144335624424d271d25c3c0009a64ce165f7f8186bd0e074502254dbbb35c32c"
+      "sha256": "d93f5958942b068ac562d7e134843b0f57eda041d60f28c17afb017a71078f23"
     },
     "internal/apiform/encoding.go": {
       "mode": "100644",
@@ -947,7 +947,7 @@
     },
     "responses/response.go": {
       "mode": "100644",
-      "sha256": "feb117975d74dfcb22784eb7a7bf5eb587e386ababa06089d410a1750d14061e"
+      "sha256": "2ac1a291407a724ce674b9da59c90c26615c5b1000327b284b2d927b809024c2"
     },
     "responses/response_test.go": {
       "mode": "100644",
