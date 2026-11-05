@@ -675,7 +675,7 @@
     },
     "data_residency_contract_test.go": {
       "mode": "100644",
-      "sha256": "22ee3ecb920018eb8ce635d0c6e86580bbe72b16468d1c8038c5b418307ab206"
+      "sha256": "a3a7962ac9192f93fb5b229e1219ba73e5f732268caabbb4fa3a533abedbad44"
     },
     "decision.go": {
       "mode": "100644",
@@ -851,7 +851,7 @@
     },
     "option/data_residency.go": {
       "mode": "100644",
-      "sha256": "621851ba3d3ed112395b99228485dc1ddf7846ad2a97e1069304791b5e958cfe"
+      "sha256": "cea957ae46d61d85ca25d54b6ed13486ae79c6af493d5d2593a8179e764ddfd8"
     },
     "paginationauto_test.go": {
       "mode": "100644",
