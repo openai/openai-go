@@ -38137,6 +38137,7 @@ const (
 	ResponseCompactParamsModelGPTDaybreakBlueLatest ResponseCompactParamsModel = "gpt-daybreak-blue-latest"
 	ResponseCompactParamsModelGPTDaybreakRedLatest  ResponseCompactParamsModel = "gpt-daybreak-red-latest"
 	ResponseCompactParamsModelGPT5_6Cyber           ResponseCompactParamsModel = "gpt-5.6-cyber"
+	ResponseCompactParamsModelGPT6Cyber             ResponseCompactParamsModel = "gpt-6-cyber"
 	ResponseCompactParamsModelGPTRosalindResearch   ResponseCompactParamsModel = "gpt-rosalind-research"
 	ResponseCompactParamsModelGPT6Rosalind          ResponseCompactParamsModel = "gpt-6-rosalind"
 )
