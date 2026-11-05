@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.95.0](https://github.com/openai/openai-go/compare/v3.94.0...v3.95.0) (2026-11-05)
+
+
+### Features
+
+* **api:** add Australia, India, and Japan residency options ([#1218](https://github.com/openai/openai-go/issues/1218)) ([6d16502](https://github.com/openai/openai-go/commit/6d16502078401697dc2e830bea0a893071320706))
+* **api:** add GPT-6 Rosalind to the model catalog ([#1216](https://github.com/openai/openai-go/issues/1216)) ([a47bab2](https://github.com/openai/openai-go/commit/a47bab2d14b3f540ec75bf0058fb047cf2619e8d))
+* **api:** add image complexity and GIF and SVG output controls ([#1219](https://github.com/openai/openai-go/issues/1219)) ([6e7ade4](https://github.com/openai/openai-go/commit/6e7ade4c8ef4d07df93504b1bf16d435a4b389ea))
+
 ## [3.94.0](https://github.com/openai/openai-go/compare/v3.93.0...v3.94.0) (2026-11-04)
 
 
