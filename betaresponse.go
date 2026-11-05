@@ -5142,6 +5142,7 @@ const (
 	BetaResponseModelGPTDaybreakBlueLatest BetaResponseModel = "gpt-daybreak-blue-latest"
 	BetaResponseModelGPTDaybreakRedLatest  BetaResponseModel = "gpt-daybreak-red-latest"
 	BetaResponseModelGPT5_6Cyber           BetaResponseModel = "gpt-5.6-cyber"
+	BetaResponseModelGPT6Cyber             BetaResponseModel = "gpt-6-cyber"
 	BetaResponseModelGPTRosalindResearch   BetaResponseModel = "gpt-rosalind-research"
 )
 
@@ -37104,6 +37105,7 @@ const (
 	BetaResponsesClientEventResponseCreateModelGPTDaybreakBlueLatest BetaResponsesClientEventResponseCreateModel = "gpt-daybreak-blue-latest"
 	BetaResponsesClientEventResponseCreateModelGPTDaybreakRedLatest  BetaResponsesClientEventResponseCreateModel = "gpt-daybreak-red-latest"
 	BetaResponsesClientEventResponseCreateModelGPT5_6Cyber           BetaResponsesClientEventResponseCreateModel = "gpt-5.6-cyber"
+	BetaResponsesClientEventResponseCreateModelGPT6Cyber             BetaResponsesClientEventResponseCreateModel = "gpt-6-cyber"
 	BetaResponsesClientEventResponseCreateModelGPTRosalindResearch   BetaResponsesClientEventResponseCreateModel = "gpt-rosalind-research"
 )
 
@@ -45433,6 +45435,7 @@ const (
 	BetaResponseNewParamsModelGPTDaybreakBlueLatest BetaResponseNewParamsModel = "gpt-daybreak-blue-latest"
 	BetaResponseNewParamsModelGPTDaybreakRedLatest  BetaResponseNewParamsModel = "gpt-daybreak-red-latest"
 	BetaResponseNewParamsModelGPT5_6Cyber           BetaResponseNewParamsModel = "gpt-5.6-cyber"
+	BetaResponseNewParamsModelGPT6Cyber             BetaResponseNewParamsModel = "gpt-6-cyber"
 	BetaResponseNewParamsModelGPTRosalindResearch   BetaResponseNewParamsModel = "gpt-rosalind-research"
 )
 
@@ -46353,6 +46356,7 @@ const (
 	BetaResponseCompactParamsModelGPTDaybreakBlueLatest BetaResponseCompactParamsModel = "gpt-daybreak-blue-latest"
 	BetaResponseCompactParamsModelGPTDaybreakRedLatest  BetaResponseCompactParamsModel = "gpt-daybreak-red-latest"
 	BetaResponseCompactParamsModelGPT5_6Cyber           BetaResponseCompactParamsModel = "gpt-5.6-cyber"
+	BetaResponseCompactParamsModelGPT6Cyber             BetaResponseCompactParamsModel = "gpt-6-cyber"
 	BetaResponseCompactParamsModelGPTRosalindResearch   BetaResponseCompactParamsModel = "gpt-rosalind-research"
 )
 
