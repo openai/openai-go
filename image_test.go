@@ -66,6 +66,9 @@ func TestImageEditWithOptionalParams(t *testing.T) {
 		},
 		Prompt:            "A cute baby sea otter wearing a beret",
 		Background:        openai.ImageEditParamsBackgroundTransparent,
+		Complexity:        openai.ImageEditParamsComplexityLow,
+		FrameCount:        openai.Int(2),
+		FrameDurationMs:   openai.Int(20),
 		InputFidelity:     openai.ImageEditParamsInputFidelityHigh,
 		Markup:            io.Reader(bytes.NewBuffer([]byte("Example data"))),
 		Mask:              io.Reader(bytes.NewBuffer([]byte("Example data"))),
@@ -106,6 +109,9 @@ func TestImageGenerateWithOptionalParams(t *testing.T) {
 	_, err := client.Images.Generate(context.TODO(), openai.ImageGenerateParams{
 		Prompt:            "A cute baby sea otter",
 		Background:        openai.ImageGenerateParamsBackgroundTransparent,
+		Complexity:        openai.ImageGenerateParamsComplexityLow,
+		FrameCount:        openai.Int(2),
+		FrameDurationMs:   openai.Int(20),
 		Model:             openai.ImageModelGPTImage2_5Flare,
 		Moderation:        openai.ImageGenerateParamsModerationLow,
 		N:                 openai.Int(1),
@@ -117,7 +123,13 @@ func TestImageGenerateWithOptionalParams(t *testing.T) {
 		SafetyIdentifier:  openai.String("user-1234"),
 		Size:              openai.ImageGenerateParamsSize1024x1024,
 		Style:             openai.ImageGenerateParamsStyleVivid,
-		User:              openai.String("user-1234"),
+		Svg: openai.ImageGenerateParamsSvg{
+			Model: "x",
+			Reasoning: openai.ImageGenerateParamsSvgReasoning{
+				Effort: "none",
+			},
+		},
+		User: openai.String("user-1234"),
 	})
 	if err != nil {
 		var apierr *openai.Error
