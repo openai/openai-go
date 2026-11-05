@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.96.0](https://github.com/openai/openai-go/compare/v3.95.0...v3.96.0) (2026-11-05)
+
+
+### Features
+
+* **api:** add a model option for Responses ([#1220](https://github.com/openai/openai-go/issues/1220)) ([94977c6](https://github.com/openai/openai-go/commit/94977c6163b613787fb7ee38ec086a727e002e86))
+
 ## [3.95.0](https://github.com/openai/openai-go/compare/v3.94.0...v3.95.0) (2026-11-05)
 
 
