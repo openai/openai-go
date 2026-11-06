@@ -16,6 +16,27 @@ wait. A successful send confirms a local write, not server processing. Inspect
 Explicit `Reconnect` obtains fresh credentials and opens a new connection; it
 does not replay commands or restore API session state.
 
+## Reusing existing Realtime items
+
+Use `SendResponseCreate` to combine references to existing session items with
+ordinary conversation items. For example, reference an earlier function call
+before supplying its output:
+
+```go
+err := conn.SendResponseCreate(ctx, realtime.ResponseCreateEventParam{}, []realtime.ResponseInput{
+    realtime.ResponseInputReference("item_previous_call"),
+    realtime.ResponseInputItem(realtime.ConversationItemParamOfFunctionCallOutput("call_lookup", "tool result")),
+})
+if err != nil {
+    return err
+}
+```
+
+The referenced item must already belong to the current Realtime session. The
+helper replaces `response.input` and preserves the event's other fields. Pass an
+empty slice or `nil` to send an empty input array. The existing `Send` method and
+conversation-item types remain available.
+
 ## Finishing a Translation session
 
 Use `client.Realtime.ConnectTranslation` when you want the SDK to finish and drain

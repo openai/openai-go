@@ -191,7 +191,7 @@ type FineTuningAlphaGraderValidateResponseGraderUnion struct {
 	// This field is from variant [MultiGrader].
 	CalculateOutput string `json:"calculate_output"`
 	// This field is from variant [MultiGrader].
-	Graders MultiGraderGradersUnion `json:"graders"`
+	Graders map[string]MultiGraderGraderUnion `json:"graders"`
 	JSON    struct {
 		Input            respjson.Field
 		Name             respjson.Field
@@ -382,9 +382,9 @@ func (u FineTuningAlphaGraderRunParamsGraderUnion) GetCalculateOutput() *string 
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u FineTuningAlphaGraderRunParamsGraderUnion) GetGraders() *MultiGraderGradersUnionParam {
+func (u FineTuningAlphaGraderRunParamsGraderUnion) GetGraders() map[string]MultiGraderGraderUnionParam {
 	if vt := u.OfMulti; vt != nil {
-		return &vt.Graders
+		return vt.Graders
 	}
 	return nil
 }
@@ -571,9 +571,9 @@ func (u FineTuningAlphaGraderValidateParamsGraderUnion) GetCalculateOutput() *st
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u FineTuningAlphaGraderValidateParamsGraderUnion) GetGraders() *MultiGraderGradersUnionParam {
+func (u FineTuningAlphaGraderValidateParamsGraderUnion) GetGraders() map[string]MultiGraderGraderUnionParam {
 	if vt := u.OfMultiGrader; vt != nil {
-		return &vt.Graders
+		return vt.Graders
 	}
 	return nil
 }

@@ -64,21 +64,24 @@ func (r *ChatKitWorkflow) UnmarshalJSON(data []byte) error {
 }
 
 // ChatKitWorkflowStateVariableUnion contains all possible properties and values
-// from [string], [bool], [float64].
+// from [string], [int64], [bool], [float64].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 //
 // If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfBool OfFloat]
+// will be valid: OfString OfInt OfBool OfFloat]
 type ChatKitWorkflowStateVariableUnion struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
+	// This field will be present if the value is a [int64] instead of an object.
+	OfInt int64 `json:",inline"`
 	// This field will be present if the value is a [bool] instead of an object.
 	OfBool bool `json:",inline"`
 	// This field will be present if the value is a [float64] instead of an object.
 	OfFloat float64 `json:",inline"`
 	JSON    struct {
 		OfString respjson.Field
+		OfInt    respjson.Field
 		OfBool   respjson.Field
 		OfFloat  respjson.Field
 		raw      string
@@ -86,6 +89,11 @@ type ChatKitWorkflowStateVariableUnion struct {
 }
 
 func (u ChatKitWorkflowStateVariableUnion) AsString() (v string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ChatKitWorkflowStateVariableUnion) AsInt() (v int64) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }

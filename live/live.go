@@ -1765,27 +1765,64 @@ func (r *DecisionItemCreateEventParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The properties Content, Role are required.
 type DecisionItemCreateEventItemParam struct {
 	// The text input to the model.
 	Content DecisionItemCreateEventItemContentUnionParam `json:"content,omitzero" api:"required"`
 	// The unique ID of this message item.
-	ID param.Opt[string] `json:"id,omitzero"`
-	// Any of "message".
-	Type string `json:"type,omitzero"`
+	ID   param.Opt[string] `json:"id,omitzero"`
+	Type string            `json:"type,omitzero"`
 	// The message role. Always `user`.
-	//
-	// This field can be elided, and will marshal its zero value as "user".
 	Role constant.User `json:"role" default:"user"`
 	paramObj
+	decodedExtraFields map[string]json.RawMessage `json:"-"`
 }
 
 func (r DecisionItemCreateEventItemParam) MarshalJSON() (data []byte, err error) {
 	type shadow DecisionItemCreateEventItemParam
-	return param.MarshalObject(r, (*shadow)(&r))
+	if _, overridden := r.Overrides(); overridden {
+		return param.MarshalObject(r, (*shadow)(&r))
+	}
+	_, typeOverridden := r.ExtraFields()["type"]
+	omitRole := !typeOverridden && r.Role == "" && r.Type != "" && r.Type != "message"
+	if len(r.decodedExtraFields) == 0 && !omitRole {
+		return param.MarshalObject(r, (*shadow)(&r))
+	}
+	extras := make(map[string]any, len(r.decodedExtraFields)+len(r.ExtraFields())+1)
+	for key, value := range r.decodedExtraFields {
+		extras[key] = value
+	}
+	if omitRole {
+		extras["role"] = param.Omit
+	}
+	for key, value := range r.ExtraFields() {
+		extras[key] = value
+	}
+	return param.MarshalWithExtras(r, (*shadow)(&r), extras)
 }
 func (r *DecisionItemCreateEventItemParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	if err := apijson.UnmarshalRoot(data, r); err != nil {
+		return err
+	}
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(data, &fields); err != nil {
+		return err
+	}
+	delete(fields, "content")
+	delete(fields, "id")
+	delete(fields, "type")
+	delete(fields, "role")
+	if len(fields) == 0 {
+		return nil
+	}
+	extras := make(map[string]json.RawMessage, len(fields)+len(r.decodedExtraFields))
+	for key, value := range r.decodedExtraFields {
+		extras[key] = value
+	}
+	for key, value := range fields {
+		extras[key] = value
+	}
+	r.decodedExtraFields = extras
+	return nil
 }
 
 func init() {
@@ -1946,8 +1983,7 @@ type DecisionItemCreatedEventItem struct {
 	Content DecisionItemCreatedEventItemContentUnion `json:"content" api:"required"`
 	// The message role. Always `user`.
 	Role constant.User `json:"role" default:"user"`
-	// Any of "message".
-	Type string `json:"type"`
+	Type string        `json:"type"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
