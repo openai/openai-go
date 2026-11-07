@@ -295,7 +295,7 @@
     },
     "api.md": {
       "mode": "100644",
-      "sha256": "f56a330e32128638efd42ca7f2052a20a48e646e21df3d65c943ed614d999eac"
+      "sha256": "a57e1d6fe0e53c6db8f94be16de4f5592a77a19185ee7136fb656541e3fe8c97"
     },
     "audio.go": {
       "mode": "100644",
@@ -363,11 +363,27 @@
     },
     "betaagent.go": {
       "mode": "100644",
-      "sha256": "a58669ae633d448462e9c8b9cf90b067c5643afef7a061ad6fcfce20d66b792b"
+      "sha256": "4d25e9b9068b4fb0111a1d9f9671d76f58ed633406e9a6b8eeea11a9cc99df15"
     },
     "betaagent_test.go": {
       "mode": "100644",
       "sha256": "2ffdc3bf29e9a5938fb07d158c73a19176d08fcde6f885eeb84073b16ddf3cfa"
+    },
+    "betaagentautomation.go": {
+      "mode": "100644",
+      "sha256": "128757d99e205a09e684df2853ffdda91a565d23198d58ace2e66e86618a3259"
+    },
+    "betaagentautomation_test.go": {
+      "mode": "100644",
+      "sha256": "c6e070e0cb7593d7806fffa26a4011e688c92974a5bb1aa472ffa85ac949b73a"
+    },
+    "betaagentautomationinvocation.go": {
+      "mode": "100644",
+      "sha256": "675cfb6813c8b1005e4b139774d484ea985908081ed84c42af6ba36e4969ca78"
+    },
+    "betaagentautomationinvocation_test.go": {
+      "mode": "100644",
+      "sha256": "c36660ba6f1536b818c6ff8874769ec07452c38e02e1df84894b5bb22a4e3519"
     },
     "betaagentenvironment.go": {
       "mode": "100644",
@@ -379,7 +395,7 @@
     },
     "betaagentenvironmentfile.go": {
       "mode": "100644",
-      "sha256": "12f08b1a4f730cd581d409f4b5e4235c4f89d0c31f9bf1a556d781e79e2c854f"
+      "sha256": "bae59b1bed4727ea745cea27d895b6cabd2cdf8912768d3c8f57299d3c1f8a00"
     },
     "betaagentenvironmentfile_test.go": {
       "mode": "100644",
@@ -871,7 +887,7 @@
     },
     "realtime/call.go": {
       "mode": "100644",
-      "sha256": "869a8d23f3ce07711269a1307ad42312397f675108ac41b22c1a3df954b5b4ab"
+      "sha256": "5bd9254f275c9cea44beb8a149f75581bc10ccbc34ac068e62a3d1e398a04639"
     },
     "realtime/call_test.go": {
       "mode": "100644",
@@ -911,7 +927,7 @@
     },
     "realtime/translationclientsecret.go": {
       "mode": "100644",
-      "sha256": "126f3b347abf72962b208e24b9c4e01cd4fbd5452f5822a460b584ca5fd1201c"
+      "sha256": "2bdb764ee72ab99fc16b9dfeedf1f02a3e1c4e9dc5e250dca682e609210e14ca"
     },
     "realtime/translationclientsecret_test.go": {
       "mode": "100644",
@@ -987,7 +1003,7 @@
     },
     "shared/constant/constants.go": {
       "mode": "100644",
-      "sha256": "c60542206498e8a24594a6adf6dc9f3d932d30b598b34384823bfd900c543947"
+      "sha256": "6413d4c3945cafef0125c5609319ea72741f97efa946f43b28856e18412c7e91"
     },
     "shared/shared.go": {
       "mode": "100644",
