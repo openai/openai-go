@@ -12,7 +12,6 @@ import (
 
 	"github.com/openai/openai-go/v3/internal/apiform"
 	"github.com/openai/openai-go/v3/internal/apijson"
-	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/param"
@@ -141,7 +140,7 @@ type CallAcceptParams struct {
 }
 
 func (r CallAcceptParams) MarshalJSON() (data []byte, err error) {
-	return shimjson.Marshal(r.RealtimeSessionCreateRequest)
+	return param.MarshalObject(r, r.RealtimeSessionCreateRequest)
 }
 func (r *CallAcceptParams) UnmarshalJSON(data []byte) error {
 	if r == nil {

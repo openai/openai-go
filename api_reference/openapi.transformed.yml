@@ -87690,7 +87690,9 @@ components:
       additionalProperties: false
       description: Fields shared by periodic and one-time automations.
     AutomationResource:
-      description: A saved automation and its schedule.
+      x-openai-go-public-shape:
+        projection_sources:
+          metadata: '#/components/schemas/AutomationResourcePeriodic/properties/metadata'
       discriminator:
         propertyName: type
         mapping:
@@ -87699,6 +87701,7 @@ components:
       x-oai-discriminator-values:
       - periodic
       - once
+      description: A saved automation and its schedule.
       anyOf:
       - $ref: '#/components/schemas/AutomationResourcePeriodic'
       - $ref: '#/components/schemas/AutomationResourceOnce'

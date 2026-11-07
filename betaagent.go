@@ -30,6 +30,7 @@ import (
 // the [NewBetaAgentService] method instead.
 type BetaAgentService struct {
 	Options      []option.RequestOption
+	Automations  BetaAgentAutomationService
 	Environments BetaAgentEnvironmentService
 	Vaults       BetaAgentVaultService
 	Sessions     BetaAgentSessionService
@@ -41,6 +42,7 @@ type BetaAgentService struct {
 func NewBetaAgentService(opts ...option.RequestOption) (r BetaAgentService) {
 	r = BetaAgentService{}
 	r.Options = requestconfig.InheritedOptions(opts...)
+	r.Automations = NewBetaAgentAutomationService(opts...)
 	r.Environments = NewBetaAgentEnvironmentService(opts...)
 	r.Vaults = NewBetaAgentVaultService(opts...)
 	r.Sessions = NewBetaAgentSessionService(opts...)
