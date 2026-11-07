@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 )
 
@@ -100,4 +101,58 @@ func TestGenerateSchemaPreserves64BitIntegerEnums(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestGenerateSchemaPreservesRecursiveReferences(t *testing.T) {
+	type recursiveSchemaNode struct {
+		Children []recursiveSchemaNode `json:"children"`
+	}
+
+	schema, err := GenerateSchema[recursiveSchemaNode]()
+	if err != nil {
+		t.Fatalf("GenerateSchema() error = %v", err)
+	}
+
+	data, err := json.Marshal(schema)
+	if err != nil {
+		t.Fatalf("json.Marshal() error = %v", err)
+	}
+
+	var decoded struct {
+		Type string `json:"type"`
+		Defs map[string]struct {
+			Properties map[string]struct {
+				Items struct {
+					Ref string `json:"$ref"`
+				} `json:"items"`
+			} `json:"properties"`
+		} `json:"$defs"`
+	}
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("json.Unmarshal() error = %v", err)
+	}
+
+	if decoded.Type != "object" {
+		t.Fatalf("root type = %q, want %q", decoded.Type, "object")
+	}
+	if len(decoded.Defs) == 0 {
+		t.Fatal("recursive schema has no $defs")
+	}
+
+	const refPrefix = "#/$defs/"
+	for definitionName, definition := range decoded.Defs {
+		children, ok := definition.Properties["children"]
+		if !ok {
+			continue
+		}
+		if !strings.HasPrefix(children.Items.Ref, refPrefix) {
+			t.Fatalf("%s children items $ref = %q, want prefix %q", definitionName, children.Items.Ref, refPrefix)
+		}
+		if strings.TrimPrefix(children.Items.Ref, refPrefix) != definitionName {
+			t.Fatalf("%s children items $ref = %q, want self-reference", definitionName, children.Items.Ref)
+		}
+		return
+	}
+
+	t.Fatalf("recursive $defs has no definition with children property: %s", data)
 }
