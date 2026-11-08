@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.97.0](https://github.com/openai/openai-go/compare/v3.96.0...v3.97.0) (2026-11-08)
+
+
+### Features
+
+* **api:** add agent scheduling APIs ([#1225](https://github.com/openai/openai-go/issues/1225)) ([80eee78](https://github.com/openai/openai-go/commit/80eee787aa06bacf51f3269af3ee77e1ec9ca7a0))
+
+
+### Documentation
+
+* consolidate AGENTS.md guidance ([#1223](https://github.com/openai/openai-go/issues/1223)) ([1996c65](https://github.com/openai/openai-go/commit/1996c655a3e95e976b4c3a75e93ad27b7c19d56a))
+
 ## [3.96.0](https://github.com/openai/openai-go/compare/v3.95.0...v3.96.0) (2026-11-05)
 
 
