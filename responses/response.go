@@ -235,7 +235,8 @@ type CompactedResponse struct {
 	Output []ResponseOutputItemUnion `json:"output" api:"required"`
 	// Token accounting for the compaction pass, including cached, reasoning, and total
 	// tokens.
-	Usage ResponseUsage `json:"usage" api:"required"`
+	Usage ResponseUsage          `json:"usage" api:"required"`
+	Image CompactedResponseImage `json:"image"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -243,6 +244,7 @@ type CompactedResponse struct {
 		Object      respjson.Field
 		Output      respjson.Field
 		Usage       respjson.Field
+		Image       respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -251,6 +253,25 @@ type CompactedResponse struct {
 // Returns the unmodified JSON received from the API
 func (r CompactedResponse) RawJSON() string { return r.JSON.raw }
 func (r *CompactedResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type CompactedResponseImage struct {
+	// Effective image context optimization policy.
+	//
+	// Any of "enabled", "disabled".
+	ContextCompression string `json:"context_compression" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ContextCompression respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r CompactedResponseImage) RawJSON() string { return r.JSON.raw }
+func (r *CompactedResponseImage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -3651,6 +3672,7 @@ type Response struct {
 	// The conversation that this response belonged to. Input items and output items
 	// from this response were automatically added to this conversation.
 	Conversation ResponseConversation `json:"conversation" api:"nullable"`
+	Image        ResponseImage        `json:"image"`
 	// An upper bound for the number of tokens that can be generated for a response,
 	// including visible output tokens and
 	// [reasoning tokens](https://developers.openai.com/api/docs/guides/reasoning).
@@ -3811,6 +3833,7 @@ type Response struct {
 		Background             respjson.Field
 		CompletedAt            respjson.Field
 		Conversation           respjson.Field
+		Image                  respjson.Field
 		MaxOutputTokens        respjson.Field
 		MaxToolCalls           respjson.Field
 		Moderation             respjson.Field
@@ -4037,6 +4060,25 @@ type ResponseConversation struct {
 // Returns the unmodified JSON received from the API
 func (r ResponseConversation) RawJSON() string { return r.JSON.raw }
 func (r *ResponseConversation) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponseImage struct {
+	// Effective image context optimization policy.
+	//
+	// Any of "enabled", "disabled".
+	ContextCompression string `json:"context_compression" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ContextCompression respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseImage) RawJSON() string { return r.JSON.raw }
+func (r *ResponseImage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -29361,6 +29403,14 @@ func (u ResponsesClientEventUnionParam) GetGenerate() *bool {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetImage() *ResponsesClientEventResponseCreateImageParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.Image
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesClientEventUnionParam) GetInclude() []ResponseIncludable {
 	if vt := u.OfResponseCreate; vt != nil {
 		return vt.Include
@@ -29829,6 +29879,8 @@ type ResponsesClientEventResponseCreateParam struct {
 	Truncation string `json:"truncation,omitzero"`
 	// Domain-specific access programs to use for this request.
 	AccessPrograms ResponsesClientEventResponseCreateAccessProgramsParam `json:"access_programs,omitzero"`
+	// Request level image options.
+	Image ResponsesClientEventResponseCreateImageParam `json:"image,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
 	//
 	// Learn more:
@@ -29979,6 +30031,31 @@ func (u ResponsesClientEventResponseCreateConversationUnionParam) MarshalJSON() 
 }
 func (u *ResponsesClientEventResponseCreateConversationUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
+}
+
+// Request level image options.
+type ResponsesClientEventResponseCreateImageParam struct {
+	// Controls image context optimization. Defaults to `auto`, which uses the model,
+	// transport, and input to select a policy. Use `enabled` to require compression
+	// support or `disabled` to turn it off.
+	//
+	// Any of "auto", "enabled", "disabled".
+	ContextCompression string `json:"context_compression,omitzero"`
+	paramObj
+}
+
+func (r ResponsesClientEventResponseCreateImageParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesClientEventResponseCreateImageParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesClientEventResponseCreateImageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponsesClientEventResponseCreateImageParam](
+		"context_compression", "auto", "enabled", "disabled",
+	)
 }
 
 // Only one field can be non-zero.
@@ -37178,6 +37255,8 @@ type ResponseNewParams struct {
 	Truncation ResponseNewParamsTruncation `json:"truncation,omitzero"`
 	// Domain-specific access programs to use for this request.
 	AccessPrograms ResponseNewParamsAccessPrograms `json:"access_programs,omitzero"`
+	// Request level image options.
+	Image ResponseNewParamsImage `json:"image,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
 	//
 	// Learn more:
@@ -37312,6 +37391,31 @@ func (u ResponseNewParamsConversationUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *ResponseNewParamsConversationUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
+}
+
+// Request level image options.
+type ResponseNewParamsImage struct {
+	// Controls image context optimization. Defaults to `auto`, which uses the model,
+	// transport, and input to select a policy. Use `enabled` to require compression
+	// support or `disabled` to turn it off.
+	//
+	// Any of "auto", "enabled", "disabled".
+	ContextCompression string `json:"context_compression,omitzero"`
+	paramObj
+}
+
+func (r ResponseNewParamsImage) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseNewParamsImage
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseNewParamsImage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseNewParamsImage](
+		"context_compression", "auto", "enabled", "disabled",
+	)
 }
 
 // Only one field can be non-zero.
@@ -37750,6 +37854,8 @@ type ResponseCompactParams struct {
 	//
 	// Any of "auto", "default", "fast", "flex", "priority".
 	ServiceTier ResponseCompactParamsServiceTier `json:"service_tier,omitzero"`
+	// Request level image options.
+	Image ResponseCompactParamsImage `json:"image,omitzero"`
 	paramObj
 }
 
@@ -38141,6 +38247,31 @@ const (
 	ResponseCompactParamsModelGPTRosalindResearch   ResponseCompactParamsModel = "gpt-rosalind-research"
 	ResponseCompactParamsModelGPT6Rosalind          ResponseCompactParamsModel = "gpt-6-rosalind"
 )
+
+// Request level image options.
+type ResponseCompactParamsImage struct {
+	// Controls image context optimization. Defaults to `auto`, which uses the model,
+	// transport, and input to select a policy. Use `enabled` to require compression
+	// support or `disabled` to turn it off.
+	//
+	// Any of "auto", "enabled", "disabled".
+	ContextCompression string `json:"context_compression,omitzero"`
+	paramObj
+}
+
+func (r ResponseCompactParamsImage) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseCompactParamsImage
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseCompactParamsImage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseCompactParamsImage](
+		"context_compression", "auto", "enabled", "disabled",
+	)
+}
 
 // Only one field can be non-zero.
 //

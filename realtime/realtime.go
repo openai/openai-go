@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/paramutil"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/param"
@@ -1905,6 +1906,10 @@ func (r RealtimeAudioConfigInput) ToParam() RealtimeAudioConfigInputParam {
 // detection accuracy (reducing false positives) and model performance by improving
 // perception of the input audio.
 type RealtimeAudioConfigInputNoiseReduction struct {
+	// Input noise suppression strength. Higher values apply more suppression. Defaults
+	// to 1 when noise reduction is first enabled. Omitting strength from a session
+	// update preserves the current strength.
+	Strength float64 `json:"strength"`
 	// Type of noise reduction. `near_field` is for close-talking microphones such as
 	// headphones, `far_field` is for far-field microphones such as laptop or
 	// conference room microphones.
@@ -1913,6 +1918,7 @@ type RealtimeAudioConfigInputNoiseReduction struct {
 	Type NoiseReductionType `json:"type"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		Strength    respjson.Field
 		Type        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -1977,6 +1983,10 @@ func (r *RealtimeAudioConfigInputParam) UnmarshalJSON(data []byte) error {
 // detection accuracy (reducing false positives) and model performance by improving
 // perception of the input audio.
 type RealtimeAudioConfigInputNoiseReductionParam struct {
+	// Input noise suppression strength. Higher values apply more suppression. Defaults
+	// to 1 when noise reduction is first enabled. Omitting strength from a session
+	// update preserves the current strength.
+	Strength param.Opt[float64] `json:"strength,omitzero"`
 	// Type of noise reduction. `near_field` is for close-talking microphones such as
 	// headphones, `far_field` is for far-field microphones such as laptop or
 	// conference room microphones.
@@ -7665,6 +7675,10 @@ func (r RealtimeTranscriptionSessionAudioInput) ToParam() RealtimeTranscriptionS
 // detection accuracy (reducing false positives) and model performance by improving
 // perception of the input audio.
 type RealtimeTranscriptionSessionAudioInputNoiseReduction struct {
+	// Input noise suppression strength. Higher values apply more suppression. Defaults
+	// to 1 when noise reduction is first enabled. Omitting strength from a session
+	// update preserves the current strength.
+	Strength float64 `json:"strength"`
 	// Type of noise reduction. `near_field` is for close-talking microphones such as
 	// headphones, `far_field` is for far-field microphones such as laptop or
 	// conference room microphones.
@@ -7673,6 +7687,7 @@ type RealtimeTranscriptionSessionAudioInputNoiseReduction struct {
 	Type NoiseReductionType `json:"type"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		Strength    respjson.Field
 		Type        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -7737,6 +7752,10 @@ func (r *RealtimeTranscriptionSessionAudioInputParam) UnmarshalJSON(data []byte)
 // detection accuracy (reducing false positives) and model performance by improving
 // perception of the input audio.
 type RealtimeTranscriptionSessionAudioInputNoiseReductionParam struct {
+	// Input noise suppression strength. Higher values apply more suppression. Defaults
+	// to 1 when noise reduction is first enabled. Omitting strength from a session
+	// update preserves the current strength.
+	Strength param.Opt[float64] `json:"strength,omitzero"`
 	// Type of noise reduction. `near_field` is for close-talking microphones such as
 	// headphones, `far_field` is for far-field microphones such as laptop or
 	// conference room microphones.
@@ -8774,9 +8793,14 @@ type RealtimeTranslationSessionAudioInputNoiseReduction struct {
 	//
 	// Any of "near_field", "far_field".
 	Type NoiseReductionType `json:"type" api:"required"`
+	// Input noise suppression strength. Higher values apply more suppression. Defaults
+	// to 1 when noise reduction is first enabled. Omitting strength from a session
+	// update preserves the current strength.
+	Strength float64 `json:"strength"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
+		Strength    respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -8932,6 +8956,10 @@ type RealtimeTranslationSessionCreateRequestAudioInputNoiseReductionParam struct
 	//
 	// Any of "near_field", "far_field".
 	Type NoiseReductionType `json:"type,omitzero" api:"required"`
+	// Input noise suppression strength. Higher values apply more suppression. Defaults
+	// to 1 when noise reduction is first enabled. Omitting strength from a session
+	// update preserves the current strength.
+	Strength param.Opt[float64] `json:"strength,omitzero"`
 	paramObj
 }
 
@@ -9086,6 +9114,10 @@ type RealtimeTranslationSessionUpdateRequestAudioInputNoiseReductionParam struct
 	//
 	// Any of "near_field", "far_field".
 	Type NoiseReductionType `json:"type,omitzero" api:"required"`
+	// Input noise suppression strength. Higher values apply more suppression. Defaults
+	// to 1 when noise reduction is first enabled. Omitting strength from a session
+	// update preserves the current strength.
+	Strength param.Opt[float64] `json:"strength,omitzero"`
 	paramObj
 }
 
@@ -10442,6 +10474,17 @@ type sessionUpdateEventSessionUnionParamAudioInputNoiseReduction struct{ any }
 //	    fmt.Errorf("not present")
 //	}
 func (u sessionUpdateEventSessionUnionParamAudioInputNoiseReduction) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u sessionUpdateEventSessionUnionParamAudioInputNoiseReduction) GetStrength() *float64 {
+	switch vt := u.any.(type) {
+	case *RealtimeAudioConfigInputNoiseReductionParam:
+		return paramutil.AddrIfPresent(vt.Strength)
+	case *RealtimeTranscriptionSessionAudioInputNoiseReductionParam:
+		return paramutil.AddrIfPresent(vt.Strength)
+	}
+	return nil
+}
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u sessionUpdateEventSessionUnionParamAudioInputNoiseReduction) GetType() *string {
