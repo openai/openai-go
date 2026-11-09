@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.98.0](https://github.com/openai/openai-go/compare/v3.97.0...v3.98.0) (2026-11-09)
+
+
+### Features
+
+* **api:** add agent, image, and realtime options ([#1227](https://github.com/openai/openai-go/issues/1227)) ([96c274a](https://github.com/openai/openai-go/commit/96c274a98354bdc7e7e70dee1ad6f4193d2d3bd3))
+
 ## [3.97.0](https://github.com/openai/openai-go/compare/v3.96.0...v3.97.0) (2026-11-08)
 
 
