@@ -5,7 +5,23 @@
 
 ### Features
 
-* **api:** add agent, image, and realtime options ([#1227](https://github.com/openai/openai-go/issues/1227)) ([96c274a](https://github.com/openai/openai-go/commit/96c274a98354bdc7e7e70dee1ad6f4193d2d3bd3))
+* **agents:** Configure session prompt-cache TTL (`30m` or `12h`) and inspect the selected TTL on sessions and turns.
+* **agents:** Support asynchronous function tools.
+* **agents:** Configure event-stream obfuscation and expose padding on 33 event types. For existing session streams, use `option.WithQuery("include_obfuscation", "false")` to disable it.
+* **agents:** Recognize the `max_output_tokens` turn error code.
+* **responses:** Configure image context compression for create, compact, and WebSocket requests; report the effective policy in responses.
+* **responses:** Add `gpt-6-rosalind` to beta Responses model constants.
+* **images:** Support SVG image edits with author-model and reasoning-effort options.
+* **realtime:** Configure input noise-reduction strength for Realtime, transcription, and translation sessions.
+* **admin:** Support organization external keys backed by Oracle Cloud Infrastructure Vault.
+
+### Bug fixes
+
+* **request unions:** Return pointers to stored optional values, so mutations affect the serialized request, including explicit zero values. Omitted and null values still return `nil`.
+
+### Documentation
+
+* Clarify image-edit markup compatibility, image token-usage descriptions, and supported image formats for content-provenance checks.
 
 ## [3.97.0](https://github.com/openai/openai-go/compare/v3.96.0...v3.97.0) (2026-11-08)
 
