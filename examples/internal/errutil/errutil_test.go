@@ -15,6 +15,7 @@ import (
 
 	"github.com/openai/openai-go/examples/internal/errutil"
 	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/responses"
 )
 
 func TestMessage(t *testing.T) {
@@ -29,6 +30,9 @@ func TestMessage(t *testing.T) {
 		{"transport", &url.Error{Op: "Post", URL: "https://synthetic-secret.invalid/?token=synthetic-secret", Err: errors.New("synthetic-secret")}, "Example operation failed"},
 		{"provider", errors.New("synthetic-secret-provider-error"), "Example operation failed"},
 		{"nil API", (*openai.Error)(nil), "Example operation failed"},
+		{"WebSocket", &responses.ResponseProtocolError{}, "Responses WebSocket API error (inspect ResponseProtocolError.Event in a trusted debugging environment)"},
+		{"wrapped WebSocket", fmt.Errorf("synthetic-secret-wrapper: %w", &responses.ResponseProtocolError{}), "Responses WebSocket API error (inspect ResponseProtocolError.Event in a trusted debugging environment)"},
+		{"nil WebSocket", (*responses.ResponseProtocolError)(nil), "Example operation failed"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			if got := errutil.Message(tc.err); got != tc.want {

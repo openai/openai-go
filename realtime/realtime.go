@@ -121,14 +121,29 @@ const (
 type AudioTranscriptionModel string
 
 const (
-	AudioTranscriptionModelWhisper1                      AudioTranscriptionModel = "whisper-1"
-	AudioTranscriptionModelGPTTranscribe                 AudioTranscriptionModel = "gpt-transcribe"
-	AudioTranscriptionModelGPTLiveTranscribe             AudioTranscriptionModel = "gpt-live-transcribe"
-	AudioTranscriptionModelGPT4oMiniTranscribe           AudioTranscriptionModel = "gpt-4o-mini-transcribe"
+	// Deprecated: Announced shutdown date: 2027-02-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AudioTranscriptionModelWhisper1          AudioTranscriptionModel = "whisper-1"
+	AudioTranscriptionModelGPTTranscribe     AudioTranscriptionModel = "gpt-transcribe"
+	AudioTranscriptionModelGPTLiveTranscribe AudioTranscriptionModel = "gpt-live-transcribe"
+	// Deprecated: Announced shutdown date: 2027-02-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AudioTranscriptionModelGPT4oMiniTranscribe AudioTranscriptionModel = "gpt-4o-mini-transcribe"
+	// Deprecated: Announced shutdown date: 2027-02-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	AudioTranscriptionModelGPT4oMiniTranscribe2025_12_15 AudioTranscriptionModel = "gpt-4o-mini-transcribe-2025-12-15"
-	AudioTranscriptionModelGPT4oTranscribe               AudioTranscriptionModel = "gpt-4o-transcribe"
-	AudioTranscriptionModelGPT4oTranscribeDiarize        AudioTranscriptionModel = "gpt-4o-transcribe-diarize"
-	AudioTranscriptionModelGPTRealtimeWhisper            AudioTranscriptionModel = "gpt-realtime-whisper"
+	// Deprecated: Announced shutdown date: 2027-02-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AudioTranscriptionModelGPT4oTranscribe AudioTranscriptionModel = "gpt-4o-transcribe"
+	// Deprecated: Announced shutdown date: 2027-02-26. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	AudioTranscriptionModelGPT4oTranscribeDiarize AudioTranscriptionModel = "gpt-4o-transcribe-diarize"
+	AudioTranscriptionModelGPTRealtimeWhisper     AudioTranscriptionModel = "gpt-realtime-whisper"
 )
 
 type AudioTranscriptionParam struct {
@@ -6496,11 +6511,17 @@ func (r *RealtimeSessionCreateRequestMaxOutputTokensUnion) UnmarshalJSON(data []
 type RealtimeSessionCreateRequestModel = string
 
 const (
-	RealtimeSessionCreateRequestModelGPTRealtime                        RealtimeSessionCreateRequestModel = "gpt-realtime"
-	RealtimeSessionCreateRequestModelGPTRealtime1_5                     RealtimeSessionCreateRequestModel = "gpt-realtime-1.5"
-	RealtimeSessionCreateRequestModelGPTRealtime2                       RealtimeSessionCreateRequestModel = "gpt-realtime-2"
-	RealtimeSessionCreateRequestModelGPTRealtime2_1                     RealtimeSessionCreateRequestModel = "gpt-realtime-2.1"
-	RealtimeSessionCreateRequestModelGPTRealtime2_1Mini                 RealtimeSessionCreateRequestModel = "gpt-realtime-2.1-mini"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	RealtimeSessionCreateRequestModelGPTRealtime        RealtimeSessionCreateRequestModel = "gpt-realtime"
+	RealtimeSessionCreateRequestModelGPTRealtime1_5     RealtimeSessionCreateRequestModel = "gpt-realtime-1.5"
+	RealtimeSessionCreateRequestModelGPTRealtime2       RealtimeSessionCreateRequestModel = "gpt-realtime-2"
+	RealtimeSessionCreateRequestModelGPTRealtime2_1     RealtimeSessionCreateRequestModel = "gpt-realtime-2.1"
+	RealtimeSessionCreateRequestModelGPTRealtime2_1Mini RealtimeSessionCreateRequestModel = "gpt-realtime-2.1-mini"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	RealtimeSessionCreateRequestModelGPTRealtime2025_08_28              RealtimeSessionCreateRequestModel = "gpt-realtime-2025-08-28"
 	RealtimeSessionCreateRequestModelGPT4oRealtimePreview               RealtimeSessionCreateRequestModel = "gpt-4o-realtime-preview"
 	RealtimeSessionCreateRequestModelGPT4oRealtimePreview2024_10_01     RealtimeSessionCreateRequestModel = "gpt-4o-realtime-preview-2024-10-01"
@@ -6508,13 +6529,25 @@ const (
 	RealtimeSessionCreateRequestModelGPT4oRealtimePreview2025_06_03     RealtimeSessionCreateRequestModel = "gpt-4o-realtime-preview-2025-06-03"
 	RealtimeSessionCreateRequestModelGPT4oMiniRealtimePreview           RealtimeSessionCreateRequestModel = "gpt-4o-mini-realtime-preview"
 	RealtimeSessionCreateRequestModelGPT4oMiniRealtimePreview2024_12_17 RealtimeSessionCreateRequestModel = "gpt-4o-mini-realtime-preview-2024-12-17"
-	RealtimeSessionCreateRequestModelGPTRealtimeMini                    RealtimeSessionCreateRequestModel = "gpt-realtime-mini"
-	RealtimeSessionCreateRequestModelGPTRealtimeMini2025_10_06          RealtimeSessionCreateRequestModel = "gpt-realtime-mini-2025-10-06"
-	RealtimeSessionCreateRequestModelGPTRealtimeMini2025_12_15          RealtimeSessionCreateRequestModel = "gpt-realtime-mini-2025-12-15"
-	RealtimeSessionCreateRequestModelGPTAudio1_5                        RealtimeSessionCreateRequestModel = "gpt-audio-1.5"
-	RealtimeSessionCreateRequestModelGPTAudioMini                       RealtimeSessionCreateRequestModel = "gpt-audio-mini"
-	RealtimeSessionCreateRequestModelGPTAudioMini2025_10_06             RealtimeSessionCreateRequestModel = "gpt-audio-mini-2025-10-06"
-	RealtimeSessionCreateRequestModelGPTAudioMini2025_12_15             RealtimeSessionCreateRequestModel = "gpt-audio-mini-2025-12-15"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	RealtimeSessionCreateRequestModelGPTRealtimeMini           RealtimeSessionCreateRequestModel = "gpt-realtime-mini"
+	RealtimeSessionCreateRequestModelGPTRealtimeMini2025_10_06 RealtimeSessionCreateRequestModel = "gpt-realtime-mini-2025-10-06"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	RealtimeSessionCreateRequestModelGPTRealtimeMini2025_12_15 RealtimeSessionCreateRequestModel = "gpt-realtime-mini-2025-12-15"
+	RealtimeSessionCreateRequestModelGPTAudio1_5               RealtimeSessionCreateRequestModel = "gpt-audio-1.5"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	RealtimeSessionCreateRequestModelGPTAudioMini           RealtimeSessionCreateRequestModel = "gpt-audio-mini"
+	RealtimeSessionCreateRequestModelGPTAudioMini2025_10_06 RealtimeSessionCreateRequestModel = "gpt-audio-mini-2025-10-06"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	RealtimeSessionCreateRequestModelGPTAudioMini2025_12_15 RealtimeSessionCreateRequestModel = "gpt-audio-mini-2025-12-15"
 )
 
 // Realtime session object configuration.

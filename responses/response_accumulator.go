@@ -2,6 +2,7 @@ package responses
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"maps"
 	"slices"
@@ -12,10 +13,13 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// ResponseAccumulator optionally collects output text, function-call arguments
+// ResponseAccumulator optionally collects output text, function and MCP arguments
 // and custom-tool input from one Responses WebSocket turn. Feed it events from
 // ResponseConnection.Recv or ResponseLane.Recv; it never reads or owns the
 // socket. Use a separate accumulator per lane and Reset before the next turn.
+// MCP argument progress requires an observed matching mcp_call item.
+// DetailedSnapshot also collects incremental refusal content; Snapshot's text
+// projection does not treat a refusal as output text.
 // Its zero value is ready to use. Like a strings.Builder, do not copy an
 // accumulator after first use or call its methods concurrently.
 type ResponseAccumulator struct {
@@ -25,6 +29,9 @@ type ResponseAccumulator struct {
 	terminalEvent string
 	responseRaw   string
 	output        map[int64]*responseAccumulatedOutput
+	// Final records stay separate from the mutable provisional projection.
+	finalizedOutput   map[int64]string
+	reconstructionErr error
 }
 
 // ResponseAccumulatorSnapshot is a partial projection, not a server Response.
@@ -66,6 +73,50 @@ type responseAccumulatedOutput struct {
 // It never closes or changes the connection. Existing snapshots remain usable.
 func (a *ResponseAccumulator) Reset() { *a = ResponseAccumulator{} }
 
+// ReconstructedResponse returns an independent typed terminal response. When
+// terminal output is omitted or null, it fills output using only previously
+// received response.output_item.done records, sorted by output_index. Sparse
+// indices become an ordered array; no finalized records produces an empty array.
+// Supplied non-null output, including an empty array, remains authoritative.
+//
+// This optional compatibility view never promotes unfinished deltas. It returns
+// an error before a terminal event, or until Reset after a protocol error
+// observed before the terminal. Failed and incomplete responses retain their
+// status and error details.
+// It does not read the socket or change Snapshot, DetailedSnapshot, original
+// events, or ResponseConnection/ResponseLane.FinalResponse.
+func (a *ResponseAccumulator) ReconstructedResponse() (*Response, error) {
+	if a.reconstructionErr != nil {
+		return nil, a.reconstructionErr
+	}
+	if a.terminalEvent == "" {
+		return nil, errors.New("responses accumulator: no terminal response collected")
+	}
+	raw := a.responseRaw
+	if output := gjson.Get(raw, "output"); !output.Exists() || output.Type == gjson.Null {
+		items := make([]json.RawMessage, 0, len(a.finalizedOutput))
+		for _, index := range slices.Sorted(maps.Keys(a.finalizedOutput)) {
+			items = append(items, json.RawMessage(a.finalizedOutput[index]))
+		}
+		output, err := json.Marshal(items)
+		if err != nil {
+			return nil, err
+		}
+		fields := accumulatedFields(raw, "")
+		fields["output"] = output
+		data, err := json.Marshal(fields)
+		if err != nil {
+			return nil, err
+		}
+		raw = string(data)
+	}
+	var response Response
+	if err := json.Unmarshal([]byte(raw), &response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+}
+
 // Snapshot returns an independent view of the data collected so far. A missing
 // terminal response or a receive error never becomes a successful completion.
 func (a *ResponseAccumulator) Snapshot() ResponseAccumulatorSnapshot {
@@ -101,9 +152,10 @@ func (s ResponseAccumulatorSnapshot) OutputText() string {
 // AddEvent observes a typed event from Recv without modifying it. The helper
 // ignores unknown/unselected events; callers retain the original event and its
 // RawJSON. Done events and supplied final output (including an empty array)
-// override earlier deltas. When terminal output is omitted or null, only this
-// projection retains prior data; ResponseConnection.FinalResponse and
-// ResponseLane.FinalResponse are unchanged. A different lane or response
+// override earlier deltas. When terminal output is omitted or null, the
+// projections retain prior data; ReconstructedResponse can recover finalized
+// items. ResponseConnection.FinalResponse and ResponseLane.FinalResponse are
+// unchanged. A different lane or response
 // requires a separate accumulator or Reset. A new nonempty item ID starts a
 // fresh projection at that output index; it never appends to another item.
 func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
@@ -133,7 +185,9 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 		"response.output_item.added", "response.output_item.done",
 		"response.content_part.added", "response.content_part.done",
 		"response.output_text.delta", "response.output_text.done",
+		"response.refusal.delta", "response.refusal.done",
 		"response.function_call_arguments.delta", "response.function_call_arguments.done",
+		"response.mcp_call_arguments.delta", "response.mcp_call_arguments.done",
 		"response.custom_tool_call_input.delta", "response.custom_tool_call_input.done", "error":
 	default:
 		return nil
@@ -152,7 +206,9 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 		return errors.New("responses accumulator: turn ended; reset before adding another event")
 	}
 	if event.Type == "error" {
-		return &ResponseProtocolError{Event: event}
+		err := &ResponseProtocolError{Event: event}
+		a.reconstructionErr = err
+		return err
 	}
 	var response *Response
 	switch event.Type {
@@ -219,6 +275,10 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 			return invalid
 		}
 		a.addItem(e.OutputIndex, e.Item)
+		if a.finalizedOutput == nil {
+			a.finalizedOutput = make(map[int64]string)
+		}
+		a.finalizedOutput[e.OutputIndex] = strings.Clone(e.Item.RawJSON())
 	case "response.content_part.added":
 		e := &event.OfResponsesServerEventResponseContentPartWsAdded
 		if !accumulatorIndicesValid(e.JSON.OutputIndex, e.JSON.ContentIndex) ||
@@ -265,6 +325,40 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 		}
 		replaceAccumulatedText(a.text(e.OutputIndex, e.ItemID, e.ContentIndex), e.Text)
 		a.output[e.OutputIndex].part(e.ContentIndex).addLogprobs(e.JSON.Logprobs.Raw(), true)
+	case "response.refusal.delta":
+		e := &event.OfResponsesServerEventResponseRefusalWsDelta
+		if !accumulatorIndicesValid(e.JSON.OutputIndex, e.JSON.ContentIndex) ||
+			!accumulatorStringsValid(e.JSON.ItemID, e.JSON.Delta) {
+			return invalid
+		}
+		// Previously raw refusal parts remain accepted until an update needs
+		// their string. Validate that seed before changing an item's identity.
+		var seed string
+		if item := a.output[e.OutputIndex]; item != nil && (item.id == "" || item.id == e.ItemID) {
+			if part := item.parts[e.ContentIndex]; part != nil && !part.refusalPresent &&
+				gjson.Get(part.raw, "type").Str == "refusal" {
+				value := gjson.Get(part.raw, "refusal")
+				if value.Type != gjson.String {
+					return invalid
+				}
+				seed = value.Str
+			}
+		}
+		part := a.item(e.OutputIndex, e.ItemID).part(e.ContentIndex)
+		if !part.refusalPresent {
+			part.refusal.WriteString(seed)
+			part.refusalPresent = true
+		}
+		part.refusal.WriteString(e.Delta)
+	case "response.refusal.done":
+		e := &event.OfResponsesServerEventResponseRefusalWsDone
+		if !accumulatorIndicesValid(e.JSON.OutputIndex, e.JSON.ContentIndex) ||
+			!accumulatorStringsValid(e.JSON.ItemID, e.JSON.Refusal) {
+			return invalid
+		}
+		part := a.item(e.OutputIndex, e.ItemID).part(e.ContentIndex)
+		replaceAccumulatedText(&part.refusal, e.Refusal)
+		part.refusalPresent = true
 	case "response.function_call_arguments.delta":
 		e := &event.OfResponsesServerEventResponseFunctionCallArgumentsWsDelta
 		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !accumulatorStringsValid(e.JSON.ItemID, e.JSON.Delta) {
@@ -279,6 +373,28 @@ func (a *ResponseAccumulator) AddEvent(event ResponsesServerEventUnion) error {
 			return invalid
 		}
 		item := a.item(e.OutputIndex, e.ItemID)
+		replaceAccumulatedText(&item.arguments, e.Arguments)
+		item.argumentsPresent = true
+	case "response.mcp_call_arguments.delta":
+		e := &event.OfResponsesServerEventResponseMcpCallArgumentsWsDelta
+		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !accumulatorStringsValid(e.JSON.ItemID, e.JSON.Delta) {
+			return invalid
+		}
+		item := a.output[e.OutputIndex]
+		if item == nil || item.itemType != "mcp_call" || item.id != e.ItemID {
+			return nil
+		}
+		item.arguments.WriteString(e.Delta)
+		item.argumentsPresent = true
+	case "response.mcp_call_arguments.done":
+		e := &event.OfResponsesServerEventResponseMcpCallArgumentsWsDone
+		if !accumulatorIndicesValid(e.JSON.OutputIndex) || !accumulatorStringsValid(e.JSON.ItemID, e.JSON.Arguments) {
+			return invalid
+		}
+		item := a.output[e.OutputIndex]
+		if item == nil || item.itemType != "mcp_call" || item.id != e.ItemID {
+			return nil
+		}
 		replaceAccumulatedText(&item.arguments, e.Arguments)
 		item.argumentsPresent = true
 	case "response.custom_tool_call_input.delta":
@@ -393,6 +509,12 @@ func (a *ResponseAccumulator) addItem(index int64, source ResponseOutputItemUnio
 		}
 	case "function_call":
 		replaceAccumulatedText(&item.arguments, source.Arguments.OfString)
+	case "mcp_call":
+		// Preserve previously accepted raw MCP items without coercing non-string arguments.
+		if arguments := gjson.Parse(source.JSON.Arguments.Raw()); arguments.Type == gjson.String {
+			replaceAccumulatedText(&item.arguments, arguments.Str)
+			item.argumentsPresent = true
+		}
 	case "custom_tool_call":
 		replaceAccumulatedText(&item.input, source.Input)
 	}

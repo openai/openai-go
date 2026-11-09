@@ -53,7 +53,7 @@ func TestClientSecretNewWithOptionalParams(t *testing.T) {
 							Keywords:  []string{"string"},
 							Language:  openai.String("language"),
 							Languages: []string{"string"},
-							Model:     realtime.AudioTranscriptionModelWhisper1,
+							Model:     realtime.AudioTranscriptionModel("whisper-1"),
 							Prompt:    openai.String("prompt"),
 						},
 						TurnDetection: realtime.RealtimeAudioInputTurnDetectionUnionParam{
@@ -85,7 +85,7 @@ func TestClientSecretNewWithOptionalParams(t *testing.T) {
 				MaxOutputTokens: realtime.RealtimeSessionCreateRequestMaxOutputTokensUnionParam{
 					OfInf: constant.ValueOf[constant.Inf](),
 				},
-				Model:             realtime.RealtimeSessionCreateRequestModelGPTRealtime,
+				Model:             realtime.RealtimeSessionCreateRequestModel("gpt-realtime"),
 				OutputModalities:  []string{"text"},
 				ParallelToolCalls: openai.Bool(true),
 				Prompt: responses.ResponsePromptParam{

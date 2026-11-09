@@ -32,6 +32,12 @@ func TestBetaAgentSessionNewWithOptionalParams(t *testing.T) {
 			OfParamNone: &openai.EnvironmentParamNone{},
 		},
 		Agent: openai.BetaAgentSessionNewParamsAgent{
+			Compaction: openai.BetaAgentSessionNewParamsAgentCompaction{
+				Async: openai.Bool(true),
+			},
+			Experimental: openai.BetaAgentSessionNewParamsAgentExperimental{
+				TimeAwareness: openai.Bool(true),
+			},
 			Instructions: openai.String("instructions"),
 			Model:        openai.String("model"),
 			MultiAgent: openai.MultiAgentConfigParam{
@@ -67,6 +73,7 @@ func TestBetaAgentSessionNewWithOptionalParams(t *testing.T) {
 		Metadata: map[string]string{
 			"foo": "string",
 		},
+		Review: openai.BetaAgentSessionNewParamsReviewNone,
 		SpendControl: openai.BetaAgentSessionNewParamsSpendControl{
 			Limit: openai.Int(1),
 		},
@@ -129,10 +136,21 @@ func TestBetaAgentSessionUpdateWithOptionalParams(t *testing.T) {
 					Effort: openai.String("none"),
 				},
 				ServiceTier: openai.String("auto"),
+				Tools: &[]openai.AgentToolParamUnion{{
+					OfParamFunction: &openai.AgentToolParamFunction{
+						Description: "description",
+						Name:        "name",
+						Parameters: map[string]any{
+							"foo": "bar",
+						},
+						DeferLoading: openai.Bool(true),
+					},
+				}},
 			},
 			Metadata: map[string]string{
 				"foo": "string",
 			},
+			Review: openai.BetaAgentSessionUpdateParamsReviewNone,
 			SpendControl: openai.BetaAgentSessionUpdateParamsSpendControl{
 				Limit: openai.Int(1),
 			},
@@ -165,7 +183,10 @@ func TestBetaAgentSessionListWithOptionalParams(t *testing.T) {
 		After:   openai.String("after"),
 		AgentID: openai.String("agent_id"),
 		Limit:   openai.Int(1),
-		Order:   openai.BetaAgentSessionListParamsOrderAsc,
+		Metadata: &map[string]string{
+			"foo": "string",
+		},
+		Order: openai.BetaAgentSessionListParamsOrderAsc,
 	})
 	if err != nil {
 		var apierr *openai.Error

@@ -527,11 +527,17 @@ func (r *RealtimeSessionCreateResponseMaxOutputTokensUnion) UnmarshalJSON(data [
 type RealtimeSessionCreateResponseModel string
 
 const (
-	RealtimeSessionCreateResponseModelGPTRealtime                        RealtimeSessionCreateResponseModel = "gpt-realtime"
-	RealtimeSessionCreateResponseModelGPTRealtime1_5                     RealtimeSessionCreateResponseModel = "gpt-realtime-1.5"
-	RealtimeSessionCreateResponseModelGPTRealtime2                       RealtimeSessionCreateResponseModel = "gpt-realtime-2"
-	RealtimeSessionCreateResponseModelGPTRealtime2_1                     RealtimeSessionCreateResponseModel = "gpt-realtime-2.1"
-	RealtimeSessionCreateResponseModelGPTRealtime2_1Mini                 RealtimeSessionCreateResponseModel = "gpt-realtime-2.1-mini"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	RealtimeSessionCreateResponseModelGPTRealtime        RealtimeSessionCreateResponseModel = "gpt-realtime"
+	RealtimeSessionCreateResponseModelGPTRealtime1_5     RealtimeSessionCreateResponseModel = "gpt-realtime-1.5"
+	RealtimeSessionCreateResponseModelGPTRealtime2       RealtimeSessionCreateResponseModel = "gpt-realtime-2"
+	RealtimeSessionCreateResponseModelGPTRealtime2_1     RealtimeSessionCreateResponseModel = "gpt-realtime-2.1"
+	RealtimeSessionCreateResponseModelGPTRealtime2_1Mini RealtimeSessionCreateResponseModel = "gpt-realtime-2.1-mini"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	RealtimeSessionCreateResponseModelGPTRealtime2025_08_28              RealtimeSessionCreateResponseModel = "gpt-realtime-2025-08-28"
 	RealtimeSessionCreateResponseModelGPT4oRealtimePreview               RealtimeSessionCreateResponseModel = "gpt-4o-realtime-preview"
 	RealtimeSessionCreateResponseModelGPT4oRealtimePreview2024_10_01     RealtimeSessionCreateResponseModel = "gpt-4o-realtime-preview-2024-10-01"
@@ -539,13 +545,25 @@ const (
 	RealtimeSessionCreateResponseModelGPT4oRealtimePreview2025_06_03     RealtimeSessionCreateResponseModel = "gpt-4o-realtime-preview-2025-06-03"
 	RealtimeSessionCreateResponseModelGPT4oMiniRealtimePreview           RealtimeSessionCreateResponseModel = "gpt-4o-mini-realtime-preview"
 	RealtimeSessionCreateResponseModelGPT4oMiniRealtimePreview2024_12_17 RealtimeSessionCreateResponseModel = "gpt-4o-mini-realtime-preview-2024-12-17"
-	RealtimeSessionCreateResponseModelGPTRealtimeMini                    RealtimeSessionCreateResponseModel = "gpt-realtime-mini"
-	RealtimeSessionCreateResponseModelGPTRealtimeMini2025_10_06          RealtimeSessionCreateResponseModel = "gpt-realtime-mini-2025-10-06"
-	RealtimeSessionCreateResponseModelGPTRealtimeMini2025_12_15          RealtimeSessionCreateResponseModel = "gpt-realtime-mini-2025-12-15"
-	RealtimeSessionCreateResponseModelGPTAudio1_5                        RealtimeSessionCreateResponseModel = "gpt-audio-1.5"
-	RealtimeSessionCreateResponseModelGPTAudioMini                       RealtimeSessionCreateResponseModel = "gpt-audio-mini"
-	RealtimeSessionCreateResponseModelGPTAudioMini2025_10_06             RealtimeSessionCreateResponseModel = "gpt-audio-mini-2025-10-06"
-	RealtimeSessionCreateResponseModelGPTAudioMini2025_12_15             RealtimeSessionCreateResponseModel = "gpt-audio-mini-2025-12-15"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	RealtimeSessionCreateResponseModelGPTRealtimeMini           RealtimeSessionCreateResponseModel = "gpt-realtime-mini"
+	RealtimeSessionCreateResponseModelGPTRealtimeMini2025_10_06 RealtimeSessionCreateResponseModel = "gpt-realtime-mini-2025-10-06"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	RealtimeSessionCreateResponseModelGPTRealtimeMini2025_12_15 RealtimeSessionCreateResponseModel = "gpt-realtime-mini-2025-12-15"
+	RealtimeSessionCreateResponseModelGPTAudio1_5               RealtimeSessionCreateResponseModel = "gpt-audio-1.5"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	RealtimeSessionCreateResponseModelGPTAudioMini           RealtimeSessionCreateResponseModel = "gpt-audio-mini"
+	RealtimeSessionCreateResponseModelGPTAudioMini2025_10_06 RealtimeSessionCreateResponseModel = "gpt-audio-mini-2025-10-06"
+	// Deprecated: Announced shutdown date: 2027-01-20. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
+	RealtimeSessionCreateResponseModelGPTAudioMini2025_12_15 RealtimeSessionCreateResponseModel = "gpt-audio-mini-2025-12-15"
 )
 
 // RealtimeSessionCreateResponseToolChoiceUnion contains all possible properties

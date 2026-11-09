@@ -30,7 +30,7 @@ Or to pin an SDK version (see the Go compatibility note below):
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/openai/openai-go/v3@v3.89.0'
+go get -u 'github.com/openai/openai-go/v3@v3.97.0'
 ```
 
 <!-- x-release-please-end -->
@@ -571,6 +571,45 @@ Retain tool results so recovery does not execute tools twice. A `Restore` callba
 may run for each explicitly configured recovery attempt; it owns any commands it
 sends and their replay/idempotency decisions. Do not automatically retry a
 `websocket.DeliveryError` whose `MayHaveBeenSent` is true.
+
+### Realtime WebSockets
+
+Use `client.Realtime.Connect` to open a Realtime session. The `realtime` package
+provides the connection options and typed events.
+
+```go
+conn, err := client.Realtime.Connect(
+	ctx, realtime.RealtimeConnectionOptions{},
+	option.WithQuery("model", "gpt-realtime"),
+)
+if err != nil {
+	return err
+}
+defer conn.Abort()
+```
+
+Use `Send` and `Recv` for typed commands and events, or `SendResponseCreate` to
+combine ordinary input items with references to existing session items. See the
+[Realtime and Translation guide](realtime/README.md) for event handling,
+connection ownership, and finishing a Translation session.
+
+### Live WebSockets
+
+Use `client.Live.Connect` to open a Live connection. The `live` package provides
+the connection options and typed events.
+
+```go
+conn, err := client.Live.Connect(ctx, live.LiveConnectionOptions{})
+if err != nil {
+	return err
+}
+defer conn.Abort()
+```
+
+Opening the connection does not start the session. Send `session.start` and wait
+for `session.started` before sending application commands. See the
+[Live guide](live/README.md) for a complete start-and-finish example, sideband
+connections, and stored-session forks.
 
 ### Chat Completions API
 

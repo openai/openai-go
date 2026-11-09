@@ -41,25 +41,13 @@ repository's minimum version.
 
 ## Modifying/Adding code
 
-Most of the SDK is generated code. Never edit generated files by hand; change
-the authoritative generation inputs or compiler and regenerate instead. The generator will never
-modify the contents of the `lib/` and `examples/` directories.
+Look up the repository-relative path in the [Castiron generated-file inventory](scripts/castiron/generated-files.json). To [report a bug](#contribution-policy), include the SDK version, affected call, and a small, sanitized reproduction.
 
-## Generated-file ownership
+- **Incorrect API field.** If the API schema gives a field the wrong type or marks it required incorrectly, fix the schema and regenerate the SDK.
+- **Incorrect generated code.** If the schema is correct but the SDK exposes the wrong type or sends the wrong value, fix the generation configuration or compiler and regenerate. Verify the fix with a regression test that calls the public SDK.
+- **Handwritten helper or example.** Keep SDK-specific extensions in handwritten files and test them directly. For instance, [chatcompletion_helpers.go](chatcompletion_helpers.go) is handwritten. The generator also preserves [lib/](lib/) and [examples/](examples/).
 
-Do not edit generated SDK files by hand. Fix the API schema, generation
-configuration, or compiler and regenerate instead. Put SDK-specific behavior in
-separately owned handwritten helpers and extension points.
-
-Regeneration replaces generated files and removes retired generated paths.
-Handwritten edits to generated output are overwritten, not carried forward.
-Separately owned handwritten files are preserved. Resolve ownership conflicts
-explicitly before regeneration. Follow the ownership rules in `AGENTS.md`
-and review generated output and inventory changes together. Generated-file
-ownership currently relies on contributor guidance and code review, without a
-dedicated generated-file edit check or required gate. Fix violations in the
-generation inputs/compiler and regenerate; do not edit inventory hashes to
-accept a handwritten patch.
+Regeneration replaces owned files, including generated tests, docs, and workflows, and removes retired paths. Review the output and inventory together. Resolve ownership collisions before regenerating. Never hand-edit generated output or its inventory. Maintainers enforce this policy in code review.
 
 ## Security requirements
 
@@ -156,6 +144,36 @@ $ ./scripts/mock
 ```sh
 $ ./scripts/test
 ```
+
+### High-memory tests
+
+Tests that require multiple GiB of memory are opt-in. Keep them in
+`*_highmemory_test.go` files with `//go:build highmemory` above the package
+statement, separated by a blank line. Normal `go test ./...` and CI runs exclude
+these files. Preserve the full payloads and assertions when moving a test.
+
+Include high-memory tests explicitly on a machine with enough available RAM:
+
+```sh
+./scripts/test -tags=highmemory
+```
+
+The script sets up the mock server and forwards the flag to `go test ./...`.
+To run just the large reconstruction test, which uses local fixtures:
+
+```sh
+go test -tags=highmemory -count=1 ./internal/websockettest \
+  -run '^TestResponsesAccumulatorReconstructedLargeResponse$'
+```
+
+The large reconstruction test has measured peak memory usage above 6 GiB, so
+leave additional room for the operating system and other processes. Keep smaller
+reconstruction tests and the separate large WebSocket transport test in the
+default suite. Run memory-heavy cases sequentially; use `-p=1` to serialize
+packages when enabling high-memory tests across multiple packages.
+
+Tagged files are not compiled in default runs. When changing a high-memory test
+or the code it exercises, validate both the default and tagged test modes.
 
 ## Formatting
 

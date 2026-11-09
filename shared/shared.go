@@ -82,7 +82,9 @@ const (
 	AllModelsGPTDaybreakBlueLatest AllModels = "gpt-daybreak-blue-latest"
 	AllModelsGPTDaybreakRedLatest  AllModels = "gpt-daybreak-red-latest"
 	AllModelsGPT5_6Cyber           AllModels = "gpt-5.6-cyber"
+	AllModelsGPT6Cyber             AllModels = "gpt-6-cyber"
 	AllModelsGPTRosalindResearch   AllModels = "gpt-rosalind-research"
+	AllModelsGPT6Rosalind          AllModels = "gpt-6-rosalind"
 	// Or some ...[ChatModel]
 )
 
@@ -106,6 +108,9 @@ const (
 	// replacements.
 	ChatModelGPT5_4Nano           ChatModel = "gpt-5.4-nano"
 	ChatModelGPT5_4Mini2026_03_17 ChatModel = "gpt-5.4-mini-2026-03-17"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	ChatModelGPT5_4Nano2026_03_17 ChatModel = "gpt-5.4-nano-2026-03-17"
 	// Deprecated: Announced shutdown date: 2026-08-10. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -122,7 +127,10 @@ const (
 	// Deprecated: Announced shutdown date: 2027-04-01. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
-	ChatModelGPT5_1            ChatModel = "gpt-5.1"
+	ChatModelGPT5_1 ChatModel = "gpt-5.1"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	ChatModelGPT5_1_2025_11_13 ChatModel = "gpt-5.1-2025-11-13"
 	// Deprecated: Announced shutdown date: 2026-07-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -1961,7 +1969,9 @@ func (r *ResponseFormatText) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (ResponseFormatText) ImplResponseFormatTextConfigUnion() {}
+func (ResponseFormatText) ImplResponseConfigurationUpdateItemTextFormatUnion()          {}
+func (ResponseFormatText) ImplResponseConfigurationUpdateItemParamTextFormatUnionResp() {}
+func (ResponseFormatText) ImplResponseFormatTextConfigUnion()                           {}
 
 // ToParam converts this ResponseFormatText to a ResponseFormatTextParam.
 //
@@ -2061,6 +2071,8 @@ const (
 	ResponsesModelGPTDaybreakBlueLatest ResponsesModel = "gpt-daybreak-blue-latest"
 	ResponsesModelGPTDaybreakRedLatest  ResponsesModel = "gpt-daybreak-red-latest"
 	ResponsesModelGPT5_6Cyber           ResponsesModel = "gpt-5.6-cyber"
+	ResponsesModelGPT6Cyber             ResponsesModel = "gpt-6-cyber"
 	ResponsesModelGPTRosalindResearch   ResponsesModel = "gpt-rosalind-research"
+	ResponsesModelGPT6Rosalind          ResponsesModel = "gpt-6-rosalind"
 	// Or some ...[ChatModel]
 )

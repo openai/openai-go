@@ -1,0 +1,1176 @@
+{
+  "schema_version": 1,
+  "scope": "Opt-in Ruby-compatible final output reconstruction from finalized items. Missing/null output probes violate the standard Response output schema and do not establish production defects.",
+  "ruby": {
+    "version": "0.115.1",
+    "commit": "fcbce33923f078baf192dde4434cd15ced386f62"
+  },
+  "cases": [
+    {
+      "name": "omitted_output_sorted_sparse_done_items",
+      "classification": "schema_invalid_output_compatibility",
+      "events": [
+        {
+          "type": "response.created",
+          "stream_id": "reconstruction",
+          "sequence_number": 0,
+          "response": {
+            "id": "resp",
+            "object": "response",
+            "created_at": 1730000000.0,
+            "access_programs": null,
+            "error": null,
+            "incomplete_details": null,
+            "instructions": null,
+            "metadata": null,
+            "model": "gpt-4o-mini",
+            "status": "in_progress",
+            "output": [],
+            "parallel_tool_calls": true,
+            "temperature": 1.0,
+            "tool_choice": "auto",
+            "tools": [],
+            "top_p": 1.0,
+            "future_metadata": {
+              "values": [
+                "retained"
+              ]
+            }
+          }
+        },
+        {
+          "type": "response.output_item.done",
+          "stream_id": "reconstruction",
+          "sequence_number": 1,
+          "output_index": 7,
+          "item": {
+            "type": "future_tool",
+            "id": "unknown",
+            "metadata": {
+              "values": [
+                "retained"
+              ]
+            }
+          }
+        },
+        {
+          "type": "response.output_item.done",
+          "stream_id": "reconstruction",
+          "sequence_number": 2,
+          "output_index": 2,
+          "item": {
+            "type": "message",
+            "id": "msg",
+            "role": "assistant",
+            "status": "completed",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "one",
+                "annotations": [],
+                "logprobs": []
+              },
+              {
+                "type": "output_text",
+                "text": "two",
+                "annotations": [],
+                "logprobs": []
+              },
+              {
+                "type": "refusal",
+                "refusal": "declined"
+              }
+            ]
+          }
+        },
+        {
+          "type": "response.output_item.done",
+          "stream_id": "reconstruction",
+          "sequence_number": 3,
+          "output_index": 0,
+          "item": {
+            "type": "function_call",
+            "id": "fn",
+            "call_id": "call",
+            "name": "never_run",
+            "arguments": "{\"value\":42}"
+          }
+        },
+        {
+          "type": "response.output_item.done",
+          "stream_id": "reconstruction",
+          "sequence_number": 4,
+          "output_index": 4,
+          "item": {
+            "type": "custom_tool_call",
+            "id": "ct",
+            "call_id": "call_custom",
+            "name": "never_run",
+            "input": "stale",
+            "status": "completed"
+          }
+        },
+        {
+          "type": "response.output_item.done",
+          "stream_id": "reconstruction",
+          "sequence_number": 5,
+          "output_index": 4,
+          "item": {
+            "type": "custom_tool_call",
+            "id": "ct",
+            "call_id": "call_custom",
+            "name": "never_run",
+            "input": "final input",
+            "status": "completed"
+          }
+        },
+        {
+          "type": "response.completed",
+          "stream_id": "reconstruction",
+          "sequence_number": 6,
+          "response": {
+            "id": "resp",
+            "object": "response",
+            "created_at": 1730000000.0,
+            "access_programs": null,
+            "error": null,
+            "incomplete_details": null,
+            "instructions": null,
+            "metadata": null,
+            "model": "gpt-4o-mini",
+            "status": "completed",
+            "parallel_tool_calls": true,
+            "temperature": 1.0,
+            "tool_choice": "auto",
+            "tools": [],
+            "top_p": 1.0,
+            "future_metadata": {
+              "values": [
+                "retained"
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {
+        "result": "response",
+        "response": {
+          "id": "resp",
+          "object": "response",
+          "created_at": 1730000000.0,
+          "access_programs": null,
+          "error": null,
+          "incomplete_details": null,
+          "instructions": null,
+          "metadata": null,
+          "model": "gpt-4o-mini",
+          "status": "completed",
+          "parallel_tool_calls": true,
+          "temperature": 1.0,
+          "tool_choice": "auto",
+          "tools": [],
+          "top_p": 1.0,
+          "future_metadata": {
+            "values": [
+              "retained"
+            ]
+          },
+          "output": [
+            {
+              "type": "function_call",
+              "id": "fn",
+              "call_id": "call",
+              "name": "never_run",
+              "arguments": "{\"value\":42}"
+            },
+            {
+              "type": "message",
+              "id": "msg",
+              "role": "assistant",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "one",
+                  "annotations": [],
+                  "logprobs": []
+                },
+                {
+                  "type": "output_text",
+                  "text": "two",
+                  "annotations": [],
+                  "logprobs": []
+                },
+                {
+                  "type": "refusal",
+                  "refusal": "declined"
+                }
+              ]
+            },
+            {
+              "type": "custom_tool_call",
+              "id": "ct",
+              "call_id": "call_custom",
+              "name": "never_run",
+              "input": "final input",
+              "status": "completed"
+            },
+            {
+              "type": "future_tool",
+              "id": "unknown",
+              "metadata": {
+                "values": [
+                  "retained"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "null_output_failed_status_error_preserved",
+      "classification": "schema_invalid_output_compatibility",
+      "events": [
+        {
+          "type": "response.created",
+          "stream_id": "reconstruction",
+          "sequence_number": 0,
+          "response": {
+            "id": "resp",
+            "object": "response",
+            "created_at": 1730000000.0,
+            "access_programs": null,
+            "error": null,
+            "incomplete_details": null,
+            "instructions": null,
+            "metadata": null,
+            "model": "gpt-4o-mini",
+            "status": "in_progress",
+            "output": [],
+            "parallel_tool_calls": true,
+            "temperature": 1.0,
+            "tool_choice": "auto",
+            "tools": [],
+            "top_p": 1.0,
+            "future_metadata": {
+              "values": [
+                "retained"
+              ]
+            }
+          }
+        },
+        {
+          "type": "response.output_item.done",
+          "stream_id": "reconstruction",
+          "sequence_number": 1,
+          "output_index": 1,
+          "item": {
+            "type": "function_call",
+            "id": "fn",
+            "call_id": "call",
+            "name": "never_run",
+            "arguments": "{\"value\":42}"
+          }
+        },
+        {
+          "type": "response.failed",
+          "stream_id": "reconstruction",
+          "sequence_number": 2,
+          "response": {
+            "id": "resp",
+            "object": "response",
+            "created_at": 1730000000.0,
+            "access_programs": null,
+            "error": {
+              "code": "server_error",
+              "message": "synthetic failure"
+            },
+            "incomplete_details": null,
+            "instructions": null,
+            "metadata": null,
+            "model": "gpt-4o-mini",
+            "status": "failed",
+            "output": null,
+            "parallel_tool_calls": true,
+            "temperature": 1.0,
+            "tool_choice": "auto",
+            "tools": [],
+            "top_p": 1.0,
+            "future_metadata": {
+              "values": [
+                "retained"
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {
+        "result": "response",
+        "response": {
+          "id": "resp",
+          "object": "response",
+          "created_at": 1730000000.0,
+          "access_programs": null,
+          "error": {
+            "code": "server_error",
+            "message": "synthetic failure"
+          },
+          "incomplete_details": null,
+          "instructions": null,
+          "metadata": null,
+          "model": "gpt-4o-mini",
+          "status": "failed",
+          "output": [
+            {
+              "type": "function_call",
+              "id": "fn",
+              "call_id": "call",
+              "name": "never_run",
+              "arguments": "{\"value\":42}"
+            }
+          ],
+          "parallel_tool_calls": true,
+          "temperature": 1.0,
+          "tool_choice": "auto",
+          "tools": [],
+          "top_p": 1.0,
+          "future_metadata": {
+            "values": [
+              "retained"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "omitted_output_incomplete_status_preserved",
+      "classification": "schema_invalid_output_compatibility",
+      "events": [
+        {
+          "type": "response.created",
+          "stream_id": "reconstruction",
+          "sequence_number": 0,
+          "response": {
+            "id": "resp",
+            "object": "response",
+            "created_at": 1730000000.0,
+            "access_programs": null,
+            "error": null,
+            "incomplete_details": null,
+            "instructions": null,
+            "metadata": null,
+            "model": "gpt-4o-mini",
+            "status": "in_progress",
+            "output": [],
+            "parallel_tool_calls": true,
+            "temperature": 1.0,
+            "tool_choice": "auto",
+            "tools": [],
+            "top_p": 1.0,
+            "future_metadata": {
+              "values": [
+                "retained"
+              ]
+            }
+          }
+        },
+        {
+          "type": "response.output_item.done",
+          "stream_id": "reconstruction",
+          "sequence_number": 1,
+          "output_index": 0,
+          "item": {
+            "type": "message",
+            "id": "msg",
+            "role": "assistant",
+            "status": "completed",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "one",
+                "annotations": [],
+                "logprobs": []
+              },
+              {
+                "type": "output_text",
+                "text": "two",
+                "annotations": [],
+                "logprobs": []
+              },
+              {
+                "type": "refusal",
+                "refusal": "declined"
+              }
+            ]
+          }
+        },
+        {
+          "type": "response.incomplete",
+          "stream_id": "reconstruction",
+          "sequence_number": 2,
+          "response": {
+            "id": "resp",
+            "object": "response",
+            "created_at": 1730000000.0,
+            "access_programs": null,
+            "error": null,
+            "incomplete_details": {
+              "reason": "max_output_tokens"
+            },
+            "instructions": null,
+            "metadata": null,
+            "model": "gpt-4o-mini",
+            "status": "incomplete",
+            "parallel_tool_calls": true,
+            "temperature": 1.0,
+            "tool_choice": "auto",
+            "tools": [],
+            "top_p": 1.0,
+            "future_metadata": {
+              "values": [
+                "retained"
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {
+        "result": "response",
+        "response": {
+          "id": "resp",
+          "object": "response",
+          "created_at": 1730000000.0,
+          "access_programs": null,
+          "error": null,
+          "incomplete_details": {
+            "reason": "max_output_tokens"
+          },
+          "instructions": null,
+          "metadata": null,
+          "model": "gpt-4o-mini",
+          "status": "incomplete",
+          "parallel_tool_calls": true,
+          "temperature": 1.0,
+          "tool_choice": "auto",
+          "tools": [],
+          "top_p": 1.0,
+          "future_metadata": {
+            "values": [
+              "retained"
+            ]
+          },
+          "output": [
+            {
+              "type": "message",
+              "id": "msg",
+              "role": "assistant",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "one",
+                  "annotations": [],
+                  "logprobs": []
+                },
+                {
+                  "type": "output_text",
+                  "text": "two",
+                  "annotations": [],
+                  "logprobs": []
+                },
+                {
+                  "type": "refusal",
+                  "refusal": "declined"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "explicit_empty_output_wins",
+      "classification": "normal_contract",
+      "events": [
+        {
+          "type": "response.created",
+          "stream_id": "reconstruction",
+          "sequence_number": 0,
+          "response": {
+            "id": "resp",
+            "object": "response",
+            "created_at": 1730000000.0,
+            "access_programs": null,
+            "error": null,
+            "incomplete_details": null,
+            "instructions": null,
+            "metadata": null,
+            "model": "gpt-4o-mini",
+            "status": "in_progress",
+            "output": [],
+            "parallel_tool_calls": true,
+            "temperature": 1.0,
+            "tool_choice": "auto",
+            "tools": [],
+            "top_p": 1.0,
+            "future_metadata": {
+              "values": [
+                "retained"
+              ]
+            }
+          }
+        },
+        {
+          "type": "response.output_item.done",
+          "stream_id": "reconstruction",
+          "sequence_number": 1,
+          "output_index": 0,
+          "item": {
+            "type": "message",
+            "id": "msg",
+            "role": "assistant",
+            "status": "completed",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "one",
+                "annotations": [],
+                "logprobs": []
+              },
+              {
+                "type": "output_text",
+                "text": "two",
+                "annotations": [],
+                "logprobs": []
+              },
+              {
+                "type": "refusal",
+                "refusal": "declined"
+              }
+            ]
+          }
+        },
+        {
+          "type": "response.completed",
+          "stream_id": "reconstruction",
+          "sequence_number": 2,
+          "response": {
+            "id": "resp",
+            "object": "response",
+            "created_at": 1730000000.0,
+            "access_programs": null,
+            "error": null,
+            "incomplete_details": null,
+            "instructions": null,
+            "metadata": null,
+            "model": "gpt-4o-mini",
+            "status": "completed",
+            "output": [],
+            "parallel_tool_calls": true,
+            "temperature": 1.0,
+            "tool_choice": "auto",
+            "tools": [],
+            "top_p": 1.0,
+            "future_metadata": {
+              "values": [
+                "retained"
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {
+        "result": "response",
+        "response": {
+          "id": "resp",
+          "object": "response",
+          "created_at": 1730000000.0,
+          "access_programs": null,
+          "error": null,
+          "incomplete_details": null,
+          "instructions": null,
+          "metadata": null,
+          "model": "gpt-4o-mini",
+          "status": "completed",
+          "output": [],
+          "parallel_tool_calls": true,
+          "temperature": 1.0,
+          "tool_choice": "auto",
+          "tools": [],
+          "top_p": 1.0,
+          "future_metadata": {
+            "values": [
+              "retained"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "explicit_nonempty_output_wins",
+      "classification": "normal_contract",
+      "events": [
+        {
+          "type": "response.created",
+          "stream_id": "reconstruction",
+          "sequence_number": 0,
+          "response": {
+            "id": "resp",
+            "object": "response",
+            "created_at": 1730000000.0,
+            "access_programs": null,
+            "error": null,
+            "incomplete_details": null,
+            "instructions": null,
+            "metadata": null,
+            "model": "gpt-4o-mini",
+            "status": "in_progress",
+            "output": [],
+            "parallel_tool_calls": true,
+            "temperature": 1.0,
+            "tool_choice": "auto",
+            "tools": [],
+            "top_p": 1.0,
+            "future_metadata": {
+              "values": [
+                "retained"
+              ]
+            }
+          }
+        },
+        {
+          "type": "response.output_item.done",
+          "stream_id": "reconstruction",
+          "sequence_number": 1,
+          "output_index": 0,
+          "item": {
+            "type": "message",
+            "id": "msg",
+            "role": "assistant",
+            "status": "completed",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "one",
+                "annotations": [],
+                "logprobs": []
+              },
+              {
+                "type": "output_text",
+                "text": "two",
+                "annotations": [],
+                "logprobs": []
+              },
+              {
+                "type": "refusal",
+                "refusal": "declined"
+              }
+            ]
+          }
+        },
+        {
+          "type": "response.completed",
+          "stream_id": "reconstruction",
+          "sequence_number": 2,
+          "response": {
+            "id": "resp",
+            "object": "response",
+            "created_at": 1730000000.0,
+            "access_programs": null,
+            "error": null,
+            "incomplete_details": null,
+            "instructions": null,
+            "metadata": null,
+            "model": "gpt-4o-mini",
+            "status": "completed",
+            "output": [
+              {
+                "type": "custom_tool_call",
+                "id": "ct",
+                "call_id": "call_custom",
+                "name": "never_run",
+                "input": "final input",
+                "status": "completed"
+              }
+            ],
+            "parallel_tool_calls": true,
+            "temperature": 1.0,
+            "tool_choice": "auto",
+            "tools": [],
+            "top_p": 1.0,
+            "future_metadata": {
+              "values": [
+                "retained"
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {
+        "result": "response",
+        "response": {
+          "id": "resp",
+          "object": "response",
+          "created_at": 1730000000.0,
+          "access_programs": null,
+          "error": null,
+          "incomplete_details": null,
+          "instructions": null,
+          "metadata": null,
+          "model": "gpt-4o-mini",
+          "status": "completed",
+          "output": [
+            {
+              "type": "custom_tool_call",
+              "id": "ct",
+              "call_id": "call_custom",
+              "name": "never_run",
+              "input": "final input",
+              "status": "completed"
+            }
+          ],
+          "parallel_tool_calls": true,
+          "temperature": 1.0,
+          "tool_choice": "auto",
+          "tools": [],
+          "top_p": 1.0,
+          "future_metadata": {
+            "values": [
+              "retained"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "finalized_items_without_terminal_are_not_success",
+      "classification": "normal_contract",
+      "events": [
+        {
+          "type": "response.created",
+          "stream_id": "reconstruction",
+          "sequence_number": 0,
+          "response": {
+            "id": "resp",
+            "object": "response",
+            "created_at": 1730000000.0,
+            "access_programs": null,
+            "error": null,
+            "incomplete_details": null,
+            "instructions": null,
+            "metadata": null,
+            "model": "gpt-4o-mini",
+            "status": "in_progress",
+            "output": [],
+            "parallel_tool_calls": true,
+            "temperature": 1.0,
+            "tool_choice": "auto",
+            "tools": [],
+            "top_p": 1.0,
+            "future_metadata": {
+              "values": [
+                "retained"
+              ]
+            }
+          }
+        },
+        {
+          "type": "response.output_item.done",
+          "stream_id": "reconstruction",
+          "sequence_number": 1,
+          "output_index": 0,
+          "item": {
+            "type": "message",
+            "id": "msg",
+            "role": "assistant",
+            "status": "completed",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "one",
+                "annotations": [],
+                "logprobs": []
+              },
+              {
+                "type": "output_text",
+                "text": "two",
+                "annotations": [],
+                "logprobs": []
+              },
+              {
+                "type": "refusal",
+                "refusal": "declined"
+              }
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "result": "not_ready"
+      }
+    },
+    {
+      "name": "protocol_error_is_not_a_response",
+      "classification": "normal_contract",
+      "events": [
+        {
+          "type": "response.created",
+          "stream_id": "reconstruction",
+          "sequence_number": 0,
+          "response": {
+            "id": "resp",
+            "object": "response",
+            "created_at": 1730000000.0,
+            "access_programs": null,
+            "error": null,
+            "incomplete_details": null,
+            "instructions": null,
+            "metadata": null,
+            "model": "gpt-4o-mini",
+            "status": "in_progress",
+            "output": [],
+            "parallel_tool_calls": true,
+            "temperature": 1.0,
+            "tool_choice": "auto",
+            "tools": [],
+            "top_p": 1.0,
+            "future_metadata": {
+              "values": [
+                "retained"
+              ]
+            }
+          }
+        },
+        {
+          "type": "response.output_item.done",
+          "stream_id": "reconstruction",
+          "sequence_number": 1,
+          "output_index": 0,
+          "item": {
+            "type": "message",
+            "id": "msg",
+            "role": "assistant",
+            "status": "completed",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "one",
+                "annotations": [],
+                "logprobs": []
+              },
+              {
+                "type": "output_text",
+                "text": "two",
+                "annotations": [],
+                "logprobs": []
+              },
+              {
+                "type": "refusal",
+                "refusal": "declined"
+              }
+            ]
+          }
+        },
+        {
+          "type": "error",
+          "stream_id": "reconstruction",
+          "sequence_number": 2,
+          "error": {
+            "type": "server_error",
+            "message": "synthetic failure"
+          }
+        }
+      ],
+      "expected": {
+        "result": "error"
+      }
+    },
+    {
+      "name": "unfinished_deltas_never_become_final_items",
+      "classification": "schema_invalid_output_compatibility",
+      "events": [
+        {
+          "type": "response.created",
+          "stream_id": "reconstruction",
+          "sequence_number": 0,
+          "response": {
+            "id": "resp",
+            "object": "response",
+            "created_at": 1730000000.0,
+            "access_programs": null,
+            "error": null,
+            "incomplete_details": null,
+            "instructions": null,
+            "metadata": null,
+            "model": "gpt-4o-mini",
+            "status": "in_progress",
+            "output": [],
+            "parallel_tool_calls": true,
+            "temperature": 1.0,
+            "tool_choice": "auto",
+            "tools": [],
+            "top_p": 1.0,
+            "future_metadata": {
+              "values": [
+                "retained"
+              ]
+            }
+          }
+        },
+        {
+          "type": "response.output_item.added",
+          "stream_id": "reconstruction",
+          "sequence_number": 1,
+          "output_index": 0,
+          "item": {
+            "type": "message",
+            "id": "msg",
+            "role": "assistant",
+            "status": "in_progress",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "",
+                "annotations": [],
+                "logprobs": []
+              }
+            ]
+          }
+        },
+        {
+          "type": "response.output_text.delta",
+          "stream_id": "reconstruction",
+          "sequence_number": 2,
+          "output_index": 0,
+          "content_index": 0,
+          "item_id": "msg",
+          "delta": "unfinished",
+          "logprobs": []
+        },
+        {
+          "type": "response.completed",
+          "stream_id": "reconstruction",
+          "sequence_number": 3,
+          "response": {
+            "id": "resp",
+            "object": "response",
+            "created_at": 1730000000.0,
+            "access_programs": null,
+            "error": null,
+            "incomplete_details": null,
+            "instructions": null,
+            "metadata": null,
+            "model": "gpt-4o-mini",
+            "status": "completed",
+            "parallel_tool_calls": true,
+            "temperature": 1.0,
+            "tool_choice": "auto",
+            "tools": [],
+            "top_p": 1.0,
+            "future_metadata": {
+              "values": [
+                "retained"
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {
+        "result": "response",
+        "response": {
+          "id": "resp",
+          "object": "response",
+          "created_at": 1730000000.0,
+          "access_programs": null,
+          "error": null,
+          "incomplete_details": null,
+          "instructions": null,
+          "metadata": null,
+          "model": "gpt-4o-mini",
+          "status": "completed",
+          "parallel_tool_calls": true,
+          "temperature": 1.0,
+          "tool_choice": "auto",
+          "tools": [],
+          "top_p": 1.0,
+          "future_metadata": {
+            "values": [
+              "retained"
+            ]
+          },
+          "output": []
+        }
+      }
+    },
+    {
+      "name": "created_resets_finalized_items",
+      "classification": "schema_invalid_output_compatibility",
+      "events": [
+        {
+          "type": "response.created",
+          "stream_id": "reconstruction",
+          "sequence_number": 0,
+          "response": {
+            "id": "resp",
+            "object": "response",
+            "created_at": 1730000000.0,
+            "access_programs": null,
+            "error": null,
+            "incomplete_details": null,
+            "instructions": null,
+            "metadata": null,
+            "model": "gpt-4o-mini",
+            "status": "in_progress",
+            "output": [],
+            "parallel_tool_calls": true,
+            "temperature": 1.0,
+            "tool_choice": "auto",
+            "tools": [],
+            "top_p": 1.0,
+            "future_metadata": {
+              "values": [
+                "retained"
+              ]
+            }
+          }
+        },
+        {
+          "type": "response.output_item.done",
+          "stream_id": "reconstruction",
+          "sequence_number": 1,
+          "output_index": 0,
+          "item": {
+            "type": "message",
+            "id": "msg",
+            "role": "assistant",
+            "status": "completed",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "one",
+                "annotations": [],
+                "logprobs": []
+              },
+              {
+                "type": "output_text",
+                "text": "two",
+                "annotations": [],
+                "logprobs": []
+              },
+              {
+                "type": "refusal",
+                "refusal": "declined"
+              }
+            ]
+          }
+        },
+        {
+          "type": "response.created",
+          "stream_id": "reconstruction",
+          "sequence_number": 2,
+          "response": {
+            "id": "resp",
+            "object": "response",
+            "created_at": 1730000000.0,
+            "access_programs": null,
+            "error": null,
+            "incomplete_details": null,
+            "instructions": null,
+            "metadata": null,
+            "model": "gpt-4o-mini",
+            "status": "in_progress",
+            "output": [],
+            "parallel_tool_calls": true,
+            "temperature": 1.0,
+            "tool_choice": "auto",
+            "tools": [],
+            "top_p": 1.0,
+            "future_metadata": {
+              "values": [
+                "retained"
+              ]
+            }
+          }
+        },
+        {
+          "type": "response.output_item.done",
+          "stream_id": "reconstruction",
+          "sequence_number": 3,
+          "output_index": 3,
+          "item": {
+            "type": "function_call",
+            "id": "fn",
+            "call_id": "call",
+            "name": "never_run",
+            "arguments": "{\"value\":42}"
+          }
+        },
+        {
+          "type": "response.completed",
+          "stream_id": "reconstruction",
+          "sequence_number": 4,
+          "response": {
+            "id": "resp",
+            "object": "response",
+            "created_at": 1730000000.0,
+            "access_programs": null,
+            "error": null,
+            "incomplete_details": null,
+            "instructions": null,
+            "metadata": null,
+            "model": "gpt-4o-mini",
+            "status": "completed",
+            "parallel_tool_calls": true,
+            "temperature": 1.0,
+            "tool_choice": "auto",
+            "tools": [],
+            "top_p": 1.0,
+            "future_metadata": {
+              "values": [
+                "retained"
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {
+        "result": "response",
+        "response": {
+          "id": "resp",
+          "object": "response",
+          "created_at": 1730000000.0,
+          "access_programs": null,
+          "error": null,
+          "incomplete_details": null,
+          "instructions": null,
+          "metadata": null,
+          "model": "gpt-4o-mini",
+          "status": "completed",
+          "parallel_tool_calls": true,
+          "temperature": 1.0,
+          "tool_choice": "auto",
+          "tools": [],
+          "top_p": 1.0,
+          "future_metadata": {
+            "values": [
+              "retained"
+            ]
+          },
+          "output": [
+            {
+              "type": "function_call",
+              "id": "fn",
+              "call_id": "call",
+              "name": "never_run",
+              "arguments": "{\"value\":42}"
+            }
+          ]
+        }
+      },
+      "reset_before_event_indices": [
+        2
+      ]
+    }
+  ]
+}

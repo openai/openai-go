@@ -4600,6 +4600,19 @@ type BetaResponse struct {
 	//   - [Text inputs and outputs](https://developers.openai.com/api/docs/guides/text)
 	//   - [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
 	Text BetaResponseTextConfig `json:"text"`
+	// Usage reported by hosted tools, separate from base model `usage`. The field can
+	// be omitted when tool usage is unavailable. When present, tool families with no
+	// recorded usage have zero counts.
+	//
+	// `image_gen` sums available token counts across image generation calls. Calls
+	// with missing or incomplete usage records may be skipped. Output token details
+	// and cached input counts can be omitted. An omitted cache count means cache usage
+	// is unknown.
+	//
+	// `web_search.num_requests` counts billable searches. Discounted searches and
+	// actions such as opening a page are excluded. Use billing records to reconcile
+	// final charges.
+	ToolUsage BetaResponseToolUsage `json:"tool_usage"`
 	// An integer between 0 and 20 specifying the maximum number of most likely tokens
 	// to return at each token position, each with an associated log probability. In
 	// some cases, the number of returned tokens may be fewer than requested.
@@ -4659,6 +4672,7 @@ type BetaResponse struct {
 		ServiceTier            respjson.Field
 		Status                 respjson.Field
 		Text                   respjson.Field
+		ToolUsage              respjson.Field
 		TopLogprobs            respjson.Field
 		Truncation             respjson.Field
 		Usage                  respjson.Field
@@ -4777,6 +4791,9 @@ const (
 	// replacements.
 	BetaResponseModelGPT5_4Nano           BetaResponseModel = "gpt-5.4-nano"
 	BetaResponseModelGPT5_4Mini2026_03_17 BetaResponseModel = "gpt-5.4-mini-2026-03-17"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponseModelGPT5_4Nano2026_03_17 BetaResponseModel = "gpt-5.4-nano-2026-03-17"
 	// Deprecated: Announced shutdown date: 2026-08-10. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -4793,7 +4810,10 @@ const (
 	// Deprecated: Announced shutdown date: 2027-04-01. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
-	BetaResponseModelGPT5_1            BetaResponseModel = "gpt-5.1"
+	BetaResponseModelGPT5_1 BetaResponseModel = "gpt-5.1"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponseModelGPT5_1_2025_11_13 BetaResponseModel = "gpt-5.1-2025-11-13"
 	// Deprecated: Announced shutdown date: 2026-07-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -5122,6 +5142,7 @@ const (
 	BetaResponseModelGPTDaybreakBlueLatest BetaResponseModel = "gpt-daybreak-blue-latest"
 	BetaResponseModelGPTDaybreakRedLatest  BetaResponseModel = "gpt-daybreak-red-latest"
 	BetaResponseModelGPT5_6Cyber           BetaResponseModel = "gpt-5.6-cyber"
+	BetaResponseModelGPT6Cyber             BetaResponseModel = "gpt-6-cyber"
 	BetaResponseModelGPTRosalindResearch   BetaResponseModel = "gpt-rosalind-research"
 )
 
@@ -5736,7 +5757,7 @@ type BetaResponsePromptCacheOptions struct {
 	Mode string `json:"mode" api:"required"`
 	// The minimum lifetime applied to each cache breakpoint.
 	//
-	// Any of "30m".
+	// Any of "30m", "12h".
 	Ttl string `json:"ttl" api:"required"`
 	// The response ID supplied as the prompt cache diagnostics comparison.
 	ComparisonResponseID string `json:"comparison_response_id" api:"nullable"`
@@ -5879,6 +5900,150 @@ const (
 	BetaResponseServiceTierFast      BetaResponseServiceTier = "fast"
 	BetaResponseServiceTierUltrafast BetaResponseServiceTier = "ultrafast"
 )
+
+// Usage reported by hosted tools, separate from base model `usage`. The field can
+// be omitted when tool usage is unavailable. When present, tool families with no
+// recorded usage have zero counts.
+//
+// `image_gen` sums available token counts across image generation calls. Calls
+// with missing or incomplete usage records may be skipped. Output token details
+// and cached input counts can be omitted. An omitted cache count means cache usage
+// is unknown.
+//
+// `web_search.num_requests` counts billable searches. Discounted searches and
+// actions such as opening a page are excluded. Use billing records to reconcile
+// final charges.
+type BetaResponseToolUsage struct {
+	// Aggregated usage statistics for image generation tool calls.
+	ImageGen BetaResponseToolUsageImageGen `json:"image_gen" api:"required"`
+	// Aggregated billable usage statistics for web search tool calls.
+	WebSearch BetaResponseToolUsageWebSearch `json:"web_search" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ImageGen    respjson.Field
+		WebSearch   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolUsage) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseToolUsage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Aggregated usage statistics for image generation tool calls.
+type BetaResponseToolUsageImageGen struct {
+	// The number of tokens (images and text) in the input prompt.
+	InputTokens int64 `json:"input_tokens" api:"required"`
+	// The input tokens detailed information for the image generation.
+	InputTokensDetails BetaResponseToolUsageImageGenInputTokensDetails `json:"input_tokens_details" api:"required"`
+	// The number of output tokens generated by the model.
+	OutputTokens int64 `json:"output_tokens" api:"required"`
+	// The total number of tokens (images and text) used for the image generation.
+	TotalTokens         int64                                            `json:"total_tokens" api:"required"`
+	CachedTokens        int64                                            `json:"cached_tokens"`
+	CachedTokensDetails BetaResponseToolUsageImageGenCachedTokensDetails `json:"cached_tokens_details"`
+	// The output token details for the image generation.
+	OutputTokensDetails BetaResponseToolUsageImageGenOutputTokensDetails `json:"output_tokens_details"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		InputTokens         respjson.Field
+		InputTokensDetails  respjson.Field
+		OutputTokens        respjson.Field
+		TotalTokens         respjson.Field
+		CachedTokens        respjson.Field
+		CachedTokensDetails respjson.Field
+		OutputTokensDetails respjson.Field
+		ExtraFields         map[string]respjson.Field
+		raw                 string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolUsageImageGen) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseToolUsageImageGen) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The input tokens detailed information for the image generation.
+type BetaResponseToolUsageImageGenInputTokensDetails struct {
+	// The number of image tokens in the input prompt.
+	ImageTokens int64 `json:"image_tokens" api:"required"`
+	// The number of text tokens in the input prompt.
+	TextTokens int64 `json:"text_tokens" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ImageTokens respjson.Field
+		TextTokens  respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolUsageImageGenInputTokensDetails) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseToolUsageImageGenInputTokensDetails) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponseToolUsageImageGenCachedTokensDetails struct {
+	CachedImageTokens int64 `json:"cached_image_tokens" api:"required"`
+	CachedTextTokens  int64 `json:"cached_text_tokens" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CachedImageTokens respjson.Field
+		CachedTextTokens  respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolUsageImageGenCachedTokensDetails) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseToolUsageImageGenCachedTokensDetails) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The output token details for the image generation.
+type BetaResponseToolUsageImageGenOutputTokensDetails struct {
+	// The number of image output tokens generated by the model.
+	ImageTokens int64 `json:"image_tokens" api:"required"`
+	// The number of text output tokens generated by the model.
+	TextTokens int64 `json:"text_tokens" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ImageTokens respjson.Field
+		TextTokens  respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolUsageImageGenOutputTokensDetails) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseToolUsageImageGenOutputTokensDetails) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Aggregated billable usage statistics for web search tool calls.
+type BetaResponseToolUsageWebSearch struct {
+	// The number of billable web search requests issued.
+	NumRequests int64 `json:"num_requests" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumRequests respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolUsageWebSearch) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseToolUsageWebSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The truncation strategy to use for the model response.
 //
@@ -7734,8 +7899,8 @@ func (r *BetaResponseComputerToolCallOutputScreenshotParam) UnmarshalJSON(data [
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// A configuration update that applies to subsequent responses until it is replaced
-// by another configuration update.
+// A configuration update for subsequent responses. Each setting stays in effect
+// until a later update replaces that setting.
 type BetaResponseConfigurationUpdateItem struct {
 	// The unique ID of the configuration update item.
 	ID string `json:"id" api:"required"`
@@ -7745,12 +7910,15 @@ type BetaResponseConfigurationUpdateItem struct {
 	Agent BetaResponseConfigurationUpdateItemAgent `json:"agent"`
 	// The reasoning configuration applied by this update.
 	Reasoning BetaResponseConfigurationUpdateItemReasoning `json:"reasoning"`
+	// The text output configuration for subsequent responses.
+	Text BetaResponseConfigurationUpdateItemText `json:"text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
 		Type        respjson.Field
 		Agent       respjson.Field
 		Reasoning   respjson.Field
+		Text        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -7801,9 +7969,120 @@ func (r *BetaResponseConfigurationUpdateItemReasoning) UnmarshalJSON(data []byte
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// An update to the conversation's response configuration. The configuration
-// remains in effect for subsequent responses until it is replaced by another
-// configuration update.
+// The text output configuration for subsequent responses.
+type BetaResponseConfigurationUpdateItemText struct {
+	// Use a JSON schema for structured output or text to return to plain text.
+	Format BetaResponseConfigurationUpdateItemTextFormatUnion `json:"format" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Format      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseConfigurationUpdateItemText) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseConfigurationUpdateItemText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseConfigurationUpdateItemTextFormatUnion contains all possible
+// properties and values from [BetaResponseConfigurationUpdateItemTextFormatText],
+// [BetaResponseFormatTextJSONSchemaConfig].
+//
+// Use the [BetaResponseConfigurationUpdateItemTextFormatUnion.AsAny] method to
+// switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaResponseConfigurationUpdateItemTextFormatUnion struct {
+	// Any of "text", "json_schema".
+	Type string `json:"type"`
+	// This field is from variant [BetaResponseFormatTextJSONSchemaConfig].
+	Name string `json:"name"`
+	// This field is from variant [BetaResponseFormatTextJSONSchemaConfig].
+	Schema map[string]any `json:"schema"`
+	// This field is from variant [BetaResponseFormatTextJSONSchemaConfig].
+	Description string `json:"description"`
+	// This field is from variant [BetaResponseFormatTextJSONSchemaConfig].
+	Strict bool `json:"strict"`
+	JSON   struct {
+		Type        respjson.Field
+		Name        respjson.Field
+		Schema      respjson.Field
+		Description respjson.Field
+		Strict      respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// anyBetaResponseConfigurationUpdateItemTextFormat is implemented by each variant
+// of [BetaResponseConfigurationUpdateItemTextFormatUnion] to add type safety for
+// the return type of [BetaResponseConfigurationUpdateItemTextFormatUnion.AsAny]
+type anyBetaResponseConfigurationUpdateItemTextFormat interface {
+	implBetaResponseConfigurationUpdateItemTextFormatUnion()
+}
+
+func (BetaResponseConfigurationUpdateItemTextFormatText) implBetaResponseConfigurationUpdateItemTextFormatUnion() {
+}
+func (BetaResponseFormatTextJSONSchemaConfig) implBetaResponseConfigurationUpdateItemTextFormatUnion() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := BetaResponseConfigurationUpdateItemTextFormatUnion.AsAny().(type) {
+//	case openai.BetaResponseConfigurationUpdateItemTextFormatText:
+//	case openai.BetaResponseFormatTextJSONSchemaConfig:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u BetaResponseConfigurationUpdateItemTextFormatUnion) AsAny() anyBetaResponseConfigurationUpdateItemTextFormat {
+	switch u.Type {
+	case "text":
+		return u.AsText()
+	case "json_schema":
+		return u.AsJSONSchema()
+	}
+	return nil
+}
+
+func (u BetaResponseConfigurationUpdateItemTextFormatUnion) AsText() (v BetaResponseConfigurationUpdateItemTextFormatText) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseConfigurationUpdateItemTextFormatUnion) AsJSONSchema() (v BetaResponseFormatTextJSONSchemaConfig) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseConfigurationUpdateItemTextFormatUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *BetaResponseConfigurationUpdateItemTextFormatUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Default response format. Used to generate text responses.
+type BetaResponseConfigurationUpdateItemTextFormatText struct {
+	// The type of response format being defined. Always `text`.
+	Type constant.Text `json:"type" default:"text"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseConfigurationUpdateItemTextFormatText) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseConfigurationUpdateItemTextFormatText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An update to the conversation's response configuration. Supply reasoning, text,
+// or both. Each setting stays in effect until a later update replaces it.
 type BetaResponseConfigurationUpdateItemParamResp struct {
 	// The item type. Always `configuration_update`.
 	Type constant.ConfigurationUpdate `json:"type" default:"configuration_update"`
@@ -7813,12 +8092,15 @@ type BetaResponseConfigurationUpdateItemParamResp struct {
 	Agent BetaResponseConfigurationUpdateItemParamAgentResp `json:"agent" api:"nullable"`
 	// Updates to reasoning configuration. Only effort is supported.
 	Reasoning BetaResponseConfigurationUpdateItemParamReasoningResp `json:"reasoning"`
+	// The text output configuration for subsequent responses.
+	Text BetaResponseConfigurationUpdateItemParamTextResp `json:"text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
 		ID          respjson.Field
 		Agent       respjson.Field
 		Reasoning   respjson.Field
+		Text        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -7879,9 +8161,124 @@ func (r *BetaResponseConfigurationUpdateItemParamReasoningResp) UnmarshalJSON(da
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// An update to the conversation's response configuration. The configuration
-// remains in effect for subsequent responses until it is replaced by another
-// configuration update.
+// The text output configuration for subsequent responses.
+type BetaResponseConfigurationUpdateItemParamTextResp struct {
+	// Use a JSON schema for structured output or text to return to plain text.
+	Format BetaResponseConfigurationUpdateItemParamTextFormatUnionResp `json:"format" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Format      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseConfigurationUpdateItemParamTextResp) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseConfigurationUpdateItemParamTextResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseConfigurationUpdateItemParamTextFormatUnionResp contains all
+// possible properties and values from
+// [BetaResponseConfigurationUpdateItemParamTextFormatText],
+// [BetaResponseFormatTextJSONSchemaConfig].
+//
+// Use the [BetaResponseConfigurationUpdateItemParamTextFormatUnionResp.AsAny]
+// method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaResponseConfigurationUpdateItemParamTextFormatUnionResp struct {
+	// Any of "text", "json_schema".
+	Type string `json:"type"`
+	// This field is from variant [BetaResponseFormatTextJSONSchemaConfig].
+	Name string `json:"name"`
+	// This field is from variant [BetaResponseFormatTextJSONSchemaConfig].
+	Schema map[string]any `json:"schema"`
+	// This field is from variant [BetaResponseFormatTextJSONSchemaConfig].
+	Description string `json:"description"`
+	// This field is from variant [BetaResponseFormatTextJSONSchemaConfig].
+	Strict bool `json:"strict"`
+	JSON   struct {
+		Type        respjson.Field
+		Name        respjson.Field
+		Schema      respjson.Field
+		Description respjson.Field
+		Strict      respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// anyBetaResponseConfigurationUpdateItemParamTextFormatResp is implemented by each
+// variant of [BetaResponseConfigurationUpdateItemParamTextFormatUnionResp] to add
+// type safety for the return type of
+// [BetaResponseConfigurationUpdateItemParamTextFormatUnionResp.AsAny]
+type anyBetaResponseConfigurationUpdateItemParamTextFormatResp interface {
+	implBetaResponseConfigurationUpdateItemParamTextFormatUnionResp()
+}
+
+func (BetaResponseConfigurationUpdateItemParamTextFormatText) implBetaResponseConfigurationUpdateItemParamTextFormatUnionResp() {
+}
+func (BetaResponseFormatTextJSONSchemaConfig) implBetaResponseConfigurationUpdateItemParamTextFormatUnionResp() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := BetaResponseConfigurationUpdateItemParamTextFormatUnionResp.AsAny().(type) {
+//	case openai.BetaResponseConfigurationUpdateItemParamTextFormatText:
+//	case openai.BetaResponseFormatTextJSONSchemaConfig:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnionResp) AsAny() anyBetaResponseConfigurationUpdateItemParamTextFormatResp {
+	switch u.Type {
+	case "text":
+		return u.AsText()
+	case "json_schema":
+		return u.AsJSONSchema()
+	}
+	return nil
+}
+
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnionResp) AsText() (v BetaResponseConfigurationUpdateItemParamTextFormatText) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnionResp) AsJSONSchema() (v BetaResponseFormatTextJSONSchemaConfig) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnionResp) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *BetaResponseConfigurationUpdateItemParamTextFormatUnionResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Default response format. Used to generate text responses.
+type BetaResponseConfigurationUpdateItemParamTextFormatText struct {
+	// The type of response format being defined. Always `text`.
+	Type constant.Text `json:"type" default:"text"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseConfigurationUpdateItemParamTextFormatText) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseConfigurationUpdateItemParamTextFormatText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An update to the conversation's response configuration. Supply reasoning, text,
+// or both. Each setting stays in effect until a later update replaces it.
 //
 // The property Type is required.
 type BetaResponseConfigurationUpdateItemParam struct {
@@ -7891,6 +8288,8 @@ type BetaResponseConfigurationUpdateItemParam struct {
 	Agent BetaResponseConfigurationUpdateItemParamAgent `json:"agent,omitzero"`
 	// Updates to reasoning configuration. Only effort is supported.
 	Reasoning BetaResponseConfigurationUpdateItemParamReasoning `json:"reasoning,omitzero"`
+	// The text output configuration for subsequent responses.
+	Text BetaResponseConfigurationUpdateItemParamText `json:"text,omitzero"`
 	// The item type. Always `configuration_update`.
 	//
 	// This field can be elided, and will marshal its zero value as
@@ -7946,6 +8345,113 @@ func init() {
 	apijson.RegisterFieldValidator[BetaResponseConfigurationUpdateItemParamReasoning](
 		"effort", "none", "minimal", "low", "medium", "high", "xhigh", "max",
 	)
+}
+
+// The text output configuration for subsequent responses.
+//
+// The property Format is required.
+type BetaResponseConfigurationUpdateItemParamText struct {
+	// Use a JSON schema for structured output or text to return to plain text.
+	Format BetaResponseConfigurationUpdateItemParamTextFormatUnion `json:"format,omitzero" api:"required"`
+	paramObj
+}
+
+func (r BetaResponseConfigurationUpdateItemParamText) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseConfigurationUpdateItemParamText
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseConfigurationUpdateItemParamText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaResponseConfigurationUpdateItemParamTextFormatUnion struct {
+	OfText       *BetaResponseConfigurationUpdateItemParamTextFormatTextParam `json:",omitzero,inline"`
+	OfJSONSchema *BetaResponseFormatTextJSONSchemaConfigParam                 `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfText, u.OfJSONSchema)
+}
+func (u *BetaResponseConfigurationUpdateItemParamTextFormatUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnion) GetName() *string {
+	if vt := u.OfJSONSchema; vt != nil {
+		return &vt.Name
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnion) GetSchema() map[string]any {
+	if vt := u.OfJSONSchema; vt != nil {
+		return vt.Schema
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnion) GetDescription() *string {
+	if vt := u.OfJSONSchema; vt != nil && vt.Description.Valid() {
+		return &vt.Description.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnion) GetStrict() *bool {
+	if vt := u.OfJSONSchema; vt != nil && vt.Strict.Valid() {
+		return &vt.Strict.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseConfigurationUpdateItemParamTextFormatUnion) GetType() *string {
+	if vt := u.OfText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfJSONSchema; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[BetaResponseConfigurationUpdateItemParamTextFormatUnion](
+		"type",
+		apijson.Discriminator[BetaResponseConfigurationUpdateItemParamTextFormatTextParam]("text"),
+		apijson.Discriminator[BetaResponseFormatTextJSONSchemaConfigParam]("json_schema"),
+	)
+}
+
+func NewBetaResponseConfigurationUpdateItemParamTextFormatTextParam() BetaResponseConfigurationUpdateItemParamTextFormatTextParam {
+	return BetaResponseConfigurationUpdateItemParamTextFormatTextParam{
+		Type: "text",
+	}
+}
+
+// Default response format. Used to generate text responses.
+//
+// This struct has a constant value, construct it with
+// [NewBetaResponseConfigurationUpdateItemParamTextFormatTextParam].
+type BetaResponseConfigurationUpdateItemParamTextFormatTextParam struct {
+	// The type of response format being defined. Always `text`.
+	Type constant.Text `json:"type" default:"text"`
+	paramObj
+}
+
+func (r BetaResponseConfigurationUpdateItemParamTextFormatTextParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseConfigurationUpdateItemParamTextFormatTextParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseConfigurationUpdateItemParamTextFormatTextParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Represents a container created with /v1/containers.
@@ -14344,6 +14850,8 @@ type BetaResponseInputItemUnion struct {
 	Tools BetaResponseInputItemUnionTools `json:"tools"`
 	// This field is from variant [BetaResponseConfigurationUpdateItemParamResp].
 	Reasoning BetaResponseConfigurationUpdateItemParamReasoningResp `json:"reasoning"`
+	// This field is from variant [BetaResponseConfigurationUpdateItemParamResp].
+	Text BetaResponseConfigurationUpdateItemParamTextResp `json:"text"`
 	// This field is from variant [BetaResponseReasoningItem].
 	Summary          []BetaResponseReasoningItemSummary `json:"summary"`
 	EncryptedContent string                             `json:"encrypted_content"`
@@ -14358,7 +14866,9 @@ type BetaResponseInputItemUnion struct {
 	RevisedPrompt string `json:"revised_prompt"`
 	// This field is from variant [BetaResponseInputItemImageGenerationCall].
 	Size string `json:"size"`
-	Code string `json:"code"`
+	// This field is from variant [BetaResponseInputItemImageGenerationCall].
+	SvgUsage BetaResponseInputItemImageGenerationCallSvgUsage `json:"svg_usage"`
+	Code     string                                           `json:"code"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
 	ContainerID string `json:"container_id"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
@@ -14407,6 +14917,7 @@ type BetaResponseInputItemUnion struct {
 		Execution                respjson.Field
 		Tools                    respjson.Field
 		Reasoning                respjson.Field
+		Text                     respjson.Field
 		Summary                  respjson.Field
 		EncryptedContent         respjson.Field
 		Result                   respjson.Field
@@ -14415,6 +14926,7 @@ type BetaResponseInputItemUnion struct {
 		Quality                  respjson.Field
 		RevisedPrompt            respjson.Field
 		Size                     respjson.Field
+		SvgUsage                 respjson.Field
 		Code                     respjson.Field
 		ContainerID              respjson.Field
 		Outputs                  respjson.Field
@@ -16119,7 +16631,7 @@ type BetaResponseInputItemImageGenerationCall struct {
 	Error BetaResponseInputItemImageGenerationCallError `json:"error"`
 	// The output format used for generation.
 	//
-	// Any of "png", "webp", "jpeg".
+	// Any of "png", "webp", "jpeg", "gif", "svg".
 	OutputFormat string `json:"output_format" api:"nullable"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
@@ -16129,7 +16641,8 @@ type BetaResponseInputItemImageGenerationCall struct {
 	// The prompt that was used after any model prompt rewriting.
 	RevisedPrompt string `json:"revised_prompt" api:"nullable"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
-	Size string `json:"size" api:"nullable"`
+	Size     string                                           `json:"size" api:"nullable"`
+	SvgUsage BetaResponseInputItemImageGenerationCallSvgUsage `json:"svg_usage"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID            respjson.Field
@@ -16144,6 +16657,7 @@ type BetaResponseInputItemImageGenerationCall struct {
 		Quality       respjson.Field
 		RevisedPrompt respjson.Field
 		Size          respjson.Field
+		SvgUsage      respjson.Field
 		ExtraFields   map[string]respjson.Field
 		raw           string
 	} `json:"-"`
@@ -16225,6 +16739,30 @@ func (r BetaResponseInputItemImageGenerationCallErrorModerationDetails) RawJSON(
 	return r.JSON.raw
 }
 func (r *BetaResponseInputItemImageGenerationCallErrorModerationDetails) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponseInputItemImageGenerationCallSvgUsage struct {
+	InputTokens     int64  `json:"input_tokens" api:"required"`
+	Model           string `json:"model" api:"required"`
+	OutputTokens    int64  `json:"output_tokens" api:"required"`
+	ReasoningTokens int64  `json:"reasoning_tokens" api:"required"`
+	TotalTokens     int64  `json:"total_tokens" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		InputTokens     respjson.Field
+		Model           respjson.Field
+		OutputTokens    respjson.Field
+		ReasoningTokens respjson.Field
+		TotalTokens     respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseInputItemImageGenerationCallSvgUsage) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseInputItemImageGenerationCallSvgUsage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -18081,6 +18619,14 @@ func (u BetaResponseInputItemUnionParam) GetReasoning() *BetaResponseConfigurati
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemUnionParam) GetText() *BetaResponseConfigurationUpdateItemParamText {
+	if vt := u.OfConfigurationUpdate; vt != nil {
+		return &vt.Text
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u BetaResponseInputItemUnionParam) GetSummary() []BetaResponseReasoningItemSummaryParam {
 	if vt := u.OfReasoning; vt != nil {
 		return vt.Summary
@@ -18124,6 +18670,14 @@ func (u BetaResponseInputItemUnionParam) GetRevisedPrompt() *string {
 func (u BetaResponseInputItemUnionParam) GetSize() *string {
 	if vt := u.OfImageGenerationCall; vt != nil && vt.Size.Valid() {
 		return &vt.Size.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemUnionParam) GetSvgUsage() *BetaResponseInputItemImageGenerationCallSvgUsageParam {
+	if vt := u.OfImageGenerationCall; vt != nil {
+		return &vt.SvgUsage
 	}
 	return nil
 }
@@ -20447,7 +21001,7 @@ type BetaResponseInputItemImageGenerationCallParam struct {
 	Background param.Opt[string] `json:"background,omitzero"`
 	// The output format used for generation.
 	//
-	// Any of "png", "webp", "jpeg".
+	// Any of "png", "webp", "jpeg", "gif", "svg".
 	OutputFormat param.Opt[string] `json:"output_format,omitzero"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
@@ -20457,7 +21011,8 @@ type BetaResponseInputItemImageGenerationCallParam struct {
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size param.Opt[string] `json:"size,omitzero"`
 	// Details of a moderation failure, when available.
-	Error BetaResponseInputItemImageGenerationCallErrorParam `json:"error,omitzero"`
+	Error    BetaResponseInputItemImageGenerationCallErrorParam    `json:"error,omitzero"`
+	SvgUsage BetaResponseInputItemImageGenerationCallSvgUsageParam `json:"svg_usage,omitzero"`
 	// The type of the image generation call. Always `image_generation_call`.
 	//
 	// This field can be elided, and will marshal its zero value as
@@ -20550,6 +21105,25 @@ func init() {
 	apijson.RegisterFieldValidator[BetaResponseInputItemImageGenerationCallErrorModerationDetailsParam](
 		"moderation_stage", "input", "output", "unknown",
 	)
+}
+
+// The properties InputTokens, Model, OutputTokens, ReasoningTokens, TotalTokens
+// are required.
+type BetaResponseInputItemImageGenerationCallSvgUsageParam struct {
+	InputTokens     int64  `json:"input_tokens" api:"required"`
+	Model           string `json:"model" api:"required"`
+	OutputTokens    int64  `json:"output_tokens" api:"required"`
+	ReasoningTokens int64  `json:"reasoning_tokens" api:"required"`
+	TotalTokens     int64  `json:"total_tokens" api:"required"`
+	paramObj
+}
+
+func (r BetaResponseInputItemImageGenerationCallSvgUsageParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseInputItemImageGenerationCallSvgUsageParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseInputItemImageGenerationCallSvgUsageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // A tool call to run a command on the local shell.
@@ -22342,6 +22916,8 @@ type BetaResponseItemUnion struct {
 	Tools BetaResponseItemUnionTools `json:"tools"`
 	// This field is from variant [BetaResponseConfigurationUpdateItem].
 	Reasoning BetaResponseConfigurationUpdateItemReasoning `json:"reasoning"`
+	// This field is from variant [BetaResponseConfigurationUpdateItem].
+	Text BetaResponseConfigurationUpdateItemText `json:"text"`
 	// This field is from variant [BetaResponseReasoningItem].
 	Summary          []BetaResponseReasoningItemSummary `json:"summary"`
 	EncryptedContent string                             `json:"encrypted_content"`
@@ -22359,6 +22935,8 @@ type BetaResponseItemUnion struct {
 	RevisedPrompt string `json:"revised_prompt"`
 	// This field is from variant [BetaResponseItemImageGenerationCall].
 	Size string `json:"size"`
+	// This field is from variant [BetaResponseItemImageGenerationCall].
+	SvgUsage BetaResponseItemImageGenerationCallSvgUsage `json:"svg_usage"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
 	ContainerID string `json:"container_id"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
@@ -22406,6 +22984,7 @@ type BetaResponseItemUnion struct {
 		Execution                respjson.Field
 		Tools                    respjson.Field
 		Reasoning                respjson.Field
+		Text                     respjson.Field
 		Summary                  respjson.Field
 		EncryptedContent         respjson.Field
 		Code                     respjson.Field
@@ -22416,6 +22995,7 @@ type BetaResponseItemUnion struct {
 		Quality                  respjson.Field
 		RevisedPrompt            respjson.Field
 		Size                     respjson.Field
+		SvgUsage                 respjson.Field
 		ContainerID              respjson.Field
 		Outputs                  respjson.Field
 		Environment              respjson.Field
@@ -23766,7 +24346,7 @@ type BetaResponseItemImageGenerationCall struct {
 	Error BetaResponseItemImageGenerationCallError `json:"error"`
 	// The output format used for generation.
 	//
-	// Any of "png", "webp", "jpeg".
+	// Any of "png", "webp", "jpeg", "gif", "svg".
 	OutputFormat string `json:"output_format" api:"nullable"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
@@ -23776,7 +24356,8 @@ type BetaResponseItemImageGenerationCall struct {
 	// The prompt that was used after any model prompt rewriting.
 	RevisedPrompt string `json:"revised_prompt" api:"nullable"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
-	Size string `json:"size" api:"nullable"`
+	Size     string                                      `json:"size" api:"nullable"`
+	SvgUsage BetaResponseItemImageGenerationCallSvgUsage `json:"svg_usage"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID            respjson.Field
@@ -23791,6 +24372,7 @@ type BetaResponseItemImageGenerationCall struct {
 		Quality       respjson.Field
 		RevisedPrompt respjson.Field
 		Size          respjson.Field
+		SvgUsage      respjson.Field
 		ExtraFields   map[string]respjson.Field
 		raw           string
 	} `json:"-"`
@@ -23872,6 +24454,30 @@ func (r BetaResponseItemImageGenerationCallErrorModerationDetails) RawJSON() str
 	return r.JSON.raw
 }
 func (r *BetaResponseItemImageGenerationCallErrorModerationDetails) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponseItemImageGenerationCallSvgUsage struct {
+	InputTokens     int64  `json:"input_tokens" api:"required"`
+	Model           string `json:"model" api:"required"`
+	OutputTokens    int64  `json:"output_tokens" api:"required"`
+	ReasoningTokens int64  `json:"reasoning_tokens" api:"required"`
+	TotalTokens     int64  `json:"total_tokens" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		InputTokens     respjson.Field
+		Model           respjson.Field
+		OutputTokens    respjson.Field
+		ReasoningTokens respjson.Field
+		TotalTokens     respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseItemImageGenerationCallSvgUsage) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseItemImageGenerationCallSvgUsage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -24798,6 +25404,8 @@ type BetaResponseOutputItemUnion struct {
 	RevisedPrompt string `json:"revised_prompt"`
 	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
 	Size string `json:"size"`
+	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
+	SvgUsage BetaResponseOutputItemImageGenerationCallSvgUsage `json:"svg_usage"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
 	ContainerID string `json:"container_id"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
@@ -24854,6 +25462,7 @@ type BetaResponseOutputItemUnion struct {
 		Quality                  respjson.Field
 		RevisedPrompt            respjson.Field
 		Size                     respjson.Field
+		SvgUsage                 respjson.Field
 		ContainerID              respjson.Field
 		Outputs                  respjson.Field
 		Environment              respjson.Field
@@ -26191,7 +26800,7 @@ type BetaResponseOutputItemImageGenerationCall struct {
 	Error BetaResponseOutputItemImageGenerationCallError `json:"error"`
 	// The output format used for generation.
 	//
-	// Any of "png", "webp", "jpeg".
+	// Any of "png", "webp", "jpeg", "gif", "svg".
 	OutputFormat string `json:"output_format" api:"nullable"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
@@ -26201,7 +26810,8 @@ type BetaResponseOutputItemImageGenerationCall struct {
 	// The prompt that was used after any model prompt rewriting.
 	RevisedPrompt string `json:"revised_prompt" api:"nullable"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
-	Size string `json:"size" api:"nullable"`
+	Size     string                                            `json:"size" api:"nullable"`
+	SvgUsage BetaResponseOutputItemImageGenerationCallSvgUsage `json:"svg_usage"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID            respjson.Field
@@ -26216,6 +26826,7 @@ type BetaResponseOutputItemImageGenerationCall struct {
 		Quality       respjson.Field
 		RevisedPrompt respjson.Field
 		Size          respjson.Field
+		SvgUsage      respjson.Field
 		ExtraFields   map[string]respjson.Field
 		raw           string
 	} `json:"-"`
@@ -26297,6 +26908,30 @@ func (r BetaResponseOutputItemImageGenerationCallErrorModerationDetails) RawJSON
 	return r.JSON.raw
 }
 func (r *BetaResponseOutputItemImageGenerationCallErrorModerationDetails) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponseOutputItemImageGenerationCallSvgUsage struct {
+	InputTokens     int64  `json:"input_tokens" api:"required"`
+	Model           string `json:"model" api:"required"`
+	OutputTokens    int64  `json:"output_tokens" api:"required"`
+	ReasoningTokens int64  `json:"reasoning_tokens" api:"required"`
+	TotalTokens     int64  `json:"total_tokens" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		InputTokens     respjson.Field
+		Model           respjson.Field
+		OutputTokens    respjson.Field
+		ReasoningTokens respjson.Field
+		TotalTokens     respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseOutputItemImageGenerationCallSvgUsage) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseOutputItemImageGenerationCallSvgUsage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -32680,6 +33315,15 @@ type BetaResponseToolSearchOutputItemParamToolUnionResp struct {
 	Background string `json:"background"`
 	// This field is from variant
 	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	Complexity string `json:"complexity"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	FrameCount int64 `json:"frame_count"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	FrameDurationMs int64 `json:"frame_duration_ms"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
 	InputFidelity string `json:"input_fidelity"`
 	// This field is from variant
 	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
@@ -32705,6 +33349,9 @@ type BetaResponseToolSearchOutputItemParamToolUnionResp struct {
 	// This field is from variant
 	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
 	Size string `json:"size"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	Svg BetaResponseToolSearchOutputItemParamToolImageGenerationSvgResp `json:"svg"`
 	// This field is from variant [BetaCustomTool].
 	Format BetaCustomToolFormatUnion `json:"format"`
 	// This field is from variant [BetaToolSearchOutputNamespaceTool].
@@ -32745,6 +33392,9 @@ type BetaResponseToolSearchOutputItemParamToolUnionResp struct {
 		Container          respjson.Field
 		Action             respjson.Field
 		Background         respjson.Field
+		Complexity         respjson.Field
+		FrameCount         respjson.Field
+		FrameDurationMs    respjson.Field
 		InputFidelity      respjson.Field
 		InputImageMask     respjson.Field
 		Model              respjson.Field
@@ -32754,6 +33404,7 @@ type BetaResponseToolSearchOutputItemParamToolUnionResp struct {
 		PartialImages      respjson.Field
 		Quality            respjson.Field
 		Size               respjson.Field
+		Svg                respjson.Field
 		Format             respjson.Field
 		Tools              respjson.Field
 		Execution          respjson.Field
@@ -33487,10 +34138,23 @@ type BetaResponseToolSearchOutputItemParamToolImageGeneration struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background"`
+	// Computation spent planning the image, independently of rendering quality.
+	// Overrides the outer response's `reasoning.effort` for image generation. When
+	// omitted, inherits a supported outer reasoning effort or uses the image model's
+	// configured default. For SVG output, controls the reference image, not the SVG
+	// author's reasoning.
+	//
+	// Any of "low", "medium", "high".
+	Complexity string `json:"complexity"`
+	// Number of GIF frames. Requires `output_format` to be `gif`. Default: 9.
+	FrameCount int64 `json:"frame_count"`
+	// Duration of each GIF frame in milliseconds, rounded to 10 ms. Requires
+	// `output_format` to be `gif`. Default: 200.
+	FrameDurationMs int64 `json:"frame_duration_ms"`
 	// Control how much effort the model will exert to match the style and features,
 	// especially facial features, of input images. Supports `high` and `low` on
-	// `gpt-image-1` and `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For
-	// `gpt-image-2`, omit this parameter. Defaults to `low` on supported models.
+	// `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For `gpt-image-2`, omit
+	// this parameter. Defaults to `low` on supported models.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity" api:"nullable"`
@@ -33500,8 +34164,8 @@ type BetaResponseToolSearchOutputItemParamToolImageGeneration struct {
 	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
 	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
 	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
-	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
-	// `gpt-image-2`.
+	// `gpt-image-2.5-flare-2026-09-08`, `gpt-image-2.6-sunburst`,
+	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default: `gpt-image-2`.
 	//
 	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
 	// `gpt-image-2.5-flare` instead.
@@ -33512,10 +34176,14 @@ type BetaResponseToolSearchOutputItemParamToolImageGeneration struct {
 	Moderation string `json:"moderation"`
 	// Compression level for the output image. Default: 100.
 	OutputCompression int64 `json:"output_compression"`
-	// The output format of the generated image. One of `png`, `webp`, or `jpeg`.
-	// Default: `png`.
+	// The output format of the generated image. One of `png`, `webp`, `jpeg`, `gif`,
+	// or `svg`. Default: `png`. GIF and SVG output require a model that supports the
+	// selected format. GIF output does not support partial image streaming
+	// (`partial_images` greater than `0`), `input_image_mask`, or custom
+	// `output_compression`. Responses lifecycle events can still be streamed for GIF
+	// output.
 	//
-	// Any of "png", "webp", "jpeg".
+	// Any of "png", "webp", "jpeg", "gif", "svg".
 	OutputFormat string `json:"output_format"`
 	// Number of partial images to generate in streaming mode, from 0 (default value)
 	// to 3.
@@ -33538,11 +34206,19 @@ type BetaResponseToolSearchOutputItemParamToolImageGeneration struct {
 	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
 	// `auto` is supported for models that allow automatic sizing.
 	Size string `json:"size"`
+	// SVG author model settings. Requires `output_format` to be `svg`. When SVG model
+	// selection is enabled, omitting this object uses the outer response model.
+	// Otherwise, the default SVG author is used and explicit model overrides are
+	// unavailable.
+	Svg BetaResponseToolSearchOutputItemParamToolImageGenerationSvgResp `json:"svg"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type              respjson.Field
 		Action            respjson.Field
 		Background        respjson.Field
+		Complexity        respjson.Field
+		FrameCount        respjson.Field
+		FrameDurationMs   respjson.Field
 		InputFidelity     respjson.Field
 		InputImageMask    respjson.Field
 		Model             respjson.Field
@@ -33552,6 +34228,7 @@ type BetaResponseToolSearchOutputItemParamToolImageGeneration struct {
 		PartialImages     respjson.Field
 		Quality           respjson.Field
 		Size              respjson.Field
+		Svg               respjson.Field
 		ExtraFields       map[string]respjson.Field
 		raw               string
 	} `json:"-"`
@@ -33584,6 +34261,55 @@ func (r BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMaskRe
 	return r.JSON.raw
 }
 func (r *BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMaskResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// SVG author model settings. Requires `output_format` to be `svg`. When SVG model
+// selection is enabled, omitting this object uses the outer response model.
+// Otherwise, the default SVG author is used and explicit model overrides are
+// unavailable.
+type BetaResponseToolSearchOutputItemParamToolImageGenerationSvgResp struct {
+	Model string `json:"model"`
+	// Reasoning effort for SVG authoring. When omitted, uses the author model's
+	// default in both Images and Responses.
+	Reasoning BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoningResp `json:"reasoning" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Model       respjson.Field
+		Reasoning   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolImageGenerationSvgResp) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseToolSearchOutputItemParamToolImageGenerationSvgResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Reasoning effort for SVG authoring. When omitted, uses the author model's
+// default in both Images and Responses.
+type BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoningResp struct {
+	// Controls how much effort the model should spend on reasoning for this request.
+	//
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
+	Effort string `json:"effort"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Effort      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoningResp) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoningResp) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -33880,6 +34606,30 @@ func (u BetaResponseToolSearchOutputItemParamToolUnion) GetBackground() *string 
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetComplexity() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Complexity
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetFrameCount() *int64 {
+	if vt := u.OfImageGeneration; vt != nil && vt.FrameCount.Valid() {
+		return &vt.FrameCount.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetFrameDurationMs() *int64 {
+	if vt := u.OfImageGeneration; vt != nil && vt.FrameDurationMs.Valid() {
+		return &vt.FrameDurationMs.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u BetaResponseToolSearchOutputItemParamToolUnion) GetInputFidelity() *string {
 	if vt := u.OfImageGeneration; vt != nil {
 		return &vt.InputFidelity
@@ -33947,6 +34697,14 @@ func (u BetaResponseToolSearchOutputItemParamToolUnion) GetQuality() *string {
 func (u BetaResponseToolSearchOutputItemParamToolUnion) GetSize() *string {
 	if vt := u.OfImageGeneration; vt != nil {
 		return &vt.Size
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetSvg() *BetaResponseToolSearchOutputItemParamToolImageGenerationSvg {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Svg
 	}
 	return nil
 }
@@ -34752,6 +35510,11 @@ func (r *BetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam) 
 //
 // The property Type is required.
 type BetaResponseToolSearchOutputItemParamToolImageGenerationParam struct {
+	// Number of GIF frames. Requires `output_format` to be `gif`. Default: 9.
+	FrameCount param.Opt[int64] `json:"frame_count,omitzero"`
+	// Duration of each GIF frame in milliseconds, rounded to 10 ms. Requires
+	// `output_format` to be `gif`. Default: 200.
+	FrameDurationMs param.Opt[int64] `json:"frame_duration_ms,omitzero"`
 	// Compression level for the output image. Default: 100.
 	OutputCompression param.Opt[int64] `json:"output_compression,omitzero"`
 	// Number of partial images to generate in streaming mode, from 0 (default value)
@@ -34759,8 +35522,8 @@ type BetaResponseToolSearchOutputItemParamToolImageGenerationParam struct {
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
 	// Control how much effort the model will exert to match the style and features,
 	// especially facial features, of input images. Supports `high` and `low` on
-	// `gpt-image-1` and `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For
-	// `gpt-image-2`, omit this parameter. Defaults to `low` on supported models.
+	// `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For `gpt-image-2`, omit
+	// this parameter. Defaults to `low` on supported models.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,omitzero"`
@@ -34780,14 +35543,22 @@ type BetaResponseToolSearchOutputItemParamToolImageGenerationParam struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background,omitzero"`
+	// Computation spent planning the image, independently of rendering quality.
+	// Overrides the outer response's `reasoning.effort` for image generation. When
+	// omitted, inherits a supported outer reasoning effort or uses the image model's
+	// configured default. For SVG output, controls the reference image, not the SVG
+	// author's reasoning.
+	//
+	// Any of "low", "medium", "high".
+	Complexity string `json:"complexity,omitzero"`
 	// Optional mask for inpainting. Contains `image_url` (string, optional) and
 	// `file_id` (string, optional).
 	InputImageMask BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMask `json:"input_image_mask,omitzero"`
 	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
 	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
 	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
-	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
-	// `gpt-image-2`.
+	// `gpt-image-2.5-flare-2026-09-08`, `gpt-image-2.6-sunburst`,
+	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default: `gpt-image-2`.
 	//
 	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
 	// `gpt-image-2.5-flare` instead.
@@ -34796,10 +35567,14 @@ type BetaResponseToolSearchOutputItemParamToolImageGenerationParam struct {
 	//
 	// Any of "auto", "low".
 	Moderation string `json:"moderation,omitzero"`
-	// The output format of the generated image. One of `png`, `webp`, or `jpeg`.
-	// Default: `png`.
+	// The output format of the generated image. One of `png`, `webp`, `jpeg`, `gif`,
+	// or `svg`. Default: `png`. GIF and SVG output require a model that supports the
+	// selected format. GIF output does not support partial image streaming
+	// (`partial_images` greater than `0`), `input_image_mask`, or custom
+	// `output_compression`. Responses lifecycle events can still be streamed for GIF
+	// output.
 	//
-	// Any of "png", "webp", "jpeg".
+	// Any of "png", "webp", "jpeg", "gif", "svg".
 	OutputFormat string `json:"output_format,omitzero"`
 	// The quality of the generated image. The GPT image models support `low`,
 	// `medium`, and `high`. `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`,
@@ -34819,6 +35594,11 @@ type BetaResponseToolSearchOutputItemParamToolImageGenerationParam struct {
 	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
 	// `auto` is supported for models that allow automatic sizing.
 	Size string `json:"size,omitzero"`
+	// SVG author model settings. Requires `output_format` to be `svg`. When SVG model
+	// selection is enabled, omitting this object uses the outer response model.
+	// Otherwise, the default SVG author is used and explicit model overrides are
+	// unavailable.
+	Svg BetaResponseToolSearchOutputItemParamToolImageGenerationSvg `json:"svg,omitzero"`
 	// The type of the image generation tool. Always `image_generation`.
 	//
 	// This field can be elided, and will marshal its zero value as "image_generation".
@@ -34842,13 +35622,16 @@ func init() {
 		"background", "transparent", "opaque", "auto",
 	)
 	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
+		"complexity", "low", "medium", "high",
+	)
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
 		"input_fidelity", "high", "low",
 	)
 	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
 		"moderation", "auto", "low",
 	)
 	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
-		"output_format", "png", "webp", "jpeg",
+		"output_format", "png", "webp", "jpeg", "gif", "svg",
 	)
 	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
 		"quality", "low", "medium", "high", "xhigh", "max", "auto",
@@ -34871,6 +35654,50 @@ func (r BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMask) 
 }
 func (r *BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMask) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// SVG author model settings. Requires `output_format` to be `svg`. When SVG model
+// selection is enabled, omitting this object uses the outer response model.
+// Otherwise, the default SVG author is used and explicit model overrides are
+// unavailable.
+type BetaResponseToolSearchOutputItemParamToolImageGenerationSvg struct {
+	Model param.Opt[string] `json:"model,omitzero"`
+	// Reasoning effort for SVG authoring. When omitted, uses the author model's
+	// default in both Images and Responses.
+	Reasoning BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoning `json:"reasoning,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolImageGenerationSvg) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolImageGenerationSvg
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolImageGenerationSvg) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Reasoning effort for SVG authoring. When omitted, uses the author model's
+// default in both Images and Responses.
+type BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoning struct {
+	// Controls how much effort the model should spend on reasoning for this request.
+	//
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
+	Effort string `json:"effort,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoning) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoning
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoning) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoning](
+		"effort", "none", "minimal", "low", "medium", "high", "xhigh", "max",
+	)
 }
 
 func NewBetaResponseToolSearchOutputItemParamToolLocalShellParam() BetaResponseToolSearchOutputItemParamToolLocalShellParam {
@@ -34951,19 +35778,43 @@ type BetaResponseUsageInputTokensDetails struct {
 	CacheWriteTokens int64 `json:"cache_write_tokens" api:"required"`
 	// The number of tokens that were retrieved from the cache.
 	// [More on prompt caching](https://developers.openai.com/api/docs/guides/prompt-caching).
-	CachedTokens int64 `json:"cached_tokens" api:"required"`
+	CachedTokens            int64                                                      `json:"cached_tokens" api:"required"`
+	CacheWriteTokensDetails BetaResponseUsageInputTokensDetailsCacheWriteTokensDetails `json:"cache_write_tokens_details"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		CacheWriteTokens respjson.Field
-		CachedTokens     respjson.Field
-		ExtraFields      map[string]respjson.Field
-		raw              string
+		CacheWriteTokens        respjson.Field
+		CachedTokens            respjson.Field
+		CacheWriteTokensDetails respjson.Field
+		ExtraFields             map[string]respjson.Field
+		raw                     string
 	} `json:"-"`
 }
 
 // Returns the unmodified JSON received from the API
 func (r BetaResponseUsageInputTokensDetails) RawJSON() string { return r.JSON.raw }
 func (r *BetaResponseUsageInputTokensDetails) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponseUsageInputTokensDetailsCacheWriteTokensDetails struct {
+	// The number of input tokens written with 12-hour retention.
+	Ttl12hTokens int64 `json:"ttl_12h_tokens" api:"required"`
+	// The number of input tokens written with 30-minute retention.
+	Ttl30mTokens int64 `json:"ttl_30m_tokens" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Ttl12hTokens respjson.Field
+		Ttl30mTokens respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseUsageInputTokensDetailsCacheWriteTokensDetails) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseUsageInputTokensDetailsCacheWriteTokensDetails) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -35195,6 +36046,14 @@ func (u BetaResponsesClientEventUnionParam) GetContextManagement() []BetaRespons
 func (u BetaResponsesClientEventUnionParam) GetConversation() *BetaResponsesClientEventResponseCreateConversationUnionParam {
 	if vt := u.OfResponseCreate; vt != nil {
 		return &vt.Conversation
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetGenerate() *bool {
+	if vt := u.OfResponseCreate; vt != nil && vt.Generate.Valid() {
+		return &vt.Generate.Value
 	}
 	return nil
 }
@@ -35568,6 +36427,10 @@ type BetaResponsesClientEventResponseCreateParam struct {
 	// [Streaming section below](https://developers.openai.com/api/reference/resources/responses/streaming-events)
 	// for more information.
 	Stream param.Opt[bool] `json:"stream,omitzero"`
+	// Whether to generate output for this response. Defaults to true when omitted. Set
+	// to false to prepare request state without model output; the response ID can be
+	// used as previous_response_id on a later turn.
+	Generate param.Opt[bool] `json:"generate,omitzero"`
 	// Specify additional output data to include in the model response. Currently
 	// supported values are:
 	//
@@ -35714,7 +36577,7 @@ type BetaResponsesClientEventResponseCreateParam struct {
 	// request can write up to four breakpoints. For cache matching, OpenAI considers
 	// up to the latest 80 breakpoints in the conversation, without a content-block
 	// lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
-	// `ttl` defaults to `30m`, which is currently the only supported value. See the
+	// `ttl` defaults to `30m`. Supported lifetimes depend on the API. See the
 	// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 	// for current details.
 	PromptCacheOptions BetaResponsesClientEventResponseCreatePromptCacheOptionsParam `json:"prompt_cache_options,omitzero"`
@@ -35891,6 +36754,9 @@ const (
 	// replacements.
 	BetaResponsesClientEventResponseCreateModelGPT5_4Nano           BetaResponsesClientEventResponseCreateModel = "gpt-5.4-nano"
 	BetaResponsesClientEventResponseCreateModelGPT5_4Mini2026_03_17 BetaResponsesClientEventResponseCreateModel = "gpt-5.4-mini-2026-03-17"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponsesClientEventResponseCreateModelGPT5_4Nano2026_03_17 BetaResponsesClientEventResponseCreateModel = "gpt-5.4-nano-2026-03-17"
 	// Deprecated: Announced shutdown date: 2026-08-10. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -35907,7 +36773,10 @@ const (
 	// Deprecated: Announced shutdown date: 2027-04-01. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
-	BetaResponsesClientEventResponseCreateModelGPT5_1            BetaResponsesClientEventResponseCreateModel = "gpt-5.1"
+	BetaResponsesClientEventResponseCreateModelGPT5_1 BetaResponsesClientEventResponseCreateModel = "gpt-5.1"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponsesClientEventResponseCreateModelGPT5_1_2025_11_13 BetaResponsesClientEventResponseCreateModel = "gpt-5.1-2025-11-13"
 	// Deprecated: Announced shutdown date: 2026-07-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -36236,6 +37105,7 @@ const (
 	BetaResponsesClientEventResponseCreateModelGPTDaybreakBlueLatest BetaResponsesClientEventResponseCreateModel = "gpt-daybreak-blue-latest"
 	BetaResponsesClientEventResponseCreateModelGPTDaybreakRedLatest  BetaResponsesClientEventResponseCreateModel = "gpt-daybreak-red-latest"
 	BetaResponsesClientEventResponseCreateModelGPT5_6Cyber           BetaResponsesClientEventResponseCreateModel = "gpt-5.6-cyber"
+	BetaResponsesClientEventResponseCreateModelGPT6Cyber             BetaResponsesClientEventResponseCreateModel = "gpt-6-cyber"
 	BetaResponsesClientEventResponseCreateModelGPTRosalindResearch   BetaResponsesClientEventResponseCreateModel = "gpt-rosalind-research"
 )
 
@@ -36352,7 +37222,7 @@ func (r *BetaResponsesClientEventResponseCreateMultiAgentParam) UnmarshalJSON(da
 // request can write up to four breakpoints. For cache matching, OpenAI considers
 // up to the latest 80 breakpoints in the conversation, without a content-block
 // lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
-// `ttl` defaults to `30m`, which is currently the only supported value. See the
+// `ttl` defaults to `30m`. Supported lifetimes depend on the API. See the
 // [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 // for current details.
 type BetaResponsesClientEventResponseCreatePromptCacheOptionsParam struct {
@@ -36372,10 +37242,10 @@ type BetaResponsesClientEventResponseCreatePromptCacheOptionsParam struct {
 	// Any of "implicit", "explicit".
 	Mode string `json:"mode,omitzero"`
 	// The minimum lifetime applied to every implicit and explicit cache breakpoint
-	// written by the request. Defaults to `30m`, which is currently the only supported
-	// value. The backend may retain cache entries for longer.
+	// written by the request. Supported values are `30m` (the default) and `12h`. The
+	// backend may retain cache entries for longer.
 	//
-	// Any of "30m".
+	// Any of "30m", "12h".
 	Ttl string `json:"ttl,omitzero"`
 	paramObj
 }
@@ -36393,7 +37263,7 @@ func init() {
 		"mode", "implicit", "explicit",
 	)
 	apijson.RegisterFieldValidator[BetaResponsesClientEventResponseCreatePromptCacheOptionsParam](
-		"ttl", "30m",
+		"ttl", "30m", "12h",
 	)
 }
 
@@ -40223,6 +41093,12 @@ type BetaToolUnion struct {
 	// This field is from variant [BetaToolImageGeneration].
 	Background string `json:"background"`
 	// This field is from variant [BetaToolImageGeneration].
+	Complexity string `json:"complexity"`
+	// This field is from variant [BetaToolImageGeneration].
+	FrameCount int64 `json:"frame_count"`
+	// This field is from variant [BetaToolImageGeneration].
+	FrameDurationMs int64 `json:"frame_duration_ms"`
+	// This field is from variant [BetaToolImageGeneration].
 	InputFidelity string `json:"input_fidelity"`
 	// This field is from variant [BetaToolImageGeneration].
 	InputImageMask BetaToolImageGenerationInputImageMask `json:"input_image_mask"`
@@ -40240,6 +41116,8 @@ type BetaToolUnion struct {
 	Quality string `json:"quality"`
 	// This field is from variant [BetaToolImageGeneration].
 	Size string `json:"size"`
+	// This field is from variant [BetaToolImageGeneration].
+	Svg BetaToolImageGenerationSvg `json:"svg"`
 	// This field is from variant [BetaCustomTool].
 	Format BetaCustomToolFormatUnion `json:"format"`
 	// This field is from variant [BetaNamespaceTool].
@@ -40280,6 +41158,9 @@ type BetaToolUnion struct {
 		Container          respjson.Field
 		Action             respjson.Field
 		Background         respjson.Field
+		Complexity         respjson.Field
+		FrameCount         respjson.Field
+		FrameDurationMs    respjson.Field
 		InputFidelity      respjson.Field
 		InputImageMask     respjson.Field
 		Model              respjson.Field
@@ -40289,6 +41170,7 @@ type BetaToolUnion struct {
 		PartialImages      respjson.Field
 		Quality            respjson.Field
 		Size               respjson.Field
+		Svg                respjson.Field
 		Format             respjson.Field
 		Tools              respjson.Field
 		Execution          respjson.Field
@@ -41001,10 +41883,23 @@ type BetaToolImageGeneration struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background"`
+	// Computation spent planning the image, independently of rendering quality.
+	// Overrides the outer response's `reasoning.effort` for image generation. When
+	// omitted, inherits a supported outer reasoning effort or uses the image model's
+	// configured default. For SVG output, controls the reference image, not the SVG
+	// author's reasoning.
+	//
+	// Any of "low", "medium", "high".
+	Complexity string `json:"complexity"`
+	// Number of GIF frames. Requires `output_format` to be `gif`. Default: 9.
+	FrameCount int64 `json:"frame_count"`
+	// Duration of each GIF frame in milliseconds, rounded to 10 ms. Requires
+	// `output_format` to be `gif`. Default: 200.
+	FrameDurationMs int64 `json:"frame_duration_ms"`
 	// Control how much effort the model will exert to match the style and features,
 	// especially facial features, of input images. Supports `high` and `low` on
-	// `gpt-image-1` and `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For
-	// `gpt-image-2`, omit this parameter. Defaults to `low` on supported models.
+	// `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For `gpt-image-2`, omit
+	// this parameter. Defaults to `low` on supported models.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity" api:"nullable"`
@@ -41014,8 +41909,8 @@ type BetaToolImageGeneration struct {
 	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
 	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
 	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
-	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
-	// `gpt-image-2`.
+	// `gpt-image-2.5-flare-2026-09-08`, `gpt-image-2.6-sunburst`,
+	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default: `gpt-image-2`.
 	//
 	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
 	// `gpt-image-2.5-flare` instead.
@@ -41026,10 +41921,14 @@ type BetaToolImageGeneration struct {
 	Moderation string `json:"moderation"`
 	// Compression level for the output image. Default: 100.
 	OutputCompression int64 `json:"output_compression"`
-	// The output format of the generated image. One of `png`, `webp`, or `jpeg`.
-	// Default: `png`.
+	// The output format of the generated image. One of `png`, `webp`, `jpeg`, `gif`,
+	// or `svg`. Default: `png`. GIF and SVG output require a model that supports the
+	// selected format. GIF output does not support partial image streaming
+	// (`partial_images` greater than `0`), `input_image_mask`, or custom
+	// `output_compression`. Responses lifecycle events can still be streamed for GIF
+	// output.
 	//
-	// Any of "png", "webp", "jpeg".
+	// Any of "png", "webp", "jpeg", "gif", "svg".
 	OutputFormat string `json:"output_format"`
 	// Number of partial images to generate in streaming mode, from 0 (default value)
 	// to 3.
@@ -41052,11 +41951,19 @@ type BetaToolImageGeneration struct {
 	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
 	// `auto` is supported for models that allow automatic sizing.
 	Size string `json:"size"`
+	// SVG author model settings. Requires `output_format` to be `svg`. When SVG model
+	// selection is enabled, omitting this object uses the outer response model.
+	// Otherwise, the default SVG author is used and explicit model overrides are
+	// unavailable.
+	Svg BetaToolImageGenerationSvg `json:"svg"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type              respjson.Field
 		Action            respjson.Field
 		Background        respjson.Field
+		Complexity        respjson.Field
+		FrameCount        respjson.Field
+		FrameDurationMs   respjson.Field
 		InputFidelity     respjson.Field
 		InputImageMask    respjson.Field
 		Model             respjson.Field
@@ -41066,6 +41973,7 @@ type BetaToolImageGeneration struct {
 		PartialImages     respjson.Field
 		Quality           respjson.Field
 		Size              respjson.Field
+		Svg               respjson.Field
 		ExtraFields       map[string]respjson.Field
 		raw               string
 	} `json:"-"`
@@ -41096,6 +42004,51 @@ type BetaToolImageGenerationInputImageMask struct {
 // Returns the unmodified JSON received from the API
 func (r BetaToolImageGenerationInputImageMask) RawJSON() string { return r.JSON.raw }
 func (r *BetaToolImageGenerationInputImageMask) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// SVG author model settings. Requires `output_format` to be `svg`. When SVG model
+// selection is enabled, omitting this object uses the outer response model.
+// Otherwise, the default SVG author is used and explicit model overrides are
+// unavailable.
+type BetaToolImageGenerationSvg struct {
+	Model string `json:"model"`
+	// Reasoning effort for SVG authoring. When omitted, uses the author model's
+	// default in both Images and Responses.
+	Reasoning BetaToolImageGenerationSvgReasoning `json:"reasoning" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Model       respjson.Field
+		Reasoning   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaToolImageGenerationSvg) RawJSON() string { return r.JSON.raw }
+func (r *BetaToolImageGenerationSvg) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Reasoning effort for SVG authoring. When omitted, uses the author model's
+// default in both Images and Responses.
+type BetaToolImageGenerationSvgReasoning struct {
+	// Controls how much effort the model should spend on reasoning for this request.
+	//
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
+	Effort string `json:"effort"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Effort      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaToolImageGenerationSvgReasoning) RawJSON() string { return r.JSON.raw }
+func (r *BetaToolImageGenerationSvgReasoning) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -41390,6 +42343,30 @@ func (u BetaToolUnionParam) GetBackground() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolUnionParam) GetComplexity() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Complexity
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolUnionParam) GetFrameCount() *int64 {
+	if vt := u.OfImageGeneration; vt != nil && vt.FrameCount.Valid() {
+		return &vt.FrameCount.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolUnionParam) GetFrameDurationMs() *int64 {
+	if vt := u.OfImageGeneration; vt != nil && vt.FrameDurationMs.Valid() {
+		return &vt.FrameDurationMs.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u BetaToolUnionParam) GetInputFidelity() *string {
 	if vt := u.OfImageGeneration; vt != nil {
 		return &vt.InputFidelity
@@ -41457,6 +42434,14 @@ func (u BetaToolUnionParam) GetQuality() *string {
 func (u BetaToolUnionParam) GetSize() *string {
 	if vt := u.OfImageGeneration; vt != nil {
 		return &vt.Size
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolUnionParam) GetSvg() *BetaToolImageGenerationSvgParam {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Svg
 	}
 	return nil
 }
@@ -42262,6 +43247,11 @@ func (r *BetaToolProgrammaticToolCallingParam) UnmarshalJSON(data []byte) error 
 //
 // The property Type is required.
 type BetaToolImageGenerationParam struct {
+	// Number of GIF frames. Requires `output_format` to be `gif`. Default: 9.
+	FrameCount param.Opt[int64] `json:"frame_count,omitzero"`
+	// Duration of each GIF frame in milliseconds, rounded to 10 ms. Requires
+	// `output_format` to be `gif`. Default: 200.
+	FrameDurationMs param.Opt[int64] `json:"frame_duration_ms,omitzero"`
 	// Compression level for the output image. Default: 100.
 	OutputCompression param.Opt[int64] `json:"output_compression,omitzero"`
 	// Number of partial images to generate in streaming mode, from 0 (default value)
@@ -42269,8 +43259,8 @@ type BetaToolImageGenerationParam struct {
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
 	// Control how much effort the model will exert to match the style and features,
 	// especially facial features, of input images. Supports `high` and `low` on
-	// `gpt-image-1` and `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For
-	// `gpt-image-2`, omit this parameter. Defaults to `low` on supported models.
+	// `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For `gpt-image-2`, omit
+	// this parameter. Defaults to `low` on supported models.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,omitzero"`
@@ -42290,14 +43280,22 @@ type BetaToolImageGenerationParam struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background,omitzero"`
+	// Computation spent planning the image, independently of rendering quality.
+	// Overrides the outer response's `reasoning.effort` for image generation. When
+	// omitted, inherits a supported outer reasoning effort or uses the image model's
+	// configured default. For SVG output, controls the reference image, not the SVG
+	// author's reasoning.
+	//
+	// Any of "low", "medium", "high".
+	Complexity string `json:"complexity,omitzero"`
 	// Optional mask for inpainting. Contains `image_url` (string, optional) and
 	// `file_id` (string, optional).
 	InputImageMask BetaToolImageGenerationInputImageMaskParam `json:"input_image_mask,omitzero"`
 	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
 	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
 	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
-	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
-	// `gpt-image-2`.
+	// `gpt-image-2.5-flare-2026-09-08`, `gpt-image-2.6-sunburst`,
+	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default: `gpt-image-2`.
 	//
 	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
 	// `gpt-image-2.5-flare` instead.
@@ -42306,10 +43304,14 @@ type BetaToolImageGenerationParam struct {
 	//
 	// Any of "auto", "low".
 	Moderation string `json:"moderation,omitzero"`
-	// The output format of the generated image. One of `png`, `webp`, or `jpeg`.
-	// Default: `png`.
+	// The output format of the generated image. One of `png`, `webp`, `jpeg`, `gif`,
+	// or `svg`. Default: `png`. GIF and SVG output require a model that supports the
+	// selected format. GIF output does not support partial image streaming
+	// (`partial_images` greater than `0`), `input_image_mask`, or custom
+	// `output_compression`. Responses lifecycle events can still be streamed for GIF
+	// output.
 	//
-	// Any of "png", "webp", "jpeg".
+	// Any of "png", "webp", "jpeg", "gif", "svg".
 	OutputFormat string `json:"output_format,omitzero"`
 	// The quality of the generated image. The GPT image models support `low`,
 	// `medium`, and `high`. `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`,
@@ -42329,6 +43331,11 @@ type BetaToolImageGenerationParam struct {
 	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
 	// `auto` is supported for models that allow automatic sizing.
 	Size string `json:"size,omitzero"`
+	// SVG author model settings. Requires `output_format` to be `svg`. When SVG model
+	// selection is enabled, omitting this object uses the outer response model.
+	// Otherwise, the default SVG author is used and explicit model overrides are
+	// unavailable.
+	Svg BetaToolImageGenerationSvgParam `json:"svg,omitzero"`
 	// The type of the image generation tool. Always `image_generation`.
 	//
 	// This field can be elided, and will marshal its zero value as "image_generation".
@@ -42352,13 +43359,16 @@ func init() {
 		"background", "transparent", "opaque", "auto",
 	)
 	apijson.RegisterFieldValidator[BetaToolImageGenerationParam](
+		"complexity", "low", "medium", "high",
+	)
+	apijson.RegisterFieldValidator[BetaToolImageGenerationParam](
 		"input_fidelity", "high", "low",
 	)
 	apijson.RegisterFieldValidator[BetaToolImageGenerationParam](
 		"moderation", "auto", "low",
 	)
 	apijson.RegisterFieldValidator[BetaToolImageGenerationParam](
-		"output_format", "png", "webp", "jpeg",
+		"output_format", "png", "webp", "jpeg", "gif", "svg",
 	)
 	apijson.RegisterFieldValidator[BetaToolImageGenerationParam](
 		"quality", "low", "medium", "high", "xhigh", "max", "auto",
@@ -42381,6 +43391,50 @@ func (r BetaToolImageGenerationInputImageMaskParam) MarshalJSON() (data []byte, 
 }
 func (r *BetaToolImageGenerationInputImageMaskParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// SVG author model settings. Requires `output_format` to be `svg`. When SVG model
+// selection is enabled, omitting this object uses the outer response model.
+// Otherwise, the default SVG author is used and explicit model overrides are
+// unavailable.
+type BetaToolImageGenerationSvgParam struct {
+	Model param.Opt[string] `json:"model,omitzero"`
+	// Reasoning effort for SVG authoring. When omitted, uses the author model's
+	// default in both Images and Responses.
+	Reasoning BetaToolImageGenerationSvgReasoningParam `json:"reasoning,omitzero"`
+	paramObj
+}
+
+func (r BetaToolImageGenerationSvgParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaToolImageGenerationSvgParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaToolImageGenerationSvgParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Reasoning effort for SVG authoring. When omitted, uses the author model's
+// default in both Images and Responses.
+type BetaToolImageGenerationSvgReasoningParam struct {
+	// Controls how much effort the model should spend on reasoning for this request.
+	//
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
+	Effort string `json:"effort,omitzero"`
+	paramObj
+}
+
+func (r BetaToolImageGenerationSvgReasoningParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaToolImageGenerationSvgReasoningParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaToolImageGenerationSvgReasoningParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaToolImageGenerationSvgReasoningParam](
+		"effort", "none", "minimal", "low", "medium", "high", "xhigh", "max",
+	)
 }
 
 func NewBetaToolLocalShellParam() BetaToolLocalShellParam {
@@ -43876,7 +44930,7 @@ type BetaResponseNewParams struct {
 	// request can write up to four breakpoints. For cache matching, OpenAI considers
 	// up to the latest 80 breakpoints in the conversation, without a content-block
 	// lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
-	// `ttl` defaults to `30m`, which is currently the only supported value. See the
+	// `ttl` defaults to `30m`. Supported lifetimes depend on the API. See the
 	// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 	// for current details.
 	PromptCacheOptions BetaResponseNewParamsPromptCacheOptions `json:"prompt_cache_options,omitzero"`
@@ -44030,6 +45084,9 @@ const (
 	// replacements.
 	BetaResponseNewParamsModelGPT5_4Nano           BetaResponseNewParamsModel = "gpt-5.4-nano"
 	BetaResponseNewParamsModelGPT5_4Mini2026_03_17 BetaResponseNewParamsModel = "gpt-5.4-mini-2026-03-17"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponseNewParamsModelGPT5_4Nano2026_03_17 BetaResponseNewParamsModel = "gpt-5.4-nano-2026-03-17"
 	// Deprecated: Announced shutdown date: 2026-08-10. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -44046,7 +45103,10 @@ const (
 	// Deprecated: Announced shutdown date: 2027-04-01. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
-	BetaResponseNewParamsModelGPT5_1            BetaResponseNewParamsModel = "gpt-5.1"
+	BetaResponseNewParamsModelGPT5_1 BetaResponseNewParamsModel = "gpt-5.1"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponseNewParamsModelGPT5_1_2025_11_13 BetaResponseNewParamsModel = "gpt-5.1-2025-11-13"
 	// Deprecated: Announced shutdown date: 2026-07-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -44375,6 +45435,7 @@ const (
 	BetaResponseNewParamsModelGPTDaybreakBlueLatest BetaResponseNewParamsModel = "gpt-daybreak-blue-latest"
 	BetaResponseNewParamsModelGPTDaybreakRedLatest  BetaResponseNewParamsModel = "gpt-daybreak-red-latest"
 	BetaResponseNewParamsModelGPT5_6Cyber           BetaResponseNewParamsModel = "gpt-5.6-cyber"
+	BetaResponseNewParamsModelGPT6Cyber             BetaResponseNewParamsModel = "gpt-6-cyber"
 	BetaResponseNewParamsModelGPTRosalindResearch   BetaResponseNewParamsModel = "gpt-rosalind-research"
 )
 
@@ -44491,7 +45552,7 @@ func (r *BetaResponseNewParamsMultiAgent) UnmarshalJSON(data []byte) error {
 // request can write up to four breakpoints. For cache matching, OpenAI considers
 // up to the latest 80 breakpoints in the conversation, without a content-block
 // lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
-// `ttl` defaults to `30m`, which is currently the only supported value. See the
+// `ttl` defaults to `30m`. Supported lifetimes depend on the API. See the
 // [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 // for current details.
 type BetaResponseNewParamsPromptCacheOptions struct {
@@ -44511,10 +45572,10 @@ type BetaResponseNewParamsPromptCacheOptions struct {
 	// Any of "implicit", "explicit".
 	Mode string `json:"mode,omitzero"`
 	// The minimum lifetime applied to every implicit and explicit cache breakpoint
-	// written by the request. Defaults to `30m`, which is currently the only supported
-	// value. The backend may retain cache entries for longer.
+	// written by the request. Supported values are `30m` (the default) and `12h`. The
+	// backend may retain cache entries for longer.
 	//
-	// Any of "30m".
+	// Any of "30m", "12h".
 	Ttl string `json:"ttl,omitzero"`
 	paramObj
 }
@@ -44532,7 +45593,7 @@ func init() {
 		"mode", "implicit", "explicit",
 	)
 	apijson.RegisterFieldValidator[BetaResponseNewParamsPromptCacheOptions](
-		"ttl", "30m",
+		"ttl", "30m", "12h",
 	)
 }
 
@@ -44879,7 +45940,7 @@ type BetaResponseCompactParams struct {
 	// request can write up to four breakpoints. For cache matching, OpenAI considers
 	// up to the latest 80 breakpoints in the conversation, without a content-block
 	// lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
-	// `ttl` defaults to `30m`, which is currently the only supported value. See the
+	// `ttl` defaults to `30m`. Supported lifetimes depend on the API. See the
 	// [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 	// for current details.
 	PromptCacheOptions BetaResponseCompactParamsPromptCacheOptions `json:"prompt_cache_options,omitzero"`
@@ -44944,6 +46005,9 @@ const (
 	// replacements.
 	BetaResponseCompactParamsModelGPT5_4Nano           BetaResponseCompactParamsModel = "gpt-5.4-nano"
 	BetaResponseCompactParamsModelGPT5_4Mini2026_03_17 BetaResponseCompactParamsModel = "gpt-5.4-mini-2026-03-17"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponseCompactParamsModelGPT5_4Nano2026_03_17 BetaResponseCompactParamsModel = "gpt-5.4-nano-2026-03-17"
 	// Deprecated: Announced shutdown date: 2026-08-10. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -44960,7 +46024,10 @@ const (
 	// Deprecated: Announced shutdown date: 2027-04-01. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
-	BetaResponseCompactParamsModelGPT5_1            BetaResponseCompactParamsModel = "gpt-5.1"
+	BetaResponseCompactParamsModelGPT5_1 BetaResponseCompactParamsModel = "gpt-5.1"
+	// Deprecated: Announced shutdown date: 2027-04-01. See
+	// https://developers.openai.com/api/docs/deprecations for details and recommended
+	// replacements.
 	BetaResponseCompactParamsModelGPT5_1_2025_11_13 BetaResponseCompactParamsModel = "gpt-5.1-2025-11-13"
 	// Deprecated: Announced shutdown date: 2026-07-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
@@ -45289,6 +46356,7 @@ const (
 	BetaResponseCompactParamsModelGPTDaybreakBlueLatest BetaResponseCompactParamsModel = "gpt-daybreak-blue-latest"
 	BetaResponseCompactParamsModelGPTDaybreakRedLatest  BetaResponseCompactParamsModel = "gpt-daybreak-red-latest"
 	BetaResponseCompactParamsModelGPT5_6Cyber           BetaResponseCompactParamsModel = "gpt-5.6-cyber"
+	BetaResponseCompactParamsModelGPT6Cyber             BetaResponseCompactParamsModel = "gpt-6-cyber"
 	BetaResponseCompactParamsModelGPTRosalindResearch   BetaResponseCompactParamsModel = "gpt-rosalind-research"
 )
 
@@ -45314,7 +46382,7 @@ func (u *BetaResponseCompactParamsInputUnion) UnmarshalJSON(data []byte) error {
 // request can write up to four breakpoints. For cache matching, OpenAI considers
 // up to the latest 80 breakpoints in the conversation, without a content-block
 // lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
-// `ttl` defaults to `30m`, which is currently the only supported value. See the
+// `ttl` defaults to `30m`. Supported lifetimes depend on the API. See the
 // [prompt caching guide](https://developers.openai.com/api/docs/guides/prompt-caching)
 // for current details.
 type BetaResponseCompactParamsPromptCacheOptions struct {

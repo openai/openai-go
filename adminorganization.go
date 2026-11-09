@@ -16,19 +16,21 @@ import (
 type AdminOrganizationService struct {
 	Options []option.RequestOption
 	// List user actions and configuration changes within this organization.
-	AuditLogs       AdminOrganizationAuditLogService
-	AdminAPIKeys    AdminOrganizationAdminAPIKeyService
-	Usage           AdminOrganizationUsageService
-	Invites         AdminOrganizationInviteService
-	Users           AdminOrganizationUserService
-	Groups          AdminOrganizationGroupService
-	Roles           AdminOrganizationRoleService
-	DataRetention   AdminOrganizationDataRetentionService
-	ExternalStorage AdminOrganizationExternalStorageService
-	SpendLimit      AdminOrganizationSpendLimitService
-	SpendAlerts     AdminOrganizationSpendAlertService
-	Certificates    AdminOrganizationCertificateService
-	Projects        AdminOrganizationProjectService
+	AuditLogs                 AdminOrganizationAuditLogService
+	AdminAPIKeys              AdminOrganizationAdminAPIKeyService
+	Usage                     AdminOrganizationUsageService
+	Invites                   AdminOrganizationInviteService
+	Users                     AdminOrganizationUserService
+	Groups                    AdminOrganizationGroupService
+	Roles                     AdminOrganizationRoleService
+	DataRetention             AdminOrganizationDataRetentionService
+	ExternalStorage           AdminOrganizationExternalStorageService
+	SpendLimit                AdminOrganizationSpendLimitService
+	SpendAlerts               AdminOrganizationSpendAlertService
+	Certificates              AdminOrganizationCertificateService
+	Projects                  AdminOrganizationProjectService
+	ExternalKeys              AdminOrganizationExternalKeyService
+	WorkloadIdentityProviders AdminOrganizationWorkloadIdentityProviderService
 }
 
 // NewAdminOrganizationService generates a new service that applies the given
@@ -50,5 +52,7 @@ func NewAdminOrganizationService(opts ...option.RequestOption) (r AdminOrganizat
 	r.SpendAlerts = NewAdminOrganizationSpendAlertService(opts...)
 	r.Certificates = NewAdminOrganizationCertificateService(opts...)
 	r.Projects = NewAdminOrganizationProjectService(opts...)
+	r.ExternalKeys = NewAdminOrganizationExternalKeyService(opts...)
+	r.WorkloadIdentityProviders = NewAdminOrganizationWorkloadIdentityProviderService(opts...)
 	return
 }

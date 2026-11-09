@@ -11,7 +11,6 @@ import (
 
 	"github.com/openai/openai-go/v3/internal/apijson"
 	"github.com/openai/openai-go/v3/internal/apiquery"
-	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/pagination"
@@ -122,7 +121,7 @@ type BetaAgentEnvironmentFileNewParams struct {
 }
 
 func (r BetaAgentEnvironmentFileNewParams) MarshalJSON() (data []byte, err error) {
-	return shimjson.Marshal(r.HostedEnvironmentFileParam)
+	return param.MarshalObject(r, r.HostedEnvironmentFileParam)
 }
 func (r *BetaAgentEnvironmentFileNewParams) UnmarshalJSON(data []byte) error {
 	if r == nil {

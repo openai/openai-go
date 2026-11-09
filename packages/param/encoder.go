@@ -11,6 +11,7 @@ import (
 
 	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
 
+	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
 
@@ -50,28 +51,93 @@ func MarshalWithExtras[T ParamStruct, R any](f T, underlying any, extras map[str
 		if err != nil {
 			return nil, err
 		}
-		// Sorted rather than map order. Each key is applied with sjson on top of
-		// the already-encoded struct, so iteration order ends up as byte order in
-		// the output, and the same value marshals to a different byte string on
-		// every call. That breaks anything hashing or diffing request bodies,
-		// prefix-based prompt caching most visibly. encoding/json has always
-		// emitted map keys in sorted order, so this matches it.
-		for _, k := range slices.Sorted(maps.Keys(extras)) {
-			v := extras[k]
-			var a any = v
-			if a == Omit {
-				// Errors when handling ForceOmitted are ignored.
-				if b, e := sjson.DeleteBytes(bytes, k); e == nil {
-					bytes = b
+		keys := slices.Sorted(maps.Keys(extras))
+		object := gjson.ParseBytes(bytes)
+		legacy := !object.IsObject()
+		for _, k := range keys {
+			// Omit has always accepted an unescaped SJSON path. Preserve its
+			// effects on earlier extras as well as on the underlying object.
+			if any(extras[k]) == Omit && (k == "" || EscapeSJSONKey(k) != k) {
+				legacy = true
+				break
+			}
+		}
+		if legacy {
+			for _, k := range keys {
+				v := extras[k]
+				if any(v) == Omit {
+					// Errors when handling ForceOmitted are ignored.
+					if b, e := sjson.DeleteBytes(bytes, k); e == nil {
+						bytes = b
+					}
+					continue
 				}
+				bytes, err = sjson.SetBytes(bytes, EscapeSJSONKey(k), v)
+				if err != nil {
+					return nil, err
+				}
+			}
+			return bytes, nil
+		}
+
+		// Encode in the established sorted order before merging, so custom
+		// marshalers and errors still occur in that order. SJSON encodes []byte
+		// and numbers differently from encoding/json. Encoding against a fixed
+		// small object avoids copying the growing output for every extra field.
+		type encodedExtra struct {
+			value  []byte
+			member []byte
+		}
+		fields := make(map[string]encodedExtra, len(keys))
+		for _, k := range keys {
+			v := extras[k]
+			if any(v) == Omit {
+				fields[k] = encodedExtra{}
 				continue
 			}
-			bytes, err = sjson.SetBytes(bytes, EscapeSJSONKey(k), v)
+			encoded, err := sjson.SetBytes([]byte("{}"), "v", v)
 			if err != nil {
 				return nil, err
 			}
+			value := encoded[len(`{"v":`) : len(encoded)-1]
+			member, err := sjson.SetRawBytes([]byte("{}"), EscapeSJSONKey(k), value)
+			if err != nil {
+				return nil, err
+			}
+			fields[k] = encodedExtra{value: value, member: member[1 : len(member)-1]}
 		}
-		return bytes, nil
+
+		merged := make([]byte, 0, len(bytes))
+		merged = append(merged, '{')
+		object.ForEach(func(key, value gjson.Result) bool {
+			field, replaced := fields[key.Str]
+			if replaced {
+				delete(fields, key.Str)
+				if field.value == nil { // Omit
+					return true
+				}
+			}
+			if len(merged) > 1 {
+				merged = append(merged, ',')
+			}
+			merged = append(merged, key.Raw...)
+			merged = append(merged, ':')
+			if replaced {
+				merged = append(merged, field.value...)
+			} else {
+				merged = append(merged, value.Raw...)
+			}
+			return true
+		})
+		for _, k := range keys {
+			if field, remaining := fields[k]; remaining && field.value != nil {
+				if len(merged) > 1 {
+					merged = append(merged, ',')
+				}
+				merged = append(merged, field.member...)
+			}
+		}
+		return append(merged, '}'), nil
 	} else if ovr, ok := f.Overrides(); ok {
 		return shimjson.Marshal(ovr)
 	} else {
