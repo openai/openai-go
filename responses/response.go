@@ -14,7 +14,6 @@ import (
 
 	"github.com/openai/openai-go/v3/internal/apijson"
 	"github.com/openai/openai-go/v3/internal/apiquery"
-	"github.com/openai/openai-go/v3/internal/paramutil"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/param"
@@ -16441,7 +16440,9 @@ func (u responseInputItemUnionParamAction) GetQueries() []string {
 func (u responseInputItemUnionParamAction) GetQuery() *string {
 	switch vt := u.any.(type) {
 	case *ResponseFunctionWebSearchActionSearchParam:
-		return paramutil.AddrIfPresent(vt.Query)
+		if vt.Query.Valid() {
+			return &vt.Query.Value
+		}
 	}
 	return nil
 }
@@ -16486,7 +16487,9 @@ func (u responseInputItemUnionParamAction) GetEnv() map[string]string {
 func (u responseInputItemUnionParamAction) GetUser() *string {
 	switch vt := u.any.(type) {
 	case *ResponseInputItemLocalShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.User)
+		if vt.User.Valid() {
+			return &vt.User.Value
+		}
 	}
 	return nil
 }
@@ -16495,7 +16498,9 @@ func (u responseInputItemUnionParamAction) GetUser() *string {
 func (u responseInputItemUnionParamAction) GetWorkingDirectory() *string {
 	switch vt := u.any.(type) {
 	case *ResponseInputItemLocalShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.WorkingDirectory)
+		if vt.WorkingDirectory.Valid() {
+			return &vt.WorkingDirectory.Value
+		}
 	}
 	return nil
 }
@@ -16513,7 +16518,9 @@ func (u responseInputItemUnionParamAction) GetCommands() []string {
 func (u responseInputItemUnionParamAction) GetMaxOutputLength() *int64 {
 	switch vt := u.any.(type) {
 	case *ResponseInputItemShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.MaxOutputLength)
+		if vt.MaxOutputLength.Valid() {
+			return &vt.MaxOutputLength.Value
+		}
 	}
 	return nil
 }
@@ -16585,7 +16592,9 @@ func (u responseInputItemUnionParamAction) GetY() *int64 {
 func (u responseInputItemUnionParamAction) GetURL() *string {
 	switch vt := u.any.(type) {
 	case *ResponseFunctionWebSearchActionOpenPageParam:
-		return paramutil.AddrIfPresent(vt.URL)
+		if vt.URL.Valid() {
+			return &vt.URL.Value
+		}
 	case *ResponseFunctionWebSearchActionFindParam:
 		return (*string)(&vt.URL)
 	}
@@ -16596,9 +16605,13 @@ func (u responseInputItemUnionParamAction) GetURL() *string {
 func (u responseInputItemUnionParamAction) GetTimeoutMs() *int64 {
 	switch vt := u.any.(type) {
 	case *ResponseInputItemLocalShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.TimeoutMs)
+		if vt.TimeoutMs.Valid() {
+			return &vt.TimeoutMs.Value
+		}
 	case *ResponseInputItemShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.TimeoutMs)
+		if vt.TimeoutMs.Valid() {
+			return &vt.TimeoutMs.Value
+		}
 	}
 	return nil
 }
@@ -28524,9 +28537,13 @@ func (u responseToolSearchOutputItemParamToolUnionUserLocation) AsAny() any { re
 func (u responseToolSearchOutputItemParamToolUnionUserLocation) GetCity() *string {
 	switch vt := u.any.(type) {
 	case *WebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.City)
+		if vt.City.Valid() {
+			return &vt.City.Value
+		}
 	case *WebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.City)
+		if vt.City.Valid() {
+			return &vt.City.Value
+		}
 	}
 	return nil
 }
@@ -28535,9 +28552,13 @@ func (u responseToolSearchOutputItemParamToolUnionUserLocation) GetCity() *strin
 func (u responseToolSearchOutputItemParamToolUnionUserLocation) GetCountry() *string {
 	switch vt := u.any.(type) {
 	case *WebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Country)
+		if vt.Country.Valid() {
+			return &vt.Country.Value
+		}
 	case *WebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Country)
+		if vt.Country.Valid() {
+			return &vt.Country.Value
+		}
 	}
 	return nil
 }
@@ -28546,9 +28567,13 @@ func (u responseToolSearchOutputItemParamToolUnionUserLocation) GetCountry() *st
 func (u responseToolSearchOutputItemParamToolUnionUserLocation) GetRegion() *string {
 	switch vt := u.any.(type) {
 	case *WebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Region)
+		if vt.Region.Valid() {
+			return &vt.Region.Value
+		}
 	case *WebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Region)
+		if vt.Region.Valid() {
+			return &vt.Region.Value
+		}
 	}
 	return nil
 }
@@ -28557,9 +28582,13 @@ func (u responseToolSearchOutputItemParamToolUnionUserLocation) GetRegion() *str
 func (u responseToolSearchOutputItemParamToolUnionUserLocation) GetTimezone() *string {
 	switch vt := u.any.(type) {
 	case *WebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Timezone)
+		if vt.Timezone.Valid() {
+			return &vt.Timezone.Value
+		}
 	case *WebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Timezone)
+		if vt.Timezone.Valid() {
+			return &vt.Timezone.Value
+		}
 	}
 	return nil
 }
@@ -35268,9 +35297,13 @@ func (u toolUnionParamUserLocation) AsAny() any { return u.any }
 func (u toolUnionParamUserLocation) GetCity() *string {
 	switch vt := u.any.(type) {
 	case *WebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.City)
+		if vt.City.Valid() {
+			return &vt.City.Value
+		}
 	case *WebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.City)
+		if vt.City.Valid() {
+			return &vt.City.Value
+		}
 	}
 	return nil
 }
@@ -35279,9 +35312,13 @@ func (u toolUnionParamUserLocation) GetCity() *string {
 func (u toolUnionParamUserLocation) GetCountry() *string {
 	switch vt := u.any.(type) {
 	case *WebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Country)
+		if vt.Country.Valid() {
+			return &vt.Country.Value
+		}
 	case *WebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Country)
+		if vt.Country.Valid() {
+			return &vt.Country.Value
+		}
 	}
 	return nil
 }
@@ -35290,9 +35327,13 @@ func (u toolUnionParamUserLocation) GetCountry() *string {
 func (u toolUnionParamUserLocation) GetRegion() *string {
 	switch vt := u.any.(type) {
 	case *WebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Region)
+		if vt.Region.Valid() {
+			return &vt.Region.Value
+		}
 	case *WebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Region)
+		if vt.Region.Valid() {
+			return &vt.Region.Value
+		}
 	}
 	return nil
 }
@@ -35301,9 +35342,13 @@ func (u toolUnionParamUserLocation) GetRegion() *string {
 func (u toolUnionParamUserLocation) GetTimezone() *string {
 	switch vt := u.any.(type) {
 	case *WebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Timezone)
+		if vt.Timezone.Valid() {
+			return &vt.Timezone.Value
+		}
 	case *WebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Timezone)
+		if vt.Timezone.Valid() {
+			return &vt.Timezone.Value
+		}
 	}
 	return nil
 }

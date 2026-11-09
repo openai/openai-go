@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
-	"github.com/openai/openai-go/v3/internal/paramutil"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/param"
@@ -10479,9 +10478,13 @@ func (u sessionUpdateEventSessionUnionParamAudioInputNoiseReduction) AsAny() any
 func (u sessionUpdateEventSessionUnionParamAudioInputNoiseReduction) GetStrength() *float64 {
 	switch vt := u.any.(type) {
 	case *RealtimeAudioConfigInputNoiseReductionParam:
-		return paramutil.AddrIfPresent(vt.Strength)
+		if vt.Strength.Valid() {
+			return &vt.Strength.Value
+		}
 	case *RealtimeTranscriptionSessionAudioInputNoiseReductionParam:
-		return paramutil.AddrIfPresent(vt.Strength)
+		if vt.Strength.Valid() {
+			return &vt.Strength.Value
+		}
 	}
 	return nil
 }

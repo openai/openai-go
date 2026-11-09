@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
-	"github.com/openai/openai-go/v3/internal/paramutil"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/param"
@@ -385,7 +384,9 @@ func (u forkClientEventUnionParamSession) GetClient() *ClientConfigParam {
 func (u forkClientEventUnionParamSession) GetStore() *bool {
 	switch vt := u.any.(type) {
 	case *ForkSessionConfigParam:
-		return paramutil.AddrIfPresent(vt.Store)
+		if vt.Store.Valid() {
+			return &vt.Store.Value
+		}
 	}
 	return nil
 }
@@ -457,13 +458,21 @@ func (u forkClientEventUnionParamSessionDelegation) GetType() *string {
 func (u forkClientEventUnionParamSessionDelegation) GetAcknowledgementDelayMs() *int64 {
 	switch vt := u.any.(type) {
 	case *ForkSessionConfigDelegationParam:
-		return paramutil.AddrIfPresent(vt.AcknowledgementDelayMs)
+		if vt.AcknowledgementDelayMs.Valid() {
+			return &vt.AcknowledgementDelayMs.Value
+		}
 	case *ClientDelegationParam:
-		return paramutil.AddrIfPresent(vt.AcknowledgementDelayMs)
+		if vt.AcknowledgementDelayMs.Valid() {
+			return &vt.AcknowledgementDelayMs.Value
+		}
 	case *SessionUpdateConfigDelegationResponsesParam:
-		return paramutil.AddrIfPresent(vt.AcknowledgementDelayMs)
+		if vt.AcknowledgementDelayMs.Valid() {
+			return &vt.AcknowledgementDelayMs.Value
+		}
 	case *SessionUpdateConfigDelegationDecisionsParam:
-		return paramutil.AddrIfPresent(vt.AcknowledgementDelayMs)
+		if vt.AcknowledgementDelayMs.Valid() {
+			return &vt.AcknowledgementDelayMs.Value
+		}
 	}
 	return nil
 }
