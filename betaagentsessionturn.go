@@ -122,21 +122,25 @@ type Turn struct {
 	// Best-effort token usage for the turn, or null if unknown. Recorded usage may
 	// change.
 	Usage TokenUsage `json:"usage" api:"required"`
+	// Prompt cache lifetime selected when this turn started, including an inherited
+	// session TTL. Null when the turn used the model default or no TTL was recorded.
+	PromptCacheOptions TurnPromptCacheOptions `json:"prompt_cache_options" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		AgentID     respjson.Field
-		CompletedAt respjson.Field
-		CreatedAt   respjson.Field
-		Error       respjson.Field
-		Object      respjson.Field
-		SessionID   respjson.Field
-		StartedAt   respjson.Field
-		Status      respjson.Field
-		SubagentID  respjson.Field
-		Usage       respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID                 respjson.Field
+		AgentID            respjson.Field
+		CompletedAt        respjson.Field
+		CreatedAt          respjson.Field
+		Error              respjson.Field
+		Object             respjson.Field
+		SessionID          respjson.Field
+		StartedAt          respjson.Field
+		Status             respjson.Field
+		SubagentID         respjson.Field
+		Usage              respjson.Field
+		PromptCacheOptions respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
 	} `json:"-"`
 }
 
@@ -164,6 +168,25 @@ const (
 	TurnStatusFailed     TurnStatus = "failed"
 	TurnStatusCancelled  TurnStatus = "cancelled"
 )
+
+// Prompt cache lifetime selected when this turn started, including an inherited
+// session TTL. Null when the turn used the model default or no TTL was recorded.
+type TurnPromptCacheOptions struct {
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Ttl         respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TurnPromptCacheOptions) RawJSON() string { return r.JSON.raw }
+func (r *TurnPromptCacheOptions) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type BetaAgentSessionTurnListParams struct {
 	// Return resources after this resource ID in the selected order.

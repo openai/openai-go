@@ -110,8 +110,9 @@ func (r *BetaAgentSessionService) Get(ctx context.Context, sessionID string, opt
 	return res, err
 }
 
-// Updates session tools, metadata, model, reasoning effort, or service tier. Model
-// settings apply to subsequent turns. Omitted fields are unchanged. See
+// Updates session tools, metadata, model, reasoning effort, service tier, or the
+// default prompt cache lifetime. Model settings apply to subsequent turns. Omitted
+// fields are unchanged. See
 // [managing sessions](https://developers.openai.com/api/docs/guides/agents-api/sessions/manage).
 func (r *BetaAgentSessionService) Update(ctx context.Context, sessionID string, body BetaAgentSessionUpdateParams, opts ...option.RequestOption) (res *AgentSession, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
@@ -190,6 +191,9 @@ type BetaAgentSessionNewParams struct {
 	// Up to 16 string key-value pairs, with keys up to 64 and values up to 512
 	// characters. Omission or null defaults to an empty map.
 	Metadata map[string]string `json:"metadata,omitzero"`
+	// Default prompt cache lifetime for turns in this session. Omit to use the model
+	// default.
+	PromptCacheOptions BetaAgentSessionNewParamsPromptCacheOptions `json:"prompt_cache_options,omitzero"`
 	// Optional spending limit in USD cents. Omission or null creates an unlimited
 	// session.
 	SpendControl BetaAgentSessionNewParamsSpendControl `json:"spend_control,omitzero"`
@@ -202,6 +206,8 @@ type BetaAgentSessionNewParams struct {
 	//
 	// Any of "none", "auto_review".
 	Review BetaAgentSessionNewParamsReview `json:"review,omitzero"`
+	// Options for the event stream. Only allowed when `stream` is `true`.
+	StreamOptions BetaAgentSessionNewParamsStreamOptions `json:"stream_options,omitzero"`
 	paramObj
 }
 
@@ -312,6 +318,30 @@ func (u *BetaAgentSessionNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
+// Default prompt cache lifetime for turns in this session. Omit to use the model
+// default.
+type BetaAgentSessionNewParamsPromptCacheOptions struct {
+	// Minimum lifetime for new prompt cache entries. Defaults to 30 minutes.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
+	paramObj
+}
+
+func (r BetaAgentSessionNewParamsPromptCacheOptions) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentSessionNewParamsPromptCacheOptions
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentSessionNewParamsPromptCacheOptions) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaAgentSessionNewParamsPromptCacheOptions](
+		"ttl", "30m", "12h",
+	)
+}
+
 // Action review mode. Omit to use none.
 type BetaAgentSessionNewParamsReview string
 
@@ -338,11 +368,30 @@ func (r *BetaAgentSessionNewParamsSpendControl) UnmarshalJSON(data []byte) error
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Options for the event stream. Only allowed when `stream` is `true`.
+type BetaAgentSessionNewParamsStreamOptions struct {
+	// Whether to include obfuscation padding in events on this connection. Defaults to
+	// `true`.
+	IncludeObfuscation param.Opt[bool] `json:"include_obfuscation,omitzero"`
+	paramObj
+}
+
+func (r BetaAgentSessionNewParamsStreamOptions) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentSessionNewParamsStreamOptions
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentSessionNewParamsStreamOptions) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type BetaAgentSessionUpdateParams struct {
 	// Replaces all metadata. Omit to leave unchanged, or pass null or {} to clear it.
 	// Up to 16 string key-value pairs, with keys up to 64 and values up to 512
 	// characters.
 	Metadata map[string]string `json:"metadata,omitzero"`
+	// Default prompt cache lifetime for future turns. Send null to clear the session
+	// default.
+	PromptCacheOptions BetaAgentSessionUpdateParamsPromptCacheOptions `json:"prompt_cache_options,omitzero"`
 	// Omit to retain the limit; null or a null limit removes it without resetting
 	// spend.
 	SpendControl BetaAgentSessionUpdateParamsSpendControl `json:"spend_control,omitzero"`
@@ -404,6 +453,30 @@ func (r BetaAgentSessionUpdateParamsAgentReasoning) MarshalJSON() (data []byte, 
 }
 func (r *BetaAgentSessionUpdateParamsAgentReasoning) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// Default prompt cache lifetime for future turns. Send null to clear the session
+// default.
+type BetaAgentSessionUpdateParamsPromptCacheOptions struct {
+	// Minimum lifetime for new prompt cache entries. Defaults to 30 minutes.
+	//
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl,omitzero"`
+	paramObj
+}
+
+func (r BetaAgentSessionUpdateParamsPromptCacheOptions) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentSessionUpdateParamsPromptCacheOptions
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentSessionUpdateParamsPromptCacheOptions) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaAgentSessionUpdateParamsPromptCacheOptions](
+		"ttl", "30m", "12h",
+	)
 }
 
 // Default action review for new root turns. Existing turns and their subagents

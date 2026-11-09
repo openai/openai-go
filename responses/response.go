@@ -14,7 +14,6 @@ import (
 
 	"github.com/openai/openai-go/v3/internal/apijson"
 	"github.com/openai/openai-go/v3/internal/apiquery"
-	"github.com/openai/openai-go/v3/internal/paramutil"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/param"
@@ -235,7 +234,8 @@ type CompactedResponse struct {
 	Output []ResponseOutputItemUnion `json:"output" api:"required"`
 	// Token accounting for the compaction pass, including cached, reasoning, and total
 	// tokens.
-	Usage ResponseUsage `json:"usage" api:"required"`
+	Usage ResponseUsage          `json:"usage" api:"required"`
+	Image CompactedResponseImage `json:"image"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -243,6 +243,7 @@ type CompactedResponse struct {
 		Object      respjson.Field
 		Output      respjson.Field
 		Usage       respjson.Field
+		Image       respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -251,6 +252,25 @@ type CompactedResponse struct {
 // Returns the unmodified JSON received from the API
 func (r CompactedResponse) RawJSON() string { return r.JSON.raw }
 func (r *CompactedResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type CompactedResponseImage struct {
+	// Effective image context optimization policy.
+	//
+	// Any of "enabled", "disabled".
+	ContextCompression string `json:"context_compression" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ContextCompression respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r CompactedResponseImage) RawJSON() string { return r.JSON.raw }
+func (r *CompactedResponseImage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -3651,6 +3671,7 @@ type Response struct {
 	// The conversation that this response belonged to. Input items and output items
 	// from this response were automatically added to this conversation.
 	Conversation ResponseConversation `json:"conversation" api:"nullable"`
+	Image        ResponseImage        `json:"image"`
 	// An upper bound for the number of tokens that can be generated for a response,
 	// including visible output tokens and
 	// [reasoning tokens](https://developers.openai.com/api/docs/guides/reasoning).
@@ -3811,6 +3832,7 @@ type Response struct {
 		Background             respjson.Field
 		CompletedAt            respjson.Field
 		Conversation           respjson.Field
+		Image                  respjson.Field
 		MaxOutputTokens        respjson.Field
 		MaxToolCalls           respjson.Field
 		Moderation             respjson.Field
@@ -4037,6 +4059,25 @@ type ResponseConversation struct {
 // Returns the unmodified JSON received from the API
 func (r ResponseConversation) RawJSON() string { return r.JSON.raw }
 func (r *ResponseConversation) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponseImage struct {
+	// Effective image context optimization policy.
+	//
+	// Any of "enabled", "disabled".
+	ContextCompression string `json:"context_compression" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ContextCompression respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseImage) RawJSON() string { return r.JSON.raw }
+func (r *ResponseImage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -16399,7 +16440,9 @@ func (u responseInputItemUnionParamAction) GetQueries() []string {
 func (u responseInputItemUnionParamAction) GetQuery() *string {
 	switch vt := u.any.(type) {
 	case *ResponseFunctionWebSearchActionSearchParam:
-		return paramutil.AddrIfPresent(vt.Query)
+		if vt.Query.Valid() {
+			return &vt.Query.Value
+		}
 	}
 	return nil
 }
@@ -16444,7 +16487,9 @@ func (u responseInputItemUnionParamAction) GetEnv() map[string]string {
 func (u responseInputItemUnionParamAction) GetUser() *string {
 	switch vt := u.any.(type) {
 	case *ResponseInputItemLocalShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.User)
+		if vt.User.Valid() {
+			return &vt.User.Value
+		}
 	}
 	return nil
 }
@@ -16453,7 +16498,9 @@ func (u responseInputItemUnionParamAction) GetUser() *string {
 func (u responseInputItemUnionParamAction) GetWorkingDirectory() *string {
 	switch vt := u.any.(type) {
 	case *ResponseInputItemLocalShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.WorkingDirectory)
+		if vt.WorkingDirectory.Valid() {
+			return &vt.WorkingDirectory.Value
+		}
 	}
 	return nil
 }
@@ -16471,7 +16518,9 @@ func (u responseInputItemUnionParamAction) GetCommands() []string {
 func (u responseInputItemUnionParamAction) GetMaxOutputLength() *int64 {
 	switch vt := u.any.(type) {
 	case *ResponseInputItemShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.MaxOutputLength)
+		if vt.MaxOutputLength.Valid() {
+			return &vt.MaxOutputLength.Value
+		}
 	}
 	return nil
 }
@@ -16543,7 +16592,9 @@ func (u responseInputItemUnionParamAction) GetY() *int64 {
 func (u responseInputItemUnionParamAction) GetURL() *string {
 	switch vt := u.any.(type) {
 	case *ResponseFunctionWebSearchActionOpenPageParam:
-		return paramutil.AddrIfPresent(vt.URL)
+		if vt.URL.Valid() {
+			return &vt.URL.Value
+		}
 	case *ResponseFunctionWebSearchActionFindParam:
 		return (*string)(&vt.URL)
 	}
@@ -16554,9 +16605,13 @@ func (u responseInputItemUnionParamAction) GetURL() *string {
 func (u responseInputItemUnionParamAction) GetTimeoutMs() *int64 {
 	switch vt := u.any.(type) {
 	case *ResponseInputItemLocalShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.TimeoutMs)
+		if vt.TimeoutMs.Valid() {
+			return &vt.TimeoutMs.Value
+		}
 	case *ResponseInputItemShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.TimeoutMs)
+		if vt.TimeoutMs.Valid() {
+			return &vt.TimeoutMs.Value
+		}
 	}
 	return nil
 }
@@ -28482,9 +28537,13 @@ func (u responseToolSearchOutputItemParamToolUnionUserLocation) AsAny() any { re
 func (u responseToolSearchOutputItemParamToolUnionUserLocation) GetCity() *string {
 	switch vt := u.any.(type) {
 	case *WebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.City)
+		if vt.City.Valid() {
+			return &vt.City.Value
+		}
 	case *WebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.City)
+		if vt.City.Valid() {
+			return &vt.City.Value
+		}
 	}
 	return nil
 }
@@ -28493,9 +28552,13 @@ func (u responseToolSearchOutputItemParamToolUnionUserLocation) GetCity() *strin
 func (u responseToolSearchOutputItemParamToolUnionUserLocation) GetCountry() *string {
 	switch vt := u.any.(type) {
 	case *WebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Country)
+		if vt.Country.Valid() {
+			return &vt.Country.Value
+		}
 	case *WebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Country)
+		if vt.Country.Valid() {
+			return &vt.Country.Value
+		}
 	}
 	return nil
 }
@@ -28504,9 +28567,13 @@ func (u responseToolSearchOutputItemParamToolUnionUserLocation) GetCountry() *st
 func (u responseToolSearchOutputItemParamToolUnionUserLocation) GetRegion() *string {
 	switch vt := u.any.(type) {
 	case *WebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Region)
+		if vt.Region.Valid() {
+			return &vt.Region.Value
+		}
 	case *WebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Region)
+		if vt.Region.Valid() {
+			return &vt.Region.Value
+		}
 	}
 	return nil
 }
@@ -28515,9 +28582,13 @@ func (u responseToolSearchOutputItemParamToolUnionUserLocation) GetRegion() *str
 func (u responseToolSearchOutputItemParamToolUnionUserLocation) GetTimezone() *string {
 	switch vt := u.any.(type) {
 	case *WebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Timezone)
+		if vt.Timezone.Valid() {
+			return &vt.Timezone.Value
+		}
 	case *WebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Timezone)
+		if vt.Timezone.Valid() {
+			return &vt.Timezone.Value
+		}
 	}
 	return nil
 }
@@ -29361,6 +29432,14 @@ func (u ResponsesClientEventUnionParam) GetGenerate() *bool {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetImage() *ResponsesClientEventResponseCreateImageParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.Image
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesClientEventUnionParam) GetInclude() []ResponseIncludable {
 	if vt := u.OfResponseCreate; vt != nil {
 		return vt.Include
@@ -29829,6 +29908,8 @@ type ResponsesClientEventResponseCreateParam struct {
 	Truncation string `json:"truncation,omitzero"`
 	// Domain-specific access programs to use for this request.
 	AccessPrograms ResponsesClientEventResponseCreateAccessProgramsParam `json:"access_programs,omitzero"`
+	// Request level image options.
+	Image ResponsesClientEventResponseCreateImageParam `json:"image,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
 	//
 	// Learn more:
@@ -29979,6 +30060,31 @@ func (u ResponsesClientEventResponseCreateConversationUnionParam) MarshalJSON() 
 }
 func (u *ResponsesClientEventResponseCreateConversationUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
+}
+
+// Request level image options.
+type ResponsesClientEventResponseCreateImageParam struct {
+	// Controls image context optimization. Defaults to `auto`, which uses the model,
+	// transport, and input to select a policy. Use `enabled` to require compression
+	// support or `disabled` to turn it off.
+	//
+	// Any of "auto", "enabled", "disabled".
+	ContextCompression string `json:"context_compression,omitzero"`
+	paramObj
+}
+
+func (r ResponsesClientEventResponseCreateImageParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesClientEventResponseCreateImageParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesClientEventResponseCreateImageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponsesClientEventResponseCreateImageParam](
+		"context_compression", "auto", "enabled", "disabled",
+	)
 }
 
 // Only one field can be non-zero.
@@ -35191,9 +35297,13 @@ func (u toolUnionParamUserLocation) AsAny() any { return u.any }
 func (u toolUnionParamUserLocation) GetCity() *string {
 	switch vt := u.any.(type) {
 	case *WebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.City)
+		if vt.City.Valid() {
+			return &vt.City.Value
+		}
 	case *WebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.City)
+		if vt.City.Valid() {
+			return &vt.City.Value
+		}
 	}
 	return nil
 }
@@ -35202,9 +35312,13 @@ func (u toolUnionParamUserLocation) GetCity() *string {
 func (u toolUnionParamUserLocation) GetCountry() *string {
 	switch vt := u.any.(type) {
 	case *WebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Country)
+		if vt.Country.Valid() {
+			return &vt.Country.Value
+		}
 	case *WebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Country)
+		if vt.Country.Valid() {
+			return &vt.Country.Value
+		}
 	}
 	return nil
 }
@@ -35213,9 +35327,13 @@ func (u toolUnionParamUserLocation) GetCountry() *string {
 func (u toolUnionParamUserLocation) GetRegion() *string {
 	switch vt := u.any.(type) {
 	case *WebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Region)
+		if vt.Region.Valid() {
+			return &vt.Region.Value
+		}
 	case *WebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Region)
+		if vt.Region.Valid() {
+			return &vt.Region.Value
+		}
 	}
 	return nil
 }
@@ -35224,9 +35342,13 @@ func (u toolUnionParamUserLocation) GetRegion() *string {
 func (u toolUnionParamUserLocation) GetTimezone() *string {
 	switch vt := u.any.(type) {
 	case *WebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Timezone)
+		if vt.Timezone.Valid() {
+			return &vt.Timezone.Value
+		}
 	case *WebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Timezone)
+		if vt.Timezone.Valid() {
+			return &vt.Timezone.Value
+		}
 	}
 	return nil
 }
@@ -37178,6 +37300,8 @@ type ResponseNewParams struct {
 	Truncation ResponseNewParamsTruncation `json:"truncation,omitzero"`
 	// Domain-specific access programs to use for this request.
 	AccessPrograms ResponseNewParamsAccessPrograms `json:"access_programs,omitzero"`
+	// Request level image options.
+	Image ResponseNewParamsImage `json:"image,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
 	//
 	// Learn more:
@@ -37312,6 +37436,31 @@ func (u ResponseNewParamsConversationUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *ResponseNewParamsConversationUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
+}
+
+// Request level image options.
+type ResponseNewParamsImage struct {
+	// Controls image context optimization. Defaults to `auto`, which uses the model,
+	// transport, and input to select a policy. Use `enabled` to require compression
+	// support or `disabled` to turn it off.
+	//
+	// Any of "auto", "enabled", "disabled".
+	ContextCompression string `json:"context_compression,omitzero"`
+	paramObj
+}
+
+func (r ResponseNewParamsImage) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseNewParamsImage
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseNewParamsImage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseNewParamsImage](
+		"context_compression", "auto", "enabled", "disabled",
+	)
 }
 
 // Only one field can be non-zero.
@@ -37750,6 +37899,8 @@ type ResponseCompactParams struct {
 	//
 	// Any of "auto", "default", "fast", "flex", "priority".
 	ServiceTier ResponseCompactParamsServiceTier `json:"service_tier,omitzero"`
+	// Request level image options.
+	Image ResponseCompactParamsImage `json:"image,omitzero"`
 	paramObj
 }
 
@@ -38141,6 +38292,31 @@ const (
 	ResponseCompactParamsModelGPTRosalindResearch   ResponseCompactParamsModel = "gpt-rosalind-research"
 	ResponseCompactParamsModelGPT6Rosalind          ResponseCompactParamsModel = "gpt-6-rosalind"
 )
+
+// Request level image options.
+type ResponseCompactParamsImage struct {
+	// Controls image context optimization. Defaults to `auto`, which uses the model,
+	// transport, and input to select a policy. Use `enabled` to require compression
+	// support or `disabled` to turn it off.
+	//
+	// Any of "auto", "enabled", "disabled".
+	ContextCompression string `json:"context_compression,omitzero"`
+	paramObj
+}
+
+func (r ResponseCompactParamsImage) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseCompactParamsImage
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseCompactParamsImage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseCompactParamsImage](
+		"context_compression", "auto", "enabled", "disabled",
+	)
+}
 
 // Only one field can be non-zero.
 //

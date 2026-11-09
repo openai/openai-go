@@ -76,6 +76,7 @@ func TestBetaAgentAutomationNewWithOptionalParams(t *testing.T) {
 									Parameters: map[string]any{
 										"foo": "bar",
 									},
+									Async:        openai.Bool(true),
 									DeferLoading: openai.Bool(true),
 								},
 							}},
@@ -195,6 +196,7 @@ func TestBetaAgentAutomationUpdateWithOptionalParams(t *testing.T) {
 								Parameters: map[string]any{
 									"foo": "bar",
 								},
+								Async:        openai.Bool(true),
 								DeferLoading: openai.Bool(true),
 							},
 						}},

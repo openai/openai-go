@@ -62,6 +62,7 @@ func TestBetaAgentSessionNewWithOptionalParams(t *testing.T) {
 					Parameters: map[string]any{
 						"foo": "bar",
 					},
+					Async:        openai.Bool(true),
 					DeferLoading: openai.Bool(true),
 				},
 			}},
@@ -73,9 +74,15 @@ func TestBetaAgentSessionNewWithOptionalParams(t *testing.T) {
 		Metadata: map[string]string{
 			"foo": "string",
 		},
+		PromptCacheOptions: openai.BetaAgentSessionNewParamsPromptCacheOptions{
+			Ttl: "30m",
+		},
 		Review: openai.BetaAgentSessionNewParamsReviewNone,
 		SpendControl: openai.BetaAgentSessionNewParamsSpendControl{
 			Limit: openai.Int(1),
+		},
+		StreamOptions: openai.BetaAgentSessionNewParamsStreamOptions{
+			IncludeObfuscation: openai.Bool(true),
 		},
 		VaultIDs: []string{"string"},
 	})
@@ -143,12 +150,16 @@ func TestBetaAgentSessionUpdateWithOptionalParams(t *testing.T) {
 						Parameters: map[string]any{
 							"foo": "bar",
 						},
+						Async:        openai.Bool(true),
 						DeferLoading: openai.Bool(true),
 					},
 				}},
 			},
 			Metadata: map[string]string{
 				"foo": "string",
+			},
+			PromptCacheOptions: openai.BetaAgentSessionUpdateParamsPromptCacheOptions{
+				Ttl: "30m",
 			},
 			Review: openai.BetaAgentSessionUpdateParamsReviewNone,
 			SpendControl: openai.BetaAgentSessionUpdateParamsSpendControl{

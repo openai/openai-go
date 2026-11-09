@@ -121,7 +121,9 @@ type ExternalKey struct {
 	Audience       string   `json:"audience"`
 	ExternalID     string   `json:"external_id"`
 	KeyName        string   `json:"key_name"`
+	KeyOcid        string   `json:"key_ocid"`
 	KeyVersion     string   `json:"key_version"`
+	KeyVersionOcid string   `json:"key_version_ocid"`
 	KmsArn         string   `json:"kms_arn"`
 	KmsKeyLocation string   `json:"kms_key_location"`
 	KmsKeyName     string   `json:"kms_key_name"`
@@ -130,8 +132,10 @@ type ExternalKey struct {
 	KmsProjectID   string   `json:"kms_project_id"`
 	// Any of "ekm", "psp_decryption".
 	Purpose                       ExternalKeyPurpose `json:"purpose"`
+	Region                        string             `json:"region"`
 	RoleArn                       string             `json:"role_arn"`
 	TenantID                      string             `json:"tenant_id"`
+	VaultOcid                     string             `json:"vault_ocid"`
 	VaultUri                      string             `json:"vault_uri"`
 	WorkloadIdentityPoolID        string             `json:"workload_identity_pool_id"`
 	WorkloadIdentityProjectNumber string             `json:"workload_identity_project_number"`
@@ -148,7 +152,9 @@ type ExternalKey struct {
 		Audience                      respjson.Field
 		ExternalID                    respjson.Field
 		KeyName                       respjson.Field
+		KeyOcid                       respjson.Field
 		KeyVersion                    respjson.Field
+		KeyVersionOcid                respjson.Field
 		KmsArn                        respjson.Field
 		KmsKeyLocation                respjson.Field
 		KmsKeyName                    respjson.Field
@@ -156,8 +162,10 @@ type ExternalKey struct {
 		KmsKeyVersion                 respjson.Field
 		KmsProjectID                  respjson.Field
 		Purpose                       respjson.Field
+		Region                        respjson.Field
 		RoleArn                       respjson.Field
 		TenantID                      respjson.Field
+		VaultOcid                     respjson.Field
 		VaultUri                      respjson.Field
 		WorkloadIdentityPoolID        respjson.Field
 		WorkloadIdentityProjectNumber respjson.Field
@@ -208,12 +216,14 @@ type AdminOrganizationExternalKeyNewParams struct {
 	OfGcp *AdminOrganizationExternalKeyNewParamsBodyGcp `json:",inline"`
 	// This field is a request body variant, only one variant field can be set.
 	OfAzure *AdminOrganizationExternalKeyNewParamsBodyAzure `json:",inline"`
+	// This field is a request body variant, only one variant field can be set.
+	OfOci *AdminOrganizationExternalKeyNewParamsBodyOci `json:",inline"`
 
 	paramUnion
 }
 
 func (u AdminOrganizationExternalKeyNewParams) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfAws, u.OfGcp, u.OfAzure)
+	return param.MarshalUnion(u, u.OfAws, u.OfGcp, u.OfAzure, u.OfOci)
 }
 func (r *AdminOrganizationExternalKeyNewParams) UnmarshalJSON(data []byte) error {
 
@@ -231,6 +241,7 @@ func init() {
 		apijson.Discriminator[AdminOrganizationExternalKeyNewParamsBodyAws]("aws"),
 		apijson.Discriminator[AdminOrganizationExternalKeyNewParamsBodyGcp]("gcp"),
 		apijson.Discriminator[AdminOrganizationExternalKeyNewParamsBodyAzure]("azure"),
+		apijson.Discriminator[AdminOrganizationExternalKeyNewParamsBodyOci]("oci"),
 	)
 }
 
@@ -329,6 +340,33 @@ func (r AdminOrganizationExternalKeyNewParamsBodyAzure) MarshalJSON() (data []by
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *AdminOrganizationExternalKeyNewParamsBodyAzure) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties KeyOcid, Name, Region, VaultOcid, Type are required.
+type AdminOrganizationExternalKeyNewParamsBodyOci struct {
+	// The OCI Vault key OCID
+	KeyOcid string `json:"key_ocid" api:"required"`
+	// A friendly name to identify this config
+	Name string `json:"name" api:"required"`
+	// The OCI region containing the vault
+	Region string `json:"region" api:"required"`
+	// The customer OCI Vault OCID
+	VaultOcid string `json:"vault_ocid" api:"required"`
+	// The exact OCI key version OCID for PSP decryption.
+	KeyVersionOcid param.Opt[string] `json:"key_version_ocid,omitzero"`
+	// Any of "ekm", "psp_decryption".
+	Purpose param.Opt[string] `json:"purpose,omitzero"`
+	// This field can be elided, and will marshal its zero value as "oci".
+	Type constant.Oci `json:"type" default:"oci"`
+	paramObj
+}
+
+func (r AdminOrganizationExternalKeyNewParamsBodyOci) MarshalJSON() (data []byte, err error) {
+	type shadow AdminOrganizationExternalKeyNewParamsBodyOci
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AdminOrganizationExternalKeyNewParamsBodyOci) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

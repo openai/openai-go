@@ -39,6 +39,9 @@ func TestBetaResponseNewWithOptionalParams(t *testing.T) {
 		Conversation: openai.BetaResponseNewParamsConversationUnion{
 			OfString: openai.String("string"),
 		},
+		Image: openai.BetaResponseNewParamsImage{
+			ContextCompression: "auto",
+		},
 		Include: []openai.BetaResponseIncludable{openai.BetaResponseIncludableFileSearchCallResults},
 		Input: openai.BetaResponseNewParamsInputUnion{
 			OfString: openai.String("string"),
@@ -247,6 +250,9 @@ func TestBetaResponseCompactWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Beta.Responses.Compact(context.TODO(), openai.BetaResponseCompactParams{
 		Model: openai.BetaResponseCompactParamsModelGPT6Astra,
+		Image: openai.BetaResponseCompactParamsImage{
+			ContextCompression: "auto",
+		},
 		Input: openai.BetaResponseCompactParamsInputUnion{
 			OfString: openai.String("string"),
 		},
