@@ -789,7 +789,7 @@ type ImagesResponse struct {
 	Background ImagesResponseBackground `json:"background"`
 	// The list of generated images.
 	Data []Image `json:"data"`
-	// The output format of the generated image.
+	// The output format of the generated or edited image.
 	//
 	// Any of "png", "webp", "jpeg", "gif", "svg".
 	OutputFormat ImagesResponseOutputFormat `json:"output_format"`
@@ -804,10 +804,9 @@ type ImagesResponse struct {
 	SafetyIdentifier string `json:"safety_identifier" api:"nullable"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size ImagesResponseSize `json:"size"`
-	// Token usage for the model that authored the SVG, separate from image rendering
-	// usage.
+	// Token usage for SVG authoring, separate from image rendering usage.
 	SvgUsage ImagesResponseSvgUsage `json:"svg_usage"`
-	// For `gpt-image-1` only, the token usage information for the image generation.
+	// Token usage information for image generation with GPT Image models.
 	Usage ImagesResponseUsage `json:"usage"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -840,7 +839,7 @@ const (
 	ImagesResponseBackgroundOpaque      ImagesResponseBackground = "opaque"
 )
 
-// The output format of the generated image.
+// The output format of the generated or edited image.
 type ImagesResponseOutputFormat string
 
 const (
@@ -872,8 +871,7 @@ const (
 	ImagesResponseSize1536x1024 ImagesResponseSize = "1536x1024"
 )
 
-// Token usage for the model that authored the SVG, separate from image rendering
-// usage.
+// Token usage for SVG authoring, separate from image rendering usage.
 type ImagesResponseSvgUsage struct {
 	InputTokens     int64  `json:"input_tokens" api:"required"`
 	Model           string `json:"model" api:"required"`
@@ -898,7 +896,7 @@ func (r *ImagesResponseSvgUsage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// For `gpt-image-1` only, the token usage information for the image generation.
+// Token usage information for image generation with GPT Image models.
 type ImagesResponseUsage struct {
 	// The number of tokens (images and text) in the input prompt.
 	InputTokens int64 `json:"input_tokens" api:"required"`
@@ -1127,9 +1125,10 @@ type ImageEditParams struct {
 	// `gpt-image-2.5-flare` instead.
 	Model ImageModel `json:"model,omitzero"`
 	// The format in which the generated images are returned. This parameter is only
-	// supported for the GPT image models. The default value is `png`.
+	// supported for the GPT image models. The default value is `png`. SVG output
+	// requires a supported image model and project access.
 	//
-	// Any of "png", "jpeg", "webp", "gif".
+	// Any of "png", "webp", "jpeg", "gif", "svg".
 	OutputFormat ImageEditParamsOutputFormat `json:"output_format,omitzero"`
 	// The quality of the image that will be generated for GPT image models. The GPT
 	// image models support `low`, `medium`, and `high`. `gpt-image-2.5-sunburst` and
@@ -1155,9 +1154,14 @@ type ImageEditParams struct {
 	// `1024x1536` are supported by the GPT image models; `auto` is supported for
 	// models that allow automatic sizing.
 	Size ImageEditParamsSize `json:"size,omitzero"`
+	// Selects the author model and reasoning effort for `output_format=svg`. Supply
+	// `svg.model` when SVG model selection is enabled. Otherwise, omit this object.
+	// SVG output requires `n=1` and cannot use streaming, partial images, or output
+	// compression. Use multipart fields such as `svg[model]`.
+	Svg ImageEditParamsSvg `json:"svg,omitzero"`
 	// A transparent PNG overlaid on the first image to guide the edit. Must match that
 	// image's dimensions after orientation and contain transparent pixels. Supports
-	// GPT Image 2.5 and 2.6. Cannot be combined with mask.
+	// GPT Image 2.5. Cannot be combined with mask.
 	Markup io.Reader `json:"markup,omitzero" format:"binary"`
 	// An additional image whose fully transparent areas (e.g. where alpha is zero)
 	// indicate where `image` should be edited. If there are multiple images provided,
@@ -1250,14 +1254,16 @@ const (
 )
 
 // The format in which the generated images are returned. This parameter is only
-// supported for the GPT image models. The default value is `png`.
+// supported for the GPT image models. The default value is `png`. SVG output
+// requires a supported image model and project access.
 type ImageEditParamsOutputFormat string
 
 const (
 	ImageEditParamsOutputFormatPNG  ImageEditParamsOutputFormat = "png"
-	ImageEditParamsOutputFormatJPEG ImageEditParamsOutputFormat = "jpeg"
 	ImageEditParamsOutputFormatWebP ImageEditParamsOutputFormat = "webp"
+	ImageEditParamsOutputFormatJPEG ImageEditParamsOutputFormat = "jpeg"
 	ImageEditParamsOutputFormatGIF  ImageEditParamsOutputFormat = "gif"
+	ImageEditParamsOutputFormatSvg  ImageEditParamsOutputFormat = "svg"
 )
 
 // The quality of the image that will be generated for GPT image models. The GPT
@@ -1312,6 +1318,50 @@ const (
 	// the selected GPT image model's supported sizes.
 	ImageEditParamsSize512x512 ImageEditParamsSize = "512x512"
 )
+
+// Selects the author model and reasoning effort for `output_format=svg`. Supply
+// `svg.model` when SVG model selection is enabled. Otherwise, omit this object.
+// SVG output requires `n=1` and cannot use streaming, partial images, or output
+// compression. Use multipart fields such as `svg[model]`.
+type ImageEditParamsSvg struct {
+	Model param.Opt[string] `json:"model,omitzero"`
+	// Reasoning effort for SVG authoring. When omitted, uses the author model's
+	// default in both Images and Responses.
+	Reasoning ImageEditParamsSvgReasoning `json:"reasoning,omitzero"`
+	paramObj
+}
+
+func (r ImageEditParamsSvg) MarshalJSON() (data []byte, err error) {
+	type shadow ImageEditParamsSvg
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ImageEditParamsSvg) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Reasoning effort for SVG authoring. When omitted, uses the author model's
+// default in both Images and Responses.
+type ImageEditParamsSvgReasoning struct {
+	// Controls how much effort the model should spend on reasoning for this request.
+	//
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
+	Effort string `json:"effort,omitzero"`
+	paramObj
+}
+
+func (r ImageEditParamsSvgReasoning) MarshalJSON() (data []byte, err error) {
+	type shadow ImageEditParamsSvgReasoning
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ImageEditParamsSvgReasoning) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ImageEditParamsSvgReasoning](
+		"effort", "none", "minimal", "low", "medium", "high", "xhigh", "max",
+	)
+}
 
 type ImageGenerateParams struct {
 	// A text description of the desired image(s). The maximum length is 32000
@@ -1389,7 +1439,7 @@ type ImageGenerateParams struct {
 	// The format in which the generated images are returned. This parameter is only
 	// supported for the GPT image models.
 	//
-	// Any of "png", "jpeg", "webp", "gif", "svg".
+	// Any of "png", "webp", "jpeg", "gif", "svg".
 	OutputFormat ImageGenerateParamsOutputFormat `json:"output_format,omitzero"`
 	// The quality of the image that will be generated.
 	//
@@ -1427,7 +1477,7 @@ type ImageGenerateParams struct {
 	// enabled, supply svg.model. When model selection is disabled, omit this object.
 	// The top-level model selects the image model that creates the reference image.
 	// SVG generation requires n=1 and does not support streaming, partial images,
-	// prompt_rewriter, or output_compression. SVG edits are not supported.
+	// prompt_rewriter, or output_compression.
 	Svg ImageGenerateParamsSvg `json:"svg,omitzero"`
 	paramObj
 }
@@ -1484,8 +1534,8 @@ type ImageGenerateParamsOutputFormat string
 
 const (
 	ImageGenerateParamsOutputFormatPNG  ImageGenerateParamsOutputFormat = "png"
-	ImageGenerateParamsOutputFormatJPEG ImageGenerateParamsOutputFormat = "jpeg"
 	ImageGenerateParamsOutputFormatWebP ImageGenerateParamsOutputFormat = "webp"
+	ImageGenerateParamsOutputFormatJPEG ImageGenerateParamsOutputFormat = "jpeg"
 	ImageGenerateParamsOutputFormatGIF  ImageGenerateParamsOutputFormat = "gif"
 	ImageGenerateParamsOutputFormatSvg  ImageGenerateParamsOutputFormat = "svg"
 )
@@ -1568,7 +1618,7 @@ const (
 // enabled, supply svg.model. When model selection is disabled, omit this object.
 // The top-level model selects the image model that creates the reference image.
 // SVG generation requires n=1 and does not support streaming, partial images,
-// prompt_rewriter, or output_compression. SVG edits are not supported.
+// prompt_rewriter, or output_compression.
 //
 // The property Model is required.
 type ImageGenerateParamsSvg struct {

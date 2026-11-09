@@ -32,6 +32,7 @@ type AdminOrganizationProjectService struct {
 	APIKeys               AdminOrganizationProjectAPIKeyService
 	RateLimits            AdminOrganizationProjectRateLimitService
 	ModelPermissions      AdminOrganizationProjectModelPermissionService
+	ServiceTierSettings   AdminOrganizationProjectServiceTierSettingService
 	HostedToolPermissions AdminOrganizationProjectHostedToolPermissionService
 	Groups                AdminOrganizationProjectGroupService
 	Roles                 AdminOrganizationProjectRoleService
@@ -39,7 +40,6 @@ type AdminOrganizationProjectService struct {
 	SpendLimit            AdminOrganizationProjectSpendLimitService
 	SpendAlerts           AdminOrganizationProjectSpendAlertService
 	Certificates          AdminOrganizationProjectCertificateService
-	ServiceTierSettings   AdminOrganizationProjectServiceTierSettingService
 }
 
 // NewAdminOrganizationProjectService generates a new service that applies the
@@ -53,6 +53,7 @@ func NewAdminOrganizationProjectService(opts ...option.RequestOption) (r AdminOr
 	r.APIKeys = NewAdminOrganizationProjectAPIKeyService(opts...)
 	r.RateLimits = NewAdminOrganizationProjectRateLimitService(opts...)
 	r.ModelPermissions = NewAdminOrganizationProjectModelPermissionService(opts...)
+	r.ServiceTierSettings = NewAdminOrganizationProjectServiceTierSettingService(opts...)
 	r.HostedToolPermissions = NewAdminOrganizationProjectHostedToolPermissionService(opts...)
 	r.Groups = NewAdminOrganizationProjectGroupService(opts...)
 	r.Roles = NewAdminOrganizationProjectRoleService(opts...)
@@ -60,7 +61,6 @@ func NewAdminOrganizationProjectService(opts ...option.RequestOption) (r AdminOr
 	r.SpendLimit = NewAdminOrganizationProjectSpendLimitService(opts...)
 	r.SpendAlerts = NewAdminOrganizationProjectSpendAlertService(opts...)
 	r.Certificates = NewAdminOrganizationProjectCertificateService(opts...)
-	r.ServiceTierSettings = NewAdminOrganizationProjectServiceTierSettingService(opts...)
 	return
 }
 
