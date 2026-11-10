@@ -5785,9 +5785,8 @@ func (r *ResponsesDelegationConfigText) UnmarshalJSON(data []byte) error {
 }
 
 // ResponsesDelegationConfigToolChoiceUnion contains all possible properties and
-// values from [string],
-// [ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam],
-// [ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam],
+// values from [string], [ResponsesDelegationConfigToolChoiceFunction],
+// [ResponsesDelegationConfigToolChoiceMcp],
 // [ResponsesDelegationConfigToolChoiceFileSearch],
 // [ResponsesDelegationConfigToolChoiceWebSearch],
 // [ResponsesDelegationConfigToolChoiceWebSearchPreview],
@@ -5807,8 +5806,8 @@ func (r *ResponsesDelegationConfigText) UnmarshalJSON(data []byte) error {
 type ResponsesDelegationConfigToolChoiceUnion struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString                                                         string                                                         `json:",inline"`
-	OfResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam `json:",inline"`
-	OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam      ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam      `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceFunction                    ResponsesDelegationConfigToolChoiceFunction                    `json:",inline"`
+	OfResponsesDelegationConfigToolChoiceMcp                         ResponsesDelegationConfigToolChoiceMcp                         `json:",inline"`
 	OfResponsesDelegationConfigToolChoiceFileSearch                  ResponsesDelegationConfigToolChoiceFileSearch                  `json:",inline"`
 	OfResponsesDelegationConfigToolChoiceWebSearch                   ResponsesDelegationConfigToolChoiceWebSearch                   `json:",inline"`
 	OfResponsesDelegationConfigToolChoiceWebSearchPreview            ResponsesDelegationConfigToolChoiceWebSearchPreview            `json:",inline"`
@@ -5822,8 +5821,8 @@ type ResponsesDelegationConfigToolChoiceUnion struct {
 	OfResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParam ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParam `json:",inline"`
 	JSON                                                             struct {
 		OfString                                                         respjson.Field
-		OfResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam respjson.Field
-		OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam      respjson.Field
+		OfResponsesDelegationConfigToolChoiceFunction                    respjson.Field
+		OfResponsesDelegationConfigToolChoiceMcp                         respjson.Field
 		OfResponsesDelegationConfigToolChoiceFileSearch                  respjson.Field
 		OfResponsesDelegationConfigToolChoiceWebSearch                   respjson.Field
 		OfResponsesDelegationConfigToolChoiceWebSearchPreview            respjson.Field
@@ -5844,12 +5843,12 @@ func (u ResponsesDelegationConfigToolChoiceUnion) AsString() (v string) {
 	return
 }
 
-func (u ResponsesDelegationConfigToolChoiceUnion) AsResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam() (v ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam) {
+func (u ResponsesDelegationConfigToolChoiceUnion) AsResponsesDelegationConfigToolChoiceFunction() (v ResponsesDelegationConfigToolChoiceFunction) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u ResponsesDelegationConfigToolChoiceUnion) AsResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam() (v ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam) {
+func (u ResponsesDelegationConfigToolChoiceUnion) AsResponsesDelegationConfigToolChoiceMcp() (v ResponsesDelegationConfigToolChoiceMcp) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -5923,6 +5922,50 @@ const (
 	ResponsesDelegationConfigToolChoiceLiveToolChoiceEnumNone     ResponsesDelegationConfigToolChoiceLiveToolChoiceEnum = "none"
 	ResponsesDelegationConfigToolChoiceLiveToolChoiceEnumRequired ResponsesDelegationConfigToolChoiceLiveToolChoiceEnum = "required"
 )
+
+// Selects a function tool by name.
+type ResponsesDelegationConfigToolChoiceFunction struct {
+	// The name of the function tool to call.
+	Name string `json:"name" api:"required"`
+	// The tool to call. Always `function`.
+	Type constant.Function `json:"type" default:"function"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Name        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceFunction) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolChoiceFunction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponsesDelegationConfigToolChoiceMcp struct {
+	// The name of the MCP tool to call. If omitted, the server may choose a default.
+	Name string `json:"name" api:"nullable"`
+	// The label of the MCP server to call.
+	ServerLabel string `json:"server_label" api:"required"`
+	// The tool to call. Always `mcp`.
+	Type constant.Mcp `json:"type" default:"mcp"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Name        respjson.Field
+		ServerLabel respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponsesDelegationConfigToolChoiceMcp) RawJSON() string { return r.JSON.raw }
+func (r *ResponsesDelegationConfigToolChoiceMcp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type ResponsesDelegationConfigToolChoiceFileSearch struct {
 	// The tool to call. Always `file_search`.
@@ -6217,7 +6260,9 @@ func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnion
 }
 
 type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFunction struct {
-	Name string            `json:"name" api:"required"`
+	// The name of the function tool to call.
+	Name string `json:"name" api:"required"`
+	// The tool to call. Always `function`.
 	Type constant.Function `json:"type" default:"function"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -6237,9 +6282,12 @@ func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFunct
 }
 
 type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolMcp struct {
-	Name        string       `json:"name" api:"required"`
-	ServerLabel string       `json:"server_label" api:"required"`
-	Type        constant.Mcp `json:"type" default:"mcp"`
+	// The name of the MCP tool to call. If omitted, the server may choose a default.
+	Name string `json:"name" api:"nullable"`
+	// The label of the MCP server to call.
+	ServerLabel string `json:"server_label" api:"required"`
+	// The tool to call. Always `mcp`.
+	Type constant.Mcp `json:"type" default:"mcp"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Name        respjson.Field
@@ -7417,8 +7465,8 @@ func init() {
 type ResponsesDelegationConfigToolChoiceUnionParam struct {
 	// Check if union is this variant with !param.IsOmitted(union.OfLiveToolChoiceEnum)
 	OfLiveToolChoiceEnum                                             param.Opt[string]                                                `json:",omitzero,inline"`
-	OfResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam *ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam  `json:",omitzero,inline"`
-	OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam      *ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam       `json:",omitzero,inline"`
+	OfResponsesDelegationConfigToolChoiceFunction                    *ResponsesDelegationConfigToolChoiceFunctionParam                `json:",omitzero,inline"`
+	OfResponsesDelegationConfigToolChoiceMcp                         *ResponsesDelegationConfigToolChoiceMcpParam                     `json:",omitzero,inline"`
 	OfResponsesDelegationConfigToolChoiceFileSearch                  *ResponsesDelegationConfigToolChoiceFileSearchParam              `json:",omitzero,inline"`
 	OfResponsesDelegationConfigToolChoiceWebSearch                   *ResponsesDelegationConfigToolChoiceWebSearchParam               `json:",omitzero,inline"`
 	OfResponsesDelegationConfigToolChoiceWebSearchPreview            *ResponsesDelegationConfigToolChoiceWebSearchPreviewParam        `json:",omitzero,inline"`
@@ -7435,8 +7483,8 @@ type ResponsesDelegationConfigToolChoiceUnionParam struct {
 
 func (u ResponsesDelegationConfigToolChoiceUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion(u, u.OfLiveToolChoiceEnum,
-		u.OfResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam,
-		u.OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam,
+		u.OfResponsesDelegationConfigToolChoiceFunction,
+		u.OfResponsesDelegationConfigToolChoiceMcp,
 		u.OfResponsesDelegationConfigToolChoiceFileSearch,
 		u.OfResponsesDelegationConfigToolChoiceWebSearch,
 		u.OfResponsesDelegationConfigToolChoiceWebSearchPreview,
@@ -7455,7 +7503,7 @@ func (u *ResponsesDelegationConfigToolChoiceUnionParam) UnmarshalJSON(data []byt
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationConfigToolChoiceUnionParam) GetServerLabel() *string {
-	if vt := u.OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam; vt != nil {
+	if vt := u.OfResponsesDelegationConfigToolChoiceMcp; vt != nil {
 		return &vt.ServerLabel
 	}
 	return nil
@@ -7479,10 +7527,10 @@ func (u ResponsesDelegationConfigToolChoiceUnionParam) GetMode() *string {
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationConfigToolChoiceUnionParam) GetName() *string {
-	if vt := u.OfResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam; vt != nil {
+	if vt := u.OfResponsesDelegationConfigToolChoiceFunction; vt != nil {
 		return (*string)(&vt.Name)
-	} else if vt := u.OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam; vt != nil {
-		return (*string)(&vt.Name)
+	} else if vt := u.OfResponsesDelegationConfigToolChoiceMcp; vt != nil && vt.Name.Valid() {
+		return &vt.Name.Value
 	} else if vt := u.OfResponsesDelegationConfigToolChoiceCustom; vt != nil {
 		return (*string)(&vt.Name)
 	}
@@ -7491,9 +7539,9 @@ func (u ResponsesDelegationConfigToolChoiceUnionParam) GetName() *string {
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationConfigToolChoiceUnionParam) GetType() *string {
-	if vt := u.OfResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam; vt != nil {
+	if vt := u.OfResponsesDelegationConfigToolChoiceFunction; vt != nil {
 		return (*string)(&vt.Type)
-	} else if vt := u.OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam; vt != nil {
+	} else if vt := u.OfResponsesDelegationConfigToolChoiceMcp; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfResponsesDelegationConfigToolChoiceFileSearch; vt != nil {
 		return (*string)(&vt.Type)
@@ -7524,35 +7572,42 @@ func (u ResponsesDelegationConfigToolChoiceUnionParam) GetType() *string {
 // Selects a function tool by name.
 //
 // The properties Name, Type are required.
-type ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam struct {
+type ResponsesDelegationConfigToolChoiceFunctionParam struct {
+	// The name of the function tool to call.
 	Name string `json:"name" api:"required"`
+	// The tool to call. Always `function`.
+	//
 	// This field can be elided, and will marshal its zero value as "function".
 	Type constant.Function `json:"type" default:"function"`
 	paramObj
 }
 
-func (r ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam
+func (r ResponsesDelegationConfigToolChoiceFunctionParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceFunctionParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam) UnmarshalJSON(data []byte) error {
+func (r *ResponsesDelegationConfigToolChoiceFunctionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The properties Name, ServerLabel, Type are required.
-type ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam struct {
-	Name        string `json:"name" api:"required"`
+// The properties ServerLabel, Type are required.
+type ResponsesDelegationConfigToolChoiceMcpParam struct {
+	// The label of the MCP server to call.
 	ServerLabel string `json:"server_label" api:"required"`
+	// The name of the MCP tool to call. If omitted, the server may choose a default.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// The tool to call. Always `mcp`.
+	//
 	// This field can be elided, and will marshal its zero value as "mcp".
 	Type constant.Mcp `json:"type" default:"mcp"`
 	paramObj
 }
 
-func (r ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam
+func (r ResponsesDelegationConfigToolChoiceMcpParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationConfigToolChoiceMcpParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam) UnmarshalJSON(data []byte) error {
+func (r *ResponsesDelegationConfigToolChoiceMcpParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -7855,8 +7910,8 @@ func (u ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionP
 func (u ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam) GetName() *string {
 	if vt := u.OfFunction; vt != nil {
 		return (*string)(&vt.Name)
-	} else if vt := u.OfMcp; vt != nil {
-		return (*string)(&vt.Name)
+	} else if vt := u.OfMcp; vt != nil && vt.Name.Valid() {
+		return &vt.Name.Value
 	} else if vt := u.OfCustom; vt != nil {
 		return (*string)(&vt.Name)
 	}
@@ -7913,7 +7968,10 @@ func init() {
 
 // The properties Name, Type are required.
 type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFunctionParam struct {
+	// The name of the function tool to call.
 	Name string `json:"name" api:"required"`
+	// The tool to call. Always `function`.
+	//
 	// This field can be elided, and will marshal its zero value as "function".
 	Type constant.Function `json:"type" default:"function"`
 	paramObj
@@ -7927,10 +7985,14 @@ func (r *ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolFunct
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The properties Name, ServerLabel, Type are required.
+// The properties ServerLabel, Type are required.
 type ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolMcpParam struct {
-	Name        string `json:"name" api:"required"`
+	// The label of the MCP server to call.
 	ServerLabel string `json:"server_label" api:"required"`
+	// The name of the MCP tool to call. If omitted, the server may choose a default.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// The tool to call. Always `mcp`.
+	//
 	// This field can be elided, and will marshal its zero value as "mcp".
 	Type constant.Mcp `json:"type" default:"mcp"`
 	paramObj
@@ -9077,8 +9139,8 @@ func init() {
 type ResponsesDelegationUpdateConfigToolChoiceUnionParam struct {
 	// Check if union is this variant with !param.IsOmitted(union.OfLiveToolChoiceEnum)
 	OfLiveToolChoiceEnum                                                   param.Opt[string]                                                      `json:",omitzero,inline"`
-	OfResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam *ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam  `json:",omitzero,inline"`
-	OfResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam      *ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam       `json:",omitzero,inline"`
+	OfResponsesDelegationUpdateConfigToolChoiceFunction                    *ResponsesDelegationUpdateConfigToolChoiceFunctionParam                `json:",omitzero,inline"`
+	OfResponsesDelegationUpdateConfigToolChoiceMcp                         *ResponsesDelegationUpdateConfigToolChoiceMcpParam                     `json:",omitzero,inline"`
 	OfResponsesDelegationUpdateConfigToolChoiceFileSearch                  *ResponsesDelegationUpdateConfigToolChoiceFileSearchParam              `json:",omitzero,inline"`
 	OfResponsesDelegationUpdateConfigToolChoiceWebSearch                   *ResponsesDelegationUpdateConfigToolChoiceWebSearchParam               `json:",omitzero,inline"`
 	OfResponsesDelegationUpdateConfigToolChoiceWebSearchPreview            *ResponsesDelegationUpdateConfigToolChoiceWebSearchPreviewParam        `json:",omitzero,inline"`
@@ -9095,8 +9157,8 @@ type ResponsesDelegationUpdateConfigToolChoiceUnionParam struct {
 
 func (u ResponsesDelegationUpdateConfigToolChoiceUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion(u, u.OfLiveToolChoiceEnum,
-		u.OfResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam,
-		u.OfResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam,
+		u.OfResponsesDelegationUpdateConfigToolChoiceFunction,
+		u.OfResponsesDelegationUpdateConfigToolChoiceMcp,
 		u.OfResponsesDelegationUpdateConfigToolChoiceFileSearch,
 		u.OfResponsesDelegationUpdateConfigToolChoiceWebSearch,
 		u.OfResponsesDelegationUpdateConfigToolChoiceWebSearchPreview,
@@ -9115,7 +9177,7 @@ func (u *ResponsesDelegationUpdateConfigToolChoiceUnionParam) UnmarshalJSON(data
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationUpdateConfigToolChoiceUnionParam) GetServerLabel() *string {
-	if vt := u.OfResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam; vt != nil {
+	if vt := u.OfResponsesDelegationUpdateConfigToolChoiceMcp; vt != nil {
 		return &vt.ServerLabel
 	}
 	return nil
@@ -9139,10 +9201,10 @@ func (u ResponsesDelegationUpdateConfigToolChoiceUnionParam) GetMode() *string {
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationUpdateConfigToolChoiceUnionParam) GetName() *string {
-	if vt := u.OfResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam; vt != nil {
+	if vt := u.OfResponsesDelegationUpdateConfigToolChoiceFunction; vt != nil {
 		return (*string)(&vt.Name)
-	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam; vt != nil {
-		return (*string)(&vt.Name)
+	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceMcp; vt != nil && vt.Name.Valid() {
+		return &vt.Name.Value
 	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceCustom; vt != nil {
 		return (*string)(&vt.Name)
 	}
@@ -9151,9 +9213,9 @@ func (u ResponsesDelegationUpdateConfigToolChoiceUnionParam) GetName() *string {
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationUpdateConfigToolChoiceUnionParam) GetType() *string {
-	if vt := u.OfResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam; vt != nil {
+	if vt := u.OfResponsesDelegationUpdateConfigToolChoiceFunction; vt != nil {
 		return (*string)(&vt.Type)
-	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam; vt != nil {
+	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceMcp; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfResponsesDelegationUpdateConfigToolChoiceFileSearch; vt != nil {
 		return (*string)(&vt.Type)
@@ -9192,35 +9254,42 @@ const (
 // Selects a function tool by name.
 //
 // The properties Name, Type are required.
-type ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam struct {
+type ResponsesDelegationUpdateConfigToolChoiceFunctionParam struct {
+	// The name of the function tool to call.
 	Name string `json:"name" api:"required"`
+	// The tool to call. Always `function`.
+	//
 	// This field can be elided, and will marshal its zero value as "function".
 	Type constant.Function `json:"type" default:"function"`
 	paramObj
 }
 
-func (r ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam
+func (r ResponsesDelegationUpdateConfigToolChoiceFunctionParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceFunctionParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam) UnmarshalJSON(data []byte) error {
+func (r *ResponsesDelegationUpdateConfigToolChoiceFunctionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The properties Name, ServerLabel, Type are required.
-type ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam struct {
-	Name        string `json:"name" api:"required"`
+// The properties ServerLabel, Type are required.
+type ResponsesDelegationUpdateConfigToolChoiceMcpParam struct {
+	// The label of the MCP server to call.
 	ServerLabel string `json:"server_label" api:"required"`
+	// The name of the MCP tool to call. If omitted, the server may choose a default.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// The tool to call. Always `mcp`.
+	//
 	// This field can be elided, and will marshal its zero value as "mcp".
 	Type constant.Mcp `json:"type" default:"mcp"`
 	paramObj
 }
 
-func (r ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam
+func (r ResponsesDelegationUpdateConfigToolChoiceMcpParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesDelegationUpdateConfigToolChoiceMcpParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam) UnmarshalJSON(data []byte) error {
+func (r *ResponsesDelegationUpdateConfigToolChoiceMcpParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -9523,8 +9592,8 @@ func (u ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamTool
 func (u ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolUnionParam) GetName() *string {
 	if vt := u.OfFunction; vt != nil {
 		return (*string)(&vt.Name)
-	} else if vt := u.OfMcp; vt != nil {
-		return (*string)(&vt.Name)
+	} else if vt := u.OfMcp; vt != nil && vt.Name.Valid() {
+		return &vt.Name.Value
 	} else if vt := u.OfCustom; vt != nil {
 		return (*string)(&vt.Name)
 	}
@@ -9581,7 +9650,10 @@ func init() {
 
 // The properties Name, Type are required.
 type ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolFunctionParam struct {
+	// The name of the function tool to call.
 	Name string `json:"name" api:"required"`
+	// The tool to call. Always `function`.
+	//
 	// This field can be elided, and will marshal its zero value as "function".
 	Type constant.Function `json:"type" default:"function"`
 	paramObj
@@ -9595,10 +9667,14 @@ func (r *ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToo
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The properties Name, ServerLabel, Type are required.
+// The properties ServerLabel, Type are required.
 type ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolMcpParam struct {
-	Name        string `json:"name" api:"required"`
+	// The label of the MCP server to call.
 	ServerLabel string `json:"server_label" api:"required"`
+	// The name of the MCP tool to call. If omitted, the server may choose a default.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// The tool to call. Always `mcp`.
+	//
 	// This field can be elided, and will marshal its zero value as "mcp".
 	Type constant.Mcp `json:"type" default:"mcp"`
 	paramObj

@@ -324,3 +324,70 @@ Keep provider and custom-doer identities stable while in use. To rotate opaque
 credentials, construct a new provider/authenticator or HTTP doer. To rotate
 client certificates, use a new transport. Do not mutate a client or transport
 concurrently with requests.
+
+## Live Responses delegation tool choices
+
+Live Responses delegation function and MCP tool choices have shorter Go names. The
+request and response variants now have separate types. All names below are in the
+`live` package.
+
+| Previous type | Request type | Response type |
+| --- | --- | --- |
+| `ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam` | `ResponsesDelegationConfigToolChoiceFunctionParam` | `ResponsesDelegationConfigToolChoiceFunction` |
+| `ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam` | `ResponsesDelegationConfigToolChoiceMcpParam` | `ResponsesDelegationConfigToolChoiceMcp` |
+| `ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam` | `ResponsesDelegationUpdateConfigToolChoiceFunctionParam` | — |
+| `ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam` | `ResponsesDelegationUpdateConfigToolChoiceMcpParam` | — |
+
+The create/response rows below apply to `ResponsesDelegationConfigToolChoiceUnionParam`
+and `ResponsesDelegationConfigToolChoiceUnion`, including the response union's `JSON`
+metadata. The update rows apply to `ResponsesDelegationUpdateConfigToolChoiceUnionParam`.
+
+| Union | Previous field | New field |
+| --- | --- | --- |
+| Create/response | `OfResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam` | `OfResponsesDelegationConfigToolChoiceFunction` |
+| Create/response | `OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam` | `OfResponsesDelegationConfigToolChoiceMcp` |
+| Update | `OfResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam` | `OfResponsesDelegationUpdateConfigToolChoiceFunction` |
+| Update | `OfResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam` | `OfResponsesDelegationUpdateConfigToolChoiceMcp` |
+
+On `ResponsesDelegationConfigToolChoiceUnion`, replace
+`AsResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam()` with
+`AsResponsesDelegationConfigToolChoiceFunction()` and
+`AsResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam()` with
+`AsResponsesDelegationConfigToolChoiceMcp()`. These accessors return the response
+types in the first table.
+
+MCP tool-choice `Name` request fields now use `param.Opt[string]`. This applies to
+the two MCP request types above and to
+`ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolMcpParam` and
+`ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolMcpParam`.
+Use `openai.String("lookup")` for a string, `param.Null[string]()` for JSON `null`, or
+leave `Name` unset to omit it. `ServerLabel` remains required. A request union's
+`GetName()` returns `nil` for both an omitted and a null name.
+
+**Before**
+
+```go
+choice := live.ResponsesDelegationConfigToolChoiceUnionParam{
+	OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam: &live.ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam{
+		ServerLabel: "docs",
+		Name:        "lookup",
+	},
+}
+```
+
+**After**
+
+```go
+choice := live.ResponsesDelegationConfigToolChoiceUnionParam{
+	OfResponsesDelegationConfigToolChoiceMcp: &live.ResponsesDelegationConfigToolChoiceMcpParam{
+		ServerLabel: "docs",
+		Name:        openai.String("lookup"),
+	},
+}
+```
+
+Both requests select the `lookup` tool on the `docs` MCP server.
+
+For responses, `Name` is a string. Check `JSON.Name.Valid()` for a value and
+`JSON.Name.Raw()` against `respjson.Omitted` or `respjson.Null` to distinguish an
+omitted field from JSON `null`. Use `RawJSON()` to retain the original wire form.
