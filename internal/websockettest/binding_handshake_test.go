@@ -81,7 +81,7 @@ func TestBindingHandshakes(t *testing.T) {
 				closed <- err
 			}))
 			defer source.Close()
-			client := openai.NewClient(option.WithBaseURL(source.URL), option.WithAPIKey("fake-client-key"))
+			client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(source.URL), option.WithAPIKey("fake-client-key"))
 			if _, err := variant.connect(ctx, &client, option.WithHeader("X-Redirect", "yes")); err == nil {
 				t.Fatal("cross-origin redirect connected")
 			}

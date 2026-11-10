@@ -9,6 +9,8 @@ import (
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 )
 
+// WorkloadIdentityMiddleware passes an authenticated copy of req to next.
+// Direct callers own the destination and transport used by next.
 func WorkloadIdentityMiddleware(
 	wia *WorkloadIdentityAuth,
 	httpClient HTTPDoer,
