@@ -114263,6 +114263,11 @@ components:
         gpt-5.1-mini:
           message: Not a supported model ID. Retained for SDK compatibility.
       x-stainless-nominal: false
+      x-openai-go-public-shape:
+        omit_constants:
+        - ChatModelGPT4VisionPreview
+        - ChatModelGPT3_5Turbo0613
+        - ChatModelGPT3_5Turbo16k0613
   responses:
     TooManyRequests:
       description: The request was rejected because a rate limit was exceeded.

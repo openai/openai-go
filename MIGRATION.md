@@ -18,6 +18,23 @@ credential to `azure.WithTokenCredential`. Use `azure.WithTokenCredentialScopes`
 if your deployment requires a custom scope. Applications using an Azure API key
 can continue using `azure.WithAPIKey` without installing Azure Identity.
 
+## Retired chat model constants in v4
+
+Go v4 removes three constants from `shared` and their aliases in `openai`,
+`conversations`, `live`, `realtime`, `responses`, and `webhooks`.
+
+| Removed constant | Replacement to evaluate |
+| --- | --- |
+| `ChatModelGPT4VisionPreview` | `openai.ChatModelGPT6Luna` for requests with image input |
+| `ChatModelGPT3_5Turbo0613` | `openai.ChatModelGPT5_6Terra` |
+| `ChatModelGPT3_5Turbo16k0613` | `openai.ChatModelGPT5_6Terra` |
+
+The original retirement notices recommended GPT-4o and GPT-3.5 Turbo.
+Subsequent notices list the replacements above. Test your application's
+messages with the model you select. You can also set
+`ChatCompletionNewParams.Model` from a string variable.
+[API model deprecations](https://developers.openai.com/api/docs/deprecations)
+
 ## Earlier SDK changes
 
 This SDK includes breaking changes to improve the ergonomics of constructing parameters and accessing responses.
