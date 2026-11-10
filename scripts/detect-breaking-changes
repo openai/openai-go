@@ -97,6 +97,17 @@ trap 'rm -f "$historical_paths"' EXIT
 git ls-tree -r -z --name-only "$1" -- "${TEST_PATHS[@]}" > "$historical_paths"
 if [[ -s "$historical_paths" ]]; then
     git --literal-pathspecs checkout "$1" --pathspec-from-file="$historical_paths" --pathspec-file-nul
+
+    # Across the v4 module rename, compile the same historical callers against
+    # the candidate. Only their SDK imports need the new major-version suffix.
+    if grep -Fxq 'module github.com/openai/openai-go/v4' go.mod &&
+        git show "$1:go.mod" | grep -Fxq 'module github.com/openai/openai-go/v3'; then
+        xargs -0 perl -pi -e '
+            if ((/^import \(/ .. /^\)/) || /^import /) {
+                s{"github\.com/openai/openai-go/v3(?=[/"])}{"github.com/openai/openai-go/v4}g;
+            }
+        ' -- < "$historical_paths"
+    fi
 fi
 
 # Compile historical tests against the current SDK without running them.
