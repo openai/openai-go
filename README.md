@@ -1714,6 +1714,18 @@ See [`examples/bedrock`](examples/bedrock) for a complete Responses API example.
 To use this library with [Azure OpenAI in Azure AI Foundry Models](https://learn.microsoft.com/azure/ai-services/openai/overview),
 use the option.RequestOption functions in the `azure` package.
 
+For Microsoft Entra ID, add Azure Identity to your application's module. Use the
+version your application supports. The following command keeps the previous minimum.
+
+```sh
+go get github.com/Azure/azure-sdk-for-go/sdk/azidentity@v1.14.1
+```
+
+To run the [Azure Identity example](examples/azure-identity/main.go), sign in with
+an identity that can access your Azure OpenAI deployment (for example, with
+`az login`). Set `AZURE_OPENAI_ENDPOINT` and `AZURE_OPENAI_DEPLOYMENT`, then run
+`go run ./azure-identity` from the `examples` directory.
+
 ```go
 package main
 
@@ -1733,11 +1745,10 @@ func main() {
 	tokenCredential, err := azidentity.NewDefaultAzureCredential(nil)
 
 	if err != nil {
-		fmt.Printf("Failed to create the DefaultAzureCredential: %s", err)
-		os.Exit(1)
+		panic("could not create the Azure credential")
 	}
 
-	client := openai.NewClient(
+	_ = openai.NewClient(
 		azure.WithEndpoint(azureOpenAIEndpoint, azureOpenAIAPIVersion),
 
 		// Choose between authenticating using a TokenCredential or an API Key
