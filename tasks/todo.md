@@ -52,15 +52,8 @@ removed 74 patch lines: verified **27 mixed files / 641 patch lines** on main
 `f85ad491` against its own hash-verified snapshot. Neither compiler
 change has been promoted into the SDK; wait for its merge before regeneration.
 
-Review-request policy: every PR and compiler Delta requires a deduplicated
-root-channel `#sdk-reviews` request explicitly including its URL. Thread-only
-requests do not qualify. The current six changes (A1, A2, A3, Audit, B, C1) share
-one consolidated root request, posted 2026-10-19. Keep its internal Slack
-permalink in the owning conversation's execution record; do not publish
-internal communication URLs in this public repository. Add later changes to a
-root request that explicitly includes their URLs, or create a new root request
-if none exists; use threads for status follow-ups. Retain required CODEOWNER
-approval gates.
+Do not publish internal communication URLs in this public repository. Retain
+required CODEOWNER approval gates.
 
 G1a (#1109) now has a separate root-channel review request, posted 2026-10-19,
 after deduplication confirmed its earlier mentions were thread replies only.
@@ -98,8 +91,7 @@ post-merge push workflows succeeded; that watch is green/complete.
 
 Second-wave publication records (internal compiler links stay in the owning
 conversation): G1 generic Execute and F1 batch state are separate ready compiler
-changes; PR #1110 is the separate one-comment restoration. Each has a root
-`#sdk-reviews` request explicitly including its URL. These are not merged source
+changes; PR #1110 is the separate one-comment restoration. These are not merged source
 reductions. Compiler output must not be promoted before the relevant change lands.
 
 G1b's shared-security proposal was never published. Independent review proved

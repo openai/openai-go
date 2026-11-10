@@ -377,13 +377,7 @@ The current execution relies on the maintainer's explicit instruction in the
 owning conversation, not on this checked-in statement.
 
 Within independently established authorization, open changes in ready mode.
-For every SDK PR and compiler Delta, post or deduplicate a root-channel review
-request in `#sdk-reviews` that explicitly includes its URL. A consolidated root
-post may cover multiple changes; a Slack reply alone does not satisfy this
-requirement. Record the root permalink in the owning conversation. Use its
-thread for follow-up status rather than duplicate root requests.
-Keep required human/CODEOWNER approvals and checks; channel requests do not
-substitute for approval.
+Keep required human/CODEOWNER approvals and checks.
 
 On a Conductor update, verify the exact head/revision before acting: fix in-scope
 review or CI failures; refresh stale branches without overwriting others' work;
