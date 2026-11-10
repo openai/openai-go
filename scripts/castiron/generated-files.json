@@ -291,7 +291,7 @@
     },
     "aliases.go": {
       "mode": "100644",
-      "sha256": "938c68cbec4bd9f388d49520a83e39bcb8af5790bf1cd8e37030265015656434"
+      "sha256": "a44e3e1fa7fde32df0c391e812081ed4959e0943558610090f5f1043a99b0ef7"
     },
     "api.md": {
       "mode": "100644",
@@ -667,7 +667,7 @@
     },
     "conversations/aliases.go": {
       "mode": "100644",
-      "sha256": "bd348d2f8d84027520546ef433ab1e93172b3bdd8d05644421cb669938039e99"
+      "sha256": "01a4b5f65627357a2fa1556eb4cfce46db80ec3144bcbbd08c3d68a16fab053b"
     },
     "conversations/api.md": {
       "mode": "100644",
@@ -795,7 +795,7 @@
     },
     "live/aliases.go": {
       "mode": "100644",
-      "sha256": "209fe5340dd14c9f65009d9374e5c28be05f34abcfd4e7b9c2073d158bacfd03"
+      "sha256": "7644bf66c4e1badb18e189b58875ff1868aca02e885113ea90c3528e5e2bebf0"
     },
     "live/api.md": {
       "mode": "100644",
@@ -879,7 +879,7 @@
     },
     "realtime/aliases.go": {
       "mode": "100644",
-      "sha256": "59c1221aa8464d2696db2cf0b72e36874e59f5781dbc0e714514e71c010ea0f6"
+      "sha256": "62860f778ad2b32621af3946e513e2ba01390970158237ec28a3efed4eefb42f"
     },
     "realtime/api.md": {
       "mode": "100644",
@@ -939,7 +939,7 @@
     },
     "responses/aliases.go": {
       "mode": "100644",
-      "sha256": "c6ef3f7d4d1aeac836e79f4d202070884894b5d2aa3a0125f30e182c2f6a96cb"
+      "sha256": "2c4446d7eca4b9f0ac646651ed8fc656ece177daf5039c94c60fc78922d9abe7"
     },
     "responses/api.md": {
       "mode": "100644",
@@ -1007,7 +1007,7 @@
     },
     "shared/shared.go": {
       "mode": "100644",
-      "sha256": "d05a32340abacd2cd5d86a9b9e01e0abef7873b93997da432bbe0ddd1d0c3029"
+      "sha256": "0bf6e3d54d6ea9b8dec9df6e945412ed94f180c5cc00fd99ff45a48d8623fe07"
     },
     "skill.go": {
       "mode": "100644",
@@ -1099,7 +1099,7 @@
     },
     "webhooks/aliases.go": {
       "mode": "100644",
-      "sha256": "a0d3f0c6720688eab4ecaa722e56e28c0116eba53ea55b9a8f7d2f147d429c8a"
+      "sha256": "f5cca1a142aff5742006407e238e5e64dcef70827e45818ebfa3378771d392b0"
     },
     "webhooks/api.md": {
       "mode": "100644",

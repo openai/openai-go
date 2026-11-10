@@ -749,15 +749,6 @@ const ChatModelGPT4TurboPreview = shared.ChatModelGPT4TurboPreview
 //nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4_1106Preview = shared.ChatModelGPT4_1106Preview
 
-// Equals "gpt-4-vision-preview"
-//
-// Deprecated: Announced shutdown date: 2024-12-06. See
-// https://developers.openai.com/api/docs/deprecations for details and recommended
-// replacements.
-//
-//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
-const ChatModelGPT4VisionPreview = shared.ChatModelGPT4VisionPreview
-
 // Equals "gpt-4"
 //
 // Deprecated: Announced shutdown date: 2026-10-23. See
@@ -839,15 +830,6 @@ const ChatModelGPT3_5Turbo16k = shared.ChatModelGPT3_5Turbo16k
 //nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT3_5Turbo0301 = shared.ChatModelGPT3_5Turbo0301
 
-// Equals "gpt-3.5-turbo-0613"
-//
-// Deprecated: Announced shutdown date: 2024-09-13. See
-// https://developers.openai.com/api/docs/deprecations for details and recommended
-// replacements.
-//
-//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
-const ChatModelGPT3_5Turbo0613 = shared.ChatModelGPT3_5Turbo0613
-
 // Equals "gpt-3.5-turbo-1106"
 //
 // Deprecated: Announced shutdown date: 2026-09-28. See
@@ -865,15 +847,6 @@ const ChatModelGPT3_5Turbo1106 = shared.ChatModelGPT3_5Turbo1106
 //
 //nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT3_5Turbo0125 = shared.ChatModelGPT3_5Turbo0125
-
-// Equals "gpt-3.5-turbo-16k-0613"
-//
-// Deprecated: Announced shutdown date: 2024-09-13. See
-// https://developers.openai.com/api/docs/deprecations for details and recommended
-// replacements.
-//
-//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
-const ChatModelGPT3_5Turbo16k0613 = shared.ChatModelGPT3_5Turbo16k0613
 
 // A filter used to compare a specified attribute key to a given value using a
 // defined comparison operation.
