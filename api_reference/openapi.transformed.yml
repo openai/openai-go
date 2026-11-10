@@ -60304,23 +60304,19 @@ components:
                 description: The output of the tool call to be submitted to continue the run.
       required:
       - tool_outputs
-    LiveFunctionToolChoiceParam:
-      type: object
-      properties:
-        type:
-          default: function
-          x-stainless-const: true
-          type: string
-          enum:
-          - function
-        name:
-          type: string
-          minLength: 1
-          maxLength: 64
-          pattern: ^[a-zA-Z0-9_-]+$
-      required:
-      - type
-      - name
+    LegacyComputerAction:
+      discriminator:
+        propertyName: type
+      anyOf:
+      - $ref: '#/components/schemas/ClickParam'
+      - $ref: '#/components/schemas/DoubleClickAction'
+      - $ref: '#/components/schemas/DragParam'
+      - $ref: '#/components/schemas/KeyPressAction'
+      - $ref: '#/components/schemas/MoveParam'
+      - $ref: '#/components/schemas/ScreenshotParam'
+      - $ref: '#/components/schemas/ScrollParam'
+      - $ref: '#/components/schemas/TypeParam'
+      - $ref: '#/components/schemas/WaitParam'
     CodeInterpreterContainerAuto:
       properties:
         type:
@@ -60658,29 +60654,41 @@ components:
       - $ref: '#/components/schemas/LiveDecisionFunctionCallOutputParam'
       - $ref: '#/components/schemas/LiveDecisionCustomToolCallParam'
       - $ref: '#/components/schemas/LiveDecisionCustomToolCallOutputParam'
-    LiveMCPToolChoiceParam:
+    LiveTransportDTMFSend:
+      description: Legacy SIP DTMF delivery notification retained for SDK compatibility and saved events. Current servers confirm delivery with transport.dtmf.sent; transport.dtmf.send is now the client command.
+      example:
+        type: transport.dtmf.send
+        event_id: event_dtmf_2
+        event: '#'
       type: object
       properties:
         type:
-          default: mcp
+          default: transport.dtmf.send
           x-stainless-const: true
           type: string
           enum:
-          - mcp
-        server_label:
+          - transport.dtmf.send
+        event_id:
+          type: string
+        event:
           type: string
           minLength: 1
-          maxLength: 64
-          pattern: ^[a-zA-Z0-9_-]+$
-        name:
+          maxLength: 1
+          pattern: ^[0-9A-D*#]$
+        client_event_id:
+          description: The event_id of the client command, when supplied.
           type: string
-          minLength: 1
-          maxLength: 64
-          pattern: ^[a-zA-Z0-9_-]+$
+          x-stainless-skip:
+          - cli
       required:
       - type
-      - server_label
-      - name
+      - event_id
+      - event
+      x-oaiMeta:
+        example:
+          type: transport.dtmf.send
+          event_id: event_dtmf_2
+          event: '#'
     CreateThreadAndRunRequestWithoutStream:
       type: object
       additionalProperties: false
@@ -80694,54 +80702,43 @@ components:
       - auto
       - none
       - required
-    LiveTransportDTMFSend:
-      description: Legacy SIP DTMF delivery notification retained for SDK compatibility and saved events. Current servers confirm delivery with transport.dtmf.sent; transport.dtmf.send is now the client command.
-      example:
-        type: transport.dtmf.send
-        event_id: event_dtmf_2
-        event: '#'
+    LiveFunctionToolChoiceParam:
       type: object
       properties:
         type:
-          default: transport.dtmf.send
+          description: The tool to call. Always `function`.
+          default: function
           x-stainless-const: true
           type: string
           enum:
-          - transport.dtmf.send
-        event_id:
+          - function
+        name:
+          description: The name of the function tool to call.
           type: string
-        event:
-          type: string
-          minLength: 1
-          maxLength: 1
-          pattern: ^[0-9A-D*#]$
-        client_event_id:
-          description: The event_id of the client command, when supplied.
-          type: string
-          x-stainless-skip:
-          - cli
       required:
       - type
-      - event_id
-      - event
-      x-oaiMeta:
-        example:
-          type: transport.dtmf.send
-          event_id: event_dtmf_2
-          event: '#'
-    LegacyComputerAction:
-      discriminator:
-        propertyName: type
-      anyOf:
-      - $ref: '#/components/schemas/ClickParam'
-      - $ref: '#/components/schemas/DoubleClickAction'
-      - $ref: '#/components/schemas/DragParam'
-      - $ref: '#/components/schemas/KeyPressAction'
-      - $ref: '#/components/schemas/MoveParam'
-      - $ref: '#/components/schemas/ScreenshotParam'
-      - $ref: '#/components/schemas/ScrollParam'
-      - $ref: '#/components/schemas/TypeParam'
-      - $ref: '#/components/schemas/WaitParam'
+      - name
+    LiveMCPToolChoiceParam:
+      type: object
+      properties:
+        type:
+          description: The tool to call. Always `mcp`.
+          default: mcp
+          x-stainless-const: true
+          type: string
+          enum:
+          - mcp
+        server_label:
+          description: The label of the MCP server to call.
+          type: string
+        name:
+          anyOf:
+          - description: The name of the MCP tool to call. If omitted, the server may choose a default.
+            type: string
+          - type: 'null'
+      required:
+      - type
+      - server_label
     LiveSpecificFileSearchParam:
       type: object
       properties:
@@ -80977,17 +80974,7 @@ components:
             anyOf:
             - $ref: '#/components/schemas/LiveFunctionToolChoiceParam'
               description: Selects a function tool by name.
-              x-openai-go-public-shape:
-                type_name: ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam
-              x-stainless-naming:
-                go:
-                  type_name: ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam
             - $ref: '#/components/schemas/LiveMCPToolChoiceParam'
-              x-openai-go-public-shape:
-                type_name: ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam
-              x-stainless-naming:
-                go:
-                  type_name: ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam
             - $ref: '#/components/schemas/LiveSpecificFileSearchParam'
             - $ref: '#/components/schemas/LiveSpecificWebSearchParam'
             - $ref: '#/components/schemas/LiveSpecificWebSearchPreviewParam'
@@ -80999,10 +80986,6 @@ components:
             - $ref: '#/components/schemas/LiveSpecificCustomToolParam'
             - $ref: '#/components/schemas/LiveSpecificApplyPatchParam'
           - $ref: '#/components/schemas/LiveAllowedToolsChoiceParam'
-          x-openai-go-public-shape:
-            variant_names:
-              '#/components/schemas/LiveFunctionToolChoiceParam': ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam
-              '#/components/schemas/LiveMCPToolChoiceParam': ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam
         parallel_tool_calls:
           anyOf:
           - description: Whether the delegated Responses model may request multiple tool calls in a single response.
@@ -81604,17 +81587,7 @@ components:
             anyOf:
             - $ref: '#/components/schemas/LiveFunctionToolChoiceParam'
               description: Selects a function tool by name.
-              x-openai-go-public-shape:
-                type_name: ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam
-              x-stainless-naming:
-                go:
-                  type_name: ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam
             - $ref: '#/components/schemas/LiveMCPToolChoiceParam'
-              x-openai-go-public-shape:
-                type_name: ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam
-              x-stainless-naming:
-                go:
-                  type_name: ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam
             - $ref: '#/components/schemas/LiveSpecificFileSearchParam'
             - $ref: '#/components/schemas/LiveSpecificWebSearchParam'
             - $ref: '#/components/schemas/LiveSpecificWebSearchPreviewParam'
@@ -81626,10 +81599,6 @@ components:
             - $ref: '#/components/schemas/LiveSpecificCustomToolParam'
             - $ref: '#/components/schemas/LiveSpecificApplyPatchParam'
           - $ref: '#/components/schemas/LiveAllowedToolsChoiceParam'
-          x-openai-go-public-shape:
-            variant_names:
-              '#/components/schemas/LiveFunctionToolChoiceParam': ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam
-              '#/components/schemas/LiveMCPToolChoiceParam': ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam
         parallel_tool_calls:
           anyOf:
           - description: Whether the delegated Responses model may request multiple tool calls in a single response.
