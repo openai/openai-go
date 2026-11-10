@@ -41,6 +41,9 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		Conversation: responses.ResponseNewParamsConversationUnion{
 			OfString: openai.String("string"),
 		},
+		Image: responses.ResponseNewParamsImage{
+			ContextCompression: "auto",
+		},
 		Include: []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
 		Input: responses.ResponseNewParamsInputUnion{
 			OfString: openai.String("string"),
@@ -231,6 +234,9 @@ func TestResponseCompactWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Responses.Compact(context.TODO(), responses.ResponseCompactParams{
 		Model: responses.ResponseCompactParamsModelGPT6Astra,
+		Image: responses.ResponseCompactParamsImage{
+			ContextCompression: "auto",
+		},
 		Input: responses.ResponseCompactParamsInputUnion{
 			OfString: openai.String("string"),
 		},

@@ -1,5 +1,74 @@
 # Changelog
 
+## [3.98.0](https://github.com/openai/openai-go/compare/v3.97.0...v3.98.0) (2026-11-09)
+
+
+### Features
+
+* **agents:** Configure session prompt-cache TTL (`30m` or `12h`) and inspect the selected TTL on sessions and turns.
+* **agents:** Support asynchronous function tools.
+* **agents:** Configure event-stream obfuscation and expose padding on 33 event types. For existing session streams, use `option.WithQuery("include_obfuscation", "false")` to disable it.
+* **agents:** Recognize the `max_output_tokens` turn error code.
+* **responses:** Configure image context compression for create, compact, and WebSocket requests; report the effective policy in responses.
+* **responses:** Add `gpt-6-rosalind` to beta Responses model constants.
+* **images:** Support SVG image edits with author-model and reasoning-effort options.
+* **realtime:** Configure input noise-reduction strength for Realtime, transcription, and translation sessions.
+* **admin:** Support organization external keys backed by Oracle Cloud Infrastructure Vault.
+
+### Bug fixes
+
+* **request unions:** Return pointers to stored optional values, so mutations affect the serialized request, including explicit zero values. Omitted and null values still return `nil`.
+
+### Documentation
+
+* Clarify image-edit markup compatibility, image token-usage descriptions, and supported image formats for content-provenance checks.
+
+## [3.97.0](https://github.com/openai/openai-go/compare/v3.96.0...v3.97.0) (2026-11-08)
+
+
+### Features
+
+* **api:** add agent scheduling APIs ([#1225](https://github.com/openai/openai-go/issues/1225)) ([80eee78](https://github.com/openai/openai-go/commit/80eee787aa06bacf51f3269af3ee77e1ec9ca7a0))
+
+
+### Documentation
+
+* consolidate AGENTS.md guidance ([#1223](https://github.com/openai/openai-go/issues/1223)) ([1996c65](https://github.com/openai/openai-go/commit/1996c655a3e95e976b4c3a75e93ad27b7c19d56a))
+
+## [3.96.0](https://github.com/openai/openai-go/compare/v3.95.0...v3.96.0) (2026-11-05)
+
+
+### Features
+
+* **api:** add a model option for Responses ([#1220](https://github.com/openai/openai-go/issues/1220)) ([94977c6](https://github.com/openai/openai-go/commit/94977c6163b613787fb7ee38ec086a727e002e86))
+
+## [3.95.0](https://github.com/openai/openai-go/compare/v3.94.0...v3.95.0) (2026-11-05)
+
+
+### Features
+
+* **api:** add Australia, India, and Japan residency options ([#1218](https://github.com/openai/openai-go/issues/1218)) ([6d16502](https://github.com/openai/openai-go/commit/6d16502078401697dc2e830bea0a893071320706))
+* **api:** add GPT-6 Rosalind to the model catalog ([#1216](https://github.com/openai/openai-go/issues/1216)) ([a47bab2](https://github.com/openai/openai-go/commit/a47bab2d14b3f540ec75bf0058fb047cf2619e8d))
+* **api:** add image complexity and GIF and SVG output controls ([#1219](https://github.com/openai/openai-go/issues/1219)) ([6e7ade4](https://github.com/openai/openai-go/commit/6e7ade4c8ef4d07df93504b1bf16d435a4b389ea))
+
+## [3.94.0](https://github.com/openai/openai-go/compare/v3.93.0...v3.94.0) (2026-11-04)
+
+
+### Features
+
+* **api:** add project service tier settings ([#1212](https://github.com/openai/openai-go/issues/1212)) ([90fa868](https://github.com/openai/openai-go/commit/90fa868bcc4e769e0fb242222b3fa088e800b224))
+* **api:** add Responses cache-write usage details ([#1213](https://github.com/openai/openai-go/issues/1213)) ([d3c5a9a](https://github.com/openai/openai-go/commit/d3c5a9a1669c3999fc99ea568d1c33d5abb7dc6c))
+
+
+### Documentation
+
+* clarify generated-file ownership ([#1214](https://github.com/openai/openai-go/issues/1214)) ([709822f](https://github.com/openai/openai-go/commit/709822fc83b994e9cddf7d48cec2d36280feea38))
+
+
+### Build System
+
+* **deps:** bump github.com/Azure/azure-sdk-for-go/sdk/azcore in / ([#1096](https://github.com/openai/openai-go/issues/1096)) ([74ab0b2](https://github.com/openai/openai-go/commit/74ab0b2f65999a5d3b62199b4e39e519543cc328))
+
 ## [3.93.0](https://github.com/openai/openai-go/compare/v3.92.0...v3.93.0) (2026-11-03)
 
 

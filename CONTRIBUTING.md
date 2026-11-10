@@ -145,6 +145,36 @@ $ ./scripts/mock
 $ ./scripts/test
 ```
 
+### High-memory tests
+
+Tests that require multiple GiB of memory are opt-in. Keep them in
+`*_highmemory_test.go` files with `//go:build highmemory` above the package
+statement, separated by a blank line. Normal `go test ./...` and CI runs exclude
+these files. Preserve the full payloads and assertions when moving a test.
+
+Include high-memory tests explicitly on a machine with enough available RAM:
+
+```sh
+./scripts/test -tags=highmemory
+```
+
+The script sets up the mock server and forwards the flag to `go test ./...`.
+To run just the large reconstruction test, which uses local fixtures:
+
+```sh
+go test -tags=highmemory -count=1 ./internal/websockettest \
+  -run '^TestResponsesAccumulatorReconstructedLargeResponse$'
+```
+
+The large reconstruction test has measured peak memory usage above 6 GiB, so
+leave additional room for the operating system and other processes. Keep smaller
+reconstruction tests and the separate large WebSocket transport test in the
+default suite. Run memory-heavy cases sequentially; use `-p=1` to serialize
+packages when enabling high-memory tests across multiple packages.
+
+Tagged files are not compiled in default runs. When changing a high-memory test
+or the code it exercises, validate both the default and tagged test modes.
+
 ## Formatting
 
 This library uses the standard `go fmt` command. Run it in each module that

@@ -241,6 +241,7 @@ func (r *ContentProvenanceCheckResultSynthID) UnmarshalJSON(data []byte) error {
 
 type ContentProvenanceCheckNewParams struct {
 	// The image or audio file to check for supported OpenAI provenance signals.
+	// Supported image formats are PNG, JPEG, WebP, and GIF (including animated GIFs).
 	File io.Reader `json:"file,omitzero" api:"required" format:"binary"`
 	paramObj
 }

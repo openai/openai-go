@@ -54,6 +54,9 @@ func TestCastironDataResidencyMappings(t *testing.T) {
 		{option.DataResidencyUS, "https://us.api.openai.com/v1/"},
 		{option.DataResidencyEU, "https://eu.api.openai.com/v1/"},
 		{option.DataResidencyAE, "https://ae.api.openai.com/v1/"},
+		{option.DataResidencyAU, "https://au.api.openai.com/v1/"},
+		{option.DataResidencyIN, "https://in.api.openai.com/v1/"},
+		{option.DataResidencyJP, "https://jp.api.openai.com/v1/"},
 	} {
 		t.Run(string(test.region), func(t *testing.T) {
 			endpoint, err := url.Parse(test.endpoint)

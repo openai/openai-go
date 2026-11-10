@@ -17,6 +17,9 @@ const (
 	DataResidencyUS     DataResidency = "us"
 	DataResidencyEU     DataResidency = "eu"
 	DataResidencyAE     DataResidency = "ae"
+	DataResidencyAU     DataResidency = "au"
+	DataResidencyIN     DataResidency = "in"
+	DataResidencyJP     DataResidency = "jp"
 )
 
 // WithDataResidency selects the OpenAI endpoint for a client, service, or request.
@@ -34,9 +37,15 @@ func WithDataResidency(residency DataResidency) RequestOption {
 		base = "https://eu.api.openai.com/v1/"
 	case DataResidencyAE:
 		base = "https://ae.api.openai.com/v1/"
+	case DataResidencyAU:
+		base = "https://au.api.openai.com/v1/"
+	case DataResidencyIN:
+		base = "https://in.api.openai.com/v1/"
+	case DataResidencyJP:
+		base = "https://jp.api.openai.com/v1/"
 	default:
 		return requestconfig.WithEndpointSelection("data_residency", nil,
-			fmt.Errorf("requestoption: invalid data residency %q (expected global, us, eu, or ae)", residency))
+			fmt.Errorf("requestoption: invalid data residency %q (expected global, us, eu, ae, au, in, or jp)", residency))
 	}
 	endpoint, _ := url.Parse(base)
 	return requestconfig.WithEndpointSelection("data_residency", endpoint, nil)

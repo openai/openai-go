@@ -22,6 +22,9 @@ type Active string                                            // Always "active"
 type AdditionalTools string                                   // Always "additional_tools"
 type Agent string                                             // Always "agent"
 type AgentMessage string                                      // Always "agent_message"
+type AgentAutomation string                                   // Always "agent.automation"
+type AgentAutomationDeleted string                            // Always "agent.automation.deleted"
+type AgentAutomationInvocation string                         // Always "agent.automation.invocation"
 type AgentDeleted string                                      // Always "agent.deleted"
 type AgentEnvironment string                                  // Always "agent.environment"
 type AgentEnvironmentExpired string                           // Always "agent.environment.expired"
@@ -91,6 +94,7 @@ type AudioPCM string                                          // Always "audio/p
 type AudioPCMA string                                         // Always "audio/pcma"
 type AudioPCMU string                                         // Always "audio/pcmu"
 type Auto string                                              // Always "auto"
+type Automation string                                        // Always "automation"
 type Automations string                                       // Always "automations"
 type Aws string                                               // Always "aws"
 type Azure string                                             // Always "azure"
@@ -201,6 +205,7 @@ type EvalRunFailed string                                     // Always "eval.ru
 type EvalRunSucceeded string                                  // Always "eval.run.succeeded"
 type Event string                                             // Always "event"
 type Exec string                                              // Always "exec"
+type ExistingSession string                                   // Always "existing_session"
 type Exit string                                              // Always "exit"
 type Explicit string                                          // Always "explicit"
 type File string                                              // Always "file"
@@ -273,6 +278,7 @@ type LocalShellCall string                                    // Always "local_s
 type LocalShellCallOutput string                              // Always "local_shell_call_output"
 type Locked string                                            // Always "locked"
 type Logs string                                              // Always "logs"
+type Manual string                                            // Always "manual"
 type Mcp string                                               // Always "mcp"
 type McpApprovalRequest string                                // Always "mcp_approval_request"
 type McpApprovalResponse string                               // Always "mcp_approval_response"
@@ -294,9 +300,11 @@ type Multi string                                             // Always "multi"
 type MultiAgentCall string                                    // Always "multi_agent_call"
 type MultiAgentCallOutput string                              // Always "multi_agent_call_output"
 type Namespace string                                         // Always "namespace"
+type NewSession string                                        // Always "new_session"
 type None string                                              // Always "none"
 type Oci string                                               // Always "oci"
 type Oidc string                                              // Always "oidc"
+type Once string                                              // Always "once"
 type OpenPage string                                          // Always "open_page"
 type OpenAIHosted string                                      // Always "openai_hosted"
 type OrganizationAdminAPIKey string                           // Always "organization.admin_api_key"
@@ -350,6 +358,8 @@ type OutputAudioBufferStarted string                          // Always "output_
 type OutputAudioBufferStopped string                          // Always "output_audio_buffer.stopped"
 type OutputText string                                        // Always "output_text"
 type Page string                                              // Always "page"
+type PendingDelivery string                                   // Always "pending_delivery"
+type Periodic string                                          // Always "periodic"
 type Predicate string                                         // Always "predicate"
 type Program string                                           // Always "program"
 type ProgramOutput string                                     // Always "program_output"
@@ -360,6 +370,7 @@ type ProjectGroupDeleted string                               // Always "project
 type ProjectModelPermissions string                           // Always "project.model_permissions"
 type ProjectModelPermissionsDeleted string                    // Always "project.model_permissions.deleted"
 type ProjectRateLimit string                                  // Always "project.rate_limit"
+type ProjectServiceTierSettings string                        // Always "project.service_tier_settings"
 type ProjectSpendAlert string                                 // Always "project.spend_alert"
 type ProjectSpendAlertDeleted string                          // Always "project.spend_alert.deleted"
 type ProjectSpendLimit string                                 // Always "project.spend_limit"
@@ -608,10 +619,15 @@ type WebhookEndpointDeleted string                            // Always "webhook
 type WebhookEndpointTest string                               // Always "webhook_endpoint.test"
 type Webrtc string                                            // Always "webrtc"
 
-func (c Active) Default() Active                     { return "active" }
-func (c AdditionalTools) Default() AdditionalTools   { return "additional_tools" }
-func (c Agent) Default() Agent                       { return "agent" }
-func (c AgentMessage) Default() AgentMessage         { return "agent_message" }
+func (c Active) Default() Active                                 { return "active" }
+func (c AdditionalTools) Default() AdditionalTools               { return "additional_tools" }
+func (c Agent) Default() Agent                                   { return "agent" }
+func (c AgentMessage) Default() AgentMessage                     { return "agent_message" }
+func (c AgentAutomation) Default() AgentAutomation               { return "agent.automation" }
+func (c AgentAutomationDeleted) Default() AgentAutomationDeleted { return "agent.automation.deleted" }
+func (c AgentAutomationInvocation) Default() AgentAutomationInvocation {
+	return "agent.automation.invocation"
+}
 func (c AgentDeleted) Default() AgentDeleted         { return "agent.deleted" }
 func (c AgentEnvironment) Default() AgentEnvironment { return "agent.environment" }
 func (c AgentEnvironmentExpired) Default() AgentEnvironmentExpired {
@@ -755,6 +771,7 @@ func (c AudioPCM) Default() AudioPCM                           { return "audio/p
 func (c AudioPCMA) Default() AudioPCMA                         { return "audio/pcma" }
 func (c AudioPCMU) Default() AudioPCMU                         { return "audio/pcmu" }
 func (c Auto) Default() Auto                                   { return "auto" }
+func (c Automation) Default() Automation                       { return "automation" }
 func (c Automations) Default() Automations                     { return "automations" }
 func (c Aws) Default() Aws                                     { return "aws" }
 func (c Azure) Default() Azure                                 { return "azure" }
@@ -893,6 +910,7 @@ func (c EvalRunFailed) Default() EvalRunFailed                   { return "eval.
 func (c EvalRunSucceeded) Default() EvalRunSucceeded             { return "eval.run.succeeded" }
 func (c Event) Default() Event                                   { return "event" }
 func (c Exec) Default() Exec                                     { return "exec" }
+func (c ExistingSession) Default() ExistingSession               { return "existing_session" }
 func (c Exit) Default() Exit                                     { return "exit" }
 func (c Explicit) Default() Explicit                             { return "explicit" }
 func (c File) Default() File                                     { return "file" }
@@ -983,6 +1001,7 @@ func (c LocalShellCall) Default() LocalShellCall                 { return "local
 func (c LocalShellCallOutput) Default() LocalShellCallOutput     { return "local_shell_call_output" }
 func (c Locked) Default() Locked                                 { return "locked" }
 func (c Logs) Default() Logs                                     { return "logs" }
+func (c Manual) Default() Manual                                 { return "manual" }
 func (c Mcp) Default() Mcp                                       { return "mcp" }
 func (c McpApprovalRequest) Default() McpApprovalRequest         { return "mcp_approval_request" }
 func (c McpApprovalResponse) Default() McpApprovalResponse       { return "mcp_approval_response" }
@@ -1004,9 +1023,11 @@ func (c Multi) Default() Multi                                   { return "multi
 func (c MultiAgentCall) Default() MultiAgentCall                 { return "multi_agent_call" }
 func (c MultiAgentCallOutput) Default() MultiAgentCallOutput     { return "multi_agent_call_output" }
 func (c Namespace) Default() Namespace                           { return "namespace" }
+func (c NewSession) Default() NewSession                         { return "new_session" }
 func (c None) Default() None                                     { return "none" }
 func (c Oci) Default() Oci                                       { return "oci" }
 func (c Oidc) Default() Oidc                                     { return "oidc" }
+func (c Once) Default() Once                                     { return "once" }
 func (c OpenPage) Default() OpenPage                             { return "open_page" }
 func (c OpenAIHosted) Default() OpenAIHosted                     { return "openai_hosted" }
 func (c OrganizationAdminAPIKey) Default() OrganizationAdminAPIKey {
@@ -1138,11 +1159,13 @@ func (c OutputAudioBufferStarted) Default() OutputAudioBufferStarted {
 func (c OutputAudioBufferStopped) Default() OutputAudioBufferStopped {
 	return "output_audio_buffer.stopped"
 }
-func (c OutputText) Default() OutputText       { return "output_text" }
-func (c Page) Default() Page                   { return "page" }
-func (c Predicate) Default() Predicate         { return "predicate" }
-func (c Program) Default() Program             { return "program" }
-func (c ProgramOutput) Default() ProgramOutput { return "program_output" }
+func (c OutputText) Default() OutputText           { return "output_text" }
+func (c Page) Default() Page                       { return "page" }
+func (c PendingDelivery) Default() PendingDelivery { return "pending_delivery" }
+func (c Periodic) Default() Periodic               { return "periodic" }
+func (c Predicate) Default() Predicate             { return "predicate" }
+func (c Program) Default() Program                 { return "program" }
+func (c ProgramOutput) Default() ProgramOutput     { return "program_output" }
 func (c ProgrammaticToolCalling) Default() ProgrammaticToolCalling {
 	return "programmatic_tool_calling"
 }
@@ -1155,7 +1178,10 @@ func (c ProjectModelPermissions) Default() ProjectModelPermissions {
 func (c ProjectModelPermissionsDeleted) Default() ProjectModelPermissionsDeleted {
 	return "project.model_permissions.deleted"
 }
-func (c ProjectRateLimit) Default() ProjectRateLimit   { return "project.rate_limit" }
+func (c ProjectRateLimit) Default() ProjectRateLimit { return "project.rate_limit" }
+func (c ProjectServiceTierSettings) Default() ProjectServiceTierSettings {
+	return "project.service_tier_settings"
+}
 func (c ProjectSpendAlert) Default() ProjectSpendAlert { return "project.spend_alert" }
 func (c ProjectSpendAlertDeleted) Default() ProjectSpendAlertDeleted {
 	return "project.spend_alert.deleted"
@@ -1560,6 +1586,9 @@ func (c Active) MarshalJSON() ([]byte, error)                          { return 
 func (c AdditionalTools) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c Agent) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c AgentMessage) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c AgentAutomation) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c AgentAutomationDeleted) MarshalJSON() ([]byte, error)          { return marshalString(c) }
+func (c AgentAutomationInvocation) MarshalJSON() ([]byte, error)       { return marshalString(c) }
 func (c AgentDeleted) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c AgentEnvironment) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c AgentEnvironmentExpired) MarshalJSON() ([]byte, error)         { return marshalString(c) }
@@ -1641,6 +1670,7 @@ func (c AudioPCM) MarshalJSON() ([]byte, error)                         { return
 func (c AudioPCMA) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c AudioPCMU) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c Auto) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
+func (c Automation) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
 func (c Automations) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c Aws) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c Azure) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
@@ -1759,6 +1789,7 @@ func (c EvalRunFailed) MarshalJSON() ([]byte, error)                       { ret
 func (c EvalRunSucceeded) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c Event) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c Exec) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
+func (c ExistingSession) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c Exit) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Explicit) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c File) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
@@ -1831,6 +1862,7 @@ func (c LocalShellCall) MarshalJSON() ([]byte, error)                      { ret
 func (c LocalShellCallOutput) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c Locked) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c Logs) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
+func (c Manual) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c Mcp) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
 func (c McpApprovalRequest) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c McpApprovalResponse) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
@@ -1852,9 +1884,11 @@ func (c Multi) MarshalJSON() ([]byte, error)                               { ret
 func (c MultiAgentCall) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c MultiAgentCallOutput) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c Namespace) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
+func (c NewSession) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c None) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Oci) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
 func (c Oidc) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
+func (c Once) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c OpenPage) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c OpenAIHosted) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c OrganizationAdminAPIKey) MarshalJSON() ([]byte, error)             { return marshalString(c) }
@@ -1926,6 +1960,8 @@ func (c OutputAudioBufferStarted) MarshalJSON() ([]byte, error)              { r
 func (c OutputAudioBufferStopped) MarshalJSON() ([]byte, error)              { return marshalString(c) }
 func (c OutputText) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c Page) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
+func (c PendingDelivery) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c Periodic) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c Predicate) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c Program) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c ProgramOutput) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
@@ -1936,6 +1972,7 @@ func (c ProjectGroupDeleted) MarshalJSON() ([]byte, error)                   { r
 func (c ProjectModelPermissions) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c ProjectModelPermissionsDeleted) MarshalJSON() ([]byte, error)        { return marshalString(c) }
 func (c ProjectRateLimit) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c ProjectServiceTierSettings) MarshalJSON() ([]byte, error)            { return marshalString(c) }
 func (c ProjectSpendAlert) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c ProjectSpendAlertDeleted) MarshalJSON() ([]byte, error)              { return marshalString(c) }
 func (c ProjectSpendLimit) MarshalJSON() ([]byte, error)                     { return marshalString(c) }

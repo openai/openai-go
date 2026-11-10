@@ -82,7 +82,9 @@ const (
 	AllModelsGPTDaybreakBlueLatest AllModels = "gpt-daybreak-blue-latest"
 	AllModelsGPTDaybreakRedLatest  AllModels = "gpt-daybreak-red-latest"
 	AllModelsGPT5_6Cyber           AllModels = "gpt-5.6-cyber"
+	AllModelsGPT6Cyber             AllModels = "gpt-6-cyber"
 	AllModelsGPTRosalindResearch   AllModels = "gpt-rosalind-research"
+	AllModelsGPT6Rosalind          AllModels = "gpt-6-rosalind"
 	// Or some ...[ChatModel]
 )
 
@@ -2069,6 +2071,8 @@ const (
 	ResponsesModelGPTDaybreakBlueLatest ResponsesModel = "gpt-daybreak-blue-latest"
 	ResponsesModelGPTDaybreakRedLatest  ResponsesModel = "gpt-daybreak-red-latest"
 	ResponsesModelGPT5_6Cyber           ResponsesModel = "gpt-5.6-cyber"
+	ResponsesModelGPT6Cyber             ResponsesModel = "gpt-6-cyber"
 	ResponsesModelGPTRosalindResearch   ResponsesModel = "gpt-rosalind-research"
+	ResponsesModelGPT6Rosalind          ResponsesModel = "gpt-6-rosalind"
 	// Or some ...[ChatModel]
 )

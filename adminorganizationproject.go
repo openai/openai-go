@@ -32,6 +32,7 @@ type AdminOrganizationProjectService struct {
 	APIKeys               AdminOrganizationProjectAPIKeyService
 	RateLimits            AdminOrganizationProjectRateLimitService
 	ModelPermissions      AdminOrganizationProjectModelPermissionService
+	ServiceTierSettings   AdminOrganizationProjectServiceTierSettingService
 	HostedToolPermissions AdminOrganizationProjectHostedToolPermissionService
 	Groups                AdminOrganizationProjectGroupService
 	Roles                 AdminOrganizationProjectRoleService
@@ -52,6 +53,7 @@ func NewAdminOrganizationProjectService(opts ...option.RequestOption) (r AdminOr
 	r.APIKeys = NewAdminOrganizationProjectAPIKeyService(opts...)
 	r.RateLimits = NewAdminOrganizationProjectRateLimitService(opts...)
 	r.ModelPermissions = NewAdminOrganizationProjectModelPermissionService(opts...)
+	r.ServiceTierSettings = NewAdminOrganizationProjectServiceTierSettingService(opts...)
 	r.HostedToolPermissions = NewAdminOrganizationProjectHostedToolPermissionService(opts...)
 	r.Groups = NewAdminOrganizationProjectGroupService(opts...)
 	r.Roles = NewAdminOrganizationProjectRoleService(opts...)

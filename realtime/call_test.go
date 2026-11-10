@@ -47,7 +47,8 @@ func TestCallNewWithOptionalParams(t *testing.T) {
 						},
 					},
 					NoiseReduction: realtime.RealtimeAudioConfigInputNoiseReductionParam{
-						Type: realtime.NoiseReductionTypeNearField,
+						Strength: openai.Float(0),
+						Type:     realtime.NoiseReductionTypeNearField,
 					},
 					Transcription: realtime.AudioTranscriptionParam{
 						Delay:     realtime.AudioTranscriptionDelayMinimal,
@@ -174,7 +175,8 @@ func TestCallAcceptWithOptionalParams(t *testing.T) {
 							},
 						},
 						NoiseReduction: realtime.RealtimeAudioConfigInputNoiseReductionParam{
-							Type: realtime.NoiseReductionTypeNearField,
+							Strength: openai.Float(0),
+							Type:     realtime.NoiseReductionTypeNearField,
 						},
 						Transcription: realtime.AudioTranscriptionParam{
 							Delay:     realtime.AudioTranscriptionDelayMinimal,

@@ -8,9 +8,9 @@ import (
 	"slices"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
-	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/param"
 )
 
 // TranslationClientSecretService contains methods and other services that help
@@ -57,7 +57,7 @@ type TranslationClientSecretNewParams struct {
 }
 
 func (r TranslationClientSecretNewParams) MarshalJSON() (data []byte, err error) {
-	return shimjson.Marshal(r.RealtimeTranslationClientSecretCreateRequest)
+	return param.MarshalObject(r, r.RealtimeTranslationClientSecretCreateRequest)
 }
 func (r *TranslationClientSecretNewParams) UnmarshalJSON(data []byte) error {
 	if r == nil {

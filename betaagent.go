@@ -30,6 +30,7 @@ import (
 // the [NewBetaAgentService] method instead.
 type BetaAgentService struct {
 	Options      []option.RequestOption
+	Automations  BetaAgentAutomationService
 	Environments BetaAgentEnvironmentService
 	Vaults       BetaAgentVaultService
 	Sessions     BetaAgentSessionService
@@ -41,6 +42,7 @@ type BetaAgentService struct {
 func NewBetaAgentService(opts ...option.RequestOption) (r BetaAgentService) {
 	r = BetaAgentService{}
 	r.Options = requestconfig.InheritedOptions(opts...)
+	r.Automations = NewBetaAgentAutomationService(opts...)
 	r.Environments = NewBetaAgentEnvironmentService(opts...)
 	r.Vaults = NewBetaAgentVaultService(opts...)
 	r.Sessions = NewBetaAgentSessionService(opts...)
@@ -761,6 +763,8 @@ type AgentOutputCommandExecutionOutputDeltaEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.output.command_execution_output.delta`.
 	Type constant.AgentOutputCommandExecutionOutputDelta `json:"type" default:"agent.output.command_execution_output.delta"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Delta       respjson.Field
@@ -770,6 +774,7 @@ type AgentOutputCommandExecutionOutputDeltaEvent struct {
 		SessionID   respjson.Field
 		TurnID      respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -1493,6 +1498,8 @@ type AgentSession struct {
 	Usage TokenUsage `json:"usage" api:"required"`
 	// The IDs of vaults made available to the session.
 	VaultIDs []string `json:"vault_ids" api:"required"`
+	// Default prompt cache lifetime for turns in this session, when configured.
+	PromptCacheOptions AgentSessionPromptCacheOptions `json:"prompt_cache_options" api:"nullable"`
 	// Review applied to eligible actions in this session. Omitted when review is none
 	// and automatic review is not enabled. Omission means none.
 	//
@@ -1503,22 +1510,23 @@ type AgentSession struct {
 	SpendControl AgentSessionSpendControl `json:"spend_control"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID              respjson.Field
-		Agent           respjson.Field
-		CreatedAt       respjson.Field
-		Environment     respjson.Field
-		Error           respjson.Field
-		LastActiveAt    respjson.Field
-		Metadata        respjson.Field
-		Object          respjson.Field
-		RequiredActions respjson.Field
-		Status          respjson.Field
-		Usage           respjson.Field
-		VaultIDs        respjson.Field
-		Review          respjson.Field
-		SpendControl    respjson.Field
-		ExtraFields     map[string]respjson.Field
-		raw             string
+		ID                 respjson.Field
+		Agent              respjson.Field
+		CreatedAt          respjson.Field
+		Environment        respjson.Field
+		Error              respjson.Field
+		LastActiveAt       respjson.Field
+		Metadata           respjson.Field
+		Object             respjson.Field
+		RequiredActions    respjson.Field
+		Status             respjson.Field
+		Usage              respjson.Field
+		VaultIDs           respjson.Field
+		PromptCacheOptions respjson.Field
+		Review             respjson.Field
+		SpendControl       respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
 	} `json:"-"`
 }
 
@@ -1997,6 +2005,24 @@ const (
 	AgentSessionStatusFailed         AgentSessionStatus = "failed"
 )
 
+// Default prompt cache lifetime for turns in this session, when configured.
+type AgentSessionPromptCacheOptions struct {
+	// Any of "30m", "12h".
+	Ttl string `json:"ttl" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Ttl         respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionPromptCacheOptions) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionPromptCacheOptions) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Review applied to eligible actions in this session. Omitted when review is none
 // and automatic review is not enabled. Omission means none.
 type AgentSessionReview string
@@ -2084,11 +2110,14 @@ type AgentSessionCreatedEvent struct {
 	Session AgentSession `json:"session" api:"required"`
 	// The type of the object. Always `agent.session.created`.
 	Type constant.AgentSessionCreated `json:"type" default:"agent.session.created"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventID     respjson.Field
 		Session     respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -2138,6 +2167,8 @@ type AgentSessionEnvironmentConnectedEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.environment.connected`.
 	Type constant.AgentSessionEnvironmentConnected `json:"type" default:"agent.session.environment.connected"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Environment respjson.Field
@@ -2145,6 +2176,7 @@ type AgentSessionEnvironmentConnectedEvent struct {
 		SessionID   respjson.Field
 		TurnID      respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -2168,6 +2200,8 @@ type AgentSessionEnvironmentDisconnectedEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.environment.disconnected`.
 	Type constant.AgentSessionEnvironmentDisconnected `json:"type" default:"agent.session.environment.disconnected"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Environment respjson.Field
@@ -2175,6 +2209,7 @@ type AgentSessionEnvironmentDisconnectedEvent struct {
 		SessionID   respjson.Field
 		TurnID      respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -2198,6 +2233,8 @@ type AgentSessionEnvironmentExpiredEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.environment.expired`.
 	Type constant.AgentSessionEnvironmentExpired `json:"type" default:"agent.session.environment.expired"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Environment respjson.Field
@@ -2205,6 +2242,7 @@ type AgentSessionEnvironmentExpiredEvent struct {
 		SessionID   respjson.Field
 		TurnID      respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -2228,6 +2266,8 @@ type AgentSessionEnvironmentFailedEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.environment.failed`.
 	Type constant.AgentSessionEnvironmentFailed `json:"type" default:"agent.session.environment.failed"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Environment respjson.Field
@@ -2235,6 +2275,7 @@ type AgentSessionEnvironmentFailedEvent struct {
 		SessionID   respjson.Field
 		TurnID      respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -2258,6 +2299,8 @@ type AgentSessionEnvironmentPendingEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.environment.pending`.
 	Type constant.AgentSessionEnvironmentPending `json:"type" default:"agent.session.environment.pending"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Environment respjson.Field
@@ -2265,6 +2308,7 @@ type AgentSessionEnvironmentPendingEvent struct {
 		SessionID   respjson.Field
 		TurnID      respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -2288,6 +2332,8 @@ type AgentSessionEnvironmentReadyEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.environment.ready`.
 	Type constant.AgentSessionEnvironmentReady `json:"type" default:"agent.session.environment.ready"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Environment respjson.Field
@@ -2295,6 +2341,7 @@ type AgentSessionEnvironmentReadyEvent struct {
 		SessionID   respjson.Field
 		TurnID      respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -2321,6 +2368,8 @@ type AgentSessionEnvironmentResetEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.environment.reset`.
 	Type constant.AgentSessionEnvironmentReset `json:"type" default:"agent.session.environment.reset"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EnvironmentID respjson.Field
@@ -2329,6 +2378,7 @@ type AgentSessionEnvironmentResetEvent struct {
 		SessionID     respjson.Field
 		TurnID        respjson.Field
 		Type          respjson.Field
+		Obfuscation   respjson.Field
 		ExtraFields   map[string]respjson.Field
 		raw           string
 	} `json:"-"`
@@ -2419,6 +2469,8 @@ type AgentSessionEnvironmentSuspendedEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.environment.suspended`.
 	Type constant.AgentSessionEnvironmentSuspended `json:"type" default:"agent.session.environment.suspended"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Environment respjson.Field
@@ -2426,6 +2478,7 @@ type AgentSessionEnvironmentSuspendedEvent struct {
 		SessionID   respjson.Field
 		TurnID      respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -2447,12 +2500,15 @@ type AgentSessionErrorEvent struct {
 	SessionID string `json:"session_id" api:"required"`
 	// The type of the object. Always `error`.
 	Type constant.Error `json:"type" default:"error"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Error       respjson.Field
 		EventID     respjson.Field
 		SessionID   respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -2513,7 +2569,8 @@ type AgentSessionEventUnion struct {
 	// "agent.session.turn.reasoning_summary_part.done",
 	// "agent.session.turn.reasoning_summary_text.delta",
 	// "agent.session.turn.reasoning_summary_text.done".
-	Type string `json:"type"`
+	Type        string `json:"type"`
+	Obfuscation string `json:"obfuscation"`
 	// This field is from variant [AgentSessionEnvironmentReadyEvent].
 	Environment AgentSessionEnvironmentState `json:"environment"`
 	TurnID      string                       `json:"turn_id"`
@@ -2546,6 +2603,7 @@ type AgentSessionEventUnion struct {
 		EventID       respjson.Field
 		SessionID     respjson.Field
 		Type          respjson.Field
+		Obfuscation   respjson.Field
 		Environment   respjson.Field
 		TurnID        respjson.Field
 		EnvironmentID respjson.Field
@@ -3209,11 +3267,14 @@ type AgentSessionFailedEvent struct {
 	Session AgentSession `json:"session" api:"required"`
 	// The type of the object. Always `agent.session.failed`.
 	Type constant.AgentSessionFailed `json:"type" default:"agent.session.failed"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventID     respjson.Field
 		Session     respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -3233,11 +3294,14 @@ type AgentSessionIdleEvent struct {
 	Session AgentSession `json:"session" api:"required"`
 	// The type of the object. Always `agent.session.idle`.
 	Type constant.AgentSessionIdle `json:"type" default:"agent.session.idle"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventID     respjson.Field
 		Session     respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -3257,11 +3321,14 @@ type AgentSessionInProgressEvent struct {
 	Session AgentSession `json:"session" api:"required"`
 	// The type of the object. Always `agent.session.in_progress`.
 	Type constant.AgentSessionInProgress `json:"type" default:"agent.session.in_progress"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventID     respjson.Field
 		Session     respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -4592,11 +4659,14 @@ type AgentSessionRequiresActionEvent struct {
 	Session AgentSession `json:"session" api:"required"`
 	// The type of the object. Always `agent.session.requires_action`.
 	Type constant.AgentSessionRequiresAction `json:"type" default:"agent.session.requires_action"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventID     respjson.Field
 		Session     respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -4616,11 +4686,14 @@ type AgentSessionSubagentActiveEvent struct {
 	Subagent Subagent `json:"subagent" api:"required"`
 	// The type of the object. Always `agent.session.subagent.active`.
 	Type constant.AgentSessionSubagentActive `json:"type" default:"agent.session.subagent.active"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventID     respjson.Field
 		Subagent    respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -4640,11 +4713,14 @@ type AgentSessionSubagentClosedEvent struct {
 	Subagent Subagent `json:"subagent" api:"required"`
 	// The type of the object. Always `agent.session.subagent.closed`.
 	Type constant.AgentSessionSubagentClosed `json:"type" default:"agent.session.subagent.closed"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventID     respjson.Field
 		Subagent    respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -4664,11 +4740,14 @@ type AgentSessionSubagentCreatedEvent struct {
 	Subagent Subagent `json:"subagent" api:"required"`
 	// The type of the object. Always `agent.session.subagent.created`.
 	Type constant.AgentSessionSubagentCreated `json:"type" default:"agent.session.subagent.created"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventID     respjson.Field
 		Subagent    respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -4694,6 +4773,8 @@ type AgentSessionTurnCancelledEvent struct {
 	Type constant.AgentSessionTurnCancelled `json:"type" default:"agent.session.turn.cancelled"`
 	// Token usage by the root agent during the turn, when available.
 	Usage TokenUsage `json:"usage" api:"required"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventID     respjson.Field
@@ -4702,6 +4783,7 @@ type AgentSessionTurnCancelledEvent struct {
 		TurnID      respjson.Field
 		Type        respjson.Field
 		Usage       respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -4727,6 +4809,8 @@ type AgentSessionTurnCompletedEvent struct {
 	Type constant.AgentSessionTurnCompleted `json:"type" default:"agent.session.turn.completed"`
 	// Token usage by the root agent during the turn, when available.
 	Usage TokenUsage `json:"usage" api:"required"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventID     respjson.Field
@@ -4735,6 +4819,7 @@ type AgentSessionTurnCompletedEvent struct {
 		TurnID      respjson.Field
 		Type        respjson.Field
 		Usage       respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -4764,6 +4849,8 @@ type AgentSessionTurnContentPartAddedEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.turn.content_part.added`.
 	Type constant.AgentSessionTurnContentPartAdded `json:"type" default:"agent.session.turn.content_part.added"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ContentIndex respjson.Field
@@ -4774,6 +4861,7 @@ type AgentSessionTurnContentPartAddedEvent struct {
 		SessionID    respjson.Field
 		TurnID       respjson.Field
 		Type         respjson.Field
+		Obfuscation  respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -4803,6 +4891,8 @@ type AgentSessionTurnContentPartDoneEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.turn.content_part.done`.
 	Type constant.AgentSessionTurnContentPartDone `json:"type" default:"agent.session.turn.content_part.done"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ContentIndex respjson.Field
@@ -4813,6 +4903,7 @@ type AgentSessionTurnContentPartDoneEvent struct {
 		SessionID    respjson.Field
 		TurnID       respjson.Field
 		Type         respjson.Field
+		Obfuscation  respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -4836,6 +4927,8 @@ type AgentSessionTurnCreatedEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.turn.created`.
 	Type constant.AgentSessionTurnCreated `json:"type" default:"agent.session.turn.created"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventID     respjson.Field
@@ -4843,6 +4936,7 @@ type AgentSessionTurnCreatedEvent struct {
 		Turn        respjson.Field
 		TurnID      respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -4868,6 +4962,8 @@ type AgentSessionTurnFailedEvent struct {
 	Type constant.AgentSessionTurnFailed `json:"type" default:"agent.session.turn.failed"`
 	// Token usage by the root agent during the turn, when available.
 	Usage TokenUsage `json:"usage" api:"required"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventID     respjson.Field
@@ -4876,6 +4972,7 @@ type AgentSessionTurnFailedEvent struct {
 		TurnID      respjson.Field
 		Type        respjson.Field
 		Usage       respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -4899,6 +4996,8 @@ type AgentSessionTurnInProgressEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.turn.in_progress`.
 	Type constant.AgentSessionTurnInProgress `json:"type" default:"agent.session.turn.in_progress"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventID     respjson.Field
@@ -4906,6 +5005,7 @@ type AgentSessionTurnInProgressEvent struct {
 		Turn        respjson.Field
 		TurnID      respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -4931,6 +5031,8 @@ type AgentSessionTurnItemAddedEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.turn.item.added`.
 	Type constant.AgentSessionTurnItemAdded `json:"type" default:"agent.session.turn.item.added"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventID     respjson.Field
@@ -4939,6 +5041,7 @@ type AgentSessionTurnItemAddedEvent struct {
 		SessionID   respjson.Field
 		TurnID      respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -4964,6 +5067,8 @@ type AgentSessionTurnItemDoneEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.turn.item.done`.
 	Type constant.AgentSessionTurnItemDone `json:"type" default:"agent.session.turn.item.done"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventID     respjson.Field
@@ -4972,6 +5077,7 @@ type AgentSessionTurnItemDoneEvent struct {
 		SessionID   respjson.Field
 		TurnID      respjson.Field
 		Type        respjson.Field
+		Obfuscation respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -5001,6 +5107,8 @@ type AgentSessionTurnOutputTextDeltaEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.turn.output_text.delta`.
 	Type constant.AgentSessionTurnOutputTextDelta `json:"type" default:"agent.session.turn.output_text.delta"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ContentIndex respjson.Field
@@ -5011,6 +5119,7 @@ type AgentSessionTurnOutputTextDeltaEvent struct {
 		SessionID    respjson.Field
 		TurnID       respjson.Field
 		Type         respjson.Field
+		Obfuscation  respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -5040,6 +5149,8 @@ type AgentSessionTurnOutputTextDoneEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.turn.output_text.done`.
 	Type constant.AgentSessionTurnOutputTextDone `json:"type" default:"agent.session.turn.output_text.done"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ContentIndex respjson.Field
@@ -5050,6 +5161,7 @@ type AgentSessionTurnOutputTextDoneEvent struct {
 		Text         respjson.Field
 		TurnID       respjson.Field
 		Type         respjson.Field
+		Obfuscation  respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -5080,6 +5192,8 @@ type AgentSessionTurnReasoningSummaryPartAddedEvent struct {
 	// The type of the object. Always
 	// `agent.session.turn.reasoning_summary_part.added`.
 	Type constant.AgentSessionTurnReasoningSummaryPartAdded `json:"type" default:"agent.session.turn.reasoning_summary_part.added"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventID      respjson.Field
@@ -5090,6 +5204,7 @@ type AgentSessionTurnReasoningSummaryPartAddedEvent struct {
 		SummaryIndex respjson.Field
 		TurnID       respjson.Field
 		Type         respjson.Field
+		Obfuscation  respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -5121,6 +5236,8 @@ type AgentSessionTurnReasoningSummaryPartDoneEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.turn.reasoning_summary_part.done`.
 	Type constant.AgentSessionTurnReasoningSummaryPartDone `json:"type" default:"agent.session.turn.reasoning_summary_part.done"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventID      respjson.Field
@@ -5132,6 +5249,7 @@ type AgentSessionTurnReasoningSummaryPartDoneEvent struct {
 		SummaryIndex respjson.Field
 		TurnID       respjson.Field
 		Type         respjson.Field
+		Obfuscation  respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -5162,6 +5280,8 @@ type AgentSessionTurnReasoningSummaryTextDeltaEvent struct {
 	// The type of the object. Always
 	// `agent.session.turn.reasoning_summary_text.delta`.
 	Type constant.AgentSessionTurnReasoningSummaryTextDelta `json:"type" default:"agent.session.turn.reasoning_summary_text.delta"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Delta        respjson.Field
@@ -5172,6 +5292,7 @@ type AgentSessionTurnReasoningSummaryTextDeltaEvent struct {
 		SummaryIndex respjson.Field
 		TurnID       respjson.Field
 		Type         respjson.Field
+		Obfuscation  respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -5201,6 +5322,8 @@ type AgentSessionTurnReasoningSummaryTextDoneEvent struct {
 	TurnID string `json:"turn_id" api:"required"`
 	// The type of the object. Always `agent.session.turn.reasoning_summary_text.done`.
 	Type constant.AgentSessionTurnReasoningSummaryTextDone `json:"type" default:"agent.session.turn.reasoning_summary_text.done"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EventID      respjson.Field
@@ -5211,6 +5334,7 @@ type AgentSessionTurnReasoningSummaryTextDoneEvent struct {
 		Text         respjson.Field
 		TurnID       respjson.Field
 		Type         respjson.Field
+		Obfuscation  respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -5303,6 +5427,8 @@ type AgentToolUnion struct {
 	// Any of "function", "programmatic_tool_calling", "mcp", "web_search",
 	// "computer_use", "automations".
 	Type string `json:"type"`
+	// This field is from variant [AgentToolFunction].
+	Async bool `json:"async"`
 	// This field is from variant [AgentToolProgrammaticToolCalling].
 	Enabled bool `json:"enabled"`
 	// This field is from variant [AgentToolMcp].
@@ -5335,6 +5461,7 @@ type AgentToolUnion struct {
 		Name               respjson.Field
 		Parameters         respjson.Field
 		Type               respjson.Field
+		Async              respjson.Field
 		Enabled            respjson.Field
 		AllowedTools       respjson.Field
 		ConnectionOrigin   respjson.Field
@@ -5444,6 +5571,8 @@ type AgentToolFunction struct {
 	Parameters map[string]any `json:"parameters" api:"required"`
 	// The type of the object. Always `function`.
 	Type constant.Function `json:"type" default:"function"`
+	// Whether the agent continues without waiting for the function result.
+	Async bool `json:"async"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		DeferLoading respjson.Field
@@ -5451,6 +5580,7 @@ type AgentToolFunction struct {
 		Name         respjson.Field
 		Parameters   respjson.Field
 		Type         respjson.Field
+		Async        respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -5699,6 +5829,14 @@ func (u AgentToolParamUnion) GetParameters() map[string]any {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u AgentToolParamUnion) GetAsync() *bool {
+	if vt := u.OfParamFunction; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u AgentToolParamUnion) GetDeferLoading() *bool {
 	if vt := u.OfParamFunction; vt != nil && vt.DeferLoading.Valid() {
 		return &vt.DeferLoading.Value
@@ -5853,6 +5991,9 @@ type AgentToolParamFunction struct {
 	Name string `json:"name" api:"required"`
 	// A JSON Schema object describing the function's arguments.
 	Parameters map[string]any `json:"parameters,omitzero" api:"required"`
+	// Whether the agent continues without waiting for the function result. Defaults to
+	// `false`.
+	Async param.Opt[bool] `json:"async,omitzero"`
 	// Whether this function is deferred and discovered through tool search. Defaults
 	// to `false`.
 	DeferLoading param.Opt[bool] `json:"defer_loading,omitzero"`
@@ -7886,6 +8027,8 @@ type PersistedAgentToolUnion struct {
 	// Any of "function", "tool_search", "programmatic_tool_calling", "mcp",
 	// "web_search", "computer_use", "automations".
 	Type string `json:"type"`
+	// This field is from variant [PersistedAgentToolFunction].
+	Async bool `json:"async"`
 	// This field is from variant [PersistedAgentToolProgrammaticToolCalling].
 	Enabled bool `json:"enabled"`
 	// This field is from variant [PersistedAgentToolMcp].
@@ -7918,6 +8061,7 @@ type PersistedAgentToolUnion struct {
 		Name               respjson.Field
 		Parameters         respjson.Field
 		Type               respjson.Field
+		Async              respjson.Field
 		Enabled            respjson.Field
 		AllowedTools       respjson.Field
 		ConnectionOrigin   respjson.Field
@@ -8037,6 +8181,8 @@ type PersistedAgentToolFunction struct {
 	Parameters map[string]any `json:"parameters" api:"required"`
 	// The type of the object. Always `function`.
 	Type constant.Function `json:"type" default:"function"`
+	// Whether the agent continues without waiting for the function result.
+	Async bool `json:"async"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		DeferLoading respjson.Field
@@ -8044,6 +8190,7 @@ type PersistedAgentToolFunction struct {
 		Name         respjson.Field
 		Parameters   respjson.Field
 		Type         respjson.Field
+		Async        respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -8309,6 +8456,14 @@ func (u PersistedAgentToolParamUnion) GetParameters() map[string]any {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u PersistedAgentToolParamUnion) GetAsync() *bool {
+	if vt := u.OfParamFunction; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u PersistedAgentToolParamUnion) GetDeferLoading() *bool {
 	if vt := u.OfParamFunction; vt != nil && vt.DeferLoading.Valid() {
 		return &vt.DeferLoading.Value
@@ -8463,6 +8618,9 @@ type PersistedAgentToolParamFunction struct {
 	Name string `json:"name" api:"required"`
 	// A JSON Schema object describing the function's arguments.
 	Parameters map[string]any `json:"parameters,omitzero" api:"required"`
+	// Whether the agent continues without waiting for the function result. Defaults to
+	// `false`.
+	Async param.Opt[bool] `json:"async,omitzero"`
 	// Whether this function is deferred and discovered through tool search. Defaults
 	// to `false`.
 	DeferLoading param.Opt[bool] `json:"defer_loading,omitzero"`
@@ -8984,15 +9142,15 @@ func (r *SessionError) UnmarshalJSON(data []byte) error {
 type SessionTurnError struct {
 	// A stable, machine-readable failure category.
 	//
-	// Any of "context_length_exceeded", "session_budget_exceeded",
-	// "usage_limit_exceeded", "project_spend_limit_exceeded",
-	// "organization_spend_limit_exceeded", "organization_usage_limit_exceeded",
-	// "billing_not_active", "credit_balance_exhausted", "rate_limit_exceeded",
-	// "flex_unavailable", "server_overloaded", "cyber_policy",
-	// "misalignment_policy_violation", "connection_failed", "server_error",
-	// "authentication_error", "invalid_request", "resource_not_found",
-	// "sandbox_error", "executor_version_incompatible", "active_turn_not_steerable",
-	// "request_timeout", "internal_error".
+	// Any of "context_length_exceeded", "max_output_tokens",
+	// "session_budget_exceeded", "usage_limit_exceeded",
+	// "project_spend_limit_exceeded", "organization_spend_limit_exceeded",
+	// "organization_usage_limit_exceeded", "billing_not_active",
+	// "credit_balance_exhausted", "rate_limit_exceeded", "flex_unavailable",
+	// "server_overloaded", "cyber_policy", "misalignment_policy_violation",
+	// "connection_failed", "server_error", "authentication_error", "invalid_request",
+	// "resource_not_found", "sandbox_error", "executor_version_incompatible",
+	// "active_turn_not_steerable", "request_timeout", "internal_error".
 	Code SessionTurnErrorCode `json:"code" api:"required"`
 	// A customer-safe explanation of the failure.
 	Message string `json:"message" api:"required"`
@@ -9016,6 +9174,7 @@ type SessionTurnErrorCode string
 
 const (
 	SessionTurnErrorCodeContextLengthExceeded          SessionTurnErrorCode = "context_length_exceeded"
+	SessionTurnErrorCodeMaxOutputTokens                SessionTurnErrorCode = "max_output_tokens"
 	SessionTurnErrorCodeSessionBudgetExceeded          SessionTurnErrorCode = "session_budget_exceeded"
 	SessionTurnErrorCodeUsageLimitExceeded             SessionTurnErrorCode = "usage_limit_exceeded"
 	SessionTurnErrorCodeProjectSpendLimitExceeded      SessionTurnErrorCode = "project_spend_limit_exceeded"

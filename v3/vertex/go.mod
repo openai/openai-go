@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	cloud.google.com/go/auth v0.24.1
-	github.com/openai/openai-go/v3 v3.86.0
+	github.com/openai/openai-go/v3 v3.91.0
 )
 
 require (

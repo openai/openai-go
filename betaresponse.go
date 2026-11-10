@@ -14,7 +14,6 @@ import (
 
 	"github.com/openai/openai-go/v3/internal/apijson"
 	"github.com/openai/openai-go/v3/internal/apiquery"
-	"github.com/openai/openai-go/v3/internal/paramutil"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/param"
@@ -262,7 +261,8 @@ type BetaCompactedResponse struct {
 	Output []BetaResponseOutputItemUnion `json:"output" api:"required"`
 	// Token accounting for the compaction pass, including cached, reasoning, and total
 	// tokens.
-	Usage BetaResponseUsage `json:"usage" api:"required"`
+	Usage BetaResponseUsage          `json:"usage" api:"required"`
+	Image BetaCompactedResponseImage `json:"image"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -270,6 +270,7 @@ type BetaCompactedResponse struct {
 		Object      respjson.Field
 		Output      respjson.Field
 		Usage       respjson.Field
+		Image       respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -278,6 +279,25 @@ type BetaCompactedResponse struct {
 // Returns the unmodified JSON received from the API
 func (r BetaCompactedResponse) RawJSON() string { return r.JSON.raw }
 func (r *BetaCompactedResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaCompactedResponseImage struct {
+	// Effective image context optimization policy.
+	//
+	// Any of "enabled", "disabled".
+	ContextCompression string `json:"context_compression" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ContextCompression respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaCompactedResponseImage) RawJSON() string { return r.JSON.raw }
+func (r *BetaCompactedResponseImage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -4498,6 +4518,7 @@ type BetaResponse struct {
 	// The conversation that this response belonged to. Input items and output items
 	// from this response were automatically added to this conversation.
 	Conversation BetaResponseConversation `json:"conversation" api:"nullable"`
+	Image        BetaResponseImage        `json:"image"`
 	// An upper bound for the number of tokens that can be generated for a response,
 	// including visible output tokens and
 	// [reasoning tokens](https://developers.openai.com/api/docs/guides/reasoning).
@@ -4658,6 +4679,7 @@ type BetaResponse struct {
 		Background             respjson.Field
 		CompletedAt            respjson.Field
 		Conversation           respjson.Field
+		Image                  respjson.Field
 		MaxOutputTokens        respjson.Field
 		MaxToolCalls           respjson.Field
 		Moderation             respjson.Field
@@ -5142,7 +5164,9 @@ const (
 	BetaResponseModelGPTDaybreakBlueLatest BetaResponseModel = "gpt-daybreak-blue-latest"
 	BetaResponseModelGPTDaybreakRedLatest  BetaResponseModel = "gpt-daybreak-red-latest"
 	BetaResponseModelGPT5_6Cyber           BetaResponseModel = "gpt-5.6-cyber"
+	BetaResponseModelGPT6Cyber             BetaResponseModel = "gpt-6-cyber"
 	BetaResponseModelGPTRosalindResearch   BetaResponseModel = "gpt-rosalind-research"
+	BetaResponseModelGPT6Rosalind          BetaResponseModel = "gpt-6-rosalind"
 )
 
 // BetaResponseToolChoiceUnion contains all possible properties and values from
@@ -5265,6 +5289,25 @@ type BetaResponseConversation struct {
 // Returns the unmodified JSON received from the API
 func (r BetaResponseConversation) RawJSON() string { return r.JSON.raw }
 func (r *BetaResponseConversation) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponseImage struct {
+	// Effective image context optimization policy.
+	//
+	// Any of "enabled", "disabled".
+	ContextCompression string `json:"context_compression" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ContextCompression respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseImage) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseImage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -14865,7 +14908,9 @@ type BetaResponseInputItemUnion struct {
 	RevisedPrompt string `json:"revised_prompt"`
 	// This field is from variant [BetaResponseInputItemImageGenerationCall].
 	Size string `json:"size"`
-	Code string `json:"code"`
+	// This field is from variant [BetaResponseInputItemImageGenerationCall].
+	SvgUsage BetaResponseInputItemImageGenerationCallSvgUsage `json:"svg_usage"`
+	Code     string                                           `json:"code"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
 	ContainerID string `json:"container_id"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
@@ -14923,6 +14968,7 @@ type BetaResponseInputItemUnion struct {
 		Quality                  respjson.Field
 		RevisedPrompt            respjson.Field
 		Size                     respjson.Field
+		SvgUsage                 respjson.Field
 		Code                     respjson.Field
 		ContainerID              respjson.Field
 		Outputs                  respjson.Field
@@ -16627,7 +16673,7 @@ type BetaResponseInputItemImageGenerationCall struct {
 	Error BetaResponseInputItemImageGenerationCallError `json:"error"`
 	// The output format used for generation.
 	//
-	// Any of "png", "webp", "jpeg".
+	// Any of "png", "webp", "jpeg", "gif", "svg".
 	OutputFormat string `json:"output_format" api:"nullable"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
@@ -16637,7 +16683,8 @@ type BetaResponseInputItemImageGenerationCall struct {
 	// The prompt that was used after any model prompt rewriting.
 	RevisedPrompt string `json:"revised_prompt" api:"nullable"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
-	Size string `json:"size" api:"nullable"`
+	Size     string                                           `json:"size" api:"nullable"`
+	SvgUsage BetaResponseInputItemImageGenerationCallSvgUsage `json:"svg_usage"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID            respjson.Field
@@ -16652,6 +16699,7 @@ type BetaResponseInputItemImageGenerationCall struct {
 		Quality       respjson.Field
 		RevisedPrompt respjson.Field
 		Size          respjson.Field
+		SvgUsage      respjson.Field
 		ExtraFields   map[string]respjson.Field
 		raw           string
 	} `json:"-"`
@@ -16733,6 +16781,30 @@ func (r BetaResponseInputItemImageGenerationCallErrorModerationDetails) RawJSON(
 	return r.JSON.raw
 }
 func (r *BetaResponseInputItemImageGenerationCallErrorModerationDetails) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponseInputItemImageGenerationCallSvgUsage struct {
+	InputTokens     int64  `json:"input_tokens" api:"required"`
+	Model           string `json:"model" api:"required"`
+	OutputTokens    int64  `json:"output_tokens" api:"required"`
+	ReasoningTokens int64  `json:"reasoning_tokens" api:"required"`
+	TotalTokens     int64  `json:"total_tokens" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		InputTokens     respjson.Field
+		Model           respjson.Field
+		OutputTokens    respjson.Field
+		ReasoningTokens respjson.Field
+		TotalTokens     respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseInputItemImageGenerationCallSvgUsage) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseInputItemImageGenerationCallSvgUsage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -18645,6 +18717,14 @@ func (u BetaResponseInputItemUnionParam) GetSize() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemUnionParam) GetSvgUsage() *BetaResponseInputItemImageGenerationCallSvgUsageParam {
+	if vt := u.OfImageGenerationCall; vt != nil {
+		return &vt.SvgUsage
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u BetaResponseInputItemUnionParam) GetContainerID() *string {
 	if vt := u.OfCodeInterpreterCall; vt != nil {
 		return &vt.ContainerID
@@ -19467,7 +19547,9 @@ func (u betaResponseInputItemUnionParamAction) GetQueries() []string {
 func (u betaResponseInputItemUnionParamAction) GetQuery() *string {
 	switch vt := u.any.(type) {
 	case *BetaResponseFunctionWebSearchActionSearchParam:
-		return paramutil.AddrIfPresent(vt.Query)
+		if vt.Query.Valid() {
+			return &vt.Query.Value
+		}
 	}
 	return nil
 }
@@ -19512,7 +19594,9 @@ func (u betaResponseInputItemUnionParamAction) GetEnv() map[string]string {
 func (u betaResponseInputItemUnionParamAction) GetUser() *string {
 	switch vt := u.any.(type) {
 	case *BetaResponseInputItemLocalShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.User)
+		if vt.User.Valid() {
+			return &vt.User.Value
+		}
 	}
 	return nil
 }
@@ -19521,7 +19605,9 @@ func (u betaResponseInputItemUnionParamAction) GetUser() *string {
 func (u betaResponseInputItemUnionParamAction) GetWorkingDirectory() *string {
 	switch vt := u.any.(type) {
 	case *BetaResponseInputItemLocalShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.WorkingDirectory)
+		if vt.WorkingDirectory.Valid() {
+			return &vt.WorkingDirectory.Value
+		}
 	}
 	return nil
 }
@@ -19539,7 +19625,9 @@ func (u betaResponseInputItemUnionParamAction) GetCommands() []string {
 func (u betaResponseInputItemUnionParamAction) GetMaxOutputLength() *int64 {
 	switch vt := u.any.(type) {
 	case *BetaResponseInputItemShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.MaxOutputLength)
+		if vt.MaxOutputLength.Valid() {
+			return &vt.MaxOutputLength.Value
+		}
 	}
 	return nil
 }
@@ -19611,7 +19699,9 @@ func (u betaResponseInputItemUnionParamAction) GetY() *int64 {
 func (u betaResponseInputItemUnionParamAction) GetURL() *string {
 	switch vt := u.any.(type) {
 	case *BetaResponseFunctionWebSearchActionOpenPageParam:
-		return paramutil.AddrIfPresent(vt.URL)
+		if vt.URL.Valid() {
+			return &vt.URL.Value
+		}
 	case *BetaResponseFunctionWebSearchActionFindInPageParam:
 		return (*string)(&vt.URL)
 	}
@@ -19622,9 +19712,13 @@ func (u betaResponseInputItemUnionParamAction) GetURL() *string {
 func (u betaResponseInputItemUnionParamAction) GetTimeoutMs() *int64 {
 	switch vt := u.any.(type) {
 	case *BetaResponseInputItemLocalShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.TimeoutMs)
+		if vt.TimeoutMs.Valid() {
+			return &vt.TimeoutMs.Value
+		}
 	case *BetaResponseInputItemShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.TimeoutMs)
+		if vt.TimeoutMs.Valid() {
+			return &vt.TimeoutMs.Value
+		}
 	}
 	return nil
 }
@@ -20963,7 +21057,7 @@ type BetaResponseInputItemImageGenerationCallParam struct {
 	Background param.Opt[string] `json:"background,omitzero"`
 	// The output format used for generation.
 	//
-	// Any of "png", "webp", "jpeg".
+	// Any of "png", "webp", "jpeg", "gif", "svg".
 	OutputFormat param.Opt[string] `json:"output_format,omitzero"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
@@ -20973,7 +21067,8 @@ type BetaResponseInputItemImageGenerationCallParam struct {
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
 	Size param.Opt[string] `json:"size,omitzero"`
 	// Details of a moderation failure, when available.
-	Error BetaResponseInputItemImageGenerationCallErrorParam `json:"error,omitzero"`
+	Error    BetaResponseInputItemImageGenerationCallErrorParam    `json:"error,omitzero"`
+	SvgUsage BetaResponseInputItemImageGenerationCallSvgUsageParam `json:"svg_usage,omitzero"`
 	// The type of the image generation call. Always `image_generation_call`.
 	//
 	// This field can be elided, and will marshal its zero value as
@@ -21066,6 +21161,25 @@ func init() {
 	apijson.RegisterFieldValidator[BetaResponseInputItemImageGenerationCallErrorModerationDetailsParam](
 		"moderation_stage", "input", "output", "unknown",
 	)
+}
+
+// The properties InputTokens, Model, OutputTokens, ReasoningTokens, TotalTokens
+// are required.
+type BetaResponseInputItemImageGenerationCallSvgUsageParam struct {
+	InputTokens     int64  `json:"input_tokens" api:"required"`
+	Model           string `json:"model" api:"required"`
+	OutputTokens    int64  `json:"output_tokens" api:"required"`
+	ReasoningTokens int64  `json:"reasoning_tokens" api:"required"`
+	TotalTokens     int64  `json:"total_tokens" api:"required"`
+	paramObj
+}
+
+func (r BetaResponseInputItemImageGenerationCallSvgUsageParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseInputItemImageGenerationCallSvgUsageParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseInputItemImageGenerationCallSvgUsageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // A tool call to run a command on the local shell.
@@ -22877,6 +22991,8 @@ type BetaResponseItemUnion struct {
 	RevisedPrompt string `json:"revised_prompt"`
 	// This field is from variant [BetaResponseItemImageGenerationCall].
 	Size string `json:"size"`
+	// This field is from variant [BetaResponseItemImageGenerationCall].
+	SvgUsage BetaResponseItemImageGenerationCallSvgUsage `json:"svg_usage"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
 	ContainerID string `json:"container_id"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
@@ -22935,6 +23051,7 @@ type BetaResponseItemUnion struct {
 		Quality                  respjson.Field
 		RevisedPrompt            respjson.Field
 		Size                     respjson.Field
+		SvgUsage                 respjson.Field
 		ContainerID              respjson.Field
 		Outputs                  respjson.Field
 		Environment              respjson.Field
@@ -24285,7 +24402,7 @@ type BetaResponseItemImageGenerationCall struct {
 	Error BetaResponseItemImageGenerationCallError `json:"error"`
 	// The output format used for generation.
 	//
-	// Any of "png", "webp", "jpeg".
+	// Any of "png", "webp", "jpeg", "gif", "svg".
 	OutputFormat string `json:"output_format" api:"nullable"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
@@ -24295,7 +24412,8 @@ type BetaResponseItemImageGenerationCall struct {
 	// The prompt that was used after any model prompt rewriting.
 	RevisedPrompt string `json:"revised_prompt" api:"nullable"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
-	Size string `json:"size" api:"nullable"`
+	Size     string                                      `json:"size" api:"nullable"`
+	SvgUsage BetaResponseItemImageGenerationCallSvgUsage `json:"svg_usage"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID            respjson.Field
@@ -24310,6 +24428,7 @@ type BetaResponseItemImageGenerationCall struct {
 		Quality       respjson.Field
 		RevisedPrompt respjson.Field
 		Size          respjson.Field
+		SvgUsage      respjson.Field
 		ExtraFields   map[string]respjson.Field
 		raw           string
 	} `json:"-"`
@@ -24391,6 +24510,30 @@ func (r BetaResponseItemImageGenerationCallErrorModerationDetails) RawJSON() str
 	return r.JSON.raw
 }
 func (r *BetaResponseItemImageGenerationCallErrorModerationDetails) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponseItemImageGenerationCallSvgUsage struct {
+	InputTokens     int64  `json:"input_tokens" api:"required"`
+	Model           string `json:"model" api:"required"`
+	OutputTokens    int64  `json:"output_tokens" api:"required"`
+	ReasoningTokens int64  `json:"reasoning_tokens" api:"required"`
+	TotalTokens     int64  `json:"total_tokens" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		InputTokens     respjson.Field
+		Model           respjson.Field
+		OutputTokens    respjson.Field
+		ReasoningTokens respjson.Field
+		TotalTokens     respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseItemImageGenerationCallSvgUsage) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseItemImageGenerationCallSvgUsage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -25317,6 +25460,8 @@ type BetaResponseOutputItemUnion struct {
 	RevisedPrompt string `json:"revised_prompt"`
 	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
 	Size string `json:"size"`
+	// This field is from variant [BetaResponseOutputItemImageGenerationCall].
+	SvgUsage BetaResponseOutputItemImageGenerationCallSvgUsage `json:"svg_usage"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
 	ContainerID string `json:"container_id"`
 	// This field is from variant [BetaResponseCodeInterpreterToolCall].
@@ -25373,6 +25518,7 @@ type BetaResponseOutputItemUnion struct {
 		Quality                  respjson.Field
 		RevisedPrompt            respjson.Field
 		Size                     respjson.Field
+		SvgUsage                 respjson.Field
 		ContainerID              respjson.Field
 		Outputs                  respjson.Field
 		Environment              respjson.Field
@@ -26710,7 +26856,7 @@ type BetaResponseOutputItemImageGenerationCall struct {
 	Error BetaResponseOutputItemImageGenerationCallError `json:"error"`
 	// The output format used for generation.
 	//
-	// Any of "png", "webp", "jpeg".
+	// Any of "png", "webp", "jpeg", "gif", "svg".
 	OutputFormat string `json:"output_format" api:"nullable"`
 	// The quality of the image generated by the image generation tool call. One of
 	// `low`, `medium`, `high`, `xhigh`, `max`, or `auto`.
@@ -26720,7 +26866,8 @@ type BetaResponseOutputItemImageGenerationCall struct {
 	// The prompt that was used after any model prompt rewriting.
 	RevisedPrompt string `json:"revised_prompt" api:"nullable"`
 	// The image dimensions as a `WIDTHxHEIGHT` string, for example `1536x864`.
-	Size string `json:"size" api:"nullable"`
+	Size     string                                            `json:"size" api:"nullable"`
+	SvgUsage BetaResponseOutputItemImageGenerationCallSvgUsage `json:"svg_usage"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID            respjson.Field
@@ -26735,6 +26882,7 @@ type BetaResponseOutputItemImageGenerationCall struct {
 		Quality       respjson.Field
 		RevisedPrompt respjson.Field
 		Size          respjson.Field
+		SvgUsage      respjson.Field
 		ExtraFields   map[string]respjson.Field
 		raw           string
 	} `json:"-"`
@@ -26816,6 +26964,30 @@ func (r BetaResponseOutputItemImageGenerationCallErrorModerationDetails) RawJSON
 	return r.JSON.raw
 }
 func (r *BetaResponseOutputItemImageGenerationCallErrorModerationDetails) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponseOutputItemImageGenerationCallSvgUsage struct {
+	InputTokens     int64  `json:"input_tokens" api:"required"`
+	Model           string `json:"model" api:"required"`
+	OutputTokens    int64  `json:"output_tokens" api:"required"`
+	ReasoningTokens int64  `json:"reasoning_tokens" api:"required"`
+	TotalTokens     int64  `json:"total_tokens" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		InputTokens     respjson.Field
+		Model           respjson.Field
+		OutputTokens    respjson.Field
+		ReasoningTokens respjson.Field
+		TotalTokens     respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseOutputItemImageGenerationCallSvgUsage) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseOutputItemImageGenerationCallSvgUsage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -33199,6 +33371,15 @@ type BetaResponseToolSearchOutputItemParamToolUnionResp struct {
 	Background string `json:"background"`
 	// This field is from variant
 	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	Complexity string `json:"complexity"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	FrameCount int64 `json:"frame_count"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	FrameDurationMs int64 `json:"frame_duration_ms"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
 	InputFidelity string `json:"input_fidelity"`
 	// This field is from variant
 	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
@@ -33224,6 +33405,9 @@ type BetaResponseToolSearchOutputItemParamToolUnionResp struct {
 	// This field is from variant
 	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
 	Size string `json:"size"`
+	// This field is from variant
+	// [BetaResponseToolSearchOutputItemParamToolImageGeneration].
+	Svg BetaResponseToolSearchOutputItemParamToolImageGenerationSvgResp `json:"svg"`
 	// This field is from variant [BetaCustomTool].
 	Format BetaCustomToolFormatUnion `json:"format"`
 	// This field is from variant [BetaToolSearchOutputNamespaceTool].
@@ -33264,6 +33448,9 @@ type BetaResponseToolSearchOutputItemParamToolUnionResp struct {
 		Container          respjson.Field
 		Action             respjson.Field
 		Background         respjson.Field
+		Complexity         respjson.Field
+		FrameCount         respjson.Field
+		FrameDurationMs    respjson.Field
 		InputFidelity      respjson.Field
 		InputImageMask     respjson.Field
 		Model              respjson.Field
@@ -33273,6 +33460,7 @@ type BetaResponseToolSearchOutputItemParamToolUnionResp struct {
 		PartialImages      respjson.Field
 		Quality            respjson.Field
 		Size               respjson.Field
+		Svg                respjson.Field
 		Format             respjson.Field
 		Tools              respjson.Field
 		Execution          respjson.Field
@@ -34006,6 +34194,19 @@ type BetaResponseToolSearchOutputItemParamToolImageGeneration struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background"`
+	// Computation spent planning the image, independently of rendering quality.
+	// Overrides the outer response's `reasoning.effort` for image generation. When
+	// omitted, inherits a supported outer reasoning effort or uses the image model's
+	// configured default. For SVG output, controls the reference image, not the SVG
+	// author's reasoning.
+	//
+	// Any of "low", "medium", "high".
+	Complexity string `json:"complexity"`
+	// Number of GIF frames. Requires `output_format` to be `gif`. Default: 9.
+	FrameCount int64 `json:"frame_count"`
+	// Duration of each GIF frame in milliseconds, rounded to 10 ms. Requires
+	// `output_format` to be `gif`. Default: 200.
+	FrameDurationMs int64 `json:"frame_duration_ms"`
 	// Control how much effort the model will exert to match the style and features,
 	// especially facial features, of input images. Supports `high` and `low` on
 	// `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For `gpt-image-2`, omit
@@ -34019,8 +34220,8 @@ type BetaResponseToolSearchOutputItemParamToolImageGeneration struct {
 	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
 	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
 	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
-	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
-	// `gpt-image-2`.
+	// `gpt-image-2.5-flare-2026-09-08`, `gpt-image-2.6-sunburst`,
+	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default: `gpt-image-2`.
 	//
 	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
 	// `gpt-image-2.5-flare` instead.
@@ -34031,10 +34232,14 @@ type BetaResponseToolSearchOutputItemParamToolImageGeneration struct {
 	Moderation string `json:"moderation"`
 	// Compression level for the output image. Default: 100.
 	OutputCompression int64 `json:"output_compression"`
-	// The output format of the generated image. One of `png`, `webp`, or `jpeg`.
-	// Default: `png`.
+	// The output format of the generated image. One of `png`, `webp`, `jpeg`, `gif`,
+	// or `svg`. Default: `png`. GIF and SVG output require a model that supports the
+	// selected format. GIF output does not support partial image streaming
+	// (`partial_images` greater than `0`), `input_image_mask`, or custom
+	// `output_compression`. Responses lifecycle events can still be streamed for GIF
+	// output.
 	//
-	// Any of "png", "webp", "jpeg".
+	// Any of "png", "webp", "jpeg", "gif", "svg".
 	OutputFormat string `json:"output_format"`
 	// Number of partial images to generate in streaming mode, from 0 (default value)
 	// to 3.
@@ -34057,11 +34262,19 @@ type BetaResponseToolSearchOutputItemParamToolImageGeneration struct {
 	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
 	// `auto` is supported for models that allow automatic sizing.
 	Size string `json:"size"`
+	// SVG author model settings. Requires `output_format` to be `svg`. When SVG model
+	// selection is enabled, omitting this object uses the outer response model.
+	// Otherwise, the default SVG author is used and explicit model overrides are
+	// unavailable.
+	Svg BetaResponseToolSearchOutputItemParamToolImageGenerationSvgResp `json:"svg"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type              respjson.Field
 		Action            respjson.Field
 		Background        respjson.Field
+		Complexity        respjson.Field
+		FrameCount        respjson.Field
+		FrameDurationMs   respjson.Field
 		InputFidelity     respjson.Field
 		InputImageMask    respjson.Field
 		Model             respjson.Field
@@ -34071,6 +34284,7 @@ type BetaResponseToolSearchOutputItemParamToolImageGeneration struct {
 		PartialImages     respjson.Field
 		Quality           respjson.Field
 		Size              respjson.Field
+		Svg               respjson.Field
 		ExtraFields       map[string]respjson.Field
 		raw               string
 	} `json:"-"`
@@ -34103,6 +34317,55 @@ func (r BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMaskRe
 	return r.JSON.raw
 }
 func (r *BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMaskResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// SVG author model settings. Requires `output_format` to be `svg`. When SVG model
+// selection is enabled, omitting this object uses the outer response model.
+// Otherwise, the default SVG author is used and explicit model overrides are
+// unavailable.
+type BetaResponseToolSearchOutputItemParamToolImageGenerationSvgResp struct {
+	Model string `json:"model"`
+	// Reasoning effort for SVG authoring. When omitted, uses the author model's
+	// default in both Images and Responses.
+	Reasoning BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoningResp `json:"reasoning" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Model       respjson.Field
+		Reasoning   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolImageGenerationSvgResp) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseToolSearchOutputItemParamToolImageGenerationSvgResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Reasoning effort for SVG authoring. When omitted, uses the author model's
+// default in both Images and Responses.
+type BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoningResp struct {
+	// Controls how much effort the model should spend on reasoning for this request.
+	//
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
+	Effort string `json:"effort"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Effort      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoningResp) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoningResp) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -34399,6 +34662,30 @@ func (u BetaResponseToolSearchOutputItemParamToolUnion) GetBackground() *string 
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetComplexity() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Complexity
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetFrameCount() *int64 {
+	if vt := u.OfImageGeneration; vt != nil && vt.FrameCount.Valid() {
+		return &vt.FrameCount.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetFrameDurationMs() *int64 {
+	if vt := u.OfImageGeneration; vt != nil && vt.FrameDurationMs.Valid() {
+		return &vt.FrameDurationMs.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u BetaResponseToolSearchOutputItemParamToolUnion) GetInputFidelity() *string {
 	if vt := u.OfImageGeneration; vt != nil {
 		return &vt.InputFidelity
@@ -34466,6 +34753,14 @@ func (u BetaResponseToolSearchOutputItemParamToolUnion) GetQuality() *string {
 func (u BetaResponseToolSearchOutputItemParamToolUnion) GetSize() *string {
 	if vt := u.OfImageGeneration; vt != nil {
 		return &vt.Size
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseToolSearchOutputItemParamToolUnion) GetSvg() *BetaResponseToolSearchOutputItemParamToolImageGenerationSvg {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Svg
 	}
 	return nil
 }
@@ -34851,9 +35146,13 @@ func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) AsAny() any 
 func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetCity() *string {
 	switch vt := u.any.(type) {
 	case *BetaWebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.City)
+		if vt.City.Valid() {
+			return &vt.City.Value
+		}
 	case *BetaWebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.City)
+		if vt.City.Valid() {
+			return &vt.City.Value
+		}
 	}
 	return nil
 }
@@ -34862,9 +35161,13 @@ func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetCity() *s
 func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetCountry() *string {
 	switch vt := u.any.(type) {
 	case *BetaWebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Country)
+		if vt.Country.Valid() {
+			return &vt.Country.Value
+		}
 	case *BetaWebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Country)
+		if vt.Country.Valid() {
+			return &vt.Country.Value
+		}
 	}
 	return nil
 }
@@ -34873,9 +35176,13 @@ func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetCountry()
 func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetRegion() *string {
 	switch vt := u.any.(type) {
 	case *BetaWebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Region)
+		if vt.Region.Valid() {
+			return &vt.Region.Value
+		}
 	case *BetaWebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Region)
+		if vt.Region.Valid() {
+			return &vt.Region.Value
+		}
 	}
 	return nil
 }
@@ -34884,9 +35191,13 @@ func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetRegion() 
 func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetTimezone() *string {
 	switch vt := u.any.(type) {
 	case *BetaWebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Timezone)
+		if vt.Timezone.Valid() {
+			return &vt.Timezone.Value
+		}
 	case *BetaWebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Timezone)
+		if vt.Timezone.Valid() {
+			return &vt.Timezone.Value
+		}
 	}
 	return nil
 }
@@ -35271,6 +35582,11 @@ func (r *BetaResponseToolSearchOutputItemParamToolProgrammaticToolCallingParam) 
 //
 // The property Type is required.
 type BetaResponseToolSearchOutputItemParamToolImageGenerationParam struct {
+	// Number of GIF frames. Requires `output_format` to be `gif`. Default: 9.
+	FrameCount param.Opt[int64] `json:"frame_count,omitzero"`
+	// Duration of each GIF frame in milliseconds, rounded to 10 ms. Requires
+	// `output_format` to be `gif`. Default: 200.
+	FrameDurationMs param.Opt[int64] `json:"frame_duration_ms,omitzero"`
 	// Compression level for the output image. Default: 100.
 	OutputCompression param.Opt[int64] `json:"output_compression,omitzero"`
 	// Number of partial images to generate in streaming mode, from 0 (default value)
@@ -35299,14 +35615,22 @@ type BetaResponseToolSearchOutputItemParamToolImageGenerationParam struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background,omitzero"`
+	// Computation spent planning the image, independently of rendering quality.
+	// Overrides the outer response's `reasoning.effort` for image generation. When
+	// omitted, inherits a supported outer reasoning effort or uses the image model's
+	// configured default. For SVG output, controls the reference image, not the SVG
+	// author's reasoning.
+	//
+	// Any of "low", "medium", "high".
+	Complexity string `json:"complexity,omitzero"`
 	// Optional mask for inpainting. Contains `image_url` (string, optional) and
 	// `file_id` (string, optional).
 	InputImageMask BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMask `json:"input_image_mask,omitzero"`
 	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
 	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
 	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
-	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
-	// `gpt-image-2`.
+	// `gpt-image-2.5-flare-2026-09-08`, `gpt-image-2.6-sunburst`,
+	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default: `gpt-image-2`.
 	//
 	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
 	// `gpt-image-2.5-flare` instead.
@@ -35315,10 +35639,14 @@ type BetaResponseToolSearchOutputItemParamToolImageGenerationParam struct {
 	//
 	// Any of "auto", "low".
 	Moderation string `json:"moderation,omitzero"`
-	// The output format of the generated image. One of `png`, `webp`, or `jpeg`.
-	// Default: `png`.
+	// The output format of the generated image. One of `png`, `webp`, `jpeg`, `gif`,
+	// or `svg`. Default: `png`. GIF and SVG output require a model that supports the
+	// selected format. GIF output does not support partial image streaming
+	// (`partial_images` greater than `0`), `input_image_mask`, or custom
+	// `output_compression`. Responses lifecycle events can still be streamed for GIF
+	// output.
 	//
-	// Any of "png", "webp", "jpeg".
+	// Any of "png", "webp", "jpeg", "gif", "svg".
 	OutputFormat string `json:"output_format,omitzero"`
 	// The quality of the generated image. The GPT image models support `low`,
 	// `medium`, and `high`. `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`,
@@ -35338,6 +35666,11 @@ type BetaResponseToolSearchOutputItemParamToolImageGenerationParam struct {
 	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
 	// `auto` is supported for models that allow automatic sizing.
 	Size string `json:"size,omitzero"`
+	// SVG author model settings. Requires `output_format` to be `svg`. When SVG model
+	// selection is enabled, omitting this object uses the outer response model.
+	// Otherwise, the default SVG author is used and explicit model overrides are
+	// unavailable.
+	Svg BetaResponseToolSearchOutputItemParamToolImageGenerationSvg `json:"svg,omitzero"`
 	// The type of the image generation tool. Always `image_generation`.
 	//
 	// This field can be elided, and will marshal its zero value as "image_generation".
@@ -35361,13 +35694,16 @@ func init() {
 		"background", "transparent", "opaque", "auto",
 	)
 	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
+		"complexity", "low", "medium", "high",
+	)
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
 		"input_fidelity", "high", "low",
 	)
 	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
 		"moderation", "auto", "low",
 	)
 	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
-		"output_format", "png", "webp", "jpeg",
+		"output_format", "png", "webp", "jpeg", "gif", "svg",
 	)
 	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationParam](
 		"quality", "low", "medium", "high", "xhigh", "max", "auto",
@@ -35390,6 +35726,50 @@ func (r BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMask) 
 }
 func (r *BetaResponseToolSearchOutputItemParamToolImageGenerationInputImageMask) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// SVG author model settings. Requires `output_format` to be `svg`. When SVG model
+// selection is enabled, omitting this object uses the outer response model.
+// Otherwise, the default SVG author is used and explicit model overrides are
+// unavailable.
+type BetaResponseToolSearchOutputItemParamToolImageGenerationSvg struct {
+	Model param.Opt[string] `json:"model,omitzero"`
+	// Reasoning effort for SVG authoring. When omitted, uses the author model's
+	// default in both Images and Responses.
+	Reasoning BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoning `json:"reasoning,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolImageGenerationSvg) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolImageGenerationSvg
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolImageGenerationSvg) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Reasoning effort for SVG authoring. When omitted, uses the author model's
+// default in both Images and Responses.
+type BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoning struct {
+	// Controls how much effort the model should spend on reasoning for this request.
+	//
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
+	Effort string `json:"effort,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoning) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoning
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoning) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseToolSearchOutputItemParamToolImageGenerationSvgReasoning](
+		"effort", "none", "minimal", "low", "medium", "high", "xhigh", "max",
+	)
 }
 
 func NewBetaResponseToolSearchOutputItemParamToolLocalShellParam() BetaResponseToolSearchOutputItemParamToolLocalShellParam {
@@ -35746,6 +36126,14 @@ func (u BetaResponsesClientEventUnionParam) GetConversation() *BetaResponsesClie
 func (u BetaResponsesClientEventUnionParam) GetGenerate() *bool {
 	if vt := u.OfResponseCreate; vt != nil && vt.Generate.Valid() {
 		return &vt.Generate.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetImage() *BetaResponsesClientEventResponseCreateImageParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.Image
 	}
 	return nil
 }
@@ -36247,6 +36635,8 @@ type BetaResponsesClientEventResponseCreateParam struct {
 	Truncation string `json:"truncation,omitzero"`
 	// Domain-specific access programs to use for this request.
 	AccessPrograms BetaResponsesClientEventResponseCreateAccessProgramsParam `json:"access_programs,omitzero"`
+	// Request level image options.
+	Image BetaResponsesClientEventResponseCreateImageParam `json:"image,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
 	//
 	// Learn more:
@@ -36394,6 +36784,31 @@ func (u BetaResponsesClientEventResponseCreateConversationUnionParam) MarshalJSO
 }
 func (u *BetaResponsesClientEventResponseCreateConversationUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
+}
+
+// Request level image options.
+type BetaResponsesClientEventResponseCreateImageParam struct {
+	// Controls image context optimization. Defaults to `auto`, which uses the model,
+	// transport, and input to select a policy. Use `enabled` to require compression
+	// support or `disabled` to turn it off.
+	//
+	// Any of "auto", "enabled", "disabled".
+	ContextCompression string `json:"context_compression,omitzero"`
+	paramObj
+}
+
+func (r BetaResponsesClientEventResponseCreateImageParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponsesClientEventResponseCreateImageParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponsesClientEventResponseCreateImageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponsesClientEventResponseCreateImageParam](
+		"context_compression", "auto", "enabled", "disabled",
+	)
 }
 
 // Only one field can be non-zero.
@@ -36797,7 +37212,9 @@ const (
 	BetaResponsesClientEventResponseCreateModelGPTDaybreakBlueLatest BetaResponsesClientEventResponseCreateModel = "gpt-daybreak-blue-latest"
 	BetaResponsesClientEventResponseCreateModelGPTDaybreakRedLatest  BetaResponsesClientEventResponseCreateModel = "gpt-daybreak-red-latest"
 	BetaResponsesClientEventResponseCreateModelGPT5_6Cyber           BetaResponsesClientEventResponseCreateModel = "gpt-5.6-cyber"
+	BetaResponsesClientEventResponseCreateModelGPT6Cyber             BetaResponsesClientEventResponseCreateModel = "gpt-6-cyber"
 	BetaResponsesClientEventResponseCreateModelGPTRosalindResearch   BetaResponsesClientEventResponseCreateModel = "gpt-rosalind-research"
+	BetaResponsesClientEventResponseCreateModelGPT6Rosalind          BetaResponsesClientEventResponseCreateModel = "gpt-6-rosalind"
 )
 
 // Configuration for running moderation on the input and output of this response.
@@ -40784,6 +41201,12 @@ type BetaToolUnion struct {
 	// This field is from variant [BetaToolImageGeneration].
 	Background string `json:"background"`
 	// This field is from variant [BetaToolImageGeneration].
+	Complexity string `json:"complexity"`
+	// This field is from variant [BetaToolImageGeneration].
+	FrameCount int64 `json:"frame_count"`
+	// This field is from variant [BetaToolImageGeneration].
+	FrameDurationMs int64 `json:"frame_duration_ms"`
+	// This field is from variant [BetaToolImageGeneration].
 	InputFidelity string `json:"input_fidelity"`
 	// This field is from variant [BetaToolImageGeneration].
 	InputImageMask BetaToolImageGenerationInputImageMask `json:"input_image_mask"`
@@ -40801,6 +41224,8 @@ type BetaToolUnion struct {
 	Quality string `json:"quality"`
 	// This field is from variant [BetaToolImageGeneration].
 	Size string `json:"size"`
+	// This field is from variant [BetaToolImageGeneration].
+	Svg BetaToolImageGenerationSvg `json:"svg"`
 	// This field is from variant [BetaCustomTool].
 	Format BetaCustomToolFormatUnion `json:"format"`
 	// This field is from variant [BetaNamespaceTool].
@@ -40841,6 +41266,9 @@ type BetaToolUnion struct {
 		Container          respjson.Field
 		Action             respjson.Field
 		Background         respjson.Field
+		Complexity         respjson.Field
+		FrameCount         respjson.Field
+		FrameDurationMs    respjson.Field
 		InputFidelity      respjson.Field
 		InputImageMask     respjson.Field
 		Model              respjson.Field
@@ -40850,6 +41278,7 @@ type BetaToolUnion struct {
 		PartialImages      respjson.Field
 		Quality            respjson.Field
 		Size               respjson.Field
+		Svg                respjson.Field
 		Format             respjson.Field
 		Tools              respjson.Field
 		Execution          respjson.Field
@@ -41562,6 +41991,19 @@ type BetaToolImageGeneration struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background"`
+	// Computation spent planning the image, independently of rendering quality.
+	// Overrides the outer response's `reasoning.effort` for image generation. When
+	// omitted, inherits a supported outer reasoning effort or uses the image model's
+	// configured default. For SVG output, controls the reference image, not the SVG
+	// author's reasoning.
+	//
+	// Any of "low", "medium", "high".
+	Complexity string `json:"complexity"`
+	// Number of GIF frames. Requires `output_format` to be `gif`. Default: 9.
+	FrameCount int64 `json:"frame_count"`
+	// Duration of each GIF frame in milliseconds, rounded to 10 ms. Requires
+	// `output_format` to be `gif`. Default: 200.
+	FrameDurationMs int64 `json:"frame_duration_ms"`
 	// Control how much effort the model will exert to match the style and features,
 	// especially facial features, of input images. Supports `high` and `low` on
 	// `gpt-image-1.5`; `gpt-image-1-mini` supports only `low`. For `gpt-image-2`, omit
@@ -41575,8 +42017,8 @@ type BetaToolImageGeneration struct {
 	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
 	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
 	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
-	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
-	// `gpt-image-2`.
+	// `gpt-image-2.5-flare-2026-09-08`, `gpt-image-2.6-sunburst`,
+	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default: `gpt-image-2`.
 	//
 	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
 	// `gpt-image-2.5-flare` instead.
@@ -41587,10 +42029,14 @@ type BetaToolImageGeneration struct {
 	Moderation string `json:"moderation"`
 	// Compression level for the output image. Default: 100.
 	OutputCompression int64 `json:"output_compression"`
-	// The output format of the generated image. One of `png`, `webp`, or `jpeg`.
-	// Default: `png`.
+	// The output format of the generated image. One of `png`, `webp`, `jpeg`, `gif`,
+	// or `svg`. Default: `png`. GIF and SVG output require a model that supports the
+	// selected format. GIF output does not support partial image streaming
+	// (`partial_images` greater than `0`), `input_image_mask`, or custom
+	// `output_compression`. Responses lifecycle events can still be streamed for GIF
+	// output.
 	//
-	// Any of "png", "webp", "jpeg".
+	// Any of "png", "webp", "jpeg", "gif", "svg".
 	OutputFormat string `json:"output_format"`
 	// Number of partial images to generate in streaming mode, from 0 (default value)
 	// to 3.
@@ -41613,11 +42059,19 @@ type BetaToolImageGeneration struct {
 	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
 	// `auto` is supported for models that allow automatic sizing.
 	Size string `json:"size"`
+	// SVG author model settings. Requires `output_format` to be `svg`. When SVG model
+	// selection is enabled, omitting this object uses the outer response model.
+	// Otherwise, the default SVG author is used and explicit model overrides are
+	// unavailable.
+	Svg BetaToolImageGenerationSvg `json:"svg"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type              respjson.Field
 		Action            respjson.Field
 		Background        respjson.Field
+		Complexity        respjson.Field
+		FrameCount        respjson.Field
+		FrameDurationMs   respjson.Field
 		InputFidelity     respjson.Field
 		InputImageMask    respjson.Field
 		Model             respjson.Field
@@ -41627,6 +42081,7 @@ type BetaToolImageGeneration struct {
 		PartialImages     respjson.Field
 		Quality           respjson.Field
 		Size              respjson.Field
+		Svg               respjson.Field
 		ExtraFields       map[string]respjson.Field
 		raw               string
 	} `json:"-"`
@@ -41657,6 +42112,51 @@ type BetaToolImageGenerationInputImageMask struct {
 // Returns the unmodified JSON received from the API
 func (r BetaToolImageGenerationInputImageMask) RawJSON() string { return r.JSON.raw }
 func (r *BetaToolImageGenerationInputImageMask) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// SVG author model settings. Requires `output_format` to be `svg`. When SVG model
+// selection is enabled, omitting this object uses the outer response model.
+// Otherwise, the default SVG author is used and explicit model overrides are
+// unavailable.
+type BetaToolImageGenerationSvg struct {
+	Model string `json:"model"`
+	// Reasoning effort for SVG authoring. When omitted, uses the author model's
+	// default in both Images and Responses.
+	Reasoning BetaToolImageGenerationSvgReasoning `json:"reasoning" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Model       respjson.Field
+		Reasoning   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaToolImageGenerationSvg) RawJSON() string { return r.JSON.raw }
+func (r *BetaToolImageGenerationSvg) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Reasoning effort for SVG authoring. When omitted, uses the author model's
+// default in both Images and Responses.
+type BetaToolImageGenerationSvgReasoning struct {
+	// Controls how much effort the model should spend on reasoning for this request.
+	//
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
+	Effort string `json:"effort"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Effort      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaToolImageGenerationSvgReasoning) RawJSON() string { return r.JSON.raw }
+func (r *BetaToolImageGenerationSvgReasoning) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -41951,6 +42451,30 @@ func (u BetaToolUnionParam) GetBackground() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolUnionParam) GetComplexity() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Complexity
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolUnionParam) GetFrameCount() *int64 {
+	if vt := u.OfImageGeneration; vt != nil && vt.FrameCount.Valid() {
+		return &vt.FrameCount.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolUnionParam) GetFrameDurationMs() *int64 {
+	if vt := u.OfImageGeneration; vt != nil && vt.FrameDurationMs.Valid() {
+		return &vt.FrameDurationMs.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u BetaToolUnionParam) GetInputFidelity() *string {
 	if vt := u.OfImageGeneration; vt != nil {
 		return &vt.InputFidelity
@@ -42018,6 +42542,14 @@ func (u BetaToolUnionParam) GetQuality() *string {
 func (u BetaToolUnionParam) GetSize() *string {
 	if vt := u.OfImageGeneration; vt != nil {
 		return &vt.Size
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolUnionParam) GetSvg() *BetaToolImageGenerationSvgParam {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Svg
 	}
 	return nil
 }
@@ -42403,9 +42935,13 @@ func (u betaToolUnionParamUserLocation) AsAny() any { return u.any }
 func (u betaToolUnionParamUserLocation) GetCity() *string {
 	switch vt := u.any.(type) {
 	case *BetaWebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.City)
+		if vt.City.Valid() {
+			return &vt.City.Value
+		}
 	case *BetaWebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.City)
+		if vt.City.Valid() {
+			return &vt.City.Value
+		}
 	}
 	return nil
 }
@@ -42414,9 +42950,13 @@ func (u betaToolUnionParamUserLocation) GetCity() *string {
 func (u betaToolUnionParamUserLocation) GetCountry() *string {
 	switch vt := u.any.(type) {
 	case *BetaWebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Country)
+		if vt.Country.Valid() {
+			return &vt.Country.Value
+		}
 	case *BetaWebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Country)
+		if vt.Country.Valid() {
+			return &vt.Country.Value
+		}
 	}
 	return nil
 }
@@ -42425,9 +42965,13 @@ func (u betaToolUnionParamUserLocation) GetCountry() *string {
 func (u betaToolUnionParamUserLocation) GetRegion() *string {
 	switch vt := u.any.(type) {
 	case *BetaWebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Region)
+		if vt.Region.Valid() {
+			return &vt.Region.Value
+		}
 	case *BetaWebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Region)
+		if vt.Region.Valid() {
+			return &vt.Region.Value
+		}
 	}
 	return nil
 }
@@ -42436,9 +42980,13 @@ func (u betaToolUnionParamUserLocation) GetRegion() *string {
 func (u betaToolUnionParamUserLocation) GetTimezone() *string {
 	switch vt := u.any.(type) {
 	case *BetaWebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Timezone)
+		if vt.Timezone.Valid() {
+			return &vt.Timezone.Value
+		}
 	case *BetaWebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Timezone)
+		if vt.Timezone.Valid() {
+			return &vt.Timezone.Value
+		}
 	}
 	return nil
 }
@@ -42823,6 +43371,11 @@ func (r *BetaToolProgrammaticToolCallingParam) UnmarshalJSON(data []byte) error 
 //
 // The property Type is required.
 type BetaToolImageGenerationParam struct {
+	// Number of GIF frames. Requires `output_format` to be `gif`. Default: 9.
+	FrameCount param.Opt[int64] `json:"frame_count,omitzero"`
+	// Duration of each GIF frame in milliseconds, rounded to 10 ms. Requires
+	// `output_format` to be `gif`. Default: 200.
+	FrameDurationMs param.Opt[int64] `json:"frame_duration_ms,omitzero"`
 	// Compression level for the output image. Default: 100.
 	OutputCompression param.Opt[int64] `json:"output_compression,omitzero"`
 	// Number of partial images to generate in streaming mode, from 0 (default value)
@@ -42851,14 +43404,22 @@ type BetaToolImageGenerationParam struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background,omitzero"`
+	// Computation spent planning the image, independently of rendering quality.
+	// Overrides the outer response's `reasoning.effort` for image generation. When
+	// omitted, inherits a supported outer reasoning effort or uses the image model's
+	// configured default. For SVG output, controls the reference image, not the SVG
+	// author's reasoning.
+	//
+	// Any of "low", "medium", "high".
+	Complexity string `json:"complexity,omitzero"`
 	// Optional mask for inpainting. Contains `image_url` (string, optional) and
 	// `file_id` (string, optional).
 	InputImageMask BetaToolImageGenerationInputImageMaskParam `json:"input_image_mask,omitzero"`
 	// The image generation model to use. One of `gpt-image-1-mini`, `gpt-image-1.5`,
 	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
 	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
-	// `gpt-image-2.5-flare-2026-09-08`, or `chatgpt-image-latest`. Default:
-	// `gpt-image-2`.
+	// `gpt-image-2.5-flare-2026-09-08`, `gpt-image-2.6-sunburst`,
+	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default: `gpt-image-2`.
 	//
 	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
 	// `gpt-image-2.5-flare` instead.
@@ -42867,10 +43428,14 @@ type BetaToolImageGenerationParam struct {
 	//
 	// Any of "auto", "low".
 	Moderation string `json:"moderation,omitzero"`
-	// The output format of the generated image. One of `png`, `webp`, or `jpeg`.
-	// Default: `png`.
+	// The output format of the generated image. One of `png`, `webp`, `jpeg`, `gif`,
+	// or `svg`. Default: `png`. GIF and SVG output require a model that supports the
+	// selected format. GIF output does not support partial image streaming
+	// (`partial_images` greater than `0`), `input_image_mask`, or custom
+	// `output_compression`. Responses lifecycle events can still be streamed for GIF
+	// output.
 	//
-	// Any of "png", "webp", "jpeg".
+	// Any of "png", "webp", "jpeg", "gif", "svg".
 	OutputFormat string `json:"output_format,omitzero"`
 	// The quality of the generated image. The GPT image models support `low`,
 	// `medium`, and `high`. `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`,
@@ -42890,6 +43455,11 @@ type BetaToolImageGenerationParam struct {
 	// `1024x1024`, `1536x1024`, and `1024x1536` are supported by the GPT image models;
 	// `auto` is supported for models that allow automatic sizing.
 	Size string `json:"size,omitzero"`
+	// SVG author model settings. Requires `output_format` to be `svg`. When SVG model
+	// selection is enabled, omitting this object uses the outer response model.
+	// Otherwise, the default SVG author is used and explicit model overrides are
+	// unavailable.
+	Svg BetaToolImageGenerationSvgParam `json:"svg,omitzero"`
 	// The type of the image generation tool. Always `image_generation`.
 	//
 	// This field can be elided, and will marshal its zero value as "image_generation".
@@ -42913,13 +43483,16 @@ func init() {
 		"background", "transparent", "opaque", "auto",
 	)
 	apijson.RegisterFieldValidator[BetaToolImageGenerationParam](
+		"complexity", "low", "medium", "high",
+	)
+	apijson.RegisterFieldValidator[BetaToolImageGenerationParam](
 		"input_fidelity", "high", "low",
 	)
 	apijson.RegisterFieldValidator[BetaToolImageGenerationParam](
 		"moderation", "auto", "low",
 	)
 	apijson.RegisterFieldValidator[BetaToolImageGenerationParam](
-		"output_format", "png", "webp", "jpeg",
+		"output_format", "png", "webp", "jpeg", "gif", "svg",
 	)
 	apijson.RegisterFieldValidator[BetaToolImageGenerationParam](
 		"quality", "low", "medium", "high", "xhigh", "max", "auto",
@@ -42942,6 +43515,50 @@ func (r BetaToolImageGenerationInputImageMaskParam) MarshalJSON() (data []byte, 
 }
 func (r *BetaToolImageGenerationInputImageMaskParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// SVG author model settings. Requires `output_format` to be `svg`. When SVG model
+// selection is enabled, omitting this object uses the outer response model.
+// Otherwise, the default SVG author is used and explicit model overrides are
+// unavailable.
+type BetaToolImageGenerationSvgParam struct {
+	Model param.Opt[string] `json:"model,omitzero"`
+	// Reasoning effort for SVG authoring. When omitted, uses the author model's
+	// default in both Images and Responses.
+	Reasoning BetaToolImageGenerationSvgReasoningParam `json:"reasoning,omitzero"`
+	paramObj
+}
+
+func (r BetaToolImageGenerationSvgParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaToolImageGenerationSvgParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaToolImageGenerationSvgParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Reasoning effort for SVG authoring. When omitted, uses the author model's
+// default in both Images and Responses.
+type BetaToolImageGenerationSvgReasoningParam struct {
+	// Controls how much effort the model should spend on reasoning for this request.
+	//
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
+	Effort string `json:"effort,omitzero"`
+	paramObj
+}
+
+func (r BetaToolImageGenerationSvgReasoningParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaToolImageGenerationSvgReasoningParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaToolImageGenerationSvgReasoningParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaToolImageGenerationSvgReasoningParam](
+		"effort", "none", "minimal", "low", "medium", "high", "xhigh", "max",
+	)
 }
 
 func NewBetaToolLocalShellParam() BetaToolLocalShellParam {
@@ -44415,6 +45032,8 @@ type BetaResponseNewParams struct {
 	Truncation BetaResponseNewParamsTruncation `json:"truncation,omitzero"`
 	// Domain-specific access programs to use for this request.
 	AccessPrograms BetaResponseNewParamsAccessPrograms `json:"access_programs,omitzero"`
+	// Request level image options.
+	Image BetaResponseNewParamsImage `json:"image,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
 	//
 	// Learn more:
@@ -44548,6 +45167,31 @@ func (u BetaResponseNewParamsConversationUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *BetaResponseNewParamsConversationUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
+}
+
+// Request level image options.
+type BetaResponseNewParamsImage struct {
+	// Controls image context optimization. Defaults to `auto`, which uses the model,
+	// transport, and input to select a policy. Use `enabled` to require compression
+	// support or `disabled` to turn it off.
+	//
+	// Any of "auto", "enabled", "disabled".
+	ContextCompression string `json:"context_compression,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseNewParamsImage) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseNewParamsImage
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseNewParamsImage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseNewParamsImage](
+		"context_compression", "auto", "enabled", "disabled",
+	)
 }
 
 // Only one field can be non-zero.
@@ -44942,7 +45586,9 @@ const (
 	BetaResponseNewParamsModelGPTDaybreakBlueLatest BetaResponseNewParamsModel = "gpt-daybreak-blue-latest"
 	BetaResponseNewParamsModelGPTDaybreakRedLatest  BetaResponseNewParamsModel = "gpt-daybreak-red-latest"
 	BetaResponseNewParamsModelGPT5_6Cyber           BetaResponseNewParamsModel = "gpt-5.6-cyber"
+	BetaResponseNewParamsModelGPT6Cyber             BetaResponseNewParamsModel = "gpt-6-cyber"
 	BetaResponseNewParamsModelGPTRosalindResearch   BetaResponseNewParamsModel = "gpt-rosalind-research"
+	BetaResponseNewParamsModelGPT6Rosalind          BetaResponseNewParamsModel = "gpt-6-rosalind"
 )
 
 // Configuration for running moderation on the input and output of this response.
@@ -45473,6 +46119,8 @@ type BetaResponseCompactParams struct {
 	//
 	// Any of "auto", "default", "fast", "flex", "priority".
 	ServiceTier BetaResponseCompactParamsServiceTier `json:"service_tier,omitzero"`
+	// Request level image options.
+	Image BetaResponseCompactParamsImage `json:"image,omitzero"`
 	// Any of "responses_multi_agent=v1".
 	Betas []string `header:"openai-beta,omitzero" json:"-"`
 	paramObj
@@ -45862,8 +46510,35 @@ const (
 	BetaResponseCompactParamsModelGPTDaybreakBlueLatest BetaResponseCompactParamsModel = "gpt-daybreak-blue-latest"
 	BetaResponseCompactParamsModelGPTDaybreakRedLatest  BetaResponseCompactParamsModel = "gpt-daybreak-red-latest"
 	BetaResponseCompactParamsModelGPT5_6Cyber           BetaResponseCompactParamsModel = "gpt-5.6-cyber"
+	BetaResponseCompactParamsModelGPT6Cyber             BetaResponseCompactParamsModel = "gpt-6-cyber"
 	BetaResponseCompactParamsModelGPTRosalindResearch   BetaResponseCompactParamsModel = "gpt-rosalind-research"
+	BetaResponseCompactParamsModelGPT6Rosalind          BetaResponseCompactParamsModel = "gpt-6-rosalind"
 )
+
+// Request level image options.
+type BetaResponseCompactParamsImage struct {
+	// Controls image context optimization. Defaults to `auto`, which uses the model,
+	// transport, and input to select a policy. Use `enabled` to require compression
+	// support or `disabled` to turn it off.
+	//
+	// Any of "auto", "enabled", "disabled".
+	ContextCompression string `json:"context_compression,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseCompactParamsImage) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseCompactParamsImage
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseCompactParamsImage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseCompactParamsImage](
+		"context_compression", "auto", "enabled", "disabled",
+	)
+}
 
 // Only one field can be non-zero.
 //
