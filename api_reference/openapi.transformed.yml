@@ -28695,756 +28695,83 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       x-oaiMeta:
         group: content_provenance_checks
-  /videos:
+  /responses/input_tokens?beta=true:
     post:
       tags:
-      - Videos
-      summary: Create a video
-      description: Create a new video generation job from a prompt and optional reference assets.
-      operationId: createVideo
-      parameters: []
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/CreateVideoMultipartBody'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VideoResource'
-        '400':
-          description: The video request is invalid, or the organization does not support video generation.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: A referenced character was not found or is not accessible, or the Videos API is unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '429':
-          $ref: '#/components/responses/InferenceRateLimited'
-        '500':
-          description: The video generation task could not be created.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '503':
-          $ref: '#/components/responses/InferenceServiceUnavailable'
-      deprecated: true
-      x-oaiMeta:
-        group: videos
-        path: create
-        examples:
-          request:
-            curl: |
-              curl https://api.openai.com/v1/videos \
-                -H "Authorization: Bearer $OPENAI_API_KEY" \
-                -F "model=sora-2" \
-                -F "prompt=A calico cat playing a piano on stage"
-            javascript: |
-              import OpenAI from 'openai';
-
-              const openai = new OpenAI();
-
-              const video = await openai.videos.create({ prompt: 'A calico cat playing a piano on stage' });
-
-              console.log(video.id);
-            python: |
-              from openai import OpenAI
-
-              client = OpenAI()
-              video = client.videos.create(
-                  prompt="A calico cat playing a piano on stage",
-              )
-              print(video.id)
-            go: |
-              package main
-
-              import (
-                "context"
-                "fmt"
-
-                "github.com/openai/openai-go"
-              )
-
-              func main() {
-                client := openai.NewClient()
-                video, err := client.Videos.New(context.TODO(), openai.VideoNewParams{
-                  Prompt: "A calico cat playing a piano on stage",
-                })
-                if err != nil {
-                  panic(err.Error())
-                }
-                fmt.Printf("%+v\n", video.ID)
-              }
-            ruby: |
-              require "openai"
-
-              openai = OpenAI::Client.new
-
-              video = openai.videos.create(prompt: "A calico cat playing a piano on stage")
-
-              puts(video)
-            java: |
-              package com.openai.example;
-
-              import com.openai.client.OpenAIClient;
-              import com.openai.client.okhttp.OpenAIOkHttpClient;
-              import com.openai.models.videos.Video;
-              import com.openai.models.videos.VideoCreateParams;
-
-              public final class Main {
-                  private Main() {}
-
-                  public static void main(String[] args) {
-                      OpenAIClient client = OpenAIOkHttpClient.fromEnv();
-
-                      VideoCreateParams params = VideoCreateParams.builder()
-                          .prompt("A calico cat playing a piano on stage")
-                          .build();
-                      Video video = client.videos().create(params);
-                  }
-              }
-          response: |
-            {
-              "id": "video_123",
-              "object": "video",
-              "model": "sora-2",
-              "status": "queued",
-              "progress": 0,
-              "created_at": 1712697600,
-              "size": "1024x1792",
-              "seconds": "8",
-              "prompt": "A calico cat playing a piano on stage",
-              "completed_at": null,
-              "expires_at": null,
-              "error": null,
-              "remixed_from_video_id": null
-            }
-    get:
-      tags:
-      - Videos
-      summary: List videos
-      description: List recently generated videos for the current project.
-      operationId: ListVideos
-      parameters:
-      - name: limit
-        in: query
-        description: Number of items to retrieve
-        required: false
-        schema:
-          type: integer
-          minimum: 0
-          maximum: 100
-      - name: order
-        in: query
-        description: Sort order of results by timestamp. Use `asc` for ascending order or `desc` for descending order.
-        required: false
-        schema:
-          $ref: '#/components/schemas/OrderEnum'
-      - name: after
-        in: query
-        description: Identifier for the last item from the previous pagination request
-        required: false
-        schema:
-          description: Identifier for the last item from the previous pagination request
-          type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VideoListResource'
-        '400':
-          description: The query parameters are invalid, or the organization does not support video generation.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: The video specified by after was not found or is not accessible, or the Videos API is unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      deprecated: true
-      x-oaiMeta:
-        group: videos
-        path: list for the organization.
-        examples:
-          request:
-            curl: |
-              curl https://api.openai.com/v1/videos \
-                -H "Authorization: Bearer $OPENAI_API_KEY"
-            javascript: |
-              import OpenAI from 'openai';
-
-              const openai = new OpenAI();
-
-              // Automatically fetches more pages as needed.
-              for await (const video of openai.videos.list()) {
-                console.log(video.id);
-              }
-            python: |
-              from openai import OpenAI
-
-              client = OpenAI()
-              page = client.videos.list()
-              page = page.data[0]
-              print(page.id)
-            go: |
-              package main
-
-              import (
-                "context"
-                "fmt"
-
-                "github.com/openai/openai-go"
-              )
-
-              func main() {
-                client := openai.NewClient()
-                page, err := client.Videos.List(context.TODO(), openai.VideoListParams{
-
-                })
-                if err != nil {
-                  panic(err.Error())
-                }
-                fmt.Printf("%+v\n", page)
-              }
-            ruby: |
-              require "openai"
-
-              openai = OpenAI::Client.new
-
-              page = openai.videos.list
-
-              puts(page)
-            java: |
-              package com.openai.example;
-
-              import com.openai.client.OpenAIClient;
-              import com.openai.client.okhttp.OpenAIOkHttpClient;
-              import com.openai.models.videos.VideoListPage;
-              import com.openai.models.videos.VideoListParams;
-
-              public final class Main {
-                  private Main() {}
-
-                  public static void main(String[] args) {
-                      OpenAIClient client = OpenAIOkHttpClient.fromEnv();
-
-                      VideoListPage page = client.videos().list();
-                  }
-              }
-          response: |
-            {
-              "data": [
-                {
-                  "id": "video_123",
-                  "object": "video",
-                  "model": "sora-2",
-                  "status": "completed",
-                  "created_at": 1712697600,
-                  "completed_at": 1712697840,
-                  "progress": 100,
-                  "expires_at": null,
-                  "error": null,
-                  "prompt": "A calico cat playing a piano on stage",
-                  "size": "1024x1792",
-                  "seconds": "8",
-                  "remixed_from_video_id": null
-                }
-              ],
-              "object": "list",
-              "first_id": "video_123",
-              "last_id": "video_123",
-              "has_more": false
-            }
-  /videos/characters:
-    post:
-      tags:
-      - Videos
-      summary: Create a character
-      description: Create a character from an uploaded video.
-      operationId: CreateVideoCharacter
-      parameters: []
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/CreateVideoCharacterBody'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VideoCharacterResource'
-        '400':
-          description: The character request or video upload is invalid, or the organization does not support video generation.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: The video character endpoint is unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: The character could not be created.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '504':
-          description: The character creation request timed out.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      deprecated: true
-  /videos/characters/{character_id}:
-    get:
-      tags:
-      - Videos
-      summary: Retrieve a character
-      description: Fetch a character.
-      operationId: GetVideoCharacter
-      parameters:
-      - name: character_id
-        in: path
-        description: The identifier of the character to retrieve.
-        required: true
-        schema:
-          example: char_123
-          type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VideoCharacterResource'
-        '400':
-          description: The character ID is invalid, or the organization does not support video generation.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: The character was not found or is not accessible, or the video character endpoint is unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      deprecated: true
-  /videos/edits:
-    post:
-      tags:
-      - Videos
-      summary: Create a video edit
-      description: Create a new video generation job by editing a source video or existing generated video.
-      operationId: CreateVideoEdit
-      parameters: []
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/CreateVideoEditMultipartBody'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VideoResource'
-        '400':
-          description: The edit request or source video is invalid, or the organization does not support video generation.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: The source video or a referenced character was not found or is not accessible, the source video is not ready, or the Videos API is unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '429':
-          $ref: '#/components/responses/InferenceRateLimited'
-        '500':
-          description: The source video media is unavailable or the edit task could not be created.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '503':
-          $ref: '#/components/responses/InferenceServiceUnavailable'
-      deprecated: true
-  /videos/extensions:
-    post:
-      tags:
-      - Videos
-      summary: Create a video extension
-      description: Create an extension of a completed video.
-      operationId: CreateVideoExtend
-      parameters: []
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/CreateVideoExtendMultipartBody'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VideoResource'
-        '400':
-          description: The extension request or source video is invalid, or the organization does not support video generation.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: The source video was not found or is not accessible, the source video is not ready, or the Videos API is unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '429':
-          $ref: '#/components/responses/InferenceRateLimited'
-        '500':
-          description: The source video media is unavailable or the extension task could not be created.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '503':
-          $ref: '#/components/responses/InferenceServiceUnavailable'
-      deprecated: true
-  /videos/{video_id}:
-    get:
-      tags:
-      - Videos
-      summary: Retrieve a video
-      description: Fetch the latest metadata for a generated video.
-      operationId: GetVideo
-      parameters:
-      - name: video_id
-        in: path
-        description: The identifier of the video to retrieve.
-        required: true
-        schema:
-          example: video_123
-          type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VideoResource'
-        '400':
-          description: The request is invalid, or the organization does not support video generation.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: The video was not found or is not accessible, or the Videos API is unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      deprecated: true
-      x-oaiMeta:
-        group: videos
-        path: retrieve matching the provided identifier.
-        examples:
-          response: |
-            {
-              "id": "video_123",
-              "object": "video",
-              "model": "sora-2",
-              "status": "queued",
-              "progress": 0,
-              "created_at": 1712697600,
-              "completed_at": null,
-              "error": null,
-              "expires_at": null,
-              "prompt": "A calico cat playing a piano on stage",
-              "remixed_from_video_id": null,
-              "size": "720x1280",
-              "seconds": "4"
-            }
-          request:
-            javascript: |
-              import OpenAI from 'openai';
-
-              const client = new OpenAI();
-
-              const video = await client.videos.retrieve('video_123');
-
-              console.log(video.id);
-            python: |
-              from openai import OpenAI
-
-              client = OpenAI()
-              video = client.videos.retrieve(
-                  "video_123",
-              )
-              print(video.id)
-            go: |
-              package main
-
-              import (
-                "context"
-                "fmt"
-
-                "github.com/openai/openai-go"
-              )
-
-              func main() {
-                client := openai.NewClient()
-                video, err := client.Videos.Get(context.TODO(), "video_123")
-                if err != nil {
-                  panic(err.Error())
-                }
-                fmt.Printf("%+v\n", video.ID)
-              }
-            ruby: |
-              require "openai"
-
-              openai = OpenAI::Client.new
-
-              video = openai.videos.retrieve("video_123")
-
-              puts(video)
-            java: |
-              package com.openai.example;
-
-              import com.openai.client.OpenAIClient;
-              import com.openai.client.okhttp.OpenAIOkHttpClient;
-              import com.openai.models.videos.Video;
-              import com.openai.models.videos.VideoRetrieveParams;
-
-              public final class Main {
-                  private Main() {}
-
-                  public static void main(String[] args) {
-                      OpenAIClient client = OpenAIOkHttpClient.fromEnv();
-
-                      Video video = client.videos().retrieve("video_123");
-                  }
-              }
-    delete:
-      tags:
-      - Videos
-      summary: Delete a video
-      description: Permanently delete a completed or failed video and its stored assets.
-      operationId: DeleteVideo
-      parameters:
-      - name: video_id
-        in: path
-        description: The identifier of the video to delete.
-        required: true
-        schema:
-          example: video_123
-          type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeletedVideoResource'
-        '400':
-          description: The video is still being processed, the request is invalid, or the organization does not support video generation.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: The video was not found or is not accessible, or the Videos API is unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: The video or its stored media could not be deleted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      deprecated: true
-      x-oaiMeta:
-        group: videos
-        path: delete
-        examples:
-          response: |
-            {
-              "id": "video_123",
-              "object": "video.deleted",
-              "deleted": true
-            }
-          request:
-            javascript: |
-              import OpenAI from 'openai';
-
-              const client = new OpenAI();
-
-              const video = await client.videos.delete('video_123');
-
-              console.log(video.id);
-            python: |
-              from openai import OpenAI
-
-              client = OpenAI()
-              video = client.videos.delete(
-                  "video_123",
-              )
-              print(video.id)
-            go: |
-              package main
-
-              import (
-                "context"
-                "fmt"
-
-                "github.com/openai/openai-go"
-              )
-
-              func main() {
-                client := openai.NewClient()
-                video, err := client.Videos.Delete(context.TODO(), "video_123")
-                if err != nil {
-                  panic(err.Error())
-                }
-                fmt.Printf("%+v\n", video.ID)
-              }
-            ruby: |
-              require "openai"
-
-              openai = OpenAI::Client.new
-
-              video = openai.videos.delete("video_123")
-
-              puts(video)
-            java: |
-              package com.openai.example;
-
-              import com.openai.client.OpenAIClient;
-              import com.openai.client.okhttp.OpenAIOkHttpClient;
-              import com.openai.models.videos.VideoDeleteParams;
-              import com.openai.models.videos.VideoDeleteResponse;
-
-              public final class Main {
-                  private Main() {}
-
-                  public static void main(String[] args) {
-                      OpenAIClient client = OpenAIOkHttpClient.fromEnv();
-
-                      VideoDeleteResponse video = client.videos().delete("video_123");
-                  }
-              }
-  /videos/{video_id}/content:
-    get:
-      tags:
-      - Videos
-      summary: Download video content
+      - Responses
+      summary: Get input token counts
       description: |-
-        Download the generated video bytes or a derived preview asset.
+        Returns input token counts of the request.
 
-        Streams the rendered video content for the specified video job.
-      operationId: RetrieveVideoContent
+        Returns an object with `object` set to `response.input_tokens` and an `input_tokens` count.
+      operationId: beta_Getinputtokencounts
       parameters:
-      - name: video_id
-        in: path
-        description: The identifier of the video whose media to download.
-        required: true
-        schema:
-          example: video_123
-          type: string
-      - name: variant
-        in: query
-        description: Which downloadable asset to return. Defaults to the MP4 video.
+      - name: openai-beta
+        in: header
         required: false
+        description: Optional beta features to enable for this request.
+        style: simple
+        explode: false
         schema:
-          $ref: '#/components/schemas/VideoContentVariant'
+          type: array
+          x-stainless-param: betas
+          items:
+            type: string
+            enum:
+            - responses_multi_agent=v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BetaTokenCountsBody'
       responses:
         '200':
-          description: The video bytes or preview asset that matches the requested variant.
+          description: Success
           content:
-            video/mp4:
-              schema:
-                type: string
-                format: binary
-              example: <binary MP4 video content>
-            image/webp:
-              schema:
-                type: string
-                format: binary
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/BetaTokenCountsResource'
         '400':
-          description: The request or content variant is invalid, or the organization does not support video generation.
+          description: The request to count input tokens is invalid or contains incompatible parameters.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: The video was not found or is not ready, its download is unavailable or expired, or the Videos API is unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: The requested video media is unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      deprecated: true
+                $ref: '#/components/schemas/BetaErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
       x-oaiMeta:
-        group: videos
-        path: content
+        group: responses
         examples:
           request:
+            curl: |
+              curl -X POST https://api.openai.com/v1/responses/input_tokens \
+                  -H "Content-Type: application/json" \
+                  -H "Authorization: Bearer $OPENAI_API_KEY" \
+                  -d '{
+                    "model": "gpt-6-astra",
+                    "input": "Tell me a joke."
+                  }'
             javascript: |
-              import OpenAI from 'openai';
+              import OpenAI from "openai";
 
               const client = new OpenAI();
 
-              const response = await client.videos.downloadContent('video_123');
+              const response = await client.responses.inputTokens.count({
+                model: "gpt-6-astra",
+                input: "Tell me a joke.",
+              });
 
-              console.log(response);
-
-              const content = await response.blob();
-              console.log(content);
+              console.log(response.input_tokens);
             python: |
               from openai import OpenAI
 
               client = OpenAI()
-              response = client.videos.download_content(
-                  video_id="video_123",
+
+              response = client.responses.input_tokens.count(
+                  model="gpt-6-astra",
+                  input="Tell me a joke."
               )
-              print(response)
-              content = response.read()
-              print(content)
+              print(response.input_tokens)
             go: |
               package main
 
@@ -29453,28 +28780,26 @@ paths:
                 "fmt"
 
                 "github.com/openai/openai-go"
+                "github.com/openai/openai-go/responses"
               )
 
               func main() {
                 client := openai.NewClient()
-                response, err := client.Videos.DownloadContent(
-                  context.TODO(),
-                  "video_123",
-                  openai.VideoDownloadContentParams{
-
-                  },
-                )
+                response, err := client.Responses.InputTokens.Count(context.TODO(), responses.InputTokenCountParams{
+                  Model: "gpt-6-astra",
+                  Input: "Tell me a joke.",
+                })
                 if err != nil {
                   panic(err.Error())
                 }
-                fmt.Printf("%+v\n", response)
+                fmt.Printf("%+v\n", response.InputTokens)
               }
             ruby: |
               require "openai"
 
               openai = OpenAI::Client.new
 
-              response = openai.videos.download_content("video_123")
+              response = openai.responses.input_tokens.count(model: "gpt-6-astra", input: "Tell me a joke.")
 
               puts(response)
             java: |
@@ -29482,8 +28807,8 @@ paths:
 
               import com.openai.client.OpenAIClient;
               import com.openai.client.okhttp.OpenAIOkHttpClient;
-              import com.openai.core.http.HttpResponse;
-              import com.openai.models.videos.VideoDownloadContentParams;
+              import com.openai.models.responses.inputtokens.InputTokenCountParams;
+              import com.openai.models.responses.inputtokens.InputTokenCountResponse;
 
               public final class Main {
                   private Main() {}
@@ -29491,160 +28816,1988 @@ paths:
                   public static void main(String[] args) {
                       OpenAIClient client = OpenAIOkHttpClient.fromEnv();
 
-                      HttpResponse response = client.videos().downloadContent("video_123");
+                      InputTokenCountParams params = InputTokenCountParams.builder()
+                          .model("gpt-6-astra")
+                          .input("Tell me a joke.")
+                          .build();
+
+                      InputTokenCountResponse response = client.responses().inputTokens().count(params);
                   }
               }
-  /videos/{video_id}/remix:
-    post:
+          response: |
+            {
+              "object": "response.input_tokens",
+              "input_tokens": 11
+            }
+  /responses/{response_id}/input_items?beta=true:
+    get:
+      operationId: beta_listInputItems
       tags:
-      - Videos
-      summary: Create a video remix
-      description: Create a remix of a completed video using a refreshed prompt.
-      operationId: CreateVideoRemix
+      - Responses
+      summary: List input items
+      description: Returns a list of input items for a given response.
       parameters:
-      - name: video_id
-        in: path
-        description: The identifier of the completed video to remix.
+      - in: path
+        name: response_id
         required: true
         schema:
-          example: video_123
           type: string
+        description: The ID of the response to retrieve input items for.
+      - name: limit
+        in: query
+        description: |
+          A limit on the number of objects to be returned. Limit can range between
+          1 and 100, and the default is 20.
+        required: false
+        schema:
+          type: integer
+          default: 20
+      - in: query
+        name: order
+        schema:
+          type: string
+          enum:
+          - asc
+          - desc
+        description: |
+          The order to return the input items in. Default is `desc`.
+          - `asc`: Return the input items in ascending order.
+          - `desc`: Return the input items in descending order.
+      - in: query
+        name: after
+        schema:
+          type: string
+        description: |
+          An item ID to list items after, used in pagination.
+      - in: query
+        name: include
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/BetaIncludeEnum'
+        description: |
+          Additional fields to include in the response. See the `include`
+          parameter for Response creation above for more information.
+      - name: openai-beta
+        in: header
+        required: false
+        description: Optional beta features to enable for this request.
+        style: simple
+        explode: false
+        schema:
+          type: array
+          x-stainless-param: betas
+          items:
+            type: string
+            enum:
+            - responses_multi_agent=v1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BetaResponseItemList'
+        '404':
+          description: The response or the item specified by `after` was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BetaErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      x-oaiMeta:
+        group: responses
+        examples:
+          request:
+            curl: |
+              curl https://api.openai.com/v1/responses/resp_abc123/input_items \
+                -H "Content-Type: application/json" \
+                -H "Authorization: Bearer $OPENAI_API_KEY"
+            javascript: |
+              import OpenAI from "openai";
+              const client = new OpenAI();
+
+              const response = await client.responses.inputItems.list("resp_123");
+              console.log(response.data);
+            python: |
+              from openai import OpenAI
+              client = OpenAI()
+
+              response = client.responses.input_items.list("resp_123")
+              print(response.data)
+          response: |
+            {
+              "object": "list",
+              "data": [
+                {
+                  "id": "msg_abc123",
+                  "type": "message",
+                  "role": "user",
+                  "content": [
+                    {
+                      "type": "input_text",
+                      "text": "Tell me a three sentence bedtime story about a unicorn."
+                    }
+                  ]
+                }
+              ],
+              "first_id": "msg_abc123",
+              "last_id": "msg_abc123",
+              "has_more": false
+            }
+  /responses/compact?beta=true:
+    post:
+      tags:
+      - Responses
+      summary: Compact conversation
+      description: |-
+        Compact a conversation. Returns a compacted response object.
+
+        Learn when and how to compact long-running conversations in the [conversation state guide](https://developers.openai.com/api/docs/guides/conversation-state#managing-the-context-window). For ZDR-compatible compaction details, see [Compaction (advanced)](https://developers.openai.com/api/docs/guides/conversation-state#compaction-advanced).
+      operationId: beta_Compactconversation
+      parameters:
+      - name: openai-beta
+        in: header
+        required: false
+        description: Optional beta features to enable for this request.
+        style: simple
+        explode: false
+        schema:
+          type: array
+          x-stainless-param: betas
+          items:
+            type: string
+            enum:
+            - responses_multi_agent=v1
       requestBody:
         content:
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/CreateVideoRemixBody'
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateVideoRemixBody'
+              $ref: '#/components/schemas/BetaCompactResponseMethodPublicBody'
       responses:
         '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VideoResource'
+                $ref: '#/components/schemas/BetaCompactResource'
         '400':
-          description: The request or source video is not supported for remixing, or the organization does not support video generation.
+          description: Invalid compaction request or incompatible input parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BetaErrorResponse'
+        '429':
+          $ref: '#/components/responses/InferenceRateLimited'
+        '503':
+          $ref: '#/components/responses/InferenceServiceUnavailable'
+      x-oaiMeta:
+        group: responses
+        examples:
+          request:
+            curl: |
+              curl -X POST https://api.openai.com/v1/responses/compact \
+                  -H "Content-Type: application/json" \
+                  -H "Authorization: Bearer $OPENAI_API_KEY" \
+                  -d '{
+                    "model": "gpt-6-astra",
+                    "input": [
+                      {
+                        "role": "user",
+                        "content": "Create a simple landing page for a dog petting café."
+                      },
+                      {
+                        "id": "msg_001",
+                        "type": "message",
+                        "status": "completed",
+                        "content": [
+                          {
+                            "type": "output_text",
+                            "annotations": [],
+                            "logprobs": [],
+                            "text": "Below is a single file, ready-to-use landing page for a dog petting café:..."
+                          }
+                        ],
+                        "role": "assistant"
+                      }
+                    ]
+                  }'
+            javascript: |
+              import OpenAI from "openai";
+
+              const openai = new OpenAI();
+
+              // Compact the previous response if you are running out of tokens
+              const compactedResponse = await openai.responses.compact({
+                model: "gpt-6-astra",
+                input: [
+                  {
+                    role: "user",
+                    content: "Create a simple landing page for a dog petting café.",
+                  },
+                  // All items returned from previous requests are included here, like reasoning, message, function call, etc.
+                  {
+                    id: "msg_030d085c0b53e67e0069332e3a72d4819c96c6f2c4adc15d33",
+                    type: "message",
+                    status: "completed",
+                    content: [
+                      {
+                        type: "output_text",
+                        annotations: [],
+                        logprobs: [],
+                        text: "Below is a single file, ready-to-use landing page for a dog petting café:...",
+                      },
+                    ],
+                    role: "assistant",
+                  },
+                ],
+              });
+
+              // Pass the compactedResponse.output as input to the next request
+              console.log(compactedResponse);
+            python: |
+              from openai import OpenAI
+
+              client = OpenAI()
+
+              compacted_response = client.responses.compact(
+                  model="gpt-6-astra",
+                  input=[
+                  {
+                      "role": "user",
+                      "content": "Create a simple landing page for a dog petting cafe.",
+                  },
+                  # All items returned from previous requests are included here, like reasoning, message, function call, etc.
+                  {
+                      "id": "msg_001",
+                      "type": "message",
+                      "status": "completed",
+                      "content": [
+                      {
+                          "type": "output_text",
+                          "annotations": [],
+                          "logprobs": [],
+                          "text": "Below is a single file, ready-to-use landing page for a dog petting café:...",
+                      },
+                      ],
+                      "role": "assistant",
+                  },
+                  ]
+              )
+              # Pass the compacted_response.output as input to the next request
+              print(compacted_response)
+          response: |
+            {
+              "id": "resp_001",
+              "object": "response.compaction",
+              "created_at": 1764967971,
+              "output": [
+                {
+                  "id": "msg_000",
+                  "type": "message",
+                  "status": "completed",
+                  "content": [
+                    {
+                      "type": "input_text",
+                      "text": "Create a simple landing page for a dog petting cafe."
+                    }
+                  ],
+                  "role": "user"
+                },
+                {
+                  "id": "cmp_001",
+                  "type": "compaction",
+                  "encrypted_content": "gAAAAABpM0Yj-...="
+                }
+              ],
+              "usage": {
+                "input_tokens": 139,
+                "input_tokens_details": {
+                  "cached_tokens": 0,
+                  "cache_write_tokens": 0
+                },
+                "output_tokens": 438,
+                "output_tokens_details": {
+                  "reasoning_tokens": 64
+                },
+                "total_tokens": 577
+              }
+            }
+  /responses/{response_id}/cancel?beta=true:
+    post:
+      operationId: beta_cancelResponse
+      tags:
+      - Responses
+      summary: Cancel a response
+      description: |
+        Cancels a model response with the given ID. Only responses created with
+        the `background` parameter set to `true` can be cancelled.
+        [Learn more](https://developers.openai.com/api/docs/guides/background).
+      parameters:
+      - in: path
+        name: response_id
+        required: true
+        schema:
+          type: string
+          example: resp_677efb5139a88190b512bc3fef8e535d
+        description: The ID of the response to cancel.
+      - name: openai-beta
+        in: header
+        required: false
+        description: Optional beta features to enable for this request.
+        style: simple
+        explode: false
+        schema:
+          type: array
+          x-stainless-param: betas
+          items:
+            type: string
+            enum:
+            - responses_multi_agent=v1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BetaResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BetaErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      x-oaiMeta:
+        group: responses
+        examples:
+          request:
+            curl: |
+              curl -X POST https://api.openai.com/v1/responses/resp_123/cancel \
+                  -H "Content-Type: application/json" \
+                  -H "Authorization: Bearer $OPENAI_API_KEY"
+            javascript: |
+              import OpenAI from "openai";
+              const client = new OpenAI();
+
+              const response = await client.responses.cancel("resp_123");
+              console.log(response);
+            python: |
+              from openai import OpenAI
+              client = OpenAI()
+
+              response = client.responses.cancel("resp_123")
+              print(response)
+          response: |
+            {
+              "id": "resp_67cb71b351908190a308f3859487620d06981a8637e6bc44",
+              "object": "response",
+              "access_programs": null,
+              "created_at": 1741386163,
+              "status": "cancelled",
+              "background": true,
+              "completed_at": null,
+              "error": null,
+              "incomplete_details": null,
+              "instructions": null,
+              "max_output_tokens": null,
+              "model": "gpt-6-astra",
+              "output": [
+                {
+                  "type": "message",
+                  "id": "msg_67cb71b3c2b0819084d481baaaf148f206981a8637e6bc44",
+                  "status": "in_progress",
+                  "role": "assistant",
+                  "content": [
+                    {
+                      "type": "output_text",
+                      "text": "Silent circuits hum,  \nThoughts emerge in data streams—  \nDigital dawn breaks.",
+                      "annotations": [],
+                      "logprobs": []
+                    }
+                  ]
+                }
+              ],
+              "parallel_tool_calls": true,
+              "previous_response_id": null,
+              "reasoning": {
+                "effort": null,
+                "summary": null
+              },
+              "store": true,
+              "temperature": 1.0,
+              "text": {
+                "format": {
+                  "type": "text"
+                }
+              },
+              "tool_choice": "auto",
+              "tools": [],
+              "top_p": 1.0,
+              "truncation": "disabled",
+              "usage": null,
+              "user": null,
+              "metadata": {}
+            }
+  /responses/{response_id}?beta=true:
+    get:
+      operationId: beta_getResponse
+      tags:
+      - Responses
+      summary: Get a model response
+      description: |
+        Retrieves a model response with the given ID.
+      parameters:
+      - in: path
+        name: response_id
+        required: true
+        schema:
+          type: string
+          example: resp_677efb5139a88190b512bc3fef8e535d
+        description: The ID of the response to retrieve.
+      - in: query
+        name: include
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/BetaIncludeEnum'
+        description: |
+          Additional fields to include in the response. See the `include`
+          parameter for Response creation above for more information.
+      - in: query
+        name: stream
+        schema:
+          type: boolean
+        description: |
+          If set to true, the model response data will be streamed to the client
+          as it is generated using [server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#Event_stream_format).
+          See the [Streaming section below](https://developers.openai.com/api/reference/resources/responses/streaming-events)
+          for more information.
+      - in: query
+        name: starting_after
+        schema:
+          type: integer
+        description: |
+          The sequence number of the event after which to start streaming.
+      - in: query
+        name: include_obfuscation
+        schema:
+          type: boolean
+        description: |
+          When true, stream obfuscation will be enabled. Stream obfuscation adds
+          random characters to an `obfuscation` field on streaming delta events
+          to normalize payload sizes as a mitigation to certain side-channel
+          attacks. These obfuscation fields are included by default, but add a
+          small amount of overhead to the data stream. You can set
+          `include_obfuscation` to false to optimize for bandwidth if you trust
+          the network links between your application and the OpenAI API.
+      - name: openai-beta
+        in: header
+        required: false
+        description: Optional beta features to enable for this request.
+        style: simple
+        explode: false
+        schema:
+          type: array
+          x-stainless-param: betas
+          items:
+            type: string
+            enum:
+            - responses_multi_agent=v1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BetaResponse'
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/BetaResponseStreamEvent'
+        '404':
+          description: The response was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BetaErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      x-oaiMeta:
+        group: responses
+        examples:
+          request:
+            curl: |
+              curl https://api.openai.com/v1/responses/resp_123 \
+                  -H "Content-Type: application/json" \
+                  -H "Authorization: Bearer $OPENAI_API_KEY"
+            javascript: |
+              import OpenAI from "openai";
+              const client = new OpenAI();
+
+              const response = await client.responses.retrieve("resp_123");
+              console.log(response);
+            python: |
+              from openai import OpenAI
+              client = OpenAI()
+
+              response = client.responses.retrieve("resp_123")
+              print(response)
+          response: |
+            {
+              "id": "resp_67cb71b351908190a308f3859487620d06981a8637e6bc44",
+              "object": "response",
+              "access_programs": null,
+              "created_at": 1741386163,
+              "status": "completed",
+              "completed_at": 1741386164,
+              "error": null,
+              "incomplete_details": null,
+              "instructions": null,
+              "max_output_tokens": null,
+              "model": "gpt-6-astra",
+              "output": [
+                {
+                  "type": "message",
+                  "id": "msg_67cb71b3c2b0819084d481baaaf148f206981a8637e6bc44",
+                  "status": "completed",
+                  "role": "assistant",
+                  "content": [
+                    {
+                      "type": "output_text",
+                      "text": "Silent circuits hum,  \nThoughts emerge in data streams—  \nDigital dawn breaks.",
+                      "annotations": [],
+                      "logprobs": []
+                    }
+                  ]
+                }
+              ],
+              "parallel_tool_calls": true,
+              "previous_response_id": null,
+              "reasoning": {
+                "effort": null,
+                "summary": null
+              },
+              "store": true,
+              "temperature": 1.0,
+              "text": {
+                "format": {
+                  "type": "text"
+                }
+              },
+              "tool_choice": "auto",
+              "tools": [],
+              "top_p": 1.0,
+              "truncation": "disabled",
+              "usage": {
+                "input_tokens": 32,
+                "input_tokens_details": {
+                  "cached_tokens": 0,
+                  "cache_write_tokens": 0
+                },
+                "output_tokens": 18,
+                "output_tokens_details": {
+                  "reasoning_tokens": 0
+                },
+                "total_tokens": 50
+              },
+              "user": null,
+              "metadata": {}
+            }
+    delete:
+      operationId: beta_deleteResponse
+      tags:
+      - Responses
+      summary: Delete a model response
+      description: |
+        Deletes a model response with the given ID.
+      parameters:
+      - in: path
+        name: response_id
+        required: true
+        schema:
+          type: string
+          example: resp_677efb5139a88190b512bc3fef8e535d
+        description: The ID of the response to delete.
+      - name: openai-beta
+        in: header
+        required: false
+        description: Optional beta features to enable for this request.
+        style: simple
+        explode: false
+        schema:
+          type: array
+          x-stainless-param: betas
+          items:
+            type: string
+            enum:
+            - responses_multi_agent=v1
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BetaErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      x-oaiMeta:
+        group: responses
+        examples:
+          request:
+            curl: |
+              curl -X DELETE https://api.openai.com/v1/responses/resp_123 \
+                  -H "Content-Type: application/json" \
+                  -H "Authorization: Bearer $OPENAI_API_KEY"
+            javascript: |
+              import OpenAI from "openai";
+              const client = new OpenAI();
+
+              const response = await client.responses.delete("resp_123");
+              console.log(response);
+            python: |
+              from openai import OpenAI
+              client = OpenAI()
+
+              response = client.responses.delete("resp_123")
+              print(response)
+          response: |
+            {
+              "id": "resp_123",
+              "object": "response.deleted",
+              "deleted": true
+            }
+  /responses?beta=true:
+    post:
+      operationId: beta_createResponse
+      tags:
+      - Responses
+      summary: Create a model response
+      description: |
+        Creates a model response. Provide [text](https://developers.openai.com/api/docs/guides/text) or
+        [image](https://developers.openai.com/api/docs/guides/images-vision) inputs to generate [text](https://developers.openai.com/api/docs/guides/text)
+        or [JSON](https://developers.openai.com/api/docs/guides/structured-outputs) outputs. Have the model call
+        your own [custom code](https://developers.openai.com/api/docs/guides/function-calling) or use built-in
+        [tools](https://developers.openai.com/api/docs/guides/tools) like [web search](https://developers.openai.com/api/docs/guides/tools-web-search)
+        or [file search](https://developers.openai.com/api/docs/guides/tools-file-search) to use your own data
+        as input for the model's response.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BetaCreateResponse'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BetaResponse'
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/BetaResponseStreamEvent'
+        '400':
+          description: Invalid response request or incompatible request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BetaErrorResponse'
+        '404':
+          description: The requested model or a referenced resource was not found or is unavailable to this caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BetaErrorResponse'
+        '429':
+          $ref: '#/components/responses/InferenceRateLimited'
+        '503':
+          $ref: '#/components/responses/InferenceServiceUnavailable'
+      x-oaiMeta:
+        group: responses
+        path: create
+        examples:
+        - title: Text input
+          request:
+            curl: |
+              curl https://api.openai.com/v1/responses \
+                -H "Content-Type: application/json" \
+                -H "Authorization: Bearer $OPENAI_API_KEY" \
+                -d '{
+                  "model": "gpt-6-astra",
+                  "input": "Tell me a three sentence bedtime story about a unicorn."
+                }'
+            javascript: |
+              import OpenAI from "openai";
+
+              const openai = new OpenAI();
+
+              const response = await openai.responses.create({
+                  model: "gpt-6-astra",
+                  input: "Tell me a three sentence bedtime story about a unicorn."
+              });
+
+              console.log(response);
+            python: |
+              from openai import OpenAI
+
+              client = OpenAI()
+
+              response = client.responses.create(
+                model="gpt-6-astra",
+                input="Tell me a three sentence bedtime story about a unicorn."
+              )
+
+              print(response)
+            csharp: |
+              using System;
+              using OpenAI.Responses;
+
+              OpenAIResponseClient client = new(
+                  model: "gpt-6-astra",
+                  apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
+              );
+
+              OpenAIResponse response = client.CreateResponse("Tell me a three sentence bedtime story about a unicorn.");
+
+              Console.WriteLine(response.GetOutputText());
+          response: |
+            {
+              "id": "resp_67ccd2bed1ec8190b14f964abc0542670bb6a6b452d3795b",
+              "object": "response",
+              "access_programs": null,
+              "created_at": 1741476542,
+              "status": "completed",
+              "completed_at": 1741476543,
+              "error": null,
+              "incomplete_details": null,
+              "instructions": null,
+              "max_output_tokens": null,
+              "model": "gpt-6-astra",
+              "output": [
+                {
+                  "type": "message",
+                  "id": "msg_67ccd2bf17f0819081ff3bb2cf6508e60bb6a6b452d3795b",
+                  "status": "completed",
+                  "role": "assistant",
+                  "content": [
+                    {
+                      "type": "output_text",
+                      "text": "In a peaceful grove beneath a silver moon, a unicorn named Lumina discovered a hidden pool that reflected the stars. As she dipped her horn into the water, the pool began to shimmer, revealing a pathway to a magical realm of endless night skies. Filled with wonder, Lumina whispered a wish for all who dream to find their own hidden magic, and as she glanced back, her hoofprints sparkled like stardust.",
+                      "annotations": [],
+                      "logprobs": []
+                    }
+                  ]
+                }
+              ],
+              "parallel_tool_calls": true,
+              "previous_response_id": null,
+              "reasoning": {
+                "effort": null,
+                "summary": null
+              },
+              "store": true,
+              "temperature": 1.0,
+              "text": {
+                "format": {
+                  "type": "text"
+                }
+              },
+              "tool_choice": "auto",
+              "tools": [],
+              "top_p": 1.0,
+              "truncation": "disabled",
+              "usage": {
+                "input_tokens": 36,
+                "input_tokens_details": {
+                  "cached_tokens": 0,
+                  "cache_write_tokens": 0
+                },
+                "output_tokens": 87,
+                "output_tokens_details": {
+                  "reasoning_tokens": 0
+                },
+                "total_tokens": 123
+              },
+              "user": null,
+              "metadata": {}
+            }
+        - title: Image input
+          request:
+            curl: |
+              curl https://api.openai.com/v1/responses \
+                -H "Content-Type: application/json" \
+                -H "Authorization: Bearer $OPENAI_API_KEY" \
+                -d '{
+                  "model": "gpt-6-astra",
+                  "input": [
+                    {
+                      "role": "user",
+                      "content": [
+                        {"type": "input_text", "text": "what is in this image?"},
+                        {
+                          "type": "input_image",
+                          "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
+                        }
+                      ]
+                    }
+                  ]
+                }'
+            javascript: |
+              import OpenAI from "openai";
+
+              const openai = new OpenAI();
+
+              const response = await openai.responses.create({
+                  model: "gpt-6-astra",
+                  input: [
+                      {
+                          role: "user",
+                          content: [
+                              { type: "input_text", text: "what is in this image?" },
+                              {
+                                  type: "input_image",
+                                  image_url:
+                                      "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg",
+                              },
+                          ],
+                      },
+                  ],
+              });
+
+              console.log(response);
+            python: |
+              from openai import OpenAI
+
+              client = OpenAI()
+
+              response = client.responses.create(
+                  model="gpt-6-astra",
+                  input=[
+                      {
+                          "role": "user",
+                          "content": [
+                              { "type": "input_text", "text": "what is in this image?" },
+                              {
+                                  "type": "input_image",
+                                  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
+                              }
+                          ]
+                      }
+                  ]
+              )
+
+              print(response)
+            csharp: |
+              using System;
+              using System.Collections.Generic;
+
+              using OpenAI.Responses;
+
+              OpenAIResponseClient client = new(
+                  model: "gpt-6-astra",
+                  apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
+              );
+
+              List<ResponseItem> inputItems =
+              [
+                  ResponseItem.CreateUserMessageItem(
+                      [
+                          ResponseContentPart.CreateInputTextPart("What is in this image?"),
+                          ResponseContentPart.CreateInputImagePart(new Uri("https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"))
+                      ]
+                  )
+              ];
+
+              OpenAIResponse response = client.CreateResponse(inputItems);
+
+              Console.WriteLine(response.GetOutputText());
+          response: |
+            {
+              "id": "resp_67ccd3a9da748190baa7f1570fe91ac604becb25c45c1d41",
+              "object": "response",
+              "access_programs": null,
+              "created_at": 1741476777,
+              "status": "completed",
+              "completed_at": 1741476778,
+              "error": null,
+              "incomplete_details": null,
+              "instructions": null,
+              "max_output_tokens": null,
+              "model": "gpt-6-astra",
+              "output": [
+                {
+                  "type": "message",
+                  "id": "msg_67ccd3acc8d48190a77525dc6de64b4104becb25c45c1d41",
+                  "status": "completed",
+                  "role": "assistant",
+                  "content": [
+                    {
+                      "type": "output_text",
+                      "text": "The image depicts a scenic landscape with a wooden boardwalk or pathway leading through lush, green grass under a blue sky with some clouds. The setting suggests a peaceful natural area, possibly a park or nature reserve. There are trees and shrubs in the background.",
+                      "annotations": [],
+                      "logprobs": []
+                    }
+                  ]
+                }
+              ],
+              "parallel_tool_calls": true,
+              "previous_response_id": null,
+              "reasoning": {
+                "effort": null,
+                "summary": null
+              },
+              "store": true,
+              "temperature": 1.0,
+              "text": {
+                "format": {
+                  "type": "text"
+                }
+              },
+              "tool_choice": "auto",
+              "tools": [],
+              "top_p": 1.0,
+              "truncation": "disabled",
+              "usage": {
+                "input_tokens": 328,
+                "input_tokens_details": {
+                  "cached_tokens": 0,
+                  "cache_write_tokens": 0
+                },
+                "output_tokens": 52,
+                "output_tokens_details": {
+                  "reasoning_tokens": 0
+                },
+                "total_tokens": 380
+              },
+              "user": null,
+              "metadata": {}
+            }
+        - title: File input
+          request:
+            curl: |
+              curl https://api.openai.com/v1/responses \
+                -H "Content-Type: application/json" \
+                -H "Authorization: Bearer $OPENAI_API_KEY" \
+                -d '{
+                  "model": "gpt-6-astra",
+                  "input": [
+                    {
+                      "role": "user",
+                      "content": [
+                        {"type": "input_text", "text": "what is in this file?"},
+                        {
+                          "type": "input_file",
+                          "file_url": "https://www.berkshirehathaway.com/letters/2024ltr.pdf",
+                          "detail": "auto"
+                        }
+                      ]
+                    }
+                  ]
+                }'
+            javascript: |
+              import OpenAI from "openai";
+
+              const openai = new OpenAI();
+
+              const response = await openai.responses.create({
+                  model: "gpt-6-astra",
+                  input: [
+                      {
+                          role: "user",
+                          content: [
+                              { type: "input_text", text: "what is in this file?" },
+                              {
+                                  type: "input_file",
+                                  file_url: "https://www.berkshirehathaway.com/letters/2024ltr.pdf",
+                                  detail: "auto",
+                              },
+                          ],
+                      },
+                  ],
+              });
+
+              console.log(response);
+            python: |
+              from openai import OpenAI
+
+              client = OpenAI()
+
+              response = client.responses.create(
+                  model="gpt-6-astra",
+                  input=[
+                      {
+                          "role": "user",
+                          "content": [
+                              { "type": "input_text", "text": "what is in this file?" },
+                              {
+                                  "type": "input_file",
+                                  "file_url": "https://www.berkshirehathaway.com/letters/2024ltr.pdf",
+                                  "detail": "auto"
+                              }
+                          ]
+                      }
+                  ]
+              )
+
+              print(response)
+          response: |
+            {
+              "id": "resp_686eef60237881a2bd1180bb8b13de430e34c516d176ff86",
+              "object": "response",
+              "access_programs": null,
+              "created_at": 1752100704,
+              "status": "completed",
+              "completed_at": 1752100705,
+              "background": false,
+              "error": null,
+              "incomplete_details": null,
+              "instructions": null,
+              "max_output_tokens": null,
+              "max_tool_calls": null,
+              "model": "gpt-6-astra",
+              "output": [
+                {
+                  "id": "msg_686eef60d3e081a29283bdcbc4322fd90e34c516d176ff86",
+                  "type": "message",
+                  "status": "completed",
+                  "content": [
+                    {
+                      "type": "output_text",
+                      "annotations": [],
+                      "logprobs": [],
+                      "text": "The file seems to contain excerpts from a letter to the shareholders of Berkshire Hathaway Inc., likely written by Warren Buffett. It covers several topics:\n\n1. **Communication Philosophy**: Buffett emphasizes the importance of transparency and candidness in reporting mistakes and successes to shareholders.\n\n2. **Mistakes and Learnings**: The letter acknowledges past mistakes in business assessments and management hires, highlighting the importance of correcting errors promptly.\n\n3. **CEO Succession**: Mention of Greg Abel stepping in as the new CEO and continuing the tradition of honest communication.\n\n4. **Pete Liegl Story**: A detailed account of acquiring Forest River and the relationship with its founder, highlighting trust and effective business decisions.\n\n5. **2024 Performance**: Overview of business performance, particularly in insurance and investment activities, with a focus on GEICO's improvement.\n\n6. **Tax Contributions**: Discussion of significant tax payments to the U.S. Treasury, credited to shareholders' reinvestments.\n\n7. **Investment Strategy**: A breakdown of Berkshire\u2019s investments in both controlled subsidiaries and marketable equities, along with a focus on long-term holding strategies.\n\n8. **American Capitalism**: Reflections on America\u2019s economic development and Berkshire\u2019s role within it.\n\n9. **Property-Casualty Insurance**: Insights into the P/C insurance business model and its challenges and benefits.\n\n10. **Japanese Investments**: Information about Berkshire\u2019s investments in Japanese companies and future plans.\n\n11. **Annual Meeting**: Details about the upcoming annual gathering in Omaha, including schedule changes and new book releases.\n\n12. **Personal Anecdotes**: Light-hearted stories about family and interactions, conveying Buffett's personable approach.\n\n13. **Financial Performance Data**: Tables comparing Berkshire\u2019s annual performance to the S&P 500, showing impressive long-term gains.\n\nOverall, the letter reinforces Berkshire Hathaway's commitment to transparency, investment in both its businesses and the wider economy, and emphasizes strong leadership and prudent financial management."
+                    }
+                  ],
+                  "role": "assistant"
+                }
+              ],
+              "parallel_tool_calls": true,
+              "previous_response_id": null,
+              "reasoning": {
+                "effort": null,
+                "summary": null
+              },
+              "service_tier": "default",
+              "store": true,
+              "temperature": 1.0,
+              "text": {
+                "format": {
+                  "type": "text"
+                }
+              },
+              "tool_choice": "auto",
+              "tools": [],
+              "top_logprobs": 0,
+              "top_p": 1.0,
+              "truncation": "disabled",
+              "usage": {
+                "input_tokens": 8438,
+                "input_tokens_details": {
+                  "cached_tokens": 0,
+                  "cache_write_tokens": 0
+                },
+                "output_tokens": 398,
+                "output_tokens_details": {
+                  "reasoning_tokens": 0
+                },
+                "total_tokens": 8836
+              },
+              "user": null,
+              "metadata": {}
+            }
+        - title: Web search
+          request:
+            curl: |
+              curl https://api.openai.com/v1/responses \
+                -H "Content-Type: application/json" \
+                -H "Authorization: Bearer $OPENAI_API_KEY" \
+                -d '{
+                  "model": "gpt-6-astra",
+                  "tools": [{ "type": "web_search_preview" }],
+                  "input": "What was a positive news story from today?"
+                }'
+            javascript: |
+              import OpenAI from "openai";
+
+              const openai = new OpenAI();
+
+              const response = await openai.responses.create({
+                  model: "gpt-6-astra",
+                  tools: [{ type: "web_search_preview" }],
+                  input: "What was a positive news story from today?",
+              });
+
+              console.log(response);
+            python: |
+              from openai import OpenAI
+
+              client = OpenAI()
+
+              response = client.responses.create(
+                  model="gpt-6-astra",
+                  tools=[{ "type": "web_search_preview" }],
+                  input="What was a positive news story from today?",
+              )
+
+              print(response)
+            csharp: |
+              using System;
+
+              using OpenAI.Responses;
+
+              OpenAIResponseClient client = new(
+                  model: "gpt-6-astra",
+                  apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
+              );
+
+              string userInputText = "What was a positive news story from today?";
+
+              ResponseCreationOptions options = new()
+              {
+                  Tools =
+                  {
+                      ResponseTool.CreateWebSearchTool()
+                  },
+              };
+
+              OpenAIResponse response = client.CreateResponse(userInputText, options);
+
+              Console.WriteLine(response.GetOutputText());
+          response: |
+            {
+              "id": "resp_67ccf18ef5fc8190b16dbee19bc54e5f087bb177ab789d5c",
+              "object": "response",
+              "access_programs": null,
+              "created_at": 1741484430,
+              "status": "completed",
+              "completed_at": 1741484431,
+              "error": null,
+              "incomplete_details": null,
+              "instructions": null,
+              "max_output_tokens": null,
+              "model": "gpt-6-astra",
+              "output": [
+                {
+                  "type": "web_search_call",
+                  "id": "ws_67ccf18f64008190a39b619f4c8455ef087bb177ab789d5c",
+                  "status": "completed"
+                },
+                {
+                  "type": "message",
+                  "id": "msg_67ccf190ca3881909d433c50b1f6357e087bb177ab789d5c",
+                  "status": "completed",
+                  "role": "assistant",
+                  "content": [
+                    {
+                      "type": "output_text",
+                      "text": "As of today, March 9, 2025, one notable positive news story...",
+                      "annotations": [
+                        {
+                          "type": "url_citation",
+                          "start_index": 442,
+                          "end_index": 557,
+                          "url": "https://.../?utm_source=chatgpt.com",
+                          "title": "..."
+                        },
+                        {
+                          "type": "url_citation",
+                          "start_index": 962,
+                          "end_index": 1077,
+                          "url": "https://.../?utm_source=chatgpt.com",
+                          "title": "..."
+                        },
+                        {
+                          "type": "url_citation",
+                          "start_index": 1336,
+                          "end_index": 1451,
+                          "url": "https://.../?utm_source=chatgpt.com",
+                          "title": "..."
+                        }
+                      ],
+                      "logprobs": []
+                    }
+                  ]
+                }
+              ],
+              "parallel_tool_calls": true,
+              "previous_response_id": null,
+              "reasoning": {
+                "effort": null,
+                "summary": null
+              },
+              "store": true,
+              "temperature": 1.0,
+              "text": {
+                "format": {
+                  "type": "text"
+                }
+              },
+              "tool_choice": "auto",
+              "tools": [
+                {
+                  "type": "web_search_preview",
+                  "domains": [],
+                  "search_context_size": "medium",
+                  "user_location": {
+                    "type": "approximate",
+                    "city": null,
+                    "country": "US",
+                    "region": null,
+                    "timezone": null
+                  }
+                }
+              ],
+              "top_p": 1.0,
+              "truncation": "disabled",
+              "usage": {
+                "input_tokens": 328,
+                "input_tokens_details": {
+                  "cached_tokens": 0,
+                  "cache_write_tokens": 0
+                },
+                "output_tokens": 356,
+                "output_tokens_details": {
+                  "reasoning_tokens": 0
+                },
+                "total_tokens": 684
+              },
+              "user": null,
+              "metadata": {}
+            }
+        - title: File search
+          request:
+            curl: |
+              curl https://api.openai.com/v1/responses \
+                -H "Content-Type: application/json" \
+                -H "Authorization: Bearer $OPENAI_API_KEY" \
+                -d '{
+                  "model": "gpt-6-astra",
+                  "tools": [{
+                    "type": "file_search",
+                    "vector_store_ids": ["vs_1234567890"],
+                    "max_num_results": 20
+                  }],
+                  "input": "What are the attributes of an ancient brown dragon?"
+                }'
+            javascript: |
+              import OpenAI from "openai";
+
+              const openai = new OpenAI();
+
+              const response = await openai.responses.create({
+                  model: "gpt-6-astra",
+                  tools: [{
+                    type: "file_search",
+                    vector_store_ids: ["vs_1234567890"],
+                    max_num_results: 20
+                  }],
+                  input: "What are the attributes of an ancient brown dragon?",
+              });
+
+              console.log(response);
+            python: |
+              from openai import OpenAI
+
+              client = OpenAI()
+
+              response = client.responses.create(
+                  model="gpt-6-astra",
+                  tools=[{
+                    "type": "file_search",
+                    "vector_store_ids": ["vs_1234567890"],
+                    "max_num_results": 20
+                  }],
+                  input="What are the attributes of an ancient brown dragon?",
+              )
+
+              print(response)
+            csharp: |
+              using System;
+
+              using OpenAI.Responses;
+
+              OpenAIResponseClient client = new(
+                  model: "gpt-6-astra",
+                  apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
+              );
+
+              string userInputText = "What are the attributes of an ancient brown dragon?";
+
+              ResponseCreationOptions options = new()
+              {
+                  Tools =
+                  {
+                      ResponseTool.CreateFileSearchTool(
+                          vectorStoreIds: ["vs_1234567890"],
+                          maxResultCount: 20
+                      )
+                  },
+              };
+
+              OpenAIResponse response = client.CreateResponse(userInputText, options);
+
+              Console.WriteLine(response.GetOutputText());
+          response: |
+            {
+              "id": "resp_67ccf4c55fc48190b71bd0463ad3306d09504fb6872380d7",
+              "object": "response",
+              "access_programs": null,
+              "created_at": 1741485253,
+              "status": "completed",
+              "completed_at": 1741485254,
+              "error": null,
+              "incomplete_details": null,
+              "instructions": null,
+              "max_output_tokens": null,
+              "model": "gpt-6-astra",
+              "output": [
+                {
+                  "type": "file_search_call",
+                  "id": "fs_67ccf4c63cd08190887ef6464ba5681609504fb6872380d7",
+                  "status": "completed",
+                  "queries": [
+                    "attributes of an ancient brown dragon"
+                  ],
+                  "results": null
+                },
+                {
+                  "type": "message",
+                  "id": "msg_67ccf4c93e5c81909d595b369351a9d309504fb6872380d7",
+                  "status": "completed",
+                  "role": "assistant",
+                  "content": [
+                    {
+                      "type": "output_text",
+                      "text": "The attributes of an ancient brown dragon include...",
+                      "annotations": [
+                        {
+                          "type": "file_citation",
+                          "index": 320,
+                          "file_id": "file-4wDz5b167pAf72nx1h9eiN",
+                          "filename": "dragons.pdf"
+                        },
+                        {
+                          "type": "file_citation",
+                          "index": 576,
+                          "file_id": "file-4wDz5b167pAf72nx1h9eiN",
+                          "filename": "dragons.pdf"
+                        },
+                        {
+                          "type": "file_citation",
+                          "index": 815,
+                          "file_id": "file-4wDz5b167pAf72nx1h9eiN",
+                          "filename": "dragons.pdf"
+                        },
+                        {
+                          "type": "file_citation",
+                          "index": 815,
+                          "file_id": "file-4wDz5b167pAf72nx1h9eiN",
+                          "filename": "dragons.pdf"
+                        },
+                        {
+                          "type": "file_citation",
+                          "index": 1030,
+                          "file_id": "file-4wDz5b167pAf72nx1h9eiN",
+                          "filename": "dragons.pdf"
+                        },
+                        {
+                          "type": "file_citation",
+                          "index": 1030,
+                          "file_id": "file-4wDz5b167pAf72nx1h9eiN",
+                          "filename": "dragons.pdf"
+                        },
+                        {
+                          "type": "file_citation",
+                          "index": 1156,
+                          "file_id": "file-4wDz5b167pAf72nx1h9eiN",
+                          "filename": "dragons.pdf"
+                        },
+                        {
+                          "type": "file_citation",
+                          "index": 1225,
+                          "file_id": "file-4wDz5b167pAf72nx1h9eiN",
+                          "filename": "dragons.pdf"
+                        }
+                      ],
+                      "logprobs": []
+                    }
+                  ]
+                }
+              ],
+              "parallel_tool_calls": true,
+              "previous_response_id": null,
+              "reasoning": {
+                "effort": null,
+                "summary": null
+              },
+              "store": true,
+              "temperature": 1.0,
+              "text": {
+                "format": {
+                  "type": "text"
+                }
+              },
+              "tool_choice": "auto",
+              "tools": [
+                {
+                  "type": "file_search",
+                  "filters": null,
+                  "max_num_results": 20,
+                  "ranking_options": {
+                    "ranker": "auto",
+                    "score_threshold": 0.0
+                  },
+                  "vector_store_ids": [
+                    "vs_1234567890"
+                  ]
+                }
+              ],
+              "top_p": 1.0,
+              "truncation": "disabled",
+              "usage": {
+                "input_tokens": 18307,
+                "input_tokens_details": {
+                  "cached_tokens": 0,
+                  "cache_write_tokens": 0
+                },
+                "output_tokens": 348,
+                "output_tokens_details": {
+                  "reasoning_tokens": 0
+                },
+                "total_tokens": 18655
+              },
+              "user": null,
+              "metadata": {}
+            }
+        - title: Streaming
+          request:
+            curl: |
+              curl https://api.openai.com/v1/responses \
+                -H "Content-Type: application/json" \
+                -H "Authorization: Bearer $OPENAI_API_KEY" \
+                -d '{
+                  "model": "gpt-6-astra",
+                  "instructions": "You are a helpful assistant.",
+                  "input": "Hello!",
+                  "stream": true
+                }'
+            python: |
+              from openai import OpenAI
+
+              client = OpenAI()
+
+              response = client.responses.create(
+                model="gpt-6-astra",
+                instructions="You are a helpful assistant.",
+                input="Hello!",
+                stream=True
+              )
+
+              for event in response:
+                print(event)
+            javascript: |
+              import OpenAI from "openai";
+
+              const openai = new OpenAI();
+
+              const response = await openai.responses.create({
+                  model: "gpt-6-astra",
+                  instructions: "You are a helpful assistant.",
+                  input: "Hello!",
+                  stream: true,
+              });
+
+              for await (const event of response) {
+                  console.log(event);
+              }
+            csharp: |
+              using System;
+              using System.ClientModel;
+              using System.Threading.Tasks;
+
+              using OpenAI.Responses;
+
+              OpenAIResponseClient client = new(
+                  model: "gpt-6-astra",
+                  apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
+              );
+
+              string userInputText = "Hello!";
+
+              ResponseCreationOptions options = new()
+              {
+                  Instructions = "You are a helpful assistant.",
+              };
+
+              AsyncCollectionResult<StreamingResponseUpdate> responseUpdates = client.CreateResponseStreamingAsync(userInputText, options);
+
+              await foreach (StreamingResponseUpdate responseUpdate in responseUpdates)
+              {
+                  if (responseUpdate is StreamingResponseOutputTextDeltaUpdate outputTextDeltaUpdate)
+                  {
+                      Console.Write(outputTextDeltaUpdate.Delta);
+                  }
+              }
+          response: |+
+            event: response.created
+            data: {"type":"response.created","response":{"id":"resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654","object":"response","access_programs":null,"created_at":1741290958,"status":"in_progress","error":null,"incomplete_details":null,"instructions":"You are a helpful assistant.","max_output_tokens":null,"model":"gpt-6-astra","output":[],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[],"top_p":1.0,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":0}
+
+            event: response.in_progress
+            data: {"type":"response.in_progress","response":{"id":"resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654","object":"response","access_programs":null,"created_at":1741290958,"status":"in_progress","error":null,"incomplete_details":null,"instructions":"You are a helpful assistant.","max_output_tokens":null,"model":"gpt-6-astra","output":[],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[],"top_p":1.0,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":1}
+
+            event: response.output_item.added
+            data: {"type":"response.output_item.added","output_index":0,"item":{"id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","type":"message","status":"in_progress","role":"assistant","content":[]},"sequence_number":2}
+
+            event: response.content_part.added
+            data: {"type":"response.content_part.added","item_id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","output_index":0,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]},"sequence_number":3}
+
+            event: response.output_text.delta
+            data: {"type":"response.output_text.delta","item_id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","output_index":0,"content_index":0,"delta":"Hi","sequence_number":4,"logprobs":[]}
+
+            : Intermediate response events omitted.
+
+            event: response.output_text.done
+            data: {"type":"response.output_text.done","item_id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","output_index":0,"content_index":0,"text":"Hi there! How can I assist you today?","sequence_number":10,"logprobs":[]}
+
+            event: response.content_part.done
+            data: {"type":"response.content_part.done","item_id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","output_index":0,"content_index":0,"part":{"type":"output_text","text":"Hi there! How can I assist you today?","annotations":[],"logprobs":[]},"sequence_number":11}
+
+            event: response.output_item.done
+            data: {"type":"response.output_item.done","output_index":0,"item":{"id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","type":"message","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Hi there! How can I assist you today?","annotations":[],"logprobs":[]}]},"sequence_number":12}
+
+            event: response.completed
+            data: {"type":"response.completed","response":{"id":"resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654","object":"response","access_programs":null,"created_at":1741290958,"status":"completed","error":null,"incomplete_details":null,"instructions":"You are a helpful assistant.","max_output_tokens":null,"model":"gpt-6-astra","output":[{"id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","type":"message","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Hi there! How can I assist you today?","annotations":[],"logprobs":[]}]}],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[],"top_p":1.0,"truncation":"disabled","usage":{"input_tokens":37,"output_tokens":11,"output_tokens_details":{"reasoning_tokens":0},"total_tokens":48,"input_tokens_details":{"cached_tokens":0,"cache_write_tokens":0}},"user":null,"metadata":{}},"sequence_number":13}
+
+        - title: Functions
+          request:
+            curl: |
+              curl https://api.openai.com/v1/responses \
+                -H "Content-Type: application/json" \
+                -H "Authorization: Bearer $OPENAI_API_KEY" \
+                -d '{
+                  "model": "gpt-6-astra",
+                  "input": "What is the weather like in Boston today?",
+                  "tools": [
+                    {
+                      "type": "function",
+                      "name": "get_current_weather",
+                      "description": "Get the current weather in a given location",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {
+                          "location": {
+                            "type": "string",
+                            "description": "The city and state, e.g. San Francisco, CA"
+                          },
+                          "unit": {
+                            "type": "string",
+                            "enum": ["celsius", "fahrenheit"]
+                          }
+                        },
+                        "required": ["location", "unit"]
+                      }
+                    }
+                  ],
+                  "tool_choice": "auto"
+                }'
+            python: |
+              from openai import OpenAI
+
+              client = OpenAI()
+
+              tools = [
+                  {
+                      "type": "function",
+                      "name": "get_current_weather",
+                      "description": "Get the current weather in a given location",
+                      "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "location": {
+                                "type": "string",
+                                "description": "The city and state, e.g. San Francisco, CA",
+                            },
+                            "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
+                        },
+                        "required": ["location", "unit"],
+                      }
+                  }
+              ]
+
+              response = client.responses.create(
+                model="gpt-6-astra",
+                tools=tools,
+                input="What is the weather like in Boston today?",
+                tool_choice="auto"
+              )
+
+              print(response)
+            javascript: |
+              import OpenAI from "openai";
+
+              const openai = new OpenAI();
+
+              const tools = [
+                  {
+                      type: "function",
+                      name: "get_current_weather",
+                      description: "Get the current weather in a given location",
+                      parameters: {
+                          type: "object",
+                          properties: {
+                              location: {
+                                  type: "string",
+                                  description: "The city and state, e.g. San Francisco, CA",
+                              },
+                              unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+                          },
+                          required: ["location", "unit"],
+                      },
+                  },
+              ];
+
+              const response = await openai.responses.create({
+                  model: "gpt-6-astra",
+                  tools: tools,
+                  input: "What is the weather like in Boston today?",
+                  tool_choice: "auto",
+              });
+
+              console.log(response);
+            csharp: |
+              using System;
+              using OpenAI.Responses;
+
+              OpenAIResponseClient client = new(
+                  model: "gpt-6-astra",
+                  apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
+              );
+
+              ResponseTool getCurrentWeatherFunctionTool = ResponseTool.CreateFunctionTool(
+                  functionName: "get_current_weather",
+                  functionDescription: "Get the current weather in a given location",
+                  functionParameters: BinaryData.FromString("""
+                      {
+                          "type": "object",
+                          "properties": {
+                              "location": {
+                                  "type": "string",
+                                  "description": "The city and state, e.g. San Francisco, CA"
+                              },
+                              "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]}
+                          },
+                          "required": ["location", "unit"]
+                      }
+                      """
+                  )
+              );
+
+              string userInputText = "What is the weather like in Boston today?";
+
+              ResponseCreationOptions options = new()
+              {
+                  Tools =
+                  {
+                      getCurrentWeatherFunctionTool
+                  },
+                  ToolChoice = ResponseToolChoice.CreateAutoChoice(),
+              };
+
+              OpenAIResponse response = client.CreateResponse(userInputText, options);
+          response: |
+            {
+              "id": "resp_67ca09c5efe0819096d0511c92b8c890096610f474011cc0",
+              "object": "response",
+              "access_programs": null,
+              "created_at": 1741294021,
+              "status": "completed",
+              "completed_at": 1741294022,
+              "error": null,
+              "incomplete_details": null,
+              "instructions": null,
+              "max_output_tokens": null,
+              "model": "gpt-6-astra",
+              "output": [
+                {
+                  "type": "function_call",
+                  "id": "fc_67ca09c6bedc8190a7abfec07b1a1332096610f474011cc0",
+                  "call_id": "call_unLAR8MvFNptuiZK6K6HCy5k",
+                  "name": "get_current_weather",
+                  "arguments": "{\"location\":\"Boston, MA\",\"unit\":\"celsius\"}",
+                  "status": "completed"
+                }
+              ],
+              "parallel_tool_calls": true,
+              "previous_response_id": null,
+              "reasoning": {
+                "effort": null,
+                "summary": null
+              },
+              "store": true,
+              "temperature": 1.0,
+              "text": {
+                "format": {
+                  "type": "text"
+                }
+              },
+              "tool_choice": "auto",
+              "tools": [
+                {
+                  "type": "function",
+                  "description": "Get the current weather in a given location",
+                  "name": "get_current_weather",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {
+                      "location": {
+                        "type": "string",
+                        "description": "The city and state, e.g. San Francisco, CA"
+                      },
+                      "unit": {
+                        "type": "string",
+                        "enum": [
+                          "celsius",
+                          "fahrenheit"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "location",
+                      "unit"
+                    ]
+                  },
+                  "strict": true
+                }
+              ],
+              "top_p": 1.0,
+              "truncation": "disabled",
+              "usage": {
+                "input_tokens": 291,
+                "output_tokens": 23,
+                "output_tokens_details": {
+                  "reasoning_tokens": 0
+                },
+                "total_tokens": 314,
+                "input_tokens_details": {
+                  "cached_tokens": 0,
+                  "cache_write_tokens": 0
+                }
+              },
+              "user": null,
+              "metadata": {}
+            }
+        - title: Reasoning
+          request:
+            curl: |
+              curl https://api.openai.com/v1/responses \
+                -H "Content-Type: application/json" \
+                -H "Authorization: Bearer $OPENAI_API_KEY" \
+                -d '{
+                  "model": "gpt-6-astra",
+                  "input": "How much wood would a woodchuck chuck?",
+                  "reasoning": {
+                    "effort": "high"
+                  }
+                }'
+            javascript: |
+              import OpenAI from "openai";
+              const openai = new OpenAI();
+
+              const response = await openai.responses.create({
+                  model: "gpt-6-astra",
+                  input: "How much wood would a woodchuck chuck?",
+                  reasoning: {
+                    effort: "high"
+                  }
+              });
+
+              console.log(response);
+            python: |
+              from openai import OpenAI
+              client = OpenAI()
+
+              response = client.responses.create(
+                  model="gpt-6-astra",
+                  input="How much wood would a woodchuck chuck?",
+                  reasoning={
+                      "effort": "high"
+                  }
+              )
+
+              print(response)
+            csharp: |
+              using System;
+              using OpenAI.Responses;
+
+              OpenAIResponseClient client = new(
+                  model: "gpt-6-astra",
+                  apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
+              );
+
+              string userInputText = "How much wood would a woodchuck chuck?";
+
+              ResponseCreationOptions options = new()
+              {
+                  ReasoningOptions = new()
+                  {
+                      ReasoningEffortLevel = ResponseReasoningEffortLevel.High,
+                  },
+              };
+
+              OpenAIResponse response = client.CreateResponse(userInputText, options);
+
+              Console.WriteLine(response.GetOutputText());
+          response: |
+            {
+              "id": "resp_67ccd7eca01881908ff0b5146584e408072912b2993db808",
+              "object": "response",
+              "access_programs": null,
+              "created_at": 1741477868,
+              "status": "completed",
+              "completed_at": 1741477869,
+              "error": null,
+              "incomplete_details": null,
+              "instructions": null,
+              "max_output_tokens": null,
+              "model": "gpt-6-astra",
+              "output": [
+                {
+                  "type": "message",
+                  "id": "msg_67ccd7f7b5848190a6f3e95d809f6b44072912b2993db808",
+                  "status": "completed",
+                  "role": "assistant",
+                  "content": [
+                    {
+                      "type": "output_text",
+                      "text": "The classic tongue twister...",
+                      "annotations": [],
+                      "logprobs": []
+                    }
+                  ]
+                }
+              ],
+              "parallel_tool_calls": true,
+              "previous_response_id": null,
+              "reasoning": {
+                "effort": "high",
+                "summary": null
+              },
+              "store": true,
+              "temperature": 1.0,
+              "text": {
+                "format": {
+                  "type": "text"
+                }
+              },
+              "tool_choice": "auto",
+              "tools": [],
+              "top_p": 1.0,
+              "truncation": "disabled",
+              "usage": {
+                "input_tokens": 81,
+                "input_tokens_details": {
+                  "cached_tokens": 0,
+                  "cache_write_tokens": 0
+                },
+                "output_tokens": 1035,
+                "output_tokens_details": {
+                  "reasoning_tokens": 832
+                },
+                "total_tokens": 1116
+              },
+              "user": null,
+              "metadata": {}
+            }
+      parameters:
+      - name: openai-beta
+        in: header
+        required: false
+        description: Optional beta features to enable for this request.
+        style: simple
+        explode: false
+        schema:
+          type: array
+          x-stainless-param: betas
+          items:
+            type: string
+            enum:
+            - responses_multi_agent=v1
+  /webhook_event_types:
+    get:
+      summary: List Webhook Event Types
+      description: Returns webhook event types visible to the authenticated project.
+      operationId: ListWebhookEventTypes
+      parameters: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEventTypeListResource'
+        '401':
+          description: The request does not contain authentication credentials.
+          headers:
+            WWW-Authenticate:
+              description: The bearer authentication challenge returned by the service.
+              schema:
+                type: string
+              example: Bearer realm="OpenAI API"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      x-oaiMeta:
+        beta: true
+  /webhook_endpoints/{webhook_endpoint_id}/test:
+    post:
+      summary: Test Webhook Endpoint
+      description: Sends a sample event to a webhook endpoint for the authenticated project.
+      operationId: TestWebhookEndpoint
+      parameters:
+      - name: webhook_endpoint_id
+        in: path
+        description: The ID of the webhook endpoint to test.
+        required: true
+        schema:
+          example: whe_123
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicTestEndpointBody'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEndpointTestResultResource'
+        '400':
+          description: The request parameters are invalid.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: The source video or a referenced character was not found or is not accessible, the source video is not ready, or the Videos API is unavailable.
+          description: The webhook endpoint was not found in the authenticated project.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '429':
-          $ref: '#/components/responses/InferenceRateLimited'
         '500':
-          description: The source generation is unavailable or the remix task could not be created.
+          description: The sample event could not be sent to the webhook endpoint.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '503':
-          $ref: '#/components/responses/InferenceServiceUnavailable'
-      deprecated: true
       x-oaiMeta:
-        group: videos
-        path: remix using the provided prompt.
-        examples:
-          request:
-            curl: |
-              curl -X POST https://api.openai.com/v1/videos/video_123/remix \
-                -H "Authorization: Bearer $OPENAI_API_KEY" \
-                -H "Content-Type: application/json" \
-                -d '{
-                  "prompt": "Extend the scene with the cat taking a bow to the cheering audience"
-                }'
-            javascript: |
-              import OpenAI from 'openai';
-
-              const client = new OpenAI();
-
-              const video = await client.videos.remix('video_123', { prompt: 'Extend the scene with the cat taking a bow to the cheering audience' });
-
-              console.log(video.id);
-            python: |
-              from openai import OpenAI
-
-              client = OpenAI()
-              video = client.videos.remix(
-                  video_id="video_123",
-                  prompt="Extend the scene with the cat taking a bow to the cheering audience",
-              )
-              print(video.id)
-            go: |
-              package main
-
-              import (
-                "context"
-                "fmt"
-
-                "github.com/openai/openai-go"
-              )
-
-              func main() {
-                client := openai.NewClient()
-                video, err := client.Videos.Remix(
-                  context.TODO(),
-                  "video_123",
-                  openai.VideoRemixParams{
-                    Prompt: "Extend the scene with the cat taking a bow to the cheering audience",
-                  },
-                )
-                if err != nil {
-                  panic(err.Error())
-                }
-                fmt.Printf("%+v\n", video.ID)
-              }
-            ruby: |
-              require "openai"
-
-              openai = OpenAI::Client.new
-
-              video = openai.videos.remix("video_123", prompt: "Extend the scene with the cat taking a bow to the cheering audience")
-
-              puts(video)
-            java: |
-              package com.openai.example;
-
-              import com.openai.client.OpenAIClient;
-              import com.openai.client.okhttp.OpenAIOkHttpClient;
-              import com.openai.models.videos.Video;
-              import com.openai.models.videos.VideoRemixParams;
-
-              public final class Main {
-                  private Main() {}
-
-                  public static void main(String[] args) {
-                      OpenAIClient client = OpenAIOkHttpClient.fromEnv();
-
-                      VideoRemixParams params = VideoRemixParams.builder()
-                          .videoId("video_123")
-                          .prompt("Extend the scene with the cat taking a bow to the cheering audience")
-                          .build();
-                      Video video = client.videos().remix(params);
-                  }
-              }
-          response: |
-            {
-              "id": "video_456",
-              "object": "video",
-              "model": "sora-2",
-              "status": "queued",
-              "progress": 0,
-              "created_at": 1712698600,
-              "size": "720x1280",
-              "seconds": "8",
-              "remixed_from_video_id": "video_123",
-              "prompt": "Extend the scene with the cat taking a bow to the cheering audience",
-              "completed_at": null,
-              "expires_at": null,
-              "error": null
-            }
+        beta: true
   /responses/input_tokens:
     post:
       tags:
@@ -36207,2109 +37360,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       x-oaiMeta:
         beta: true
-  /webhook_endpoints/{webhook_endpoint_id}/test:
-    post:
-      summary: Test Webhook Endpoint
-      description: Sends a sample event to a webhook endpoint for the authenticated project.
-      operationId: TestWebhookEndpoint
-      parameters:
-      - name: webhook_endpoint_id
-        in: path
-        description: The ID of the webhook endpoint to test.
-        required: true
-        schema:
-          example: whe_123
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PublicTestEndpointBody'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WebhookEndpointTestResultResource'
-        '400':
-          description: The request parameters are invalid.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: The webhook endpoint was not found in the authenticated project.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: The sample event could not be sent to the webhook endpoint.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      x-oaiMeta:
-        beta: true
-  /webhook_event_types:
-    get:
-      summary: List Webhook Event Types
-      description: Returns webhook event types visible to the authenticated project.
-      operationId: ListWebhookEventTypes
-      parameters: []
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WebhookEventTypeListResource'
-        '401':
-          description: The request does not contain authentication credentials.
-          headers:
-            WWW-Authenticate:
-              description: The bearer authentication challenge returned by the service.
-              schema:
-                type: string
-              example: Bearer realm="OpenAI API"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      x-oaiMeta:
-        beta: true
-  /responses?beta=true:
-    post:
-      operationId: beta_createResponse
-      tags:
-      - Responses
-      summary: Create a model response
-      description: |
-        Creates a model response. Provide [text](https://developers.openai.com/api/docs/guides/text) or
-        [image](https://developers.openai.com/api/docs/guides/images-vision) inputs to generate [text](https://developers.openai.com/api/docs/guides/text)
-        or [JSON](https://developers.openai.com/api/docs/guides/structured-outputs) outputs. Have the model call
-        your own [custom code](https://developers.openai.com/api/docs/guides/function-calling) or use built-in
-        [tools](https://developers.openai.com/api/docs/guides/tools) like [web search](https://developers.openai.com/api/docs/guides/tools-web-search)
-        or [file search](https://developers.openai.com/api/docs/guides/tools-file-search) to use your own data
-        as input for the model's response.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BetaCreateResponse'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BetaResponse'
-            text/event-stream:
-              schema:
-                $ref: '#/components/schemas/BetaResponseStreamEvent'
-        '400':
-          description: Invalid response request or incompatible request parameters.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BetaErrorResponse'
-        '404':
-          description: The requested model or a referenced resource was not found or is unavailable to this caller.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BetaErrorResponse'
-        '429':
-          $ref: '#/components/responses/InferenceRateLimited'
-        '503':
-          $ref: '#/components/responses/InferenceServiceUnavailable'
-      x-oaiMeta:
-        group: responses
-        path: create
-        examples:
-        - title: Text input
-          request:
-            curl: |
-              curl https://api.openai.com/v1/responses \
-                -H "Content-Type: application/json" \
-                -H "Authorization: Bearer $OPENAI_API_KEY" \
-                -d '{
-                  "model": "gpt-6-astra",
-                  "input": "Tell me a three sentence bedtime story about a unicorn."
-                }'
-            javascript: |
-              import OpenAI from "openai";
-
-              const openai = new OpenAI();
-
-              const response = await openai.responses.create({
-                  model: "gpt-6-astra",
-                  input: "Tell me a three sentence bedtime story about a unicorn."
-              });
-
-              console.log(response);
-            python: |
-              from openai import OpenAI
-
-              client = OpenAI()
-
-              response = client.responses.create(
-                model="gpt-6-astra",
-                input="Tell me a three sentence bedtime story about a unicorn."
-              )
-
-              print(response)
-            csharp: |
-              using System;
-              using OpenAI.Responses;
-
-              OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
-                  apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
-              );
-
-              OpenAIResponse response = client.CreateResponse("Tell me a three sentence bedtime story about a unicorn.");
-
-              Console.WriteLine(response.GetOutputText());
-          response: |
-            {
-              "id": "resp_67ccd2bed1ec8190b14f964abc0542670bb6a6b452d3795b",
-              "object": "response",
-              "access_programs": null,
-              "created_at": 1741476542,
-              "status": "completed",
-              "completed_at": 1741476543,
-              "error": null,
-              "incomplete_details": null,
-              "instructions": null,
-              "max_output_tokens": null,
-              "model": "gpt-6-astra",
-              "output": [
-                {
-                  "type": "message",
-                  "id": "msg_67ccd2bf17f0819081ff3bb2cf6508e60bb6a6b452d3795b",
-                  "status": "completed",
-                  "role": "assistant",
-                  "content": [
-                    {
-                      "type": "output_text",
-                      "text": "In a peaceful grove beneath a silver moon, a unicorn named Lumina discovered a hidden pool that reflected the stars. As she dipped her horn into the water, the pool began to shimmer, revealing a pathway to a magical realm of endless night skies. Filled with wonder, Lumina whispered a wish for all who dream to find their own hidden magic, and as she glanced back, her hoofprints sparkled like stardust.",
-                      "annotations": [],
-                      "logprobs": []
-                    }
-                  ]
-                }
-              ],
-              "parallel_tool_calls": true,
-              "previous_response_id": null,
-              "reasoning": {
-                "effort": null,
-                "summary": null
-              },
-              "store": true,
-              "temperature": 1.0,
-              "text": {
-                "format": {
-                  "type": "text"
-                }
-              },
-              "tool_choice": "auto",
-              "tools": [],
-              "top_p": 1.0,
-              "truncation": "disabled",
-              "usage": {
-                "input_tokens": 36,
-                "input_tokens_details": {
-                  "cached_tokens": 0,
-                  "cache_write_tokens": 0
-                },
-                "output_tokens": 87,
-                "output_tokens_details": {
-                  "reasoning_tokens": 0
-                },
-                "total_tokens": 123
-              },
-              "user": null,
-              "metadata": {}
-            }
-        - title: Image input
-          request:
-            curl: |
-              curl https://api.openai.com/v1/responses \
-                -H "Content-Type: application/json" \
-                -H "Authorization: Bearer $OPENAI_API_KEY" \
-                -d '{
-                  "model": "gpt-6-astra",
-                  "input": [
-                    {
-                      "role": "user",
-                      "content": [
-                        {"type": "input_text", "text": "what is in this image?"},
-                        {
-                          "type": "input_image",
-                          "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
-                        }
-                      ]
-                    }
-                  ]
-                }'
-            javascript: |
-              import OpenAI from "openai";
-
-              const openai = new OpenAI();
-
-              const response = await openai.responses.create({
-                  model: "gpt-6-astra",
-                  input: [
-                      {
-                          role: "user",
-                          content: [
-                              { type: "input_text", text: "what is in this image?" },
-                              {
-                                  type: "input_image",
-                                  image_url:
-                                      "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg",
-                              },
-                          ],
-                      },
-                  ],
-              });
-
-              console.log(response);
-            python: |
-              from openai import OpenAI
-
-              client = OpenAI()
-
-              response = client.responses.create(
-                  model="gpt-6-astra",
-                  input=[
-                      {
-                          "role": "user",
-                          "content": [
-                              { "type": "input_text", "text": "what is in this image?" },
-                              {
-                                  "type": "input_image",
-                                  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
-                              }
-                          ]
-                      }
-                  ]
-              )
-
-              print(response)
-            csharp: |
-              using System;
-              using System.Collections.Generic;
-
-              using OpenAI.Responses;
-
-              OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
-                  apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
-              );
-
-              List<ResponseItem> inputItems =
-              [
-                  ResponseItem.CreateUserMessageItem(
-                      [
-                          ResponseContentPart.CreateInputTextPart("What is in this image?"),
-                          ResponseContentPart.CreateInputImagePart(new Uri("https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"))
-                      ]
-                  )
-              ];
-
-              OpenAIResponse response = client.CreateResponse(inputItems);
-
-              Console.WriteLine(response.GetOutputText());
-          response: |
-            {
-              "id": "resp_67ccd3a9da748190baa7f1570fe91ac604becb25c45c1d41",
-              "object": "response",
-              "access_programs": null,
-              "created_at": 1741476777,
-              "status": "completed",
-              "completed_at": 1741476778,
-              "error": null,
-              "incomplete_details": null,
-              "instructions": null,
-              "max_output_tokens": null,
-              "model": "gpt-6-astra",
-              "output": [
-                {
-                  "type": "message",
-                  "id": "msg_67ccd3acc8d48190a77525dc6de64b4104becb25c45c1d41",
-                  "status": "completed",
-                  "role": "assistant",
-                  "content": [
-                    {
-                      "type": "output_text",
-                      "text": "The image depicts a scenic landscape with a wooden boardwalk or pathway leading through lush, green grass under a blue sky with some clouds. The setting suggests a peaceful natural area, possibly a park or nature reserve. There are trees and shrubs in the background.",
-                      "annotations": [],
-                      "logprobs": []
-                    }
-                  ]
-                }
-              ],
-              "parallel_tool_calls": true,
-              "previous_response_id": null,
-              "reasoning": {
-                "effort": null,
-                "summary": null
-              },
-              "store": true,
-              "temperature": 1.0,
-              "text": {
-                "format": {
-                  "type": "text"
-                }
-              },
-              "tool_choice": "auto",
-              "tools": [],
-              "top_p": 1.0,
-              "truncation": "disabled",
-              "usage": {
-                "input_tokens": 328,
-                "input_tokens_details": {
-                  "cached_tokens": 0,
-                  "cache_write_tokens": 0
-                },
-                "output_tokens": 52,
-                "output_tokens_details": {
-                  "reasoning_tokens": 0
-                },
-                "total_tokens": 380
-              },
-              "user": null,
-              "metadata": {}
-            }
-        - title: File input
-          request:
-            curl: |
-              curl https://api.openai.com/v1/responses \
-                -H "Content-Type: application/json" \
-                -H "Authorization: Bearer $OPENAI_API_KEY" \
-                -d '{
-                  "model": "gpt-6-astra",
-                  "input": [
-                    {
-                      "role": "user",
-                      "content": [
-                        {"type": "input_text", "text": "what is in this file?"},
-                        {
-                          "type": "input_file",
-                          "file_url": "https://www.berkshirehathaway.com/letters/2024ltr.pdf",
-                          "detail": "auto"
-                        }
-                      ]
-                    }
-                  ]
-                }'
-            javascript: |
-              import OpenAI from "openai";
-
-              const openai = new OpenAI();
-
-              const response = await openai.responses.create({
-                  model: "gpt-6-astra",
-                  input: [
-                      {
-                          role: "user",
-                          content: [
-                              { type: "input_text", text: "what is in this file?" },
-                              {
-                                  type: "input_file",
-                                  file_url: "https://www.berkshirehathaway.com/letters/2024ltr.pdf",
-                                  detail: "auto",
-                              },
-                          ],
-                      },
-                  ],
-              });
-
-              console.log(response);
-            python: |
-              from openai import OpenAI
-
-              client = OpenAI()
-
-              response = client.responses.create(
-                  model="gpt-6-astra",
-                  input=[
-                      {
-                          "role": "user",
-                          "content": [
-                              { "type": "input_text", "text": "what is in this file?" },
-                              {
-                                  "type": "input_file",
-                                  "file_url": "https://www.berkshirehathaway.com/letters/2024ltr.pdf",
-                                  "detail": "auto"
-                              }
-                          ]
-                      }
-                  ]
-              )
-
-              print(response)
-          response: |
-            {
-              "id": "resp_686eef60237881a2bd1180bb8b13de430e34c516d176ff86",
-              "object": "response",
-              "access_programs": null,
-              "created_at": 1752100704,
-              "status": "completed",
-              "completed_at": 1752100705,
-              "background": false,
-              "error": null,
-              "incomplete_details": null,
-              "instructions": null,
-              "max_output_tokens": null,
-              "max_tool_calls": null,
-              "model": "gpt-6-astra",
-              "output": [
-                {
-                  "id": "msg_686eef60d3e081a29283bdcbc4322fd90e34c516d176ff86",
-                  "type": "message",
-                  "status": "completed",
-                  "content": [
-                    {
-                      "type": "output_text",
-                      "annotations": [],
-                      "logprobs": [],
-                      "text": "The file seems to contain excerpts from a letter to the shareholders of Berkshire Hathaway Inc., likely written by Warren Buffett. It covers several topics:\n\n1. **Communication Philosophy**: Buffett emphasizes the importance of transparency and candidness in reporting mistakes and successes to shareholders.\n\n2. **Mistakes and Learnings**: The letter acknowledges past mistakes in business assessments and management hires, highlighting the importance of correcting errors promptly.\n\n3. **CEO Succession**: Mention of Greg Abel stepping in as the new CEO and continuing the tradition of honest communication.\n\n4. **Pete Liegl Story**: A detailed account of acquiring Forest River and the relationship with its founder, highlighting trust and effective business decisions.\n\n5. **2024 Performance**: Overview of business performance, particularly in insurance and investment activities, with a focus on GEICO's improvement.\n\n6. **Tax Contributions**: Discussion of significant tax payments to the U.S. Treasury, credited to shareholders' reinvestments.\n\n7. **Investment Strategy**: A breakdown of Berkshire\u2019s investments in both controlled subsidiaries and marketable equities, along with a focus on long-term holding strategies.\n\n8. **American Capitalism**: Reflections on America\u2019s economic development and Berkshire\u2019s role within it.\n\n9. **Property-Casualty Insurance**: Insights into the P/C insurance business model and its challenges and benefits.\n\n10. **Japanese Investments**: Information about Berkshire\u2019s investments in Japanese companies and future plans.\n\n11. **Annual Meeting**: Details about the upcoming annual gathering in Omaha, including schedule changes and new book releases.\n\n12. **Personal Anecdotes**: Light-hearted stories about family and interactions, conveying Buffett's personable approach.\n\n13. **Financial Performance Data**: Tables comparing Berkshire\u2019s annual performance to the S&P 500, showing impressive long-term gains.\n\nOverall, the letter reinforces Berkshire Hathaway's commitment to transparency, investment in both its businesses and the wider economy, and emphasizes strong leadership and prudent financial management."
-                    }
-                  ],
-                  "role": "assistant"
-                }
-              ],
-              "parallel_tool_calls": true,
-              "previous_response_id": null,
-              "reasoning": {
-                "effort": null,
-                "summary": null
-              },
-              "service_tier": "default",
-              "store": true,
-              "temperature": 1.0,
-              "text": {
-                "format": {
-                  "type": "text"
-                }
-              },
-              "tool_choice": "auto",
-              "tools": [],
-              "top_logprobs": 0,
-              "top_p": 1.0,
-              "truncation": "disabled",
-              "usage": {
-                "input_tokens": 8438,
-                "input_tokens_details": {
-                  "cached_tokens": 0,
-                  "cache_write_tokens": 0
-                },
-                "output_tokens": 398,
-                "output_tokens_details": {
-                  "reasoning_tokens": 0
-                },
-                "total_tokens": 8836
-              },
-              "user": null,
-              "metadata": {}
-            }
-        - title: Web search
-          request:
-            curl: |
-              curl https://api.openai.com/v1/responses \
-                -H "Content-Type: application/json" \
-                -H "Authorization: Bearer $OPENAI_API_KEY" \
-                -d '{
-                  "model": "gpt-6-astra",
-                  "tools": [{ "type": "web_search_preview" }],
-                  "input": "What was a positive news story from today?"
-                }'
-            javascript: |
-              import OpenAI from "openai";
-
-              const openai = new OpenAI();
-
-              const response = await openai.responses.create({
-                  model: "gpt-6-astra",
-                  tools: [{ type: "web_search_preview" }],
-                  input: "What was a positive news story from today?",
-              });
-
-              console.log(response);
-            python: |
-              from openai import OpenAI
-
-              client = OpenAI()
-
-              response = client.responses.create(
-                  model="gpt-6-astra",
-                  tools=[{ "type": "web_search_preview" }],
-                  input="What was a positive news story from today?",
-              )
-
-              print(response)
-            csharp: |
-              using System;
-
-              using OpenAI.Responses;
-
-              OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
-                  apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
-              );
-
-              string userInputText = "What was a positive news story from today?";
-
-              ResponseCreationOptions options = new()
-              {
-                  Tools =
-                  {
-                      ResponseTool.CreateWebSearchTool()
-                  },
-              };
-
-              OpenAIResponse response = client.CreateResponse(userInputText, options);
-
-              Console.WriteLine(response.GetOutputText());
-          response: |
-            {
-              "id": "resp_67ccf18ef5fc8190b16dbee19bc54e5f087bb177ab789d5c",
-              "object": "response",
-              "access_programs": null,
-              "created_at": 1741484430,
-              "status": "completed",
-              "completed_at": 1741484431,
-              "error": null,
-              "incomplete_details": null,
-              "instructions": null,
-              "max_output_tokens": null,
-              "model": "gpt-6-astra",
-              "output": [
-                {
-                  "type": "web_search_call",
-                  "id": "ws_67ccf18f64008190a39b619f4c8455ef087bb177ab789d5c",
-                  "status": "completed"
-                },
-                {
-                  "type": "message",
-                  "id": "msg_67ccf190ca3881909d433c50b1f6357e087bb177ab789d5c",
-                  "status": "completed",
-                  "role": "assistant",
-                  "content": [
-                    {
-                      "type": "output_text",
-                      "text": "As of today, March 9, 2025, one notable positive news story...",
-                      "annotations": [
-                        {
-                          "type": "url_citation",
-                          "start_index": 442,
-                          "end_index": 557,
-                          "url": "https://.../?utm_source=chatgpt.com",
-                          "title": "..."
-                        },
-                        {
-                          "type": "url_citation",
-                          "start_index": 962,
-                          "end_index": 1077,
-                          "url": "https://.../?utm_source=chatgpt.com",
-                          "title": "..."
-                        },
-                        {
-                          "type": "url_citation",
-                          "start_index": 1336,
-                          "end_index": 1451,
-                          "url": "https://.../?utm_source=chatgpt.com",
-                          "title": "..."
-                        }
-                      ],
-                      "logprobs": []
-                    }
-                  ]
-                }
-              ],
-              "parallel_tool_calls": true,
-              "previous_response_id": null,
-              "reasoning": {
-                "effort": null,
-                "summary": null
-              },
-              "store": true,
-              "temperature": 1.0,
-              "text": {
-                "format": {
-                  "type": "text"
-                }
-              },
-              "tool_choice": "auto",
-              "tools": [
-                {
-                  "type": "web_search_preview",
-                  "domains": [],
-                  "search_context_size": "medium",
-                  "user_location": {
-                    "type": "approximate",
-                    "city": null,
-                    "country": "US",
-                    "region": null,
-                    "timezone": null
-                  }
-                }
-              ],
-              "top_p": 1.0,
-              "truncation": "disabled",
-              "usage": {
-                "input_tokens": 328,
-                "input_tokens_details": {
-                  "cached_tokens": 0,
-                  "cache_write_tokens": 0
-                },
-                "output_tokens": 356,
-                "output_tokens_details": {
-                  "reasoning_tokens": 0
-                },
-                "total_tokens": 684
-              },
-              "user": null,
-              "metadata": {}
-            }
-        - title: File search
-          request:
-            curl: |
-              curl https://api.openai.com/v1/responses \
-                -H "Content-Type: application/json" \
-                -H "Authorization: Bearer $OPENAI_API_KEY" \
-                -d '{
-                  "model": "gpt-6-astra",
-                  "tools": [{
-                    "type": "file_search",
-                    "vector_store_ids": ["vs_1234567890"],
-                    "max_num_results": 20
-                  }],
-                  "input": "What are the attributes of an ancient brown dragon?"
-                }'
-            javascript: |
-              import OpenAI from "openai";
-
-              const openai = new OpenAI();
-
-              const response = await openai.responses.create({
-                  model: "gpt-6-astra",
-                  tools: [{
-                    type: "file_search",
-                    vector_store_ids: ["vs_1234567890"],
-                    max_num_results: 20
-                  }],
-                  input: "What are the attributes of an ancient brown dragon?",
-              });
-
-              console.log(response);
-            python: |
-              from openai import OpenAI
-
-              client = OpenAI()
-
-              response = client.responses.create(
-                  model="gpt-6-astra",
-                  tools=[{
-                    "type": "file_search",
-                    "vector_store_ids": ["vs_1234567890"],
-                    "max_num_results": 20
-                  }],
-                  input="What are the attributes of an ancient brown dragon?",
-              )
-
-              print(response)
-            csharp: |
-              using System;
-
-              using OpenAI.Responses;
-
-              OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
-                  apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
-              );
-
-              string userInputText = "What are the attributes of an ancient brown dragon?";
-
-              ResponseCreationOptions options = new()
-              {
-                  Tools =
-                  {
-                      ResponseTool.CreateFileSearchTool(
-                          vectorStoreIds: ["vs_1234567890"],
-                          maxResultCount: 20
-                      )
-                  },
-              };
-
-              OpenAIResponse response = client.CreateResponse(userInputText, options);
-
-              Console.WriteLine(response.GetOutputText());
-          response: |
-            {
-              "id": "resp_67ccf4c55fc48190b71bd0463ad3306d09504fb6872380d7",
-              "object": "response",
-              "access_programs": null,
-              "created_at": 1741485253,
-              "status": "completed",
-              "completed_at": 1741485254,
-              "error": null,
-              "incomplete_details": null,
-              "instructions": null,
-              "max_output_tokens": null,
-              "model": "gpt-6-astra",
-              "output": [
-                {
-                  "type": "file_search_call",
-                  "id": "fs_67ccf4c63cd08190887ef6464ba5681609504fb6872380d7",
-                  "status": "completed",
-                  "queries": [
-                    "attributes of an ancient brown dragon"
-                  ],
-                  "results": null
-                },
-                {
-                  "type": "message",
-                  "id": "msg_67ccf4c93e5c81909d595b369351a9d309504fb6872380d7",
-                  "status": "completed",
-                  "role": "assistant",
-                  "content": [
-                    {
-                      "type": "output_text",
-                      "text": "The attributes of an ancient brown dragon include...",
-                      "annotations": [
-                        {
-                          "type": "file_citation",
-                          "index": 320,
-                          "file_id": "file-4wDz5b167pAf72nx1h9eiN",
-                          "filename": "dragons.pdf"
-                        },
-                        {
-                          "type": "file_citation",
-                          "index": 576,
-                          "file_id": "file-4wDz5b167pAf72nx1h9eiN",
-                          "filename": "dragons.pdf"
-                        },
-                        {
-                          "type": "file_citation",
-                          "index": 815,
-                          "file_id": "file-4wDz5b167pAf72nx1h9eiN",
-                          "filename": "dragons.pdf"
-                        },
-                        {
-                          "type": "file_citation",
-                          "index": 815,
-                          "file_id": "file-4wDz5b167pAf72nx1h9eiN",
-                          "filename": "dragons.pdf"
-                        },
-                        {
-                          "type": "file_citation",
-                          "index": 1030,
-                          "file_id": "file-4wDz5b167pAf72nx1h9eiN",
-                          "filename": "dragons.pdf"
-                        },
-                        {
-                          "type": "file_citation",
-                          "index": 1030,
-                          "file_id": "file-4wDz5b167pAf72nx1h9eiN",
-                          "filename": "dragons.pdf"
-                        },
-                        {
-                          "type": "file_citation",
-                          "index": 1156,
-                          "file_id": "file-4wDz5b167pAf72nx1h9eiN",
-                          "filename": "dragons.pdf"
-                        },
-                        {
-                          "type": "file_citation",
-                          "index": 1225,
-                          "file_id": "file-4wDz5b167pAf72nx1h9eiN",
-                          "filename": "dragons.pdf"
-                        }
-                      ],
-                      "logprobs": []
-                    }
-                  ]
-                }
-              ],
-              "parallel_tool_calls": true,
-              "previous_response_id": null,
-              "reasoning": {
-                "effort": null,
-                "summary": null
-              },
-              "store": true,
-              "temperature": 1.0,
-              "text": {
-                "format": {
-                  "type": "text"
-                }
-              },
-              "tool_choice": "auto",
-              "tools": [
-                {
-                  "type": "file_search",
-                  "filters": null,
-                  "max_num_results": 20,
-                  "ranking_options": {
-                    "ranker": "auto",
-                    "score_threshold": 0.0
-                  },
-                  "vector_store_ids": [
-                    "vs_1234567890"
-                  ]
-                }
-              ],
-              "top_p": 1.0,
-              "truncation": "disabled",
-              "usage": {
-                "input_tokens": 18307,
-                "input_tokens_details": {
-                  "cached_tokens": 0,
-                  "cache_write_tokens": 0
-                },
-                "output_tokens": 348,
-                "output_tokens_details": {
-                  "reasoning_tokens": 0
-                },
-                "total_tokens": 18655
-              },
-              "user": null,
-              "metadata": {}
-            }
-        - title: Streaming
-          request:
-            curl: |
-              curl https://api.openai.com/v1/responses \
-                -H "Content-Type: application/json" \
-                -H "Authorization: Bearer $OPENAI_API_KEY" \
-                -d '{
-                  "model": "gpt-6-astra",
-                  "instructions": "You are a helpful assistant.",
-                  "input": "Hello!",
-                  "stream": true
-                }'
-            python: |
-              from openai import OpenAI
-
-              client = OpenAI()
-
-              response = client.responses.create(
-                model="gpt-6-astra",
-                instructions="You are a helpful assistant.",
-                input="Hello!",
-                stream=True
-              )
-
-              for event in response:
-                print(event)
-            javascript: |
-              import OpenAI from "openai";
-
-              const openai = new OpenAI();
-
-              const response = await openai.responses.create({
-                  model: "gpt-6-astra",
-                  instructions: "You are a helpful assistant.",
-                  input: "Hello!",
-                  stream: true,
-              });
-
-              for await (const event of response) {
-                  console.log(event);
-              }
-            csharp: |
-              using System;
-              using System.ClientModel;
-              using System.Threading.Tasks;
-
-              using OpenAI.Responses;
-
-              OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
-                  apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
-              );
-
-              string userInputText = "Hello!";
-
-              ResponseCreationOptions options = new()
-              {
-                  Instructions = "You are a helpful assistant.",
-              };
-
-              AsyncCollectionResult<StreamingResponseUpdate> responseUpdates = client.CreateResponseStreamingAsync(userInputText, options);
-
-              await foreach (StreamingResponseUpdate responseUpdate in responseUpdates)
-              {
-                  if (responseUpdate is StreamingResponseOutputTextDeltaUpdate outputTextDeltaUpdate)
-                  {
-                      Console.Write(outputTextDeltaUpdate.Delta);
-                  }
-              }
-          response: |+
-            event: response.created
-            data: {"type":"response.created","response":{"id":"resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654","object":"response","access_programs":null,"created_at":1741290958,"status":"in_progress","error":null,"incomplete_details":null,"instructions":"You are a helpful assistant.","max_output_tokens":null,"model":"gpt-6-astra","output":[],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[],"top_p":1.0,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":0}
-
-            event: response.in_progress
-            data: {"type":"response.in_progress","response":{"id":"resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654","object":"response","access_programs":null,"created_at":1741290958,"status":"in_progress","error":null,"incomplete_details":null,"instructions":"You are a helpful assistant.","max_output_tokens":null,"model":"gpt-6-astra","output":[],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[],"top_p":1.0,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":1}
-
-            event: response.output_item.added
-            data: {"type":"response.output_item.added","output_index":0,"item":{"id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","type":"message","status":"in_progress","role":"assistant","content":[]},"sequence_number":2}
-
-            event: response.content_part.added
-            data: {"type":"response.content_part.added","item_id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","output_index":0,"content_index":0,"part":{"type":"output_text","text":"","annotations":[],"logprobs":[]},"sequence_number":3}
-
-            event: response.output_text.delta
-            data: {"type":"response.output_text.delta","item_id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","output_index":0,"content_index":0,"delta":"Hi","sequence_number":4,"logprobs":[]}
-
-            : Intermediate response events omitted.
-
-            event: response.output_text.done
-            data: {"type":"response.output_text.done","item_id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","output_index":0,"content_index":0,"text":"Hi there! How can I assist you today?","sequence_number":10,"logprobs":[]}
-
-            event: response.content_part.done
-            data: {"type":"response.content_part.done","item_id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","output_index":0,"content_index":0,"part":{"type":"output_text","text":"Hi there! How can I assist you today?","annotations":[],"logprobs":[]},"sequence_number":11}
-
-            event: response.output_item.done
-            data: {"type":"response.output_item.done","output_index":0,"item":{"id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","type":"message","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Hi there! How can I assist you today?","annotations":[],"logprobs":[]}]},"sequence_number":12}
-
-            event: response.completed
-            data: {"type":"response.completed","response":{"id":"resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654","object":"response","access_programs":null,"created_at":1741290958,"status":"completed","error":null,"incomplete_details":null,"instructions":"You are a helpful assistant.","max_output_tokens":null,"model":"gpt-6-astra","output":[{"id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","type":"message","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Hi there! How can I assist you today?","annotations":[],"logprobs":[]}]}],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[],"top_p":1.0,"truncation":"disabled","usage":{"input_tokens":37,"output_tokens":11,"output_tokens_details":{"reasoning_tokens":0},"total_tokens":48,"input_tokens_details":{"cached_tokens":0,"cache_write_tokens":0}},"user":null,"metadata":{}},"sequence_number":13}
-
-        - title: Functions
-          request:
-            curl: |
-              curl https://api.openai.com/v1/responses \
-                -H "Content-Type: application/json" \
-                -H "Authorization: Bearer $OPENAI_API_KEY" \
-                -d '{
-                  "model": "gpt-6-astra",
-                  "input": "What is the weather like in Boston today?",
-                  "tools": [
-                    {
-                      "type": "function",
-                      "name": "get_current_weather",
-                      "description": "Get the current weather in a given location",
-                      "parameters": {
-                        "type": "object",
-                        "properties": {
-                          "location": {
-                            "type": "string",
-                            "description": "The city and state, e.g. San Francisco, CA"
-                          },
-                          "unit": {
-                            "type": "string",
-                            "enum": ["celsius", "fahrenheit"]
-                          }
-                        },
-                        "required": ["location", "unit"]
-                      }
-                    }
-                  ],
-                  "tool_choice": "auto"
-                }'
-            python: |
-              from openai import OpenAI
-
-              client = OpenAI()
-
-              tools = [
-                  {
-                      "type": "function",
-                      "name": "get_current_weather",
-                      "description": "Get the current weather in a given location",
-                      "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "location": {
-                                "type": "string",
-                                "description": "The city and state, e.g. San Francisco, CA",
-                            },
-                            "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
-                        },
-                        "required": ["location", "unit"],
-                      }
-                  }
-              ]
-
-              response = client.responses.create(
-                model="gpt-6-astra",
-                tools=tools,
-                input="What is the weather like in Boston today?",
-                tool_choice="auto"
-              )
-
-              print(response)
-            javascript: |
-              import OpenAI from "openai";
-
-              const openai = new OpenAI();
-
-              const tools = [
-                  {
-                      type: "function",
-                      name: "get_current_weather",
-                      description: "Get the current weather in a given location",
-                      parameters: {
-                          type: "object",
-                          properties: {
-                              location: {
-                                  type: "string",
-                                  description: "The city and state, e.g. San Francisco, CA",
-                              },
-                              unit: { type: "string", enum: ["celsius", "fahrenheit"] },
-                          },
-                          required: ["location", "unit"],
-                      },
-                  },
-              ];
-
-              const response = await openai.responses.create({
-                  model: "gpt-6-astra",
-                  tools: tools,
-                  input: "What is the weather like in Boston today?",
-                  tool_choice: "auto",
-              });
-
-              console.log(response);
-            csharp: |
-              using System;
-              using OpenAI.Responses;
-
-              OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
-                  apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
-              );
-
-              ResponseTool getCurrentWeatherFunctionTool = ResponseTool.CreateFunctionTool(
-                  functionName: "get_current_weather",
-                  functionDescription: "Get the current weather in a given location",
-                  functionParameters: BinaryData.FromString("""
-                      {
-                          "type": "object",
-                          "properties": {
-                              "location": {
-                                  "type": "string",
-                                  "description": "The city and state, e.g. San Francisco, CA"
-                              },
-                              "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]}
-                          },
-                          "required": ["location", "unit"]
-                      }
-                      """
-                  )
-              );
-
-              string userInputText = "What is the weather like in Boston today?";
-
-              ResponseCreationOptions options = new()
-              {
-                  Tools =
-                  {
-                      getCurrentWeatherFunctionTool
-                  },
-                  ToolChoice = ResponseToolChoice.CreateAutoChoice(),
-              };
-
-              OpenAIResponse response = client.CreateResponse(userInputText, options);
-          response: |
-            {
-              "id": "resp_67ca09c5efe0819096d0511c92b8c890096610f474011cc0",
-              "object": "response",
-              "access_programs": null,
-              "created_at": 1741294021,
-              "status": "completed",
-              "completed_at": 1741294022,
-              "error": null,
-              "incomplete_details": null,
-              "instructions": null,
-              "max_output_tokens": null,
-              "model": "gpt-6-astra",
-              "output": [
-                {
-                  "type": "function_call",
-                  "id": "fc_67ca09c6bedc8190a7abfec07b1a1332096610f474011cc0",
-                  "call_id": "call_unLAR8MvFNptuiZK6K6HCy5k",
-                  "name": "get_current_weather",
-                  "arguments": "{\"location\":\"Boston, MA\",\"unit\":\"celsius\"}",
-                  "status": "completed"
-                }
-              ],
-              "parallel_tool_calls": true,
-              "previous_response_id": null,
-              "reasoning": {
-                "effort": null,
-                "summary": null
-              },
-              "store": true,
-              "temperature": 1.0,
-              "text": {
-                "format": {
-                  "type": "text"
-                }
-              },
-              "tool_choice": "auto",
-              "tools": [
-                {
-                  "type": "function",
-                  "description": "Get the current weather in a given location",
-                  "name": "get_current_weather",
-                  "parameters": {
-                    "type": "object",
-                    "properties": {
-                      "location": {
-                        "type": "string",
-                        "description": "The city and state, e.g. San Francisco, CA"
-                      },
-                      "unit": {
-                        "type": "string",
-                        "enum": [
-                          "celsius",
-                          "fahrenheit"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "location",
-                      "unit"
-                    ]
-                  },
-                  "strict": true
-                }
-              ],
-              "top_p": 1.0,
-              "truncation": "disabled",
-              "usage": {
-                "input_tokens": 291,
-                "output_tokens": 23,
-                "output_tokens_details": {
-                  "reasoning_tokens": 0
-                },
-                "total_tokens": 314,
-                "input_tokens_details": {
-                  "cached_tokens": 0,
-                  "cache_write_tokens": 0
-                }
-              },
-              "user": null,
-              "metadata": {}
-            }
-        - title: Reasoning
-          request:
-            curl: |
-              curl https://api.openai.com/v1/responses \
-                -H "Content-Type: application/json" \
-                -H "Authorization: Bearer $OPENAI_API_KEY" \
-                -d '{
-                  "model": "gpt-6-astra",
-                  "input": "How much wood would a woodchuck chuck?",
-                  "reasoning": {
-                    "effort": "high"
-                  }
-                }'
-            javascript: |
-              import OpenAI from "openai";
-              const openai = new OpenAI();
-
-              const response = await openai.responses.create({
-                  model: "gpt-6-astra",
-                  input: "How much wood would a woodchuck chuck?",
-                  reasoning: {
-                    effort: "high"
-                  }
-              });
-
-              console.log(response);
-            python: |
-              from openai import OpenAI
-              client = OpenAI()
-
-              response = client.responses.create(
-                  model="gpt-6-astra",
-                  input="How much wood would a woodchuck chuck?",
-                  reasoning={
-                      "effort": "high"
-                  }
-              )
-
-              print(response)
-            csharp: |
-              using System;
-              using OpenAI.Responses;
-
-              OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
-                  apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
-              );
-
-              string userInputText = "How much wood would a woodchuck chuck?";
-
-              ResponseCreationOptions options = new()
-              {
-                  ReasoningOptions = new()
-                  {
-                      ReasoningEffortLevel = ResponseReasoningEffortLevel.High,
-                  },
-              };
-
-              OpenAIResponse response = client.CreateResponse(userInputText, options);
-
-              Console.WriteLine(response.GetOutputText());
-          response: |
-            {
-              "id": "resp_67ccd7eca01881908ff0b5146584e408072912b2993db808",
-              "object": "response",
-              "access_programs": null,
-              "created_at": 1741477868,
-              "status": "completed",
-              "completed_at": 1741477869,
-              "error": null,
-              "incomplete_details": null,
-              "instructions": null,
-              "max_output_tokens": null,
-              "model": "gpt-6-astra",
-              "output": [
-                {
-                  "type": "message",
-                  "id": "msg_67ccd7f7b5848190a6f3e95d809f6b44072912b2993db808",
-                  "status": "completed",
-                  "role": "assistant",
-                  "content": [
-                    {
-                      "type": "output_text",
-                      "text": "The classic tongue twister...",
-                      "annotations": [],
-                      "logprobs": []
-                    }
-                  ]
-                }
-              ],
-              "parallel_tool_calls": true,
-              "previous_response_id": null,
-              "reasoning": {
-                "effort": "high",
-                "summary": null
-              },
-              "store": true,
-              "temperature": 1.0,
-              "text": {
-                "format": {
-                  "type": "text"
-                }
-              },
-              "tool_choice": "auto",
-              "tools": [],
-              "top_p": 1.0,
-              "truncation": "disabled",
-              "usage": {
-                "input_tokens": 81,
-                "input_tokens_details": {
-                  "cached_tokens": 0,
-                  "cache_write_tokens": 0
-                },
-                "output_tokens": 1035,
-                "output_tokens_details": {
-                  "reasoning_tokens": 832
-                },
-                "total_tokens": 1116
-              },
-              "user": null,
-              "metadata": {}
-            }
-      parameters:
-      - name: openai-beta
-        in: header
-        required: false
-        description: Optional beta features to enable for this request.
-        style: simple
-        explode: false
-        schema:
-          type: array
-          x-stainless-param: betas
-          items:
-            type: string
-            enum:
-            - responses_multi_agent=v1
-  /responses/{response_id}?beta=true:
-    get:
-      operationId: beta_getResponse
-      tags:
-      - Responses
-      summary: Get a model response
-      description: |
-        Retrieves a model response with the given ID.
-      parameters:
-      - in: path
-        name: response_id
-        required: true
-        schema:
-          type: string
-          example: resp_677efb5139a88190b512bc3fef8e535d
-        description: The ID of the response to retrieve.
-      - in: query
-        name: include
-        schema:
-          type: array
-          items:
-            $ref: '#/components/schemas/BetaIncludeEnum'
-        description: |
-          Additional fields to include in the response. See the `include`
-          parameter for Response creation above for more information.
-      - in: query
-        name: stream
-        schema:
-          type: boolean
-        description: |
-          If set to true, the model response data will be streamed to the client
-          as it is generated using [server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#Event_stream_format).
-          See the [Streaming section below](https://developers.openai.com/api/reference/resources/responses/streaming-events)
-          for more information.
-      - in: query
-        name: starting_after
-        schema:
-          type: integer
-        description: |
-          The sequence number of the event after which to start streaming.
-      - in: query
-        name: include_obfuscation
-        schema:
-          type: boolean
-        description: |
-          When true, stream obfuscation will be enabled. Stream obfuscation adds
-          random characters to an `obfuscation` field on streaming delta events
-          to normalize payload sizes as a mitigation to certain side-channel
-          attacks. These obfuscation fields are included by default, but add a
-          small amount of overhead to the data stream. You can set
-          `include_obfuscation` to false to optimize for bandwidth if you trust
-          the network links between your application and the OpenAI API.
-      - name: openai-beta
-        in: header
-        required: false
-        description: Optional beta features to enable for this request.
-        style: simple
-        explode: false
-        schema:
-          type: array
-          x-stainless-param: betas
-          items:
-            type: string
-            enum:
-            - responses_multi_agent=v1
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BetaResponse'
-            text/event-stream:
-              schema:
-                $ref: '#/components/schemas/BetaResponseStreamEvent'
-        '404':
-          description: The response was not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BetaErrorResponse'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-      x-oaiMeta:
-        group: responses
-        examples:
-          request:
-            curl: |
-              curl https://api.openai.com/v1/responses/resp_123 \
-                  -H "Content-Type: application/json" \
-                  -H "Authorization: Bearer $OPENAI_API_KEY"
-            javascript: |
-              import OpenAI from "openai";
-              const client = new OpenAI();
-
-              const response = await client.responses.retrieve("resp_123");
-              console.log(response);
-            python: |
-              from openai import OpenAI
-              client = OpenAI()
-
-              response = client.responses.retrieve("resp_123")
-              print(response)
-          response: |
-            {
-              "id": "resp_67cb71b351908190a308f3859487620d06981a8637e6bc44",
-              "object": "response",
-              "access_programs": null,
-              "created_at": 1741386163,
-              "status": "completed",
-              "completed_at": 1741386164,
-              "error": null,
-              "incomplete_details": null,
-              "instructions": null,
-              "max_output_tokens": null,
-              "model": "gpt-6-astra",
-              "output": [
-                {
-                  "type": "message",
-                  "id": "msg_67cb71b3c2b0819084d481baaaf148f206981a8637e6bc44",
-                  "status": "completed",
-                  "role": "assistant",
-                  "content": [
-                    {
-                      "type": "output_text",
-                      "text": "Silent circuits hum,  \nThoughts emerge in data streams—  \nDigital dawn breaks.",
-                      "annotations": [],
-                      "logprobs": []
-                    }
-                  ]
-                }
-              ],
-              "parallel_tool_calls": true,
-              "previous_response_id": null,
-              "reasoning": {
-                "effort": null,
-                "summary": null
-              },
-              "store": true,
-              "temperature": 1.0,
-              "text": {
-                "format": {
-                  "type": "text"
-                }
-              },
-              "tool_choice": "auto",
-              "tools": [],
-              "top_p": 1.0,
-              "truncation": "disabled",
-              "usage": {
-                "input_tokens": 32,
-                "input_tokens_details": {
-                  "cached_tokens": 0,
-                  "cache_write_tokens": 0
-                },
-                "output_tokens": 18,
-                "output_tokens_details": {
-                  "reasoning_tokens": 0
-                },
-                "total_tokens": 50
-              },
-              "user": null,
-              "metadata": {}
-            }
-    delete:
-      operationId: beta_deleteResponse
-      tags:
-      - Responses
-      summary: Delete a model response
-      description: |
-        Deletes a model response with the given ID.
-      parameters:
-      - in: path
-        name: response_id
-        required: true
-        schema:
-          type: string
-          example: resp_677efb5139a88190b512bc3fef8e535d
-        description: The ID of the response to delete.
-      - name: openai-beta
-        in: header
-        required: false
-        description: Optional beta features to enable for this request.
-        style: simple
-        explode: false
-        schema:
-          type: array
-          x-stainless-param: betas
-          items:
-            type: string
-            enum:
-            - responses_multi_agent=v1
-      responses:
-        '200':
-          description: OK
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BetaErrorResponse'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-      x-oaiMeta:
-        group: responses
-        examples:
-          request:
-            curl: |
-              curl -X DELETE https://api.openai.com/v1/responses/resp_123 \
-                  -H "Content-Type: application/json" \
-                  -H "Authorization: Bearer $OPENAI_API_KEY"
-            javascript: |
-              import OpenAI from "openai";
-              const client = new OpenAI();
-
-              const response = await client.responses.delete("resp_123");
-              console.log(response);
-            python: |
-              from openai import OpenAI
-              client = OpenAI()
-
-              response = client.responses.delete("resp_123")
-              print(response)
-          response: |
-            {
-              "id": "resp_123",
-              "object": "response.deleted",
-              "deleted": true
-            }
-  /responses/{response_id}/cancel?beta=true:
-    post:
-      operationId: beta_cancelResponse
-      tags:
-      - Responses
-      summary: Cancel a response
-      description: |
-        Cancels a model response with the given ID. Only responses created with
-        the `background` parameter set to `true` can be cancelled.
-        [Learn more](https://developers.openai.com/api/docs/guides/background).
-      parameters:
-      - in: path
-        name: response_id
-        required: true
-        schema:
-          type: string
-          example: resp_677efb5139a88190b512bc3fef8e535d
-        description: The ID of the response to cancel.
-      - name: openai-beta
-        in: header
-        required: false
-        description: Optional beta features to enable for this request.
-        style: simple
-        explode: false
-        schema:
-          type: array
-          x-stainless-param: betas
-          items:
-            type: string
-            enum:
-            - responses_multi_agent=v1
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BetaResponse'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BetaErrorResponse'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-      x-oaiMeta:
-        group: responses
-        examples:
-          request:
-            curl: |
-              curl -X POST https://api.openai.com/v1/responses/resp_123/cancel \
-                  -H "Content-Type: application/json" \
-                  -H "Authorization: Bearer $OPENAI_API_KEY"
-            javascript: |
-              import OpenAI from "openai";
-              const client = new OpenAI();
-
-              const response = await client.responses.cancel("resp_123");
-              console.log(response);
-            python: |
-              from openai import OpenAI
-              client = OpenAI()
-
-              response = client.responses.cancel("resp_123")
-              print(response)
-          response: |
-            {
-              "id": "resp_67cb71b351908190a308f3859487620d06981a8637e6bc44",
-              "object": "response",
-              "access_programs": null,
-              "created_at": 1741386163,
-              "status": "cancelled",
-              "background": true,
-              "completed_at": null,
-              "error": null,
-              "incomplete_details": null,
-              "instructions": null,
-              "max_output_tokens": null,
-              "model": "gpt-6-astra",
-              "output": [
-                {
-                  "type": "message",
-                  "id": "msg_67cb71b3c2b0819084d481baaaf148f206981a8637e6bc44",
-                  "status": "in_progress",
-                  "role": "assistant",
-                  "content": [
-                    {
-                      "type": "output_text",
-                      "text": "Silent circuits hum,  \nThoughts emerge in data streams—  \nDigital dawn breaks.",
-                      "annotations": [],
-                      "logprobs": []
-                    }
-                  ]
-                }
-              ],
-              "parallel_tool_calls": true,
-              "previous_response_id": null,
-              "reasoning": {
-                "effort": null,
-                "summary": null
-              },
-              "store": true,
-              "temperature": 1.0,
-              "text": {
-                "format": {
-                  "type": "text"
-                }
-              },
-              "tool_choice": "auto",
-              "tools": [],
-              "top_p": 1.0,
-              "truncation": "disabled",
-              "usage": null,
-              "user": null,
-              "metadata": {}
-            }
-  /responses/compact?beta=true:
-    post:
-      tags:
-      - Responses
-      summary: Compact conversation
-      description: |-
-        Compact a conversation. Returns a compacted response object.
-
-        Learn when and how to compact long-running conversations in the [conversation state guide](https://developers.openai.com/api/docs/guides/conversation-state#managing-the-context-window). For ZDR-compatible compaction details, see [Compaction (advanced)](https://developers.openai.com/api/docs/guides/conversation-state#compaction-advanced).
-      operationId: beta_Compactconversation
-      parameters:
-      - name: openai-beta
-        in: header
-        required: false
-        description: Optional beta features to enable for this request.
-        style: simple
-        explode: false
-        schema:
-          type: array
-          x-stainless-param: betas
-          items:
-            type: string
-            enum:
-            - responses_multi_agent=v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BetaCompactResponseMethodPublicBody'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BetaCompactResource'
-        '400':
-          description: Invalid compaction request or incompatible input parameters.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BetaErrorResponse'
-        '429':
-          $ref: '#/components/responses/InferenceRateLimited'
-        '503':
-          $ref: '#/components/responses/InferenceServiceUnavailable'
-      x-oaiMeta:
-        group: responses
-        examples:
-          request:
-            curl: |
-              curl -X POST https://api.openai.com/v1/responses/compact \
-                  -H "Content-Type: application/json" \
-                  -H "Authorization: Bearer $OPENAI_API_KEY" \
-                  -d '{
-                    "model": "gpt-6-astra",
-                    "input": [
-                      {
-                        "role": "user",
-                        "content": "Create a simple landing page for a dog petting café."
-                      },
-                      {
-                        "id": "msg_001",
-                        "type": "message",
-                        "status": "completed",
-                        "content": [
-                          {
-                            "type": "output_text",
-                            "annotations": [],
-                            "logprobs": [],
-                            "text": "Below is a single file, ready-to-use landing page for a dog petting café:..."
-                          }
-                        ],
-                        "role": "assistant"
-                      }
-                    ]
-                  }'
-            javascript: |
-              import OpenAI from "openai";
-
-              const openai = new OpenAI();
-
-              // Compact the previous response if you are running out of tokens
-              const compactedResponse = await openai.responses.compact({
-                model: "gpt-6-astra",
-                input: [
-                  {
-                    role: "user",
-                    content: "Create a simple landing page for a dog petting café.",
-                  },
-                  // All items returned from previous requests are included here, like reasoning, message, function call, etc.
-                  {
-                    id: "msg_030d085c0b53e67e0069332e3a72d4819c96c6f2c4adc15d33",
-                    type: "message",
-                    status: "completed",
-                    content: [
-                      {
-                        type: "output_text",
-                        annotations: [],
-                        logprobs: [],
-                        text: "Below is a single file, ready-to-use landing page for a dog petting café:...",
-                      },
-                    ],
-                    role: "assistant",
-                  },
-                ],
-              });
-
-              // Pass the compactedResponse.output as input to the next request
-              console.log(compactedResponse);
-            python: |
-              from openai import OpenAI
-
-              client = OpenAI()
-
-              compacted_response = client.responses.compact(
-                  model="gpt-6-astra",
-                  input=[
-                  {
-                      "role": "user",
-                      "content": "Create a simple landing page for a dog petting cafe.",
-                  },
-                  # All items returned from previous requests are included here, like reasoning, message, function call, etc.
-                  {
-                      "id": "msg_001",
-                      "type": "message",
-                      "status": "completed",
-                      "content": [
-                      {
-                          "type": "output_text",
-                          "annotations": [],
-                          "logprobs": [],
-                          "text": "Below is a single file, ready-to-use landing page for a dog petting café:...",
-                      },
-                      ],
-                      "role": "assistant",
-                  },
-                  ]
-              )
-              # Pass the compacted_response.output as input to the next request
-              print(compacted_response)
-          response: |
-            {
-              "id": "resp_001",
-              "object": "response.compaction",
-              "created_at": 1764967971,
-              "output": [
-                {
-                  "id": "msg_000",
-                  "type": "message",
-                  "status": "completed",
-                  "content": [
-                    {
-                      "type": "input_text",
-                      "text": "Create a simple landing page for a dog petting cafe."
-                    }
-                  ],
-                  "role": "user"
-                },
-                {
-                  "id": "cmp_001",
-                  "type": "compaction",
-                  "encrypted_content": "gAAAAABpM0Yj-...="
-                }
-              ],
-              "usage": {
-                "input_tokens": 139,
-                "input_tokens_details": {
-                  "cached_tokens": 0,
-                  "cache_write_tokens": 0
-                },
-                "output_tokens": 438,
-                "output_tokens_details": {
-                  "reasoning_tokens": 64
-                },
-                "total_tokens": 577
-              }
-            }
-  /responses/{response_id}/input_items?beta=true:
-    get:
-      operationId: beta_listInputItems
-      tags:
-      - Responses
-      summary: List input items
-      description: Returns a list of input items for a given response.
-      parameters:
-      - in: path
-        name: response_id
-        required: true
-        schema:
-          type: string
-        description: The ID of the response to retrieve input items for.
-      - name: limit
-        in: query
-        description: |
-          A limit on the number of objects to be returned. Limit can range between
-          1 and 100, and the default is 20.
-        required: false
-        schema:
-          type: integer
-          default: 20
-      - in: query
-        name: order
-        schema:
-          type: string
-          enum:
-          - asc
-          - desc
-        description: |
-          The order to return the input items in. Default is `desc`.
-          - `asc`: Return the input items in ascending order.
-          - `desc`: Return the input items in descending order.
-      - in: query
-        name: after
-        schema:
-          type: string
-        description: |
-          An item ID to list items after, used in pagination.
-      - in: query
-        name: include
-        schema:
-          type: array
-          items:
-            $ref: '#/components/schemas/BetaIncludeEnum'
-        description: |
-          Additional fields to include in the response. See the `include`
-          parameter for Response creation above for more information.
-      - name: openai-beta
-        in: header
-        required: false
-        description: Optional beta features to enable for this request.
-        style: simple
-        explode: false
-        schema:
-          type: array
-          x-stainless-param: betas
-          items:
-            type: string
-            enum:
-            - responses_multi_agent=v1
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BetaResponseItemList'
-        '404':
-          description: The response or the item specified by `after` was not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BetaErrorResponse'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-      x-oaiMeta:
-        group: responses
-        examples:
-          request:
-            curl: |
-              curl https://api.openai.com/v1/responses/resp_abc123/input_items \
-                -H "Content-Type: application/json" \
-                -H "Authorization: Bearer $OPENAI_API_KEY"
-            javascript: |
-              import OpenAI from "openai";
-              const client = new OpenAI();
-
-              const response = await client.responses.inputItems.list("resp_123");
-              console.log(response.data);
-            python: |
-              from openai import OpenAI
-              client = OpenAI()
-
-              response = client.responses.input_items.list("resp_123")
-              print(response.data)
-          response: |
-            {
-              "object": "list",
-              "data": [
-                {
-                  "id": "msg_abc123",
-                  "type": "message",
-                  "role": "user",
-                  "content": [
-                    {
-                      "type": "input_text",
-                      "text": "Tell me a three sentence bedtime story about a unicorn."
-                    }
-                  ]
-                }
-              ],
-              "first_id": "msg_abc123",
-              "last_id": "msg_abc123",
-              "has_more": false
-            }
-  /responses/input_tokens?beta=true:
-    post:
-      tags:
-      - Responses
-      summary: Get input token counts
-      description: |-
-        Returns input token counts of the request.
-
-        Returns an object with `object` set to `response.input_tokens` and an `input_tokens` count.
-      operationId: beta_Getinputtokencounts
-      parameters:
-      - name: openai-beta
-        in: header
-        required: false
-        description: Optional beta features to enable for this request.
-        style: simple
-        explode: false
-        schema:
-          type: array
-          x-stainless-param: betas
-          items:
-            type: string
-            enum:
-            - responses_multi_agent=v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BetaTokenCountsBody'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BetaTokenCountsResource'
-        '400':
-          description: The request to count input tokens is invalid or contains incompatible parameters.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BetaErrorResponse'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-      x-oaiMeta:
-        group: responses
-        examples:
-          request:
-            curl: |
-              curl -X POST https://api.openai.com/v1/responses/input_tokens \
-                  -H "Content-Type: application/json" \
-                  -H "Authorization: Bearer $OPENAI_API_KEY" \
-                  -d '{
-                    "model": "gpt-6-astra",
-                    "input": "Tell me a joke."
-                  }'
-            javascript: |
-              import OpenAI from "openai";
-
-              const client = new OpenAI();
-
-              const response = await client.responses.inputTokens.count({
-                model: "gpt-6-astra",
-                input: "Tell me a joke.",
-              });
-
-              console.log(response.input_tokens);
-            python: |
-              from openai import OpenAI
-
-              client = OpenAI()
-
-              response = client.responses.input_tokens.count(
-                  model="gpt-6-astra",
-                  input="Tell me a joke."
-              )
-              print(response.input_tokens)
-            go: |
-              package main
-
-              import (
-                "context"
-                "fmt"
-
-                "github.com/openai/openai-go"
-                "github.com/openai/openai-go/responses"
-              )
-
-              func main() {
-                client := openai.NewClient()
-                response, err := client.Responses.InputTokens.Count(context.TODO(), responses.InputTokenCountParams{
-                  Model: "gpt-6-astra",
-                  Input: "Tell me a joke.",
-                })
-                if err != nil {
-                  panic(err.Error())
-                }
-                fmt.Printf("%+v\n", response.InputTokens)
-              }
-            ruby: |
-              require "openai"
-
-              openai = OpenAI::Client.new
-
-              response = openai.responses.input_tokens.count(model: "gpt-6-astra", input: "Tell me a joke.")
-
-              puts(response)
-            java: |
-              package com.openai.example;
-
-              import com.openai.client.OpenAIClient;
-              import com.openai.client.okhttp.OpenAIOkHttpClient;
-              import com.openai.models.responses.inputtokens.InputTokenCountParams;
-              import com.openai.models.responses.inputtokens.InputTokenCountResponse;
-
-              public final class Main {
-                  private Main() {}
-
-                  public static void main(String[] args) {
-                      OpenAIClient client = OpenAIOkHttpClient.fromEnv();
-
-                      InputTokenCountParams params = InputTokenCountParams.builder()
-                          .model("gpt-6-astra")
-                          .input("Tell me a joke.")
-                          .build();
-
-                      InputTokenCountResponse response = client.responses().inputTokens().count(params);
-                  }
-              }
-          response: |
-            {
-              "object": "response.input_tokens",
-              "input_tokens": 11
-            }
 webhooks:
   agent_environment_expired:
     post:
@@ -43064,8 +42114,7 @@ components:
           - /v1/moderations
           - /v1/images/generations
           - /v1/images/edits
-          - /v1/videos
-          description: The endpoint to be used for all requests in the batch. Currently `/v1/responses`, `/v1/chat/completions`, `/v1/embeddings`, `/v1/completions`, `/v1/moderations`, `/v1/images/generations`, `/v1/images/edits`, and `/v1/videos` are supported. Note that `/v1/embeddings` batches are also restricted to a maximum of 50,000 embedding inputs across all requests in the batch.
+          description: The endpoint for all requests in the batch. Batches using `/v1/embeddings` can contain at most 50,000 embedding inputs across all requests.
         completion_window:
           type: string
           enum:

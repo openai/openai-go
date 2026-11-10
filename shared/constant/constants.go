@@ -606,8 +606,6 @@ type VectorStoreFileContentPage string                        // Always "vector_
 type VectorStoreFileDeleted string                            // Always "vector_store.file.deleted"
 type VectorStoreFilesBatch string                             // Always "vector_store.files_batch"
 type VectorStoreSearchResultsPage string                      // Always "vector_store.search_results.page"
-type Video string                                             // Always "video"
-type VideoDeleted string                                      // Always "video.deleted"
 type Wait string                                              // Always "wait"
 type WaitForSubagentsCall string                              // Always "wait_for_subagents_call"
 type Wandb string                                             // Always "wandb"
@@ -1569,8 +1567,6 @@ func (c VectorStoreFilesBatch) Default() VectorStoreFilesBatch   { return "vecto
 func (c VectorStoreSearchResultsPage) Default() VectorStoreSearchResultsPage {
 	return "vector_store.search_results.page"
 }
-func (c Video) Default() Video                                   { return "video" }
-func (c VideoDeleted) Default() VideoDeleted                     { return "video.deleted" }
 func (c Wait) Default() Wait                                     { return "wait" }
 func (c WaitForSubagentsCall) Default() WaitForSubagentsCall     { return "wait_for_subagents_call" }
 func (c Wandb) Default() Wandb                                   { return "wandb" }
@@ -2212,8 +2208,6 @@ func (c VectorStoreFileContentPage) MarshalJSON() ([]byte, error)          { ret
 func (c VectorStoreFileDeleted) MarshalJSON() ([]byte, error)              { return marshalString(c) }
 func (c VectorStoreFilesBatch) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c VectorStoreSearchResultsPage) MarshalJSON() ([]byte, error)        { return marshalString(c) }
-func (c Video) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
-func (c VideoDeleted) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c Wait) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c WaitForSubagentsCall) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c Wandb) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
