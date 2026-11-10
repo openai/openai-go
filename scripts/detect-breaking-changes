@@ -97,6 +97,27 @@ git ls-tree -r -z --name-only "$1" -- "${TEST_PATHS[@]}" > "$historical_paths"
 if [[ -s "$historical_paths" ]]; then
     git --literal-pathspecs checkout "$1" --pathspec-from-file="$historical_paths" --pathspec-file-nul
 
+    # Go next wraps six historical Enabled literals in openai.Bool (#1243).
+    # Use the candidate fixture only if it is byte-identical to that migration.
+    migrate_enabled_fixture() {
+        local fixture=$1
+        shift
+        local candidate migrated
+        candidate=$(git rev-parse --verify --quiet "HEAD:$fixture") || return 0
+        [[ -f "$fixture" ]] || return 0
+        migrated=$(TYPES="$*" perl -0pe '
+            for my $type (split / /, $ENV{TYPES}) {
+                s/(openai\.\Q$type\E\{\s*Enabled:\s*)true,/${1}openai.Bool(true),/;
+            }
+        ' "$fixture" | git hash-object --stdin)
+        if [[ "$migrated" == "$candidate" ]]; then
+            git show "HEAD:$fixture" > "$fixture"
+        fi
+    }
+    migrate_enabled_fixture adminorganizationprojecthostedtoolpermission_test.go \
+        AdminOrganizationProjectHostedToolPermissionUpdateParams{CodeInterpreter,FileSearch,ImageGeneration,Mcp,WebSearch}
+    migrate_enabled_fixture betaresponse_test.go BetaResponseNewParamsMultiAgent
+
     # Across the v4 module rename, compile the same historical callers against
     # the candidate. Only their SDK imports need the new major-version suffix.
     if grep -Fxq 'module github.com/openai/openai-go/v4' go.mod &&
