@@ -11,7 +11,7 @@ import (
 )
 
 func TestErrorDiagnosticsTransport(t *testing.T) {
-	for _, route := range []string{"responses", "beta", "videos"} {
+	for _, route := range []string{"responses", "beta"} {
 		for _, shape := range []string{"values", "nulls", "omitted"} {
 			t.Run(route+"/"+shape, func(t *testing.T) {
 				fields := `,"type":"synthetic_error","param":"input[0]"`
@@ -21,11 +21,7 @@ func TestErrorDiagnosticsTransport(t *testing.T) {
 				if shape == "omitted" {
 					fields = ""
 				}
-				path := "/v1/responses/resp_synthetic"
-				if route == "videos" {
-					path = "/v1/videos/video_synthetic"
-				}
-				client := imageErrorClient(t, "GET", path, `{"error":{"code":"server_error","message":"Synthetic failure"`+fields+`}}`, func(r *http.Request) {
+				client := imageErrorClient(t, "GET", "/v1/responses/resp_synthetic", `{"error":{"code":"server_error","message":"Synthetic failure"`+fields+`}}`, func(r *http.Request) {
 					want := ""
 					if route == "beta" {
 						want = "true"
@@ -52,14 +48,6 @@ func TestErrorDiagnosticsTransport(t *testing.T) {
 					}
 					e := result.Error
 					kind, parameter, code, message = e.Type, e.Param, string(e.Code), e.Message
-					typeField, paramField = e.JSON.Type, e.JSON.Param
-				case "videos":
-					result, err := client.Videos.Get(context.Background(), "video_synthetic")
-					if err != nil {
-						t.Fatal(err)
-					}
-					e := result.Error
-					kind, parameter, code, message = e.Type, e.Param, e.Code, e.Message
 					typeField, paramField = e.JSON.Type, e.JSON.Param
 				}
 				wantType, wantParam, rawType, rawParam := "", "", "", ""

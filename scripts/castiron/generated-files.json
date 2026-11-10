@@ -295,7 +295,7 @@
     },
     "api.md": {
       "mode": "100644",
-      "sha256": "b3595ab7ff395bd5890d6a104afa37ad973212006eb83f15681c31afd35ddc47"
+      "sha256": "ed5e8d8bdf2d2a5cbd0664cddea1ff22c262bfc0c7820685721c7873f4e3d69b"
     },
     "audio.go": {
       "mode": "100644",
@@ -343,7 +343,7 @@
     },
     "batch.go": {
       "mode": "100644",
-      "sha256": "2b6afe2279a82ad10076144e46fe74fa43a33e1a7d04542c789765fc234a47a3"
+      "sha256": "7f4ec00aff0fae54a706695e02fab715cd5b27d15116656bb299963a8efa9656"
     },
     "batch_test.go": {
       "mode": "100644",
@@ -619,7 +619,7 @@
     },
     "client.go": {
       "mode": "100644",
-      "sha256": "67847b9c6fc60e8e9e9789c27fbb85c4265db633305e7789358bb396c3c68eb7"
+      "sha256": "0ac9819daf1b1615574541d65c71663e6be96f64f6f6d05c8685b0865bbeecc6"
     },
     "client_test.go": {
       "mode": "100644",
@@ -1003,7 +1003,7 @@
     },
     "shared/constant/constants.go": {
       "mode": "100644",
-      "sha256": "6413d4c3945cafef0125c5609319ea72741f97efa946f43b28856e18412c7e91"
+      "sha256": "f765e6df0d1dd23994dc4e01d8d6d7cde971b377aa64a760ad3d7c1e903d9834"
     },
     "shared/shared.go": {
       "mode": "100644",
@@ -1088,14 +1088,6 @@
     "vectorstorefilebatch_test.go": {
       "mode": "100644",
       "sha256": "73775ae27db958639012fb127933f04312ac1f716571b5685b3fdfed15a4512f"
-    },
-    "video.go": {
-      "mode": "100644",
-      "sha256": "5401da9db1300a02b914b012d0bf8024d273ee29602f8c668b0a4bc7310c7c45"
-    },
-    "video_test.go": {
-      "mode": "100644",
-      "sha256": "9f32156a5d66fdd5f6645d44799766ba1bb076d56de76a71265ffc2f8745d632"
     },
     "webhooks/aliases.go": {
       "mode": "100644",

@@ -35,6 +35,17 @@ messages with the model you select. You can also set
 `ChatCompletionNewParams.Model` from a string variable.
 [API model deprecations](https://developers.openai.com/api/docs/deprecations)
 
+## Go v4 removes the Videos API
+
+The Sora API shut down on September 24, 2026. Remove the video-generation feature
+from your application or choose another service. There is no direct replacement
+in the OpenAI API. Installing an older SDK cannot restore access.
+
+Remove calls to `client.Videos`, including `NewAndPoll`, `PollStatus` and
+`ListAutoPaging`. Remove references to `openai.NewVideoService`, the video
+request and response types, `openai.ImageInputReferenceParam`, and Sora model
+constants. Remove batch submissions that use `openai.BatchNewParamsEndpointV1Videos`.
+
 ## Earlier SDK changes
 
 This SDK includes breaking changes to improve the ergonomics of constructing parameters and accessing responses.
