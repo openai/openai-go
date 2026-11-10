@@ -308,6 +308,12 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 	}
 
 	// This must run after `cfg.Apply(...)` above so we know which specific security scheme to add
+	if err := cfg.configureCredentialTransport(); err != nil {
+		if body, ok := cfg.Body.(io.Closer); ok {
+			_ = body.Close()
+		}
+		return nil, err
+	}
 	ApplySecurity(cfg)
 
 	// This must run after `cfg.Apply(...)` above in case the request timeout gets modified. We also only
@@ -349,6 +355,8 @@ type RequestConfig struct {
 	authentication             authenticationState
 	cloneError                 error
 	queryChanges               map[string]bool
+	requireSecureTransport     bool
+	allowLoopbackHTTP          bool
 	// DefaultBaseURL will be used if BaseURL is not explicitly overridden using
 	// WithBaseURL.
 	DefaultBaseURL *url.URL
@@ -636,26 +644,8 @@ func (cfg *RequestConfig) Execute() (err error) {
 		}
 	}
 
-	client := *cfg.HTTPClient
-	transport := client.Transport
-	if transport == nil {
-		transport = http.DefaultTransport
-	}
-	if hasCredentialRedirectGuard(transport) {
-		client.Transport = transport
-	} else {
-		client.Transport = originTransport{origin: cfg.BaseURL, next: transport}
-	}
-	// Provider transports may implement a narrower, explicitly configured
-	// redirect policy. Every initial request must still retain the configured
-	// origin after all SDK and caller middleware has run.
-	handler := enforceRequestOrigin(cfg.BaseURL, client.Do)
-	if cfg.CustomHTTPDoer != nil {
-		handler = enforceRequestOrigin(cfg.BaseURL, cfg.CustomHTTPDoer.Do)
-	}
-	for i := len(cfg.Middlewares) - 1; i >= 0; i -= 1 {
-		handler = applyMiddleware(cfg.Middlewares[i], handler)
-	}
+	var rejected rejectedBodies
+	handler := cfg.newHTTPHandler(&rejected)
 
 	// Don't send the current retry count in the headers if the caller modified the header defaults.
 	shouldSendRetryCount := cfg.Request.Header.Get("X-Stainless-Retry-Count") == "0"
@@ -684,14 +674,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 
 		attemptBody := req.Body
 		res, err = handler(req)
-		if err != nil {
-			if req.Body != nil {
-				_ = req.Body.Close()
-			}
-			if attemptBody != nil {
-				_ = attemptBody.Close()
-			}
-		}
+		rejected.finishAttempt(err, req.Body, attemptBody)
 		if ctx != nil && ctx.Err() != nil {
 			if res != nil && res.Body != nil {
 				_ = res.Body.Close()
@@ -973,26 +956,23 @@ func WithBearerAuthPreference() RequestOption {
 }
 
 func ApplySecurity(r RequestConfig) {
+	if key := r.staticBearerKey(); key != "" {
+		r.Request.Header.Set("Authorization", "Bearer "+key)
+	}
+}
+
+func (r *RequestConfig) staticBearerKey() string {
 	if r.authentication.headerOverride {
-		return
+		return ""
 	}
-
 	if r.authentication.preference == authCredentialPreferenceBearer && r.Security.BearerAuth && r.APIKey != "" {
-		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.APIKey))
-		return
+		return r.APIKey
 	}
-
-	if r.authentication.preference == authCredentialPreferenceAdmin && r.Security.AdminAPIKeyAuth && r.AdminAPIKey != "" {
-		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.AdminAPIKey))
-		return
-	}
-
 	if r.Security.AdminAPIKeyAuth && r.AdminAPIKey != "" {
-		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.AdminAPIKey))
-		return
+		return r.AdminAPIKey
 	}
-
-	if r.Security.BearerAuth && r.APIKey != "" {
-		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.APIKey))
+	if r.Security.BearerAuth {
+		return r.APIKey
 	}
+	return ""
 }

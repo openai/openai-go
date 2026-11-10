@@ -27,6 +27,8 @@ type RequestOption = requestconfig.RequestOption
 //
 // It cannot be combined with WithDataResidency in the same configuration call.
 // For security reasons, ensure that the base URL is trusted.
+// Authenticated OpenAI endpoints require HTTPS. Local HTTP development requires
+// [WithUnsafeAllowHTTP], which only permits direct loopback connections.
 func WithBaseURL(base string) RequestOption {
 	u, err := url.Parse(base)
 	if err == nil && u.Path != "" && !strings.HasSuffix(u.Path, "/") {
@@ -385,6 +387,9 @@ func WithWorkloadIdentity(config auth.WorkloadIdentity) RequestOption {
 					return nil, requestconfig.WithNoRetryError(
 						errors.New("workload identity requires its request-owned retry scope"),
 					)
+				}
+				if err := final.ValidateOpenAICredentialRequest(req); err != nil {
+					return nil, err
 				}
 				initOnce.Do(func() {
 					wia, initErr = auth.NewWorkloadIdentityAuth(config)

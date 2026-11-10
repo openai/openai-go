@@ -129,7 +129,7 @@ func TestSkipAuthAllowsExplicitGatewayCredentials(t *testing.T) {
 			var request *http.Request
 			client, err := NewClient(context.Background(), Config{
 				SkipAuth: true,
-				BaseURL:  "https://gateway.example/openai/v1",
+				BaseURL:  "http://127.0.0.1/openai/v1",
 			}, test.option, option.WithHTTPClient(httpDoerFunc(func(req *http.Request) (*http.Response, error) {
 				request = req
 				return successfulResponse(req), nil
