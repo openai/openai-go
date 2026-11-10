@@ -427,3 +427,26 @@ Both requests select the `lookup` tool on the `docs` MCP server.
 For responses, `Name` is a string. Check `JSON.Name.Valid()` for a value and
 `JSON.Name.Raw()` against `respjson.Omitted` or `respjson.Null` to distinguish an
 omitted field from JSON `null`. Use `RawJSON()` to retain the original wire form.
+
+## Retained messages in compaction output
+
+GA and beta compaction results can contain retained input messages. If you
+declare the type of the output slice, change the GA type from
+`[]responses.ResponseOutputItemUnion` to `[]responses.ResponseItemUnion`
+and the beta type from `[]openai.BetaResponseOutputItemUnion` to
+`[]openai.BetaResponseItemUnion`.
+
+For a message, `AsAny()` selects the input-message type for the `user`,
+`system`, and `developer` roles and the output-message type for
+`assistant`. For GA, handle both variants when iterating over the output.
+
+```go
+for _, item := range compacted.Output {
+    switch msg := item.AsAny().(type) {
+    case responses.ResponseInputMessageItem:
+        fmt.Println(msg.Role, msg.Content)
+    case responses.ResponseOutputMessage:
+        fmt.Println(msg.Role, msg.Content)
+    }
+}
+```

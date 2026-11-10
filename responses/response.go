@@ -231,7 +231,7 @@ type CompactedResponse struct {
 	Object constant.ResponseCompaction `json:"object" default:"response.compaction"`
 	// The compacted list of output items. This is a list of all user messages,
 	// followed by a single compaction item.
-	Output []ResponseOutputItemUnion `json:"output" api:"required"`
+	Output []ResponseItemUnion `json:"output" api:"required"`
 	// Token accounting for the compaction pass, including cached, reasoning, and total
 	// tokens.
 	Usage ResponseUsage          `json:"usage" api:"required"`
@@ -18833,21 +18833,21 @@ func init() {
 }
 
 // ResponseItemUnion contains all possible properties and values from
-// [ResponseInputMessageItem], [ResponseFileSearchToolCall],
-// [ResponseComputerToolCall], [ResponseComputerToolCallOutputItem],
-// [ResponseFunctionWebSearch], [ResponseFunctionToolCallItem],
-// [ResponseFunctionToolCallOutputItem], [ResponseToolSearchCall],
-// [ResponseToolSearchOutputItem], [ResponseItemAdditionalTools],
-// [ResponseConfigurationUpdateItem], [ResponseReasoningItem],
-// [ResponseItemProgram], [ResponseItemProgramOutput], [ResponseCompactionItem],
-// [ResponseItemImageGenerationCall], [ResponseCodeInterpreterToolCall],
-// [ResponseItemLocalShellCall], [ResponseItemLocalShellCallOutput],
-// [ResponseFunctionShellToolCall], [ResponseFunctionShellToolCallOutput],
-// [ResponseApplyPatchToolCall], [ResponseApplyPatchToolCallOutput],
-// [ResponseItemMcpListTools], [ResponseItemMcpApprovalRequest],
-// [ResponseItemMcpApprovalResponse], [ResponseItemMcpCall],
-// [ResponseCustomToolCallItem], [ResponseCustomToolCallOutputItem],
-// [ResponseOutputMessage].
+// [ResponseInputMessageItem], [ResponseOutputMessage],
+// [ResponseFileSearchToolCall], [ResponseComputerToolCall],
+// [ResponseComputerToolCallOutputItem], [ResponseFunctionWebSearch],
+// [ResponseFunctionToolCallItem], [ResponseFunctionToolCallOutputItem],
+// [ResponseToolSearchCall], [ResponseToolSearchOutputItem],
+// [ResponseItemAdditionalTools], [ResponseConfigurationUpdateItem],
+// [ResponseReasoningItem], [ResponseItemProgram], [ResponseItemProgramOutput],
+// [ResponseCompactionItem], [ResponseItemImageGenerationCall],
+// [ResponseCodeInterpreterToolCall], [ResponseItemLocalShellCall],
+// [ResponseItemLocalShellCallOutput], [ResponseFunctionShellToolCall],
+// [ResponseFunctionShellToolCallOutput], [ResponseApplyPatchToolCall],
+// [ResponseApplyPatchToolCallOutput], [ResponseItemMcpListTools],
+// [ResponseItemMcpApprovalRequest], [ResponseItemMcpApprovalResponse],
+// [ResponseItemMcpCall], [ResponseCustomToolCallItem],
+// [ResponseCustomToolCallOutputItem].
 //
 // Use the [ResponseItemUnion.AsAny] method to switch on the variant.
 //
@@ -19011,6 +19011,7 @@ type anyResponseItem interface {
 }
 
 func (ResponseInputMessageItem) implResponseItemUnion()            {}
+func (ResponseOutputMessage) implResponseItemUnion()               {}
 func (ResponseFileSearchToolCall) implResponseItemUnion()          {}
 func (ResponseComputerToolCall) implResponseItemUnion()            {}
 func (ResponseComputerToolCallOutputItem) implResponseItemUnion()  {}
@@ -19039,12 +19040,12 @@ func (ResponseItemMcpApprovalResponse) implResponseItemUnion()     {}
 func (ResponseItemMcpCall) implResponseItemUnion()                 {}
 func (ResponseCustomToolCallItem) implResponseItemUnion()          {}
 func (ResponseCustomToolCallOutputItem) implResponseItemUnion()    {}
-func (ResponseOutputMessage) implResponseItemUnion()               {}
 
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseItemUnion.AsAny().(type) {
 //	case responses.ResponseInputMessageItem:
+//	case responses.ResponseOutputMessage:
 //	case responses.ResponseFileSearchToolCall:
 //	case responses.ResponseComputerToolCall:
 //	case responses.ResponseComputerToolCallOutputItem:
@@ -19073,12 +19074,18 @@ func (ResponseOutputMessage) implResponseItemUnion()               {}
 //	case responses.ResponseItemMcpCall:
 //	case responses.ResponseCustomToolCallItem:
 //	case responses.ResponseCustomToolCallOutputItem:
-//	case responses.ResponseOutputMessage:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
 func (u ResponseItemUnion) AsAny() anyResponseItem {
 	switch u.Type {
+	case "message":
+		switch u.Role {
+		case "developer", "system", "user":
+			return u.AsMessage()
+		case "assistant":
+			return u.AsOutputMessage()
+		}
 	case "file_search_call":
 		return u.AsFileSearchCall()
 	case "computer_call":
@@ -19135,13 +19142,16 @@ func (u ResponseItemUnion) AsAny() anyResponseItem {
 		return u.AsCustomToolCall()
 	case "custom_tool_call_output":
 		return u.AsCustomToolCallOutput()
-	case "message":
-		return u.AsOutputMessage()
 	}
 	return nil
 }
 
 func (u ResponseItemUnion) AsMessage() (v ResponseInputMessageItem) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseItemUnion) AsOutputMessage() (v ResponseOutputMessage) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -19282,11 +19292,6 @@ func (u ResponseItemUnion) AsCustomToolCall() (v ResponseCustomToolCallItem) {
 }
 
 func (u ResponseItemUnion) AsCustomToolCallOutput() (v ResponseCustomToolCallOutputItem) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u ResponseItemUnion) AsOutputMessage() (v ResponseOutputMessage) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }

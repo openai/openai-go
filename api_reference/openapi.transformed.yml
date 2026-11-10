@@ -51043,8 +51043,7 @@ components:
       description: |
         Content item used to generate a response.
       x-openai-go-public-shape:
-        dispatch:
-          message: '#/components/schemas/OutputMessage'
+        dispatch: {}
       discriminator:
         propertyName: type
       anyOf:
@@ -83728,7 +83727,7 @@ components:
           type: array
           description: The compacted list of output items. This is a list of all user messages, followed by a single compaction item.
           items:
-            $ref: '#/components/schemas/OutputItem'
+            $ref: '#/components/schemas/ItemResource'
         created_at:
           type: integer
           format: unixtime
@@ -105598,8 +105597,7 @@ components:
       description: |
         Content item used to generate a response.
       x-openai-go-public-shape:
-        dispatch:
-          message: '#/components/schemas/BetaOutputMessage'
+        dispatch: {}
       discriminator:
         propertyName: type
       anyOf:
@@ -106781,7 +106779,7 @@ components:
           type: array
           description: The compacted list of output items. This is a list of all user messages, followed by a single compaction item.
           items:
-            $ref: '#/components/schemas/BetaOutputItem'
+            $ref: '#/components/schemas/BetaItemResource'
         created_at:
           type: integer
           format: unixtime
