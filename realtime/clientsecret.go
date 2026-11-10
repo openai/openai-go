@@ -238,6 +238,10 @@ func (r *RealtimeSessionCreateResponseAudioInput) UnmarshalJSON(data []byte) err
 // detection accuracy (reducing false positives) and model performance by improving
 // perception of the input audio.
 type RealtimeSessionCreateResponseAudioInputNoiseReduction struct {
+	// Input noise suppression strength. Higher values apply more suppression. Defaults
+	// to 1 when noise reduction is first enabled. Omitting strength from a session
+	// update preserves the current strength.
+	Strength float64 `json:"strength"`
 	// Type of noise reduction. `near_field` is for close-talking microphones such as
 	// headphones, `far_field` is for far-field microphones such as laptop or
 	// conference room microphones.
@@ -246,6 +250,7 @@ type RealtimeSessionCreateResponseAudioInputNoiseReduction struct {
 	Type NoiseReductionType `json:"type"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		Strength    respjson.Field
 		Type        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -1128,6 +1133,10 @@ func (r *RealtimeTranscriptionSessionCreateResponseAudioInput) UnmarshalJSON(dat
 
 // Configuration for input audio noise reduction.
 type RealtimeTranscriptionSessionCreateResponseAudioInputNoiseReduction struct {
+	// Input noise suppression strength. Higher values apply more suppression. Defaults
+	// to 1 when noise reduction is first enabled. Omitting strength from a session
+	// update preserves the current strength.
+	Strength float64 `json:"strength"`
 	// Type of noise reduction. `near_field` is for close-talking microphones such as
 	// headphones, `far_field` is for far-field microphones such as laptop or
 	// conference room microphones.
@@ -1136,6 +1145,7 @@ type RealtimeTranscriptionSessionCreateResponseAudioInputNoiseReduction struct {
 	Type NoiseReductionType `json:"type"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		Strength    respjson.Field
 		Type        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -1377,12 +1387,14 @@ func (r *ClientSecretNewResponseSessionUnionAudioInput) UnmarshalJSON(data []byt
 // For type safety it is recommended to directly use a variant of the
 // [ClientSecretNewResponseSessionUnion].
 type ClientSecretNewResponseSessionUnionAudioInputNoiseReduction struct {
+	Strength float64 `json:"strength"`
 	// This field is from variant
 	// [RealtimeSessionCreateResponseAudioInputNoiseReduction].
 	Type NoiseReductionType `json:"type"`
 	JSON struct {
-		Type respjson.Field
-		raw  string
+		Strength respjson.Field
+		Type     respjson.Field
+		raw      string
 	} `json:"-"`
 }
 
@@ -1692,6 +1704,21 @@ type clientSecretNewParamsSessionUnionAudioInputNoiseReduction struct{ any }
 //	    fmt.Errorf("not present")
 //	}
 func (u clientSecretNewParamsSessionUnionAudioInputNoiseReduction) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u clientSecretNewParamsSessionUnionAudioInputNoiseReduction) GetStrength() *float64 {
+	switch vt := u.any.(type) {
+	case *RealtimeAudioConfigInputNoiseReductionParam:
+		if vt.Strength.Valid() {
+			return &vt.Strength.Value
+		}
+	case *RealtimeTranscriptionSessionAudioInputNoiseReductionParam:
+		if vt.Strength.Valid() {
+			return &vt.Strength.Value
+		}
+	}
+	return nil
+}
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u clientSecretNewParamsSessionUnionAudioInputNoiseReduction) GetType() *string {

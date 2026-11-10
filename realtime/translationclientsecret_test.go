@@ -35,7 +35,8 @@ func TestTranslationClientSecretNewWithOptionalParams(t *testing.T) {
 				Audio: realtime.RealtimeTranslationSessionCreateRequestAudioParam{
 					Input: realtime.RealtimeTranslationSessionCreateRequestAudioInputParam{
 						NoiseReduction: realtime.RealtimeTranslationSessionCreateRequestAudioInputNoiseReductionParam{
-							Type: realtime.NoiseReductionTypeNearField,
+							Type:     realtime.NoiseReductionTypeNearField,
+							Strength: openai.Float(0),
 						},
 						Transcription: realtime.RealtimeTranslationSessionCreateRequestAudioInputTranscriptionParam{
 							Model: "model",

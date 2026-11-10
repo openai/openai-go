@@ -14,7 +14,6 @@ import (
 
 	"github.com/openai/openai-go/v3/internal/apijson"
 	"github.com/openai/openai-go/v3/internal/apiquery"
-	"github.com/openai/openai-go/v3/internal/paramutil"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/param"
@@ -262,7 +261,8 @@ type BetaCompactedResponse struct {
 	Output []BetaResponseOutputItemUnion `json:"output" api:"required"`
 	// Token accounting for the compaction pass, including cached, reasoning, and total
 	// tokens.
-	Usage BetaResponseUsage `json:"usage" api:"required"`
+	Usage BetaResponseUsage          `json:"usage" api:"required"`
+	Image BetaCompactedResponseImage `json:"image"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -270,6 +270,7 @@ type BetaCompactedResponse struct {
 		Object      respjson.Field
 		Output      respjson.Field
 		Usage       respjson.Field
+		Image       respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -278,6 +279,25 @@ type BetaCompactedResponse struct {
 // Returns the unmodified JSON received from the API
 func (r BetaCompactedResponse) RawJSON() string { return r.JSON.raw }
 func (r *BetaCompactedResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaCompactedResponseImage struct {
+	// Effective image context optimization policy.
+	//
+	// Any of "enabled", "disabled".
+	ContextCompression string `json:"context_compression" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ContextCompression respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaCompactedResponseImage) RawJSON() string { return r.JSON.raw }
+func (r *BetaCompactedResponseImage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -4498,6 +4518,7 @@ type BetaResponse struct {
 	// The conversation that this response belonged to. Input items and output items
 	// from this response were automatically added to this conversation.
 	Conversation BetaResponseConversation `json:"conversation" api:"nullable"`
+	Image        BetaResponseImage        `json:"image"`
 	// An upper bound for the number of tokens that can be generated for a response,
 	// including visible output tokens and
 	// [reasoning tokens](https://developers.openai.com/api/docs/guides/reasoning).
@@ -4658,6 +4679,7 @@ type BetaResponse struct {
 		Background             respjson.Field
 		CompletedAt            respjson.Field
 		Conversation           respjson.Field
+		Image                  respjson.Field
 		MaxOutputTokens        respjson.Field
 		MaxToolCalls           respjson.Field
 		Moderation             respjson.Field
@@ -5144,6 +5166,7 @@ const (
 	BetaResponseModelGPT5_6Cyber           BetaResponseModel = "gpt-5.6-cyber"
 	BetaResponseModelGPT6Cyber             BetaResponseModel = "gpt-6-cyber"
 	BetaResponseModelGPTRosalindResearch   BetaResponseModel = "gpt-rosalind-research"
+	BetaResponseModelGPT6Rosalind          BetaResponseModel = "gpt-6-rosalind"
 )
 
 // BetaResponseToolChoiceUnion contains all possible properties and values from
@@ -5266,6 +5289,25 @@ type BetaResponseConversation struct {
 // Returns the unmodified JSON received from the API
 func (r BetaResponseConversation) RawJSON() string { return r.JSON.raw }
 func (r *BetaResponseConversation) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponseImage struct {
+	// Effective image context optimization policy.
+	//
+	// Any of "enabled", "disabled".
+	ContextCompression string `json:"context_compression" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ContextCompression respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseImage) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseImage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -19505,7 +19547,9 @@ func (u betaResponseInputItemUnionParamAction) GetQueries() []string {
 func (u betaResponseInputItemUnionParamAction) GetQuery() *string {
 	switch vt := u.any.(type) {
 	case *BetaResponseFunctionWebSearchActionSearchParam:
-		return paramutil.AddrIfPresent(vt.Query)
+		if vt.Query.Valid() {
+			return &vt.Query.Value
+		}
 	}
 	return nil
 }
@@ -19550,7 +19594,9 @@ func (u betaResponseInputItemUnionParamAction) GetEnv() map[string]string {
 func (u betaResponseInputItemUnionParamAction) GetUser() *string {
 	switch vt := u.any.(type) {
 	case *BetaResponseInputItemLocalShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.User)
+		if vt.User.Valid() {
+			return &vt.User.Value
+		}
 	}
 	return nil
 }
@@ -19559,7 +19605,9 @@ func (u betaResponseInputItemUnionParamAction) GetUser() *string {
 func (u betaResponseInputItemUnionParamAction) GetWorkingDirectory() *string {
 	switch vt := u.any.(type) {
 	case *BetaResponseInputItemLocalShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.WorkingDirectory)
+		if vt.WorkingDirectory.Valid() {
+			return &vt.WorkingDirectory.Value
+		}
 	}
 	return nil
 }
@@ -19577,7 +19625,9 @@ func (u betaResponseInputItemUnionParamAction) GetCommands() []string {
 func (u betaResponseInputItemUnionParamAction) GetMaxOutputLength() *int64 {
 	switch vt := u.any.(type) {
 	case *BetaResponseInputItemShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.MaxOutputLength)
+		if vt.MaxOutputLength.Valid() {
+			return &vt.MaxOutputLength.Value
+		}
 	}
 	return nil
 }
@@ -19649,7 +19699,9 @@ func (u betaResponseInputItemUnionParamAction) GetY() *int64 {
 func (u betaResponseInputItemUnionParamAction) GetURL() *string {
 	switch vt := u.any.(type) {
 	case *BetaResponseFunctionWebSearchActionOpenPageParam:
-		return paramutil.AddrIfPresent(vt.URL)
+		if vt.URL.Valid() {
+			return &vt.URL.Value
+		}
 	case *BetaResponseFunctionWebSearchActionFindInPageParam:
 		return (*string)(&vt.URL)
 	}
@@ -19660,9 +19712,13 @@ func (u betaResponseInputItemUnionParamAction) GetURL() *string {
 func (u betaResponseInputItemUnionParamAction) GetTimeoutMs() *int64 {
 	switch vt := u.any.(type) {
 	case *BetaResponseInputItemLocalShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.TimeoutMs)
+		if vt.TimeoutMs.Valid() {
+			return &vt.TimeoutMs.Value
+		}
 	case *BetaResponseInputItemShellCallActionParam:
-		return paramutil.AddrIfPresent(vt.TimeoutMs)
+		if vt.TimeoutMs.Valid() {
+			return &vt.TimeoutMs.Value
+		}
 	}
 	return nil
 }
@@ -35090,9 +35146,13 @@ func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) AsAny() any 
 func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetCity() *string {
 	switch vt := u.any.(type) {
 	case *BetaWebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.City)
+		if vt.City.Valid() {
+			return &vt.City.Value
+		}
 	case *BetaWebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.City)
+		if vt.City.Valid() {
+			return &vt.City.Value
+		}
 	}
 	return nil
 }
@@ -35101,9 +35161,13 @@ func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetCity() *s
 func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetCountry() *string {
 	switch vt := u.any.(type) {
 	case *BetaWebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Country)
+		if vt.Country.Valid() {
+			return &vt.Country.Value
+		}
 	case *BetaWebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Country)
+		if vt.Country.Valid() {
+			return &vt.Country.Value
+		}
 	}
 	return nil
 }
@@ -35112,9 +35176,13 @@ func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetCountry()
 func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetRegion() *string {
 	switch vt := u.any.(type) {
 	case *BetaWebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Region)
+		if vt.Region.Valid() {
+			return &vt.Region.Value
+		}
 	case *BetaWebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Region)
+		if vt.Region.Valid() {
+			return &vt.Region.Value
+		}
 	}
 	return nil
 }
@@ -35123,9 +35191,13 @@ func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetRegion() 
 func (u betaResponseToolSearchOutputItemParamToolUnionUserLocation) GetTimezone() *string {
 	switch vt := u.any.(type) {
 	case *BetaWebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Timezone)
+		if vt.Timezone.Valid() {
+			return &vt.Timezone.Value
+		}
 	case *BetaWebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Timezone)
+		if vt.Timezone.Valid() {
+			return &vt.Timezone.Value
+		}
 	}
 	return nil
 }
@@ -36059,6 +36131,14 @@ func (u BetaResponsesClientEventUnionParam) GetGenerate() *bool {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetImage() *BetaResponsesClientEventResponseCreateImageParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.Image
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u BetaResponsesClientEventUnionParam) GetInclude() []BetaResponseIncludable {
 	if vt := u.OfResponseCreate; vt != nil {
 		return vt.Include
@@ -36555,6 +36635,8 @@ type BetaResponsesClientEventResponseCreateParam struct {
 	Truncation string `json:"truncation,omitzero"`
 	// Domain-specific access programs to use for this request.
 	AccessPrograms BetaResponsesClientEventResponseCreateAccessProgramsParam `json:"access_programs,omitzero"`
+	// Request level image options.
+	Image BetaResponsesClientEventResponseCreateImageParam `json:"image,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
 	//
 	// Learn more:
@@ -36702,6 +36784,31 @@ func (u BetaResponsesClientEventResponseCreateConversationUnionParam) MarshalJSO
 }
 func (u *BetaResponsesClientEventResponseCreateConversationUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
+}
+
+// Request level image options.
+type BetaResponsesClientEventResponseCreateImageParam struct {
+	// Controls image context optimization. Defaults to `auto`, which uses the model,
+	// transport, and input to select a policy. Use `enabled` to require compression
+	// support or `disabled` to turn it off.
+	//
+	// Any of "auto", "enabled", "disabled".
+	ContextCompression string `json:"context_compression,omitzero"`
+	paramObj
+}
+
+func (r BetaResponsesClientEventResponseCreateImageParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponsesClientEventResponseCreateImageParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponsesClientEventResponseCreateImageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponsesClientEventResponseCreateImageParam](
+		"context_compression", "auto", "enabled", "disabled",
+	)
 }
 
 // Only one field can be non-zero.
@@ -37107,6 +37214,7 @@ const (
 	BetaResponsesClientEventResponseCreateModelGPT5_6Cyber           BetaResponsesClientEventResponseCreateModel = "gpt-5.6-cyber"
 	BetaResponsesClientEventResponseCreateModelGPT6Cyber             BetaResponsesClientEventResponseCreateModel = "gpt-6-cyber"
 	BetaResponsesClientEventResponseCreateModelGPTRosalindResearch   BetaResponsesClientEventResponseCreateModel = "gpt-rosalind-research"
+	BetaResponsesClientEventResponseCreateModelGPT6Rosalind          BetaResponsesClientEventResponseCreateModel = "gpt-6-rosalind"
 )
 
 // Configuration for running moderation on the input and output of this response.
@@ -42827,9 +42935,13 @@ func (u betaToolUnionParamUserLocation) AsAny() any { return u.any }
 func (u betaToolUnionParamUserLocation) GetCity() *string {
 	switch vt := u.any.(type) {
 	case *BetaWebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.City)
+		if vt.City.Valid() {
+			return &vt.City.Value
+		}
 	case *BetaWebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.City)
+		if vt.City.Valid() {
+			return &vt.City.Value
+		}
 	}
 	return nil
 }
@@ -42838,9 +42950,13 @@ func (u betaToolUnionParamUserLocation) GetCity() *string {
 func (u betaToolUnionParamUserLocation) GetCountry() *string {
 	switch vt := u.any.(type) {
 	case *BetaWebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Country)
+		if vt.Country.Valid() {
+			return &vt.Country.Value
+		}
 	case *BetaWebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Country)
+		if vt.Country.Valid() {
+			return &vt.Country.Value
+		}
 	}
 	return nil
 }
@@ -42849,9 +42965,13 @@ func (u betaToolUnionParamUserLocation) GetCountry() *string {
 func (u betaToolUnionParamUserLocation) GetRegion() *string {
 	switch vt := u.any.(type) {
 	case *BetaWebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Region)
+		if vt.Region.Valid() {
+			return &vt.Region.Value
+		}
 	case *BetaWebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Region)
+		if vt.Region.Valid() {
+			return &vt.Region.Value
+		}
 	}
 	return nil
 }
@@ -42860,9 +42980,13 @@ func (u betaToolUnionParamUserLocation) GetRegion() *string {
 func (u betaToolUnionParamUserLocation) GetTimezone() *string {
 	switch vt := u.any.(type) {
 	case *BetaWebSearchToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Timezone)
+		if vt.Timezone.Valid() {
+			return &vt.Timezone.Value
+		}
 	case *BetaWebSearchPreviewToolUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Timezone)
+		if vt.Timezone.Valid() {
+			return &vt.Timezone.Value
+		}
 	}
 	return nil
 }
@@ -44908,6 +45032,8 @@ type BetaResponseNewParams struct {
 	Truncation BetaResponseNewParamsTruncation `json:"truncation,omitzero"`
 	// Domain-specific access programs to use for this request.
 	AccessPrograms BetaResponseNewParamsAccessPrograms `json:"access_programs,omitzero"`
+	// Request level image options.
+	Image BetaResponseNewParamsImage `json:"image,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
 	//
 	// Learn more:
@@ -45041,6 +45167,31 @@ func (u BetaResponseNewParamsConversationUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *BetaResponseNewParamsConversationUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
+}
+
+// Request level image options.
+type BetaResponseNewParamsImage struct {
+	// Controls image context optimization. Defaults to `auto`, which uses the model,
+	// transport, and input to select a policy. Use `enabled` to require compression
+	// support or `disabled` to turn it off.
+	//
+	// Any of "auto", "enabled", "disabled".
+	ContextCompression string `json:"context_compression,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseNewParamsImage) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseNewParamsImage
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseNewParamsImage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseNewParamsImage](
+		"context_compression", "auto", "enabled", "disabled",
+	)
 }
 
 // Only one field can be non-zero.
@@ -45437,6 +45588,7 @@ const (
 	BetaResponseNewParamsModelGPT5_6Cyber           BetaResponseNewParamsModel = "gpt-5.6-cyber"
 	BetaResponseNewParamsModelGPT6Cyber             BetaResponseNewParamsModel = "gpt-6-cyber"
 	BetaResponseNewParamsModelGPTRosalindResearch   BetaResponseNewParamsModel = "gpt-rosalind-research"
+	BetaResponseNewParamsModelGPT6Rosalind          BetaResponseNewParamsModel = "gpt-6-rosalind"
 )
 
 // Configuration for running moderation on the input and output of this response.
@@ -45967,6 +46119,8 @@ type BetaResponseCompactParams struct {
 	//
 	// Any of "auto", "default", "fast", "flex", "priority".
 	ServiceTier BetaResponseCompactParamsServiceTier `json:"service_tier,omitzero"`
+	// Request level image options.
+	Image BetaResponseCompactParamsImage `json:"image,omitzero"`
 	// Any of "responses_multi_agent=v1".
 	Betas []string `header:"openai-beta,omitzero" json:"-"`
 	paramObj
@@ -46358,7 +46512,33 @@ const (
 	BetaResponseCompactParamsModelGPT5_6Cyber           BetaResponseCompactParamsModel = "gpt-5.6-cyber"
 	BetaResponseCompactParamsModelGPT6Cyber             BetaResponseCompactParamsModel = "gpt-6-cyber"
 	BetaResponseCompactParamsModelGPTRosalindResearch   BetaResponseCompactParamsModel = "gpt-rosalind-research"
+	BetaResponseCompactParamsModelGPT6Rosalind          BetaResponseCompactParamsModel = "gpt-6-rosalind"
 )
+
+// Request level image options.
+type BetaResponseCompactParamsImage struct {
+	// Controls image context optimization. Defaults to `auto`, which uses the model,
+	// transport, and input to select a policy. Use `enabled` to require compression
+	// support or `disabled` to turn it off.
+	//
+	// Any of "auto", "enabled", "disabled".
+	ContextCompression string `json:"context_compression,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseCompactParamsImage) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseCompactParamsImage
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseCompactParamsImage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseCompactParamsImage](
+		"context_compression", "auto", "enabled", "disabled",
+	)
+}
 
 // Only one field can be non-zero.
 //

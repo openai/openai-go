@@ -81,7 +81,13 @@ func TestImageEditWithOptionalParams(t *testing.T) {
 		ResponseFormat:    openai.ImageEditParamsResponseFormatURL,
 		SafetyIdentifier:  openai.String("user-1234"),
 		Size:              openai.ImageEditParamsSize1024x1024,
-		User:              openai.String("user-1234"),
+		Svg: openai.ImageEditParamsSvg{
+			Model: openai.String("x"),
+			Reasoning: openai.ImageEditParamsSvgReasoning{
+				Effort: "none",
+			},
+		},
+		User: openai.String("user-1234"),
 	})
 	if err != nil {
 		var apierr *openai.Error
