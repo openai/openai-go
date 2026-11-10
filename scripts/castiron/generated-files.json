@@ -543,7 +543,7 @@
     },
     "betaresponse.go": {
       "mode": "100644",
-      "sha256": "eaf3832c90ac692b735f3a7dda63c8d4a19e62846b54ba94cd7a3b51e0e369b2"
+      "sha256": "8d477d53a833b8d0b4f2ece80d76dc3998e2559d0e0223ad2173d549a357ef15"
     },
     "betaresponse_test.go": {
       "mode": "100644",
@@ -963,7 +963,7 @@
     },
     "responses/response.go": {
       "mode": "100644",
-      "sha256": "e8e20d32c5ac151d19e56d392156df826eeaa70d3180e0f989443048f475b855"
+      "sha256": "7e503a2604527981c1e9ad30d13bfbec2a27f8a17a6493656e208ed84259bc27"
     },
     "responses/response_test.go": {
       "mode": "100644",

@@ -265,7 +265,7 @@ type BetaCompactedResponse struct {
 	Object constant.ResponseCompaction `json:"object" default:"response.compaction"`
 	// The compacted list of output items. This is a list of all user messages,
 	// followed by a single compaction item.
-	Output []BetaResponseOutputItemUnion `json:"output" api:"required"`
+	Output []BetaResponseItemUnion `json:"output" api:"required"`
 	// Token accounting for the compaction pass, including cached, reasoning, and total
 	// tokens.
 	Usage BetaResponseUsage          `json:"usage" api:"required"`
@@ -22866,23 +22866,23 @@ func init() {
 }
 
 // BetaResponseItemUnion contains all possible properties and values from
-// [BetaResponseInputMessageItem], [BetaResponseFileSearchToolCall],
-// [BetaResponseComputerToolCall], [BetaResponseComputerToolCallOutputItem],
-// [BetaResponseFunctionWebSearch], [BetaResponseFunctionToolCallItem],
-// [BetaResponseFunctionToolCallOutputItem], [BetaResponseItemAgentMessage],
-// [BetaResponseItemMultiAgentCall], [BetaResponseItemMultiAgentCallOutput],
-// [BetaResponseToolSearchCall], [BetaResponseToolSearchOutputItem],
-// [BetaResponseItemAdditionalTools], [BetaResponseConfigurationUpdateItem],
-// [BetaResponseReasoningItem], [BetaResponseItemProgram],
-// [BetaResponseItemProgramOutput], [BetaResponseCompactionItem],
-// [BetaResponseItemImageGenerationCall], [BetaResponseCodeInterpreterToolCall],
-// [BetaResponseItemLocalShellCall], [BetaResponseItemLocalShellCallOutput],
-// [BetaResponseFunctionShellToolCall], [BetaResponseFunctionShellToolCallOutput],
-// [BetaResponseApplyPatchToolCall], [BetaResponseApplyPatchToolCallOutput],
-// [BetaResponseItemMcpListTools], [BetaResponseItemMcpApprovalRequest],
-// [BetaResponseItemMcpApprovalResponse], [BetaResponseItemMcpCall],
-// [BetaResponseCustomToolCallItem], [BetaResponseCustomToolCallOutputItem],
-// [BetaResponseOutputMessage].
+// [BetaResponseInputMessageItem], [BetaResponseOutputMessage],
+// [BetaResponseFileSearchToolCall], [BetaResponseComputerToolCall],
+// [BetaResponseComputerToolCallOutputItem], [BetaResponseFunctionWebSearch],
+// [BetaResponseFunctionToolCallItem], [BetaResponseFunctionToolCallOutputItem],
+// [BetaResponseItemAgentMessage], [BetaResponseItemMultiAgentCall],
+// [BetaResponseItemMultiAgentCallOutput], [BetaResponseToolSearchCall],
+// [BetaResponseToolSearchOutputItem], [BetaResponseItemAdditionalTools],
+// [BetaResponseConfigurationUpdateItem], [BetaResponseReasoningItem],
+// [BetaResponseItemProgram], [BetaResponseItemProgramOutput],
+// [BetaResponseCompactionItem], [BetaResponseItemImageGenerationCall],
+// [BetaResponseCodeInterpreterToolCall], [BetaResponseItemLocalShellCall],
+// [BetaResponseItemLocalShellCallOutput], [BetaResponseFunctionShellToolCall],
+// [BetaResponseFunctionShellToolCallOutput], [BetaResponseApplyPatchToolCall],
+// [BetaResponseApplyPatchToolCallOutput], [BetaResponseItemMcpListTools],
+// [BetaResponseItemMcpApprovalRequest], [BetaResponseItemMcpApprovalResponse],
+// [BetaResponseItemMcpCall], [BetaResponseCustomToolCallItem],
+// [BetaResponseCustomToolCallOutputItem].
 //
 // Use the [BetaResponseItemUnion.AsAny] method to switch on the variant.
 //
@@ -23081,6 +23081,7 @@ type anyBetaResponseItem interface {
 }
 
 func (BetaResponseInputMessageItem) implBetaResponseItemUnion()            {}
+func (BetaResponseOutputMessage) implBetaResponseItemUnion()               {}
 func (BetaResponseFileSearchToolCall) implBetaResponseItemUnion()          {}
 func (BetaResponseComputerToolCall) implBetaResponseItemUnion()            {}
 func (BetaResponseComputerToolCallOutputItem) implBetaResponseItemUnion()  {}
@@ -23112,12 +23113,12 @@ func (BetaResponseItemMcpApprovalResponse) implBetaResponseItemUnion()     {}
 func (BetaResponseItemMcpCall) implBetaResponseItemUnion()                 {}
 func (BetaResponseCustomToolCallItem) implBetaResponseItemUnion()          {}
 func (BetaResponseCustomToolCallOutputItem) implBetaResponseItemUnion()    {}
-func (BetaResponseOutputMessage) implBetaResponseItemUnion()               {}
 
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := BetaResponseItemUnion.AsAny().(type) {
 //	case openai.BetaResponseInputMessageItem:
+//	case openai.BetaResponseOutputMessage:
 //	case openai.BetaResponseFileSearchToolCall:
 //	case openai.BetaResponseComputerToolCall:
 //	case openai.BetaResponseComputerToolCallOutputItem:
@@ -23149,12 +23150,18 @@ func (BetaResponseOutputMessage) implBetaResponseItemUnion()               {}
 //	case openai.BetaResponseItemMcpCall:
 //	case openai.BetaResponseCustomToolCallItem:
 //	case openai.BetaResponseCustomToolCallOutputItem:
-//	case openai.BetaResponseOutputMessage:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
 func (u BetaResponseItemUnion) AsAny() anyBetaResponseItem {
 	switch u.Type {
+	case "message":
+		switch u.Role {
+		case "developer", "system", "user":
+			return u.AsMessage()
+		case "assistant":
+			return u.AsOutputMessage()
+		}
 	case "file_search_call":
 		return u.AsFileSearchCall()
 	case "computer_call":
@@ -23217,13 +23224,16 @@ func (u BetaResponseItemUnion) AsAny() anyBetaResponseItem {
 		return u.AsCustomToolCall()
 	case "custom_tool_call_output":
 		return u.AsCustomToolCallOutput()
-	case "message":
-		return u.AsOutputMessage()
 	}
 	return nil
 }
 
 func (u BetaResponseItemUnion) AsMessage() (v BetaResponseInputMessageItem) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseItemUnion) AsOutputMessage() (v BetaResponseOutputMessage) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -23379,11 +23389,6 @@ func (u BetaResponseItemUnion) AsCustomToolCall() (v BetaResponseCustomToolCallI
 }
 
 func (u BetaResponseItemUnion) AsCustomToolCallOutput() (v BetaResponseCustomToolCallOutputItem) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u BetaResponseItemUnion) AsOutputMessage() (v BetaResponseOutputMessage) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
