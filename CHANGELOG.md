@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased Go v4 breaking changes
+
+* Applications using Microsoft Entra ID must declare the Azure Identity version they require. The SDK no longer pins `azidentity v1.14.1`. See the [migration guide](MIGRATION.md#go-v4-breaking-change-azure-identity-version-selection).
+
 ## [3.98.0](https://github.com/openai/openai-go/compare/v3.97.0...v3.98.0) (2026-11-09)
 
 

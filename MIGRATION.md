@@ -2,6 +2,24 @@
 
 <a href="https://pkg.go.dev/github.com/openai/openai-go/v3"><img src="https://pkg.go.dev/badge/github.com/openai/openai-go.svg" alt="Go Reference"></a>
 
+## Go v4 breaking change: Azure Identity version selection
+
+If your application uses `azidentity`, declare the version it needs in your own
+`go.mod`. The SDK no longer sets the minimum to `v1.14.1`. Your other
+dependencies can select an older version. Run the following commands to keep the previous minimum.
+
+```sh
+go get github.com/Azure/azure-sdk-for-go/sdk/azidentity@v1.14.1
+go mod tidy
+```
+
+To choose the latest release instead, use `@latest`. Continue passing your
+credential to `azure.WithTokenCredential`. Use `azure.WithTokenCredentialScopes`
+if your deployment requires a custom scope. Applications using an Azure API key
+can continue using `azure.WithAPIKey` without installing Azure Identity.
+
+## Earlier SDK changes
+
 This SDK includes breaking changes to improve the ergonomics of constructing parameters and accessing responses.
 
 To reduce verbosity, the `openai.F(...)` and `param.Field[T]` have been removed.
