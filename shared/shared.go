@@ -342,10 +342,6 @@ const (
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
 	ChatModelGPT4_1106Preview ChatModel = "gpt-4-1106-preview"
-	// Deprecated: Announced shutdown date: 2024-12-06. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
-	ChatModelGPT4VisionPreview ChatModel = "gpt-4-vision-preview"
 	// Deprecated: Announced shutdown date: 2026-10-23. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -382,10 +378,6 @@ const (
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
 	ChatModelGPT3_5Turbo0301 ChatModel = "gpt-3.5-turbo-0301"
-	// Deprecated: Announced shutdown date: 2024-09-13. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
-	ChatModelGPT3_5Turbo0613 ChatModel = "gpt-3.5-turbo-0613"
 	// Deprecated: Announced shutdown date: 2026-09-28. See
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
@@ -394,10 +386,6 @@ const (
 	// https://developers.openai.com/api/docs/deprecations for details and recommended
 	// replacements.
 	ChatModelGPT3_5Turbo0125 ChatModel = "gpt-3.5-turbo-0125"
-	// Deprecated: Announced shutdown date: 2024-09-13. See
-	// https://developers.openai.com/api/docs/deprecations for details and recommended
-	// replacements.
-	ChatModelGPT3_5Turbo16k0613 ChatModel = "gpt-3.5-turbo-16k-0613"
 )
 
 // A filter used to compare a specified attribute key to a given value using a
