@@ -47,8 +47,8 @@ func TestWebhookService_RequestOptionsOverrideClientOptions(t *testing.T) {
 	t.Setenv("OPENAI_WEBHOOK_SECRET", "")
 
 	const (
-		clientSecret  = "client-secret"
-		requestSecret = "request-secret"
+		clientSecret  = "client-secret-long-enough-for-testing"
+		requestSecret = "request-secret-long-enough-for-testing"
 	)
 	timestamp := time.Now().Unix()
 	now := time.Unix(timestamp, 0)
@@ -212,21 +212,26 @@ func TestWebhookService_VerifySignature_AcceptsMinimumLengthPrefixedSecret(t *te
 	}
 }
 
-func TestWebhookService_VerifySignature_AcceptsRawSecret(t *testing.T) {
-	secret := "legacy-raw-secret"
-	client := openai.NewClient(
-		option.WithAPIKey("test-key"),
-		option.WithWebhookSecret(secret),
-	)
-
-	err := client.Webhooks.VerifySignatureWithToleranceAndTime(
-		[]byte(testPayload),
-		createTestHeadersForSecret([]byte(secret)),
-		5*time.Minute,
-		time.Unix(testTimestamp, 0),
-	)
-	if err != nil {
-		t.Fatalf("VerifySignatureWithToleranceAndTime should have accepted a valid raw secret: %v", err)
+func TestWebhookService_LegacySecretMinimumLength(t *testing.T) {
+	for _, size := range []int{1, 17, 23, 24, 32} {
+		t.Run(strconv.Itoa(size)+"_bytes", func(t *testing.T) {
+			secret := strings.Repeat("a", size)
+			client := openai.NewClient(option.WithWebhookSecret(secret))
+			headers := createSignedTestHeaders(secret, testTimestamp)
+			now := time.Unix(testTimestamp, 0)
+			body := []byte(testPayload)
+			verifyErr := client.Webhooks.VerifySignatureWithToleranceAndTime(body, headers, 5*time.Minute, now)
+			event, unwrapErr := client.Webhooks.UnwrapWithToleranceAndTime(body, headers, 5*time.Minute, now)
+			if size < 24 {
+				if verifyErr == nil || unwrapErr == nil || event != nil {
+					t.Fatalf("undersized key: verify error = %v, unwrap error = %v, event = %v", verifyErr, unwrapErr, event)
+				}
+				return
+			}
+			if verifyErr != nil || unwrapErr != nil || event == nil {
+				t.Fatalf("valid key: verify error = %v, unwrap error = %v, event = %v", verifyErr, unwrapErr, event)
+			}
+		})
 	}
 }
 
