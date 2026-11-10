@@ -43,10 +43,11 @@ func NewBetaAgentSessionEventService(opts ...option.RequestOption) (r BetaAgentS
 // See
 // [session events](https://developers.openai.com/api/docs/guides/agents-api/sessions/events).
 func (r *BetaAgentSessionEventService) New(ctx context.Context, sessionID string, params BetaAgentSessionEventNewParams, opts ...option.RequestOption) (err error) {
-	opts = slices.Clone(opts)
+	var headerOpts []option.RequestOption
 	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
+		headerOpts = append(headerOpts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
 	}
+	opts = slices.Concat(headerOpts, opts)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*"), option.WithHeader("OpenAI-Beta", "agents=v1")}, opts...)
