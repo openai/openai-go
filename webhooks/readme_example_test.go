@@ -21,7 +21,7 @@ import (
 
 const (
 	readmeWebhookBodyLimit int64 = 1 << 20
-	readmeWebhookSecret          = "readme-test-secret"
+	readmeWebhookSecret          = "readme-test-secret-long-enough-for-testing"
 	readmeWebhookID              = "wh_readme_test"
 )
 

@@ -996,6 +996,13 @@ openai.FileNewParams{
 
 ## Webhook Verification
 
+In v4, `VerifySignature` and `Unwrap` require at least 24 bytes for legacy raw
+signing keys. For OpenAI webhooks, use the OpenAI-issued `whsec_` secret.
+If your sender uses a shorter raw key, generate a new random key of at least
+24 bytes. Configure the new key at both the sender and receiver before upgrading
+the receiver to v4. Replace short keys in test fixtures and re-sign the payloads
+with the replacement test key.
+
 Signature verification authenticates the delivery and checks timestamp freshness.
 It does not provide exactly-once processing: the same signed request can pass
 verification more than once within the accepted timestamp window. The handlers
