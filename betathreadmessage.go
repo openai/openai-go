@@ -592,7 +592,7 @@ func (r ImageFileContentBlock) ToParam() ImageFileContentBlockParam {
 //
 // The properties ImageFile, Type are required.
 type ImageFileContentBlockParam struct {
-	ImageFile ImageFileParam `json:"image_file,omitzero" api:"required"`
+	ImageFile ImageFileParam `json:"image_file" api:"required"`
 	// Always `image_file`.
 	//
 	// This field can be elided, and will marshal its zero value as "image_file".
@@ -765,7 +765,7 @@ func (r ImageURLContentBlock) ToParam() ImageURLContentBlockParam {
 //
 // The properties ImageURL, Type are required.
 type ImageURLContentBlockParam struct {
-	ImageURL ImageURLParam `json:"image_url,omitzero" api:"required"`
+	ImageURL ImageURLParam `json:"image_url" api:"required"`
 	// The type of the content part.
 	//
 	// This field can be elided, and will marshal its zero value as "image_url".

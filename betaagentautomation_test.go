@@ -55,7 +55,7 @@ func TestBetaAgentAutomationNewWithOptionalParams(t *testing.T) {
 							Instructions: openai.String("instructions"),
 							Model:        openai.String("model"),
 							MultiAgent: openai.MultiAgentConfigParam{
-								Enabled:                true,
+								Enabled:                openai.Bool(true),
 								MaxConcurrentSubagents: openai.Int(1),
 							},
 							Reasoning: openai.AgentReasoningParam{
@@ -175,7 +175,7 @@ func TestBetaAgentAutomationUpdateWithOptionalParams(t *testing.T) {
 						Instructions: openai.String("instructions"),
 						Model:        openai.String("model"),
 						MultiAgent: openai.MultiAgentConfigParam{
-							Enabled:                true,
+							Enabled:                openai.Bool(true),
 							MaxConcurrentSubagents: openai.Int(1),
 						},
 						Reasoning: openai.AgentReasoningParam{

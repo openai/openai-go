@@ -747,7 +747,7 @@ type FineTuningJobNewParamsIntegration struct {
 	// specifies the project that metrics will be sent to. Optionally, you can set an
 	// explicit display name for your run, add tags to your run, and set a default
 	// entity (team, username, etc) to be associated with your run.
-	Wandb FineTuningJobNewParamsIntegrationWandb `json:"wandb,omitzero" api:"required"`
+	Wandb FineTuningJobNewParamsIntegrationWandb `json:"wandb" api:"required"`
 	// The type of integration to enable. Currently, only "wandb" (Weights and Biases)
 	// is supported.
 	//

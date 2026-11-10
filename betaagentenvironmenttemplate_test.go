@@ -30,7 +30,7 @@ func TestBetaAgentEnvironmentTemplateNewWithOptionalParams(t *testing.T) {
 	_, err := client.Beta.Agents.Environments.Templates.New(context.TODO(), openai.BetaAgentEnvironmentTemplateNewParams{
 		CapabilityDirectories: []string{"string"},
 		Desktop: openai.BetaAgentEnvironmentTemplateNewParamsDesktop{
-			Enabled: true,
+			Enabled: openai.Bool(true),
 		},
 		Env: map[string]string{
 			"foo": "string",
@@ -123,7 +123,7 @@ func TestBetaAgentEnvironmentTemplateUpdateWithOptionalParams(t *testing.T) {
 		openai.BetaAgentEnvironmentTemplateUpdateParams{
 			CapabilityDirectories: []string{"string"},
 			Desktop: openai.BetaAgentEnvironmentTemplateUpdateParamsDesktop{
-				Enabled: true,
+				Enabled: openai.Bool(true),
 			},
 			Env: map[string]string{
 				"foo": "string",

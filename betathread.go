@@ -867,7 +867,7 @@ func (r *BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAu
 
 // The properties Static, Type are required.
 type BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic struct {
-	Static BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic `json:"static,omitzero" api:"required"`
+	Static BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic `json:"static" api:"required"`
 	// Always `static`.
 	//
 	// This field can be elided, and will marshal its zero value as "static".
@@ -1388,7 +1388,7 @@ func (r *BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunki
 
 // The properties Static, Type are required.
 type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyStatic struct {
-	Static BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic `json:"static,omitzero" api:"required"`
+	Static BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic `json:"static" api:"required"`
 	// Always `static`.
 	//
 	// This field can be elided, and will marshal its zero value as "static".
