@@ -64,7 +64,7 @@ type BetaChatKitSessionNewParams struct {
 	// access other objects that have the same `user` scope.
 	User string `json:"user" api:"required"`
 	// Workflow that powers the session.
-	Workflow ChatSessionWorkflowParam `json:"workflow,omitzero" api:"required"`
+	Workflow ChatSessionWorkflowParam `json:"workflow" api:"required"`
 	// Optional overrides for ChatKit runtime configuration features
 	ChatKitConfiguration ChatSessionChatKitConfigurationParam `json:"chatkit_configuration,omitzero"`
 	// Optional override for session expiration timing in seconds from creation.

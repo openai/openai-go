@@ -6776,7 +6776,7 @@ func init() {
 // The property Enabled is required.
 type EnvironmentParamOpenAIHostedDesktop struct {
 	// Whether to provision the desktop and its browser proxy.
-	Enabled bool `json:"enabled" api:"required"`
+	Enabled param.Opt[bool] `json:"enabled,omitzero" api:"required"`
 	paramObj
 }
 
@@ -7142,7 +7142,7 @@ type HostedPluginParam struct {
 	// The plugin name declared in `.codex-plugin/plugin.json`.
 	Name string `json:"name" api:"required"`
 	// Provides ZIP bytes encoded with standard base64.
-	Source InlineCapabilitySourceParam `json:"source,omitzero" api:"required"`
+	Source InlineCapabilitySourceParam `json:"source" api:"required"`
 	// The type of the object. Always `inline`.
 	//
 	// This field can be elided, and will marshal its zero value as "inline".
@@ -7371,7 +7371,7 @@ type HostedSkillParamInline struct {
 	// The skill name declared in `SKILL.md`.
 	Name string `json:"name" api:"required"`
 	// Provides ZIP bytes encoded with standard base64.
-	Source InlineCapabilitySourceParam `json:"source,omitzero" api:"required"`
+	Source InlineCapabilitySourceParam `json:"source" api:"required"`
 	// The type of the object. Always `inline`.
 	//
 	// This field can be elided, and will marshal its zero value as "inline".
@@ -7971,7 +7971,7 @@ func (r *MultiAgentConfig) UnmarshalJSON(data []byte) error {
 // The property Enabled is required.
 type MultiAgentConfigParam struct {
 	// Whether subagent tools are enabled.
-	Enabled bool `json:"enabled" api:"required"`
+	Enabled param.Opt[bool] `json:"enabled,omitzero" api:"required"`
 	// Maximum number of subagents that may run concurrently. Defaults to 6.
 	MaxConcurrentSubagents param.Opt[int64] `json:"max_concurrent_subagents,omitzero"`
 	paramObj

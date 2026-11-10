@@ -192,7 +192,7 @@ func (r *SessionForkResponseTransport) UnmarshalJSON(data []byte) error {
 type SessionAcceptParams struct {
 	// Model and startup configuration for the Live session that answers the incoming
 	// SIP call.
-	Session SessionAcceptParamsSession `json:"session,omitzero" api:"required"`
+	Session SessionAcceptParamsSession `json:"session" api:"required"`
 	paramObj
 }
 
@@ -387,7 +387,7 @@ func init() {
 type SessionAcceptParamsSessionDelegationResponses struct {
 	// Backend model, prompt, and tools used when the Live session delegates a task to
 	// Responses.
-	Responses ResponsesDelegationConfigParam `json:"responses,omitzero" api:"required"`
+	Responses ResponsesDelegationConfigParam `json:"responses" api:"required"`
 	// Milliseconds to wait before requesting an automatic spoken acknowledgement for a
 	// delegation. The model may still speak before this delay. Any commentary or
 	// thinking appended to the session cancels all pending acknowledgements, including
@@ -434,7 +434,7 @@ func (r *SessionAcceptParamsSessionDelegationDecisions) UnmarshalJSON(data []byt
 
 type SessionForkParams struct {
 	// WebRTC transport with an SDP offer for the new connection to the forked session.
-	Transport SessionForkParamsTransport `json:"transport,omitzero" api:"required"`
+	Transport SessionForkParamsTransport `json:"transport" api:"required"`
 	// Optional configuration overrides for the new Live session. Omit this object or
 	// send an empty object to inherit the stored session's settings.
 	Session MediaSessionForkConfigParam `json:"session,omitzero"`

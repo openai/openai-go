@@ -38319,7 +38319,6 @@ components:
           x-stainless-const: true
         function:
           $ref: '#/components/schemas/FunctionObject'
-          x-stainless-go-json: omitzero
       required:
       - type
       - function
@@ -39942,7 +39941,6 @@ components:
           x-stainless-const: true
         allowed_tools:
           $ref: '#/components/schemas/ChatCompletionAllowedTools'
-          x-stainless-go-json: omitzero
       required:
       - type
       - allowed_tools
@@ -40102,7 +40100,6 @@ components:
           required:
           - name
           - input
-          x-stainless-go-json: omitzero
       required:
       - id
       - type
@@ -40208,7 +40205,6 @@ components:
           required:
           - name
           - arguments
-          x-stainless-go-json: omitzero
       required:
       - id
       - type
@@ -40354,7 +40350,6 @@ components:
               description: The name of the function to call.
           required:
           - name
-          x-stainless-go-json: omitzero
       required:
       - type
       - function
@@ -40377,7 +40372,6 @@ components:
               description: The name of the custom tool to call.
           required:
           - name
-          x-stainless-go-json: omitzero
       required:
       - type
       - custom
@@ -40554,7 +40548,6 @@ components:
           required:
           - data
           - format
-          x-stainless-go-json: omitzero
         prompt_cache_breakpoint:
           $ref: '#/components/schemas/PromptCacheBreakpointParam'
       required:
@@ -40597,7 +40590,6 @@ components:
               type_name: FileObject
             kotlin:
               type_name: FileObject
-          x-stainless-go-json: omitzero
         prompt_cache_breakpoint:
           $ref: '#/components/schemas/PromptCacheBreakpointParam'
       required:
@@ -40636,7 +40628,6 @@ components:
               default: auto
           required:
           - url
-          x-stainless-go-json: omitzero
         prompt_cache_breakpoint:
           $ref: '#/components/schemas/PromptCacheBreakpointParam'
       required:
@@ -41072,7 +41063,6 @@ components:
           x-stainless-const: true
         function:
           $ref: '#/components/schemas/FunctionObject'
-          x-stainless-go-json: omitzero
       required:
       - type
       - function
@@ -42045,7 +42035,6 @@ components:
                                 required:
                                 - max_chunk_size_tokens
                                 - chunk_overlap_tokens
-                                x-stainless-go-json: omitzero
                             required:
                             - type
                             - static
@@ -42210,7 +42199,6 @@ components:
                     x-stainless-const: true
                   approximate:
                     $ref: '#/components/schemas/WebSearchLocation'
-                    x-stainless-go-json: omitzero
               search_context_size:
                 $ref: '#/components/schemas/WebSearchContextSize'
           top_logprobs:
@@ -43915,7 +43903,6 @@ components:
                     items:
                       type: string
                       example: custom-tag
-                x-stainless-go-json: omitzero
         seed:
           description: |
             The seed controls the reproducibility of the job. Passing in the same seed and job parameters should produce the same results, but may differ in rare cases.
@@ -45249,7 +45236,6 @@ components:
           description: The time interval for evaluating spend against the threshold.
         notification_channel:
           $ref: '#/components/schemas/SpendAlertNotificationChannel'
-          x-stainless-go-json: omitzero
       required:
       - threshold_amount
       - currency
@@ -45523,7 +45509,6 @@ components:
                                 required:
                                 - max_chunk_size_tokens
                                 - chunk_overlap_tokens
-                                x-stainless-go-json: omitzero
                             required:
                             - type
                             - static
@@ -46338,7 +46323,6 @@ components:
                     required:
                     - definition
                     - syntax
-                    x-stainless-go-json: omitzero
                 required:
                 - type
                 - grammar
@@ -46347,7 +46331,6 @@ components:
                 propertyName: type
           required:
           - name
-          x-stainless-go-json: omitzero
       required:
       - type
       - custom
@@ -50728,7 +50711,6 @@ components:
           required:
           - data
           - format
-          x-stainless-go-json: omitzero
       required:
       - type
       - input_audio
@@ -51546,7 +51528,6 @@ components:
         session:
           $ref: '#/components/schemas/LiveCallAcceptSession'
           description: Model and startup configuration for the Live session that answers the incoming SIP call.
-          x-stainless-go-json: omitzero
       required:
       - session
       additionalProperties: false
@@ -51640,11 +51621,9 @@ components:
         session:
           $ref: '#/components/schemas/LiveMediaSessionCreateParams'
           description: Startup configuration for the Live session.
-          x-stainless-go-json: omitzero
         transport:
           $ref: '#/components/schemas/LiveWebRTCTransport'
           description: WebRTC transport with the browser's SDP offer.
-          x-stainless-go-json: omitzero
       required:
       - session
       - transport
@@ -51707,7 +51686,6 @@ components:
         transport:
           $ref: '#/components/schemas/LiveWebRTCTransport'
           description: WebRTC transport with an SDP offer for the new connection to the forked session.
-          x-stainless-go-json: omitzero
       required:
       - transport
       additionalProperties: false
@@ -51980,7 +51958,6 @@ components:
             The unique ID of the local shell tool call generated by the model.
         action:
           $ref: '#/components/schemas/LocalShellExecAction'
-          x-stainless-go-json: omitzero
         status:
           type: string
           enum:
@@ -52475,7 +52452,6 @@ components:
               default: auto
           required:
           - file_id
-          x-stainless-go-json: omitzero
       required:
       - type
       - image_file
@@ -52507,7 +52483,6 @@ components:
               default: auto
           required:
           - url
-          x-stainless-go-json: omitzero
       required:
       - type
       - image_url
@@ -54492,36 +54467,26 @@ components:
           - $ref: '#/components/schemas/HostedToolPermissionUpdate'
           - type: 'null'
           description: The file search permission update.
-          x-openai-go-legacy-bool-fields:
-          - enabled
         web_search:
           anyOf:
           - $ref: '#/components/schemas/HostedToolPermissionUpdate'
           - type: 'null'
           description: The web search permission update.
-          x-openai-go-legacy-bool-fields:
-          - enabled
         image_generation:
           anyOf:
           - $ref: '#/components/schemas/HostedToolPermissionUpdate'
           - type: 'null'
           description: The image generation permission update.
-          x-openai-go-legacy-bool-fields:
-          - enabled
         mcp:
           anyOf:
           - $ref: '#/components/schemas/HostedToolPermissionUpdate'
           - type: 'null'
           description: The MCP permission update.
-          x-openai-go-legacy-bool-fields:
-          - enabled
         code_interpreter:
           anyOf:
           - $ref: '#/components/schemas/HostedToolPermissionUpdate'
           - type: 'null'
           description: The code interpreter permission update.
-          x-openai-go-legacy-bool-fields:
-          - enabled
     ProjectListResponse:
       type: object
       properties:
@@ -63820,7 +63785,6 @@ components:
               default: 600
         session:
           $ref: '#/components/schemas/RealtimeTranslationSessionCreateRequest'
-          x-stainless-go-json: omitzero
       required:
       - session
     RealtimeTranslationClientSecretCreateResponse:
@@ -65915,7 +65879,6 @@ components:
               - type: 'null'
           required:
           - name
-          x-stainless-go-json: omitzero
       required:
       - type
       - json_schema
@@ -70832,7 +70795,6 @@ components:
           x-stainless-const: true
         static:
           $ref: '#/components/schemas/StaticChunkingStrategy'
-          x-stainless-go-json: omitzero
       required:
       - type
       - static
@@ -75645,7 +75607,6 @@ components:
         source:
           $ref: '#/components/schemas/InlineSkillSourceParam'
           description: Inline skill payload
-          x-stainless-go-json: omitzero
       type: object
       required:
       - type
@@ -78138,7 +78099,6 @@ components:
           x-stainless-const: true
         output:
           $ref: '#/components/schemas/ComputerScreenshotImage'
-          x-stainless-go-json: omitzero
         acknowledged_safety_checks:
           anyOf:
           - items:
@@ -78711,7 +78671,6 @@ components:
         action:
           $ref: '#/components/schemas/FunctionShellActionParam'
           description: The shell commands and limits that describe how to run the tool call.
-          x-stainless-go-json: omitzero
         status:
           anyOf:
           - $ref: '#/components/schemas/FunctionShellCallItemStatus'
@@ -80061,7 +80020,6 @@ components:
         responses:
           description: Backend model, prompt, and tools used when the Live session delegates a task to Responses.
           $ref: '#/components/schemas/LiveResponsesDelegationSettingsInputParam'
-          x-stainless-go-json: omitzero
       required:
       - type
       - responses
@@ -80559,7 +80517,6 @@ components:
         data_channel:
           description: Client and server event permissions for the WebRTC frontend data channel.
           $ref: '#/components/schemas/LiveDataChannelConfigParam'
-          x-stainless-go-json: omitzero
       required:
       - data_channel
     session:
@@ -84339,7 +84296,6 @@ components:
         workflow:
           $ref: '#/components/schemas/WorkflowParam'
           description: Workflow that powers the session.
-          x-stainless-go-json: omitzero
         user:
           type: string
           minLength: 1
@@ -87648,8 +87604,6 @@ components:
       - enabled
       additionalProperties: false
       description: Explicit configuration for creating and coordinating subagents.
-      x-openai-go-legacy-bool-fields:
-      - enabled
     CompactionParam:
       type: object
       properties:
@@ -88350,7 +88304,6 @@ components:
         source:
           $ref: '#/components/schemas/InlineCapabilitySourceParam'
           description: The inline ZIP archive.
-          x-stainless-go-json: omitzero
       required:
       - type
       - name
@@ -88394,7 +88347,6 @@ components:
         source:
           $ref: '#/components/schemas/InlineCapabilitySourceParam'
           description: The inline ZIP archive.
-          x-stainless-go-json: omitzero
       required:
       - type
       - name
@@ -88518,8 +88470,6 @@ components:
           - $ref: '#/components/schemas/DesktopParam'
           - type: 'null'
           description: Desktop provisioning. Omission or null inherits the template setting, or defaults to disabled.
-          x-openai-go-legacy-bool-fields:
-          - enabled
         env:
           type:
           - object
@@ -92343,8 +92293,6 @@ components:
           - $ref: '#/components/schemas/DesktopParam'
           - type: 'null'
           description: Desktop provisioning. Omission or null inherits the template setting, or defaults to disabled.
-          x-openai-go-legacy-bool-fields:
-          - enabled
         env:
           type:
           - object
@@ -92441,8 +92389,6 @@ components:
           - $ref: '#/components/schemas/DesktopParam'
           - type: 'null'
           description: Replacement desktop configuration, or null to disable the desktop.
-          x-openai-go-legacy-bool-fields:
-          - enabled
         env:
           type:
           - object
@@ -100871,7 +100817,6 @@ components:
         source:
           $ref: '#/components/schemas/BetaInlineSkillSourceParam'
           description: Inline skill payload
-          x-stainless-go-json: omitzero
       type: object
       required:
       - type
@@ -102914,7 +102859,6 @@ components:
         action:
           $ref: '#/components/schemas/BetaFunctionShellActionParam'
           description: The shell commands and limits that describe how to run the tool call.
-          x-stainless-go-json: omitzero
         status:
           anyOf:
           - $ref: '#/components/schemas/BetaFunctionShellCallItemStatus'
@@ -103027,7 +102971,6 @@ components:
             The unique ID of the local shell tool call generated by the model.
         action:
           $ref: '#/components/schemas/BetaLocalShellExecAction'
-          x-stainless-go-json: omitzero
         status:
           type: string
           enum:
@@ -104499,7 +104442,6 @@ components:
           x-stainless-const: true
         output:
           $ref: '#/components/schemas/BetaComputerScreenshotImage'
-          x-stainless-go-json: omitzero
         acknowledged_safety_checks:
           anyOf:
           - items:
@@ -112663,8 +112605,6 @@ components:
             - $ref: '#/components/schemas/BetaMultiAgentParam'
               description: Configuration for server-hosted multi-agent execution.
             - type: 'null'
-            x-openai-go-legacy-bool-fields:
-            - enabled
     BetaMultiAgentParam:
       properties:
         enabled:
@@ -112972,7 +112912,6 @@ components:
               example: https://example.com/image.jpg
           required:
           - url
-          x-stainless-go-json: omitzero
       required:
       - type
       - image_url

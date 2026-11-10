@@ -65,7 +65,7 @@ func TestBetaResponseNewWithOptionalParams(t *testing.T) {
 			},
 		},
 		MultiAgent: openai.BetaResponseNewParamsMultiAgent{
-			Enabled:                true,
+			Enabled:                openai.Bool(true),
 			MaxConcurrentSubagents: openai.Int(1),
 		},
 		ParallelToolCalls:  openai.Bool(true),

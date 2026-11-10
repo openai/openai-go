@@ -402,7 +402,7 @@ func (r ClientConfig) ToParam() ClientConfigParam {
 // The property DataChannel is required.
 type ClientConfigParam struct {
 	// Client and server event permissions for the WebRTC frontend data channel.
-	DataChannel DataChannelConfigParam `json:"data_channel,omitzero" api:"required"`
+	DataChannel DataChannelConfigParam `json:"data_channel" api:"required"`
 	paramObj
 }
 
@@ -5321,7 +5321,7 @@ func init() {
 type MediaSessionConfigDelegationResponsesParam struct {
 	// Backend model, prompt, and tools used when the Live session delegates a task to
 	// Responses.
-	Responses ResponsesDelegationConfigParam `json:"responses,omitzero" api:"required"`
+	Responses ResponsesDelegationConfigParam `json:"responses" api:"required"`
 	// Milliseconds to wait before requesting an automatic spoken acknowledgement for a
 	// delegation. The model may still speak before this delay. Any commentary or
 	// thinking appended to the session cancels all pending acknowledgements, including
@@ -11734,7 +11734,7 @@ func init() {
 type SessionConfigDelegationResponsesParam struct {
 	// Backend model, prompt, and tools used when the Live session delegates a task to
 	// Responses.
-	Responses ResponsesDelegationConfigParam `json:"responses,omitzero" api:"required"`
+	Responses ResponsesDelegationConfigParam `json:"responses" api:"required"`
 	// Milliseconds to wait before requesting an automatic spoken acknowledgement for a
 	// delegation. The model may still speak before this delay. Any commentary or
 	// thinking appended to the session cancels all pending acknowledgements, including
@@ -12553,9 +12553,9 @@ func (r *LiveNewResponseTransport) UnmarshalJSON(data []byte) error {
 
 type LiveNewParams struct {
 	// Startup configuration for the Live session.
-	Session MediaSessionConfigParam `json:"session,omitzero" api:"required"`
+	Session MediaSessionConfigParam `json:"session" api:"required"`
 	// WebRTC transport with the browser's SDP offer.
-	Transport LiveNewParamsTransport `json:"transport,omitzero" api:"required"`
+	Transport LiveNewParamsTransport `json:"transport" api:"required"`
 	paramObj
 }
 

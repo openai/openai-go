@@ -40,7 +40,7 @@ func TestBetaAgentNewWithOptionalParams(t *testing.T) {
 			"foo": "string",
 		},
 		MultiAgent: openai.MultiAgentConfigParam{
-			Enabled:                true,
+			Enabled:                openai.Bool(true),
 			MaxConcurrentSubagents: openai.Int(1),
 		},
 		Name: openai.String("name"),
@@ -130,7 +130,7 @@ func TestBetaAgentUpdateWithOptionalParams(t *testing.T) {
 			},
 			Model: openai.String("model"),
 			MultiAgent: openai.MultiAgentConfigParam{
-				Enabled:                true,
+				Enabled:                openai.Bool(true),
 				MaxConcurrentSubagents: openai.Int(1),
 			},
 			Name: openai.String("name"),

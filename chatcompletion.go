@@ -688,7 +688,7 @@ const (
 // The properties AllowedTools, Type are required.
 type ChatCompletionAllowedToolChoiceParam struct {
 	// Constrains the tools available to the model to a pre-defined set.
-	AllowedTools ChatCompletionAllowedToolsParam `json:"allowed_tools,omitzero" api:"required"`
+	AllowedTools ChatCompletionAllowedToolsParam `json:"allowed_tools" api:"required"`
 	// Allowed tool configuration type. Always `allowed_tools`.
 	//
 	// This field can be elided, and will marshal its zero value as "allowed_tools".
@@ -1826,7 +1826,7 @@ func init() {
 //
 // The properties File, Type are required.
 type ChatCompletionContentPartFileParam struct {
-	File ChatCompletionContentPartFileFileParam `json:"file,omitzero" api:"required"`
+	File ChatCompletionContentPartFileFileParam `json:"file" api:"required"`
 	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
 	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
 	// not rounded to a token block.
@@ -1990,7 +1990,7 @@ func (r *ChatCompletionContentPartImagePromptCacheBreakpoint) UnmarshalJSON(data
 //
 // The properties ImageURL, Type are required.
 type ChatCompletionContentPartImageParam struct {
-	ImageURL ChatCompletionContentPartImageImageURLParam `json:"image_url,omitzero" api:"required"`
+	ImageURL ChatCompletionContentPartImageImageURLParam `json:"image_url" api:"required"`
 	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
 	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
 	// not rounded to a token block.
@@ -2076,7 +2076,7 @@ func init() {
 //
 // The properties InputAudio, Type are required.
 type ChatCompletionContentPartInputAudioParam struct {
-	InputAudio ChatCompletionContentPartInputAudioInputAudioParam `json:"input_audio,omitzero" api:"required"`
+	InputAudio ChatCompletionContentPartInputAudioInputAudioParam `json:"input_audio" api:"required"`
 	// Marks the exact end of a reusable prompt prefix. When `ttl` is omitted, the
 	// breakpoint inherits the request's `prompt_cache_options.ttl`; the boundary is
 	// not rounded to a token block.
@@ -2303,7 +2303,7 @@ func init() {
 // The properties Custom, Type are required.
 type ChatCompletionCustomToolParam struct {
 	// Properties of the custom tool.
-	Custom ChatCompletionCustomToolCustomParam `json:"custom,omitzero" api:"required"`
+	Custom ChatCompletionCustomToolCustomParam `json:"custom" api:"required"`
 	// The type of the custom tool. Always `custom`.
 	//
 	// This field can be elided, and will marshal its zero value as "custom".
@@ -2411,7 +2411,7 @@ func (r *ChatCompletionCustomToolCustomFormatTextParam) UnmarshalJSON(data []byt
 // The properties Grammar, Type are required.
 type ChatCompletionCustomToolCustomFormatGrammarParam struct {
 	// Your chosen grammar.
-	Grammar ChatCompletionCustomToolCustomFormatGrammarGrammarParam `json:"grammar,omitzero" api:"required"`
+	Grammar ChatCompletionCustomToolCustomFormatGrammarGrammarParam `json:"grammar" api:"required"`
 	// Grammar format. Always `grammar`.
 	//
 	// This field can be elided, and will marshal its zero value as "grammar".
@@ -2573,7 +2573,7 @@ func (r *ChatCompletionFunctionMessageParam) UnmarshalJSON(data []byte) error {
 //
 // The properties Function, Type are required.
 type ChatCompletionFunctionToolParam struct {
-	Function shared.FunctionDefinitionParam `json:"function,omitzero" api:"required"`
+	Function shared.FunctionDefinitionParam `json:"function" api:"required"`
 	// The type of the tool. Currently, only `function` is supported.
 	//
 	// This field can be elided, and will marshal its zero value as "function".
@@ -2768,7 +2768,7 @@ type ChatCompletionMessageCustomToolCallParam struct {
 	// The ID of the tool call.
 	ID string `json:"id" api:"required"`
 	// The custom tool that the model called.
-	Custom ChatCompletionMessageCustomToolCallCustomParam `json:"custom,omitzero" api:"required"`
+	Custom ChatCompletionMessageCustomToolCallCustomParam `json:"custom" api:"required"`
 	// The type of the tool. Always `custom`.
 	//
 	// This field can be elided, and will marshal its zero value as "custom".
@@ -2868,7 +2868,7 @@ type ChatCompletionMessageFunctionToolCallParam struct {
 	// The ID of the tool call.
 	ID string `json:"id" api:"required"`
 	// The function that the model called.
-	Function ChatCompletionMessageFunctionToolCallFunctionParam `json:"function,omitzero" api:"required"`
+	Function ChatCompletionMessageFunctionToolCallFunctionParam `json:"function" api:"required"`
 	// The type of the tool. Currently, only `function` is supported.
 	//
 	// This field can be elided, and will marshal its zero value as "function".
@@ -3264,7 +3264,7 @@ func init() {
 //
 // The properties Function, Type are required.
 type ChatCompletionNamedToolChoiceParam struct {
-	Function ChatCompletionNamedToolChoiceFunctionParam `json:"function,omitzero" api:"required"`
+	Function ChatCompletionNamedToolChoiceFunctionParam `json:"function" api:"required"`
 	// For function calling, the type is always `function`.
 	//
 	// This field can be elided, and will marshal its zero value as "function".
@@ -3300,7 +3300,7 @@ func (r *ChatCompletionNamedToolChoiceFunctionParam) UnmarshalJSON(data []byte) 
 //
 // The properties Custom, Type are required.
 type ChatCompletionNamedToolChoiceCustomParam struct {
-	Custom ChatCompletionNamedToolChoiceCustomCustomParam `json:"custom,omitzero" api:"required"`
+	Custom ChatCompletionNamedToolChoiceCustomCustomParam `json:"custom" api:"required"`
 	// For custom tool calling, the type is always `custom`.
 	//
 	// This field can be elided, and will marshal its zero value as "custom".
@@ -4506,7 +4506,7 @@ func init() {
 // The properties Approximate, Type are required.
 type ChatCompletionNewParamsWebSearchOptionsUserLocation struct {
 	// Approximate location parameters for the search.
-	Approximate ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate `json:"approximate,omitzero" api:"required"`
+	Approximate ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate `json:"approximate" api:"required"`
 	// The type of location approximation. Always `approximate`.
 	//
 	// This field can be elided, and will marshal its zero value as "approximate".

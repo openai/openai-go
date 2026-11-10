@@ -1893,7 +1893,7 @@ func (r *ResponseFormatJSONSchemaJSONSchema) UnmarshalJSON(data []byte) error {
 // The properties JSONSchema, Type are required.
 type ResponseFormatJSONSchemaParam struct {
 	// Structured Outputs configuration options, including a JSON Schema.
-	JSONSchema ResponseFormatJSONSchemaJSONSchemaParam `json:"json_schema,omitzero" api:"required"`
+	JSONSchema ResponseFormatJSONSchemaJSONSchemaParam `json:"json_schema" api:"required"`
 	// The type of response format being defined. Always `json_schema`.
 	//
 	// This field can be elided, and will marshal its zero value as "json_schema".
