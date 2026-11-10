@@ -62,9 +62,6 @@ type Client struct {
 	Conversations conversations.ConversationService
 	Containers    ContainerService
 	Skills        SkillService
-	// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
-	// 2026.
-	Videos VideoService
 }
 
 // DefaultClientOptions read from the environment (OPENAI_API_KEY,
@@ -144,7 +141,6 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 	r.Conversations = conversations.NewConversationService(opts...)
 	r.Containers = NewContainerService(opts...)
 	r.Skills = NewSkillService(opts...)
-	r.Videos = NewVideoService(opts...)
 
 	return
 }

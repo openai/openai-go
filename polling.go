@@ -120,38 +120,3 @@ func (r *VectorStoreFileBatchService) PollStatus(ctx context.Context, vectorStor
 		}
 	}
 }
-
-// PollStatus waits until a VectorStoreFile is no longer in an incomplete state and returns it.
-// Pass 0 as pollIntervalMs to use the default polling interval of 1 second.
-// Server-suggested intervals are limited to 8 seconds; pass a positive value to
-// explicitly use a longer interval.
-//
-// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
-// 2026.
-func (r *VideoService) PollStatus(ctx context.Context, videoID string, pollIntervalMs int, opts ...option.RequestOption) (*Video, error) {
-	var raw *http.Response
-	var interval time.Duration
-	opts = append(opts, mkPollingOptions(pollIntervalMs)...)
-	opts = append(opts, option.WithResponseInto(&raw))
-	for {
-		video, err := r.Get(ctx, videoID, opts...)
-		if err != nil {
-			return nil, fmt.Errorf("error running video poll: received %w", err)
-		}
-
-		switch video.Status {
-		case VideoStatusQueued, VideoStatusInProgress:
-			if interval == 0 {
-				interval = pollInterval(pollIntervalMs, raw)
-			}
-			if err := requestconfig.WaitForDelay(ctx, interval); err != nil {
-				return nil, err
-			}
-		case VideoStatusCompleted,
-			VideoStatusFailed:
-			return video, nil
-		default:
-			return nil, fmt.Errorf("invalid video status during polling: received %s", video.Status)
-		}
-	}
-}
