@@ -27,7 +27,7 @@ func TestBetaResponseConcurrentRequestOptions(t *testing.T) {
 					w.WriteHeader(http.StatusBadRequest)
 					return
 				}
-				want := []string{"caller-beta", body.Instructions}
+				want := []string{body.Instructions, "caller-beta"}
 				if got := r.Header.Values("OpenAI-Beta"); !slices.Equal(got, want) {
 					t.Errorf("request %s: beta headers = %q, want %q", body.Instructions, got, want)
 				}

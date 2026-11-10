@@ -42,10 +42,11 @@ func NewBetaResponseInputTokenService(opts ...option.RequestOption) (r BetaRespo
 // Returns an object with `object` set to `response.input_tokens` and an
 // `input_tokens` count.
 func (r *BetaResponseInputTokenService) Count(ctx context.Context, params BetaResponseInputTokenCountParams, opts ...option.RequestOption) (res *BetaResponseInputTokenCountResponse, err error) {
-	opts = slices.Clone(opts)
+	var headerOpts []option.RequestOption
 	for _, v := range params.Betas {
-		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
+		headerOpts = append(headerOpts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
+	opts = slices.Concat(headerOpts, opts)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "responses/input_tokens?beta=true"

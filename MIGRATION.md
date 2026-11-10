@@ -51,6 +51,14 @@ structs with a field for each variant, wherein only one field can be set.
 These struct unions also expose 'Get' methods to access and mutate subfields
 which may be shared by multiple variants.
 
+## Typed headers and per-call options in v4
+
+Go v4 applies service defaults first, typed header parameters second, and per-call options last. A call that supplies a typed `IdempotencyKey` of `"from-params"` and `option.WithHeader("Idempotency-Key", "from-option")` sends `"from-option"`. In v3 it sends `"from-params"`.
+
+Choose one source for each idempotency key. To keep the typed key, remove the conflicting per-call option. Reuse the same key for retries of one operation and use a distinct key for each new operation.
+
+Check shared options for `WithHeaderDel` and `WithHeaderAdd` as well. Deleting a typed header removes it from the request. Adding values to a repeated header such as `OpenAI-Beta` places them after the typed values, in the order you supplied them.
+
 # Request parameters
 
 ## Required primitives parameters serialize their zero values (`string`, `int64`, etc.)

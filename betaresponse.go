@@ -61,10 +61,11 @@ func NewBetaResponseService(opts ...option.RequestOption) (r BetaResponseService
 // [file search](https://developers.openai.com/api/docs/guides/tools-file-search)
 // to use your own data as input for the model's response.
 func (r *BetaResponseService) New(ctx context.Context, params BetaResponseNewParams, opts ...option.RequestOption) (res *BetaResponse, err error) {
-	opts = slices.Clone(opts)
+	var headerOpts []option.RequestOption
 	for _, v := range params.Betas {
-		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
+		headerOpts = append(headerOpts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
+	opts = slices.Concat(headerOpts, opts)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "responses?beta=true"
@@ -88,10 +89,11 @@ func (r *BetaResponseService) NewStreaming(ctx context.Context, params BetaRespo
 		raw *http.Response
 		err error
 	)
-	opts = slices.Clone(opts)
+	var headerOpts []option.RequestOption
 	for _, v := range params.Betas {
-		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
+		headerOpts = append(headerOpts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
+	opts = slices.Concat(headerOpts, opts)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append(opts, option.WithJSONSet("stream", true))
@@ -102,10 +104,11 @@ func (r *BetaResponseService) NewStreaming(ctx context.Context, params BetaRespo
 
 // Retrieves a model response with the given ID.
 func (r *BetaResponseService) Get(ctx context.Context, responseID string, params BetaResponseGetParams, opts ...option.RequestOption) (res *BetaResponse, err error) {
-	opts = slices.Clone(opts)
+	var headerOpts []option.RequestOption
 	for _, v := range params.Betas {
-		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
+		headerOpts = append(headerOpts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
+	opts = slices.Concat(headerOpts, opts)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if responseID == "" {
@@ -123,10 +126,11 @@ func (r *BetaResponseService) GetStreaming(ctx context.Context, responseID strin
 		raw *http.Response
 		err error
 	)
-	opts = slices.Clone(opts)
+	var headerOpts []option.RequestOption
 	for _, v := range params.Betas {
-		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
+		headerOpts = append(headerOpts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
+	opts = slices.Concat(headerOpts, opts)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append(opts, option.WithJSONSet("stream", true))
@@ -141,10 +145,11 @@ func (r *BetaResponseService) GetStreaming(ctx context.Context, responseID strin
 
 // Deletes a model response with the given ID.
 func (r *BetaResponseService) Delete(ctx context.Context, responseID string, body BetaResponseDeleteParams, opts ...option.RequestOption) (err error) {
-	opts = slices.Clone(opts)
+	var headerOpts []option.RequestOption
 	for _, v := range body.Betas {
-		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
+		headerOpts = append(headerOpts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
+	opts = slices.Concat(headerOpts, opts)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
@@ -161,10 +166,11 @@ func (r *BetaResponseService) Delete(ctx context.Context, responseID string, bod
 // `background` parameter set to `true` can be cancelled.
 // [Learn more](https://developers.openai.com/api/docs/guides/background).
 func (r *BetaResponseService) Cancel(ctx context.Context, responseID string, body BetaResponseCancelParams, opts ...option.RequestOption) (res *BetaResponse, err error) {
-	opts = slices.Clone(opts)
+	var headerOpts []option.RequestOption
 	for _, v := range body.Betas {
-		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
+		headerOpts = append(headerOpts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
+	opts = slices.Concat(headerOpts, opts)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if responseID == "" {
@@ -183,10 +189,11 @@ func (r *BetaResponseService) Cancel(ctx context.Context, responseID string, bod
 // For ZDR-compatible compaction details, see
 // [Compaction (advanced)](https://developers.openai.com/api/docs/guides/conversation-state#compaction-advanced).
 func (r *BetaResponseService) Compact(ctx context.Context, params BetaResponseCompactParams, opts ...option.RequestOption) (res *BetaCompactedResponse, err error) {
-	opts = slices.Clone(opts)
+	var headerOpts []option.RequestOption
 	for _, v := range params.Betas {
-		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
+		headerOpts = append(headerOpts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
+	opts = slices.Concat(headerOpts, opts)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "responses/compact?beta=true"
