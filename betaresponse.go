@@ -4526,6 +4526,8 @@ type BetaResponse struct {
 	// from this response were automatically added to this conversation.
 	Conversation BetaResponseConversation `json:"conversation" api:"nullable"`
 	Image        BetaResponseImage        `json:"image"`
+	// Reasoning inputs withheld from the model, in input order.
+	InputTransformations []BetaResponseInputTransformation `json:"input_transformations"`
 	// An upper bound for the number of tokens that can be generated for a response,
 	// including visible output tokens and
 	// [reasoning tokens](https://developers.openai.com/api/docs/guides/reasoning).
@@ -4687,6 +4689,7 @@ type BetaResponse struct {
 		CompletedAt            respjson.Field
 		Conversation           respjson.Field
 		Image                  respjson.Field
+		InputTransformations   respjson.Field
 		MaxOutputTokens        respjson.Field
 		MaxToolCalls           respjson.Field
 		Moderation             respjson.Field
@@ -5315,6 +5318,31 @@ type BetaResponseImage struct {
 // Returns the unmodified JSON received from the API
 func (r BetaResponseImage) RawJSON() string { return r.JSON.raw }
 func (r *BetaResponseImage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponseInputTransformation struct {
+	// The original reasoning item ID.
+	ID     string           `json:"id" api:"required"`
+	Action constant.Removed `json:"action" default:"removed"`
+	// Any of "organization_mismatch", "end_user_mismatch", "model_mismatch",
+	// "prefix_mismatch", "turn_boundary".
+	Reason string             `json:"reason" api:"required"`
+	Type   constant.Reasoning `json:"type" default:"reasoning"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Action      respjson.Field
+		Reason      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseInputTransformation) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseInputTransformation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

@@ -385,6 +385,7 @@ type RealtimeSession string                                   // Always "realtim
 type Reasoning string                                         // Always "reasoning"
 type ReasoningText string                                     // Always "reasoning_text"
 type Refusal string                                           // Always "refusal"
+type Removed string                                           // Always "removed"
 type Response string                                          // Always "response"
 type ResponseAudioDelta string                                // Always "response.audio.delta"
 type ResponseAudioDone string                                 // Always "response.audio.done"
@@ -1198,6 +1199,7 @@ func (c RealtimeSession) Default() RealtimeSession           { return "realtime.
 func (c Reasoning) Default() Reasoning                       { return "reasoning" }
 func (c ReasoningText) Default() ReasoningText               { return "reasoning_text" }
 func (c Refusal) Default() Refusal                           { return "refusal" }
+func (c Removed) Default() Removed                           { return "removed" }
 func (c Response) Default() Response                         { return "response" }
 func (c ResponseAudioDelta) Default() ResponseAudioDelta     { return "response.audio.delta" }
 func (c ResponseAudioDone) Default() ResponseAudioDone       { return "response.audio.done" }
@@ -1983,6 +1985,7 @@ func (c RealtimeSession) MarshalJSON() ([]byte, error)                       { r
 func (c Reasoning) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c ReasoningText) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c Refusal) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
+func (c Removed) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c Response) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c ResponseAudioDelta) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c ResponseAudioDone) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
