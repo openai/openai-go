@@ -1,5 +1,29 @@
 # Changelog
 
+## [3.99.0](https://github.com/openai/openai-go/compare/v3.98.0...v3.99.0) (2026-11-12)
+
+
+### Features
+
+* **api:** decode reasoning input transformations on responses ([#1251](https://github.com/openai/openai-go/issues/1251)) ([fdf7743](https://github.com/openai/openai-go/commit/fdf774366001768f31d7385daa1078937dd27f63))
+
+
+### Bug Fixes
+
+* **examples:** handle structured output completion and final answers ([#1249](https://github.com/openai/openai-go/issues/1249)) ([d28b18e](https://github.com/openai/openai-go/commit/d28b18e262f369106de4f9dce38b2252e7d8ecd1))
+
+
+### Documentation
+
+* simplify review handoff instructions ([#1244](https://github.com/openai/openai-go/issues/1244)) ([509b662](https://github.com/openai/openai-go/commit/509b6628f7ed50f8b9b6e63616f234ae2eaa724c))
+
+
+### Build System
+
+* **deps:** bump github.com/aws/aws-sdk-go-v2 in / ([#1228](https://github.com/openai/openai-go/issues/1228)) ([680961e](https://github.com/openai/openai-go/commit/680961e04fd9cccbf9b3569289cacea9194c67ba))
+* **deps:** bump github.com/aws/aws-sdk-go-v2/config in / ([#1229](https://github.com/openai/openai-go/issues/1229)) ([3d2f45c](https://github.com/openai/openai-go/commit/3d2f45caf3d1c1d4acc631537d0dce70e95dfb26))
+* **deps:** bump github.com/Azure/azure-sdk-for-go/sdk/azidentity in / ([#1155](https://github.com/openai/openai-go/issues/1155)) ([ad7d72c](https://github.com/openai/openai-go/commit/ad7d72caef326705d8093dd9f51b1e742df3621f))
+
 ## [3.98.0](https://github.com/openai/openai-go/compare/v3.97.0...v3.98.0) (2026-11-09)
 
 
