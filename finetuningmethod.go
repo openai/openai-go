@@ -832,7 +832,7 @@ type ReinforcementMethodGraderUnion struct {
 	// This field is from variant [MultiGrader].
 	CalculateOutput string `json:"calculate_output"`
 	// This field is from variant [MultiGrader].
-	Graders MultiGraderGradersUnion `json:"graders"`
+	Graders map[string]MultiGraderGraderUnion `json:"graders"`
 	JSON    struct {
 		Input            respjson.Field
 		Name             respjson.Field
@@ -1016,9 +1016,9 @@ func (u ReinforcementMethodGraderUnionParam) GetCalculateOutput() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ReinforcementMethodGraderUnionParam) GetGraders() *MultiGraderGradersUnionParam {
+func (u ReinforcementMethodGraderUnionParam) GetGraders() map[string]MultiGraderGraderUnionParam {
 	if vt := u.OfMultiGrader; vt != nil {
-		return &vt.Graders
+		return vt.Graders
 	}
 	return nil
 }

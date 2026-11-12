@@ -2,6 +2,32 @@
 
 <a href="https://pkg.go.dev/github.com/openai/openai-go/v3"><img src="https://pkg.go.dev/badge/github.com/openai/openai-go.svg" alt="Go Reference"></a>
 
+## Float and encoded embeddings in v4
+
+`Embedding.Embedding` holds a vector or the encoded string returned by the API.
+Select the variant that matches the requested encoding.
+
+```go
+vector := result.Data[0].Embedding.OfEmbeddingEmbeddingArray
+encoded := result.Data[0].Embedding.OfString
+```
+
+Request `encoding_format: "float"` to receive a vector. When requesting base64,
+decode the string in your application if you need float values.
+
+## Named MultiGrader entries in v4
+
+`MultiGraderParam.Graders` is a map. Use the same keys in the formula and
+when reading the returned graders.
+
+```go
+params.Graders = map[string]openai.MultiGraderGraderUnionParam{
+    "exact": exactGrader,
+    "similarity": similarityGrader,
+}
+params.CalculateOutput = "(exact + similarity) / 2"
+```
+
 ## Go v4 breaking change: Azure Identity version selection
 
 If your application uses `azidentity`, declare the version it needs in your own
