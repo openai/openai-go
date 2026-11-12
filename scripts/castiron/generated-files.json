@@ -543,7 +543,7 @@
     },
     "betaresponse.go": {
       "mode": "100644",
-      "sha256": "5cb4d1022c842a129f461b44b0a4e4067a3243f016c6e891b9fecb788b73b1d4"
+      "sha256": "58ce3d38e629ab29336ba27c4010c47f1452cb07534373a5f9cb0810fe73dbd1"
     },
     "betaresponse_test.go": {
       "mode": "100644",
@@ -963,7 +963,7 @@
     },
     "responses/response.go": {
       "mode": "100644",
-      "sha256": "919d99e0bf8c65bd9b8d1d9458c597d034855108e604866753ba23a481e91bdd"
+      "sha256": "0305f9ae019fe64064c5abdfeabbdc85d6f67e9417de3724094b5be5b632c5a4"
     },
     "responses/response_test.go": {
       "mode": "100644",
@@ -1003,7 +1003,7 @@
     },
     "shared/constant/constants.go": {
       "mode": "100644",
-      "sha256": "6413d4c3945cafef0125c5609319ea72741f97efa946f43b28856e18412c7e91"
+      "sha256": "3882be4f868be216ff857860a69cf1b1884703056af4916c5f4e4c51c75c57a6"
     },
     "shared/shared.go": {
       "mode": "100644",
