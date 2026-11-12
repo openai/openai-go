@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/invopop/jsonschema"
@@ -74,6 +75,45 @@ func historicalComputerParams(question string, schema map[string]any) responses.
 	}
 }
 
+// This example expects one JSON text part from a completed final answer.
+func historicalComputerFromResponse(response *responses.Response) (*HistoricalComputer, error) {
+	if response.Status != responses.ResponseStatusCompleted {
+		return nil, fmt.Errorf("response did not complete: %s", response.Status)
+	}
+	var text *string
+	for _, item := range response.Output {
+		if item.Type != "message" || (item.Phase != "" && item.Phase != responses.ResponseOutputMessagePhaseFinalAnswer) {
+			continue
+		}
+		if item.Status != "completed" {
+			return nil, errors.New("final output message did not complete")
+		}
+		for _, part := range item.Content {
+			switch part.Type {
+			case "refusal":
+				return nil, errors.New("model refused the request")
+			case "output_text":
+				if text != nil {
+					return nil, errors.New("expected one final JSON text part")
+				}
+				text = &part.Text
+			}
+		}
+	}
+	if text == nil {
+		return nil, errors.New("response has no final JSON text")
+	}
+	// JSON decoding is not JSON Schema or business-rule validation.
+	var computer *HistoricalComputer
+	if err := json.Unmarshal([]byte(*text), &computer); err != nil {
+		return nil, fmt.Errorf("decode historical computer: %w", err)
+	}
+	if computer == nil {
+		return nil, errors.New("expected a JSON object, received null")
+	}
+	return computer, nil
+}
+
 func main() {
 	client := openai.NewClient()
 	ctx := context.Background()
@@ -93,9 +133,8 @@ func main() {
 		panic(errutil.Message(err))
 	}
 
-	// The model responds with a JSON string, so parse it into a struct
-	var historicalComputer HistoricalComputer
-	err = json.Unmarshal([]byte(response.OutputText()), &historicalComputer)
+	// Select the final answer before decoding its JSON into a Go struct.
+	historicalComputer, err := historicalComputerFromResponse(response)
 	if err != nil {
 		panic(errutil.Message(err))
 	}
