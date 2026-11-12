@@ -43,8 +43,10 @@ func TestDecisionsPreserveResponseItemGetters(t *testing.T) {
 
 func TestDecisionsConcreteItemsRetainWireBody(t *testing.T) {
 	item := &live.DecisionItemCreateEventParam{
-		Item: live.DecisionItemCreateEventItemParam{
-			Content: live.DecisionItemCreateEventItemContentUnionParam{OfString: openai.String("synthetic input")},
+		Item: live.DecisionItemCreateEventItemUnionParam{
+			OfUserMessage: &live.DecisionUserMessageParam{
+				Content: live.DecisionUserMessageContentUnionParam{OfString: openai.String("synthetic input")},
+			},
 		},
 	}
 	for _, event := range []responseItemGetter{
@@ -71,6 +73,65 @@ func TestDecisionsConcreteItemsRetainWireBody(t *testing.T) {
 		}
 		if got.Type != "decision.item.create" || got.Item.Content != "synthetic input" || got.Item.Role != "user" {
 			t.Errorf("%T lost its concrete Decision item: %s", event, body)
+		}
+	}
+}
+
+func TestDecisionsShareQuestionInstructions(t *testing.T) {
+	instructions := live.DecisionQuestionInstructionsUnionParam{
+		OfParts: []live.DecisionQuestionInstructionPartUnionParam{
+			{OfInputText: &live.DecisionInputTextParam{Text: "review"}},
+		},
+	}
+	questions := []live.DecisionQuestionUnionParam{
+		{OfChoice: &live.DecisionQuestionChoiceParam{
+			Instructions: instructions,
+			Choices: []live.DecisionChoiceOptionParam{
+				{Value: live.DecisionChoiceOptionValueUnionParam{OfString: openai.String("yes")}},
+				{Value: live.DecisionChoiceOptionValueUnionParam{OfString: openai.String("no")}},
+			},
+		}},
+		{OfPredicate: &live.DecisionQuestionPredicateParam{Instructions: instructions}},
+		{OfScore: &live.DecisionQuestionScoreParam{
+			Instructions: instructions,
+			Levels:       []live.DecisionQuestionScoreLevelParam{{Label: "low"}, {Label: "high"}},
+		}},
+	}
+	body, err := json.Marshal(questions)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var wire []struct {
+		Type         string
+		Instructions []struct{ Type, Text string }
+	}
+	if err := json.Unmarshal(body, &wire); err != nil {
+		t.Fatal(err)
+	}
+	wantTypes := []string{"choice", "predicate", "score"}
+	if len(wire) != len(wantTypes) {
+		t.Fatalf("questions = %s", body)
+	}
+	for i, want := range wantTypes {
+		got := wire[i]
+		if got.Type != want || len(got.Instructions) != 1 ||
+			got.Instructions[0].Type != "input_text" || got.Instructions[0].Text != "review" {
+			t.Errorf("%s question wire = %+v", want, got)
+		}
+	}
+
+	var decoded []live.DecisionQuestionUnion
+	if err := json.Unmarshal(body, &decoded); err != nil {
+		t.Fatal(err)
+	}
+	for i, got := range []live.DecisionQuestionInstructionsUnion{
+		decoded[0].AsDecisionQuestionChoice().Instructions,
+		decoded[1].AsDecisionQuestionPredicate().Instructions,
+		decoded[2].AsDecisionQuestionScore().Instructions,
+	} {
+		parts := got.AsParts()
+		if len(parts) != 1 || parts[0].AsDecisionInputText().Text != "review" {
+			t.Errorf("%s decoded instructions = %+v", wantTypes[i], got)
 		}
 	}
 }
