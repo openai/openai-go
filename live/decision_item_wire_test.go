@@ -1,9 +1,9 @@
 package live_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -19,16 +19,21 @@ import (
 
 func TestDecisionItemTypedSendPreservesWireItems(t *testing.T) {
 	items := map[string]string{
-		"user":                 `{"type":"message","role":"user","content":"hello"}`,
-		"system":               `{"type":"message","role":"system","content":"hello"}`,
-		"developer":            `{"type":"message","role":"developer","content":"hello"}`,
-		"assistant":            `{"type":"message","role":"assistant","content":"hello"}`,
-		"implicit_message":     `{"role":"user","content":"hello"}`,
-		"json_content":         `{"type":"message","role":"user","content":[{"type":"input_json","json":{"ready":true}}]}`,
-		"function_call":        `{"type":"function_call","call_id":"call_test","name":"weather","arguments":"{}","future":{"keep":true}}`,
-		"function_call_output": `{"type":"function_call_output","call_id":"call_test","output":"done"}`,
-		"custom_tool_call":     `{"type":"custom_tool_call","call_id":"call_test","name":"weather","input":"hello"}`,
-		"custom_tool_output":   `{"type":"custom_tool_call_output","call_id":"call_test","output":"done"}`,
+		"user":                       `{"type":"message","role":"user","content":"hello"}`,
+		"system":                     `{"type":"message","role":"system","content":"hello"}`,
+		"developer":                  `{"type":"message","role":"developer","content":"hello"}`,
+		"assistant":                  `{"type":"message","role":"assistant","content":"hello"}`,
+		"implicit_message":           `{"role":"user","content":"hello"}`,
+		"future_item":                `{"type":"future_item","payload":{"keep":true}}`,
+		"json_content":               `{"type":"message","role":"user","content":[{"type":"input_json","json":{"ready":true}}]}`,
+		"json_content_object":        `{"type":"message","role":"user","content":[{"type":"input_json","data":{"nested":{"id":9007199254740993}}}]}`,
+		"json_content_array":         `{"type":"message","role":"user","content":[{"type":"input_json","data":[{"ids":[9007199254740993]}]}]}`,
+		"function_call":              `{"type":"function_call","call_id":"call_test","name":"weather","arguments":"{}","future":{"keep":true}}`,
+		"function_call_output":       `{"type":"function_call_output","call_id":"call_test","output":"done"}`,
+		"custom_tool_call":           `{"type":"custom_tool_call","call_id":"call_test","name":"weather","input":"hello"}`,
+		"custom_tool_output":         `{"type":"custom_tool_call_output","call_id":"call_test","output":"done"}`,
+		"function_call_output_parts": `{"type":"function_call_output","call_id":"call_test","output":[{"type":"input_text","text":"done","future":true}]}`,
+		"custom_tool_output_parts":   `{"type":"custom_tool_call_output","call_id":"call_test","output":[{"type":"input_text","text":"done","future":{"keep":true}}]}`,
 	}
 	for _, family := range []string{"primary", "sideband", "fork"} {
 		for name, item := range items {
@@ -109,29 +114,28 @@ func sendDecisionWireItem(ctx context.Context, client openai.Client, family stri
 }
 
 func TestDecisionItemDecodedKnownFieldsRemainMutable(t *testing.T) {
-	var item live.DecisionItemCreateEventItemParam
-	if err := json.Unmarshal([]byte(`{"type":"function_call","call_id":"call_test","name":"weather","arguments":"{}"}`), &item); err != nil {
+	var item live.DecisionItemCreateEventItemUnionParam
+	if err := json.Unmarshal([]byte(`{"type":"function_call","call_id":"call_test","name":"weather","arguments":"{}","future":{"keep":true}}`), &item); err != nil {
 		t.Fatal(err)
 	}
-	item.ID = openai.String("item_changed")
-	item.Role = "assistant"
+	if item.OfFunctionCall == nil {
+		t.Fatal("function call variant was not selected")
+	}
+	item.OfFunctionCall.ID = openai.String("item_changed")
+	item.OfFunctionCall.Arguments = `{"city":"Boston"}`
 	data, err := json.Marshal(item)
 	if err != nil {
 		t.Fatal(err)
 	}
-	assertDecisionWireJSON(t, data, []byte(`{"type":"function_call","id":"item_changed","role":"assistant","call_id":"call_test","name":"weather","arguments":"{}"}`))
-	item.Type = "message"
-	item.Content.OfString = openai.String("changed")
-	data, err = json.Marshal(item)
-	if err != nil {
-		t.Fatal(err)
-	}
-	assertDecisionWireJSON(t, data, []byte(`{"type":"message","id":"item_changed","role":"assistant","content":"changed","call_id":"call_test","name":"weather","arguments":"{}"}`))
+	assertDecisionWireJSON(t, data, []byte(`{"type":"function_call","id":"item_changed","call_id":"call_test","name":"weather","arguments":"{\"city\":\"Boston\"}","future":{"keep":true}}`))
 }
 
 func TestDecisionItemManualToolFieldsDoNotAddRole(t *testing.T) {
-	item := live.DecisionItemCreateEventItemParam{Type: "function_call"}
-	item.SetExtraFields(map[string]any{"call_id": "call_test", "name": "weather", "arguments": "{}"})
+	item := live.DecisionItemCreateEventItemUnionParam{
+		OfFunctionCall: &live.DecisionItemCreateEventItemFunctionCallParam{
+			CallID: "call_test", Name: "weather", Arguments: "{}",
+		},
+	}
 	data, err := json.Marshal(item)
 	if err != nil {
 		t.Fatal(err)
@@ -140,38 +144,33 @@ func TestDecisionItemManualToolFieldsDoNotAddRole(t *testing.T) {
 }
 
 func TestDecisionItemExplicitOverridesKeepPrecedence(t *testing.T) {
-	item := live.DecisionItemCreateEventItemParam{Type: "function_call"}
-	item.SetExtraFields(map[string]any{"role": "system", "call_id": "call_test", "name": "weather", "arguments": "{}"})
+	var item live.DecisionItemCreateEventItemFunctionCallParam
+	if err := json.Unmarshal([]byte(`{"type":"function_call","call_id":"call_test","name":"weather","arguments":"{}","future":true}`), &item); err != nil {
+		t.Fatal(err)
+	}
+	item.SetExtraFields(map[string]any{"name": "forecast", "future": param.Omit})
 	data, err := json.Marshal(item)
 	if err != nil {
 		t.Fatal(err)
 	}
-	assertDecisionWireJSON(t, data, []byte(`{"type":"function_call","role":"system","call_id":"call_test","name":"weather","arguments":"{}"}`))
-	item.Role = "assistant"
-	item.SetExtraFields(map[string]any{"role": param.Omit})
-	data, err = json.Marshal(item)
-	if err != nil {
-		t.Fatal(err)
-	}
-	assertDecisionWireJSON(t, data, []byte(`{"type":"function_call"}`))
+	assertDecisionWireJSON(t, data, []byte(`{"type":"function_call","call_id":"call_test","name":"forecast","arguments":"{}"}`))
 
 	raw := json.RawMessage(`{"type":"future_item","role":null,"keep":true}`)
-	item = param.Override[live.DecisionItemCreateEventItemParam](raw)
-	data, err = json.Marshal(item)
+	union := param.Override[live.DecisionItemCreateEventItemUnionParam](raw)
+	data, err = json.Marshal(union)
 	if err != nil {
 		t.Fatal(err)
 	}
 	assertDecisionWireJSON(t, data, raw)
 
-	item = param.NullStruct[live.DecisionItemCreateEventItemParam]()
-	data, err = json.Marshal(item)
+	data, err = json.Marshal(param.NullStruct[live.DecisionItemCreateEventItemUnionParam]())
 	if err != nil || string(data) != "null" {
 		t.Fatalf("null override changed: %s, %v", data, err)
 	}
 }
 
 func TestDecisionItemReusedMetadata(t *testing.T) {
-	type itemParam = live.DecisionItemCreateEventItemParam
+	type itemParam = live.DecisionUserMessageParam
 	tests := []struct {
 		name         string
 		seed         func(map[string]any) itemParam
@@ -266,7 +265,7 @@ func TestDecisionItemReusedMetadata(t *testing.T) {
 func TestDecisionItemEmptyDecodePreservesOmission(t *testing.T) {
 	for _, input := range []string{`null`, `{}`} {
 		t.Run(input, func(t *testing.T) {
-			var item live.DecisionItemCreateEventItemParam
+			var item live.DecisionItemCreateEventItemUnionParam
 			if err := json.Unmarshal([]byte(input), &item); err != nil {
 				t.Fatal(err)
 			}
@@ -278,7 +277,7 @@ func TestDecisionItemEmptyDecodePreservesOmission(t *testing.T) {
 }
 
 func TestDecisionItemNilReceiverPreservesError(t *testing.T) {
-	var item *live.DecisionItemCreateEventItemParam
+	var item *live.DecisionItemCreateEventItemUnionParam
 	if err := item.UnmarshalJSON([]byte(`null`)); err == nil {
 		t.Fatal("nil receiver must return an error")
 	}
@@ -287,7 +286,7 @@ func TestDecisionItemNilReceiverPreservesError(t *testing.T) {
 func TestDecisionItemRepeatedDecodeKeepsLatestToolCall(t *testing.T) {
 	for _, override := range []string{"none", "before-decode", "after-decode"} {
 		t.Run(override, func(t *testing.T) {
-			var item live.DecisionItemCreateEventItemParam
+			var item live.DecisionItemCreateEventItemFunctionCallParam
 			// RawMessage is valid caller data too. It must never be mistaken
 			// for an automatically decoded field that later inputs can replace.
 			caller := map[string]any{"call_id": json.RawMessage(`"caller"`), "name": param.Omit}
@@ -309,15 +308,14 @@ func TestDecisionItemRepeatedDecodeKeepsLatestToolCall(t *testing.T) {
 			if decodeErr := json.Unmarshal([]byte(`{"id":"item2","call_id":"call2","name":"second","arguments":"{\"second\":2}"}`), &item); decodeErr != nil {
 				t.Fatal(decodeErr)
 			}
-			// Typed fields remain mutable while repeated decoding updates extras.
-			item.Role = "assistant"
+			// Repeated decoding updates wire fields and retains caller extras.
 			got, err := json.Marshal(item)
 			if err != nil {
 				t.Fatal(err)
 			}
-			want := `{"id":"item2","type":"function_call","role":"assistant","call_id":"call2","name":"second","arguments":"{\"second\":2}","keep":"first-only"}`
+			want := `{"id":"item2","type":"function_call","call_id":"call2","name":"second","arguments":"{\"second\":2}","keep":"first-only"}`
 			if override != "none" {
-				want = `{"id":"item2","type":"function_call","role":"assistant","call_id":"caller","arguments":"{\"second\":2}","keep":"first-only"}`
+				want = `{"id":"item2","type":"function_call","call_id":"caller","arguments":"{\"second\":2}","keep":"first-only"}`
 			}
 			assertDecisionWireJSON(t, got, []byte(want))
 
@@ -342,13 +340,51 @@ func TestDecisionItemRepeatedDecodeKeepsLatestToolCall(t *testing.T) {
 	}
 }
 
+func TestDecisionJSONContentEditsPreserveNumbers(t *testing.T) {
+	t.Run("message object", func(t *testing.T) {
+		var part live.DecisionUserMessageContentPartInputJSONParam
+		if err := json.Unmarshal([]byte(`{"type":"input_json","data":{"id":9007199254740993,"label":"before"}}`), &part); err != nil {
+			t.Fatal(err)
+		}
+		if part.Data.OfLiveDecisionJSONObject == nil {
+			t.Fatal("object data variant was not selected")
+		}
+		(*part.Data.OfLiveDecisionJSONObject)["label"] = "after"
+		(*part.Data.OfLiveDecisionJSONObject)["nullable"] = param.NullMap[live.DecisionJSONObject]()
+		wire, err := json.Marshal(part)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assertDecisionWireJSON(t, wire, []byte(`{"type":"input_json","data":{"id":9007199254740993,"label":"after","nullable":null}}`))
+	})
+	t.Run("instruction array", func(t *testing.T) {
+		var part live.DecisionQuestionInstructionPartInputJSONParam
+		if err := json.Unmarshal([]byte(`{"type":"input_json","data":[{"id":9007199254740993,"label":"before"}]}`), &part); err != nil {
+			t.Fatal(err)
+		}
+		if len(part.Data.OfArrayOfJSONObjects) != 1 {
+			t.Fatal("array data variant was not selected")
+		}
+		part.Data.OfArrayOfJSONObjects[0]["label"] = "after"
+		wire, err := json.Marshal(part)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assertDecisionWireJSON(t, wire, []byte(`{"type":"input_json","data":[{"id":9007199254740993,"label":"after"}]}`))
+	})
+}
+
 func assertDecisionWireJSON(t *testing.T, got, want []byte) {
 	t.Helper()
 	var gotValue, wantValue any
-	if err := json.Unmarshal(got, &gotValue); err != nil {
+	gotDecoder := json.NewDecoder(bytes.NewReader(got))
+	gotDecoder.UseNumber()
+	if err := gotDecoder.Decode(&gotValue); err != nil {
 		t.Fatal(err)
 	}
-	if err := json.Unmarshal(want, &wantValue); err != nil {
+	wantDecoder := json.NewDecoder(bytes.NewReader(want))
+	wantDecoder.UseNumber()
+	if err := wantDecoder.Decode(&wantValue); err != nil {
 		t.Fatal(err)
 	}
 	if !reflect.DeepEqual(gotValue, wantValue) {
@@ -371,7 +407,7 @@ func TestDecisionItemRoleDefaultsOnlyForMessages(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			var item live.DecisionItemCreateEventItemParam
+			var item live.DecisionItemCreateEventItemUnionParam
 			if err := json.Unmarshal([]byte(tc.raw), &item); err != nil {
 				t.Fatal(err)
 			}
@@ -380,108 +416,6 @@ func TestDecisionItemRoleDefaultsOnlyForMessages(t *testing.T) {
 				t.Fatal(err)
 			}
 			assertDecisionWireJSON(t, data, []byte(tc.want))
-		})
-	}
-	t.Run("future_manual_and_caller_overrides", func(t *testing.T) {
-		item := live.DecisionItemCreateEventItemParam{Type: "future_item"}
-		item.SetExtraFields(map[string]any{"payload": true})
-		data, err := json.Marshal(item)
-		if err != nil {
-			t.Fatal(err)
-		}
-		assertDecisionWireJSON(t, data, []byte(`{"type":"future_item","payload":true}`))
-		item.SetExtraFields(map[string]any{"payload": true, "role": "developer"})
-		data, err = json.Marshal(item)
-		if err != nil {
-			t.Fatal(err)
-		}
-		assertDecisionWireJSON(t, data, []byte(`{"type":"future_item","payload":true,"role":"developer"}`))
-		item.SetExtraFields(map[string]any{"payload": true, "role": nil})
-		data, err = json.Marshal(item)
-		if err != nil {
-			t.Fatal(err)
-		}
-		assertDecisionWireJSON(t, data, []byte(`{"type":"future_item","payload":true,"role":null}`))
-		item.Role = "assistant"
-		item.SetExtraFields(map[string]any{"payload": true, "role": param.Omit})
-		data, err = json.Marshal(item)
-		if err != nil {
-			t.Fatal(err)
-		}
-		assertDecisionWireJSON(t, data, []byte(`{"type":"future_item","payload":true}`))
-	})
-}
-
-type decisionRawType string
-
-type decisionTypeMarshaler struct {
-	calls *int
-	data  json.RawMessage
-	err   error
-}
-
-func (v decisionTypeMarshaler) MarshalJSON() ([]byte, error) {
-	*v.calls++
-	return v.data, v.err
-}
-
-func TestDecisionItemRawTypeOverridePreservesReleasedDefaults(t *testing.T) {
-	for _, tc := range []struct {
-		name   string
-		typed  string
-		extras map[string]any
-		want   string
-	}{
-		{"future_to_message", "future_item", map[string]any{"type": "message", "content": "hello"}, `{"type":"message","content":"hello","role":"user"}`},
-		{"tool_to_message", "function_call", map[string]any{"type": "message", "content": "hello"}, `{"type":"message","content":"hello","role":"user"}`},
-		{"message_to_tool_raw_defaults", "message", map[string]any{"type": "function_call", "call_id": "c", "name": "f", "arguments": "{}"}, `{"type":"function_call","call_id":"c","name":"f","arguments":"{}","role":"user"}`},
-		{"extra_only_tool_omit_role", "", map[string]any{"type": "function_call", "call_id": "c", "name": "f", "arguments": "{}", "role": param.Omit}, `{"type":"function_call","call_id":"c","name":"f","arguments":"{}"}`},
-		{"future_to_raw_message", "future_item", map[string]any{"type": json.RawMessage(`"message"`)}, `{"type":"message","role":"user"}`},
-		{"future_to_named_message", "future_item", map[string]any{"type": decisionRawType("message")}, `{"type":"message","role":"user"}`},
-		{"future_to_null_type", "future_item", map[string]any{"type": nil}, `{"type":null,"role":"user"}`},
-		{"future_to_omitted_type", "future_item", map[string]any{"type": param.Omit}, `{"role":"user"}`},
-		{"future_to_empty_type", "future_item", map[string]any{"type": ""}, `{"type":"","role":"user"}`},
-		{"future_to_tool_raw_defaults", "future_item", map[string]any{"type": "custom_tool_call", "call_id": "c", "name": "f", "input": "hello"}, `{"type":"custom_tool_call","call_id":"c","name":"f","input":"hello","role":"user"}`},
-		{"future_to_message_explicit_role", "future_item", map[string]any{"type": "message", "role": "developer"}, `{"type":"message","role":"developer"}`},
-		{"future_to_message_explicit_null_role", "future_item", map[string]any{"type": "message", "role": nil}, `{"type":"message","role":null}`},
-		{"future_to_message_explicit_omitted_role", "future_item", map[string]any{"type": "message", "role": param.Omit}, `{"type":"message"}`},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			item := live.DecisionItemCreateEventItemParam{Type: tc.typed}
-			item.SetExtraFields(tc.extras)
-			data, err := json.Marshal(item)
-			if err != nil {
-				t.Fatal(err)
-			}
-			assertDecisionWireJSON(t, data, []byte(tc.want))
-		})
-	}
-}
-
-func TestDecisionItemRawTypeMarshalOnce(t *testing.T) {
-	for _, tc := range []struct {
-		name string
-		data json.RawMessage
-		err  error
-		want string
-	}{
-		{"message", json.RawMessage(`"message"`), nil, `{"type":"message","role":"user"}`},
-		{"custom_error", nil, errors.New("synthetic type error"), ""},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			calls := 0
-			item := live.DecisionItemCreateEventItemParam{Type: "future_item"}
-			item.SetExtraFields(map[string]any{"type": decisionTypeMarshaler{calls: &calls, data: tc.data, err: tc.err}})
-			data, err := json.Marshal(item)
-			if !errors.Is(err, tc.err) {
-				t.Fatalf("marshal error = %v; want %v", err, tc.err)
-			}
-			if calls != 1 {
-				t.Fatalf("type marshaler called %d times; want 1", calls)
-			}
-			if err == nil {
-				assertDecisionWireJSON(t, data, []byte(tc.want))
-			}
 		})
 	}
 }

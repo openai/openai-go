@@ -14,6 +14,13 @@ func WithSkipCompaction(b bool) Option {
 	}
 }
 
+// WithStandardJSONNumbers encodes encoding/json.Number values as JSON numbers.
+func WithStandardJSONNumbers() Option {
+	return func(eos *encOpts) {
+		eos.standardJSONNumbers = true
+	}
+}
+
 func (eos encOpts) apply(opts ...Option) encOpts {
 	for _, opt := range opts {
 		opt(&eos)

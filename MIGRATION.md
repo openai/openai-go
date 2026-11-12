@@ -476,3 +476,35 @@ for _, item := range compacted.Output {
     }
 }
 ```
+
+## Typed Live Decisions items and questions
+
+Set one item variant for each `decision.item.create` event. Message variants
+select the role. Function calls, custom-tool calls and their outputs have their
+own variants. Use `OfString` or `OfParts` for question instructions.
+
+```go
+event := live.DecisionItemCreateEventParam{
+    Item: live.DecisionItemCreateEventItemUnionParam{
+        OfUserMessage: &live.DecisionUserMessageParam{
+            Content: live.DecisionUserMessageContentUnionParam{
+                OfString: openai.String("Check the order status"),
+            },
+        },
+    },
+}
+```
+
+Reuse `live.DecisionQuestionInstructionsUnionParam` for Choice, Predicate, and
+Score. For returned instructions, call `AsString()` or `AsParts()` on the shared
+`live.DecisionQuestionInstructionsUnion`. Use
+`live.DecisionQuestionInstructionPartInputJSON` for a JSON part that previously
+used `shared.DecisionInputJSON`.
+
+Numbers decoded from Live JSON request data use `json.Number` so forwarding a
+decoded item preserves their precision.
+
+For a manually authored item type without a typed variant, use
+`param.Override[live.DecisionItemCreateEventItemUnionParam](raw)` with the full
+JSON payload, including any role the API expects. Decoding an unknown item
+automatically keeps its raw JSON for forwarding.

@@ -80144,6 +80144,7 @@ components:
     LiveDecisionJsonObject:
       type: object
       additionalProperties: true
+      x-stainless-model: live.decision_json_object
     LiveDecisionInputJsonParam:
       type: object
       properties:
@@ -80159,6 +80160,7 @@ components:
           - type: array
             items:
               $ref: '#/components/schemas/LiveDecisionJsonObject'
+          x-openai-go-preserve-json-numbers: true
       required:
       - type
       - data
@@ -80185,13 +80187,16 @@ components:
         name:
           type: string
         instructions:
-          type: string
+          $ref: '#/components/schemas/LiveDecisionQuestionInstructions'
         choices:
           type: array
           items:
             $ref: '#/components/schemas/LiveDecisionChoiceParam'
           minItems: 2
           maxItems: 255
+          example:
+          - value: false
+          - value: true
       required:
       - type
       - instructions
@@ -80208,7 +80213,7 @@ components:
         name:
           type: string
         instructions:
-          type: string
+          $ref: '#/components/schemas/LiveDecisionQuestionInstructions'
       required:
       - type
       - instructions
@@ -80233,7 +80238,7 @@ components:
         name:
           type: string
         instructions:
-          type: string
+          $ref: '#/components/schemas/LiveDecisionQuestionInstructions'
         levels:
           type: array
           items:
@@ -80258,7 +80263,7 @@ components:
           description: Native Decision API questions evaluated together, in order.
           type: array
           items:
-            $ref: '#/components/schemas/QuestionParam'
+            $ref: '#/components/schemas/LiveDecisionQuestion'
           minItems: 1
           maxItems: 64
         model:
@@ -80304,7 +80309,7 @@ components:
           description: Native Decision API questions evaluated together, in order.
           type: array
           items:
-            $ref: '#/components/schemas/QuestionParam'
+            $ref: '#/components/schemas/LiveDecisionQuestion'
           minItems: 1
           maxItems: 64
       required:
@@ -97037,7 +97042,7 @@ components:
           description: Native Decision API questions evaluated together, in order.
           type: array
           items:
-            $ref: '#/components/schemas/QuestionParam'
+            $ref: '#/components/schemas/LiveDecisionQuestion'
           minItems: 1
           maxItems: 64
       required: []
@@ -97460,6 +97465,7 @@ components:
       required:
       - role
       - content
+      x-stainless-model: live.decision_user_message
     LiveDecisionDeveloperMessageParam:
       type: object
       properties:
@@ -97492,6 +97498,7 @@ components:
       required:
       - role
       - content
+      x-stainless-model: live.decision_developer_message
     LiveDecisionSystemMessageParam:
       type: object
       properties:
@@ -97524,6 +97531,7 @@ components:
       required:
       - role
       - content
+      x-stainless-model: live.decision_system_message
     LiveDecisionOutputTextParam:
       type: object
       properties:
@@ -97602,6 +97610,7 @@ components:
       required:
       - role
       - content
+      x-stainless-model: live.decision_assistant_message
     LiveFunctionCallItemStatus:
       type: string
       enum:
@@ -97781,47 +97790,26 @@ components:
       - type
       - output
     LiveDecisionInputItemParam:
-      type: object
-      properties:
-        id:
-          anyOf:
-          - description: The unique ID of this message item.
+      discriminator:
+        propertyName: type
+      x-oai-default-discriminator-value: message
+      anyOf:
+      - discriminator:
+          propertyName: role
+        properties:
+          type:
             type: string
-          - type: 'null'
-        type:
-          description: The item type. An omitted type denotes a message. Tool call and output items have their corresponding tool type.
-          default: message
-          x-stainless-const: true
-          type: string
-          enum:
-          - message
-        role:
-          description: The role on a message item, defaulting to user. Tool call and output items omit role.
-          default: user
-          x-stainless-const: true
-          type: string
-          enum:
-          - user
-        content:
-          description: The required content of a message item. Tool call and output items omit content.
-          anyOf:
-          - description: The text input to the model.
-            type: string
-            maxLength: 10485760
-          - type: array
-            items:
-              discriminator:
-                propertyName: type
-              anyOf:
-              - $ref: '#/components/schemas/LiveDecisionInputTextParam'
-              - $ref: '#/components/schemas/LiveDecisionInputImageParam'
-            x-stainless-variantName: parts
-            x-stainless-naming:
-              java:
-                variant_constructor: DecisionItemCreateEventItemContentItems
-      required:
-      - role
-      - content
+            enum:
+            - message
+        anyOf:
+        - $ref: '#/components/schemas/LiveDecisionUserMessageParam'
+        - $ref: '#/components/schemas/LiveDecisionDeveloperMessageParam'
+        - $ref: '#/components/schemas/LiveDecisionSystemMessageParam'
+        - $ref: '#/components/schemas/LiveDecisionAssistantMessageParam'
+      - $ref: '#/components/schemas/LiveDecisionFunctionCallParam'
+      - $ref: '#/components/schemas/LiveDecisionFunctionCallOutputParam'
+      - $ref: '#/components/schemas/LiveDecisionCustomToolCallParam'
+      - $ref: '#/components/schemas/LiveDecisionCustomToolCallOutputParam'
     LiveDecisionItemCreateParam:
       description: Append an input item for future decisions without starting an evaluation or changing Live voice context.
       example:
@@ -98854,6 +98842,7 @@ components:
       - role
       - content
       - id
+      x-stainless-model: live.decision_stored_user_message
     LiveDecisionStoredDeveloperMessageParam:
       type: object
       properties:
@@ -98881,6 +98870,7 @@ components:
       - role
       - content
       - id
+      x-stainless-model: live.decision_stored_developer_message
     LiveDecisionStoredSystemMessageParam:
       type: object
       properties:
@@ -98908,6 +98898,7 @@ components:
       - role
       - content
       - id
+      x-stainless-model: live.decision_stored_system_message
     LiveDecisionStoredAssistantMessageParam:
       type: object
       properties:
@@ -98944,6 +98935,7 @@ components:
       - role
       - content
       - id
+      x-stainless-model: live.decision_stored_assistant_message
     LiveDecisionStoredFunctionCallParam:
       type: object
       properties:
@@ -99109,46 +99101,26 @@ components:
       - output
       - id
     LiveDecisionStoredInputItemParam:
-      type: object
-      properties:
-        id:
-          description: The ID of the stored Decision input item.
-          type: string
-        type:
-          description: The item type. An omitted type denotes a message. Tool call and output items have their corresponding tool type.
-          default: message
-          x-stainless-const: true
-          type: string
-          enum:
-          - message
-        role:
-          description: The role on a message item. Tool call and output items omit role.
-          default: user
-          x-stainless-const: true
-          type: string
-          enum:
-          - user
-        content:
-          description: The required content of a message item. Tool call and output items omit content.
-          anyOf:
-          - description: The text input to the model.
+      discriminator:
+        propertyName: type
+      x-oai-default-discriminator-value: message
+      anyOf:
+      - discriminator:
+          propertyName: role
+        properties:
+          type:
             type: string
-            maxLength: 10485760
-          - type: array
-            items:
-              discriminator:
-                propertyName: type
-              anyOf:
-              - $ref: '#/components/schemas/LiveDecisionInputTextParam'
-              - $ref: '#/components/schemas/LiveDecisionInputImageParam'
-            x-stainless-variantName: parts
-            x-stainless-naming:
-              java:
-                variant_constructor: DecisionItemCreatedEventItemContentItems
-      required:
-      - id
-      - role
-      - content
+            enum:
+            - message
+        anyOf:
+        - $ref: '#/components/schemas/LiveDecisionStoredUserMessageParam'
+        - $ref: '#/components/schemas/LiveDecisionStoredDeveloperMessageParam'
+        - $ref: '#/components/schemas/LiveDecisionStoredSystemMessageParam'
+        - $ref: '#/components/schemas/LiveDecisionStoredAssistantMessageParam'
+      - $ref: '#/components/schemas/LiveDecisionStoredFunctionCallParam'
+      - $ref: '#/components/schemas/LiveDecisionStoredFunctionCallOutputParam'
+      - $ref: '#/components/schemas/LiveDecisionStoredCustomToolCallParam'
+      - $ref: '#/components/schemas/LiveDecisionStoredCustomToolCallOutputParam'
     LiveDecisionItemCreated:
       description: An input item was appended for future decisions.
       example:
@@ -113366,6 +113338,24 @@ components:
         - ChatModelGPT4VisionPreview
         - ChatModelGPT3_5Turbo0613
         - ChatModelGPT3_5Turbo16k0613
+    LiveDecisionQuestionInstructionPart:
+      discriminator:
+        propertyName: type
+      anyOf:
+      - $ref: '#/components/schemas/LiveDecisionInputTextParam'
+      - $ref: '#/components/schemas/LiveDecisionInputImageParam'
+      - $ref: '#/components/schemas/LiveDecisionInputJsonParam'
+    LiveDecisionQuestionInstructions:
+      anyOf:
+      - type: string
+      - type: array
+        items:
+          $ref: '#/components/schemas/LiveDecisionQuestionInstructionPart'
+        minItems: 1
+        x-stainless-variantName: parts
+        x-stainless-naming:
+          java:
+            variant_constructor: Parts
   responses:
     TooManyRequests:
       description: The request was rejected because a rate limit was exceeded.
