@@ -703,7 +703,7 @@
     },
     "embedding.go": {
       "mode": "100644",
-      "sha256": "a0559c3e7b9f6666902c5856721386f35d4b3df90a724c047830f88340652eda"
+      "sha256": "72e69b47ca0162e6dd09d2c45a320d02b2b2b8f57acade40c7d62f5422a6ddd6"
     },
     "embedding_test.go": {
       "mode": "100644",
@@ -727,7 +727,7 @@
     },
     "finetuningalphagrader.go": {
       "mode": "100644",
-      "sha256": "8ff6a3bb02d787753cd446e34785e550bcba96f5fa47aeb81aee53d58688cf05"
+      "sha256": "7039d27094fbd38b138d923ae111554dba0ecc833f1a02a5c1863bc5a2f68f46"
     },
     "finetuningalphagrader_test.go": {
       "mode": "100644",
@@ -763,7 +763,7 @@
     },
     "finetuningmethod.go": {
       "mode": "100644",
-      "sha256": "752b7e67001aa07963d3e9d1e8a703a992df83234e40761ea2d2297ebed90375"
+      "sha256": "3dbd7dcb2ec1665fa03ed936e30d9c51760091061ec512400f89d07ae1ffc3e3"
     },
     "grader.go": {
       "mode": "100644",
@@ -771,7 +771,7 @@
     },
     "gradergradermodel.go": {
       "mode": "100644",
-      "sha256": "ec2b9b68f0097bf4aee12421f97cac144f9680535b845c40bb779cd36732a293"
+      "sha256": "2844d659512ccd90e247e6f99f2aad75103f25c9db675a57916f1e22317715b8"
     },
     "image.go": {
       "mode": "100644",
