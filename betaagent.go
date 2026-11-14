@@ -1624,6 +1624,7 @@ func (r *AgentSessionAgentExperimental) UnmarshalJSON(data []byte) error {
 }
 
 // AgentSessionRequiredActionUnion contains all possible properties and values from
+// [AgentSessionRequiredActionMcpApprovalRequest],
 // [AgentSessionRequiredActionComputerUseApprovalRequest],
 // [AgentSessionRequiredActionFunctionCall],
 // [AgentSessionRequiredActionEnvironmentConnection].
@@ -1632,14 +1633,13 @@ func (r *AgentSessionAgentExperimental) UnmarshalJSON(data []byte) error {
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type AgentSessionRequiredActionUnion struct {
-	// This field is from variant
-	// [AgentSessionRequiredActionComputerUseApprovalRequest].
-	Request AgentSessionRequiredActionComputerUseApprovalRequestRequestUnion `json:"request"`
-	// This field is from variant
-	// [AgentSessionRequiredActionComputerUseApprovalRequest].
-	RequestID string `json:"request_id"`
-	TurnID    string `json:"turn_id"`
-	// Any of "computer_use_approval_request", "function_call",
+	// This field uses the type from
+	// [AgentSessionRequiredActionComputerUseApprovalRequest]. For the variant-specific
+	// Request, use [AgentSessionRequiredActionUnion.AsMcpApprovalRequest].
+	Request   AgentSessionRequiredActionComputerUseApprovalRequestRequestUnion `json:"request"`
+	RequestID string                                                           `json:"request_id"`
+	TurnID    string                                                           `json:"turn_id"`
+	// Any of "mcp_approval_request", "computer_use_approval_request", "function_call",
 	// "environment_connection".
 	Type string `json:"type"`
 	// This field is from variant [AgentSessionRequiredActionFunctionCall].
@@ -1670,6 +1670,7 @@ type anyAgentSessionRequiredAction interface {
 	implAgentSessionRequiredActionUnion()
 }
 
+func (AgentSessionRequiredActionMcpApprovalRequest) implAgentSessionRequiredActionUnion()         {}
 func (AgentSessionRequiredActionComputerUseApprovalRequest) implAgentSessionRequiredActionUnion() {}
 func (AgentSessionRequiredActionFunctionCall) implAgentSessionRequiredActionUnion()               {}
 func (AgentSessionRequiredActionEnvironmentConnection) implAgentSessionRequiredActionUnion()      {}
@@ -1677,6 +1678,7 @@ func (AgentSessionRequiredActionEnvironmentConnection) implAgentSessionRequiredA
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := AgentSessionRequiredActionUnion.AsAny().(type) {
+//	case openai.AgentSessionRequiredActionMcpApprovalRequest:
 //	case openai.AgentSessionRequiredActionComputerUseApprovalRequest:
 //	case openai.AgentSessionRequiredActionFunctionCall:
 //	case openai.AgentSessionRequiredActionEnvironmentConnection:
@@ -1685,6 +1687,8 @@ func (AgentSessionRequiredActionEnvironmentConnection) implAgentSessionRequiredA
 //	}
 func (u AgentSessionRequiredActionUnion) AsAny() anyAgentSessionRequiredAction {
 	switch u.Type {
+	case "mcp_approval_request":
+		return u.AsMcpApprovalRequest()
 	case "computer_use_approval_request":
 		return u.AsComputerUseApprovalRequest()
 	case "function_call":
@@ -1693,6 +1697,11 @@ func (u AgentSessionRequiredActionUnion) AsAny() anyAgentSessionRequiredAction {
 		return u.AsEnvironmentConnection()
 	}
 	return nil
+}
+
+func (u AgentSessionRequiredActionUnion) AsMcpApprovalRequest() (v AgentSessionRequiredActionMcpApprovalRequest) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
 func (u AgentSessionRequiredActionUnion) AsComputerUseApprovalRequest() (v AgentSessionRequiredActionComputerUseApprovalRequest) {
@@ -1714,6 +1723,61 @@ func (u AgentSessionRequiredActionUnion) AsEnvironmentConnection() (v AgentSessi
 func (u AgentSessionRequiredActionUnion) RawJSON() string { return u.JSON.raw }
 
 func (r *AgentSessionRequiredActionUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Respond to an MCP tool-call approval request.
+type AgentSessionRequiredActionMcpApprovalRequest struct {
+	// Information for presenting an MCP approval.
+	Request AgentSessionRequiredActionMcpApprovalRequestRequest `json:"request" api:"required"`
+	// The opaque approval ID to echo when responding.
+	RequestID string `json:"request_id" api:"required"`
+	// The turn that requested approval.
+	TurnID string `json:"turn_id" api:"required"`
+	// The type of the object. Always `mcp_approval_request`.
+	Type constant.McpApprovalRequest `json:"type" default:"mcp_approval_request"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Request     respjson.Field
+		RequestID   respjson.Field
+		TurnID      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionRequiredActionMcpApprovalRequest) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionRequiredActionMcpApprovalRequest) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Information for presenting an MCP approval.
+type AgentSessionRequiredActionMcpApprovalRequestRequest struct {
+	// The tool arguments as JSON, or null when CCA does not provide them.
+	Arguments any    `json:"arguments" api:"required"`
+	Message   string `json:"message" api:"required"`
+	// The tool name, or null when CCA does not provide it.
+	Name        string `json:"name" api:"required"`
+	ServerLabel string `json:"server_label" api:"required"`
+	// The type of the object. Always `mcp_tool_call`.
+	Type constant.McpToolCall `json:"type" default:"mcp_tool_call"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Arguments   respjson.Field
+		Message     respjson.Field
+		Name        respjson.Field
+		ServerLabel respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionRequiredActionMcpApprovalRequestRequest) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionRequiredActionMcpApprovalRequestRequest) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -3372,6 +3436,13 @@ const (
 	AgentSessionInputMessageParamTypeMessage AgentSessionInputMessageParamType = "message"
 )
 
+func AgentSessionInputParamOfParamAgentSessionInputMcpApprovalRequestResult(requestID string, response AgentSessionInputParamAgentSessionInputMcpApprovalRequestResultResponse) AgentSessionInputParamUnion {
+	var paramAgentSessionInputMcpApprovalRequestResult AgentSessionInputParamAgentSessionInputMcpApprovalRequestResult
+	paramAgentSessionInputMcpApprovalRequestResult.RequestID = requestID
+	paramAgentSessionInputMcpApprovalRequestResult.Response = response
+	return AgentSessionInputParamUnion{OfParamAgentSessionInputMcpApprovalRequestResult: &paramAgentSessionInputMcpApprovalRequestResult}
+}
+
 func AgentSessionInputParamOfParamAgentSessionInputComputerUseApprovalRequestResult[
 	T AgentBrowserAuthenticationSubmitParam | AgentBrowserAuthenticationCancelParam | AgentBrowserOriginAccessParam,
 ](requestID string, response T) AgentSessionInputParamUnion {
@@ -3406,6 +3477,7 @@ func AgentSessionInputParamOfParamAgentSessionInputToolResult(callID string, suc
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type AgentSessionInputParamUnion struct {
+	OfParamAgentSessionInputMcpApprovalRequestResult         *AgentSessionInputParamAgentSessionInputMcpApprovalRequestResult         `json:",omitzero,inline"`
 	OfParamAgentSessionInputComputerUseApprovalRequestResult *AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResult `json:",omitzero,inline"`
 	OfParamAgentSessionInputMessage                          *AgentSessionInputParamAgentSessionInputMessage                          `json:",omitzero,inline"`
 	OfParamAgentSessionInputCancel                           *AgentSessionInputParamAgentSessionInputCancel                           `json:",omitzero,inline"`
@@ -3414,18 +3486,14 @@ type AgentSessionInputParamUnion struct {
 }
 
 func (u AgentSessionInputParamUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfParamAgentSessionInputComputerUseApprovalRequestResult, u.OfParamAgentSessionInputMessage, u.OfParamAgentSessionInputCancel, u.OfParamAgentSessionInputToolResult)
+	return param.MarshalUnion(u, u.OfParamAgentSessionInputMcpApprovalRequestResult,
+		u.OfParamAgentSessionInputComputerUseApprovalRequestResult,
+		u.OfParamAgentSessionInputMessage,
+		u.OfParamAgentSessionInputCancel,
+		u.OfParamAgentSessionInputToolResult)
 }
 func (u *AgentSessionInputParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u AgentSessionInputParamUnion) GetRequestID() *string {
-	if vt := u.OfParamAgentSessionInputComputerUseApprovalRequestResult; vt != nil {
-		return &vt.RequestID
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -3485,8 +3553,20 @@ func (u AgentSessionInputParamUnion) GetOutput() *AgentFunctionCallOutputParamUn
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u AgentSessionInputParamUnion) GetRequestID() *string {
+	if vt := u.OfParamAgentSessionInputMcpApprovalRequestResult; vt != nil {
+		return (*string)(&vt.RequestID)
+	} else if vt := u.OfParamAgentSessionInputComputerUseApprovalRequestResult; vt != nil {
+		return (*string)(&vt.RequestID)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u AgentSessionInputParamUnion) GetType() *string {
-	if vt := u.OfParamAgentSessionInputComputerUseApprovalRequestResult; vt != nil {
+	if vt := u.OfParamAgentSessionInputMcpApprovalRequestResult; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfParamAgentSessionInputComputerUseApprovalRequestResult; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfParamAgentSessionInputMessage; vt != nil {
 		return (*string)(&vt.Type)
@@ -3501,10 +3581,65 @@ func (u AgentSessionInputParamUnion) GetType() *string {
 func init() {
 	apijson.RegisterUnion[AgentSessionInputParamUnion](
 		"type",
+		apijson.Discriminator[AgentSessionInputParamAgentSessionInputMcpApprovalRequestResult]("agent.session.input.mcp_approval_request_result"),
 		apijson.Discriminator[AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResult]("agent.session.input.computer_use_approval_request_result"),
 		apijson.Discriminator[AgentSessionInputParamAgentSessionInputMessage]("agent.session.input.message"),
 		apijson.Discriminator[AgentSessionInputParamAgentSessionInputCancel]("agent.session.input.cancel"),
 		apijson.Discriminator[AgentSessionInputParamAgentSessionInputToolResult]("agent.session.input.tool_result"),
+	)
+}
+
+// Responds to a pending MCP tool-call approval request.
+//
+// The properties RequestID, Response, Type are required.
+type AgentSessionInputParamAgentSessionInputMcpApprovalRequestResult struct {
+	// The opaque approval ID from the required action.
+	RequestID string `json:"request_id" api:"required"`
+	// The user's decision for a pending MCP tool call.
+	Response AgentSessionInputParamAgentSessionInputMcpApprovalRequestResultResponse `json:"response" api:"required"`
+	// The type of the object. Always
+	// `agent.session.input.mcp_approval_request_result`.
+	//
+	// This field can be elided, and will marshal its zero value as
+	// "agent.session.input.mcp_approval_request_result".
+	Type constant.AgentSessionInputMcpApprovalRequestResult `json:"type" default:"agent.session.input.mcp_approval_request_result"`
+	paramObj
+}
+
+func (r AgentSessionInputParamAgentSessionInputMcpApprovalRequestResult) MarshalJSON() (data []byte, err error) {
+	type shadow AgentSessionInputParamAgentSessionInputMcpApprovalRequestResult
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AgentSessionInputParamAgentSessionInputMcpApprovalRequestResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The user's decision for a pending MCP tool call.
+//
+// The properties Decision, Type are required.
+type AgentSessionInputParamAgentSessionInputMcpApprovalRequestResultResponse struct {
+	// Cancel dismisses this request without cancelling the session or turn.
+	//
+	// Any of "approve", "deny", "cancel".
+	Decision string `json:"decision,omitzero" api:"required"`
+	// The type of the object. Always `mcp_tool_call`.
+	//
+	// This field can be elided, and will marshal its zero value as "mcp_tool_call".
+	Type constant.McpToolCall `json:"type" default:"mcp_tool_call"`
+	paramObj
+}
+
+func (r AgentSessionInputParamAgentSessionInputMcpApprovalRequestResultResponse) MarshalJSON() (data []byte, err error) {
+	type shadow AgentSessionInputParamAgentSessionInputMcpApprovalRequestResultResponse
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AgentSessionInputParamAgentSessionInputMcpApprovalRequestResultResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[AgentSessionInputParamAgentSessionInputMcpApprovalRequestResultResponse](
+		"decision", "approve", "deny", "cancel",
 	)
 }
 

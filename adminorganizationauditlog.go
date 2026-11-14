@@ -713,13 +713,16 @@ func (r *AdminOrganizationAuditLogListResponseAPIKeyUpdated) UnmarshalJSON(data 
 
 // The payload used to update the API key.
 type AdminOrganizationAuditLogListResponseAPIKeyUpdatedChangesRequested struct {
+	// Number of seconds from the update request until the API key expires.
+	ExpiresInSeconds int64 `json:"expires_in_seconds"`
 	// A list of scopes allowed for the API key, e.g. `["api.model.request"]`
 	Scopes []string `json:"scopes"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Scopes      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ExpiresInSeconds respjson.Field
+		Scopes           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 

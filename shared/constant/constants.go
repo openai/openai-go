@@ -54,6 +54,7 @@ type AgentSessionIdle string                                  // Always "agent.s
 type AgentSessionInProgress string                            // Always "agent.session.in_progress"
 type AgentSessionInputCancel string                           // Always "agent.session.input.cancel"
 type AgentSessionInputComputerUseApprovalRequestResult string // Always "agent.session.input.computer_use_approval_request_result"
+type AgentSessionInputMcpApprovalRequestResult string         // Always "agent.session.input.mcp_approval_request_result"
 type AgentSessionInputMessage string                          // Always "agent.session.input.message"
 type AgentSessionInputToolResult string                       // Always "agent.session.input.tool_result"
 type AgentSessionRequiresAction string                        // Always "agent.session.requires_action"
@@ -271,6 +272,7 @@ type Limited string                                           // Always "limited
 type List string                                              // Always "list"
 type Live string                                              // Always "live"
 type LiveCallIncoming string                                  // Always "live.call.incoming"
+type LiveTransportConnected string                            // Always "live.transport.connected"
 type LiveTransportIncoming string                             // Always "live.transport.incoming"
 type Local string                                             // Always "local"
 type LocalShell string                                        // Always "local_shell"
@@ -289,6 +291,7 @@ type McpListToolsFailed string                                // Always "mcp_lis
 type McpListToolsInProgress string                            // Always "mcp_list_tools.in_progress"
 type McpOAuth string                                          // Always "mcp_oauth"
 type McpProtocolError string                                  // Always "mcp_protocol_error"
+type McpToolCall string                                       // Always "mcp_tool_call"
 type McpToolExecutionError string                             // Always "mcp_tool_execution_error"
 type Message string                                           // Always "message"
 type MessageCreation string                                   // Always "message_creation"
@@ -692,6 +695,9 @@ func (c AgentSessionInputCancel) Default() AgentSessionInputCancel {
 func (c AgentSessionInputComputerUseApprovalRequestResult) Default() AgentSessionInputComputerUseApprovalRequestResult {
 	return "agent.session.input.computer_use_approval_request_result"
 }
+func (c AgentSessionInputMcpApprovalRequestResult) Default() AgentSessionInputMcpApprovalRequestResult {
+	return "agent.session.input.mcp_approval_request_result"
+}
 func (c AgentSessionInputMessage) Default() AgentSessionInputMessage {
 	return "agent.session.input.message"
 }
@@ -995,6 +1001,7 @@ func (c Limited) Default() Limited                               { return "limit
 func (c List) Default() List                                     { return "list" }
 func (c Live) Default() Live                                     { return "live" }
 func (c LiveCallIncoming) Default() LiveCallIncoming             { return "live.call.incoming" }
+func (c LiveTransportConnected) Default() LiveTransportConnected { return "live.transport.connected" }
 func (c LiveTransportIncoming) Default() LiveTransportIncoming   { return "live.transport.incoming" }
 func (c Local) Default() Local                                   { return "local" }
 func (c LocalShell) Default() LocalShell                         { return "local_shell" }
@@ -1013,6 +1020,7 @@ func (c McpListToolsFailed) Default() McpListToolsFailed         { return "mcp_l
 func (c McpListToolsInProgress) Default() McpListToolsInProgress { return "mcp_list_tools.in_progress" }
 func (c McpOAuth) Default() McpOAuth                             { return "mcp_oauth" }
 func (c McpProtocolError) Default() McpProtocolError             { return "mcp_protocol_error" }
+func (c McpToolCall) Default() McpToolCall                       { return "mcp_tool_call" }
 func (c McpToolExecutionError) Default() McpToolExecutionError   { return "mcp_tool_execution_error" }
 func (c Message) Default() Message                               { return "message" }
 func (c MessageCreation) Default() MessageCreation               { return "message_creation" }
@@ -1624,6 +1632,9 @@ func (c AgentSessionInputCancel) MarshalJSON() ([]byte, error)             { ret
 func (c AgentSessionInputComputerUseApprovalRequestResult) MarshalJSON() ([]byte, error) {
 	return marshalString(c)
 }
+func (c AgentSessionInputMcpApprovalRequestResult) MarshalJSON() ([]byte, error) {
+	return marshalString(c)
+}
 func (c AgentSessionInputMessage) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c AgentSessionInputToolResult) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c AgentSessionRequiresAction) MarshalJSON() ([]byte, error)       { return marshalString(c) }
@@ -1857,6 +1868,7 @@ func (c Limited) MarshalJSON() ([]byte, error)                             { ret
 func (c List) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Live) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c LiveCallIncoming) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c LiveTransportConnected) MarshalJSON() ([]byte, error)              { return marshalString(c) }
 func (c LiveTransportIncoming) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c Local) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c LocalShell) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
@@ -1875,6 +1887,7 @@ func (c McpListToolsFailed) MarshalJSON() ([]byte, error)                  { ret
 func (c McpListToolsInProgress) MarshalJSON() ([]byte, error)              { return marshalString(c) }
 func (c McpOAuth) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c McpProtocolError) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c McpToolCall) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c McpToolExecutionError) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c Message) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c MessageCreation) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
