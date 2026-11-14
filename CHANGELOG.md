@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.100.0](https://github.com/openai/openai-go/compare/v3.99.0...v3.100.0) (2026-11-14)
+
+
+### Features
+
+* **api:** add MCP approvals and Live transport events ([#1255](https://github.com/openai/openai-go/issues/1255)) ([4281497](https://github.com/openai/openai-go/commit/428149726d74749b6b42b5e571ca8e146e3527cd))
+
+
+### Bug Fixes
+
+* **api:** represent fixed schema values with const ([#1257](https://github.com/openai/openai-go/issues/1257)) ([d5d7034](https://github.com/openai/openai-go/commit/d5d7034713929d8dbb59ea770a062129371d449d))
+
 ## [3.99.0](https://github.com/openai/openai-go/compare/v3.98.0...v3.99.0) (2026-11-12)
 
 
