@@ -65,8 +65,9 @@ func TestLiveNewWithOptionalParams(t *testing.T) {
 					Type:   "message",
 				},
 			}},
-			Instructions: openai.String("instructions"),
-			Store:        openai.Bool(true),
+			Instructions:     openai.String("instructions"),
+			SafetyIdentifier: openai.String("safety_identifier"),
+			Store:            openai.Bool(true),
 			Triggers: []live.DecisionTriggerParam{{
 				Decisions: live.DecisionTriggerDecisionsParam{
 					Questions: []live.DecisionTriggerDecisionsQuestionUnionParam{{

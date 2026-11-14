@@ -300,8 +300,9 @@ type VideoCreateError struct {
 	Code string `json:"code" api:"required"`
 	// A human-readable description of the error that was returned.
 	Message string `json:"message" api:"required"`
-	// The Retry-After and Retry-After-Ms headers returned with the original error, if
-	// any.
+	// Headers returned with the original error. These can include Retry-After,
+	// Retry-After-Ms, and, on opted-in deployments,
+	// x-openai-inference-capacity-reason.
 	Headers      map[string]string            `json:"headers"`
 	Misalignment VideoCreateErrorMisalignment `json:"misalignment"`
 	// The request parameter associated with the error, or null if none was recorded.

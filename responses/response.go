@@ -3797,7 +3797,9 @@ type Response struct {
 	//
 	//   - `auto`: If the input to this Response exceeds the model's context window size,
 	//     the model will truncate the response to fit the context window by dropping
-	//     items from the beginning of the conversation.
+	//     items from the beginning of the conversation. On some models, trimming can
+	//     begin earlier because the API subtracts the model's maximum output allowance
+	//     from its input limit, even if you set a lower `max_output_tokens`.
 	//   - `disabled` (default): If the input size will exceed the context window size
 	//     for a model, the request will fail with a 400 error.
 	//
@@ -4821,7 +4823,9 @@ func (r *ResponseToolUsageWebSearch) UnmarshalJSON(data []byte) error {
 //
 //   - `auto`: If the input to this Response exceeds the model's context window size,
 //     the model will truncate the response to fit the context window by dropping
-//     items from the beginning of the conversation.
+//     items from the beginning of the conversation. On some models, trimming can
+//     begin earlier because the API subtracts the model's maximum output allowance
+//     from its input limit, even if you set a lower `max_output_tokens`.
 //   - `disabled` (default): If the input size will exceed the context window size
 //     for a model, the request will fail with a 400 error.
 type ResponseTruncation string
@@ -20376,7 +20380,9 @@ func (r *ResponseMcpListToolsInProgressEvent) UnmarshalJSON(data []byte) error {
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ResponseOutputItemUnion struct {
-	ID      string                              `json:"id"`
+	ID string `json:"id"`
+	// This field uses the type from [ResponseOutputMessage]. For the variant-specific
+	// Content, use [ResponseOutputItemUnion.AsReasoning].
 	Content []ResponseOutputMessageContentUnion `json:"content"`
 	Role    string                              `json:"role"`
 	Status  string                              `json:"status"`
@@ -27661,7 +27667,8 @@ type ResponseToolSearchOutputItemParamToolImageGeneration struct {
 	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
 	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
 	// `gpt-image-2.5-flare-2026-09-08`, `gpt-image-2.6-sunburst`,
-	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default: `gpt-image-2`.
+	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2.6-sunburst`.
 	//
 	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
 	// `gpt-image-2.5-flare` instead.
@@ -29049,7 +29056,8 @@ type ResponseToolSearchOutputItemParamToolImageGenerationParam struct {
 	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
 	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
 	// `gpt-image-2.5-flare-2026-09-08`, `gpt-image-2.6-sunburst`,
-	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default: `gpt-image-2`.
+	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2.6-sunburst`.
 	//
 	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
 	// `gpt-image-2.5-flare` instead.
@@ -29926,7 +29934,9 @@ type ResponsesClientEventResponseCreateParam struct {
 	//
 	//   - `auto`: If the input to this Response exceeds the model's context window size,
 	//     the model will truncate the response to fit the context window by dropping
-	//     items from the beginning of the conversation.
+	//     items from the beginning of the conversation. On some models, trimming can
+	//     begin earlier because the API subtracts the model's maximum output allowance
+	//     from its input limit, even if you set a lower `max_output_tokens`.
 	//   - `disabled` (default): If the input size will exceed the context window size
 	//     for a model, the request will fail with a 400 error.
 	//
@@ -34409,7 +34419,8 @@ type ToolImageGeneration struct {
 	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
 	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
 	// `gpt-image-2.5-flare-2026-09-08`, `gpt-image-2.6-sunburst`,
-	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default: `gpt-image-2`.
+	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2.6-sunburst`.
 	//
 	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
 	// `gpt-image-2.5-flare` instead.
@@ -35725,7 +35736,8 @@ type ToolImageGenerationParam struct {
 	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
 	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
 	// `gpt-image-2.5-flare-2026-09-08`, `gpt-image-2.6-sunburst`,
-	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default: `gpt-image-2`.
+	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2.6-sunburst`.
 	//
 	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
 	// `gpt-image-2.5-flare` instead.
@@ -37320,7 +37332,9 @@ type ResponseNewParams struct {
 	//
 	//   - `auto`: If the input to this Response exceeds the model's context window size,
 	//     the model will truncate the response to fit the context window by dropping
-	//     items from the beginning of the conversation.
+	//     items from the beginning of the conversation. On some models, trimming can
+	//     begin earlier because the API subtracts the model's maximum output allowance
+	//     from its input limit, even if you set a lower `max_output_tokens`.
 	//   - `disabled` (default): If the input size will exceed the context window size
 	//     for a model, the request will fail with a 400 error.
 	//
@@ -37839,7 +37853,9 @@ func (r *ResponseNewParamsToolChoiceSpecificProgrammaticToolCallingParam) Unmars
 //
 //   - `auto`: If the input to this Response exceeds the model's context window size,
 //     the model will truncate the response to fit the context window by dropping
-//     items from the beginning of the conversation.
+//     items from the beginning of the conversation. On some models, trimming can
+//     begin earlier because the API subtracts the model's maximum output allowance
+//     from its input limit, even if you set a lower `max_output_tokens`.
 //   - `disabled` (default): If the input size will exceed the context window size
 //     for a model, the request will fail with a 400 error.
 type ResponseNewParamsTruncation string

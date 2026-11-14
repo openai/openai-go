@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,6 +13,8 @@ import (
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/shared/constant"
+	"github.com/openai/openai-go/v3/webhooks"
 )
 
 // Standardized test constants (matches TypeScript implementation)
@@ -568,5 +571,73 @@ func TestWebhookService_VerifySignature_MultipleSignaturesAllInvalid(t *testing.
 	expectedError := "webhook signature verification failed"
 	if err.Error() != expectedError {
 		t.Errorf("Expected error '%s', got '%s'", expectedError, err.Error())
+	}
+}
+
+func TestWebhookTransportProjectionCompatibility(t *testing.T) {
+	service := webhooks.NewWebhookService(option.WithWebhookSecret(sipMediaSecurityTestSecret))
+	for _, tc := range []struct {
+		eventType, transport, projectionRaw string
+	}{
+		{"live.transport.incoming", "sip", `"sip"`},
+		{"live.transport.connected", "webrtc", ""},
+	} {
+		t.Run(tc.transport, func(t *testing.T) {
+			body := []byte(`{"id":"evt_synthetic","object":"event","created_at":0,"type":"` + tc.eventType + `","data":{"type":"` + tc.transport + `","session_id":"lsess_synthetic"}}`)
+			event, err := service.Unwrap(body, signedSIPMediaSecurityHeaders(t, body))
+			if err != nil {
+				t.Fatal(err)
+			}
+			var wireType constant.Sip = event.Data.Type
+			projection := event.Data.JSON.Type
+			if string(wireType) != tc.transport || projection.Valid() != (tc.projectionRaw != "") || projection.Raw() != tc.projectionRaw {
+				t.Errorf("transport/presence/raw = %q / %v / %q, want %q / %v / %q",
+					wireType, projection.Valid(), projection.Raw(), tc.transport, tc.projectionRaw != "", tc.projectionRaw)
+			}
+			if event.RawJSON() != string(body) {
+				t.Error("raw event lost wire data")
+			}
+			if tc.transport == "webrtc" {
+				connected := event.AsLiveTransportConnected()
+				if connected.Data.Type != "webrtc" || !connected.Data.JSON.Type.Valid() || connected.Data.SessionID != "lsess_synthetic" {
+					t.Error("concrete WebRTC data changed")
+				}
+			}
+
+			type wireData struct {
+				Type      string `json:"type"`
+				SessionID string `json:"session_id"`
+				Extra     string `json:"extra"`
+			}
+			checkJSON := func(value any, want wireData) {
+				t.Helper()
+				body, err := json.Marshal(value)
+				if err != nil {
+					t.Fatal(err)
+				}
+				var got wireData
+				if err := json.Unmarshal(body, &got); err != nil {
+					t.Fatal(err)
+				}
+				if got != want {
+					t.Errorf("marshal %T = %+v, want %+v", value, got, want)
+				}
+			}
+			checkJSON(event.Data, wireData{Type: tc.transport, SessionID: "lsess_synthetic"})
+
+			value := struct {
+				webhooks.UnwrapWebhookEventUnionData
+				Extra string `json:"extra"`
+			}{event.Data, "caller-field"}
+			pointer := struct {
+				*webhooks.UnwrapWebhookEventUnionData
+				Extra string `json:"extra"`
+			}{&event.Data, "caller-field"}
+			value.Type, value.SessionID = "caller-transport", "lsess_value_edit"
+			pointer.SessionID = "lsess_pointer_edit"
+			checkJSON(value, wireData{Type: "caller-transport", SessionID: "lsess_value_edit", Extra: "caller-field"})
+			checkJSON(&value, wireData{Type: "caller-transport", SessionID: "lsess_value_edit", Extra: "caller-field"})
+			checkJSON(pointer, wireData{Type: tc.transport, SessionID: "lsess_pointer_edit", Extra: "caller-field"})
+		})
 	}
 }
