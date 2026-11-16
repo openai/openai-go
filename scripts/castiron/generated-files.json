@@ -363,7 +363,7 @@
     },
     "betaagent.go": {
       "mode": "100644",
-      "sha256": "4cd49423f1279ab5e302c10a1eb12a716d3f4f6c9561deaa10d7dec76d540bb1"
+      "sha256": "bdaeb4beab6e3e491db7741661cb7e115a4938d136499b8c1abacdaefe3e12e9"
     },
     "betaagent_test.go": {
       "mode": "100644",
@@ -371,7 +371,7 @@
     },
     "betaagentautomation.go": {
       "mode": "100644",
-      "sha256": "128757d99e205a09e684df2853ffdda91a565d23198d58ace2e66e86618a3259"
+      "sha256": "5a89602ce00a46c1e031c820ec3feed3fc537c92760a7141d8b2ccfa702226ed"
     },
     "betaagentautomation_test.go": {
       "mode": "100644",
@@ -411,7 +411,7 @@
     },
     "betaagentsession.go": {
       "mode": "100644",
-      "sha256": "2bb03b19ac9d50781d3fdbe4286c6deab1fad2fbeda85c3c7b83f98cf099def9"
+      "sha256": "60c448e94d8be80fa117903174bfa469b34591a88c9d46bc1fdd626b2a6f4db5"
     },
     "betaagentsession_test.go": {
       "mode": "100644",
@@ -807,7 +807,7 @@
     },
     "live/live.go": {
       "mode": "100644",
-      "sha256": "19fe5f8e48ba35dbb46a8b6bbf99d80acba7eb4fb0974369bb5848a9562d1df8"
+      "sha256": "d3a184699446cdbae81ce71b099bf7d20480e70d62ecb8edbe9047fb1b169587"
     },
     "live/live_forks_websocket.go": {
       "mode": "100644",

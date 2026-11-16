@@ -228,8 +228,7 @@ type BetaAgentSessionNewParamsAgent struct {
 	// The model to use for the agent. The requested model name is preserved.
 	Model param.Opt[string] `json:"model,omitzero"`
 	// Context compaction settings. Omit to keep the current settings. A supplied
-	// object replaces the settings; null or an empty object enables background
-	// compaction.
+	// object replaces the settings; null or an empty object uses blocking compaction.
 	Compaction BetaAgentSessionNewParamsAgentCompaction `json:"compaction,omitzero"`
 	// The service tier used for model requests.
 	//
@@ -267,12 +266,11 @@ func init() {
 }
 
 // Context compaction settings. Omit to keep the current settings. A supplied
-// object replaces the settings; null or an empty object enables background
-// compaction.
+// object replaces the settings; null or an empty object uses blocking compaction.
 type BetaAgentSessionNewParamsAgentCompaction struct {
-	// Whether to compact context in the background. Omission or null defaults to true.
-	// Set to false to use blocking compaction. Background compaction may increase
-	// token usage.
+	// Whether to compact context in the background. Omission or null defaults to
+	// false. Set to true to enable background compaction. Background compaction may
+	// increase token usage.
 	Async param.Opt[bool] `json:"async,omitzero"`
 	paramObj
 }
