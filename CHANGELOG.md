@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.100.0](https://github.com/openai/openai-go/compare/v3.99.0...v3.100.0) (2026-11-16)
+
+
+### Features
+
+* **api:** add MCP approvals and Live transport events ([#1255](https://github.com/openai/openai-go/issues/1255)) ([4281497](https://github.com/openai/openai-go/commit/428149726d74749b6b42b5e571ca8e146e3527cd))
+* **api:** add schedule pause reasons ([#1269](https://github.com/openai/openai-go/issues/1269)) ([6c47107](https://github.com/openai/openai-go/commit/6c47107b759522a70819b8dcd8237d72ea877289))
+* **api:** deliver beta Agents session errors as stream events ([#1270](https://github.com/openai/openai-go/issues/1270)) ([a97b182](https://github.com/openai/openai-go/commit/a97b1826f1d6157554740364129a10fc73ee398a))
+
+
+### Bug Fixes
+
+* **api:** represent fixed schema values with const ([#1257](https://github.com/openai/openai-go/issues/1257)) ([d5d7034](https://github.com/openai/openai-go/commit/d5d7034713929d8dbb59ea770a062129371d449d))
+
 ## [3.99.0](https://github.com/openai/openai-go/compare/v3.98.0...v3.99.0) (2026-11-12)
 
 
