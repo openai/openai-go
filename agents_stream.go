@@ -87,9 +87,11 @@ type agentPendingCall struct {
 // session idle event, or a session failure. The session must be idle, with only
 // one input writer while the helper runs; concurrent inputs cannot be correlated
 // to turns. Initial idle and subagent completion events do not end the stream.
-// Protocol error frames follow the underlying stream's Err path and close the
-// connection before later events are read. Typed turn/session terminal events are
-// yielded when reached. Unknown functions remain available for manual handling through Events.New.
+// In-band error events are yielded through Current; inspect Current().Error when
+// Type is "error" and continue reading subsequent lifecycle events. Request,
+// transport, and JSON decoding errors stop iteration and are reported through Err.
+// Typed turn/session terminal events are yielded when reached. Unknown functions
+// remain available for manual handling through Events.New.
 // Registered handlers run on the next Next call after their event is returned.
 // WithResponseBodyInto is incompatible with the helper's required typed decodes
 // and is rejected through Err; other request options retain their normal behavior.
