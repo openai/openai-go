@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/tidwall/sjson"
+	"github.com/openai/openai-go/v3/internal/encoding/sjson"
 
 	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
 )
