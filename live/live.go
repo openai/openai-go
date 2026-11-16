@@ -857,6 +857,17 @@ func (u clientEventUnionParamSession) GetInstructions() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u clientEventUnionParamSession) GetSafetyIdentifier() *string {
+	switch vt := u.any.(type) {
+	case *SessionConfigParam:
+		if vt.SafetyIdentifier.Valid() {
+			return &vt.SafetyIdentifier.Value
+		}
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u clientEventUnionParamSession) GetStore() *bool {
 	switch vt := u.any.(type) {
 	case *SessionConfigParam:
@@ -11482,6 +11493,9 @@ type SessionConfigParam struct {
 	// Limited to 16,384 client-supplied tokens. Omitted or blank instructions use
 	// server defaults. Immutable after startup.
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
+	// A stable identifier for your end user, used for safety monitoring and abuse
+	// detection.
+	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
 	// Whether to store the session for later forking and recording download. Defaults
 	// to false for new sessions.
 	Store param.Opt[bool] `json:"store,omitzero"`
@@ -11743,6 +11757,9 @@ type SessionResource struct {
 	// Limited to 16,384 client-supplied tokens. Omitted or blank instructions use
 	// server defaults. Immutable after startup.
 	Instructions string `json:"instructions" api:"nullable"`
+	// A stable identifier for your end user, used for safety monitoring and abuse
+	// detection.
+	SafetyIdentifier string `json:"safety_identifier,omitzero" api:"nullable"`
 	// Whether to store the session for later forking and recording download. Defaults
 	// to false for new sessions.
 	Store bool `json:"store"`
@@ -11753,19 +11770,20 @@ type SessionResource struct {
 	Triggers []DecisionTrigger `json:"triggers"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID           respjson.Field
-		ExpiresAt    respjson.Field
-		Model        respjson.Field
-		Status       respjson.Field
-		Audio        respjson.Field
-		Client       respjson.Field
-		Delegation   respjson.Field
-		Input        respjson.Field
-		Instructions respjson.Field
-		Store        respjson.Field
-		Triggers     respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		ID               respjson.Field
+		ExpiresAt        respjson.Field
+		Model            respjson.Field
+		Status           respjson.Field
+		Audio            respjson.Field
+		Client           respjson.Field
+		Delegation       respjson.Field
+		Input            respjson.Field
+		Instructions     respjson.Field
+		SafetyIdentifier respjson.Field
+		Store            respjson.Field
+		Triggers         respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 

@@ -170,23 +170,25 @@ type AutomationUnion struct {
 	// This field is from variant [PeriodicAutomation].
 	Timezone string `json:"timezone"`
 	// Any of "periodic", "once".
-	Type string `json:"type"`
+	Type        string `json:"type"`
+	PauseReason string `json:"pause_reason"`
 	// This field is from variant [OneTimeAutomation].
 	RunAt int64 `json:"run_at"`
 	JSON  struct {
-		ID         respjson.Field
-		CreatedAt  respjson.Field
-		CreatedBy  respjson.Field
-		Expression respjson.Field
-		Metadata   respjson.Field
-		Name       respjson.Field
-		Object     respjson.Field
-		Status     respjson.Field
-		Target     respjson.Field
-		Timezone   respjson.Field
-		Type       respjson.Field
-		RunAt      respjson.Field
-		raw        string
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		CreatedBy   respjson.Field
+		Expression  respjson.Field
+		Metadata    respjson.Field
+		Name        respjson.Field
+		Object      respjson.Field
+		Status      respjson.Field
+		Target      respjson.Field
+		Timezone    respjson.Field
+		Type        respjson.Field
+		PauseReason respjson.Field
+		RunAt       respjson.Field
+		raw         string
 	} `json:"-"`
 }
 
@@ -292,7 +294,7 @@ const (
 
 // The effective context compaction settings.
 type AutomationAgentConfigCompaction struct {
-	// Whether context is compacted in the background. Defaults to true.
+	// Whether context is compacted in the background. Defaults to false.
 	Async bool `json:"async" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -1437,8 +1439,7 @@ type AutomationTargetParamNewSessionAgent struct {
 	// The model to use for the agent. The requested model name is preserved.
 	Model param.Opt[string] `json:"model,omitzero"`
 	// Context compaction settings. Omit to keep the current settings. A supplied
-	// object replaces the settings; null or an empty object enables background
-	// compaction.
+	// object replaces the settings; null or an empty object uses blocking compaction.
 	Compaction AutomationTargetParamNewSessionAgentCompaction `json:"compaction,omitzero"`
 	// The service tier used for model requests.
 	//
@@ -1476,12 +1477,11 @@ func init() {
 }
 
 // Context compaction settings. Omit to keep the current settings. A supplied
-// object replaces the settings; null or an empty object enables background
-// compaction.
+// object replaces the settings; null or an empty object uses blocking compaction.
 type AutomationTargetParamNewSessionAgentCompaction struct {
-	// Whether to compact context in the background. Omission or null defaults to true.
-	// Set to false to use blocking compaction. Background compaction may increase
-	// token usage.
+	// Whether to compact context in the background. Omission or null defaults to
+	// false. Set to true to enable background compaction. Background compaction may
+	// increase token usage.
 	Async param.Opt[bool] `json:"async,omitzero"`
 	paramObj
 }
@@ -1558,6 +1558,10 @@ type OneTimeAutomation struct {
 	Target AutomationTargetUnion `json:"target" api:"required"`
 	// The type of the object. Always `once`.
 	Type constant.Once `json:"type" default:"once"`
+	// Why the service paused this schedule, or null for other schedules.
+	//
+	// Any of "target_session_failed".
+	PauseReason OneTimeAutomationPauseReason `json:"pause_reason" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -1570,6 +1574,7 @@ type OneTimeAutomation struct {
 		Status      respjson.Field
 		Target      respjson.Field
 		Type        respjson.Field
+		PauseReason respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -1588,6 +1593,13 @@ const (
 	OneTimeAutomationStatusActive    OneTimeAutomationStatus = "active"
 	OneTimeAutomationStatusPaused    OneTimeAutomationStatus = "paused"
 	OneTimeAutomationStatusCompleted OneTimeAutomationStatus = "completed"
+)
+
+// Why the service paused this schedule, or null for other schedules.
+type OneTimeAutomationPauseReason string
+
+const (
+	OneTimeAutomationPauseReasonTargetSessionFailed OneTimeAutomationPauseReason = "target_session_failed"
 )
 
 // Fields shared by periodic and one-time automations.
@@ -1616,6 +1628,10 @@ type PeriodicAutomation struct {
 	Timezone string `json:"timezone" api:"required"`
 	// The type of the object. Always `periodic`.
 	Type constant.Periodic `json:"type" default:"periodic"`
+	// Why the service paused this schedule, or null for other schedules.
+	//
+	// Any of "target_session_failed".
+	PauseReason PeriodicAutomationPauseReason `json:"pause_reason" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -1629,6 +1645,7 @@ type PeriodicAutomation struct {
 		Target      respjson.Field
 		Timezone    respjson.Field
 		Type        respjson.Field
+		PauseReason respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -1646,6 +1663,13 @@ type PeriodicAutomationStatus string
 const (
 	PeriodicAutomationStatusActive PeriodicAutomationStatus = "active"
 	PeriodicAutomationStatusPaused PeriodicAutomationStatus = "paused"
+)
+
+// Why the service paused this schedule, or null for other schedules.
+type PeriodicAutomationPauseReason string
+
+const (
+	PeriodicAutomationPauseReasonTargetSessionFailed PeriodicAutomationPauseReason = "target_session_failed"
 )
 
 type BetaAgentAutomationNewParams struct {

@@ -208,7 +208,7 @@ const (
 
 // The effective context compaction settings.
 type AgentCompaction struct {
-	// Whether context is compacted in the background. Defaults to true.
+	// Whether context is compacted in the background. Defaults to false.
 	Async bool `json:"async" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -1589,7 +1589,7 @@ func (r *AgentSessionAgent) UnmarshalJSON(data []byte) error {
 
 // The effective context compaction settings.
 type AgentSessionAgentCompaction struct {
-	// Whether context is compacted in the background. Defaults to true.
+	// Whether context is compacted in the background. Defaults to false.
 	Async bool `json:"async" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -9881,7 +9881,7 @@ type BetaAgentNewParams struct {
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
 	// A human-readable name for the agent. Omission or null leaves the agent unnamed.
 	Name param.Opt[string] `json:"name,omitzero"`
-	// Context compaction settings. Omission or null enables background compaction.
+	// Context compaction settings. Omission or null uses blocking compaction.
 	Compaction BetaAgentNewParamsCompaction `json:"compaction,omitzero"`
 	// Up to 16 string key-value pairs, with keys up to 64 and values up to 512
 	// characters. Omission or null defaults to an empty map.
@@ -9914,11 +9914,11 @@ func (r *BetaAgentNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Context compaction settings. Omission or null enables background compaction.
+// Context compaction settings. Omission or null uses blocking compaction.
 type BetaAgentNewParamsCompaction struct {
-	// Whether to compact context in the background. Omission or null defaults to true.
-	// Set to false to use blocking compaction. Background compaction may increase
-	// token usage.
+	// Whether to compact context in the background. Omission or null defaults to
+	// false. Set to true to enable background compaction. Background compaction may
+	// increase token usage.
 	Async param.Opt[bool] `json:"async,omitzero"`
 	paramObj
 }
@@ -9967,8 +9967,7 @@ type BetaAgentUpdateParams struct {
 	// The model to use for the agent. The requested model name is preserved.
 	Model param.Opt[string] `json:"model,omitzero"`
 	// Context compaction settings. Omit to keep the current settings. A supplied
-	// object replaces the settings; null or an empty object enables background
-	// compaction.
+	// object replaces the settings; null or an empty object uses blocking compaction.
 	Compaction BetaAgentUpdateParamsCompaction `json:"compaction,omitzero"`
 	// Replaces all metadata. Omit to leave unchanged, or pass null or {} to clear it.
 	// Up to 16 string key-value pairs, with keys up to 64 and values up to 512
@@ -10003,12 +10002,11 @@ func (r *BetaAgentUpdateParams) UnmarshalJSON(data []byte) error {
 }
 
 // Context compaction settings. Omit to keep the current settings. A supplied
-// object replaces the settings; null or an empty object enables background
-// compaction.
+// object replaces the settings; null or an empty object uses blocking compaction.
 type BetaAgentUpdateParamsCompaction struct {
-	// Whether to compact context in the background. Omission or null defaults to true.
-	// Set to false to use blocking compaction. Background compaction may increase
-	// token usage.
+	// Whether to compact context in the background. Omission or null defaults to
+	// false. Set to true to enable background compaction. Background compaction may
+	// increase token usage.
 	Async param.Opt[bool] `json:"async,omitzero"`
 	paramObj
 }
