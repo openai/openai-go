@@ -75,7 +75,7 @@ func (r *BetaAgentSessionEventService) StreamStreaming(ctx context.Context, sess
 	}
 	path := requestconfig.FormatPath("agents/sessions/%s/events", sessionID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &raw, opts...)
-	return ssestream.NewStream[AgentSessionEventUnion](ssestream.NewDecoder(raw), err)
+	return ssestream.NewStream[AgentSessionEventUnion](ssestream.NewDecoder(raw), err).WithEventsMode()
 }
 
 type BetaAgentSessionEventNewParams struct {

@@ -22,3 +22,9 @@ The beta callback runs during stream iteration, once per local failure. The API
 still receives only `Tool handler failed.`; request errors propagate through the
 stream normally. Nothing is logged automatically. Callback panics propagate;
 the helper does not recover panics or retry application code.
+
+Raw Agents session creation and event subscriptions yield `Type == "error"`
+values instead of ending the stream. Handle these events in your loop to receive
+later lifecycle events. HTTP failures, connection failures, and malformed JSON
+still appear through `Err()`. `FinalResult` still returns an error if it cannot
+collect a completed turn.

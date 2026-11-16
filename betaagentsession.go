@@ -88,7 +88,7 @@ func (r *BetaAgentSessionService) NewStreaming(ctx context.Context, body BetaAge
 	opts = append(opts, option.WithJSONSet("stream", true))
 	path := "agents/sessions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
-	stream = ssestream.NewStreamWithBetaAccumulator[AgentSessionEventUnion](ssestream.NewDecoder(raw), err, &betaAgentTurnCollector{})
+	stream = ssestream.NewStreamWithBetaAccumulator[AgentSessionEventUnion](ssestream.NewDecoder(raw), err, &betaAgentTurnCollector{}).WithEventsMode()
 	if cancel != nil {
 		return betaAgentCreationStream(ctx, cancel, r, stream, body.ToolHandlers, toolOpts)
 	}

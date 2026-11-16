@@ -182,6 +182,7 @@ type Stream[T any] struct {
 	closeOnce           sync.Once
 	done                atomic.Bool
 	synthesizeEventData bool
+	eventsMode          bool
 }
 
 func NewStream[T any](decoder Decoder, err error) *Stream[T] {
@@ -189,6 +190,15 @@ func NewStream[T any](decoder Decoder, err error) *Stream[T] {
 		decoder: decoder,
 		err:     err,
 	}
+}
+
+// WithEventsMode delivers in-band error objects as typed events instead of
+// stopping the stream. Transport and JSON decoding errors still stop iteration.
+// Call this before reading the stream. Typed beta iterators retain their own
+// event and error handling.
+func (s *Stream[T]) WithEventsMode() *Stream[T] {
+	s.eventsMode = true
+	return s
 }
 
 // NewStreamWithBetaAccumulator creates a stream whose accumulator observes all events,
@@ -254,16 +264,18 @@ func (s *Stream[T]) Next() bool {
 		return s.finish(nil)
 	}
 
-	ep := gjson.GetBytes(event.Data, "error")
-	if ep.Exists() {
-		return s.finish(&StreamError{
-			Message: fmt.Sprintf("received error while streaming: %s", ep.String()),
-			Event:   event,
-		})
+	if !s.eventsMode {
+		ep := gjson.GetBytes(event.Data, "error")
+		if ep.Exists() {
+			return s.finish(&StreamError{
+				Message: fmt.Sprintf("received error while streaming: %s", ep.String()),
+				Event:   event,
+			})
+		}
 	}
 	var nxt T
 	data := event.Data
-	if s.synthesizeEventData || strings.HasPrefix(event.Type, "thread.") {
+	if s.synthesizeEventData || (!s.eventsMode && strings.HasPrefix(event.Type, "thread.")) {
 		synthesized := map[string]any{
 			"event": event.Type,
 			"data":  json.RawMessage(data),
