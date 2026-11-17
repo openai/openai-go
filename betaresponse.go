@@ -4802,7 +4802,9 @@ type BetaResponseModel string
 
 const (
 	BetaResponseModelGPT6Astra         BetaResponseModel = "gpt-6-astra"
+	BetaResponseModelGPT6_2Astra       BetaResponseModel = "gpt-6.2-astra"
 	BetaResponseModelGPT6_1Sol         BetaResponseModel = "gpt-6.1-sol"
+	BetaResponseModelGPT6_2Sol         BetaResponseModel = "gpt-6.2-sol"
 	BetaResponseModelGPT6_1Terra       BetaResponseModel = "gpt-6.1-terra"
 	BetaResponseModelGPT6Sol           BetaResponseModel = "gpt-6-sol"
 	BetaResponseModelGPT6Luna          BetaResponseModel = "gpt-6-luna"
@@ -5172,6 +5174,7 @@ const (
 	BetaResponseModelGPT6Cyber             BetaResponseModel = "gpt-6-cyber"
 	BetaResponseModelGPTRosalindResearch   BetaResponseModel = "gpt-rosalind-research"
 	BetaResponseModelGPT6Rosalind          BetaResponseModel = "gpt-6-rosalind"
+	BetaResponseModelGPT6_2AstraLaw        BetaResponseModel = "gpt-6.2-astra-law"
 )
 
 // BetaResponseToolChoiceUnion contains all possible properties and values from
@@ -36141,6 +36144,14 @@ func (u BetaResponsesClientEventUnionParam) GetBackground() *bool {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponsesClientEventUnionParam) GetBackgroundOptions() *BetaResponsesClientEventResponseCreateBackgroundOptionsParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.BackgroundOptions
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u BetaResponsesClientEventUnionParam) GetContextManagement() []BetaResponsesClientEventResponseCreateContextManagementParam {
 	if vt := u.OfResponseCreate; vt != nil {
 		return vt.ContextManagement
@@ -36671,6 +36682,10 @@ type BetaResponsesClientEventResponseCreateParam struct {
 	Truncation string `json:"truncation,omitzero"`
 	// Domain-specific access programs to use for this request.
 	AccessPrograms BetaResponsesClientEventResponseCreateAccessProgramsParam `json:"access_programs,omitzero"`
+	// Options for background execution on HTTP requests. The `2h` and `8h` completion
+	// windows require `background: true`, Standard processing, and `stream: false` or
+	// omitted.
+	BackgroundOptions BetaResponsesClientEventResponseCreateBackgroundOptionsParam `json:"background_options,omitzero"`
 	// Request level image options.
 	Image BetaResponsesClientEventResponseCreateImageParam `json:"image,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
@@ -36789,6 +36804,35 @@ func init() {
 	)
 }
 
+// Options for background execution on HTTP requests. The `2h` and `8h` completion
+// windows require `background: true`, Standard processing, and `stream: false` or
+// omitted.
+type BetaResponsesClientEventResponseCreateBackgroundOptionsParam struct {
+	// A customer-provided opaque identifier used to prioritize related background
+	// requests. It does not add prior history to the input.
+	ContinuationID param.Opt[string] `json:"continuation_id,omitzero"`
+	// The completion window for background execution. Defaults to `soonest`; `2h` and
+	// `8h` select discounted background execution.
+	//
+	// Any of "soonest", "2h", "8h".
+	CompletionWindow string `json:"completion_window,omitzero"`
+	paramObj
+}
+
+func (r BetaResponsesClientEventResponseCreateBackgroundOptionsParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponsesClientEventResponseCreateBackgroundOptionsParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponsesClientEventResponseCreateBackgroundOptionsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponsesClientEventResponseCreateBackgroundOptionsParam](
+		"completion_window", "soonest", "2h", "8h",
+	)
+}
+
 // The property Type is required.
 type BetaResponsesClientEventResponseCreateContextManagementParam struct {
 	// The context management entry type. Currently only 'compaction' is supported.
@@ -36881,7 +36925,9 @@ type BetaResponsesClientEventResponseCreateModel = string
 
 const (
 	BetaResponsesClientEventResponseCreateModelGPT6Astra         BetaResponsesClientEventResponseCreateModel = "gpt-6-astra"
+	BetaResponsesClientEventResponseCreateModelGPT6_2Astra       BetaResponsesClientEventResponseCreateModel = "gpt-6.2-astra"
 	BetaResponsesClientEventResponseCreateModelGPT6_1Sol         BetaResponsesClientEventResponseCreateModel = "gpt-6.1-sol"
+	BetaResponsesClientEventResponseCreateModelGPT6_2Sol         BetaResponsesClientEventResponseCreateModel = "gpt-6.2-sol"
 	BetaResponsesClientEventResponseCreateModelGPT6_1Terra       BetaResponsesClientEventResponseCreateModel = "gpt-6.1-terra"
 	BetaResponsesClientEventResponseCreateModelGPT6Sol           BetaResponsesClientEventResponseCreateModel = "gpt-6-sol"
 	BetaResponsesClientEventResponseCreateModelGPT6Luna          BetaResponsesClientEventResponseCreateModel = "gpt-6-luna"
@@ -37251,6 +37297,7 @@ const (
 	BetaResponsesClientEventResponseCreateModelGPT6Cyber             BetaResponsesClientEventResponseCreateModel = "gpt-6-cyber"
 	BetaResponsesClientEventResponseCreateModelGPTRosalindResearch   BetaResponsesClientEventResponseCreateModel = "gpt-rosalind-research"
 	BetaResponsesClientEventResponseCreateModelGPT6Rosalind          BetaResponsesClientEventResponseCreateModel = "gpt-6-rosalind"
+	BetaResponsesClientEventResponseCreateModelGPT6_2AstraLaw        BetaResponsesClientEventResponseCreateModel = "gpt-6.2-astra-law"
 )
 
 // Configuration for running moderation on the input and output of this response.
@@ -45072,6 +45119,10 @@ type BetaResponseNewParams struct {
 	Truncation BetaResponseNewParamsTruncation `json:"truncation,omitzero"`
 	// Domain-specific access programs to use for this request.
 	AccessPrograms BetaResponseNewParamsAccessPrograms `json:"access_programs,omitzero"`
+	// Options for background execution on HTTP requests. The `2h` and `8h` completion
+	// windows require `background: true`, Standard processing, and `stream: false` or
+	// omitted.
+	BackgroundOptions BetaResponseNewParamsBackgroundOptions `json:"background_options,omitzero"`
 	// Request level image options.
 	Image BetaResponseNewParamsImage `json:"image,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
@@ -45176,6 +45227,35 @@ func init() {
 	)
 }
 
+// Options for background execution on HTTP requests. The `2h` and `8h` completion
+// windows require `background: true`, Standard processing, and `stream: false` or
+// omitted.
+type BetaResponseNewParamsBackgroundOptions struct {
+	// A customer-provided opaque identifier used to prioritize related background
+	// requests. It does not add prior history to the input.
+	ContinuationID param.Opt[string] `json:"continuation_id,omitzero"`
+	// The completion window for background execution. Defaults to `soonest`; `2h` and
+	// `8h` select discounted background execution.
+	//
+	// Any of "soonest", "2h", "8h".
+	CompletionWindow string `json:"completion_window,omitzero"`
+	paramObj
+}
+
+func (r BetaResponseNewParamsBackgroundOptions) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseNewParamsBackgroundOptions
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaResponseNewParamsBackgroundOptions) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaResponseNewParamsBackgroundOptions](
+		"completion_window", "soonest", "2h", "8h",
+	)
+}
+
 // The property Type is required.
 type BetaResponseNewParamsContextManagement struct {
 	// The context management entry type. Currently only 'compaction' is supported.
@@ -45259,7 +45339,9 @@ type BetaResponseNewParamsModel string
 
 const (
 	BetaResponseNewParamsModelGPT6Astra         BetaResponseNewParamsModel = "gpt-6-astra"
+	BetaResponseNewParamsModelGPT6_2Astra       BetaResponseNewParamsModel = "gpt-6.2-astra"
 	BetaResponseNewParamsModelGPT6_1Sol         BetaResponseNewParamsModel = "gpt-6.1-sol"
+	BetaResponseNewParamsModelGPT6_2Sol         BetaResponseNewParamsModel = "gpt-6.2-sol"
 	BetaResponseNewParamsModelGPT6_1Terra       BetaResponseNewParamsModel = "gpt-6.1-terra"
 	BetaResponseNewParamsModelGPT6Sol           BetaResponseNewParamsModel = "gpt-6-sol"
 	BetaResponseNewParamsModelGPT6Luna          BetaResponseNewParamsModel = "gpt-6-luna"
@@ -45629,6 +45711,7 @@ const (
 	BetaResponseNewParamsModelGPT6Cyber             BetaResponseNewParamsModel = "gpt-6-cyber"
 	BetaResponseNewParamsModelGPTRosalindResearch   BetaResponseNewParamsModel = "gpt-rosalind-research"
 	BetaResponseNewParamsModelGPT6Rosalind          BetaResponseNewParamsModel = "gpt-6-rosalind"
+	BetaResponseNewParamsModelGPT6_2AstraLaw        BetaResponseNewParamsModel = "gpt-6.2-astra-law"
 )
 
 // Configuration for running moderation on the input and output of this response.
@@ -46185,7 +46268,9 @@ type BetaResponseCompactParamsModel string
 
 const (
 	BetaResponseCompactParamsModelGPT6Astra         BetaResponseCompactParamsModel = "gpt-6-astra"
+	BetaResponseCompactParamsModelGPT6_2Astra       BetaResponseCompactParamsModel = "gpt-6.2-astra"
 	BetaResponseCompactParamsModelGPT6_1Sol         BetaResponseCompactParamsModel = "gpt-6.1-sol"
+	BetaResponseCompactParamsModelGPT6_2Sol         BetaResponseCompactParamsModel = "gpt-6.2-sol"
 	BetaResponseCompactParamsModelGPT6_1Terra       BetaResponseCompactParamsModel = "gpt-6.1-terra"
 	BetaResponseCompactParamsModelGPT6Sol           BetaResponseCompactParamsModel = "gpt-6-sol"
 	BetaResponseCompactParamsModelGPT6Luna          BetaResponseCompactParamsModel = "gpt-6-luna"
@@ -46555,6 +46640,7 @@ const (
 	BetaResponseCompactParamsModelGPT6Cyber             BetaResponseCompactParamsModel = "gpt-6-cyber"
 	BetaResponseCompactParamsModelGPTRosalindResearch   BetaResponseCompactParamsModel = "gpt-rosalind-research"
 	BetaResponseCompactParamsModelGPT6Rosalind          BetaResponseCompactParamsModel = "gpt-6-rosalind"
+	BetaResponseCompactParamsModelGPT6_2AstraLaw        BetaResponseCompactParamsModel = "gpt-6.2-astra-law"
 )
 
 // Request level image options.
