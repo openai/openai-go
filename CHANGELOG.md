@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.102.0](https://github.com/openai/openai-go/compare/v3.101.0...v3.102.0) (2026-11-17)
+
+
+### Features
+
+* **api:** type Managed Agents budget events ([#1274](https://github.com/openai/openai-go/issues/1274)) ([7d320e4](https://github.com/openai/openai-go/commit/7d320e4dc592b2b93929aa3ca964a1828a7a16c1))
+
 ## [3.101.0](https://github.com/openai/openai-go/compare/v3.100.0...v3.101.0) (2026-11-17)
 
 
