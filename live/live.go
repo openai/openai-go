@@ -5149,6 +5149,104 @@ func (r *InstructionsAppendedEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type McpRequireApproval string
+
+const (
+	McpRequireApprovalAlways McpRequireApproval = "always"
+	McpRequireApprovalNever  McpRequireApproval = "never"
+)
+
+type McpRequireApprovalFilter struct {
+	// A filter that forces approval for matching tools.
+	Always McpToolFilter `json:"always" api:"nullable"`
+	// A filter that skips approval for matching tools.
+	Never McpToolFilter `json:"never" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Always      respjson.Field
+		Never       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r McpRequireApprovalFilter) RawJSON() string { return r.JSON.raw }
+func (r *McpRequireApprovalFilter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this McpRequireApprovalFilter to a
+// McpRequireApprovalFilterParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// McpRequireApprovalFilterParam.Overrides()
+func (r McpRequireApprovalFilter) ToParam() McpRequireApprovalFilterParam {
+	return param.Override[McpRequireApprovalFilterParam](json.RawMessage(r.RawJSON()))
+}
+
+type McpRequireApprovalFilterParam struct {
+	// A filter that forces approval for matching tools.
+	Always McpToolFilterParam `json:"always,omitzero"`
+	// A filter that skips approval for matching tools.
+	Never McpToolFilterParam `json:"never,omitzero"`
+	paramObj
+}
+
+func (r McpRequireApprovalFilterParam) MarshalJSON() (data []byte, err error) {
+	type shadow McpRequireApprovalFilterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *McpRequireApprovalFilterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type McpToolFilter struct {
+	// Whether to allow only read-only tools for matching entries.
+	ReadOnly bool `json:"read_only" api:"nullable"`
+	// A list of tool names to match against.
+	ToolNames []string `json:"tool_names" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ReadOnly    respjson.Field
+		ToolNames   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r McpToolFilter) RawJSON() string { return r.JSON.raw }
+func (r *McpToolFilter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this McpToolFilter to a McpToolFilterParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// McpToolFilterParam.Overrides()
+func (r McpToolFilter) ToParam() McpToolFilterParam {
+	return param.Override[McpToolFilterParam](json.RawMessage(r.RawJSON()))
+}
+
+type McpToolFilterParam struct {
+	// Whether to allow only read-only tools for matching entries.
+	ReadOnly param.Opt[bool] `json:"read_only,omitzero"`
+	// A list of tool names to match against.
+	ToolNames []string `json:"tool_names,omitzero"`
+	paramObj
+}
+
+func (r McpToolFilterParam) MarshalJSON() (data []byte, err error) {
+	type shadow McpToolFilterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *McpToolFilterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Startup configuration for a Live media session. Follow the
 // [Live prompting guide](https://developers.openai.com/api/docs/guides/live-prompting)
 // when writing frontend instructions and the backend prompt under
@@ -7216,18 +7314,128 @@ func (r *ResponsesDelegationConfigToolImageGeneration) UnmarshalJSON(data []byte
 }
 
 type ResponsesDelegationConfigToolMcp struct {
-	Type constant.Mcp `json:"type" default:"mcp"`
+	// The tool invocation context(s).
+	//
+	// Any of "direct", "programmatic".
+	AllowedCallers []string `json:"allowed_callers" api:"nullable"`
+	// A list of MCP tool names that are allowed for this server.
+	AllowedTools ResponsesDelegationConfigToolMcpAllowedToolsUnion `json:"allowed_tools" api:"nullable"`
+	// This value is omitted from returned Live session data.
+	Authorization string `json:"authorization" api:"nullable"`
+	// The ID of a built-in MCP connector. This field is deprecated for models released
+	// after September 1, 2026. Use `server_url` to connect to a remote MCP server, or
+	// `tunnel_id` to connect to a local MCP server.
+	//
+	// Deprecated: deprecated
+	ConnectorID string `json:"connector_id" api:"nullable"`
+	// Whether this MCP tool should be deferred and discovered via tool search.
+	DeferLoading bool `json:"defer_loading" api:"nullable"`
+	// Optional HTTP headers to send when connecting to the MCP server.
+	Headers map[string]string `json:"headers" api:"nullable"`
+	// Controls which MCP tools require explicit user approval before execution.
+	RequireApproval ResponsesDelegationConfigToolMcpRequireApprovalUnion `json:"require_approval" api:"nullable"`
+	// An optional human-readable description of the MCP server.
+	ServerDescription string `json:"server_description" api:"nullable"`
+	// A label used to identify the MCP server.
+	ServerLabel string `json:"server_label"`
+	// The URL of the MCP server to connect to.
+	ServerURL string `json:"server_url" api:"nullable" format:"uri"`
+	// The Secure MCP Tunnel ID to use instead of a direct server URL.
+	TunnelID string       `json:"tunnel_id" api:"nullable"`
+	Type     constant.Mcp `json:"type" default:"mcp"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		AllowedCallers    respjson.Field
+		AllowedTools      respjson.Field
+		Authorization     respjson.Field
+		ConnectorID       respjson.Field
+		DeferLoading      respjson.Field
+		Headers           respjson.Field
+		RequireApproval   respjson.Field
+		ServerDescription respjson.Field
+		ServerLabel       respjson.Field
+		ServerURL         respjson.Field
+		TunnelID          respjson.Field
+		Type              respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
 	} `json:"-"`
 }
 
 // Returns the unmodified JSON received from the API
 func (r ResponsesDelegationConfigToolMcp) RawJSON() string { return r.JSON.raw }
 func (r *ResponsesDelegationConfigToolMcp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponsesDelegationConfigToolMcpAllowedToolsUnion contains all possible
+// properties and values from [[]string], [McpToolFilter].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfArrayOfString]
+type ResponsesDelegationConfigToolMcpAllowedToolsUnion struct {
+	// This field will be present if the value is a [[]string] instead of an object.
+	OfArrayOfString []string      `json:",inline"`
+	OfMcpToolFilter McpToolFilter `json:",inline"`
+	JSON            struct {
+		OfArrayOfString respjson.Field
+		OfMcpToolFilter respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+func (u ResponsesDelegationConfigToolMcpAllowedToolsUnion) AsArrayOfString() (v []string) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolMcpAllowedToolsUnion) AsMcpToolFilter() (v McpToolFilter) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponsesDelegationConfigToolMcpAllowedToolsUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ResponsesDelegationConfigToolMcpAllowedToolsUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponsesDelegationConfigToolMcpRequireApprovalUnion contains all possible
+// properties and values from [McpRequireApprovalFilter], [McpRequireApproval].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfMcpRequire]
+type ResponsesDelegationConfigToolMcpRequireApprovalUnion struct {
+	OfMcpRequireApprovalFilter McpRequireApprovalFilter `json:",inline"`
+	// This field will be present if the value is a [McpRequireApproval] instead of an
+	// object.
+	OfMcpRequire McpRequireApproval `json:",inline"`
+	JSON         struct {
+		OfMcpRequireApprovalFilter respjson.Field
+		OfMcpRequire               respjson.Field
+		raw                        string
+	} `json:"-"`
+}
+
+func (u ResponsesDelegationConfigToolMcpRequireApprovalUnion) AsMcpRequireApprovalFilter() (v McpRequireApprovalFilter) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponsesDelegationConfigToolMcpRequireApprovalUnion) AsMcpRequire() (v McpRequireApproval) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponsesDelegationConfigToolMcpRequireApprovalUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ResponsesDelegationConfigToolMcpRequireApprovalUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -8259,6 +8467,94 @@ func (u ResponsesDelegationConfigToolUnionParam) GetEnvironment() *ResponsesDele
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolUnionParam) GetAllowedCallers() []string {
+	if vt := u.OfMcp; vt != nil {
+		return vt.AllowedCallers
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolUnionParam) GetAllowedTools() *ResponsesDelegationConfigToolMcpAllowedToolsUnionParam {
+	if vt := u.OfMcp; vt != nil {
+		return &vt.AllowedTools
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolUnionParam) GetAuthorization() *string {
+	if vt := u.OfMcp; vt != nil && vt.Authorization.Valid() {
+		return &vt.Authorization.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolUnionParam) GetConnectorID() *string {
+	if vt := u.OfMcp; vt != nil && vt.ConnectorID.Valid() {
+		return &vt.ConnectorID.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolUnionParam) GetDeferLoading() *bool {
+	if vt := u.OfMcp; vt != nil && vt.DeferLoading.Valid() {
+		return &vt.DeferLoading.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolUnionParam) GetHeaders() map[string]string {
+	if vt := u.OfMcp; vt != nil {
+		return vt.Headers
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolUnionParam) GetRequireApproval() *ResponsesDelegationConfigToolMcpRequireApprovalUnionParam {
+	if vt := u.OfMcp; vt != nil {
+		return &vt.RequireApproval
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolUnionParam) GetServerDescription() *string {
+	if vt := u.OfMcp; vt != nil && vt.ServerDescription.Valid() {
+		return &vt.ServerDescription.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolUnionParam) GetServerLabel() *string {
+	if vt := u.OfMcp; vt != nil && vt.ServerLabel.Valid() {
+		return &vt.ServerLabel.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolUnionParam) GetServerURL() *string {
+	if vt := u.OfMcp; vt != nil && vt.ServerURL.Valid() {
+		return &vt.ServerURL.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationConfigToolUnionParam) GetTunnelID() *string {
+	if vt := u.OfMcp; vt != nil && vt.TunnelID.Valid() {
+		return &vt.TunnelID.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationConfigToolUnionParam) GetType() *string {
 	if vt := u.OfFunction; vt != nil {
 		return (*string)(&vt.Type)
@@ -8835,10 +9131,38 @@ func NewResponsesDelegationConfigToolMcpParam() ResponsesDelegationConfigToolMcp
 	}
 }
 
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationConfigToolMcpParam].
+// Use [NewResponsesDelegationConfigToolMcpParam] to initialize the constant
+// fields.
 type ResponsesDelegationConfigToolMcpParam struct {
-	Type constant.Mcp `json:"type" default:"mcp"`
+	// This value is omitted from returned Live session data.
+	Authorization param.Opt[string] `json:"authorization,omitzero"`
+	// The ID of a built-in MCP connector. This field is deprecated for models released
+	// after September 1, 2026. Use `server_url` to connect to a remote MCP server, or
+	// `tunnel_id` to connect to a local MCP server.
+	//
+	// Deprecated: deprecated
+	ConnectorID param.Opt[string] `json:"connector_id,omitzero"`
+	// Whether this MCP tool should be deferred and discovered via tool search.
+	DeferLoading param.Opt[bool] `json:"defer_loading,omitzero"`
+	// An optional human-readable description of the MCP server.
+	ServerDescription param.Opt[string] `json:"server_description,omitzero"`
+	// The URL of the MCP server to connect to.
+	ServerURL param.Opt[string] `json:"server_url,omitzero" format:"uri"`
+	// The Secure MCP Tunnel ID to use instead of a direct server URL.
+	TunnelID param.Opt[string] `json:"tunnel_id,omitzero"`
+	// A label used to identify the MCP server.
+	ServerLabel param.Opt[string] `json:"server_label,omitzero"`
+	// The tool invocation context(s).
+	//
+	// Any of "direct", "programmatic".
+	AllowedCallers []string `json:"allowed_callers,omitzero"`
+	// A list of MCP tool names that are allowed for this server.
+	AllowedTools ResponsesDelegationConfigToolMcpAllowedToolsUnionParam `json:"allowed_tools,omitzero"`
+	// Optional HTTP headers to send when connecting to the MCP server.
+	Headers map[string]string `json:"headers,omitzero"`
+	// Controls which MCP tools require explicit user approval before execution.
+	RequireApproval ResponsesDelegationConfigToolMcpRequireApprovalUnionParam `json:"require_approval,omitzero"`
+	Type            constant.Mcp                                              `json:"type" default:"mcp"`
 	paramObj
 }
 
@@ -8848,6 +9172,39 @@ func (r ResponsesDelegationConfigToolMcpParam) MarshalJSON() (data []byte, err e
 }
 func (r *ResponsesDelegationConfigToolMcpParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponsesDelegationConfigToolMcpAllowedToolsUnionParam struct {
+	OfArrayOfStrings []string            `json:",omitzero,inline"`
+	OfMcpToolFilter  *McpToolFilterParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponsesDelegationConfigToolMcpAllowedToolsUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfArrayOfStrings, u.OfMcpToolFilter)
+}
+func (u *ResponsesDelegationConfigToolMcpAllowedToolsUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponsesDelegationConfigToolMcpRequireApprovalUnionParam struct {
+	OfMcpRequireApprovalFilter *McpRequireApprovalFilterParam `json:",omitzero,inline"`
+	// Check if union is this variant with !param.IsOmitted(union.OfMcpRequire)
+	OfMcpRequire param.Opt[McpRequireApproval] `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponsesDelegationConfigToolMcpRequireApprovalUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfMcpRequireApprovalFilter, u.OfMcpRequire)
+}
+func (u *ResponsesDelegationConfigToolMcpRequireApprovalUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func NewResponsesDelegationConfigToolCustomParam() ResponsesDelegationConfigToolCustomParam {
@@ -9927,6 +10284,94 @@ func (u ResponsesDelegationUpdateConfigToolUnionParam) GetEnvironment() *Respons
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolUnionParam) GetAllowedCallers() []string {
+	if vt := u.OfMcp; vt != nil {
+		return vt.AllowedCallers
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolUnionParam) GetAllowedTools() *ResponsesDelegationUpdateConfigToolMcpAllowedToolsUnionParam {
+	if vt := u.OfMcp; vt != nil {
+		return &vt.AllowedTools
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolUnionParam) GetAuthorization() *string {
+	if vt := u.OfMcp; vt != nil && vt.Authorization.Valid() {
+		return &vt.Authorization.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolUnionParam) GetConnectorID() *string {
+	if vt := u.OfMcp; vt != nil && vt.ConnectorID.Valid() {
+		return &vt.ConnectorID.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolUnionParam) GetDeferLoading() *bool {
+	if vt := u.OfMcp; vt != nil && vt.DeferLoading.Valid() {
+		return &vt.DeferLoading.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolUnionParam) GetHeaders() map[string]string {
+	if vt := u.OfMcp; vt != nil {
+		return vt.Headers
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolUnionParam) GetRequireApproval() *ResponsesDelegationUpdateConfigToolMcpRequireApprovalUnionParam {
+	if vt := u.OfMcp; vt != nil {
+		return &vt.RequireApproval
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolUnionParam) GetServerDescription() *string {
+	if vt := u.OfMcp; vt != nil && vt.ServerDescription.Valid() {
+		return &vt.ServerDescription.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolUnionParam) GetServerLabel() *string {
+	if vt := u.OfMcp; vt != nil && vt.ServerLabel.Valid() {
+		return &vt.ServerLabel.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolUnionParam) GetServerURL() *string {
+	if vt := u.OfMcp; vt != nil && vt.ServerURL.Valid() {
+		return &vt.ServerURL.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesDelegationUpdateConfigToolUnionParam) GetTunnelID() *string {
+	if vt := u.OfMcp; vt != nil && vt.TunnelID.Valid() {
+		return &vt.TunnelID.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesDelegationUpdateConfigToolUnionParam) GetType() *string {
 	if vt := u.OfFunction; vt != nil {
 		return (*string)(&vt.Type)
@@ -10505,10 +10950,38 @@ func NewResponsesDelegationUpdateConfigToolMcpParam() ResponsesDelegationUpdateC
 	}
 }
 
-// This struct has a constant value, construct it with
-// [NewResponsesDelegationUpdateConfigToolMcpParam].
+// Use [NewResponsesDelegationUpdateConfigToolMcpParam] to initialize the constant
+// fields.
 type ResponsesDelegationUpdateConfigToolMcpParam struct {
-	Type constant.Mcp `json:"type" default:"mcp"`
+	// This value is omitted from returned Live session data.
+	Authorization param.Opt[string] `json:"authorization,omitzero"`
+	// The ID of a built-in MCP connector. This field is deprecated for models released
+	// after September 1, 2026. Use `server_url` to connect to a remote MCP server, or
+	// `tunnel_id` to connect to a local MCP server.
+	//
+	// Deprecated: deprecated
+	ConnectorID param.Opt[string] `json:"connector_id,omitzero"`
+	// Whether this MCP tool should be deferred and discovered via tool search.
+	DeferLoading param.Opt[bool] `json:"defer_loading,omitzero"`
+	// An optional human-readable description of the MCP server.
+	ServerDescription param.Opt[string] `json:"server_description,omitzero"`
+	// The URL of the MCP server to connect to.
+	ServerURL param.Opt[string] `json:"server_url,omitzero" format:"uri"`
+	// The Secure MCP Tunnel ID to use instead of a direct server URL.
+	TunnelID param.Opt[string] `json:"tunnel_id,omitzero"`
+	// A label used to identify the MCP server.
+	ServerLabel param.Opt[string] `json:"server_label,omitzero"`
+	// The tool invocation context(s).
+	//
+	// Any of "direct", "programmatic".
+	AllowedCallers []string `json:"allowed_callers,omitzero"`
+	// A list of MCP tool names that are allowed for this server.
+	AllowedTools ResponsesDelegationUpdateConfigToolMcpAllowedToolsUnionParam `json:"allowed_tools,omitzero"`
+	// Optional HTTP headers to send when connecting to the MCP server.
+	Headers map[string]string `json:"headers,omitzero"`
+	// Controls which MCP tools require explicit user approval before execution.
+	RequireApproval ResponsesDelegationUpdateConfigToolMcpRequireApprovalUnionParam `json:"require_approval,omitzero"`
+	Type            constant.Mcp                                                    `json:"type" default:"mcp"`
 	paramObj
 }
 
@@ -10518,6 +10991,39 @@ func (r ResponsesDelegationUpdateConfigToolMcpParam) MarshalJSON() (data []byte,
 }
 func (r *ResponsesDelegationUpdateConfigToolMcpParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponsesDelegationUpdateConfigToolMcpAllowedToolsUnionParam struct {
+	OfArrayOfStrings []string            `json:",omitzero,inline"`
+	OfMcpToolFilter  *McpToolFilterParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponsesDelegationUpdateConfigToolMcpAllowedToolsUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfArrayOfStrings, u.OfMcpToolFilter)
+}
+func (u *ResponsesDelegationUpdateConfigToolMcpAllowedToolsUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponsesDelegationUpdateConfigToolMcpRequireApprovalUnionParam struct {
+	OfMcpRequireApprovalFilter *McpRequireApprovalFilterParam `json:",omitzero,inline"`
+	// Check if union is this variant with !param.IsOmitted(union.OfMcpRequire)
+	OfMcpRequire param.Opt[McpRequireApproval] `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponsesDelegationUpdateConfigToolMcpRequireApprovalUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfMcpRequireApprovalFilter, u.OfMcpRequire)
+}
+func (u *ResponsesDelegationUpdateConfigToolMcpRequireApprovalUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func NewResponsesDelegationUpdateConfigToolCustomParam() ResponsesDelegationUpdateConfigToolCustomParam {

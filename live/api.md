@@ -14,6 +14,9 @@ Params Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#ForkSessionConfigParam">ForkSessionConfigParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#FunctionToolParam">FunctionToolParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#InitialItemUnionParam">InitialItemUnionParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#McpRequireApproval">McpRequireApproval</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#McpRequireApprovalFilterParam">McpRequireApprovalFilterParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#McpToolFilterParam">McpToolFilterParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#MediaSessionConfigParam">MediaSessionConfigParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#MediaSessionForkConfigParam">MediaSessionForkConfigParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#ResponsesDelegationConfigParam">ResponsesDelegationConfigParam</a>
@@ -35,6 +38,9 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#LiveError">LiveError</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#FunctionTool">FunctionTool</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#InitialItemUnion">InitialItemUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#McpRequireApproval">McpRequireApproval</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#McpRequireApprovalFilter">McpRequireApprovalFilter</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#McpToolFilter">McpToolFilter</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#ResponsesDelegationConfig">ResponsesDelegationConfig</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#ServerEventSelector">ServerEventSelector</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live">live</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/live#SessionResource">SessionResource</a>
