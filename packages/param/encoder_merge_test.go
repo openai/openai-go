@@ -10,11 +10,12 @@ import (
 	"testing"
 
 	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
+	"github.com/openai/openai-go/v3/internal/encoding/sjson"
 	"github.com/openai/openai-go/v3/packages/param"
-	"github.com/tidwall/sjson"
 )
 
-// Keep the released algorithm as a comparison for the encoding contract:
+// Keep the released traversal algorithm as a comparison for the encoding contract.
+// Fixed expectations below independently protect empty-path behavior:
 // bytes, field position, SJSON values, omission paths and error order.
 func marshalExtrasReleased(underlying any, extras map[string]any) ([]byte, error) {
 	encoded, err := shimjson.Marshal(underlying)
@@ -89,7 +90,7 @@ func TestExtraFieldsReleasedEncoding(t *testing.T) {
 			extras:     map[string]any{"first": true, "raw": json.RawMessage(`{bad}`), "z": false},
 		},
 		{
-			name:       "SJSON nonfinite value remains an invalid JSON error at enclosing marshal",
+			name:       "SJSON nonfinite value is rejected",
 			underlying: json.RawMessage(`{"a":0}`),
 			extras:     map[string]any{"a": math.NaN(), "b": math.Inf(1)},
 		},
@@ -169,6 +170,20 @@ func BenchmarkExtraFields(b *testing.B) {
 					}
 				}
 			})
+		}
+	}
+}
+
+func TestExtraFieldsEmptyKeyContract(t *testing.T) {
+	got, err := param.MarshalWithExtras(Struct{}, json.RawMessage(`{"":"keep","z":true}`), map[string]any{"": param.Omit, "new": false})
+	if err != nil || string(got) != `{"":"keep","z":true,"new":false}` {
+		t.Fatalf("empty Omit changed the object: %s / %v", got, err)
+	}
+	for _, underlying := range []json.RawMessage{json.RawMessage(`{}`), json.RawMessage(`[]`)} {
+		var calls []string
+		got, err := param.MarshalWithExtras(Struct{}, underlying, map[string]any{"": recordedMarshaler{"empty", &calls, false}})
+		if err == nil || err.Error() != "path cannot be empty" || len(got) != 0 || !slices.Equal(calls, []string{"empty"}) {
+			t.Fatalf("empty set contract: %s / %v / %v", got, err, calls)
 		}
 	}
 }

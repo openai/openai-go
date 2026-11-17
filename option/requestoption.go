@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/openai/openai-go/v3/auth"
+	"github.com/openai/openai-go/v3/internal/encoding/sjson"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
-	"github.com/tidwall/sjson"
 )
 
 // RequestOption is an option for the requests made by the openai API Client

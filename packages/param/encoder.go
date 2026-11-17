@@ -11,8 +11,8 @@ import (
 
 	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
 
+	"github.com/openai/openai-go/v3/internal/encoding/sjson"
 	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
 )
 
 // EncodedAsDate is not be stable and shouldn't be relied upon
