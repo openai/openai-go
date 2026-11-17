@@ -39,6 +39,7 @@ type AgentSession string                                      // Always "agent.s
 type AgentSessionActionRequired string                        // Always "agent.session.action_required"
 type AgentSessionArtifact string                              // Always "agent.session.artifact"
 type AgentSessionArtifactDeleted string                       // Always "agent.session.artifact.deleted"
+type AgentSessionBudgetReached string                         // Always "agent.session.budget_reached"
 type AgentSessionCreated string                               // Always "agent.session.created"
 type AgentSessionDeleted string                               // Always "agent.session.deleted"
 type AgentSessionEnvironmentConnected string                  // Always "agent.session.environment.connected"
@@ -659,6 +660,9 @@ func (c AgentSessionActionRequired) Default() AgentSessionActionRequired {
 func (c AgentSessionArtifact) Default() AgentSessionArtifact { return "agent.session.artifact" }
 func (c AgentSessionArtifactDeleted) Default() AgentSessionArtifactDeleted {
 	return "agent.session.artifact.deleted"
+}
+func (c AgentSessionBudgetReached) Default() AgentSessionBudgetReached {
+	return "agent.session.budget_reached"
 }
 func (c AgentSessionCreated) Default() AgentSessionCreated { return "agent.session.created" }
 func (c AgentSessionDeleted) Default() AgentSessionDeleted { return "agent.session.deleted" }
@@ -1615,6 +1619,7 @@ func (c AgentSession) MarshalJSON() ([]byte, error)                        { ret
 func (c AgentSessionActionRequired) MarshalJSON() ([]byte, error)          { return marshalString(c) }
 func (c AgentSessionArtifact) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c AgentSessionArtifactDeleted) MarshalJSON() ([]byte, error)         { return marshalString(c) }
+func (c AgentSessionBudgetReached) MarshalJSON() ([]byte, error)           { return marshalString(c) }
 func (c AgentSessionCreated) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c AgentSessionDeleted) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c AgentSessionEnvironmentConnected) MarshalJSON() ([]byte, error)    { return marshalString(c) }

@@ -84,9 +84,10 @@ type agentPendingCall struct {
 
 // Stream subscribes to events before submitting input, then streams through the
 // selected coordinator turn's completion/failure/cancellation and subsequent
-// session idle event, or a session failure. The session must be idle, with only
-// one input writer while the helper runs; concurrent inputs cannot be correlated
-// to turns. Initial idle and subagent completion events do not end the stream.
+// session idle event, a session failure, or a matching-session budget pause.
+// The session must be idle, with only one input writer while the helper runs;
+// concurrent inputs cannot be correlated to turns. Initial idle and subagent
+// completion events do not end the stream.
 // In-band error events are yielded through Current; inspect Current().Error when
 // Type is "error" and continue reading subsequent lifecycle events. Request,
 // transport, and JSON decoding errors stop iteration and are reported through Err.
@@ -200,7 +201,9 @@ func (s *AgentSessionStream) Next() (ok bool) {
 		}
 		s.collector.Accumulate(event)
 		s.current = event
-		if event.Type == "agent.session.failed" || (event.Type == "agent.session.idle" && s.turnEnded) {
+		if event.Type == "agent.session.failed" ||
+			(event.Type == "agent.session.budget_reached" && event.Session.ID == s.sessionID && (s.turnID == "" || s.turnEnded)) ||
+			(event.Type == "agent.session.idle" && s.turnEnded) {
 			_ = s.Close()
 		} else if event.Type == "agent.session.turn.item.added" && event.Item.Type == "function_call" {
 			key := agentCallKey{event.Item.TurnID, event.Item.CallID}
@@ -228,7 +231,7 @@ func (s *AgentSessionStream) Next() (ok bool) {
 }
 
 func (s *AgentSessionStream) accept(event AgentSessionEventUnion) bool {
-	if s.sessionID == "" && event.Type == "agent.session.created" {
+	if s.sessionID == "" && (event.Type == "agent.session.created" || event.Type == "agent.session.budget_reached") {
 		s.sessionID = event.Session.ID
 	}
 	if _, exists := s.eventIDs[event.EventID]; exists {
