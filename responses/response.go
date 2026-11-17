@@ -29444,6 +29444,14 @@ func (u ResponsesClientEventUnionParam) GetBackground() *bool {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetBackgroundOptions() *ResponsesClientEventResponseCreateBackgroundOptionsParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.BackgroundOptions
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponsesClientEventUnionParam) GetContextManagement() []ResponsesClientEventResponseCreateContextManagementParam {
 	if vt := u.OfResponseCreate; vt != nil {
 		return vt.ContextManagement
@@ -29946,6 +29954,10 @@ type ResponsesClientEventResponseCreateParam struct {
 	Truncation string `json:"truncation,omitzero"`
 	// Domain-specific access programs to use for this request.
 	AccessPrograms ResponsesClientEventResponseCreateAccessProgramsParam `json:"access_programs,omitzero"`
+	// Options for background execution on HTTP requests. The `2h` and `8h` completion
+	// windows require `background: true`, Standard processing, and `stream: false` or
+	// omitted.
+	BackgroundOptions ResponsesClientEventResponseCreateBackgroundOptionsParam `json:"background_options,omitzero"`
 	// Request level image options.
 	Image ResponsesClientEventResponseCreateImageParam `json:"image,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
@@ -30064,6 +30076,35 @@ func (r *ResponsesClientEventResponseCreateAccessProgramsParam) UnmarshalJSON(da
 func init() {
 	apijson.RegisterFieldValidator[ResponsesClientEventResponseCreateAccessProgramsParam](
 		"cyber", "standard", "daybreak_blue", "daybreak_red",
+	)
+}
+
+// Options for background execution on HTTP requests. The `2h` and `8h` completion
+// windows require `background: true`, Standard processing, and `stream: false` or
+// omitted.
+type ResponsesClientEventResponseCreateBackgroundOptionsParam struct {
+	// A customer-provided opaque identifier used to prioritize related background
+	// requests. It does not add prior history to the input.
+	ContinuationID param.Opt[string] `json:"continuation_id,omitzero"`
+	// The completion window for background execution. Defaults to `soonest`; `2h` and
+	// `8h` select discounted background execution.
+	//
+	// Any of "soonest", "2h", "8h".
+	CompletionWindow string `json:"completion_window,omitzero"`
+	paramObj
+}
+
+func (r ResponsesClientEventResponseCreateBackgroundOptionsParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesClientEventResponseCreateBackgroundOptionsParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesClientEventResponseCreateBackgroundOptionsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponsesClientEventResponseCreateBackgroundOptionsParam](
+		"completion_window", "soonest", "2h", "8h",
 	)
 }
 
@@ -37342,6 +37383,10 @@ type ResponseNewParams struct {
 	Truncation ResponseNewParamsTruncation `json:"truncation,omitzero"`
 	// Domain-specific access programs to use for this request.
 	AccessPrograms ResponseNewParamsAccessPrograms `json:"access_programs,omitzero"`
+	// Options for background execution on HTTP requests. The `2h` and `8h` completion
+	// windows require `background: true`, Standard processing, and `stream: false` or
+	// omitted.
+	BackgroundOptions ResponseNewParamsBackgroundOptions `json:"background_options,omitzero"`
 	// Request level image options.
 	Image ResponseNewParamsImage `json:"image,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
@@ -37444,6 +37489,35 @@ func (r *ResponseNewParamsAccessPrograms) UnmarshalJSON(data []byte) error {
 func init() {
 	apijson.RegisterFieldValidator[ResponseNewParamsAccessPrograms](
 		"cyber", "standard", "daybreak_blue", "daybreak_red",
+	)
+}
+
+// Options for background execution on HTTP requests. The `2h` and `8h` completion
+// windows require `background: true`, Standard processing, and `stream: false` or
+// omitted.
+type ResponseNewParamsBackgroundOptions struct {
+	// A customer-provided opaque identifier used to prioritize related background
+	// requests. It does not add prior history to the input.
+	ContinuationID param.Opt[string] `json:"continuation_id,omitzero"`
+	// The completion window for background execution. Defaults to `soonest`; `2h` and
+	// `8h` select discounted background execution.
+	//
+	// Any of "soonest", "2h", "8h".
+	CompletionWindow string `json:"completion_window,omitzero"`
+	paramObj
+}
+
+func (r ResponseNewParamsBackgroundOptions) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseNewParamsBackgroundOptions
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseNewParamsBackgroundOptions) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseNewParamsBackgroundOptions](
+		"completion_window", "soonest", "2h", "8h",
 	)
 }
 
@@ -37965,7 +38039,9 @@ type ResponseCompactParamsModel string
 
 const (
 	ResponseCompactParamsModelGPT6Astra         ResponseCompactParamsModel = "gpt-6-astra"
+	ResponseCompactParamsModelGPT6_2Astra       ResponseCompactParamsModel = "gpt-6.2-astra"
 	ResponseCompactParamsModelGPT6_1Sol         ResponseCompactParamsModel = "gpt-6.1-sol"
+	ResponseCompactParamsModelGPT6_2Sol         ResponseCompactParamsModel = "gpt-6.2-sol"
 	ResponseCompactParamsModelGPT6_1Terra       ResponseCompactParamsModel = "gpt-6.1-terra"
 	ResponseCompactParamsModelGPT6Sol           ResponseCompactParamsModel = "gpt-6-sol"
 	ResponseCompactParamsModelGPT6Luna          ResponseCompactParamsModel = "gpt-6-luna"
@@ -38335,6 +38411,7 @@ const (
 	ResponseCompactParamsModelGPT6Cyber             ResponseCompactParamsModel = "gpt-6-cyber"
 	ResponseCompactParamsModelGPTRosalindResearch   ResponseCompactParamsModel = "gpt-rosalind-research"
 	ResponseCompactParamsModelGPT6Rosalind          ResponseCompactParamsModel = "gpt-6-rosalind"
+	ResponseCompactParamsModelGPT6_2AstraLaw        ResponseCompactParamsModel = "gpt-6.2-astra-law"
 )
 
 // Request level image options.
