@@ -93,6 +93,9 @@ func BetaAgentSessionWithResultCollection(stream *ssestream.Stream[AgentSessionE
 // FinalResult. This beta helper is experimental.
 func (s *AgentSessionStream) WithResultCollection() *AgentSessionStream {
 	s.collector.enable()
+	if s.collector.enabled && s.collector.sessionID == "" {
+		s.collector.sessionID = s.sessionID
+	}
 	return s
 }
 
@@ -102,8 +105,8 @@ func (s *AgentSessionStream) WithResultCollection() *AgentSessionStream {
 // The result is cached. Unhandled actions return a BetaAgentTurnResultError
 // rather than waiting indefinitely. Closing observation does not cancel the turn.
 func (s *AgentSessionStream) FinalResult() (*BetaAgentTurnResult, error) {
+	s.WithResultCollection()
 	c := &s.collector
-	c.enable()
 	if c.finalized {
 		return c.result, c.err
 	}
@@ -172,6 +175,14 @@ func (c *betaAgentTurnCollector) Accumulate(event AgentSessionEventUnion) {
 		c.required = nil
 	case "agent.session.failed":
 		c.sessionFailed = true
+	case "agent.session.budget_reached":
+		if c.sessionID == "" {
+			c.sessionID = event.Session.ID
+		}
+		if event.Session.ID == c.sessionID && (c.turn == nil || c.terminal) {
+			c.boundary = true
+			c.required = nil
+		}
 	case "agent.session.idle":
 		if c.terminal {
 			c.boundary = true
@@ -279,7 +290,9 @@ func (c *betaAgentTurnCollector) finalResult(cause error) (*BetaAgentTurnResult,
 		reason = "requires_action"
 	case c.turn == nil || !c.terminal || c.turn.Status != "completed" || !c.boundary:
 		reason = "observation_incomplete"
-		cause = io.ErrUnexpectedEOF
+		if !c.boundary {
+			cause = io.ErrUnexpectedEOF
+		}
 	}
 	if reason != "" {
 		c.err = &BetaAgentTurnResultError{Reason: reason, SessionID: c.sessionID, Turn: c.turn, Messages: messages, RequiredActions: c.required, Cause: cause}
