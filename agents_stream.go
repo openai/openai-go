@@ -84,7 +84,7 @@ type agentPendingCall struct {
 
 // Stream subscribes to events before submitting input, then streams through the
 // selected coordinator turn's completion/failure/cancellation and subsequent
-// session idle event, a session failure, or a matching-session budget pause.
+// session idle event or a session failure.
 // The session must be idle, with only one input writer while the helper runs;
 // concurrent inputs cannot be correlated to turns. Initial idle and subagent
 // completion events do not end the stream.
@@ -202,7 +202,7 @@ func (s *AgentSessionStream) Next() (ok bool) {
 		s.collector.Accumulate(event)
 		s.current = event
 		if event.Type == "agent.session.failed" ||
-			(event.Type == "agent.session.budget_reached" && event.Session.ID == s.sessionID && (s.turnID == "" || s.turnEnded)) ||
+			(event.Type == "agent.session.budget_reached" && event.Session.ID != "" && event.Session.ID == s.sessionID && (s.turnID == "" || s.turnEnded)) ||
 			(event.Type == "agent.session.idle" && s.turnEnded) {
 			_ = s.Close()
 		} else if event.Type == "agent.session.turn.item.added" && event.Item.Type == "function_call" {

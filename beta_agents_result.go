@@ -179,7 +179,7 @@ func (c *betaAgentTurnCollector) Accumulate(event AgentSessionEventUnion) {
 		if c.sessionID == "" {
 			c.sessionID = event.Session.ID
 		}
-		if event.Session.ID == c.sessionID && (c.turn == nil || c.terminal) {
+		if event.Session.ID != "" && event.Session.ID == c.sessionID && (c.turn == nil || c.terminal) {
 			c.boundary = true
 			c.required = nil
 		}
