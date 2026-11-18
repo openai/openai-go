@@ -19,7 +19,7 @@
     },
     "adminorganizationauditlog.go": {
       "mode": "100644",
-      "sha256": "13a14c64f001dd402c17be90e419bb5c0bc309608626181c8eb29ae91884d330"
+      "sha256": "3e2237487423fc6a2300e3f4642f53359e0a16b552aa61f6fd65e584f9cf8de3"
     },
     "adminorganizationauditlog_test.go": {
       "mode": "100644",
@@ -291,7 +291,7 @@
     },
     "aliases.go": {
       "mode": "100644",
-      "sha256": "ff0aad5d1c985faa06552a98c5120c05ec4f89924fc1d68271bb9a56ebc097a1"
+      "sha256": "1e04a700cadba11ab5a06fc9933e9090df46005b610c7e9d39f9210483572541"
     },
     "api.md": {
       "mode": "100644",
@@ -363,7 +363,7 @@
     },
     "betaagent.go": {
       "mode": "100644",
-      "sha256": "a2a62a4c0337ec5252a470a37148614923accd719894083b3adfbe539f805ba0"
+      "sha256": "110049f08f8a063f3f85070ce055bc2e86d11fd790945197c8fc28514af7dd90"
     },
     "betaagent_test.go": {
       "mode": "100644",
@@ -371,7 +371,7 @@
     },
     "betaagentautomation.go": {
       "mode": "100644",
-      "sha256": "128757d99e205a09e684df2853ffdda91a565d23198d58ace2e66e86618a3259"
+      "sha256": "5a89602ce00a46c1e031c820ec3feed3fc537c92760a7141d8b2ccfa702226ed"
     },
     "betaagentautomation_test.go": {
       "mode": "100644",
@@ -411,11 +411,11 @@
     },
     "betaagentsession.go": {
       "mode": "100644",
-      "sha256": "2bb03b19ac9d50781d3fdbe4286c6deab1fad2fbeda85c3c7b83f98cf099def9"
+      "sha256": "5d38936973a09269336dd7f57d79360408a509fe5b708611840fa55e2799e352"
     },
     "betaagentsession_test.go": {
       "mode": "100644",
-      "sha256": "00250856c30fe8d04aef022f6d1c07a7ab5d152ec45111b4e1a5f4a719c1a0b5"
+      "sha256": "9a2a7d94e1402d48da4da9b0727e987c1f7a4262fb32a37977b76f51f36417e0"
     },
     "betaagentsessionartifact.go": {
       "mode": "100644",
@@ -427,11 +427,11 @@
     },
     "betaagentsessionevent.go": {
       "mode": "100644",
-      "sha256": "fecd7e833e32fae65befc7f80157ace64ccb7fab74a79a7e59e5eabfc08a6d48"
+      "sha256": "38f5f4df4669fc033d8ff329db33eee6dc4ddf5c90cbe1fd986c80ec59e8b86d"
     },
     "betaagentsessionevent_test.go": {
       "mode": "100644",
-      "sha256": "872c304334cc504e8a41b7ca14895c6b61fc96b94a094bd903aae9d9e94b3bd5"
+      "sha256": "3ff11c3b3c146b935a9dd4e9d0574a22992c9fdc3352be2aa55624d37d0b5415"
     },
     "betaagentsessionitem.go": {
       "mode": "100644",
@@ -543,11 +543,11 @@
     },
     "betaresponse.go": {
       "mode": "100644",
-      "sha256": "5e02eb2f1250e0da132f5ca8575a9ee5c23b951d13b8912179525e8ff7b9500c"
+      "sha256": "c7bce2102631be2edfecba833dd9f1c6aec3acfcdb4d13cc259cc7216ad09efc"
     },
     "betaresponse_test.go": {
       "mode": "100644",
-      "sha256": "ccee4092f3862d55dbdf9395124ab30d6ad5d7722238dc30bb690ebcd1950eb6"
+      "sha256": "4d0842a183fd0d589226cbd23a19f2b2e096717af0c13bc11deedc198f947873"
     },
     "betaresponseinputitem.go": {
       "mode": "100644",
@@ -559,7 +559,7 @@
     },
     "betaresponseinputtoken.go": {
       "mode": "100644",
-      "sha256": "4d07e5865cc726112c39f78424e9eed8229e12d8d72d5d06add9c4bf02afa420"
+      "sha256": "abcd984cc180b60a83b10e855fc90e5d34bd432c998dd8215a1446b83d98d3d9"
     },
     "betaresponseinputtoken_test.go": {
       "mode": "100644",
@@ -667,7 +667,7 @@
     },
     "conversations/aliases.go": {
       "mode": "100644",
-      "sha256": "8a82ef3ec4707827b30e9c503b45505604938eb34805304b73f401031a8585c2"
+      "sha256": "5012baf16df3c981795b71914dc8af22122fbcf9ce111b16d73cea26510f6a9e"
     },
     "conversations/api.md": {
       "mode": "100644",
@@ -795,11 +795,11 @@
     },
     "live/aliases.go": {
       "mode": "100644",
-      "sha256": "d46cbfe3163c0d2a2e1baf44ff52156bbf4d921fd22c9644283afdd29e62d3f3"
+      "sha256": "8d69fd03d850af7dffb86e29f852cfc305781b892f94c1bc860cebe14411c816"
     },
     "live/api.md": {
       "mode": "100644",
-      "sha256": "9648440735b837de4560640e80174283c3edbf15211fb4b74645209c66c66e89"
+      "sha256": "945975e0ad0286560415e0f287d5e09cbed772ea0698ee27ecd514b80bf64885"
     },
     "live/fork.go": {
       "mode": "100644",
@@ -807,7 +807,7 @@
     },
     "live/live.go": {
       "mode": "100644",
-      "sha256": "6f4eec3d1c61ed50293a4c8cb29a7e0a32783cd92bc2d27a62a17d368c56cfd7"
+      "sha256": "997b8e95637b883033596add47b259b3a6535a69bc57e72faebb50ecdfe3b35b"
     },
     "live/live_forks_websocket.go": {
       "mode": "100644",
@@ -827,7 +827,7 @@
     },
     "live/live_test.go": {
       "mode": "100644",
-      "sha256": "e47037d237b092b554dc497bf5a4b1a8d270ac671c41df1fe73741756bdde1ac"
+      "sha256": "1555c5fa16bf0cd66eaa61c7eb6884e0e1d730d41a0942328ca9df1e74876f3d"
     },
     "live/live_websocket.go": {
       "mode": "100644",
@@ -839,11 +839,11 @@
     },
     "live/session.go": {
       "mode": "100644",
-      "sha256": "ec5e6924b4bbf5d979497070d8c69d49b98b5fb8a289aa6240016f857a06102c"
+      "sha256": "b597704a335fb1896dab7feab12d2afa6220628101def725113dee4c5eb9d2cf"
     },
     "live/session_test.go": {
       "mode": "100644",
-      "sha256": "11587f647646c70f68fa75c40df5ce20262d5acfa6d622fd39bf608d780d38fb"
+      "sha256": "f55b758268cb43a13a729dc7b50711b7576e87ead7d8caf338b79cb0cad8dceb"
     },
     "live/sideband.go": {
       "mode": "100644",
@@ -879,7 +879,7 @@
     },
     "realtime/aliases.go": {
       "mode": "100644",
-      "sha256": "73ec5833e8aa82af46e9e17250e0a897fb74f5610ee8a160e3063844edb03e23"
+      "sha256": "ee2824d2c6ea5d8348131124829368a964cb6b486e8334df2df6d9c696f8e7fa"
     },
     "realtime/api.md": {
       "mode": "100644",
@@ -939,7 +939,7 @@
     },
     "responses/aliases.go": {
       "mode": "100644",
-      "sha256": "7d91a7c8167a0839632434aeef9f1fddc2ff9a10ad5b50fc73cdad9d771935c8"
+      "sha256": "7f6d7aa7a3bd0900be2fcdedd5958aacd69b54074acb73013e41e71af7fd5cb9"
     },
     "responses/api.md": {
       "mode": "100644",
@@ -955,7 +955,7 @@
     },
     "responses/inputtoken.go": {
       "mode": "100644",
-      "sha256": "f0a9e6ebd0f256e43c75df0527c2d0071906fa4a9d589280dfec4aace7fb7402"
+      "sha256": "f27fb12b56e9f124c4b4cd309d91755d6e0fa84c03a1b707cd9139d2b7faffa2"
     },
     "responses/inputtoken_test.go": {
       "mode": "100644",
@@ -963,11 +963,11 @@
     },
     "responses/response.go": {
       "mode": "100644",
-      "sha256": "066bde82e21cfabde97482e16de950e4c5aaff29d7059ca44e61aa06c4ea48d7"
+      "sha256": "10d0502b6b4eafeba8bc764733382eb7be097845b3ae991b10d8597e7b44fa95"
     },
     "responses/response_test.go": {
       "mode": "100644",
-      "sha256": "13c520d458523317edf0c2056e8a20916562af1f3a7d1499876ff873fbacd9e1"
+      "sha256": "ee95804658a6a4e94ef504ad3692bee25afd575ba4d868ddeab9657db017ba38"
     },
     "responses/responses_websocket.go": {
       "mode": "100644",
@@ -1003,11 +1003,11 @@
     },
     "shared/constant/constants.go": {
       "mode": "100644",
-      "sha256": "d56e92677a8c29677393d66df4532a6478746ad04d64d75ec09dfd4ed8f25fce"
+      "sha256": "b509230105b2a24cc1ca273b303af9973763fe90b5ff0c571f8185f8be1153e4"
     },
     "shared/shared.go": {
       "mode": "100644",
-      "sha256": "56e558511f4b0e244fcfb9ccc2be3f7e10d73a364eb2f7825bd391eaba5daeae"
+      "sha256": "498f29efafb69dc38f9f2f0da3d0c4f09366d42053c8240c94955acf1be58428"
     },
     "skill.go": {
       "mode": "100644",
@@ -1091,11 +1091,11 @@
     },
     "webhooks/aliases.go": {
       "mode": "100644",
-      "sha256": "a89775d2798e730e8300b644801241691b10c51b2bf9b85c45afe93d2c6aed77"
+      "sha256": "e8185ed862ff2017219e06364fce5602ec3669ea89efe7df574e307a9ecc192d"
     },
     "webhooks/api.md": {
       "mode": "100644",
-      "sha256": "21fa4d1f529bc4692c26b3eb36cbb6096d02c5b7f548cf438e9e6e070870e4b7"
+      "sha256": "85e2eae531b725ab37877f6e7a6906abb309c04347bc5bb48f0d654f1f846434"
     },
     "webhooks/eventtype.go": {
       "mode": "100644",
@@ -1107,7 +1107,7 @@
     },
     "webhooks/webhook.go": {
       "mode": "100644",
-      "sha256": "2f0f144b32146a50f0d5cde6391600aff5d718b9c5fc2fc2fb6968d0b56ee803"
+      "sha256": "4208d645313006848864bef35cda748771588f974e9f45dc0fba70032d8b7642"
     }
   }
 }

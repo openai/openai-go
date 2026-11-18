@@ -3797,7 +3797,9 @@ type Response struct {
 	//
 	//   - `auto`: If the input to this Response exceeds the model's context window size,
 	//     the model will truncate the response to fit the context window by dropping
-	//     items from the beginning of the conversation.
+	//     items from the beginning of the conversation. On some models, trimming can
+	//     begin earlier because the API subtracts the model's maximum output allowance
+	//     from its input limit, even if you set a lower `max_output_tokens`.
 	//   - `disabled` (default): If the input size will exceed the context window size
 	//     for a model, the request will fail with a 400 error.
 	//
@@ -4821,7 +4823,9 @@ func (r *ResponseToolUsageWebSearch) UnmarshalJSON(data []byte) error {
 //
 //   - `auto`: If the input to this Response exceeds the model's context window size,
 //     the model will truncate the response to fit the context window by dropping
-//     items from the beginning of the conversation.
+//     items from the beginning of the conversation. On some models, trimming can
+//     begin earlier because the API subtracts the model's maximum output allowance
+//     from its input limit, even if you set a lower `max_output_tokens`.
 //   - `disabled` (default): If the input size will exceed the context window size
 //     for a model, the request will fail with a 400 error.
 type ResponseTruncation string
@@ -20381,7 +20385,9 @@ func (r *ResponseMcpListToolsInProgressEvent) UnmarshalJSON(data []byte) error {
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ResponseOutputItemUnion struct {
-	ID      string                              `json:"id"`
+	ID string `json:"id"`
+	// This field uses the type from [ResponseOutputMessage]. For the variant-specific
+	// Content, use [ResponseOutputItemUnion.AsReasoning].
 	Content []ResponseOutputMessageContentUnion `json:"content"`
 	Role    string                              `json:"role"`
 	Status  string                              `json:"status"`
@@ -27666,7 +27672,8 @@ type ResponseToolSearchOutputItemParamToolImageGeneration struct {
 	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
 	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
 	// `gpt-image-2.5-flare-2026-09-08`, `gpt-image-2.6-sunburst`,
-	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default: `gpt-image-2`.
+	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2.6-sunburst`.
 	//
 	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
 	// `gpt-image-2.5-flare` instead.
@@ -29054,7 +29061,8 @@ type ResponseToolSearchOutputItemParamToolImageGenerationParam struct {
 	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
 	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
 	// `gpt-image-2.5-flare-2026-09-08`, `gpt-image-2.6-sunburst`,
-	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default: `gpt-image-2`.
+	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2.6-sunburst`.
 	//
 	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
 	// `gpt-image-2.5-flare` instead.
@@ -29436,6 +29444,14 @@ func (u ResponsesClientEventUnionParam) GetAccessPrograms() *ResponsesClientEven
 func (u ResponsesClientEventUnionParam) GetBackground() *bool {
 	if vt := u.OfResponseCreate; vt != nil && vt.Background.Valid() {
 		return &vt.Background.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsesClientEventUnionParam) GetBackgroundOptions() *ResponsesClientEventResponseCreateBackgroundOptionsParam {
+	if vt := u.OfResponseCreate; vt != nil {
+		return &vt.BackgroundOptions
 	}
 	return nil
 }
@@ -29931,7 +29947,9 @@ type ResponsesClientEventResponseCreateParam struct {
 	//
 	//   - `auto`: If the input to this Response exceeds the model's context window size,
 	//     the model will truncate the response to fit the context window by dropping
-	//     items from the beginning of the conversation.
+	//     items from the beginning of the conversation. On some models, trimming can
+	//     begin earlier because the API subtracts the model's maximum output allowance
+	//     from its input limit, even if you set a lower `max_output_tokens`.
 	//   - `disabled` (default): If the input size will exceed the context window size
 	//     for a model, the request will fail with a 400 error.
 	//
@@ -29941,6 +29959,10 @@ type ResponsesClientEventResponseCreateParam struct {
 	Truncation string `json:"truncation,omitzero"`
 	// Domain-specific access programs to use for this request.
 	AccessPrograms ResponsesClientEventResponseCreateAccessProgramsParam `json:"access_programs,omitzero"`
+	// Options for background execution on HTTP requests. The `2h` and `8h` completion
+	// windows require `background: true`, Standard processing, and `stream: false` or
+	// omitted.
+	BackgroundOptions ResponsesClientEventResponseCreateBackgroundOptionsParam `json:"background_options,omitzero"`
 	// Request level image options.
 	Image ResponsesClientEventResponseCreateImageParam `json:"image,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
@@ -30059,6 +30081,35 @@ func (r *ResponsesClientEventResponseCreateAccessProgramsParam) UnmarshalJSON(da
 func init() {
 	apijson.RegisterFieldValidator[ResponsesClientEventResponseCreateAccessProgramsParam](
 		"cyber", "standard", "daybreak_blue", "daybreak_red",
+	)
+}
+
+// Options for background execution on HTTP requests. The `2h` and `8h` completion
+// windows require `background: true`, Standard processing, and `stream: false` or
+// omitted.
+type ResponsesClientEventResponseCreateBackgroundOptionsParam struct {
+	// A customer-provided opaque identifier used to prioritize related background
+	// requests. It does not add prior history to the input.
+	ContinuationID param.Opt[string] `json:"continuation_id,omitzero"`
+	// The completion window for background execution. Defaults to `soonest`; `2h` and
+	// `8h` select discounted background execution.
+	//
+	// Any of "soonest", "2h", "8h".
+	CompletionWindow string `json:"completion_window,omitzero"`
+	paramObj
+}
+
+func (r ResponsesClientEventResponseCreateBackgroundOptionsParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponsesClientEventResponseCreateBackgroundOptionsParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponsesClientEventResponseCreateBackgroundOptionsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponsesClientEventResponseCreateBackgroundOptionsParam](
+		"completion_window", "soonest", "2h", "8h",
 	)
 }
 
@@ -34414,7 +34465,8 @@ type ToolImageGeneration struct {
 	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
 	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
 	// `gpt-image-2.5-flare-2026-09-08`, `gpt-image-2.6-sunburst`,
-	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default: `gpt-image-2`.
+	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2.6-sunburst`.
 	//
 	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
 	// `gpt-image-2.5-flare` instead.
@@ -35730,7 +35782,8 @@ type ToolImageGenerationParam struct {
 	// `gpt-image-2`, `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
 	// `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
 	// `gpt-image-2.5-flare-2026-09-08`, `gpt-image-2.6-sunburst`,
-	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default: `gpt-image-2`.
+	// `gpt-image-2.6-flare`, or `chatgpt-image-latest`. Default:
+	// `gpt-image-2.6-sunburst`.
 	//
 	// `gpt-image-1` was shut down on October 23, 2026. Use `gpt-image-2.5-sunburst` or
 	// `gpt-image-2.5-flare` instead.
@@ -37325,7 +37378,9 @@ type ResponseNewParams struct {
 	//
 	//   - `auto`: If the input to this Response exceeds the model's context window size,
 	//     the model will truncate the response to fit the context window by dropping
-	//     items from the beginning of the conversation.
+	//     items from the beginning of the conversation. On some models, trimming can
+	//     begin earlier because the API subtracts the model's maximum output allowance
+	//     from its input limit, even if you set a lower `max_output_tokens`.
 	//   - `disabled` (default): If the input size will exceed the context window size
 	//     for a model, the request will fail with a 400 error.
 	//
@@ -37333,6 +37388,10 @@ type ResponseNewParams struct {
 	Truncation ResponseNewParamsTruncation `json:"truncation,omitzero"`
 	// Domain-specific access programs to use for this request.
 	AccessPrograms ResponseNewParamsAccessPrograms `json:"access_programs,omitzero"`
+	// Options for background execution on HTTP requests. The `2h` and `8h` completion
+	// windows require `background: true`, Standard processing, and `stream: false` or
+	// omitted.
+	BackgroundOptions ResponseNewParamsBackgroundOptions `json:"background_options,omitzero"`
 	// Request level image options.
 	Image ResponseNewParamsImage `json:"image,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
@@ -37435,6 +37494,35 @@ func (r *ResponseNewParamsAccessPrograms) UnmarshalJSON(data []byte) error {
 func init() {
 	apijson.RegisterFieldValidator[ResponseNewParamsAccessPrograms](
 		"cyber", "standard", "daybreak_blue", "daybreak_red",
+	)
+}
+
+// Options for background execution on HTTP requests. The `2h` and `8h` completion
+// windows require `background: true`, Standard processing, and `stream: false` or
+// omitted.
+type ResponseNewParamsBackgroundOptions struct {
+	// A customer-provided opaque identifier used to prioritize related background
+	// requests. It does not add prior history to the input.
+	ContinuationID param.Opt[string] `json:"continuation_id,omitzero"`
+	// The completion window for background execution. Defaults to `soonest`; `2h` and
+	// `8h` select discounted background execution.
+	//
+	// Any of "soonest", "2h", "8h".
+	CompletionWindow string `json:"completion_window,omitzero"`
+	paramObj
+}
+
+func (r ResponseNewParamsBackgroundOptions) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseNewParamsBackgroundOptions
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseNewParamsBackgroundOptions) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseNewParamsBackgroundOptions](
+		"completion_window", "soonest", "2h", "8h",
 	)
 }
 
@@ -37844,7 +37932,9 @@ func (r *ResponseNewParamsToolChoiceSpecificProgrammaticToolCallingParam) Unmars
 //
 //   - `auto`: If the input to this Response exceeds the model's context window size,
 //     the model will truncate the response to fit the context window by dropping
-//     items from the beginning of the conversation.
+//     items from the beginning of the conversation. On some models, trimming can
+//     begin earlier because the API subtracts the model's maximum output allowance
+//     from its input limit, even if you set a lower `max_output_tokens`.
 //   - `disabled` (default): If the input size will exceed the context window size
 //     for a model, the request will fail with a 400 error.
 type ResponseNewParamsTruncation string
@@ -37954,7 +38044,9 @@ type ResponseCompactParamsModel string
 
 const (
 	ResponseCompactParamsModelGPT6Astra         ResponseCompactParamsModel = "gpt-6-astra"
+	ResponseCompactParamsModelGPT6_2Astra       ResponseCompactParamsModel = "gpt-6.2-astra"
 	ResponseCompactParamsModelGPT6_1Sol         ResponseCompactParamsModel = "gpt-6.1-sol"
+	ResponseCompactParamsModelGPT6_2Sol         ResponseCompactParamsModel = "gpt-6.2-sol"
 	ResponseCompactParamsModelGPT6_1Terra       ResponseCompactParamsModel = "gpt-6.1-terra"
 	ResponseCompactParamsModelGPT6Sol           ResponseCompactParamsModel = "gpt-6-sol"
 	ResponseCompactParamsModelGPT6Luna          ResponseCompactParamsModel = "gpt-6-luna"
@@ -38324,6 +38416,7 @@ const (
 	ResponseCompactParamsModelGPT6Cyber             ResponseCompactParamsModel = "gpt-6-cyber"
 	ResponseCompactParamsModelGPTRosalindResearch   ResponseCompactParamsModel = "gpt-rosalind-research"
 	ResponseCompactParamsModelGPT6Rosalind          ResponseCompactParamsModel = "gpt-6-rosalind"
+	ResponseCompactParamsModelGPT6_2AstraLaw        ResponseCompactParamsModel = "gpt-6.2-astra-law"
 )
 
 // Request level image options.

@@ -2,6 +2,7 @@ package openai_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -108,7 +109,7 @@ func TestBetaAgentFinalResultOutcomes(t *testing.T) {
 		{"missing-idle", []string{betaResultTurn("completed", "root", "null")}, "observation_incomplete"},
 		{"null-phase", []string{betaResultMessage("done", "m", "root", "null", "answer", 0), betaResultTurn("completed", "root", "null"), betaResultIdle()}, ""},
 		{"session-failed", []string{agentEvent("failed", "failure", `,"session":{"id":"session","status":"failed"}`)}, "session_failed"},
-		{"protocol-error", []string{`{"type":"error","error":{"message":"synthetic delivery error"}}`}, "observation_failed"},
+		{"malformed-event", []string{`{"type":"error","error":`}, "observation_failed"},
 		{"required-action", []string{agentEvent("requires_action", "pending", `,"session":{"id":"session","required_actions":[{"type":"function_call","turn_id":"root","call_id":"call","name":"lookup","arguments":{}}]}`)}, "requires_action"},
 	}
 	for _, test := range cases {
@@ -132,10 +133,10 @@ func TestBetaAgentFinalResultOutcomes(t *testing.T) {
 			if test.name == "missing-idle" && !errors.Is(err, io.ErrUnexpectedEOF) {
 				t.Fatal("lost EOF cause")
 			}
-			if test.name == "protocol-error" {
-				var cause *ssestream.StreamError
+			if test.name == "malformed-event" {
+				var cause *json.SyntaxError
 				if !errors.As(err, &cause) {
-					t.Fatal("lost transport cause")
+					t.Fatal("lost decoding cause")
 				}
 			}
 			if test.name == "required-action" && len(failure.RequiredActions) != 1 {
@@ -241,12 +242,13 @@ func TestBetaAgentFinalResultRechecksReplacedRequiredActions(t *testing.T) {
 }
 
 func TestBetaAgentFinalResultIgnoresLaterTurns(t *testing.T) {
-	events := []string{betaResultTurn("created", "root", "null"), betaResultMessage("done", "m", "root", `"final_answer"`, "answer", 0), betaResultTurn("completed", "root", "null"), betaResultIdle(), betaResultTurn("created", "later", "null"), agentEvent("failed", "later-failure", `,"session":{"id":"session","status":"failed"}`), `{"type":"error","error":{"message":"later delivery error"}}`}
+	events := []string{betaResultTurn("created", "root", "null"), betaResultMessage("done", "m", "root", `"final_answer"`, "answer", 0), betaResultTurn("completed", "root", "null"), betaResultIdle(), betaResultTurn("created", "later", "null"), agentEvent("failed", "later-failure", `,"session":{"id":"session","status":"failed"}`), `{"type":"error","error":`}
 	stream := openai.BetaAgentSessionWithResultCollection(betaResultCreateStream(t, events, false))
 	for stream.Next() {
 	}
-	if stream.Err() == nil {
-		t.Fatal("raw stream must retain its later delivery error")
+	var syntaxError *json.SyntaxError
+	if !errors.As(stream.Err(), &syntaxError) {
+		t.Fatalf("raw stream lost its later decoding error: %v", stream.Err())
 	}
 	result, err := openai.BetaAgentSessionFinalResult(stream)
 	if err != nil || result.OutputText() != "answer" || result.TurnID() != "root" {

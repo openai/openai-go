@@ -19,6 +19,7 @@ import (
 	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/packages/respjson"
 	"github.com/openai/openai-go/v3/shared/constant"
+	"github.com/tidwall/gjson"
 )
 
 // WebhookService contains methods and other services that help with interacting
@@ -426,7 +427,7 @@ func (r *AgentSessionActionRequiredWebhookEventData) UnmarshalJSON(data []byte) 
 
 // The action type. Retrieve the session for action details.
 type AgentSessionActionRequiredWebhookEventDataRequiredAction struct {
-	// Any of "computer_use_approval_request", "function_call",
+	// Any of "computer_use_approval_request", "mcp_approval_request", "function_call",
 	// "environment_connection".
 	Type string `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -1358,6 +1359,56 @@ const (
 	LiveCallIncomingWebhookEventObjectEvent LiveCallIncomingWebhookEventObject = "event"
 )
 
+// Sent when a direct Live WebRTC session is created or an Instant Connect session
+// activates. Use its session ID to attach a sideband observer.
+type LiveTransportConnectedWebhookEvent struct {
+	// The webhook event ID.
+	ID string `json:"id" api:"required"`
+	// Unix time in seconds when the event was created.
+	CreatedAt int64                                  `json:"created_at" api:"required" format:"unixtime"`
+	Data      LiveTransportConnectedWebhookEventData `json:"data" api:"required"`
+	Object    constant.Event                         `json:"object" default:"event"`
+	Type      constant.LiveTransportConnected        `json:"type" default:"live.transport.connected"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r LiveTransportConnectedWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *LiveTransportConnectedWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type LiveTransportConnectedWebhookEventData struct {
+	// The Live session ID to use with the sideband attach endpoint.
+	SessionID string `json:"session_id" api:"required"`
+	// The session transport.
+	//
+	// Any of "webrtc".
+	Type string `json:"type" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		SessionID   respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r LiveTransportConnectedWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *LiveTransportConnectedWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Sent when an incoming API SIP session is available for Live acceptance. The same
 // pending session can also emit `realtime.call.incoming`; the first successful
 // Realtime or Live accept endpoint selects the runtime surface.
@@ -1969,11 +2020,12 @@ func (r *SafetyWarningIssuedWebhookEventData) UnmarshalJSON(data []byte) error {
 // [EvalRunFailedWebhookEvent], [EvalRunSucceededWebhookEvent],
 // [FineTuningJobCancelledWebhookEvent], [FineTuningJobFailedWebhookEvent],
 // [FineTuningJobSucceededWebhookEvent], [LiveCallIncomingWebhookEvent],
-// [LiveTransportIncomingWebhookEvent], [RealtimeCallIncomingWebhookEvent],
-// [ResponseCancelledWebhookEvent], [ResponseCompletedWebhookEvent],
-// [ResponseFailedWebhookEvent], [ResponseIncompleteWebhookEvent],
-// [SafetyAlertCreatedWebhookEvent], [SafetyDeactivationIssuedWebhookEvent],
-// [SafetyOrgAlertCreatedWebhookEvent], [SafetyWarningIssuedWebhookEvent].
+// [LiveTransportConnectedWebhookEvent], [LiveTransportIncomingWebhookEvent],
+// [RealtimeCallIncomingWebhookEvent], [ResponseCancelledWebhookEvent],
+// [ResponseCompletedWebhookEvent], [ResponseFailedWebhookEvent],
+// [ResponseIncompleteWebhookEvent], [SafetyAlertCreatedWebhookEvent],
+// [SafetyDeactivationIssuedWebhookEvent], [SafetyOrgAlertCreatedWebhookEvent],
+// [SafetyWarningIssuedWebhookEvent].
 //
 // Use the [UnwrapWebhookEventUnion.AsAny] method to switch on the variant.
 //
@@ -1993,10 +2045,11 @@ type UnwrapWebhookEventUnion struct {
 	// [EvalRunCanceledWebhookEventData], [EvalRunFailedWebhookEventData],
 	// [EvalRunSucceededWebhookEventData], [FineTuningJobCancelledWebhookEventData],
 	// [FineTuningJobFailedWebhookEventData], [FineTuningJobSucceededWebhookEventData],
-	// [LiveCallIncomingWebhookEventData], [LiveTransportIncomingWebhookEventData],
-	// [RealtimeCallIncomingWebhookEventData], [ResponseCancelledWebhookEventData],
-	// [ResponseCompletedWebhookEventData], [ResponseFailedWebhookEventData],
-	// [ResponseIncompleteWebhookEventData], [SafetyAlertCreatedWebhookEventData],
+	// [LiveCallIncomingWebhookEventData], [LiveTransportConnectedWebhookEventData],
+	// [LiveTransportIncomingWebhookEventData], [RealtimeCallIncomingWebhookEventData],
+	// [ResponseCancelledWebhookEventData], [ResponseCompletedWebhookEventData],
+	// [ResponseFailedWebhookEventData], [ResponseIncompleteWebhookEventData],
+	// [SafetyAlertCreatedWebhookEventData],
 	// [SafetyDeactivationIssuedWebhookEventData],
 	// [SafetyOrgAlertCreatedWebhookEventData], [SafetyWarningIssuedWebhookEventData]
 	Data UnwrapWebhookEventUnionData `json:"data"`
@@ -2007,11 +2060,11 @@ type UnwrapWebhookEventUnion struct {
 	// "batch.cancelled", "batch.completed", "batch.expired", "batch.failed",
 	// "eval.run.canceled", "eval.run.failed", "eval.run.succeeded",
 	// "fine_tuning.job.cancelled", "fine_tuning.job.failed",
-	// "fine_tuning.job.succeeded", "live.call.incoming", "live.transport.incoming",
-	// "realtime.call.incoming", "response.cancelled", "response.completed",
-	// "response.failed", "response.incomplete", "safety.alert.created",
-	// "safety.deactivation_issued", "safety.org_alert.created",
-	// "safety.warning_issued".
+	// "fine_tuning.job.succeeded", "live.call.incoming", "live.transport.connected",
+	// "live.transport.incoming", "realtime.call.incoming", "response.cancelled",
+	// "response.completed", "response.failed", "response.incomplete",
+	// "safety.alert.created", "safety.deactivation_issued",
+	// "safety.org_alert.created", "safety.warning_issued".
 	Type   string `json:"type"`
 	Object string `json:"object"`
 	JSON   struct {
@@ -2051,6 +2104,7 @@ func (FineTuningJobCancelledWebhookEvent) implUnwrapWebhookEventUnion()     {}
 func (FineTuningJobFailedWebhookEvent) implUnwrapWebhookEventUnion()        {}
 func (FineTuningJobSucceededWebhookEvent) implUnwrapWebhookEventUnion()     {}
 func (LiveCallIncomingWebhookEvent) implUnwrapWebhookEventUnion()           {}
+func (LiveTransportConnectedWebhookEvent) implUnwrapWebhookEventUnion()     {}
 func (LiveTransportIncomingWebhookEvent) implUnwrapWebhookEventUnion()      {}
 func (RealtimeCallIncomingWebhookEvent) implUnwrapWebhookEventUnion()       {}
 func (ResponseCancelledWebhookEvent) implUnwrapWebhookEventUnion()          {}
@@ -2085,6 +2139,7 @@ func (SafetyWarningIssuedWebhookEvent) implUnwrapWebhookEventUnion()        {}
 //	case webhooks.FineTuningJobFailedWebhookEvent:
 //	case webhooks.FineTuningJobSucceededWebhookEvent:
 //	case webhooks.LiveCallIncomingWebhookEvent:
+//	case webhooks.LiveTransportConnectedWebhookEvent:
 //	case webhooks.LiveTransportIncomingWebhookEvent:
 //	case webhooks.RealtimeCallIncomingWebhookEvent:
 //	case webhooks.ResponseCancelledWebhookEvent:
@@ -2140,6 +2195,8 @@ func (u UnwrapWebhookEventUnion) AsAny() anyUnwrapWebhookEvent {
 		return u.AsFineTuningJobSucceeded()
 	case "live.call.incoming":
 		return u.AsLiveCallIncoming()
+	case "live.transport.connected":
+		return u.AsLiveTransportConnected()
 	case "live.transport.incoming":
 		return u.AsLiveTransportIncoming()
 	case "realtime.call.incoming":
@@ -2264,6 +2321,11 @@ func (u UnwrapWebhookEventUnion) AsLiveCallIncoming() (v LiveCallIncomingWebhook
 	return
 }
 
+func (u UnwrapWebhookEventUnion) AsLiveTransportConnected() (v LiveTransportConnectedWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
 func (u UnwrapWebhookEventUnion) AsLiveTransportIncoming() (v LiveTransportIncomingWebhookEvent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
@@ -2318,7 +2380,17 @@ func (u UnwrapWebhookEventUnion) AsSafetyWarningIssued() (v SafetyWarningIssuedW
 func (u UnwrapWebhookEventUnion) RawJSON() string { return u.JSON.raw }
 
 func (r *UnwrapWebhookEventUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	if err := apijson.UnmarshalRoot(data, r); err != nil {
+		return err
+	}
+	if wireType := gjson.GetBytes(data, apijson.EscapeSJSONKey("type")); wireType.Type == gjson.String {
+		switch wireType.Str {
+		case "live.transport.connected":
+			// Keep the wire value for JSON encoding and caller edits.
+			r.Data.JSON.Type = respjson.Field{}
+		}
+	}
+	return nil
 }
 
 // UnwrapWebhookEventUnionData is an implicit subunion of
@@ -2342,6 +2414,8 @@ type UnwrapWebhookEventUnionData struct {
 	SipHeaders       UnwrapWebhookEventUnionDataSipHeaders `json:"sip_headers"`
 	SipMediaSecurity string                                `json:"sip_media_security"`
 	// This field is from variant [LiveTransportIncomingWebhookEventData].
+	// Check JSON.Type.Valid() for projected presence. Excluded variants retain the
+	// wire value for JSON encoding.
 	Type constant.Sip `json:"type"`
 	// This field is from variant [RealtimeCallIncomingWebhookEventData].
 	CallID string `json:"call_id"`

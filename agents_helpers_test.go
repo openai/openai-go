@@ -17,7 +17,6 @@ import (
 
 	openai "github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/packages/ssestream"
 )
 
 type agentHelperPost struct {
@@ -618,22 +617,23 @@ func TestAgentsHelperRejectsResponseBodyOverrides(t *testing.T) {
 	}
 }
 
-func TestAgentsHelperProtocolErrorSurfacesAndCloses(t *testing.T) {
-	m, c := newAgentHelperServer(t, agentCreated("created", "turn", "null"), `{"type":"error","event_id":"protocol-error","session_id":"session","error":{"code":"internal_error","message":"synthetic protocol failure"}}`, agentEvent("failed", "failed", `,"session":{"status":"failed"}`))
+func TestAgentsHelperDomainErrorThenTerminalCloses(t *testing.T) {
+	m, c := newAgentHelperServer(t, agentCreated("created", "turn", "null"), `{"type":"error","event_id":"domain-error","session_id":"session","error":{"code":"internal_error","message":"synthetic domain failure"}}`, agentEvent("failed", "failed", `,"session":{"status":"failed"}`))
 	s := c.Beta.Agents.Sessions.Stream(context.Background(), "session", openai.AgentSessionStreamParams{Input: "hi"})
 	defer func() { _ = s.Close() }()
-	if !s.Next() || s.Current().Type != "agent.session.turn.created" {
-		t.Fatal("missing typed event before protocol error")
+	for index, want := range []string{"agent.session.turn.created", "error", "agent.session.failed"} {
+		if !s.Next() || s.Current().Type != want {
+			t.Fatalf("event %d: got %q, error=%v, want %q", index, s.Current().Type, s.Err(), want)
+		}
+		if want == "error" && s.Current().Error.Code != "internal_error" {
+			t.Fatalf("domain error=%#v", s.Current().Error)
+		}
 	}
-	if s.Next() {
-		t.Fatal("protocol error should follow the SDK Err path")
-	}
-	var streamError *ssestream.StreamError
-	if !errors.As(s.Err(), &streamError) || !strings.Contains(string(streamError.Event.Data), "protocol-error") {
-		t.Fatalf("missing original protocol error: %v", s.Err())
+	if s.Next() || s.Err() != nil {
+		t.Fatalf("stream error=%v", s.Err())
 	}
 	if m.closed.Load() != 1 || len(m.submissions()) != 1 {
-		t.Fatal("protocol error did not close without cancelling the backend")
+		t.Fatal("terminal event did not close without cancelling the backend")
 	}
 }
 

@@ -34,6 +34,10 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 			Cyber: "standard",
 		},
 		Background: openai.Bool(true),
+		BackgroundOptions: responses.ResponseNewParamsBackgroundOptions{
+			CompletionWindow: "soonest",
+			ContinuationID:   openai.String("continuation_id"),
+		},
 		ContextManagement: []responses.ResponseNewParamsContextManagement{{
 			Type:             "compaction",
 			CompactThreshold: openai.Int(1000),

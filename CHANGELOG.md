@@ -4,6 +4,55 @@
 
 * Applications using Microsoft Entra ID must declare the Azure Identity version they require. The SDK no longer pins `azidentity v1.14.1`. See the [migration guide](MIGRATION.md#go-v4-breaking-change-azure-identity-version-selection).
 
+## [3.103.0](https://github.com/openai/openai-go/compare/v3.102.0...v3.103.0) (2026-11-18)
+
+
+### Features
+
+* **api:** add the CSAM moderation response model constant ([#1280](https://github.com/openai/openai-go/issues/1280)) ([e59ebe1](https://github.com/openai/openai-go/commit/e59ebe105ed1af04b1f3c63ae9d51fc1356a62b3))
+* **api:** configure Live MCP tools and read approval filters ([#1271](https://github.com/openai/openai-go/issues/1271)) ([30e06c7](https://github.com/openai/openai-go/commit/30e06c74cd98e828c895bb1731f0b85180da677d))
+* **api:** hide Managed Agents session budget controls and events ([#1279](https://github.com/openai/openai-go/issues/1279)) ([8f7a60e](https://github.com/openai/openai-go/commit/8f7a60ee8747dd0c61dd11ec75fe2b017b5f367c))
+
+
+### Build System
+
+* **deps:** bump cloud.google.com/go/auth from 0.24.2 to 0.24.3 in /v3/vertex ([#1266](https://github.com/openai/openai-go/issues/1266)) ([3abf262](https://github.com/openai/openai-go/commit/3abf262631a843e9e40d2355cbc35b067541bff7))
+* **deps:** bump github.com/aws/aws-sdk-go-v2 in / ([#1262](https://github.com/openai/openai-go/issues/1262)) ([398b72a](https://github.com/openai/openai-go/commit/398b72a813ab7548f83eddfbc248669ab3772681))
+* **deps:** bump github.com/Azure/azure-sdk-for-go/sdk/azcore in / ([#1261](https://github.com/openai/openai-go/issues/1261)) ([8ea5b78](https://github.com/openai/openai-go/commit/8ea5b786706094721493c546f8a4e66d2030de00))
+* **deps:** bump github.com/tidwall/gjson in / ([#1264](https://github.com/openai/openai-go/issues/1264)) ([b801adb](https://github.com/openai/openai-go/commit/b801adb39903b20839357965b1fd004a05144e64))
+* **deps:** bump the codeql group with 2 updates ([#1268](https://github.com/openai/openai-go/issues/1268)) ([f585c9a](https://github.com/openai/openai-go/commit/f585c9a38301a9fbb0e453b76f436f73c3acc280))
+
+## [3.102.0](https://github.com/openai/openai-go/compare/v3.101.0...v3.102.0) (2026-11-17)
+
+
+### Features
+
+* **api:** type Managed Agents budget events ([#1274](https://github.com/openai/openai-go/issues/1274)) ([7d320e4](https://github.com/openai/openai-go/commit/7d320e4dc592b2b93929aa3ca964a1828a7a16c1))
+
+## [3.101.0](https://github.com/openai/openai-go/compare/v3.100.0...v3.101.0) (2026-11-17)
+
+
+### Features
+
+* **api:** add 2-hour and 8-hour Responses background windows ([1a6de5e](https://github.com/openai/openai-go/commit/1a6de5e3f5f86c2626b5195b47b41b37b6675dc8))
+* **api:** add the GPT-6.2 Astra Law Responses model identifier ([1a6de5e](https://github.com/openai/openai-go/commit/1a6de5e3f5f86c2626b5195b47b41b37b6675dc8))
+* **api:** add the GPT-6.2 Astra model identifier ([1a6de5e](https://github.com/openai/openai-go/commit/1a6de5e3f5f86c2626b5195b47b41b37b6675dc8))
+* **api:** add the GPT-6.2 Sol model identifier ([1a6de5e](https://github.com/openai/openai-go/commit/1a6de5e3f5f86c2626b5195b47b41b37b6675dc8))
+
+## [3.100.0](https://github.com/openai/openai-go/compare/v3.99.0...v3.100.0) (2026-11-16)
+
+
+### Features
+
+* **api:** add MCP approvals and Live transport events ([#1255](https://github.com/openai/openai-go/issues/1255)) ([4281497](https://github.com/openai/openai-go/commit/428149726d74749b6b42b5e571ca8e146e3527cd))
+* **api:** add schedule pause reasons ([#1269](https://github.com/openai/openai-go/issues/1269)) ([6c47107](https://github.com/openai/openai-go/commit/6c47107b759522a70819b8dcd8237d72ea877289))
+* **api:** deliver beta Agents session errors as stream events ([#1270](https://github.com/openai/openai-go/issues/1270)) ([a97b182](https://github.com/openai/openai-go/commit/a97b1826f1d6157554740364129a10fc73ee398a))
+
+
+### Bug Fixes
+
+* **api:** represent fixed schema values with const ([#1257](https://github.com/openai/openai-go/issues/1257)) ([d5d7034](https://github.com/openai/openai-go/commit/d5d7034713929d8dbb59ea770a062129371d449d))
+
 ## [3.99.0](https://github.com/openai/openai-go/compare/v3.98.0...v3.99.0) (2026-11-12)
 
 

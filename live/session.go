@@ -219,6 +219,9 @@ type SessionAcceptParamsSession struct {
 	// Limited to 16,384 client-supplied tokens. Omitted or blank instructions use
 	// server defaults. Immutable after startup.
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
+	// A stable identifier for your end user, used for safety monitoring and abuse
+	// detection.
+	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
 	// Whether to store the session for later forking and recording download. Defaults
 	// to false for new sessions.
 	Store param.Opt[bool] `json:"store,omitzero"`

@@ -32,16 +32,10 @@ func TestBetaAgentSessionEventNewWithOptionalParams(t *testing.T) {
 		"session_id",
 		openai.BetaAgentSessionEventNewParams{
 			Events: []openai.AgentSessionInputParamUnion{{
-				OfParamAgentSessionInputComputerUseApprovalRequestResult: &openai.AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResult{
+				OfParamAgentSessionInputMcpApprovalRequestResult: &openai.AgentSessionInputParamAgentSessionInputMcpApprovalRequestResult{
 					RequestID: "request_id",
-					Response: openai.AgentSessionInputParamAgentSessionInputComputerUseApprovalRequestResultResponseUnion{
-						OfBrowserAuthenticationSubmit: &openai.AgentBrowserAuthenticationSubmitParam{
-							Fields: []openai.AgentBrowserAuthenticationSubmitParamField{{
-								FieldID: "field_id",
-								Value:   "value",
-							}},
-							SelectedOption: openai.String("selected_option"),
-						},
+					Response: openai.AgentSessionInputParamAgentSessionInputMcpApprovalRequestResultResponse{
+						Decision: "approve",
 					},
 				},
 			}},
