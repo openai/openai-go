@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"sync/atomic"
+	"syscall"
 	"testing"
 	"time"
 
@@ -1018,6 +1019,20 @@ func TestAzureUnsafeHTTPMatchesProxyBypass(t *testing.T) {
 
 				transport := http.DefaultTransport.(*http.Transport).Clone()
 				transport.Proxy = http.ProxyFromEnvironment
+				if host.host == "localhost" {
+					// Simulate an unavailable opposite family while exercising the real
+					// security dialer. Otherwise another test can own that family's port.
+					// This test must remain nonparallel while changing the package dialer.
+					savedDialer := azureLoopbackDialer
+					azureLoopbackDialer.ControlContext = func(_ context.Context, network, _ string, _ syscall.RawConn) error {
+						if network != host.network {
+							return errors.New("address family unavailable in test fixture")
+						}
+						return nil
+					}
+					t.Cleanup(func() { azureLoopbackDialer = savedDialer })
+				}
+				t.Cleanup(transport.CloseIdleConnections)
 
 				endpoint := "http://" + host.host + ":" + originURL.Port()
 				client := openai.NewClient(
@@ -1025,11 +1040,11 @@ func TestAzureUnsafeHTTPMatchesProxyBypass(t *testing.T) {
 					auth.option(),
 					WithUnsafeAllowHTTP(),
 					option.WithMaxRetries(0),
-					option.WithHTTPClient(&http.Client{Transport: transport}),
+					option.WithHTTPClient(&http.Client{Transport: transport, Timeout: 5 * time.Second}),
 				)
 
 				var res map[string]any
-				requestErr := client.Execute(context.Background(), http.MethodGet, "models", nil, &res)
+				requestErr := client.Execute(t.Context(), http.MethodGet, "models", nil, &res)
 				if !host.wantAllowed {
 					if requestErr == nil || !strings.Contains(requestErr.Error(), "azure: authenticated requests require HTTPS") {
 						t.Errorf("expected HTTPS requirement error, got %v", requestErr)

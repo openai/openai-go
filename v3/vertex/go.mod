@@ -3,7 +3,7 @@ module github.com/openai/openai-go/v3/vertex
 go 1.26.0
 
 require (
-	cloud.google.com/go/auth v0.24.2
+	cloud.google.com/go/auth v0.24.3
 	github.com/openai/openai-go/v3 v3.91.0
 )
 
