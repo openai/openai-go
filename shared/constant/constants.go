@@ -307,6 +307,7 @@ type NewSession string                                        // Always "new_ses
 type None string                                              // Always "none"
 type Oci string                                               // Always "oci"
 type Oidc string                                              // Always "oidc"
+type OmniModerationCsamLatest string                          // Always "omni-moderation-csam-latest"
 type Once string                                              // Always "once"
 type OpenPage string                                          // Always "open_page"
 type OpenAIHosted string                                      // Always "openai_hosted"
@@ -1036,9 +1037,12 @@ func (c NewSession) Default() NewSession                         { return "new_s
 func (c None) Default() None                                     { return "none" }
 func (c Oci) Default() Oci                                       { return "oci" }
 func (c Oidc) Default() Oidc                                     { return "oidc" }
-func (c Once) Default() Once                                     { return "once" }
-func (c OpenPage) Default() OpenPage                             { return "open_page" }
-func (c OpenAIHosted) Default() OpenAIHosted                     { return "openai_hosted" }
+func (c OmniModerationCsamLatest) Default() OmniModerationCsamLatest {
+	return "omni-moderation-csam-latest"
+}
+func (c Once) Default() Once                 { return "once" }
+func (c OpenPage) Default() OpenPage         { return "open_page" }
+func (c OpenAIHosted) Default() OpenAIHosted { return "openai_hosted" }
 func (c OrganizationAdminAPIKey) Default() OrganizationAdminAPIKey {
 	return "organization.admin_api_key"
 }
@@ -1903,6 +1907,7 @@ func (c NewSession) MarshalJSON() ([]byte, error)                          { ret
 func (c None) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Oci) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
 func (c Oidc) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
+func (c OmniModerationCsamLatest) MarshalJSON() ([]byte, error)            { return marshalString(c) }
 func (c Once) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c OpenPage) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c OpenAIHosted) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
