@@ -13,16 +13,12 @@ import (
 	"github.com/openai/openai-go/v3/packages/ssestream"
 )
 
-func TestAgentBudgetEventStreamingReplay(t *testing.T) {
+func TestAgentErrorEventStreamingReplay(t *testing.T) {
 	for _, mode := range []string{"create", "subscribe"} {
 		t.Run(mode, func(t *testing.T) {
-			limitJSON, wantLimit := "500", int64(500)
-			if mode == "subscribe" {
-				limitJSON, wantLimit = "null", 0
-			}
 			payloads := []string{
-				`{"type":"error","event_id":"before","session_id":"session","error":{"code":"session_budget_exceeded","message":"Synthetic budget reached"}}`,
-				fmt.Sprintf(`{"type":"agent.session.budget_reached","event_id":"budget","session":{"id":"session","status":"budget_reached","spend_control":{"limit":%s,"consumed":500}},"obfuscation":"synthetic-padding"}`, limitJSON),
+				`{"type":"error","event_id":"before","session_id":"session","error":{"code":"internal_error","message":"Synthetic domain failure"}}`,
+				`{"type":"agent.session.future_state","event_id":"future","session":{"id":"session"}}`,
 				`{"type":"agent.session.idle","event_id":"after","session":{"id":"session","status":"idle"}}`,
 			}
 			server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -69,32 +65,18 @@ func TestAgentBudgetEventStreamingReplay(t *testing.T) {
 				ids = append(ids, event.EventID)
 				if event.EventID == "before" {
 					failure, ok := event.AsAny().(openai.AgentSessionErrorEvent)
-					if !ok || failure.Type != "error" || failure.SessionID != "session" || failure.Error.Code != "session_budget_exceeded" || failure.Error.Message != "Synthetic budget reached" {
+					if !ok || failure.Type != "error" || failure.SessionID != "session" || failure.Error.Code != "internal_error" || failure.Error.Message != "Synthetic domain failure" {
 						t.Fatalf("error event type=%T payload=%#v", event.AsAny(), failure)
 					}
-				}
-				if event.EventID != "budget" {
-					continue
-				}
-				budget, ok := event.AsAny().(openai.AgentSessionBudgetReachedEvent)
-				if !ok {
-					t.Fatalf("budget event type=%T", event.AsAny())
-				}
-				if budget.Type != "agent.session.budget_reached" || budget.EventID != "budget" || budget.Session.ID != "session" || budget.Session.Status != "budget_reached" || budget.Session.SpendControl.Limit != wantLimit || budget.Session.SpendControl.Consumed != 500 || budget.Obfuscation != "synthetic-padding" {
-					t.Fatalf("budget payload=%#v", budget)
-				}
-				limit := budget.Session.SpendControl.JSON.Limit
-				if limit.Raw() != limitJSON || limit.Valid() != (limitJSON != "null") {
-					t.Fatalf("limit raw=%q valid=%t, want %q valid=%t", limit.Raw(), limit.Valid(), limitJSON, limitJSON != "null")
-				}
-				if budget.RawJSON() != payloads[1] {
-					t.Fatalf("raw payload=%q, want %q", budget.RawJSON(), payloads[1])
+					if failure.RawJSON() != payloads[0] {
+						t.Fatalf("raw error payload=%q, want %q", failure.RawJSON(), payloads[0])
+					}
 				}
 			}
 			if err := stream.Err(); err != nil {
 				t.Fatal(err)
 			}
-			if want := []string{"before", "budget", "after"}; !reflect.DeepEqual(ids, want) {
+			if want := []string{"before", "future", "after"}; !reflect.DeepEqual(ids, want) {
 				t.Fatalf("event order=%v, want %v", ids, want)
 			}
 		})

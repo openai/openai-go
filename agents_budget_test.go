@@ -28,8 +28,8 @@ func TestAgentsHelperBudgetReachedStandalone(t *testing.T) {
 		if !stream.Next() || stream.Current().Type != want {
 			t.Fatalf("event %d: got %q, error=%v, want %q", index, stream.Current().Type, stream.Err(), want)
 		}
-		if _, ok := stream.Current().AsAny().(openai.AgentSessionBudgetReachedEvent); !ok {
-			t.Fatalf("budget event is not typed: %#v", stream.Current())
+		if stream.Current().Session.ID == "" {
+			t.Fatal("budget snapshot lost its session identity")
 		}
 	}
 	if stream.Next() || stream.Err() != nil || mock.closed.Load() != 1 {
@@ -107,51 +107,76 @@ func TestBetaAgentBudgetBoundaryWithoutRoot(t *testing.T) {
 }
 
 func TestAgentsCreationToolsBudgetWithoutCreated(t *testing.T) {
-	closed := make(chan struct{})
-	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/event-stream")
-		for _, payload := range []string{
-			`{"type":"error","event_id":"error","session_id":"session","error":{"code":"session_budget_exceeded","message":"Synthetic budget reached"}}`,
-			budgetEvent("matching", "session"),
-		} {
-			_, _ = fmt.Fprintf(w, "data: %s\n\n", payload)
-			w.(http.Flusher).Flush()
-		}
-		<-r.Context().Done()
-		close(closed)
-	}))
-	defer server.Close()
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
-	stream := client.Beta.Agents.Sessions.NewStreaming(ctx, openai.BetaAgentSessionNewParams{
-		Environment: openai.EnvironmentParamUnion{OfParamNone: &openai.EnvironmentParamNone{}},
-		Input:       openai.BetaAgentSessionNewParamsInputUnion{OfString: openai.String("Question")},
-		ToolHandlers: map[string]openai.AgentToolHandler{"unused": func(context.Context, map[string]any) (any, error) {
-			t.Error("unexpected tool call")
-			return nil, nil
-		}},
-	})
-	defer func() { _ = stream.Close() }()
-	for _, want := range []string{"error", "agent.session.budget_reached"} {
-		if !stream.Next() || stream.Current().Type != want {
-			t.Fatalf("type=%q error=%v, want %q", stream.Current().Type, stream.Err(), want)
-		}
-		if want == "error" {
-			if _, ok := stream.Current().AsAny().(openai.AgentSessionErrorEvent); !ok {
-				t.Fatalf("error type=%T", stream.Current().AsAny())
+	for _, missingID := range []bool{false, true} {
+		t.Run(fmt.Sprintf("missing-id=%v", missingID), func(t *testing.T) {
+
+			sessionID := "session"
+			if missingID {
+				sessionID = ""
 			}
-		}
+			payloads := []string{
+				`{"type":"error","event_id":"error","session_id":"session","error":{"code":"session_budget_exceeded","message":"Synthetic budget reached"}}`,
+				budgetEvent("matching", sessionID),
+			}
+			wantTypes := []string{"error", "agent.session.budget_reached"}
+			if missingID {
+				payloads = append(payloads, agentEvent("failed", "failed", `,"session":{"id":"session","status":"failed"}`))
+				wantTypes = append(wantTypes, "agent.session.failed")
+			}
+			closed := make(chan struct{})
+			server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "text/event-stream")
+				for _, payload := range payloads {
+					_, _ = fmt.Fprintf(w, "data: %s\n\n", payload)
+					w.(http.Flusher).Flush()
+				}
+				<-r.Context().Done()
+				close(closed)
+			}))
+			defer server.Close()
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithHTTPClient(server.Client()), option.WithAPIKey("synthetic"), option.WithMaxRetries(0))
+			stream := client.Beta.Agents.Sessions.NewStreaming(ctx, openai.BetaAgentSessionNewParams{
+				Environment: openai.EnvironmentParamUnion{OfParamNone: &openai.EnvironmentParamNone{}},
+				Input:       openai.BetaAgentSessionNewParamsInputUnion{OfString: openai.String("Question")},
+				ToolHandlers: map[string]openai.AgentToolHandler{"unused": func(context.Context, map[string]any) (any, error) {
+					t.Error("unexpected tool call")
+					return nil, nil
+				}},
+			})
+			defer func() { _ = stream.Close() }()
+			for _, want := range wantTypes {
+				if !stream.Next() || stream.Current().Type != want {
+					t.Fatalf("type=%q error=%v, want %q", stream.Current().Type, stream.Err(), want)
+				}
+				if want == "error" {
+					if _, ok := stream.Current().AsAny().(openai.AgentSessionErrorEvent); !ok {
+						t.Fatalf("error type=%T", stream.Current().AsAny())
+					}
+				}
+			}
+			if stream.Current().Session.ID != "session" {
+				t.Fatalf("budget session=%q", stream.Current().Session.ID)
+			}
+			select {
+			case <-closed:
+			case <-time.After(time.Second):
+				t.Fatal("matching budget did not close the live response body")
+			}
+			if stream.Next() || stream.Err() != nil {
+				t.Fatalf("matching budget did not stop cleanly: err=%v", stream.Err())
+			}
+
+		})
 	}
-	if _, ok := stream.Current().AsAny().(openai.AgentSessionBudgetReachedEvent); !ok {
-		t.Fatalf("budget type=%T", stream.Current().AsAny())
-	}
-	select {
-	case <-closed:
-	case <-time.After(time.Second):
-		t.Fatal("matching budget did not close the live response body")
-	}
-	if stream.Next() || stream.Err() != nil {
-		t.Fatalf("matching budget did not stop cleanly: err=%v", stream.Err())
+}
+
+func TestBetaAgentBudgetWithoutSessionIDDoesNotEndCreation(t *testing.T) {
+	stream := betaResultCreateStream(t, []string{budgetEvent("missing", ""), agentEvent("failed", "failed", `,"session":{"id":"session","status":"failed"}`)}, true)
+	_, err := openai.BetaAgentSessionFinalResult(stream)
+	var failure *openai.BetaAgentTurnResultError
+	if !errors.As(err, &failure) || failure.Reason != "session_failed" || stream.Current().Type != "agent.session.failed" {
+		t.Fatalf("error=%#v last event=%q", err, stream.Current().Type)
 	}
 }
