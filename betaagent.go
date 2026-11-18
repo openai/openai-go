@@ -9318,8 +9318,7 @@ func (r *SessionError) UnmarshalJSON(data []byte) error {
 type SessionTurnError struct {
 	// A stable, machine-readable failure category.
 	//
-	// Any of "context_length_exceeded", "max_output_tokens",
-	// "session_budget_exceeded", "usage_limit_exceeded",
+	// Any of "context_length_exceeded", "max_output_tokens", "usage_limit_exceeded",
 	// "project_spend_limit_exceeded", "organization_spend_limit_exceeded",
 	// "organization_usage_limit_exceeded", "billing_not_active",
 	// "credit_balance_exhausted", "rate_limit_exceeded", "flex_unavailable",
@@ -9351,7 +9350,6 @@ type SessionTurnErrorCode string
 const (
 	SessionTurnErrorCodeContextLengthExceeded          SessionTurnErrorCode = "context_length_exceeded"
 	SessionTurnErrorCodeMaxOutputTokens                SessionTurnErrorCode = "max_output_tokens"
-	SessionTurnErrorCodeSessionBudgetExceeded          SessionTurnErrorCode = "session_budget_exceeded"
 	SessionTurnErrorCodeUsageLimitExceeded             SessionTurnErrorCode = "usage_limit_exceeded"
 	SessionTurnErrorCodeProjectSpendLimitExceeded      SessionTurnErrorCode = "project_spend_limit_exceeded"
 	SessionTurnErrorCodeOrganizationSpendLimitExceeded SessionTurnErrorCode = "organization_spend_limit_exceeded"

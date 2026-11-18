@@ -363,7 +363,7 @@
     },
     "betaagent.go": {
       "mode": "100644",
-      "sha256": "95285d5787354879406cc5ad029d5215622858c455ab54bbb54bd4c00d18ea51"
+      "sha256": "b8dd2cb00c13fd494c68cf584a11e6aee9ba7e94d391093e3976e04536e433d4"
     },
     "betaagent_test.go": {
       "mode": "100644",
