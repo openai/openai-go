@@ -1,5 +1,23 @@
 # Changelog
 
+## [3.103.0](https://github.com/openai/openai-go/compare/v3.102.0...v3.103.0) (2026-11-18)
+
+
+### Features
+
+* **api:** add the CSAM moderation response model constant ([#1280](https://github.com/openai/openai-go/issues/1280)) ([e59ebe1](https://github.com/openai/openai-go/commit/e59ebe105ed1af04b1f3c63ae9d51fc1356a62b3))
+* **api:** configure Live MCP tools and read approval filters ([#1271](https://github.com/openai/openai-go/issues/1271)) ([30e06c7](https://github.com/openai/openai-go/commit/30e06c74cd98e828c895bb1731f0b85180da677d))
+* **api:** hide Managed Agents session budget controls and events ([#1279](https://github.com/openai/openai-go/issues/1279)) ([8f7a60e](https://github.com/openai/openai-go/commit/8f7a60ee8747dd0c61dd11ec75fe2b017b5f367c))
+
+
+### Build System
+
+* **deps:** bump cloud.google.com/go/auth from 0.24.2 to 0.24.3 in /v3/vertex ([#1266](https://github.com/openai/openai-go/issues/1266)) ([3abf262](https://github.com/openai/openai-go/commit/3abf262631a843e9e40d2355cbc35b067541bff7))
+* **deps:** bump github.com/aws/aws-sdk-go-v2 in / ([#1262](https://github.com/openai/openai-go/issues/1262)) ([398b72a](https://github.com/openai/openai-go/commit/398b72a813ab7548f83eddfbc248669ab3772681))
+* **deps:** bump github.com/Azure/azure-sdk-for-go/sdk/azcore in / ([#1261](https://github.com/openai/openai-go/issues/1261)) ([8ea5b78](https://github.com/openai/openai-go/commit/8ea5b786706094721493c546f8a4e66d2030de00))
+* **deps:** bump github.com/tidwall/gjson in / ([#1264](https://github.com/openai/openai-go/issues/1264)) ([b801adb](https://github.com/openai/openai-go/commit/b801adb39903b20839357965b1fd004a05144e64))
+* **deps:** bump the codeql group with 2 updates ([#1268](https://github.com/openai/openai-go/issues/1268)) ([f585c9a](https://github.com/openai/openai-go/commit/f585c9a38301a9fbb0e453b76f436f73c3acc280))
+
 ## [3.102.0](https://github.com/openai/openai-go/compare/v3.101.0...v3.102.0) (2026-11-17)
 
 
