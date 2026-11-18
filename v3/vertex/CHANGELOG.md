@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4](https://github.com/openai/openai-go/compare/v3/vertex/v1.0.3...v3/vertex/v1.0.4) (2026-11-18)
+
+
+### Build System
+
+* **deps:** bump cloud.google.com/go/auth from 0.24.2 to 0.24.3 in /v3/vertex ([#1266](https://github.com/openai/openai-go/issues/1266)) ([3abf262](https://github.com/openai/openai-go/commit/3abf262631a843e9e40d2355cbc35b067541bff7))
+
 ## [1.0.3](https://github.com/openai/openai-go/compare/v3/vertex/v1.0.2...v3/vertex/v1.0.3) (2026-11-12)
 
 
