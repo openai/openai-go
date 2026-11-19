@@ -54,6 +54,7 @@ func TestLiveNewWithOptionalParams(t *testing.T) {
 					AcknowledgementDelayMs: openai.Int(0),
 				},
 			},
+			IdleTimeoutS: openai.Int(5),
 			Input: []live.InitialItemUnionParam{{
 				OfDeveloper: &live.InitialItemDeveloperParam{
 					Content: []live.InitialItemDeveloperContentParam{{
@@ -81,6 +82,9 @@ func TestLiveNewWithOptionalParams(t *testing.T) {
 				},
 				EventType: live.DecisionTriggerEventTypeSessionInputTranscriptDelta,
 			}},
+			WakePolicy: live.MediaSessionConfigWakePolicyParam{
+				VadThreshold: openai.Float(0),
+			},
 		},
 		Transport: live.LiveNewParamsTransport{
 			Sdp: "x",

@@ -510,6 +510,8 @@ type SessionOutputAudioFixturePlay string                     // Always "session
 type SessionOutputAudioFixturePlayed string                   // Always "session.output_audio.fixture.played"
 type SessionOutputAudioFixturePlaying string                  // Always "session.output_audio.fixture.playing"
 type SessionOutputTranscriptDelta string                      // Always "session.output_transcript.delta"
+type SessionPaused string                                     // Always "session.paused"
+type SessionResumed string                                    // Always "session.resumed"
 type SessionStart string                                      // Always "session.start"
 type SessionStarted string                                    // Always "session.started"
 type SessionThinkingAppend string                             // Always "session.thinking.append"
@@ -526,6 +528,7 @@ type SkillReference string                                    // Always "skill_r
 type SkillDeleted string                                      // Always "skill.deleted"
 type SkillVersion string                                      // Always "skill.version"
 type SkillVersionDeleted string                               // Always "skill.version.deleted"
+type Speech string                                            // Always "speech"
 type Static string                                            // Always "static"
 type StaticBearer string                                      // Always "static_bearer"
 type Stdio string                                             // Always "stdio"
@@ -1464,6 +1467,8 @@ func (c SessionOutputAudioFixturePlaying) Default() SessionOutputAudioFixturePla
 func (c SessionOutputTranscriptDelta) Default() SessionOutputTranscriptDelta {
 	return "session.output_transcript.delta"
 }
+func (c SessionPaused) Default() SessionPaused                 { return "session.paused" }
+func (c SessionResumed) Default() SessionResumed               { return "session.resumed" }
 func (c SessionStart) Default() SessionStart                   { return "session.start" }
 func (c SessionStarted) Default() SessionStarted               { return "session.started" }
 func (c SessionThinkingAppend) Default() SessionThinkingAppend { return "session.thinking.append" }
@@ -1482,6 +1487,7 @@ func (c SkillReference) Default() SkillReference                 { return "skill
 func (c SkillDeleted) Default() SkillDeleted                     { return "skill.deleted" }
 func (c SkillVersion) Default() SkillVersion                     { return "skill.version" }
 func (c SkillVersionDeleted) Default() SkillVersionDeleted       { return "skill.version.deleted" }
+func (c Speech) Default() Speech                                 { return "speech" }
 func (c Static) Default() Static                                 { return "static" }
 func (c StaticBearer) Default() StaticBearer                     { return "static_bearer" }
 func (c Stdio) Default() Stdio                                   { return "stdio" }
@@ -2132,6 +2138,8 @@ func (c SessionOutputAudioFixturePlay) MarshalJSON() ([]byte, error)       { ret
 func (c SessionOutputAudioFixturePlayed) MarshalJSON() ([]byte, error)     { return marshalString(c) }
 func (c SessionOutputAudioFixturePlaying) MarshalJSON() ([]byte, error)    { return marshalString(c) }
 func (c SessionOutputTranscriptDelta) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c SessionPaused) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c SessionResumed) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c SessionStart) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c SessionStarted) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c SessionThinkingAppend) MarshalJSON() ([]byte, error)               { return marshalString(c) }
@@ -2148,6 +2156,7 @@ func (c SkillReference) MarshalJSON() ([]byte, error)                      { ret
 func (c SkillDeleted) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c SkillVersion) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c SkillVersionDeleted) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c Speech) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c Static) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c StaticBearer) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c Stdio) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
