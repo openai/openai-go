@@ -16,6 +16,9 @@ const (
 func decodeWebhookSecret(secret string) ([]byte, error) {
 	encodedSecret, prefixed := strings.CutPrefix(secret, webhookSecretPrefix)
 	if !prefixed {
+		if len(secret) < minimumWebhookSecretBytes {
+			return nil, fmt.Errorf("invalid webhook secret: raw secret must be at least %d bytes", minimumWebhookSecretBytes)
+		}
 		return []byte(secret), nil
 	}
 

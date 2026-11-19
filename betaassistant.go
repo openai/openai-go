@@ -1744,7 +1744,7 @@ func (r FunctionTool) ToParam() FunctionToolParam {
 
 // The properties Function, Type are required.
 type FunctionToolParam struct {
-	Function shared.FunctionDefinitionParam `json:"function,omitzero" api:"required"`
+	Function shared.FunctionDefinitionParam `json:"function" api:"required"`
 	// The type of tool being defined: `function`
 	//
 	// This field can be elided, and will marshal its zero value as "function".
@@ -1993,7 +1993,7 @@ func (r *BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrateg
 
 // The properties Static, Type are required.
 type BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic struct {
-	Static BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic `json:"static,omitzero" api:"required"`
+	Static BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic `json:"static" api:"required"`
 	// Always `static`.
 	//
 	// This field can be elided, and will marshal its zero value as "static".

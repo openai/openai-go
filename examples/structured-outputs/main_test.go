@@ -151,7 +151,7 @@ func TestHistoricalComputerFromResponse(t *testing.T) {
 			if status == "" {
 				status = "completed"
 			}
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.Method != http.MethodPost || r.URL.Path != "/responses" {
 					t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
 				}
@@ -161,7 +161,12 @@ func TestHistoricalComputerFromResponse(t *testing.T) {
 				}
 			}))
 			defer server.Close()
-			client := openai.NewClient(option.WithAPIKey("test-key"), option.WithBaseURL(server.URL), option.WithMaxRetries(0))
+			client := openai.NewClient(
+				option.WithAPIKey("test-key"),
+				option.WithBaseURL(server.URL),
+				option.WithHTTPClient(server.Client()),
+				option.WithMaxRetries(0),
+			)
 			schema, err := GenerateSchema[HistoricalComputer]()
 			if err != nil {
 				t.Fatal(err)

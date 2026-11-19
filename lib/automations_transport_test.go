@@ -24,7 +24,7 @@ func TestAutomationResponseMetadata(t *testing.T) {
 		_, _ = w.Write([]byte(automationFixture))
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("test-key"))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("test-key"))
 	got, err := client.Beta.Agents.Automations.Get(context.Background(), "auto_test")
 	if err != nil {
 		t.Fatal(err)
@@ -94,7 +94,7 @@ func TestAutomationCreateUnionBody(t *testing.T) {
 					_, _ = w.Write([]byte(automationFixture))
 				}))
 				defer server.Close()
-				client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("test-key"))
+				client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("test-key"))
 				if _, err := client.Beta.Agents.Automations.New(context.Background(), params); err != nil {
 					t.Fatal(err)
 				}
@@ -126,7 +126,7 @@ func TestAutomationInvocationNullableFields(t *testing.T) {
 				}
 			}))
 			defer server.Close()
-			client := openai.NewClient(option.WithBaseURL(server.URL), option.WithAPIKey("test-key"))
+			client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL), option.WithAPIKey("test-key"))
 			got, err := client.Beta.Agents.Automations.Invocations.Get(context.Background(), "auto_test", "inv_test")
 			if err != nil {
 				t.Fatal(err)

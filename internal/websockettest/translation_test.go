@@ -39,7 +39,7 @@ func translationPeer(t *testing.T, options realtime.TranslationConnectionOptions
 		result <- script(ctx, socket)
 	}))
 	t.Cleanup(server.Close)
-	client := openai.NewClient(option.WithBaseURL(server.URL+"/v1"), option.WithAPIKey("synthetic-key"))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL+"/v1"), option.WithAPIKey("synthetic-key"))
 	options.CloseTimeout = 100 * time.Millisecond
 	connection, err := client.Realtime.ConnectTranslation(ctx, "gpt-realtime-translate", options)
 	if err != nil {
@@ -748,7 +748,7 @@ func TestTranslationRejectsCrossOriginRedirect(t *testing.T) {
 		http.Redirect(w, r, target.URL+"/v1/realtime/translations", http.StatusTemporaryRedirect)
 	}))
 	defer server.Close()
-	client := openai.NewClient(option.WithBaseURL(server.URL+"/v1"), option.WithAPIKey("synthetic-key"))
+	client := openai.NewClient(option.WithUnsafeAllowHTTP(), option.WithBaseURL(server.URL+"/v1"), option.WithAPIKey("synthetic-key"))
 	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
 	defer cancel()
 	if connection, err := client.Realtime.ConnectTranslation(ctx, "gpt-realtime-translate", realtime.TranslationConnectionOptions{}); err == nil {

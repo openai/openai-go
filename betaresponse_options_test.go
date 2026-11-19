@@ -27,7 +27,7 @@ func TestBetaResponseConcurrentRequestOptions(t *testing.T) {
 					w.WriteHeader(http.StatusBadRequest)
 					return
 				}
-				want := []string{"caller-beta", body.Instructions}
+				want := []string{body.Instructions, "first-beta", "second-beta"}
 				if got := r.Header.Values("OpenAI-Beta"); !slices.Equal(got, want) {
 					t.Errorf("request %s: beta headers = %q, want %q", body.Instructions, got, want)
 				}
@@ -53,9 +53,10 @@ func TestBetaResponseConcurrentRequestOptions(t *testing.T) {
 			)
 			// The unused slots expose writes through the caller's backing array,
 			// even when scheduling happens not to produce a header mismatch.
-			opts := make([]option.RequestOption, 2, 8)
+			opts := make([]option.RequestOption, 3, 8)
 			opts[0] = option.WithHeader("X-Caller", "preserved")
-			opts[1] = option.WithHeaderAdd("OpenAI-Beta", "caller-beta")
+			opts[1] = option.WithHeaderAdd("OpenAI-Beta", "first-beta")
+			opts[2] = option.WithHeaderAdd("OpenAI-Beta", "second-beta")
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			start := make(chan struct{})
@@ -93,6 +94,43 @@ func TestBetaResponseConcurrentRequestOptions(t *testing.T) {
 				if opt != nil {
 					t.Errorf("request mutated caller option backing array at slot %d", len(opts)+i)
 				}
+			}
+		})
+	}
+}
+
+func TestBetaAgentEnvironmentIdempotencyKey(t *testing.T) {
+	const header = "Idempotency-Key"
+	typed := openai.BetaAgentEnvironmentNewParams{IdempotencyKey: openai.String("from-params")}
+	for _, tc := range []struct {
+		name   string
+		params openai.BetaAgentEnvironmentNewParams
+		opts   []option.RequestOption
+		want   []string
+	}{
+		{name: "typed only", params: typed, want: []string{"from-params"}},
+		{name: "replace", params: typed, opts: []option.RequestOption{option.WithHeader(header, "from-option")}, want: []string{"from-option"}},
+		{name: "delete", params: typed, opts: []option.RequestOption{option.WithHeaderDel(header)}},
+		{name: "option only", opts: []option.RequestOption{option.WithHeader(header, "from-option")}, want: []string{"from-option"}},
+		{name: "omitted"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if got := r.Header.Values(header); !slices.Equal(got, tc.want) {
+					t.Errorf("%s = %q, want %q", header, got, tc.want)
+				}
+				w.Header().Set("Content-Type", "application/json")
+				if _, err := fmt.Fprint(w, `{}`); err != nil {
+					t.Error(err)
+				}
+			}))
+			defer server.Close()
+			service := openai.NewBetaAgentEnvironmentService(
+				option.WithBaseURL(server.URL), option.WithUnsafeAllowHTTP(),
+				option.WithAPIKey("test-key"), option.WithMaxRetries(0),
+			)
+			if _, err := service.New(t.Context(), tc.params, tc.opts...); err != nil {
+				t.Fatal(err)
 			}
 		})
 	}

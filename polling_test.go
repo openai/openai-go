@@ -47,11 +47,11 @@ func TestPollStatusRemoteDelayObservesContext(t *testing.T) {
 				return err
 			},
 		},
-		"video overflowing delay": {
+		"vector store file overflowing delay": {
 			header: "999999999999999999999999",
-			body:   `{"id":"video_123","status":"in_progress"}`,
+			body:   `{"id":"file_123","status":"in_progress","vector_store_id":"vs_123"}`,
 			poll: func(ctx context.Context, client *openai.Client) error {
-				_, err := client.Videos.PollStatus(ctx, "video_123", 0)
+				_, err := client.VectorStores.Files.PollStatus(ctx, "vs_123", "file_123", 0)
 				return err
 			},
 		},

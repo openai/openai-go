@@ -208,7 +208,7 @@ func (r *AdminOrganizationProjectHostedToolPermissionUpdateParams) UnmarshalJSON
 // The property Enabled is required.
 type AdminOrganizationProjectHostedToolPermissionUpdateParamsCodeInterpreter struct {
 	// Whether to enable the hosted tool for the project.
-	Enabled bool `json:"enabled" api:"required"`
+	Enabled param.Opt[bool] `json:"enabled,omitzero" api:"required"`
 	paramObj
 }
 
@@ -225,7 +225,7 @@ func (r *AdminOrganizationProjectHostedToolPermissionUpdateParamsCodeInterpreter
 // The property Enabled is required.
 type AdminOrganizationProjectHostedToolPermissionUpdateParamsFileSearch struct {
 	// Whether to enable the hosted tool for the project.
-	Enabled bool `json:"enabled" api:"required"`
+	Enabled param.Opt[bool] `json:"enabled,omitzero" api:"required"`
 	paramObj
 }
 
@@ -242,7 +242,7 @@ func (r *AdminOrganizationProjectHostedToolPermissionUpdateParamsFileSearch) Unm
 // The property Enabled is required.
 type AdminOrganizationProjectHostedToolPermissionUpdateParamsImageGeneration struct {
 	// Whether to enable the hosted tool for the project.
-	Enabled bool `json:"enabled" api:"required"`
+	Enabled param.Opt[bool] `json:"enabled,omitzero" api:"required"`
 	paramObj
 }
 
@@ -259,7 +259,7 @@ func (r *AdminOrganizationProjectHostedToolPermissionUpdateParamsImageGeneration
 // The property Enabled is required.
 type AdminOrganizationProjectHostedToolPermissionUpdateParamsMcp struct {
 	// Whether to enable the hosted tool for the project.
-	Enabled bool `json:"enabled" api:"required"`
+	Enabled param.Opt[bool] `json:"enabled,omitzero" api:"required"`
 	paramObj
 }
 
@@ -276,7 +276,7 @@ func (r *AdminOrganizationProjectHostedToolPermissionUpdateParamsMcp) UnmarshalJ
 // The property Enabled is required.
 type AdminOrganizationProjectHostedToolPermissionUpdateParamsWebSearch struct {
 	// Whether to enable the hosted tool for the project.
-	Enabled bool `json:"enabled" api:"required"`
+	Enabled param.Opt[bool] `json:"enabled,omitzero" api:"required"`
 	paramObj
 }
 

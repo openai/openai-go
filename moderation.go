@@ -284,7 +284,7 @@ func (r *ModerationCategoryScores) UnmarshalJSON(data []byte) error {
 // The properties ImageURL, Type are required.
 type ModerationImageURLInputParam struct {
 	// Contains either an image URL or a data URL for a base64 encoded image.
-	ImageURL ModerationImageURLInputImageURLParam `json:"image_url,omitzero" api:"required"`
+	ImageURL ModerationImageURLInputImageURLParam `json:"image_url" api:"required"`
 	// Always `image_url`.
 	//
 	// This field can be elided, and will marshal its zero value as "image_url".

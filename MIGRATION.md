@@ -2,6 +2,78 @@
 
 <a href="https://pkg.go.dev/github.com/openai/openai-go/v3"><img src="https://pkg.go.dev/badge/github.com/openai/openai-go.svg" alt="Go Reference"></a>
 
+## Float and encoded embeddings in v4
+
+`Embedding.Embedding` holds a vector or the encoded string returned by the API.
+Select the variant that matches the requested encoding.
+
+```go
+vector := result.Data[0].Embedding.OfEmbeddingEmbeddingArray
+encoded := result.Data[0].Embedding.OfString
+```
+
+Request `encoding_format: "float"` to receive a vector. When requesting base64,
+decode the string in your application if you need float values.
+
+## Named MultiGrader entries in v4
+
+`MultiGraderParam.Graders` is a map. Use the same keys in the formula and
+when reading the returned graders.
+
+```go
+params.Graders = map[string]openai.MultiGraderGraderUnionParam{
+    "exact": exactGrader,
+    "similarity": similarityGrader,
+}
+params.CalculateOutput = "(exact + similarity) / 2"
+```
+
+## Go v4 breaking change: Azure Identity version selection
+
+If your application uses `azidentity`, declare the version it needs in your own
+`go.mod`. The SDK no longer sets the minimum to `v1.14.1`. Your other
+dependencies can select an older version. Run the following commands to keep the previous minimum.
+
+```sh
+go get github.com/Azure/azure-sdk-for-go/sdk/azidentity@v1.14.1
+go mod tidy
+```
+
+To choose the latest release instead, use `@latest`. Continue passing your
+credential to `azure.WithTokenCredential`. Use `azure.WithTokenCredentialScopes`
+if your deployment requires a custom scope. Applications using an Azure API key
+can continue using `azure.WithAPIKey` without installing Azure Identity.
+
+## Retired chat model constants in v4
+
+Go v4 removes three constants from `shared` and their aliases in `openai`,
+`conversations`, `live`, `realtime`, `responses`, and `webhooks`.
+
+| Removed constant | Replacement to evaluate |
+| --- | --- |
+| `ChatModelGPT4VisionPreview` | `openai.ChatModelGPT6Luna` for requests with image input |
+| `ChatModelGPT3_5Turbo0613` | `openai.ChatModelGPT5_6Terra` |
+| `ChatModelGPT3_5Turbo16k0613` | `openai.ChatModelGPT5_6Terra` |
+
+The original retirement notices recommended GPT-4o and GPT-3.5 Turbo.
+Subsequent notices list the replacements above. Test your application's
+messages with the model you select. You can also set
+`ChatCompletionNewParams.Model` from a string variable.
+[API model deprecations](https://developers.openai.com/api/docs/deprecations)
+
+## Go v4 removes the Videos API
+
+The Sora API shut down on September 24, 2026. Remove the video-generation feature
+from your application or choose another service. There is no direct replacement
+in the OpenAI API. Installing an older SDK cannot restore access.
+
+Remove calls to `client.Videos`, including `NewAndPoll`, `PollStatus` and
+`ListAutoPaging`. Remove references to `openai.NewVideoService`, the video
+request and response types, `openai.ImageInputReferenceParam`, and Sora model
+constants. Remove batch submissions that use `openai.BatchNewParamsEndpointV1Videos`.
+
+## Earlier SDK changes
+
 This SDK includes breaking changes to improve the ergonomics of constructing parameters and accessing responses.
 
 To reduce verbosity, the `openai.F(...)` and `param.Field[T]` have been removed.
@@ -15,6 +87,14 @@ a type assertion to access variants and fields. The new design uses
 structs with a field for each variant, wherein only one field can be set.
 These struct unions also expose 'Get' methods to access and mutate subfields
 which may be shared by multiple variants.
+
+## Typed headers and per-call options in v4
+
+Go v4 applies service defaults first, typed header parameters second, and per-call options last. A call that supplies a typed `IdempotencyKey` of `"from-params"` and `option.WithHeader("Idempotency-Key", "from-option")` sends `"from-option"`. In v3 it sends `"from-params"`.
+
+Choose one source for each idempotency key. To keep the typed key, remove the conflicting per-call option. Reuse the same key for retries of one operation and use a distinct key for each new operation.
+
+Check shared options for `WithHeaderDel` and `WithHeaderAdd` as well. Deleting a typed header removes it from the request. Adding values to a repeated header such as `OpenAI-Beta` places them after the typed values, in the order you supplied them.
 
 # Request parameters
 
@@ -282,3 +362,149 @@ The `.RawJSON()` method has moved to the parent of the `.JSON` property.
 ```
 
 [^1]: The SDK doesn't require Go 1.24, despite supporting the `omitzero` feature
+
+## Workload identity token reuse
+
+Reusing `option.WithWorkloadIdentity` across clients no longer shares one token
+cache across different HTTP identities. Each native HTTP client and transport
+pair keeps its own cache; request-level `option.WithHTTPClient` overrides select
+the corresponding identity. A rejected token invalidates only that identity's
+cache. The public method and option signatures are unchanged.
+
+Applications that previously relied on token reuse across different clients may
+make additional token exchanges. Reuse a stable client and transport when they
+represent the same identity. Native HTTP clients also retain tokens when their
+transport is a function or other non-comparable value; replacing that transport
+selects a separate cache. Non-comparable custom HTTP doers remain supported,
+but acquire tokens independently for each logical SDK request while retaining
+authentication state across that request’s retry attempts. The cache retains at most 32 idle
+or active identity entries; eviction or overflow may also require another
+exchange without limiting the number of clients you can use. An overflowing
+identity retains its authentication state across attempts of one SDK request.
+
+Keep provider and custom-doer identities stable while in use. To rotate opaque
+credentials, construct a new provider/authenticator or HTTP doer. To rotate
+client certificates, use a new transport. Do not mutate a client or transport
+concurrently with requests.
+
+## Live Responses delegation tool choices
+
+Live Responses delegation function and MCP tool choices have shorter Go names. The
+request and response variants now have separate types. All names below are in the
+`live` package.
+
+| Previous type | Request type | Response type |
+| --- | --- | --- |
+| `ResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam` | `ResponsesDelegationConfigToolChoiceFunctionParam` | `ResponsesDelegationConfigToolChoiceFunction` |
+| `ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam` | `ResponsesDelegationConfigToolChoiceMcpParam` | `ResponsesDelegationConfigToolChoiceMcp` |
+| `ResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam` | `ResponsesDelegationUpdateConfigToolChoiceFunctionParam` | — |
+| `ResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam` | `ResponsesDelegationUpdateConfigToolChoiceMcpParam` | — |
+
+The create/response rows below apply to `ResponsesDelegationConfigToolChoiceUnionParam`
+and `ResponsesDelegationConfigToolChoiceUnion`, including the response union's `JSON`
+metadata. The update rows apply to `ResponsesDelegationUpdateConfigToolChoiceUnionParam`.
+
+| Union | Previous field | New field |
+| --- | --- | --- |
+| Create/response | `OfResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam` | `OfResponsesDelegationConfigToolChoiceFunction` |
+| Create/response | `OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam` | `OfResponsesDelegationConfigToolChoiceMcp` |
+| Update | `OfResponsesDelegationUpdateConfigToolChoiceLiveFunctionToolChoiceParam` | `OfResponsesDelegationUpdateConfigToolChoiceFunction` |
+| Update | `OfResponsesDelegationUpdateConfigToolChoiceLiveMcpToolChoiceParam` | `OfResponsesDelegationUpdateConfigToolChoiceMcp` |
+
+On `ResponsesDelegationConfigToolChoiceUnion`, replace
+`AsResponsesDelegationConfigToolChoiceLiveFunctionToolChoiceParam()` with
+`AsResponsesDelegationConfigToolChoiceFunction()` and
+`AsResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam()` with
+`AsResponsesDelegationConfigToolChoiceMcp()`. These accessors return the response
+types in the first table.
+
+MCP tool-choice `Name` request fields now use `param.Opt[string]`. This applies to
+the two MCP request types above and to
+`ResponsesDelegationConfigToolChoiceLiveAllowedToolsChoiceParamToolMcpParam` and
+`ResponsesDelegationUpdateConfigToolChoiceLiveAllowedToolsChoiceParamToolMcpParam`.
+Use `openai.String("lookup")` for a string, `param.Null[string]()` for JSON `null`, or
+leave `Name` unset to omit it. `ServerLabel` remains required. A request union's
+`GetName()` returns `nil` for both an omitted and a null name.
+
+**Before**
+
+```go
+choice := live.ResponsesDelegationConfigToolChoiceUnionParam{
+	OfResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam: &live.ResponsesDelegationConfigToolChoiceLiveMcpToolChoiceParam{
+		ServerLabel: "docs",
+		Name:        "lookup",
+	},
+}
+```
+
+**After**
+
+```go
+choice := live.ResponsesDelegationConfigToolChoiceUnionParam{
+	OfResponsesDelegationConfigToolChoiceMcp: &live.ResponsesDelegationConfigToolChoiceMcpParam{
+		ServerLabel: "docs",
+		Name:        openai.String("lookup"),
+	},
+}
+```
+
+Both requests select the `lookup` tool on the `docs` MCP server.
+
+For responses, `Name` is a string. Check `JSON.Name.Valid()` for a value and
+`JSON.Name.Raw()` against `respjson.Omitted` or `respjson.Null` to distinguish an
+omitted field from JSON `null`. Use `RawJSON()` to retain the original wire form.
+
+## Retained messages in compaction output
+
+GA and beta compaction results can contain retained input messages. If you
+declare the type of the output slice, change the GA type from
+`[]responses.ResponseOutputItemUnion` to `[]responses.ResponseItemUnion`
+and the beta type from `[]openai.BetaResponseOutputItemUnion` to
+`[]openai.BetaResponseItemUnion`.
+
+For a message, `AsAny()` selects the input-message type for the `user`,
+`system`, and `developer` roles and the output-message type for
+`assistant`. For GA, handle both variants when iterating over the output.
+
+```go
+for _, item := range compacted.Output {
+    switch msg := item.AsAny().(type) {
+    case responses.ResponseInputMessageItem:
+        fmt.Println(msg.Role, msg.Content)
+    case responses.ResponseOutputMessage:
+        fmt.Println(msg.Role, msg.Content)
+    }
+}
+```
+
+## Typed Live Decisions items and questions
+
+Set one item variant for each `decision.item.create` event. Message variants
+select the role. Function calls, custom-tool calls and their outputs have their
+own variants. Use `OfString` or `OfParts` for question instructions.
+
+```go
+event := live.DecisionItemCreateEventParam{
+    Item: live.DecisionItemCreateEventItemUnionParam{
+        OfUserMessage: &live.DecisionUserMessageParam{
+            Content: live.DecisionUserMessageContentUnionParam{
+                OfString: openai.String("Check the order status"),
+            },
+        },
+    },
+}
+```
+
+Reuse `live.DecisionQuestionInstructionsUnionParam` for Choice, Predicate, and
+Score. For returned instructions, call `AsString()` or `AsParts()` on the shared
+`live.DecisionQuestionInstructionsUnion`. Use
+`live.DecisionQuestionInstructionPartInputJSON` for a JSON part that previously
+used `shared.DecisionInputJSON`.
+
+Numbers decoded from Live JSON request data use `json.Number` so forwarding a
+decoded item preserves their precision.
+
+For a manually authored item type without a typed variant, use
+`param.Override[live.DecisionItemCreateEventItemUnionParam](raw)` with the full
+JSON payload, including any role the API expects. Decoding an unknown item
+automatically keeps its raw JSON for forwarding.

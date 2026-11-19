@@ -85,19 +85,20 @@ func TestWebSocketUpgradePreservesRequestPolicyAndTLS(t *testing.T) {
 }
 
 func TestWebSocketRejectsCrossOriginRedirect(t *testing.T) {
-	var leaked atomic.Int32
+	var received, leaked atomic.Int32
 	other := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { leaked.Add(1); w.WriteHeader(http.StatusBadRequest) }))
 	defer other.Close()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		received.Add(1)
 		http.Redirect(w, r, other.URL, http.StatusTemporaryRedirect)
 	}))
 	defer server.Close()
-	_, err := dialPrepared(t, option.WithBaseURL(server.URL), option.WithAPIKey("fake-key"))
-	if err == nil {
-		t.Fatal("cross-origin redirect unexpectedly succeeded")
+	_, err := dialPrepared(t, option.WithBaseURL(server.URL), option.WithAPIKey("fake-key"), option.WithUnsafeAllowHTTP())
+	if err == nil || !strings.Contains(err.Error(), "origin must match") {
+		t.Fatalf("expected cross-origin redirect error, got %v", err)
 	}
-	if leaked.Load() != 0 {
-		t.Fatalf("cross-origin requests = %d, want 0", leaked.Load())
+	if received.Load() != 1 || leaked.Load() != 0 {
+		t.Fatalf("initial requests = %d, want 1; cross-origin requests = %d, want 0", received.Load(), leaked.Load())
 	}
 }
 

@@ -1042,6 +1042,13 @@ openai.FileNewParams{
 
 ## Webhook Verification
 
+In v4, `VerifySignature` and `Unwrap` require at least 24 bytes for legacy raw
+signing keys. For OpenAI webhooks, use the OpenAI-issued `whsec_` secret.
+If your sender uses a shorter raw key, generate a new random key of at least
+24 bytes. Configure the new key at both the sender and receiver before upgrading
+the receiver to v4. Replace short keys in test fixtures and re-sign the payloads
+with the replacement test key.
+
 Signature verification authenticates the delivery and checks timestamp freshness.
 It does not provide exactly-once processing: the same signed request can pass
 verification more than once within the accepted timestamp window. The handlers
@@ -1376,6 +1383,42 @@ checks in the redirect path, including when the client uses a custom
 redirects it performs inside `Do` and must keep credentialed requests on the
 configured origin. Prefer a native `*http.Client` with a custom transport when
 possible.
+
+### Local HTTP development
+
+Authenticated requests sent by the SDK client require HTTPS, including endpoints selected by
+`OPENAI_BASE_URL` or `option.WithBaseURL`. A remote HTTP endpoint returns an error
+before the SDK attaches an API or admin key or obtains a workload token. Use
+HTTPS for remote servers. To make an unauthenticated request with a client that
+has a static key, pass `option.WithHeaderDel("Authorization")` on that request.
+
+For local development, explicitly allow plaintext connections to `localhost` or
+a literal loopback IP address:
+
+```go
+client := openai.NewClient(
+    option.WithBaseURL("http://127.0.0.1:8080/v1"),
+    option.WithUnsafeAllowHTTP(),
+    option.WithAPIKey("local-test-key"),
+)
+```
+
+The exception never permits remote HTTP. These local requests use a dedicated
+direct transport, bypassing proxies, custom transports, dialers, and HTTP doers.
+A request that starts on the direct transport keeps it for same-origin redirects,
+even if a redirect drops the credential.
+Use HTTPS when a test needs a custom transport. HTTPS requests and workload token
+exchanges retain their configured HTTP clients. Azure and Bedrock credentials
+follow their provider-specific transport policies. A Bedrock client using
+`SkipAuth` with `option.WithWorkloadIdentity` acquires an OpenAI token and
+follows the OpenAI HTTPS and direct-loopback rules.
+
+Use `option.WithWorkloadIdentity` to have the SDK check the destination before
+acquiring a token. If you call `auth.WorkloadIdentityMiddleware` directly, your
+`next` callback receives an authenticated request and controls its destination,
+proxy and transport. Pass the SDK's `next` to use the SDK's dispatch checks.
+The helper acquires the token before calling `next`. Reusing a
+request context does not enable local HTTP on another SDK request.
 
 ### Mutual TLS with a custom HTTP client
 
@@ -1760,6 +1803,18 @@ See [`examples/bedrock`](examples/bedrock) for a complete Responses API example.
 To use this library with [Azure OpenAI in Azure AI Foundry Models](https://learn.microsoft.com/azure/ai-services/openai/overview),
 use the option.RequestOption functions in the `azure` package.
 
+For Microsoft Entra ID, add Azure Identity to your application's module. Use the
+version your application supports. The following command keeps the previous minimum.
+
+```sh
+go get github.com/Azure/azure-sdk-for-go/sdk/azidentity@v1.14.1
+```
+
+To run the [Azure Identity example](examples/azure-identity/main.go), sign in with
+an identity that can access your Azure OpenAI deployment (for example, with
+`az login`). Set `AZURE_OPENAI_ENDPOINT` and `AZURE_OPENAI_DEPLOYMENT`, then run
+`go run ./azure-identity` from the `examples` directory.
+
 ```go
 package main
 
@@ -1779,11 +1834,10 @@ func main() {
 	tokenCredential, err := azidentity.NewDefaultAzureCredential(nil)
 
 	if err != nil {
-		fmt.Printf("Failed to create the DefaultAzureCredential: %s", err)
-		os.Exit(1)
+		panic("could not create the Azure credential")
 	}
 
-	client := openai.NewClient(
+	_ = openai.NewClient(
 		azure.WithEndpoint(azureOpenAIEndpoint, azureOpenAIAPIVersion),
 
 		// Choose between authenticating using a TokenCredential or an API Key

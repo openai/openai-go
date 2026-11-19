@@ -78,9 +78,28 @@ func ConnectClientEventParamOfDecisionCreate(eventID string) ConnectClientEventU
 	return ConnectClientEventUnionParam{OfDecisionCreate: &decisionCreate}
 }
 
-func ConnectClientEventParamOfDecisionItemCreate(item DecisionItemCreateEventItemParam) ConnectClientEventUnionParam {
+func ConnectClientEventParamOfDecisionItemCreate[
+	T DecisionUserMessageParam | DecisionDeveloperMessageParam | DecisionSystemMessageParam | DecisionAssistantMessageParam | DecisionItemCreateEventItemFunctionCallParam | DecisionItemCreateEventItemFunctionCallOutputParam | DecisionItemCreateEventItemCustomToolCallParam | DecisionItemCreateEventItemCustomToolCallOutputParam,
+](item T) ConnectClientEventUnionParam {
 	var decisionItemCreate DecisionItemCreateEventParam
-	decisionItemCreate.Item = item
+	switch v := any(item).(type) {
+	case DecisionUserMessageParam:
+		decisionItemCreate.Item.OfUserMessage = &v
+	case DecisionDeveloperMessageParam:
+		decisionItemCreate.Item.OfDeveloperMessage = &v
+	case DecisionSystemMessageParam:
+		decisionItemCreate.Item.OfSystemMessage = &v
+	case DecisionAssistantMessageParam:
+		decisionItemCreate.Item.OfAssistantMessage = &v
+	case DecisionItemCreateEventItemFunctionCallParam:
+		decisionItemCreate.Item.OfFunctionCall = &v
+	case DecisionItemCreateEventItemFunctionCallOutputParam:
+		decisionItemCreate.Item.OfFunctionCallOutput = &v
+	case DecisionItemCreateEventItemCustomToolCallParam:
+		decisionItemCreate.Item.OfCustomToolCall = &v
+	case DecisionItemCreateEventItemCustomToolCallOutputParam:
+		decisionItemCreate.Item.OfCustomToolCallOutput = &v
+	}
 	return ConnectClientEventUnionParam{OfDecisionItemCreate: &decisionItemCreate}
 }
 

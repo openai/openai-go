@@ -8301,7 +8301,7 @@ func init() {
 type RealtimeTranslationClientSecretCreateRequestParam struct {
 	// Realtime translation session configuration. Translation sessions stream source
 	// audio in and translated audio plus transcript deltas out continuously.
-	Session RealtimeTranslationSessionCreateRequestParam `json:"session,omitzero" api:"required"`
+	Session RealtimeTranslationSessionCreateRequestParam `json:"session" api:"required"`
 	// Configuration for the client secret expiration. Expiration refers to the time
 	// after which a client secret will no longer be valid for creating sessions. The
 	// session itself may continue after that time once started. A secret can be used

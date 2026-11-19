@@ -56,19 +56,19 @@ func TestAdminOrganizationProjectHostedToolPermissionUpdateWithOptionalParams(t 
 		"project_id",
 		openai.AdminOrganizationProjectHostedToolPermissionUpdateParams{
 			CodeInterpreter: openai.AdminOrganizationProjectHostedToolPermissionUpdateParamsCodeInterpreter{
-				Enabled: true,
+				Enabled: openai.Bool(true),
 			},
 			FileSearch: openai.AdminOrganizationProjectHostedToolPermissionUpdateParamsFileSearch{
-				Enabled: true,
+				Enabled: openai.Bool(true),
 			},
 			ImageGeneration: openai.AdminOrganizationProjectHostedToolPermissionUpdateParamsImageGeneration{
-				Enabled: true,
+				Enabled: openai.Bool(true),
 			},
 			Mcp: openai.AdminOrganizationProjectHostedToolPermissionUpdateParamsMcp{
-				Enabled: true,
+				Enabled: openai.Bool(true),
 			},
 			WebSearch: openai.AdminOrganizationProjectHostedToolPermissionUpdateParamsWebSearch{
-				Enabled: true,
+				Enabled: openai.Bool(true),
 			},
 		},
 	)

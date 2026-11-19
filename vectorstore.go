@@ -382,7 +382,7 @@ func (r *StaticFileChunkingStrategyObject) UnmarshalJSON(data []byte) error {
 //
 // The properties Static, Type are required.
 type StaticFileChunkingStrategyObjectParam struct {
-	Static StaticFileChunkingStrategyParam `json:"static,omitzero" api:"required"`
+	Static StaticFileChunkingStrategyParam `json:"static" api:"required"`
 	// Always `static`.
 	//
 	// This field can be elided, and will marshal its zero value as "static".

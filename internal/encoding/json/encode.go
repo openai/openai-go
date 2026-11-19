@@ -18,6 +18,7 @@ import (
 	"cmp"
 	"encoding"
 	"encoding/base64"
+	stdjson "encoding/json" // EDIT: support the standard Number type when requested
 	"fmt"
 	"math"
 	"reflect"
@@ -362,6 +363,7 @@ type encOpts struct {
 	// EDIT(begin): add optimization to skip compaction
 	skipCompaction bool
 	// EDIT(end)
+	standardJSONNumbers bool // EDIT: preserve numeric types inside selected payloads
 }
 
 type encoderFunc func(e *encodeState, v reflect.Value, opts encOpts)
@@ -623,8 +625,10 @@ var (
 	float64Encoder = (floatEncoder(64)).encode
 )
 
+var standardJSONNumberType = shims.TypeFor[stdjson.Number]() // EDIT
+
 func stringEncoder(e *encodeState, v reflect.Value, opts encOpts) {
-	if v.Type() == numberType {
+	if v.Type() == numberType || (opts.standardJSONNumbers && v.Type() == standardJSONNumberType) { // EDIT: support standard Number
 		numStr := v.String()
 		// In Go1.5 the empty string encodes to "0", while this is not a valid number literal
 		// we keep compatibility so check validity after this.

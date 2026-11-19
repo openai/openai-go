@@ -100,12 +100,21 @@ func (cfg *RequestConfig) PrepareWebSocketWithRecovery(recoveryEnabled bool, exc
 	request := cfg.Request.Clone(cfg.Request.Context())
 	request.URL = target
 	selected := cfg.HTTPClient
+	var clientErr error
 	if cfg.CustomHTTPDoer != nil {
 		capable, ok := cfg.CustomHTTPDoer.(WebSocketHTTPClient)
 		if !ok {
-			return nil, nil, errors.New("websocket: custom HTTP client must implement WebSocketHTTPClient")
+			clientErr = errors.New("websocket: custom HTTP client must implement WebSocketHTTPClient")
+		} else {
+			selected = capable.WebSocketHTTPClient()
+			if selected == nil {
+				clientErr = errors.New("websocket: nil HTTP client")
+				selected = cfg.HTTPClient
+			}
 		}
-		selected = capable.WebSocketHTTPClient()
+	}
+	if clientErr != nil && origin.Scheme == "https" {
+		return nil, nil, clientErr
 	}
 	if selected == nil {
 		return nil, nil, errors.New("websocket: nil HTTP client")
@@ -115,17 +124,27 @@ func (cfg *RequestConfig) PrepareWebSocketWithRecovery(recoveryEnabled bool, exc
 	if transport == nil {
 		transport = http.DefaultTransport
 	}
-	client.Transport = websocketRoundTripper(enforceRequestOrigin(&origin, func(req *http.Request) (*http.Response, error) {
-		if recoveryEnabled && len(excludedQueryParams) > 0 {
-			query := req.URL.Query()
-			for _, key := range excludedQueryParams {
-				if query.Has(key) {
-					return nil, errors.New("websocket: automatic recovery does not support this session selector")
+	guardedTransport := func(fallback http.RoundTripper) http.RoundTripper {
+		return websocketRoundTripper(enforceRequestOrigin(&origin, func(req *http.Request) (*http.Response, error) {
+			if recoveryEnabled && len(excludedQueryParams) > 0 {
+				query := req.URL.Query()
+				for _, key := range excludedQueryParams {
+					if query.Has(key) {
+						return nil, errors.New("websocket: automatic recovery does not support this session selector")
+					}
 				}
 			}
-		}
-		return websockettransport.RoundTrip(transport, req)
-	}))
+			direct, err := cfg.credentialTransportForDispatch(req)
+			if err != nil {
+				return nil, err
+			}
+			if direct != nil {
+				return websockettransport.RoundTrip(direct, req)
+			}
+			return websockettransport.RoundTrip(fallback, req)
+		}))
+	}
+	client.Transport = guardedTransport(transport)
 	previousRedirect := client.CheckRedirect
 	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		switch req.URL.Scheme {
@@ -150,7 +169,22 @@ func (cfg *RequestConfig) PrepareWebSocketWithRecovery(recoveryEnabled bool, exc
 	// Only the outer client's timeout bounds opening; neither client may keep
 	// a body timer running after the response becomes an established socket.
 	client.Timeout = 0
-	handler := enforceRequestOrigin(&origin, client.Do)
+	handler := enforceRequestOrigin(&origin, func(req *http.Request) (*http.Response, error) {
+		direct, transportErr := cfg.credentialTransportForDispatch(req)
+		if transportErr != nil {
+			return nil, transportErr
+		}
+		if direct != nil {
+			localClient := client
+			localClient.Transport = guardedTransport(direct)
+			return localClient.Do(req)
+		}
+		if clientErr != nil {
+			closeRequestBody(req)
+			return nil, clientErr
+		}
+		return client.Do(req)
+	})
 	for i := len(cfg.Middlewares) - 1; i >= 0; i-- {
 		handler = applyMiddleware(cfg.Middlewares[i], handler)
 	}

@@ -544,7 +544,7 @@ func (r *BetaAgentEnvironmentTemplateNewParams) UnmarshalJSON(data []byte) error
 // The property Enabled is required.
 type BetaAgentEnvironmentTemplateNewParamsDesktop struct {
 	// Whether to provision the desktop and its browser proxy.
-	Enabled bool `json:"enabled" api:"required"`
+	Enabled param.Opt[bool] `json:"enabled,omitzero" api:"required"`
 	paramObj
 }
 
@@ -645,7 +645,7 @@ func (r *BetaAgentEnvironmentTemplateUpdateParams) UnmarshalJSON(data []byte) er
 // The property Enabled is required.
 type BetaAgentEnvironmentTemplateUpdateParamsDesktop struct {
 	// Whether to provision the desktop and its browser proxy.
-	Enabled bool `json:"enabled" api:"required"`
+	Enabled param.Opt[bool] `json:"enabled,omitzero" api:"required"`
 	paramObj
 }
 

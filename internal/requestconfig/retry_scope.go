@@ -29,6 +29,8 @@ type RequestRetryScope struct {
 	replayUsed      bool
 	allowBodyReplay bool
 	onInternalRetry func(int)
+
+	authenticationCaches map[any]any
 }
 
 // NewRequestRetryScope creates the retry scope for one logical SDK request.
@@ -90,6 +92,22 @@ func WithRequestRetryScope(ctx context.Context, scope *RequestRetryScope) contex
 func RequestRetryScopeFromContext(ctx context.Context) *RequestRetryScope {
 	scope, _ := ctx.Value(requestRetryScopeContextKey{}).(*RequestRetryScope)
 	return scope
+}
+
+// LoadOrStoreAuthenticationCache retains authentication state across attempts of
+// this logical request. Keys must be comparable and scoped to an authenticator
+// and HTTP identity. The state becomes collectible with the retry scope.
+func (scope *RequestRetryScope) LoadOrStoreAuthenticationCache(key, cache any) any {
+	scope.mu.Lock()
+	defer scope.mu.Unlock()
+	if existing, ok := scope.authenticationCaches[key]; ok {
+		return existing
+	}
+	if scope.authenticationCaches == nil {
+		scope.authenticationCaches = make(map[any]any)
+	}
+	scope.authenticationCaches[key] = cache
+	return cache
 }
 
 // BeginAttempt records the first dispatch or one ordinary SDK retry attempt.

@@ -61,10 +61,11 @@ func NewBetaResponseService(opts ...option.RequestOption) (r BetaResponseService
 // [file search](https://developers.openai.com/api/docs/guides/tools-file-search)
 // to use your own data as input for the model's response.
 func (r *BetaResponseService) New(ctx context.Context, params BetaResponseNewParams, opts ...option.RequestOption) (res *BetaResponse, err error) {
-	opts = slices.Clone(opts)
+	var headerOpts []option.RequestOption
 	for _, v := range params.Betas {
-		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
+		headerOpts = append(headerOpts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
+	opts = slices.Concat(headerOpts, opts)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "responses?beta=true"
@@ -88,10 +89,11 @@ func (r *BetaResponseService) NewStreaming(ctx context.Context, params BetaRespo
 		raw *http.Response
 		err error
 	)
-	opts = slices.Clone(opts)
+	var headerOpts []option.RequestOption
 	for _, v := range params.Betas {
-		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
+		headerOpts = append(headerOpts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
+	opts = slices.Concat(headerOpts, opts)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append(opts, option.WithJSONSet("stream", true))
@@ -102,10 +104,11 @@ func (r *BetaResponseService) NewStreaming(ctx context.Context, params BetaRespo
 
 // Retrieves a model response with the given ID.
 func (r *BetaResponseService) Get(ctx context.Context, responseID string, params BetaResponseGetParams, opts ...option.RequestOption) (res *BetaResponse, err error) {
-	opts = slices.Clone(opts)
+	var headerOpts []option.RequestOption
 	for _, v := range params.Betas {
-		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
+		headerOpts = append(headerOpts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
+	opts = slices.Concat(headerOpts, opts)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if responseID == "" {
@@ -123,10 +126,11 @@ func (r *BetaResponseService) GetStreaming(ctx context.Context, responseID strin
 		raw *http.Response
 		err error
 	)
-	opts = slices.Clone(opts)
+	var headerOpts []option.RequestOption
 	for _, v := range params.Betas {
-		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
+		headerOpts = append(headerOpts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
+	opts = slices.Concat(headerOpts, opts)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append(opts, option.WithJSONSet("stream", true))
@@ -141,10 +145,11 @@ func (r *BetaResponseService) GetStreaming(ctx context.Context, responseID strin
 
 // Deletes a model response with the given ID.
 func (r *BetaResponseService) Delete(ctx context.Context, responseID string, body BetaResponseDeleteParams, opts ...option.RequestOption) (err error) {
-	opts = slices.Clone(opts)
+	var headerOpts []option.RequestOption
 	for _, v := range body.Betas {
-		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
+		headerOpts = append(headerOpts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
+	opts = slices.Concat(headerOpts, opts)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
@@ -161,10 +166,11 @@ func (r *BetaResponseService) Delete(ctx context.Context, responseID string, bod
 // `background` parameter set to `true` can be cancelled.
 // [Learn more](https://developers.openai.com/api/docs/guides/background).
 func (r *BetaResponseService) Cancel(ctx context.Context, responseID string, body BetaResponseCancelParams, opts ...option.RequestOption) (res *BetaResponse, err error) {
-	opts = slices.Clone(opts)
+	var headerOpts []option.RequestOption
 	for _, v := range body.Betas {
-		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
+		headerOpts = append(headerOpts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
+	opts = slices.Concat(headerOpts, opts)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if responseID == "" {
@@ -183,10 +189,11 @@ func (r *BetaResponseService) Cancel(ctx context.Context, responseID string, bod
 // For ZDR-compatible compaction details, see
 // [Compaction (advanced)](https://developers.openai.com/api/docs/guides/conversation-state#compaction-advanced).
 func (r *BetaResponseService) Compact(ctx context.Context, params BetaResponseCompactParams, opts ...option.RequestOption) (res *BetaCompactedResponse, err error) {
-	opts = slices.Clone(opts)
+	var headerOpts []option.RequestOption
 	for _, v := range params.Betas {
-		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
+		headerOpts = append(headerOpts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
 	}
+	opts = slices.Concat(headerOpts, opts)
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "responses/compact?beta=true"
@@ -258,7 +265,7 @@ type BetaCompactedResponse struct {
 	Object constant.ResponseCompaction `json:"object" default:"response.compaction"`
 	// The compacted list of output items. This is a list of all user messages,
 	// followed by a single compaction item.
-	Output []BetaResponseOutputItemUnion `json:"output" api:"required"`
+	Output []BetaResponseItemUnion `json:"output" api:"required"`
 	// Token accounting for the compaction pass, including cached, reasoning, and total
 	// tokens.
 	Usage BetaResponseUsage          `json:"usage" api:"required"`
@@ -3628,7 +3635,7 @@ type BetaInlineSkillParam struct {
 	// The name of the skill.
 	Name string `json:"name" api:"required"`
 	// Inline skill payload
-	Source BetaInlineSkillSourceParam `json:"source,omitzero" api:"required"`
+	Source BetaInlineSkillSourceParam `json:"source" api:"required"`
 	// Defines an inline skill for this request.
 	//
 	// This field can be elided, and will marshal its zero value as "inline".
@@ -20197,7 +20204,7 @@ type BetaResponseInputItemComputerCallOutputParam struct {
 	// The ID of the computer tool call that produced the output.
 	CallID string `json:"call_id" api:"required"`
 	// A computer screenshot image used with the computer use tool.
-	Output BetaResponseComputerToolCallOutputScreenshotParam `json:"output,omitzero" api:"required"`
+	Output BetaResponseComputerToolCallOutputScreenshotParam `json:"output" api:"required"`
 	// The ID of the computer tool call output.
 	ID param.Opt[string] `json:"id,omitzero"`
 	// The safety checks reported by the API that have been acknowledged by the
@@ -21224,7 +21231,7 @@ type BetaResponseInputItemLocalShellCallParam struct {
 	// The unique ID of the local shell call.
 	ID string `json:"id" api:"required"`
 	// Execute a shell command on the server.
-	Action BetaResponseInputItemLocalShellCallActionParam `json:"action,omitzero" api:"required"`
+	Action BetaResponseInputItemLocalShellCallActionParam `json:"action" api:"required"`
 	// The unique ID of the local shell tool call generated by the model.
 	CallID string `json:"call_id" api:"required"`
 	// The status of the local shell call.
@@ -21358,7 +21365,7 @@ func (r *BetaResponseInputItemLocalShellCallOutputAgentParam) UnmarshalJSON(data
 // The properties Action, CallID, Type are required.
 type BetaResponseInputItemShellCallParam struct {
 	// The shell commands and limits that describe how to run the tool call.
-	Action BetaResponseInputItemShellCallActionParam `json:"action,omitzero" api:"required"`
+	Action BetaResponseInputItemShellCallActionParam `json:"action" api:"required"`
 	// The unique ID of the shell tool call generated by the model.
 	CallID string `json:"call_id" api:"required"`
 	// The unique ID of the shell tool call. Populated when this item is returned via
@@ -22894,23 +22901,23 @@ func init() {
 }
 
 // BetaResponseItemUnion contains all possible properties and values from
-// [BetaResponseInputMessageItem], [BetaResponseFileSearchToolCall],
-// [BetaResponseComputerToolCall], [BetaResponseComputerToolCallOutputItem],
-// [BetaResponseFunctionWebSearch], [BetaResponseFunctionToolCallItem],
-// [BetaResponseFunctionToolCallOutputItem], [BetaResponseItemAgentMessage],
-// [BetaResponseItemMultiAgentCall], [BetaResponseItemMultiAgentCallOutput],
-// [BetaResponseToolSearchCall], [BetaResponseToolSearchOutputItem],
-// [BetaResponseItemAdditionalTools], [BetaResponseConfigurationUpdateItem],
-// [BetaResponseReasoningItem], [BetaResponseItemProgram],
-// [BetaResponseItemProgramOutput], [BetaResponseCompactionItem],
-// [BetaResponseItemImageGenerationCall], [BetaResponseCodeInterpreterToolCall],
-// [BetaResponseItemLocalShellCall], [BetaResponseItemLocalShellCallOutput],
-// [BetaResponseFunctionShellToolCall], [BetaResponseFunctionShellToolCallOutput],
-// [BetaResponseApplyPatchToolCall], [BetaResponseApplyPatchToolCallOutput],
-// [BetaResponseItemMcpListTools], [BetaResponseItemMcpApprovalRequest],
-// [BetaResponseItemMcpApprovalResponse], [BetaResponseItemMcpCall],
-// [BetaResponseCustomToolCallItem], [BetaResponseCustomToolCallOutputItem],
-// [BetaResponseOutputMessage].
+// [BetaResponseInputMessageItem], [BetaResponseOutputMessage],
+// [BetaResponseFileSearchToolCall], [BetaResponseComputerToolCall],
+// [BetaResponseComputerToolCallOutputItem], [BetaResponseFunctionWebSearch],
+// [BetaResponseFunctionToolCallItem], [BetaResponseFunctionToolCallOutputItem],
+// [BetaResponseItemAgentMessage], [BetaResponseItemMultiAgentCall],
+// [BetaResponseItemMultiAgentCallOutput], [BetaResponseToolSearchCall],
+// [BetaResponseToolSearchOutputItem], [BetaResponseItemAdditionalTools],
+// [BetaResponseConfigurationUpdateItem], [BetaResponseReasoningItem],
+// [BetaResponseItemProgram], [BetaResponseItemProgramOutput],
+// [BetaResponseCompactionItem], [BetaResponseItemImageGenerationCall],
+// [BetaResponseCodeInterpreterToolCall], [BetaResponseItemLocalShellCall],
+// [BetaResponseItemLocalShellCallOutput], [BetaResponseFunctionShellToolCall],
+// [BetaResponseFunctionShellToolCallOutput], [BetaResponseApplyPatchToolCall],
+// [BetaResponseApplyPatchToolCallOutput], [BetaResponseItemMcpListTools],
+// [BetaResponseItemMcpApprovalRequest], [BetaResponseItemMcpApprovalResponse],
+// [BetaResponseItemMcpCall], [BetaResponseCustomToolCallItem],
+// [BetaResponseCustomToolCallOutputItem].
 //
 // Use the [BetaResponseItemUnion.AsAny] method to switch on the variant.
 //
@@ -23109,6 +23116,7 @@ type anyBetaResponseItem interface {
 }
 
 func (BetaResponseInputMessageItem) implBetaResponseItemUnion()            {}
+func (BetaResponseOutputMessage) implBetaResponseItemUnion()               {}
 func (BetaResponseFileSearchToolCall) implBetaResponseItemUnion()          {}
 func (BetaResponseComputerToolCall) implBetaResponseItemUnion()            {}
 func (BetaResponseComputerToolCallOutputItem) implBetaResponseItemUnion()  {}
@@ -23140,12 +23148,12 @@ func (BetaResponseItemMcpApprovalResponse) implBetaResponseItemUnion()     {}
 func (BetaResponseItemMcpCall) implBetaResponseItemUnion()                 {}
 func (BetaResponseCustomToolCallItem) implBetaResponseItemUnion()          {}
 func (BetaResponseCustomToolCallOutputItem) implBetaResponseItemUnion()    {}
-func (BetaResponseOutputMessage) implBetaResponseItemUnion()               {}
 
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := BetaResponseItemUnion.AsAny().(type) {
 //	case openai.BetaResponseInputMessageItem:
+//	case openai.BetaResponseOutputMessage:
 //	case openai.BetaResponseFileSearchToolCall:
 //	case openai.BetaResponseComputerToolCall:
 //	case openai.BetaResponseComputerToolCallOutputItem:
@@ -23177,12 +23185,18 @@ func (BetaResponseOutputMessage) implBetaResponseItemUnion()               {}
 //	case openai.BetaResponseItemMcpCall:
 //	case openai.BetaResponseCustomToolCallItem:
 //	case openai.BetaResponseCustomToolCallOutputItem:
-//	case openai.BetaResponseOutputMessage:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
 func (u BetaResponseItemUnion) AsAny() anyBetaResponseItem {
 	switch u.Type {
+	case "message":
+		switch u.Role {
+		case "developer", "system", "user":
+			return u.AsMessage()
+		case "assistant":
+			return u.AsOutputMessage()
+		}
 	case "file_search_call":
 		return u.AsFileSearchCall()
 	case "computer_call":
@@ -23245,13 +23259,16 @@ func (u BetaResponseItemUnion) AsAny() anyBetaResponseItem {
 		return u.AsCustomToolCall()
 	case "custom_tool_call_output":
 		return u.AsCustomToolCallOutput()
-	case "message":
-		return u.AsOutputMessage()
 	}
 	return nil
 }
 
 func (u BetaResponseItemUnion) AsMessage() (v BetaResponseInputMessageItem) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseItemUnion) AsOutputMessage() (v BetaResponseOutputMessage) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -23407,11 +23424,6 @@ func (u BetaResponseItemUnion) AsCustomToolCall() (v BetaResponseCustomToolCallI
 }
 
 func (u BetaResponseItemUnion) AsCustomToolCallOutput() (v BetaResponseCustomToolCallOutputItem) {
-	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u BetaResponseItemUnion) AsOutputMessage() (v BetaResponseOutputMessage) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -37388,7 +37400,7 @@ func init() {
 // The property Enabled is required.
 type BetaResponsesClientEventResponseCreateMultiAgentParam struct {
 	// Whether to enable server-hosted multi-agent execution for this response.
-	Enabled bool `json:"enabled" api:"required"`
+	Enabled param.Opt[bool] `json:"enabled,omitzero" api:"required"`
 	// `max_concurrent_subagents` sets the maximum number of subagents that can be
 	// active simultaneously across the entire agent tree. It includes all
 	// descendants—children, grandchildren, and deeper subagents—but excludes the root
@@ -45802,7 +45814,7 @@ func init() {
 // The property Enabled is required.
 type BetaResponseNewParamsMultiAgent struct {
 	// Whether to enable server-hosted multi-agent execution for this response.
-	Enabled bool `json:"enabled" api:"required"`
+	Enabled param.Opt[bool] `json:"enabled,omitzero" api:"required"`
 	// `max_concurrent_subagents` sets the maximum number of subagents that can be
 	// active simultaneously across the entire agent tree. It includes all
 	// descendants—children, grandchildren, and deeper subagents—but excludes the root

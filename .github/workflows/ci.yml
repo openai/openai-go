@@ -83,9 +83,11 @@ jobs:
       - name: Cache lint dependencies, builds, and analysis
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
+          # The packages job needs disk space to compile the full SDK. Keep
+          # its Go build cache local to the run instead of restoring old builds.
           path: |
             ${{ steps.go-cache.outputs.mod }}
-            ${{ steps.go-cache.outputs.build }}
+            ${{ matrix.scope != 'packages' && steps.go-cache.outputs.build || '' }}
             ${{ env.GOLANGCI_LINT_CACHE }}
           # Include every module (especially tools), the resolved toolchain,
           # and lint configuration. A new revision saves updated build and

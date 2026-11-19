@@ -758,15 +758,6 @@ const ChatModelGPT4TurboPreview = shared.ChatModelGPT4TurboPreview
 //nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT4_1106Preview = shared.ChatModelGPT4_1106Preview
 
-// Equals "gpt-4-vision-preview"
-//
-// Deprecated: Announced shutdown date: 2024-12-06. See
-// https://developers.openai.com/api/docs/deprecations for details and recommended
-// replacements.
-//
-//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
-const ChatModelGPT4VisionPreview = shared.ChatModelGPT4VisionPreview
-
 // Equals "gpt-4"
 //
 // Deprecated: Announced shutdown date: 2026-10-23. See
@@ -848,15 +839,6 @@ const ChatModelGPT3_5Turbo16k = shared.ChatModelGPT3_5Turbo16k
 //nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT3_5Turbo0301 = shared.ChatModelGPT3_5Turbo0301
 
-// Equals "gpt-3.5-turbo-0613"
-//
-// Deprecated: Announced shutdown date: 2024-09-13. See
-// https://developers.openai.com/api/docs/deprecations for details and recommended
-// replacements.
-//
-//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
-const ChatModelGPT3_5Turbo0613 = shared.ChatModelGPT3_5Turbo0613
-
 // Equals "gpt-3.5-turbo-1106"
 //
 // Deprecated: Announced shutdown date: 2026-09-28. See
@@ -874,15 +856,6 @@ const ChatModelGPT3_5Turbo1106 = shared.ChatModelGPT3_5Turbo1106
 //
 //nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
 const ChatModelGPT3_5Turbo0125 = shared.ChatModelGPT3_5Turbo0125
-
-// Equals "gpt-3.5-turbo-16k-0613"
-//
-// Deprecated: Announced shutdown date: 2024-09-13. See
-// https://developers.openai.com/api/docs/deprecations for details and recommended
-// replacements.
-//
-//nolint:staticcheck // SA1019: Keep the deprecated constant available through this compatibility alias.
-const ChatModelGPT3_5Turbo16k0613 = shared.ChatModelGPT3_5Turbo16k0613
 
 // A filter used to compare a specified attribute key to a given value using a
 // defined comparison operation.
@@ -1021,16 +994,6 @@ type CustomToolInputFormatGrammarParam = shared.CustomToolInputFormatGrammarPara
 // compact UTF-8 JSON.
 //
 // This is an alias to an internal type.
-type DecisionInputJSON = shared.DecisionInputJSON
-
-// This is an alias to an internal type.
-type DecisionInputJSONDataUnion = shared.DecisionInputJSONDataUnion
-
-// A JSON object or an array of objects rendered as text. Nested values may be any
-// JSON value. Limited to 32 container levels, 10,000 values, and 256 KiB of
-// compact UTF-8 JSON.
-//
-// This is an alias to an internal type.
 type DecisionInputJSONParam = shared.DecisionInputJSONParam
 
 // This is an alias to an internal type.
@@ -1040,7 +1003,7 @@ type DecisionInputJSONDataUnionParam = shared.DecisionInputJSONDataUnionParam
 // File IDs are not supported.
 //
 // This is an alias to an internal type.
-type DecisionQuestionInputImage = shared.DecisionQuestionInputImage
+type DecisionQuestionInputImageParam = shared.DecisionQuestionInputImageParam
 
 // The image detail level, using the selected model's image profile. Defaults to
 // auto.
@@ -1060,24 +1023,10 @@ const DecisionQuestionInputImageDetailAuto = shared.DecisionQuestionInputImageDe
 // Equals "original"
 const DecisionQuestionInputImageDetailOriginal = shared.DecisionQuestionInputImageDetailOriginal
 
-// An image provided as a base64 data URL or a publicly accessible HTTP(S) URL.
-// File IDs are not supported.
-//
-// This is an alias to an internal type.
-type DecisionQuestionInputImageParam = shared.DecisionQuestionInputImageParam
-
-// A text, image, or JSON content part in a question instruction.
-//
-// This is an alias to an internal type.
-type DecisionQuestionInputPartUnion = shared.DecisionQuestionInputPartUnion
-
 // A text, image, or JSON content part in a question instruction.
 //
 // This is an alias to an internal type.
 type DecisionQuestionInputPartUnionParam = shared.DecisionQuestionInputPartUnionParam
-
-// This is an alias to an internal type.
-type DecisionQuestionInputText = shared.DecisionQuestionInputText
 
 // This is an alias to an internal type.
 type DecisionQuestionInputTextParam = shared.DecisionQuestionInputTextParam

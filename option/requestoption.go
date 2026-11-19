@@ -27,6 +27,8 @@ type RequestOption = requestconfig.RequestOption
 //
 // It cannot be combined with WithDataResidency in the same configuration call.
 // For security reasons, ensure that the base URL is trusted.
+// Authenticated OpenAI endpoints require HTTPS. Local HTTP development requires
+// [WithUnsafeAllowHTTP], which only permits direct loopback connections.
 func WithBaseURL(base string) RequestOption {
 	u, err := url.Parse(base)
 	if err == nil && u.Path != "" && !strings.HasSuffix(u.Path, "/") {
@@ -345,6 +347,12 @@ func WithWebhookSecret(value string) requestconfig.PreRequestOptionFunc {
 // WithWorkloadIdentity returns a RequestOption that configures workload identity authentication.
 // This enables the client to authenticate using short-lived tokens from cloud providers
 // (Kubernetes, Azure, GCP) instead of long-lived API keys.
+// Reusing this option keeps separate, bounded token caches for each effective
+// HTTP client and transport, including request-level overrides. Non-comparable
+// custom HTTP doers acquire tokens independently per logical request, retaining
+// authentication state across its retry attempts. Providers and custom doers must
+// keep their identity stable; use a new option or doer for opaque identity changes,
+// and a new transport when rotating client certificates.
 func WithWorkloadIdentity(config auth.WorkloadIdentity) RequestOption {
 	var wia *auth.WorkloadIdentityAuth
 	var initOnce sync.Once
@@ -379,6 +387,9 @@ func WithWorkloadIdentity(config auth.WorkloadIdentity) RequestOption {
 					return nil, requestconfig.WithNoRetryError(
 						errors.New("workload identity requires its request-owned retry scope"),
 					)
+				}
+				if err := final.ValidateOpenAICredentialRequest(req); err != nil {
+					return nil, err
 				}
 				initOnce.Do(func() {
 					wia, initErr = auth.NewWorkloadIdentityAuth(config)

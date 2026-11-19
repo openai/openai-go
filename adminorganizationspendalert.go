@@ -219,7 +219,7 @@ type AdminOrganizationSpendAlertNewParams struct {
 	// Any of "month".
 	Interval AdminOrganizationSpendAlertNewParamsInterval `json:"interval,omitzero" api:"required"`
 	// Email notification settings for a spend alert.
-	NotificationChannel AdminOrganizationSpendAlertNewParamsNotificationChannel `json:"notification_channel,omitzero" api:"required"`
+	NotificationChannel AdminOrganizationSpendAlertNewParamsNotificationChannel `json:"notification_channel" api:"required"`
 	// The alert threshold amount, in cents.
 	ThresholdAmount int64 `json:"threshold_amount" api:"required"`
 	paramObj
@@ -280,7 +280,7 @@ type AdminOrganizationSpendAlertUpdateParams struct {
 	// Any of "month".
 	Interval AdminOrganizationSpendAlertUpdateParamsInterval `json:"interval,omitzero" api:"required"`
 	// Email notification settings for a spend alert.
-	NotificationChannel AdminOrganizationSpendAlertUpdateParamsNotificationChannel `json:"notification_channel,omitzero" api:"required"`
+	NotificationChannel AdminOrganizationSpendAlertUpdateParamsNotificationChannel `json:"notification_channel" api:"required"`
 	// The alert threshold amount, in cents.
 	ThresholdAmount int64 `json:"threshold_amount" api:"required"`
 	paramObj
