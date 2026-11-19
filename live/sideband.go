@@ -386,13 +386,15 @@ func (r *ConnectClientEventTransportDtmfSendParam) UnmarshalJSON(data []byte) er
 }
 
 // ConnectServerEventUnion contains all possible properties and values from
-// [SessionStartedEvent], [SessionUpdatedEvent], [InputAudioMutedEvent],
-// [InputAudioUnmutedEvent], [OutputAudioFixturePlayingEvent],
-// [OutputAudioFixturePlayedEvent], [InstructionsAppendedEvent],
-// [ThinkingAppendedEvent], [CommentaryAppendedEvent], [InputTranscriptDeltaEvent],
-// [OutputTranscriptDeltaEvent], [DelegationCreatedEvent], [DecisionEvent],
-// [DecisionItemCreatedEvent], [DecisionItemDeletedEvent], [ResponseEvent],
-// [SessionUsageUpdatedEvent], [SessionClosedEvent], [ErrorEvent], [InfoEvent],
+// [SessionStartedEvent], [SessionUpdatedEvent],
+// [ConnectServerEventSessionResumed], [ConnectServerEventSessionPaused],
+// [InputAudioMutedEvent], [InputAudioUnmutedEvent],
+// [OutputAudioFixturePlayingEvent], [OutputAudioFixturePlayedEvent],
+// [InstructionsAppendedEvent], [ThinkingAppendedEvent], [CommentaryAppendedEvent],
+// [InputTranscriptDeltaEvent], [OutputTranscriptDeltaEvent],
+// [DelegationCreatedEvent], [DecisionEvent], [DecisionItemCreatedEvent],
+// [DecisionItemDeletedEvent], [ResponseEvent], [SessionUsageUpdatedEvent],
+// [SessionClosedEvent], [ErrorEvent], [InfoEvent],
 // [ConnectServerEventSessionInputAudioAppend], [OutputAudioDeltaEvent],
 // [ConnectServerEventTransportDtmfReceived],
 // [ConnectServerEventTransportDtmfSend], [ConnectServerEventTransportDtmfSent],
@@ -405,6 +407,8 @@ func (r *ConnectClientEventTransportDtmfSendParam) UnmarshalJSON(data []byte) er
 type ConnectServerEventUnion struct {
 	OfSessionStartedEvent                       SessionStartedEvent                       `json:",inline"`
 	OfSessionUpdatedEvent                       SessionUpdatedEvent                       `json:",inline"`
+	OfConnectServerEventSessionResumed          ConnectServerEventSessionResumed          `json:",inline"`
+	OfConnectServerEventSessionPaused           ConnectServerEventSessionPaused           `json:",inline"`
 	OfInputAudioMutedEvent                      InputAudioMutedEvent                      `json:",inline"`
 	OfInputAudioUnmutedEvent                    InputAudioUnmutedEvent                    `json:",inline"`
 	OfOutputAudioFixturePlayingEvent            OutputAudioFixturePlayingEvent            `json:",inline"`
@@ -435,6 +439,8 @@ type ConnectServerEventUnion struct {
 	JSON                                        struct {
 		OfSessionStartedEvent                       respjson.Field
 		OfSessionUpdatedEvent                       respjson.Field
+		OfConnectServerEventSessionResumed          respjson.Field
+		OfConnectServerEventSessionPaused           respjson.Field
 		OfInputAudioMutedEvent                      respjson.Field
 		OfInputAudioUnmutedEvent                    respjson.Field
 		OfOutputAudioFixturePlayingEvent            respjson.Field
@@ -475,6 +481,8 @@ type anyConnectServerEvent interface {
 
 func (SessionStartedEvent) implConnectServerEventUnion()                       {}
 func (SessionUpdatedEvent) implConnectServerEventUnion()                       {}
+func (ConnectServerEventSessionResumed) implConnectServerEventUnion()          {}
+func (ConnectServerEventSessionPaused) implConnectServerEventUnion()           {}
 func (InputAudioMutedEvent) implConnectServerEventUnion()                      {}
 func (InputAudioUnmutedEvent) implConnectServerEventUnion()                    {}
 func (OutputAudioFixturePlayingEvent) implConnectServerEventUnion()            {}
@@ -507,6 +515,8 @@ func (ConnectServerEventTransportFailed) implConnectServerEventUnion()         {
 //	switch variant := ConnectServerEventUnion.AsAny().(type) {
 //	case live.SessionStartedEvent:
 //	case live.SessionUpdatedEvent:
+//	case live.ConnectServerEventSessionResumed:
+//	case live.ConnectServerEventSessionPaused:
 //	case live.InputAudioMutedEvent:
 //	case live.InputAudioUnmutedEvent:
 //	case live.OutputAudioFixturePlayingEvent:
@@ -542,6 +552,10 @@ func (u ConnectServerEventUnion) AsAny() anyConnectServerEvent {
 		return u.AsSessionStartedEvent()
 	case "session.updated":
 		return u.AsSessionUpdatedEvent()
+	case "session.resumed":
+		return u.AsConnectServerEventSessionResumed()
+	case "session.paused":
+		return u.AsConnectServerEventSessionPaused()
 	case "session.input_audio.muted":
 		return u.AsInputAudioMutedEvent()
 	case "session.input_audio.unmuted":
@@ -604,6 +618,16 @@ func (u ConnectServerEventUnion) AsSessionStartedEvent() (v SessionStartedEvent)
 }
 
 func (u ConnectServerEventUnion) AsSessionUpdatedEvent() (v SessionUpdatedEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConnectServerEventUnion) AsConnectServerEventSessionResumed() (v ConnectServerEventSessionResumed) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConnectServerEventUnion) AsConnectServerEventSessionPaused() (v ConnectServerEventSessionPaused) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -772,6 +796,16 @@ func (r *ConnectServerEventUnion) unmarshalWebsocketEventWithRawType(data []byte
 			return err
 		}
 		r.JSON.OfSessionUpdatedEvent = respjson.NewField(r.JSON.raw)
+	case "session.resumed":
+		if err := apijson.UnmarshalRoot(data, &r.OfConnectServerEventSessionResumed); err != nil {
+			return err
+		}
+		r.JSON.OfConnectServerEventSessionResumed = respjson.NewField(r.JSON.raw)
+	case "session.paused":
+		if err := apijson.UnmarshalRoot(data, &r.OfConnectServerEventSessionPaused); err != nil {
+			return err
+		}
+		r.JSON.OfConnectServerEventSessionPaused = respjson.NewField(r.JSON.raw)
 	case "session.input_audio.muted":
 		if err := apijson.UnmarshalRoot(data, &r.OfInputAudioMutedEvent); err != nil {
 			return err
@@ -904,6 +938,58 @@ func (r *ConnectServerEventUnion) unmarshalWebsocketEventWithRawType(data []byte
 		r.JSON.OfConnectServerEventTransportFailed = respjson.NewField(r.JSON.raw)
 	}
 	return nil
+}
+
+// Sent when speech resumes paused inference and it is ready for audio in a Live
+// WebRTC session. Delivered to the sideband and, when permitted by its event
+// settings, the data channel.
+type ConnectServerEventSessionResumed struct {
+	// The event_id of the client command associated with this server event, when
+	// supplied.
+	ClientEventID string `json:"client_event_id"`
+	// The unique ID of the Live server event.
+	EventID string                  `json:"event_id" api:"required"`
+	Type    constant.SessionResumed `json:"type" default:"session.resumed"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ClientEventID respjson.Field
+		EventID       respjson.Field
+		Type          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ConnectServerEventSessionResumed) RawJSON() string { return r.JSON.raw }
+func (r *ConnectServerEventSessionResumed) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Sent when the idle timeout pauses inference in a Live WebRTC session. The WebRTC
+// connection, sideband, and session ID persist. Delivered to the sideband and,
+// when permitted by its event settings, the data channel.
+type ConnectServerEventSessionPaused struct {
+	// The event_id of the client command associated with this server event, when
+	// supplied.
+	ClientEventID string `json:"client_event_id"`
+	// The unique ID of the Live server event.
+	EventID string                 `json:"event_id" api:"required"`
+	Type    constant.SessionPaused `json:"type" default:"session.paused"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ClientEventID respjson.Field
+		EventID       respjson.Field
+		Type          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ConnectServerEventSessionPaused) RawJSON() string { return r.JSON.raw }
+func (r *ConnectServerEventSessionPaused) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Input audio received from the primary transport and reflected to a Live sideband

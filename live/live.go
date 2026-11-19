@@ -5268,6 +5268,10 @@ type MediaSessionConfigParam struct {
 	// A stable identifier for your end user, used for safety monitoring and abuse
 	// detection.
 	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
+	// Whole seconds of inactivity after which a Live WebRTC session with a speech wake
+	// policy pauses inference. The connection and conversation history are retained.
+	// Omit to keep inference active until the session ends.
+	IdleTimeoutS param.Opt[int64] `json:"idle_timeout_s,omitzero"`
 	// Whether to store the session for later forking and recording download. Defaults
 	// to false for new sessions.
 	Store param.Opt[bool] `json:"store,omitzero"`
@@ -5290,6 +5294,9 @@ type MediaSessionConfigParam struct {
 	// configuration, send a list to replace it, or send an empty list to disable
 	// triggers.
 	Triggers []DecisionTriggerParam `json:"triggers,omitzero"`
+	// Inference starts when the Live WebRTC session connects. After an idle pause,
+	// microphone speech resumes inference.
+	WakePolicy MediaSessionConfigWakePolicyParam `json:"wake_policy,omitzero"`
 	paramObj
 }
 
@@ -5476,6 +5483,30 @@ func (r MediaSessionConfigDelegationDecisionsParam) MarshalJSON() (data []byte, 
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *MediaSessionConfigDelegationDecisionsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Inference starts when the Live WebRTC session connects. After an idle pause,
+// microphone speech resumes inference.
+//
+// The property Type is required.
+type MediaSessionConfigWakePolicyParam struct {
+	// The speech detection threshold for resuming paused inference, from 0 to 1
+	// inclusive. Defaults to 0.5. Higher values require stronger evidence of speech.
+	// This setting is independent of active turn detection.
+	VadThreshold param.Opt[float64] `json:"vad_threshold,omitzero"`
+	// The wake policy type, always `speech`.
+	//
+	// This field can be elided, and will marshal its zero value as "speech".
+	Type constant.Speech `json:"type" default:"speech"`
+	paramObj
+}
+
+func (r MediaSessionConfigWakePolicyParam) MarshalJSON() (data []byte, err error) {
+	type shadow MediaSessionConfigWakePolicyParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *MediaSessionConfigWakePolicyParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -12799,17 +12830,25 @@ func (r *SessionUpdatedEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Cumulative audio duration for a Live session. Values are totals for the session,
-// not increments to sum across usage events.
+// Cumulative billable duration for a Live session. Eligible WebRTC sessions also
+// report the active and paused breakdown. Do not sum values across usage events.
 type SessionUsage struct {
-	// The cumulative Live audio duration in seconds. Do not sum this value across
-	// usage events.
+	// The cumulative billable duration in whole seconds. When present, the active and
+	// paused breakdown adds up to this total.
 	Seconds float64 `json:"seconds" api:"required"`
+	// The remaining billable seconds attributed to active audio and any unused prepaid
+	// duration.
+	ActiveSeconds int64 `json:"active_seconds"`
+	// Billable time attributed to paused inference at the configured rate, rounded
+	// down to whole seconds.
+	PausedSeconds int64 `json:"paused_seconds"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Seconds     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Seconds       respjson.Field
+		ActiveSeconds respjson.Field
+		PausedSeconds respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
