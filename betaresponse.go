@@ -37528,6 +37528,13 @@ func init() {
 	)
 }
 
+type BetaResponsesClientEventResponseCreateReasoningMode string
+
+const (
+	BetaResponsesClientEventResponseCreateReasoningModeStandard BetaResponsesClientEventResponseCreateReasoningMode = "standard"
+	BetaResponsesClientEventResponseCreateReasoningModePro      BetaResponsesClientEventResponseCreateReasoningMode = "pro"
+)
+
 // Options for streaming responses. Only set this when you set `stream: true`.
 type BetaResponsesClientEventResponseCreateStreamOptionsParam struct {
 	// When true, stream obfuscation will be enabled. Stream obfuscation adds random
@@ -45965,6 +45972,13 @@ func init() {
 		"summary", "auto", "concise", "detailed",
 	)
 }
+
+type BetaResponseNewParamsReasoningMode string
+
+const (
+	BetaResponseNewParamsReasoningModeStandard BetaResponseNewParamsReasoningMode = "standard"
+	BetaResponseNewParamsReasoningModePro      BetaResponseNewParamsReasoningMode = "pro"
+)
 
 // Specifies the processing type used for serving the request.
 //

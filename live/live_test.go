@@ -31,7 +31,7 @@ func TestLiveNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Live.New(context.TODO(), live.LiveNewParams{
 		Session: live.MediaSessionConfigParam{
-			Model: live.MediaSessionConfigModelGPTLive1,
+			Model: live.MediaSessionConfigModelGPTLive1_1,
 			Audio: live.MediaSessionConfigAudioParam{
 				Output: live.MediaSessionConfigAudioOutputParam{
 					Voice: live.MediaSessionConfigAudioOutputVoiceUnionParam{
