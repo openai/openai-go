@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.104.0](https://github.com/openai/openai-go/compare/v3.103.0...v3.104.0) (2026-11-19)
+
+
+### Features
+
+* **api:** add gpt-live-1.1 to Live model choices ([#1282](https://github.com/openai/openai-go/issues/1282)) ([c548658](https://github.com/openai/openai-go/commit/c54865857ce1dcc4a491e1d0f610850003c674db))
+
 ## [3.103.0](https://github.com/openai/openai-go/compare/v3.102.0...v3.103.0) (2026-11-18)
 
 
