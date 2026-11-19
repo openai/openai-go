@@ -257,12 +257,11 @@ func (r *SessionAcceptParamsSession) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The Live model. Required in the session configuration for every transport; do
-// not pass it as a URL query parameter.
 type SessionAcceptParamsSessionModel string
 
 const (
-	SessionAcceptParamsSessionModelGPTLive1 SessionAcceptParamsSessionModel = "gpt-live-1"
+	SessionAcceptParamsSessionModelGPTLive1   SessionAcceptParamsSessionModel = "gpt-live-1"
+	SessionAcceptParamsSessionModelGPTLive1_1 SessionAcceptParamsSessionModel = "gpt-live-1.1"
 )
 
 // Startup audio output configuration. SIP negotiates the media format;

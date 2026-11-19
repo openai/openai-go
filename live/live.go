@@ -5306,7 +5306,8 @@ func (r *MediaSessionConfigParam) UnmarshalJSON(data []byte) error {
 type MediaSessionConfigModel = string
 
 const (
-	MediaSessionConfigModelGPTLive1 MediaSessionConfigModel = "gpt-live-1"
+	MediaSessionConfigModelGPTLive1   MediaSessionConfigModel = "gpt-live-1"
+	MediaSessionConfigModelGPTLive1_1 MediaSessionConfigModel = "gpt-live-1.1"
 )
 
 // Startup audio configuration. WebRTC and SIP negotiate their audio format on the
@@ -12041,7 +12042,8 @@ func (r *SessionConfigParam) UnmarshalJSON(data []byte) error {
 type SessionConfigModel = string
 
 const (
-	SessionConfigModelGPTLive1 SessionConfigModel = "gpt-live-1"
+	SessionConfigModelGPTLive1   SessionConfigModel = "gpt-live-1"
+	SessionConfigModelGPTLive1_1 SessionConfigModel = "gpt-live-1.1"
 )
 
 // Startup audio configuration. Only primary WebSockets accept audio.format; WebRTC
@@ -12304,7 +12306,8 @@ func (r *SessionResource) UnmarshalJSON(data []byte) error {
 type SessionResourceModel = string
 
 const (
-	SessionResourceModelGPTLive1 SessionResourceModel = "gpt-live-1"
+	SessionResourceModelGPTLive1   SessionResourceModel = "gpt-live-1"
+	SessionResourceModelGPTLive1_1 SessionResourceModel = "gpt-live-1.1"
 )
 
 // Startup audio configuration. Only primary WebSockets accept audio.format; WebRTC

@@ -252,6 +252,13 @@ func init() {
 	)
 }
 
+type BetaResponseInputTokenCountParamsReasoningMode string
+
+const (
+	BetaResponseInputTokenCountParamsReasoningModeStandard BetaResponseInputTokenCountParamsReasoningMode = "standard"
+	BetaResponseInputTokenCountParamsReasoningModePro      BetaResponseInputTokenCountParamsReasoningMode = "pro"
+)
+
 // Configuration options for a text response from the model. Can be plain text or
 // structured JSON data. Learn more:
 //

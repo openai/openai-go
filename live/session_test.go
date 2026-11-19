@@ -38,7 +38,7 @@ func TestSessionAcceptWithOptionalParams(t *testing.T) {
 		"session_id",
 		live.SessionAcceptParams{
 			Session: live.SessionAcceptParamsSession{
-				Model: "gpt-live-1",
+				Model: "gpt-live-1.1",
 				Audio: live.SessionAcceptParamsSessionAudio{
 					Output: live.SessionAcceptParamsSessionAudioOutput{
 						Voice: live.SessionAcceptParamsSessionAudioOutputVoiceUnion{
