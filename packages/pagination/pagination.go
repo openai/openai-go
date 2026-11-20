@@ -328,10 +328,6 @@ func (r *NextCursorPage[T]) UnmarshalJSON(data []byte) error {
 // there is no next page, this function will return a 'nil' for the page value, but
 // will not return an error
 func (r *NextCursorPage[T]) GetNextPage() (res *NextCursorPage[T], err error) {
-	if len(r.Data) == 0 {
-		return nil, nil
-	}
-
 	if r.JSON.HasMore.Valid() && r.HasMore == false {
 		return nil, nil
 	}
@@ -364,11 +360,12 @@ func (r *NextCursorPage[T]) SetPageConfig(cfg *requestconfig.RequestConfig, res 
 }
 
 type NextCursorPageAutoPager[T any] struct {
-	page *NextCursorPage[T]
-	cur  T
-	idx  int
-	run  int
-	err  error
+	page        *NextCursorPage[T]
+	cur         T
+	idx         int
+	run         int
+	err         error
+	seenCursors *map[string]struct{}
 	paramObj
 }
 
@@ -380,20 +377,33 @@ func NewNextCursorPageAutoPager[T any](page *NextCursorPage[T], err error) *Next
 }
 
 func (r *NextCursorPageAutoPager[T]) Next() bool {
-	if r.page == nil || len(r.page.Data) == 0 {
-		return false
-	}
-	if r.idx >= len(r.page.Data) {
+	for {
+		if r.page == nil {
+			return false
+		}
+		if r.idx < len(r.page.Data) {
+			r.cur = r.page.Data[r.idx]
+			r.run += 1
+			r.idx += 1
+			return true
+		}
 		r.idx = 0
+		next := r.page.Next
+		if next != "" {
+			if r.seenCursors == nil {
+				seenCursors := make(map[string]struct{})
+				r.seenCursors = &seenCursors
+			}
+			if _, seen := (*r.seenCursors)[next]; seen {
+				return false
+			}
+			(*r.seenCursors)[next] = struct{}{}
+		}
 		r.page, r.err = r.page.GetNextPage()
-		if r.err != nil || r.page == nil || len(r.page.Data) == 0 {
+		if r.err != nil || r.page == nil {
 			return false
 		}
 	}
-	r.cur = r.page.Data[r.idx]
-	r.run += 1
-	r.idx += 1
-	return true
 }
 
 func (r *NextCursorPageAutoPager[T]) Current() T {
