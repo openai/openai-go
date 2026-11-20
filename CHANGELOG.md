@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.105.0](https://github.com/openai/openai-go/compare/v3.104.0...v3.105.0) (2026-11-19)
+
+
+### Features
+
+* **api:** support Live WebRTC standby ([#1284](https://github.com/openai/openai-go/issues/1284)) ([fcbeddb](https://github.com/openai/openai-go/commit/fcbeddb47021389b70e141442104e3995225edce))
+
 ## [3.104.0](https://github.com/openai/openai-go/compare/v3.103.0...v3.104.0) (2026-11-19)
 
 
