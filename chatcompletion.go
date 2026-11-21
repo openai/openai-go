@@ -3895,9 +3895,9 @@ type ChatCompletionNewParams struct {
 	// [images](https://developers.openai.com/api/docs/guides/images-vision), and
 	// [audio](https://developers.openai.com/api/docs/guides/audio).
 	Messages []ChatCompletionMessageParamUnion `json:"messages,omitzero" api:"required"`
-	// Model ID used to generate the response, like `gpt-6-astra` or `o3`. OpenAI
-	// offers a wide range of models with different capabilities, performance
-	// characteristics, and price points. Refer to the
+	// Model ID used to generate the response, like `gpt-6.2-astra`. OpenAI offers a
+	// wide range of models with different capabilities, performance characteristics,
+	// and price points. Refer to the
 	// [model guide](https://developers.openai.com/api/docs/models) to browse and
 	// compare available models.
 	Model shared.ChatModel `json:"model,omitzero" api:"required"`
@@ -3921,9 +3921,10 @@ type ChatCompletionNewParams struct {
 	// compatible with
 	// [o-series models](https://developers.openai.com/api/docs/guides/reasoning).
 	MaxTokens param.Opt[int64] `json:"max_tokens,omitzero"`
-	// How many chat completion choices to generate for each input message. Note that
-	// you will be charged based on the number of generated tokens across all of the
-	// choices. Keep `n` as `1` to minimize costs.
+	// How many chat completion choices to generate for each input message. Omit `n` to
+	// generate one choice. Newer models reject an explicit `n`, even `n=1`. When
+	// requesting multiple choices, you are billed for generated tokens across all
+	// choices.
 	N param.Opt[int64] `json:"n,omitzero"`
 	// Number between -2.0 and 2.0. Positive values penalize new tokens based on
 	// whether they appear in the text so far, increasing the model's likelihood to
@@ -4068,7 +4069,7 @@ type ChatCompletionNewParams struct {
 	//
 	// Any of "auto", "default", "flex", "scale", "priority", "fast".
 	ServiceTier ChatCompletionNewParamsServiceTier `json:"service_tier,omitzero"`
-	// Not supported with latest reasoning models `o3` and `o4-mini`.
+	// Not supported with reasoning models `o3` and `o4-mini`.
 	//
 	// Up to 4 sequences where the API will stop generating further tokens. The
 	// returned text will not contain the stop sequence.

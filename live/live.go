@@ -5270,7 +5270,7 @@ type MediaSessionConfigParam struct {
 	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
 	// Whole seconds of inactivity after which a Live WebRTC session with a speech wake
 	// policy pauses inference. The connection and conversation history are retained.
-	// Omit to keep inference active until the session ends.
+	// Omit to keep inference active after the first wake until the session ends.
 	IdleTimeoutS param.Opt[int64] `json:"idle_timeout_s,omitzero"`
 	// Whether to store the session for later forking and recording download. Defaults
 	// to false for new sessions.
@@ -5294,8 +5294,7 @@ type MediaSessionConfigParam struct {
 	// configuration, send a list to replace it, or send an empty list to disable
 	// triggers.
 	Triggers []DecisionTriggerParam `json:"triggers,omitzero"`
-	// Inference starts when the Live WebRTC session connects. After an idle pause,
-	// microphone speech resumes inference.
+	// Starts inference when microphone speech is detected.
 	WakePolicy MediaSessionConfigWakePolicyParam `json:"wake_policy,omitzero"`
 	paramObj
 }
@@ -5486,13 +5485,12 @@ func (r *MediaSessionConfigDelegationDecisionsParam) UnmarshalJSON(data []byte) 
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Inference starts when the Live WebRTC session connects. After an idle pause,
-// microphone speech resumes inference.
+// Starts inference when microphone speech is detected.
 //
 // The property Type is required.
 type MediaSessionConfigWakePolicyParam struct {
-	// The speech detection threshold for resuming paused inference, from 0 to 1
-	// inclusive. Defaults to 0.5. Higher values require stronger evidence of speech.
+	// The speech detection threshold for the first wake and each later wake, from 0 to
+	// 1 inclusive. Defaults to 0.5. Higher values require stronger evidence of speech.
 	// This setting is independent of active turn detection.
 	VadThreshold param.Opt[float64] `json:"vad_threshold,omitzero"`
 	// The wake policy type, always `speech`.
@@ -7007,7 +7005,10 @@ type ResponsesDelegationConfigToolShellEnvironmentContainerAuto struct {
 	MemoryLimit string `json:"memory_limit" api:"nullable"`
 	// Network access policy for the container.
 	NetworkPolicy ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnion `json:"network_policy" api:"nullable"`
-	// An optional list of skills referenced by id or inline data.
+	// An optional list of skills referenced by id or inline data. Across all inline
+	// skills in this list, decoded ZIP data must total at most 50 MiB and Base64 text
+	// must total at most 70,254,592 characters, including line breaks. Skill
+	// references do not count toward these limits.
 	Skills []ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnion `json:"skills" api:"nullable"`
 	// Automatically creates a container for this request
 	Type constant.ContainerAuto `json:"type" default:"container_auto"`
@@ -8829,7 +8830,10 @@ type ResponsesDelegationConfigToolShellEnvironmentContainerAutoParam struct {
 	MemoryLimit string `json:"memory_limit,omitzero"`
 	// Network access policy for the container.
 	NetworkPolicy ResponsesDelegationConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam `json:"network_policy,omitzero"`
-	// An optional list of skills referenced by id or inline data.
+	// An optional list of skills referenced by id or inline data. Across all inline
+	// skills in this list, decoded ZIP data must total at most 50 MiB and Base64 text
+	// must total at most 70,254,592 characters, including line breaks. Skill
+	// references do not count toward these limits.
 	Skills []ResponsesDelegationConfigToolShellEnvironmentContainerAutoSkillUnionParam `json:"skills,omitzero"`
 	// Automatically creates a container for this request
 	//
@@ -10648,7 +10652,10 @@ type ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoParam struc
 	MemoryLimit string `json:"memory_limit,omitzero"`
 	// Network access policy for the container.
 	NetworkPolicy ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoNetworkPolicyUnionParam `json:"network_policy,omitzero"`
-	// An optional list of skills referenced by id or inline data.
+	// An optional list of skills referenced by id or inline data. Across all inline
+	// skills in this list, decoded ZIP data must total at most 50 MiB and Base64 text
+	// must total at most 70,254,592 characters, including line breaks. Skill
+	// references do not count toward these limits.
 	Skills []ResponsesDelegationUpdateConfigToolShellEnvironmentContainerAutoSkillUnionParam `json:"skills,omitzero"`
 	// Automatically creates a container for this request
 	//

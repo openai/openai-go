@@ -613,7 +613,7 @@ type FineTuningJobNewParams struct {
 	// name.
 	//
 	// For example, a `suffix` of "custom-model-name" would produce a model name like
-	// `ft:gpt-4o-mini:openai:custom-model-name:7p4lURel`.
+	// `ft:gpt-4.1-mini-2025-04-14:openai:custom-model-name:7p4lURel`.
 	Suffix param.Opt[string] `json:"suffix,omitzero"`
 	// The ID of an uploaded file that contains validation data.
 	//
@@ -659,10 +659,11 @@ func (r *FineTuningJobNewParams) UnmarshalJSON(data []byte) error {
 type FineTuningJobNewParamsModel string
 
 const (
-	FineTuningJobNewParamsModelBabbage002  FineTuningJobNewParamsModel = "babbage-002"
-	FineTuningJobNewParamsModelDavinci002  FineTuningJobNewParamsModel = "davinci-002"
-	FineTuningJobNewParamsModelGPT3_5Turbo FineTuningJobNewParamsModel = "gpt-3.5-turbo"
-	FineTuningJobNewParamsModelGPT4oMini   FineTuningJobNewParamsModel = "gpt-4o-mini"
+	FineTuningJobNewParamsModelGPT4_1Mini2025_04_14 FineTuningJobNewParamsModel = "gpt-4.1-mini-2025-04-14"
+	FineTuningJobNewParamsModelBabbage002           FineTuningJobNewParamsModel = "babbage-002"
+	FineTuningJobNewParamsModelDavinci002           FineTuningJobNewParamsModel = "davinci-002"
+	FineTuningJobNewParamsModelGPT3_5Turbo          FineTuningJobNewParamsModel = "gpt-3.5-turbo"
+	FineTuningJobNewParamsModelGPT4oMini            FineTuningJobNewParamsModel = "gpt-4o-mini"
 )
 
 // The hyperparameters used for the fine-tuning job. This value is now deprecated

@@ -32,7 +32,7 @@ func TestAudioTranscriptionNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Audio.Transcriptions.New(context.TODO(), openai.AudioTranscriptionNewParams{
 		File:  io.Reader(bytes.NewBuffer([]byte("Example data"))),
-		Model: openai.AudioModel("gpt-4o-transcribe"),
+		Model: openai.AudioModelGPTTranscribe,
 		ChunkingStrategy: openai.AudioTranscriptionNewParamsChunkingStrategyUnion{
 			OfAuto: constant.ValueOf[constant.Auto](),
 		},

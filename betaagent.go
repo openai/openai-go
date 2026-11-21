@@ -9252,13 +9252,14 @@ type SessionTurnError struct {
 	// A stable, machine-readable failure category.
 	//
 	// Any of "context_length_exceeded", "max_output_tokens", "usage_limit_exceeded",
-	// "project_spend_limit_exceeded", "organization_spend_limit_exceeded",
-	// "organization_usage_limit_exceeded", "billing_not_active",
-	// "credit_balance_exhausted", "rate_limit_exceeded", "flex_unavailable",
-	// "server_overloaded", "cyber_policy", "misalignment_policy_violation",
-	// "connection_failed", "server_error", "authentication_error", "invalid_request",
-	// "resource_not_found", "sandbox_error", "executor_version_incompatible",
-	// "active_turn_not_steerable", "request_timeout", "internal_error".
+	// "api_key_spend_limit_exceeded", "project_spend_limit_exceeded",
+	// "organization_spend_limit_exceeded", "organization_usage_limit_exceeded",
+	// "billing_not_active", "credit_balance_exhausted", "rate_limit_exceeded",
+	// "flex_unavailable", "server_overloaded", "cyber_policy",
+	// "misalignment_policy_violation", "connection_failed", "server_error",
+	// "authentication_error", "invalid_request", "resource_not_found",
+	// "sandbox_error", "executor_version_incompatible", "active_turn_not_steerable",
+	// "request_timeout", "internal_error".
 	Code SessionTurnErrorCode `json:"code" api:"required"`
 	// A customer-safe explanation of the failure.
 	Message string `json:"message" api:"required"`
@@ -9284,6 +9285,7 @@ const (
 	SessionTurnErrorCodeContextLengthExceeded          SessionTurnErrorCode = "context_length_exceeded"
 	SessionTurnErrorCodeMaxOutputTokens                SessionTurnErrorCode = "max_output_tokens"
 	SessionTurnErrorCodeUsageLimitExceeded             SessionTurnErrorCode = "usage_limit_exceeded"
+	SessionTurnErrorCodeAPIKeySpendLimitExceeded       SessionTurnErrorCode = "api_key_spend_limit_exceeded"
 	SessionTurnErrorCodeProjectSpendLimitExceeded      SessionTurnErrorCode = "project_spend_limit_exceeded"
 	SessionTurnErrorCodeOrganizationSpendLimitExceeded SessionTurnErrorCode = "organization_spend_limit_exceeded"
 	SessionTurnErrorCodeOrganizationUsageLimitExceeded SessionTurnErrorCode = "organization_usage_limit_exceeded"

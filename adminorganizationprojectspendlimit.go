@@ -172,6 +172,9 @@ type AdminOrganizationProjectSpendLimitUpdateParams struct {
 	Interval AdminOrganizationProjectSpendLimitUpdateParamsInterval `json:"interval,omitzero" api:"required"`
 	// The hard spend limit amount, in cents.
 	ThresholdAmount int64 `json:"threshold_amount" api:"required"`
+	// Configure email notifications when the spend limit is reached. Leave this out to
+	// keep the current settings, or send null to reset to owner-only notifications.
+	NotificationChannel SpendLimitEmailNotificationChannelParam `json:"notification_channel,omitzero"`
 	paramObj
 }
 

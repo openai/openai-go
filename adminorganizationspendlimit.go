@@ -146,6 +146,26 @@ func (r *OrganizationSpendLimitDeleted) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The property Type is required.
+type SpendLimitEmailNotificationChannelParam struct {
+	// Email subject prefix. Omit to keep it unchanged; send null or an empty string to
+	// clear it.
+	SubjectPrefix param.Opt[string] `json:"subject_prefix,omitzero"`
+	// Additional email recipients. Omit to keep them unchanged; send [] to clear them.
+	Recipients *[]string `json:"recipients,omitzero"`
+	// This field can be elided, and will marshal its zero value as "email".
+	Type constant.Email `json:"type" default:"email"`
+	paramObj
+}
+
+func (r SpendLimitEmailNotificationChannelParam) MarshalJSON() (data []byte, err error) {
+	type shadow SpendLimitEmailNotificationChannelParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *SpendLimitEmailNotificationChannelParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type AdminOrganizationSpendLimitUpdateParams struct {
 	// The currency for the threshold amount. Currently, only `USD` is supported.
 	//
@@ -158,6 +178,9 @@ type AdminOrganizationSpendLimitUpdateParams struct {
 	Interval AdminOrganizationSpendLimitUpdateParamsInterval `json:"interval,omitzero" api:"required"`
 	// The hard spend limit amount, in cents.
 	ThresholdAmount int64 `json:"threshold_amount" api:"required"`
+	// Configure email notifications when the spend limit is reached. Leave this out to
+	// keep the current settings, or send null to reset to owner-only notifications.
+	NotificationChannel SpendLimitEmailNotificationChannelParam `json:"notification_channel,omitzero"`
 	paramObj
 }
 

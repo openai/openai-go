@@ -110,9 +110,9 @@ func (r *BetaAgentSessionService) Get(ctx context.Context, sessionID string, opt
 	return res, err
 }
 
-// Updates session tools, metadata, model, reasoning effort, service tier, or the
-// default prompt cache lifetime. Model settings apply to subsequent turns. Omitted
-// fields are unchanged. See
+// Updates session tools, vaults, metadata, model, reasoning effort, service tier,
+// or the default prompt cache lifetime. Model settings apply to subsequent turns.
+// Omitted fields are unchanged. See
 // [managing sessions](https://developers.openai.com/api/docs/guides/agents-api/sessions/manage).
 func (r *BetaAgentSessionService) Update(ctx context.Context, sessionID string, body BetaAgentSessionUpdateParams, opts ...option.RequestOption) (res *AgentSession, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
@@ -369,6 +369,9 @@ type BetaAgentSessionUpdateParams struct {
 	// Default prompt cache lifetime for future turns. Send null to clear the session
 	// default.
 	PromptCacheOptions BetaAgentSessionUpdateParamsPromptCacheOptions `json:"prompt_cache_options,omitzero"`
+	// Replaces the session's referenced vaults. Omit to retain them; null or [] clears
+	// them.
+	VaultIDs []string `json:"vault_ids,omitzero"`
 	// Agent settings to update on this session. Omitted fields stay unchanged.
 	Agent BetaAgentSessionUpdateParamsAgent `json:"agent,omitzero"`
 	// Default action review for new root turns. Existing turns and their subagents

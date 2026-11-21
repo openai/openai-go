@@ -86,7 +86,7 @@ func TestClientSecretNewWithOptionalParams(t *testing.T) {
 				MaxOutputTokens: realtime.RealtimeSessionCreateRequestMaxOutputTokensUnionParam{
 					OfInf: constant.ValueOf[constant.Inf](),
 				},
-				Model:             realtime.RealtimeSessionCreateRequestModel("gpt-realtime"),
+				Model:             realtime.RealtimeSessionCreateRequestModelGPTRealtime2_1,
 				OutputModalities:  []string{"text"},
 				ParallelToolCalls: openai.Bool(true),
 				Prompt: responses.ResponsePromptParam{

@@ -48,7 +48,7 @@ func TestBetaResponseNewWithOptionalParams(t *testing.T) {
 		},
 		Include: []openai.BetaResponseIncludable{openai.BetaResponseIncludableFileSearchCallResults},
 		Input: openai.BetaResponseNewParamsInputUnion{
-			OfString: openai.String("string"),
+			OfString: openai.String("Write a one-sentence bedtime story about a unicorn."),
 		},
 		Instructions:    openai.String("instructions"),
 		MaxOutputTokens: openai.Int(16),
@@ -56,7 +56,7 @@ func TestBetaResponseNewWithOptionalParams(t *testing.T) {
 		Metadata: map[string]string{
 			"foo": "string",
 		},
-		Model: openai.BetaResponseNewParamsModelGPT6Astra,
+		Model: openai.BetaResponseNewParamsModelGPT6_2Astra,
 		Moderation: openai.BetaResponseNewParamsModeration{
 			Model: "model",
 			Policy: openai.BetaResponseNewParamsModerationPolicy{

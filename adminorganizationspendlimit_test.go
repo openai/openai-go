@@ -37,7 +37,7 @@ func TestAdminOrganizationSpendLimitGet(t *testing.T) {
 	}
 }
 
-func TestAdminOrganizationSpendLimitUpdate(t *testing.T) {
+func TestAdminOrganizationSpendLimitUpdateWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -55,6 +55,10 @@ func TestAdminOrganizationSpendLimitUpdate(t *testing.T) {
 		Currency:        openai.AdminOrganizationSpendLimitUpdateParamsCurrencyUsd,
 		Interval:        openai.AdminOrganizationSpendLimitUpdateParamsIntervalMonth,
 		ThresholdAmount: 1,
+		NotificationChannel: openai.SpendLimitEmailNotificationChannelParam{
+			Recipients:    &[]string{"string"},
+			SubjectPrefix: openai.String("subject_prefix"),
+		},
 	})
 	if err != nil {
 		var apierr *openai.Error

@@ -1300,7 +1300,10 @@ type ContainerAuto struct {
 	MemoryLimit ContainerAutoMemoryLimit `json:"memory_limit" api:"nullable"`
 	// Network access policy for the container.
 	NetworkPolicy ContainerAutoNetworkPolicyUnion `json:"network_policy"`
-	// An optional list of skills referenced by id or inline data.
+	// An optional list of skills referenced by id or inline data. Across all inline
+	// skills in this list, decoded ZIP data must total at most 50 MiB and Base64 text
+	// must total at most 70,254,592 characters, including line breaks. Skill
+	// references do not count toward these limits.
 	Skills []ContainerAutoSkillUnion `json:"skills"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -1490,7 +1493,10 @@ type ContainerAutoParam struct {
 	FileIDs []string `json:"file_ids,omitzero"`
 	// Network access policy for the container.
 	NetworkPolicy ContainerAutoNetworkPolicyUnionParam `json:"network_policy,omitzero"`
-	// An optional list of skills referenced by id or inline data.
+	// An optional list of skills referenced by id or inline data. Across all inline
+	// skills in this list, decoded ZIP data must total at most 50 MiB and Base64 text
+	// must total at most 70,254,592 characters, including line breaks. Skill
+	// references do not count toward these limits.
 	Skills []ContainerAutoSkillUnionParam `json:"skills,omitzero"`
 	// Automatically creates a container for this request
 	//
@@ -3608,9 +3614,9 @@ type Response struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata" api:"required"`
-	// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
-	// range of models with different capabilities, performance characteristics, and
-	// price points. Refer to the
+	// Model ID used to generate the response, like `gpt-6.2-astra`. OpenAI offers a
+	// wide range of models with different capabilities, performance characteristics,
+	// and price points. Refer to the
 	// [model guide](https://developers.openai.com/api/docs/models) to browse and
 	// compare available models.
 	Model shared.ResponsesModel `json:"model" api:"required"`
@@ -29970,9 +29976,9 @@ type ResponsesClientEventResponseCreateParam struct {
 	//   - [Conversation state](https://developers.openai.com/api/docs/guides/conversation-state)
 	//   - [Function calling](https://developers.openai.com/api/docs/guides/function-calling)
 	Input ResponsesClientEventResponseCreateInputUnionParam `json:"input,omitzero"`
-	// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
-	// range of models with different capabilities, performance characteristics, and
-	// price points. Refer to the
+	// Model ID used to generate the response, like `gpt-6.2-astra`. OpenAI offers a
+	// wide range of models with different capabilities, performance characteristics,
+	// and price points. Refer to the
 	// [model guide](https://developers.openai.com/api/docs/models) to browse and
 	// compare available models.
 	Model shared.ResponsesModel `json:"model,omitzero"`
@@ -37399,9 +37405,9 @@ type ResponseNewParams struct {
 	//   - [Conversation state](https://developers.openai.com/api/docs/guides/conversation-state)
 	//   - [Function calling](https://developers.openai.com/api/docs/guides/function-calling)
 	Input ResponseNewParamsInputUnion `json:"input,omitzero"`
-	// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
-	// range of models with different capabilities, performance characteristics, and
-	// price points. Refer to the
+	// Model ID used to generate the response, like `gpt-6.2-astra`. OpenAI offers a
+	// wide range of models with different capabilities, performance characteristics,
+	// and price points. Refer to the
 	// [model guide](https://developers.openai.com/api/docs/models) to browse and
 	// compare available models.
 	Model shared.ResponsesModel `json:"model,omitzero"`
@@ -37964,9 +37970,9 @@ func (r ResponseGetParams) URLQuery() (v url.Values, err error) {
 }
 
 type ResponseCompactParams struct {
-	// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
-	// range of models with different capabilities, performance characteristics, and
-	// price points. Refer to the
+	// Model ID used to generate the response, like `gpt-6.2-astra`. OpenAI offers a
+	// wide range of models with different capabilities, performance characteristics,
+	// and price points. Refer to the
 	// [model guide](https://developers.openai.com/api/docs/models) to browse and
 	// compare available models.
 	Model ResponseCompactParamsModel `json:"model,omitzero" api:"required"`
@@ -38030,9 +38036,9 @@ func (r *ResponseCompactParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
-// range of models with different capabilities, performance characteristics, and
-// price points. Refer to the
+// Model ID used to generate the response, like `gpt-6.2-astra`. OpenAI offers a
+// wide range of models with different capabilities, performance characteristics,
+// and price points. Refer to the
 // [model guide](https://developers.openai.com/api/docs/models) to browse and
 // compare available models.
 type ResponseCompactParamsModel string
