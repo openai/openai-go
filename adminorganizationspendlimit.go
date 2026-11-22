@@ -146,6 +146,9 @@ func (r *OrganizationSpendLimitDeleted) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Configure email notifications when the spend limit is reached. Leave this out to
+// keep the current settings, or send null to reset to owner-only notifications.
+//
 // The property Type is required.
 type SpendLimitEmailNotificationChannelParam struct {
 	// Email subject prefix. Omit to keep it unchanged; send null or an empty string to

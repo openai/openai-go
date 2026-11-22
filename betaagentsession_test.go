@@ -78,6 +78,9 @@ func TestBetaAgentSessionNewWithOptionalParams(t *testing.T) {
 			Ttl: "30m",
 		},
 		Review: openai.BetaAgentSessionNewParamsReviewNone,
+		SpendControl: openai.BetaAgentSessionNewParamsSpendControl{
+			Limit: openai.Int(1),
+		},
 		StreamOptions: openai.BetaAgentSessionNewParamsStreamOptions{
 			IncludeObfuscation: openai.Bool(true),
 		},
@@ -158,7 +161,10 @@ func TestBetaAgentSessionUpdateWithOptionalParams(t *testing.T) {
 			PromptCacheOptions: openai.BetaAgentSessionUpdateParamsPromptCacheOptions{
 				Ttl: "30m",
 			},
-			Review:   openai.BetaAgentSessionUpdateParamsReviewNone,
+			Review: openai.BetaAgentSessionUpdateParamsReviewNone,
+			SpendControl: openai.BetaAgentSessionUpdateParamsSpendControl{
+				Limit: openai.Int(1),
+			},
 			VaultIDs: []string{"string"},
 		},
 	)

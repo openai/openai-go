@@ -243,7 +243,7 @@
     },
     "adminorganizationspendlimit.go": {
       "mode": "100644",
-      "sha256": "c91cff229238e64518719d0e19c06ccb98c9dd4444d2abc4acdd0abd5c59519d"
+      "sha256": "a2056c4b5118421a3d7d4300fc7b042fe8a69fbfbbb632cc4d445a1acaa5a9aa"
     },
     "adminorganizationspendlimit_test.go": {
       "mode": "100644",
@@ -295,7 +295,7 @@
     },
     "api.md": {
       "mode": "100644",
-      "sha256": "d5bfe0247342b6f6c0acfb4c1243fc7c6052ce1a888a2ce6a1777d854f1e2c56"
+      "sha256": "049d1c37402ede5bcf9187a973aa1f52af7c4e37b9bf73e46f1f47b31350bff2"
     },
     "audio.go": {
       "mode": "100644",
@@ -363,7 +363,7 @@
     },
     "betaagent.go": {
       "mode": "100644",
-      "sha256": "c062647ec6b804151458a187da42ee71634a76429a0ee89edfc2d43e55a19bc7"
+      "sha256": "426a9e4f097ecad3166bd2f5448259a25754359070bf2a2d4f408ed6ae586fb4"
     },
     "betaagent_test.go": {
       "mode": "100644",
@@ -411,11 +411,11 @@
     },
     "betaagentsession.go": {
       "mode": "100644",
-      "sha256": "0f83401adb70b79fcd28ccbc5a03110f002c58b2be7da8f616640b0701b9757c"
+      "sha256": "590094aeed40c7b98433a6cde7c23d2a0a94b2020e4d3a36377691d518976d6f"
     },
     "betaagentsession_test.go": {
       "mode": "100644",
-      "sha256": "e16149a740c795aae761c9090109b20fc3519638a249dc7000301a12b01626d7"
+      "sha256": "a01addaa9fd3864785ed6a14e070c1ee5999406f70f9f0db7efaf3a960d88c2c"
     },
     "betaagentsessionartifact.go": {
       "mode": "100644",
@@ -475,7 +475,7 @@
     },
     "betaagentsessiontrace.go": {
       "mode": "100644",
-      "sha256": "357151b8229a7a2d81daba44e9e2345bd17cea173f43cf0ad9be5a86bbf92b34"
+      "sha256": "b0aea9017421ac3bf16050d0fcd45816fa5f95ff7c4258f8fc6b2121436b555e"
     },
     "betaagentsessiontrace_test.go": {
       "mode": "100644",
@@ -627,7 +627,7 @@
     },
     "completion.go": {
       "mode": "100644",
-      "sha256": "e5925450766c7dac63cdbb3c4eb45de12ef93cb9ab7a2f39832425f1fce00d35"
+      "sha256": "6e8813251861d9c307519c312fa2742fc5abc8fdb07ace78b8eb7ab06d4711eb"
     },
     "completion_test.go": {
       "mode": "100644",
@@ -1003,7 +1003,7 @@
     },
     "shared/constant/constants.go": {
       "mode": "100644",
-      "sha256": "bc5e7fb4e4dbd1cc4fce5f42bc828d79a0e4faa0146c20bdb01064d1fde20f39"
+      "sha256": "af53bd81cffd815af2299afa503037a928bb6f7e12f43293be8afce74465a854"
     },
     "shared/shared.go": {
       "mode": "100644",
