@@ -194,6 +194,9 @@ type BetaAgentSessionNewParams struct {
 	// Default prompt cache lifetime for turns in this session. Omit to use the model
 	// default.
 	PromptCacheOptions BetaAgentSessionNewParamsPromptCacheOptions `json:"prompt_cache_options,omitzero"`
+	// Optional spending limit in USD cents. Omission or null creates an unlimited
+	// session.
+	SpendControl BetaAgentSessionNewParamsSpendControl `json:"spend_control,omitzero"`
 	// The IDs of vaults made available to the session.
 	VaultIDs []string `json:"vault_ids,omitzero"`
 	// Agent configuration. With `agent_id`, supplied fields override the saved agent
@@ -345,6 +348,24 @@ const (
 	BetaAgentSessionNewParamsReviewAutoReview BetaAgentSessionNewParamsReview = "auto_review"
 )
 
+// Optional spending limit in USD cents. Omission or null creates an unlimited
+// session.
+//
+// The property Limit is required.
+type BetaAgentSessionNewParamsSpendControl struct {
+	// Positive USD cents, or null to remove the limit.
+	Limit param.Opt[int64] `json:"limit,omitzero" api:"required"`
+	paramObj
+}
+
+func (r BetaAgentSessionNewParamsSpendControl) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentSessionNewParamsSpendControl
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentSessionNewParamsSpendControl) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Options for the event stream. Only allowed when `stream` is `true`.
 type BetaAgentSessionNewParamsStreamOptions struct {
 	// Whether to include obfuscation padding in events on this connection. Defaults to
@@ -369,6 +390,9 @@ type BetaAgentSessionUpdateParams struct {
 	// Default prompt cache lifetime for future turns. Send null to clear the session
 	// default.
 	PromptCacheOptions BetaAgentSessionUpdateParamsPromptCacheOptions `json:"prompt_cache_options,omitzero"`
+	// Omit to retain the limit; null or a null limit removes it without resetting
+	// spend.
+	SpendControl BetaAgentSessionUpdateParamsSpendControl `json:"spend_control,omitzero"`
 	// Replaces the session's referenced vaults. Omit to retain them; null or [] clears
 	// them.
 	VaultIDs []string `json:"vault_ids,omitzero"`
@@ -464,6 +488,24 @@ const (
 	BetaAgentSessionUpdateParamsReviewNone       BetaAgentSessionUpdateParamsReview = "none"
 	BetaAgentSessionUpdateParamsReviewAutoReview BetaAgentSessionUpdateParamsReview = "auto_review"
 )
+
+// Omit to retain the limit; null or a null limit removes it without resetting
+// spend.
+//
+// The property Limit is required.
+type BetaAgentSessionUpdateParamsSpendControl struct {
+	// Positive USD cents, or null to remove the limit.
+	Limit param.Opt[int64] `json:"limit,omitzero" api:"required"`
+	paramObj
+}
+
+func (r BetaAgentSessionUpdateParamsSpendControl) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAgentSessionUpdateParamsSpendControl
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAgentSessionUpdateParamsSpendControl) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type BetaAgentSessionListParams struct {
 	// Return resources after this resource ID in the selected order.

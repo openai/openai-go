@@ -3728,9 +3728,7 @@ paths:
                   object:
                     type: string
                     description: The object type, which is always "text_completion"
-                    enum:
-                    - text_completion
-                    x-stainless-const: true
+                    const: text_completion
                   usage:
                     anyOf:
                     - $ref: '#/components/schemas/CompletionUsage'
@@ -34914,7 +34912,7 @@ paths:
     get:
       operationId: listAgentSessionTraces
       summary: List agent session traces
-      description: Lists published root-turn traces as OTLP JSON, ordered by turn creation time and ID. Unpublished traces are skipped. Each page returns data available when read; it does not wait for late traces. Trace reads and the JSON response are limited to 16 MiB per request. If the limit is exceeded, request fewer traces.
+      description: Lists published root-turn traces as OTLP JSON, ordered by turn creation time and ID. Unpublished traces are skipped. Each page returns data available when read; it does not wait for late traces. Pages may contain fewer traces than requested to fit the 16 MiB response limit. When `has_more` is true, pass `last_id` as `after` to continue. If the first trace exceeds 16 MiB before conversion or cannot fit on a page by itself, the API returns a `trace_too_large` error.
       tags:
       - Agents
       parameters:
@@ -42749,9 +42747,8 @@ components:
       description: A list of Conversation items.
       properties:
         object:
-          x-stainless-const: true
-          description: The type of object returned, must be `list`.
           const: list
+          description: The type of object returned, must be `list`.
         data:
           type: array
           description: A list of conversation items.
@@ -43788,7 +43785,7 @@ components:
           default: 1
           example: 1
           description: |
-            How many completions to generate for each prompt. Omit `n` to generate one completion per prompt. Newer models reject an explicit `n`, even `n=1`.
+            How many completions to generate for each prompt. Omit `n` to generate one completion per prompt.
 
             **Note:** Because this parameter generates many completions, it can quickly consume your token quota. Use carefully and ensure that you have reasonable settings for `max_tokens` and `stop`.
         presence_penalty:
@@ -43936,9 +43933,7 @@ components:
         object:
           type: string
           description: The object type, which is always "text_completion"
-          enum:
-          - text_completion
-          x-stainless-const: true
+          const: text_completion
         usage:
           $ref: '#/components/schemas/CompletionUsage'
       required:
@@ -47301,9 +47296,8 @@ components:
       type: object
       properties:
         object:
-          x-stainless-const: true
-          description: The object type, must be `certificate.deleted`.
           const: certificate.deleted
+          description: The object type, must be `certificate.deleted`.
         id:
           type: string
           description: The ID of the certificate that was deleted.
@@ -52037,9 +52031,7 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - list
-          x-stainless-const: true
+          const: list
         data:
           type: array
           items:
@@ -52103,9 +52095,7 @@ components:
           type: boolean
         object:
           type: string
-          enum:
-          - list
-          x-stainless-const: true
+          const: list
       required:
       - object
       - data
@@ -52275,9 +52265,7 @@ components:
           type: boolean
         object:
           type: string
-          enum:
-          - list
-          x-stainless-const: true
+          const: list
       required:
       - object
       - data
@@ -52417,10 +52405,8 @@ components:
           $ref: '#/components/schemas/input'
         type:
           type: string
-          enum:
-          - live
+          const: live
           default: live
-          x-stainless-const: true
           description: The session type. Always `live`.
       required:
       - model
@@ -52612,9 +52598,7 @@ components:
         type:
           type: string
           description: The transport used for the Live session. Always `sip`.
-          enum:
-          - sip
-          x-stainless-const: true
+          const: sip
         destination:
           type: string
           description: Phone number to call in E.164 format. SIP URI destinations are not supported.
@@ -52712,9 +52696,7 @@ components:
               type:
                 type: string
                 description: The transport used for the Live session. Always `sip`.
-                enum:
-                - sip
-                x-stainless-const: true
+                const: sip
             required:
             - type
       required:
@@ -52798,9 +52780,7 @@ components:
         type:
           type: string
           description: The transport used for the Live session. Always `webrtc`.
-          enum:
-          - webrtc
-          x-stainless-const: true
+          const: webrtc
         sdp:
           type: string
           minLength: 1
@@ -54399,10 +54379,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - organization.certificate
+          const: organization.certificate
           description: The object type, which is always `organization.certificate`.
-          x-stainless-const: true
         id:
           type: string
           description: The identifier, which can be referenced in API endpoints
@@ -54441,10 +54419,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - organization.certificate.activation
+          const: organization.certificate.activation
           description: The organization certificate activation result type.
-          x-stainless-const: true
         data:
           type: array
           items:
@@ -54457,10 +54433,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - organization.certificate.deactivation
+          const: organization.certificate.deactivation
           description: The organization certificate deactivation result type.
-          x-stainless-const: true
         data:
           type: array
           items:
@@ -54474,10 +54448,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - organization.data_retention
+          const: organization.data_retention
           description: The object type, which is always `organization.data_retention`.
-          x-stainless-const: true
         type:
           type: string
           enum:
@@ -54502,10 +54474,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - organization.project.certificate
+          const: organization.project.certificate
           description: The object type, which is always `organization.project.certificate`.
-          x-stainless-const: true
         id:
           type: string
           description: The identifier, which can be referenced in API endpoints
@@ -54544,10 +54514,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - organization.project.certificate.activation
+          const: organization.project.certificate.activation
           description: The project certificate activation result type.
-          x-stainless-const: true
         data:
           type: array
           items:
@@ -54560,10 +54528,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - organization.project.certificate.deactivation
+          const: organization.project.certificate.deactivation
           description: The project certificate deactivation result type.
-          x-stainless-const: true
         data:
           type: array
           items:
@@ -54580,10 +54546,8 @@ components:
           description: The identifier, which can be referenced in API endpoints.
         object:
           type: string
-          enum:
-          - organization.spend_alert
+          const: organization.spend_alert
           description: The object type, which is always `organization.spend_alert`.
-          x-stainless-const: true
         threshold_amount:
           type: integer
           description: The alert threshold amount, in cents.
@@ -54630,10 +54594,8 @@ components:
           description: The deleted spend alert ID.
         object:
           type: string
-          enum:
-          - organization.spend_alert.deleted
+          const: organization.spend_alert.deleted
           description: Always `organization.spend_alert.deleted`.
-          x-stainless-const: true
         deleted:
           type: boolean
           description: Whether the spend alert was deleted.
@@ -54647,10 +54609,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - list
+          const: list
           description: Always `list`.
-          x-stainless-const: true
         data:
           type: array
           description: Spend alerts returned in the current page.
@@ -54878,10 +54838,8 @@ components:
           description: The identifier, which can be referenced in API endpoints
         object:
           type: string
-          enum:
-          - organization.project
+          const: organization.project
           description: The object type, which is always `organization.project`
-          x-stainless-const: true
         name:
           anyOf:
           - type: string
@@ -54932,10 +54890,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - organization.project.api_key
+          const: organization.project.api_key
           description: The object type, which is always `organization.project.api_key`
-          x-stainless-const: true
         redacted_value:
           type: string
           description: The redacted value of the API key
@@ -55017,9 +54973,7 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - organization.project.api_key.deleted
-          x-stainless-const: true
+          const: organization.project.api_key.deleted
         id:
           type: string
         deleted:
@@ -55033,9 +54987,7 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - list
-          x-stainless-const: true
+          const: list
         data:
           type: array
           items:
@@ -55134,10 +55086,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - project.data_retention
+          const: project.data_retention
           description: The object type, which is always `project.data_retention`.
-          x-stainless-const: true
         type:
           type: string
           enum:
@@ -55164,10 +55114,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - project.group
+          const: project.group
           description: Always `project.group`.
-          x-stainless-const: true
         project_id:
           type: string
           description: Identifier of the project.
@@ -55211,10 +55159,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - project.group.deleted
+          const: project.group.deleted
           description: Always `project.group.deleted`.
-          x-stainless-const: true
         deleted:
           type: boolean
           description: Whether the group membership in the project was removed.
@@ -55234,10 +55180,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - list
+          const: list
           description: Always `list`.
-          x-stainless-const: true
         data:
           type: array
           description: Project group memberships returned in the current page.
@@ -55357,9 +55301,7 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - list
-          x-stainless-const: true
+          const: list
         data:
           type: array
           items:
@@ -55384,10 +55326,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - project.model_permissions
+          const: project.model_permissions
           description: The object type, which is always `project.model_permissions`.
-          x-stainless-const: true
         mode:
           type: string
           enum:
@@ -55420,10 +55360,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - project.model_permissions.deleted
+          const: project.model_permissions.deleted
           description: The object type, which is always `project.model_permissions.deleted`.
-          x-stainless-const: true
         deleted:
           type: boolean
           description: Whether the project model permissions were deleted.
@@ -55460,10 +55398,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - project.rate_limit
+          const: project.rate_limit
           description: The object type, which is always `project.rate_limit`
-          x-stainless-const: true
         id:
           type: string
           description: The identifier, which can be referenced in API endpoints.
@@ -55510,9 +55446,7 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - list
-          x-stainless-const: true
+          const: list
         data:
           type: array
           items:
@@ -55558,10 +55492,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - organization.project.service_account
+          const: organization.project.service_account
           description: The object type, which is always `organization.project.service_account`
-          x-stainless-const: true
         id:
           type: string
           description: The identifier, which can be referenced in API endpoints
@@ -55600,10 +55532,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - organization.project.service_account.api_key
+          const: organization.project.service_account.api_key
           description: The object type, which is always `organization.project.service_account.api_key`
-          x-stainless-const: true
         value:
           type: string
         name:
@@ -55650,9 +55580,7 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - organization.project.service_account
-          x-stainless-const: true
+          const: organization.project.service_account
         id:
           type: string
         name:
@@ -55683,9 +55611,7 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - organization.project.service_account.deleted
-          x-stainless-const: true
+          const: organization.project.service_account.deleted
         id:
           type: string
         deleted:
@@ -55699,9 +55625,7 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - list
-          x-stainless-const: true
+          const: list
         data:
           type: array
           items:
@@ -55729,10 +55653,8 @@ components:
           description: The identifier, which can be referenced in API endpoints.
         object:
           type: string
-          enum:
-          - project.spend_alert
+          const: project.spend_alert
           description: The object type, which is always `project.spend_alert`.
-          x-stainless-const: true
         threshold_amount:
           type: integer
           description: The alert threshold amount, in cents.
@@ -55779,10 +55701,8 @@ components:
           description: The deleted spend alert ID.
         object:
           type: string
-          enum:
-          - project.spend_alert.deleted
+          const: project.spend_alert.deleted
           description: Always `project.spend_alert.deleted`.
-          x-stainless-const: true
         deleted:
           type: boolean
           description: Whether the spend alert was deleted.
@@ -55796,10 +55716,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - list
+          const: list
           description: Always `list`.
-          x-stainless-const: true
         data:
           type: array
           description: Spend alerts returned in the current page.
@@ -55851,10 +55769,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - organization.project.user
+          const: organization.project.user
           description: The object type, which is always `organization.project.user`
-          x-stainless-const: true
         id:
           type: string
           description: The identifier, which can be referenced in API endpoints
@@ -55914,9 +55830,7 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - organization.project.user.deleted
-          x-stainless-const: true
+          const: organization.project.user.deleted
         id:
           type: string
         deleted:
@@ -71153,9 +71067,7 @@ components:
           type: string
           description: |
             The type of the event. Always `speech.audio.delta`.
-          enum:
-          - speech.audio.delta
-          x-stainless-const: true
+          const: speech.audio.delta
         audio:
           type: string
           description: |
@@ -71179,9 +71091,7 @@ components:
           type: string
           description: |
             The type of the event. Always `speech.audio.done`.
-          enum:
-          - speech.audio.done
-          x-stainless-const: true
+          const: speech.audio.done
         usage:
           type: object
           description: |
@@ -71221,10 +71131,8 @@ components:
       properties:
         type:
           type: string
-          enum:
-          - email
+          const: email
           description: The notification channel type. Currently only `email` is supported.
-          x-stainless-const: true
         recipients:
           type: array
           description: Email addresses that receive the spend alert notification.
@@ -71952,12 +71860,10 @@ components:
       - description: 'Controls how the audio is cut into chunks. When set to `"auto"`, the server first normalizes loudness and then uses voice activity detection (VAD) to choose boundaries. `server_vad` object can be provided to tweak VAD detection parameters manually. If unset, the audio is transcribed as a single block. Required when using `gpt-4o-transcribe-diarize` for inputs longer than 30 seconds. '
         anyOf:
         - type: string
-          enum:
-          - auto
+          const: auto
           default: auto
           description: |
             Automatically set chunking parameters based on the audio. Must be set to `"auto"`.
-          x-stainless-const: true
         - $ref: '#/components/schemas/VadConfig'
         x-oaiTypeLabel: string
       - type: 'null'
@@ -83516,6 +83422,7 @@ components:
       type: object
       required:
       - type
+      description: Configure email notifications when the spend limit is reached. Leave this out to keep the current settings, or send null to reset to owner-only notifications.
     UpdateOrganizationSpendLimitBody:
       properties:
         threshold_amount:
@@ -83534,11 +83441,8 @@ components:
           description: The time interval for evaluating spend against the threshold. Currently, only `month` is supported.
         notification_channel:
           anyOf:
-          - discriminator:
-              propertyName: type
+          - $ref: '#/components/schemas/SpendLimitEmailNotificationChannelParams'
             description: Configure email notifications when the spend limit is reached. Leave this out to keep the current settings, or send null to reset to owner-only notifications.
-            anyOf:
-            - $ref: '#/components/schemas/SpendLimitEmailNotificationChannelParams'
           - type: 'null'
       type: object
       required:
@@ -83610,11 +83514,8 @@ components:
           description: The time interval for evaluating spend against the threshold. Currently, only `month` is supported.
         notification_channel:
           anyOf:
-          - discriminator:
-              propertyName: type
+          - $ref: '#/components/schemas/SpendLimitEmailNotificationChannelParams'
             description: Configure email notifications when the spend limit is reached. Leave this out to keep the current settings, or send null to reset to owner-only notifications.
-            anyOf:
-            - $ref: '#/components/schemas/SpendLimitEmailNotificationChannelParams'
           - type: 'null'
       type: object
       required:
@@ -91761,6 +91662,7 @@ components:
       enum:
       - context_length_exceeded
       - max_output_tokens
+      - session_budget_exceeded
       - usage_limit_exceeded
       - api_key_spend_limit_exceeded
       - project_spend_limit_exceeded
@@ -91773,6 +91675,7 @@ components:
       - server_overloaded
       - cyber_policy
       - misalignment_policy_violation
+      - audio_input_unavailable
       - connection_failed
       - server_error
       - authentication_error
@@ -91786,6 +91689,7 @@ components:
       x-enumDescriptions:
       - The request exceeds the model's context window.
       - The model reached its output token limit before finishing the response.
+      - The session has reached its usage budget.
       - The organization has reached a usage, plan, or billing limit.
       - The API key has reached its enforced spend limit.
       - The project has reached its enforced spend limit.
@@ -91798,6 +91702,7 @@ components:
       - The model service is temporarily overloaded.
       - The request was rejected by a safety policy.
       - The request was blocked by the safety systems.
+      - Audio input is unavailable for the organization.
       - The request could not connect to the model service.
       - The model service encountered an unexpected error.
       - The API credentials are invalid or lack the required access.
@@ -93286,6 +93191,28 @@ components:
       - none
       - auto_review
       description: The configured action review mode.
+    SessionBudgetControlResource:
+      type: object
+      properties:
+        limit:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
+          maximum: 4503599627370495
+          description: The configured positive limit in USD cents, or null when unlimited.
+        consumed:
+          type:
+          - integer
+          - 'null'
+          minimum: 0
+          description: Best-effort recorded spend floored to whole USD cents, or null when unavailable.
+      required:
+      - limit
+      - consumed
+      additionalProperties: false
+      description: Session-wide spending limit and best-effort consumption, including unlimited sessions.
     SessionStatusResource:
       type: string
       enum:
@@ -93293,11 +93220,13 @@ components:
       - in_progress
       - requires_action
       - failed
+      - budget_reached
       x-enumDescriptions:
       - The session has no turn in progress and is ready for input. A hosted environment may still be provisioning.
       - The session is processing a turn.
       - The session is waiting for one or more required actions.
       - The session failed.
+      - The session is paused because its spending limit was reached.
       description: The current status of a session.
     McpApprovalRequestResourceMcpToolCall:
       type: object
@@ -93759,6 +93688,9 @@ components:
         review:
           $ref: '#/components/schemas/SessionReviewResource'
           description: Review applied to eligible actions in this session. Omitted when review is none and automatic review is not enabled. Omission means none.
+        spend_control:
+          $ref: '#/components/schemas/SessionBudgetControlResource'
+          description: Spending limit and best-effort consumption, in USD cents. The limit is null for an unlimited session. Consumption is null when unavailable.
         metadata:
           type: object
           additionalProperties:
@@ -93827,6 +93759,7 @@ components:
           - type: 'null'
           description: Best-effort token usage for the session, or null if unknown. Recorded usage may change.
       required:
+      - spend_control
       - metadata
       - id
       - object
@@ -93890,6 +93823,21 @@ components:
       - Keep the existing execution behavior without automatic action review.
       - Review eligible actions automatically. Deny manual approval fallbacks.
       description: Review applied to eligible actions in a session.
+    SessionBudgetControlParams:
+      type: object
+      properties:
+        limit:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
+          maximum: 4503599627370495
+          description: Positive USD cents, or null to remove the limit.
+      required:
+      - limit
+      additionalProperties: false
+      description: Sets the session-wide limit without changing recorded spend.
     CreateSessionInputParam:
       description: Initial input submitted when creating a session.
       anyOf:
@@ -93933,6 +93881,11 @@ components:
         review:
           $ref: '#/components/schemas/SessionReviewParam'
           description: Action review mode. Omit to use none.
+        spend_control:
+          anyOf:
+          - $ref: '#/components/schemas/SessionBudgetControlParams'
+          - type: 'null'
+          description: Optional spending limit in USD cents. Omission or null creates an unlimited session.
         metadata:
           type:
           - object
@@ -94832,6 +94785,33 @@ components:
       - session
       additionalProperties: false
       description: Emitted when a session becomes idle.
+    SessionEventAgentSessionBudgetReached:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - agent.session.budget_reached
+          default: agent.session.budget_reached
+          x-stainless-const: true
+          description: The type of the object. Always `agent.session.budget_reached`.
+        event_id:
+          type: string
+          minLength: 0
+          description: The unique ID of the event.
+        session:
+          $ref: '#/components/schemas/SessionResource'
+          description: The paused session.
+        obfuscation:
+          type: string
+          minLength: 0
+          description: Random alphanumeric padding. Present when stream obfuscation is enabled.
+      required:
+      - type
+      - event_id
+      - session
+      additionalProperties: false
+      description: Emitted when a session pauses because its spending limit was reached.
     SessionEventAgentSessionInProgress:
       type: object
       properties:
@@ -95609,6 +95589,7 @@ components:
           agent.session.turn.cancelled: '#/components/schemas/SessionEventAgentSessionTurnCancelled'
           agent.session.turn.item.added: '#/components/schemas/SessionEventAgentSessionTurnItemAdded'
           agent.session.idle: '#/components/schemas/SessionEventAgentSessionIdle'
+          agent.session.budget_reached: '#/components/schemas/SessionEventAgentSessionBudgetReached'
           agent.session.in_progress: '#/components/schemas/SessionEventAgentSessionInProgress'
           agent.session.requires_action: '#/components/schemas/SessionEventAgentSessionRequiresAction'
           agent.session.failed: '#/components/schemas/SessionEventAgentSessionFailed'
@@ -95640,6 +95621,7 @@ components:
       - agent.session.turn.cancelled
       - agent.session.turn.item.added
       - agent.session.idle
+      - agent.session.budget_reached
       - agent.session.in_progress
       - agent.session.requires_action
       - agent.session.failed
@@ -95674,6 +95656,7 @@ components:
       - $ref: '#/components/schemas/SessionEventAgentSessionTurnCancelled'
       - $ref: '#/components/schemas/SessionEventAgentSessionTurnItemAdded'
       - $ref: '#/components/schemas/SessionEventAgentSessionIdle'
+      - $ref: '#/components/schemas/SessionEventAgentSessionBudgetReached'
       - $ref: '#/components/schemas/SessionEventAgentSessionInProgress'
       - $ref: '#/components/schemas/SessionEventAgentSessionRequiresAction'
       - $ref: '#/components/schemas/SessionEventAgentSessionFailed'
@@ -95755,6 +95738,11 @@ components:
         review:
           $ref: '#/components/schemas/SessionReviewParam'
           description: Default action review for new root turns. Existing turns and their subagents keep their review mode.
+        spend_control:
+          anyOf:
+          - $ref: '#/components/schemas/SessionBudgetControlParams'
+          - type: 'null'
+          description: Omit to retain the limit; null or a null limit removes it without resetting spend.
         agent:
           $ref: '#/components/schemas/UpdateSessionAgentParam'
           description: Agent settings to update on this session. Omitted fields stay unchanged.

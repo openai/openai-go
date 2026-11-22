@@ -311,7 +311,7 @@ type CompletionNewParams struct {
 	// for counting tokens.
 	MaxTokens param.Opt[int64] `json:"max_tokens,omitzero"`
 	// How many completions to generate for each prompt. Omit `n` to generate one
-	// completion per prompt. Newer models reject an explicit `n`, even `n=1`.
+	// completion per prompt.
 	//
 	// **Note:** Because this parameter generates many completions, it can quickly
 	// consume your token quota. Use carefully and ensure that you have reasonable

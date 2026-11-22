@@ -1489,9 +1489,12 @@ type AgentSession struct {
 	Object constant.AgentSession `json:"object" default:"agent.session"`
 	// Actions that must be completed before the session can continue.
 	RequiredActions []AgentSessionRequiredActionUnion `json:"required_actions" api:"required"`
+	// Spending limit and best-effort consumption, in USD cents. The limit is null for
+	// an unlimited session. Consumption is null when unavailable.
+	SpendControl AgentSessionSpendControl `json:"spend_control" api:"required"`
 	// The current status of the session.
 	//
-	// Any of "idle", "in_progress", "requires_action", "failed".
+	// Any of "idle", "in_progress", "requires_action", "failed", "budget_reached".
 	Status AgentSessionStatus `json:"status" api:"required"`
 	// Best-effort token usage for the session, or null if unknown. Recorded usage may
 	// change.
@@ -1516,6 +1519,7 @@ type AgentSession struct {
 		Metadata           respjson.Field
 		Object             respjson.Field
 		RequiredActions    respjson.Field
+		SpendControl       respjson.Field
 		Status             respjson.Field
 		Usage              respjson.Field
 		VaultIDs           respjson.Field
@@ -2055,6 +2059,28 @@ func (r *AgentSessionRequiredActionEnvironmentConnection) UnmarshalJSON(data []b
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Spending limit and best-effort consumption, in USD cents. The limit is null for
+// an unlimited session. Consumption is null when unavailable.
+type AgentSessionSpendControl struct {
+	// Best-effort recorded spend floored to whole USD cents, or null when unavailable.
+	Consumed int64 `json:"consumed" api:"required"`
+	// The configured positive limit in USD cents, or null when unlimited.
+	Limit int64 `json:"limit" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Consumed    respjson.Field
+		Limit       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionSpendControl) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionSpendControl) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The current status of the session.
 type AgentSessionStatus string
 
@@ -2063,6 +2089,7 @@ const (
 	AgentSessionStatusInProgress     AgentSessionStatus = "in_progress"
 	AgentSessionStatusRequiresAction AgentSessionStatus = "requires_action"
 	AgentSessionStatusFailed         AgentSessionStatus = "failed"
+	AgentSessionStatusBudgetReached  AgentSessionStatus = "budget_reached"
 )
 
 // Default prompt cache lifetime for turns in this session, when configured.
@@ -2139,6 +2166,33 @@ const (
 	AgentSessionAssistantMessagePhaseCommentary  AgentSessionAssistantMessagePhase = "commentary"
 	AgentSessionAssistantMessagePhaseFinalAnswer AgentSessionAssistantMessagePhase = "final_answer"
 )
+
+// Emitted when a session pauses because its spending limit was reached.
+type AgentSessionBudgetReachedEvent struct {
+	// The unique ID of the event.
+	EventID string `json:"event_id" api:"required"`
+	// The paused session.
+	Session AgentSession `json:"session" api:"required"`
+	// The type of the object. Always `agent.session.budget_reached`.
+	Type constant.AgentSessionBudgetReached `json:"type" default:"agent.session.budget_reached"`
+	// Random alphanumeric padding. Present when stream obfuscation is enabled.
+	Obfuscation string `json:"obfuscation"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		EventID     respjson.Field
+		Session     respjson.Field
+		Type        respjson.Field
+		Obfuscation respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AgentSessionBudgetReachedEvent) RawJSON() string { return r.JSON.raw }
+func (r *AgentSessionBudgetReachedEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Emitted when a session is created.
 type AgentSessionCreatedEvent struct {
@@ -2566,9 +2620,10 @@ func (r *AgentSessionErrorEvent) UnmarshalJSON(data []byte) error {
 // [AgentSessionTurnCreatedEvent], [AgentSessionTurnInProgressEvent],
 // [AgentSessionTurnCompletedEvent], [AgentSessionTurnFailedEvent],
 // [AgentSessionTurnCancelledEvent], [AgentSessionTurnItemAddedEvent],
-// [AgentSessionIdleEvent], [AgentSessionInProgressEvent],
-// [AgentSessionRequiresActionEvent], [AgentSessionFailedEvent],
-// [AgentSessionEnvironmentPendingEvent], [AgentSessionEnvironmentConnectedEvent],
+// [AgentSessionIdleEvent], [AgentSessionBudgetReachedEvent],
+// [AgentSessionInProgressEvent], [AgentSessionRequiresActionEvent],
+// [AgentSessionFailedEvent], [AgentSessionEnvironmentPendingEvent],
+// [AgentSessionEnvironmentConnectedEvent],
 // [AgentSessionEnvironmentDisconnectedEvent],
 // [AgentSessionEnvironmentFailedEvent], [AgentSessionSubagentCreatedEvent],
 // [AgentSessionSubagentActiveEvent], [AgentSessionSubagentClosedEvent],
@@ -2595,14 +2650,15 @@ type AgentSessionEventUnion struct {
 	// "agent.session.turn.created", "agent.session.turn.in_progress",
 	// "agent.session.turn.completed", "agent.session.turn.failed",
 	// "agent.session.turn.cancelled", "agent.session.turn.item.added",
-	// "agent.session.idle", "agent.session.in_progress",
-	// "agent.session.requires_action", "agent.session.failed",
-	// "agent.session.environment.pending", "agent.session.environment.connected",
-	// "agent.session.environment.disconnected", "agent.session.environment.failed",
-	// "agent.session.subagent.created", "agent.session.subagent.active",
-	// "agent.session.subagent.closed", "agent.session.turn.item.done",
-	// "agent.session.turn.content_part.added", "agent.session.turn.content_part.done",
-	// "agent.session.turn.output_text.delta", "agent.session.turn.output_text.done",
+	// "agent.session.idle", "agent.session.budget_reached",
+	// "agent.session.in_progress", "agent.session.requires_action",
+	// "agent.session.failed", "agent.session.environment.pending",
+	// "agent.session.environment.connected", "agent.session.environment.disconnected",
+	// "agent.session.environment.failed", "agent.session.subagent.created",
+	// "agent.session.subagent.active", "agent.session.subagent.closed",
+	// "agent.session.turn.item.done", "agent.session.turn.content_part.added",
+	// "agent.session.turn.content_part.done", "agent.session.turn.output_text.delta",
+	// "agent.session.turn.output_text.done",
 	// "agent.session.turn.reasoning_summary_part.added",
 	// "agent.session.turn.reasoning_summary_part.done",
 	// "agent.session.turn.reasoning_summary_text.delta",
@@ -2683,6 +2739,7 @@ func (AgentSessionTurnFailedEvent) implAgentSessionEventUnion()                 
 func (AgentSessionTurnCancelledEvent) implAgentSessionEventUnion()                 {}
 func (AgentSessionTurnItemAddedEvent) implAgentSessionEventUnion()                 {}
 func (AgentSessionIdleEvent) implAgentSessionEventUnion()                          {}
+func (AgentSessionBudgetReachedEvent) implAgentSessionEventUnion()                 {}
 func (AgentSessionInProgressEvent) implAgentSessionEventUnion()                    {}
 func (AgentSessionRequiresActionEvent) implAgentSessionEventUnion()                {}
 func (AgentSessionFailedEvent) implAgentSessionEventUnion()                        {}
@@ -2720,6 +2777,7 @@ func (AgentSessionTurnReasoningSummaryTextDoneEvent) implAgentSessionEventUnion(
 //	case openai.AgentSessionTurnCancelledEvent:
 //	case openai.AgentSessionTurnItemAddedEvent:
 //	case openai.AgentSessionIdleEvent:
+//	case openai.AgentSessionBudgetReachedEvent:
 //	case openai.AgentSessionInProgressEvent:
 //	case openai.AgentSessionRequiresActionEvent:
 //	case openai.AgentSessionFailedEvent:
@@ -2772,6 +2830,8 @@ func (u AgentSessionEventUnion) AsAny() anyAgentSessionEvent {
 		return u.AsAgentSessionTurnItemAdded()
 	case "agent.session.idle":
 		return u.AsAgentSessionIdle()
+	case "agent.session.budget_reached":
+		return u.AsAgentSessionBudgetReached()
 	case "agent.session.in_progress":
 		return u.AsAgentSessionInProgress()
 	case "agent.session.requires_action":
@@ -2880,6 +2940,11 @@ func (u AgentSessionEventUnion) AsAgentSessionTurnItemAdded() (v AgentSessionTur
 }
 
 func (u AgentSessionEventUnion) AsAgentSessionIdle() (v AgentSessionIdleEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AgentSessionEventUnion) AsAgentSessionBudgetReached() (v AgentSessionBudgetReachedEvent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -9251,13 +9316,14 @@ func (r *SessionError) UnmarshalJSON(data []byte) error {
 type SessionTurnError struct {
 	// A stable, machine-readable failure category.
 	//
-	// Any of "context_length_exceeded", "max_output_tokens", "usage_limit_exceeded",
+	// Any of "context_length_exceeded", "max_output_tokens",
+	// "session_budget_exceeded", "usage_limit_exceeded",
 	// "api_key_spend_limit_exceeded", "project_spend_limit_exceeded",
 	// "organization_spend_limit_exceeded", "organization_usage_limit_exceeded",
 	// "billing_not_active", "credit_balance_exhausted", "rate_limit_exceeded",
 	// "flex_unavailable", "server_overloaded", "cyber_policy",
-	// "misalignment_policy_violation", "connection_failed", "server_error",
-	// "authentication_error", "invalid_request", "resource_not_found",
+	// "misalignment_policy_violation", "audio_input_unavailable", "connection_failed",
+	// "server_error", "authentication_error", "invalid_request", "resource_not_found",
 	// "sandbox_error", "executor_version_incompatible", "active_turn_not_steerable",
 	// "request_timeout", "internal_error".
 	Code SessionTurnErrorCode `json:"code" api:"required"`
@@ -9284,6 +9350,7 @@ type SessionTurnErrorCode string
 const (
 	SessionTurnErrorCodeContextLengthExceeded          SessionTurnErrorCode = "context_length_exceeded"
 	SessionTurnErrorCodeMaxOutputTokens                SessionTurnErrorCode = "max_output_tokens"
+	SessionTurnErrorCodeSessionBudgetExceeded          SessionTurnErrorCode = "session_budget_exceeded"
 	SessionTurnErrorCodeUsageLimitExceeded             SessionTurnErrorCode = "usage_limit_exceeded"
 	SessionTurnErrorCodeAPIKeySpendLimitExceeded       SessionTurnErrorCode = "api_key_spend_limit_exceeded"
 	SessionTurnErrorCodeProjectSpendLimitExceeded      SessionTurnErrorCode = "project_spend_limit_exceeded"
@@ -9296,6 +9363,7 @@ const (
 	SessionTurnErrorCodeServerOverloaded               SessionTurnErrorCode = "server_overloaded"
 	SessionTurnErrorCodeCyberPolicy                    SessionTurnErrorCode = "cyber_policy"
 	SessionTurnErrorCodeMisalignmentPolicyViolation    SessionTurnErrorCode = "misalignment_policy_violation"
+	SessionTurnErrorCodeAudioInputUnavailable          SessionTurnErrorCode = "audio_input_unavailable"
 	SessionTurnErrorCodeConnectionFailed               SessionTurnErrorCode = "connection_failed"
 	SessionTurnErrorCodeServerError                    SessionTurnErrorCode = "server_error"
 	SessionTurnErrorCodeAuthenticationError            SessionTurnErrorCode = "authentication_error"
