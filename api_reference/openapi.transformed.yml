@@ -837,14 +837,14 @@ paths:
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -H "Content-Type: multipart/form-data" \
                 -F file="@/path/to/file/audio.mp3" \
-                -F model="gpt-4o-transcribe"
+                -F model="gpt-transcribe"
             python: |
               from openai import OpenAI
               client = OpenAI()
 
               audio_file = open("speech.mp3", "rb")
               transcript = client.audio.transcriptions.create(
-                model="gpt-4o-transcribe",
+                model="gpt-transcribe",
                 file=audio_file
               )
             javascript: |
@@ -856,7 +856,7 @@ paths:
               async function main() {
                 const transcription = await openai.audio.transcriptions.create({
                   file: fs.createReadStream("audio.mp3"),
-                  model: "gpt-4o-transcribe",
+                  model: "gpt-transcribe",
                 });
 
                 console.log(transcription.text);
@@ -869,7 +869,7 @@ paths:
               string audioFilePath = "audio.mp3";
 
               AudioClient client = new(
-                  model: "gpt-4o-transcribe",
+                  model: "gpt-transcribe",
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
@@ -988,7 +988,7 @@ paths:
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -H "Content-Type: multipart/form-data" \
                 -F file="@/path/to/file/audio.mp3" \
-                -F model="gpt-4o-mini-transcribe" \
+                -F model="gpt-transcribe" \
                 -F stream=true
             python: |
               from openai import OpenAI
@@ -997,7 +997,7 @@ paths:
               audio_file = open("speech.mp3", "rb")
               stream = client.audio.transcriptions.create(
                 file=audio_file,
-                model="gpt-4o-mini-transcribe",
+                model="gpt-transcribe",
                 stream=True
               )
 
@@ -1011,7 +1011,7 @@ paths:
 
               const stream = await openai.audio.transcriptions.create({
                 file: fs.createReadStream("audio.mp3"),
-                model: "gpt-4o-mini-transcribe",
+                model: "gpt-transcribe",
                 stream: true,
               });
 
@@ -1019,69 +1019,69 @@ paths:
                 console.log(event);
               }
           response: |
-            data: {"type":"transcript.text.delta","delta":"I","logprobs":[{"token":"I","logprob":-0.00007588794,"bytes":[73]}]}
+            data: {"type":"transcript.text.delta","delta":"I"}
 
-            data: {"type":"transcript.text.delta","delta":" see","logprobs":[{"token":" see","logprob":-3.1281633e-7,"bytes":[32,115,101,101]}]}
+            data: {"type":"transcript.text.delta","delta":" see"}
 
-            data: {"type":"transcript.text.delta","delta":" skies","logprobs":[{"token":" skies","logprob":-2.3392786e-6,"bytes":[32,115,107,105,101,115]}]}
+            data: {"type":"transcript.text.delta","delta":" skies"}
 
-            data: {"type":"transcript.text.delta","delta":" of","logprobs":[{"token":" of","logprob":-3.1281633e-7,"bytes":[32,111,102]}]}
+            data: {"type":"transcript.text.delta","delta":" of"}
 
-            data: {"type":"transcript.text.delta","delta":" blue","logprobs":[{"token":" blue","logprob":-1.0280384e-6,"bytes":[32,98,108,117,101]}]}
+            data: {"type":"transcript.text.delta","delta":" blue"}
 
-            data: {"type":"transcript.text.delta","delta":" and","logprobs":[{"token":" and","logprob":-0.0005108566,"bytes":[32,97,110,100]}]}
+            data: {"type":"transcript.text.delta","delta":" and"}
 
-            data: {"type":"transcript.text.delta","delta":" clouds","logprobs":[{"token":" clouds","logprob":-1.9361265e-7,"bytes":[32,99,108,111,117,100,115]}]}
+            data: {"type":"transcript.text.delta","delta":" clouds"}
 
-            data: {"type":"transcript.text.delta","delta":" of","logprobs":[{"token":" of","logprob":-1.9361265e-7,"bytes":[32,111,102]}]}
+            data: {"type":"transcript.text.delta","delta":" of"}
 
-            data: {"type":"transcript.text.delta","delta":" white","logprobs":[{"token":" white","logprob":-7.89631e-7,"bytes":[32,119,104,105,116,101]}]}
+            data: {"type":"transcript.text.delta","delta":" white"}
 
-            data: {"type":"transcript.text.delta","delta":",","logprobs":[{"token":",","logprob":-0.0014890312,"bytes":[44]}]}
+            data: {"type":"transcript.text.delta","delta":","}
 
-            data: {"type":"transcript.text.delta","delta":" the","logprobs":[{"token":" the","logprob":-0.0110956915,"bytes":[32,116,104,101]}]}
+            data: {"type":"transcript.text.delta","delta":" the"}
 
-            data: {"type":"transcript.text.delta","delta":" bright","logprobs":[{"token":" bright","logprob":0.0,"bytes":[32,98,114,105,103,104,116]}]}
+            data: {"type":"transcript.text.delta","delta":" bright"}
 
-            data: {"type":"transcript.text.delta","delta":" blessed","logprobs":[{"token":" blessed","logprob":-0.000045848617,"bytes":[32,98,108,101,115,115,101,100]}]}
+            data: {"type":"transcript.text.delta","delta":" blessed"}
 
-            data: {"type":"transcript.text.delta","delta":" days","logprobs":[{"token":" days","logprob":-0.000010802739,"bytes":[32,100,97,121,115]}]}
+            data: {"type":"transcript.text.delta","delta":" days"}
 
-            data: {"type":"transcript.text.delta","delta":",","logprobs":[{"token":",","logprob":-0.00001700133,"bytes":[44]}]}
+            data: {"type":"transcript.text.delta","delta":","}
 
-            data: {"type":"transcript.text.delta","delta":" the","logprobs":[{"token":" the","logprob":-0.0000118755715,"bytes":[32,116,104,101]}]}
+            data: {"type":"transcript.text.delta","delta":" the"}
 
-            data: {"type":"transcript.text.delta","delta":" dark","logprobs":[{"token":" dark","logprob":-5.5122365e-7,"bytes":[32,100,97,114,107]}]}
+            data: {"type":"transcript.text.delta","delta":" dark"}
 
-            data: {"type":"transcript.text.delta","delta":" sacred","logprobs":[{"token":" sacred","logprob":-5.4385737e-6,"bytes":[32,115,97,99,114,101,100]}]}
+            data: {"type":"transcript.text.delta","delta":" sacred"}
 
-            data: {"type":"transcript.text.delta","delta":" nights","logprobs":[{"token":" nights","logprob":-4.00813e-6,"bytes":[32,110,105,103,104,116,115]}]}
+            data: {"type":"transcript.text.delta","delta":" nights"}
 
-            data: {"type":"transcript.text.delta","delta":",","logprobs":[{"token":",","logprob":-0.0036910512,"bytes":[44]}]}
+            data: {"type":"transcript.text.delta","delta":","}
 
-            data: {"type":"transcript.text.delta","delta":" and","logprobs":[{"token":" and","logprob":-0.0031903093,"bytes":[32,97,110,100]}]}
+            data: {"type":"transcript.text.delta","delta":" and"}
 
-            data: {"type":"transcript.text.delta","delta":" I","logprobs":[{"token":" I","logprob":-1.504853e-6,"bytes":[32,73]}]}
+            data: {"type":"transcript.text.delta","delta":" I"}
 
-            data: {"type":"transcript.text.delta","delta":" think","logprobs":[{"token":" think","logprob":-4.3202e-7,"bytes":[32,116,104,105,110,107]}]}
+            data: {"type":"transcript.text.delta","delta":" think"}
 
-            data: {"type":"transcript.text.delta","delta":" to","logprobs":[{"token":" to","logprob":-1.9361265e-7,"bytes":[32,116,111]}]}
+            data: {"type":"transcript.text.delta","delta":" to"}
 
-            data: {"type":"transcript.text.delta","delta":" myself","logprobs":[{"token":" myself","logprob":-1.7432603e-6,"bytes":[32,109,121,115,101,108,102]}]}
+            data: {"type":"transcript.text.delta","delta":" myself"}
 
-            data: {"type":"transcript.text.delta","delta":",","logprobs":[{"token":",","logprob":-0.29254505,"bytes":[44]}]}
+            data: {"type":"transcript.text.delta","delta":","}
 
-            data: {"type":"transcript.text.delta","delta":" what","logprobs":[{"token":" what","logprob":-0.016815351,"bytes":[32,119,104,97,116]}]}
+            data: {"type":"transcript.text.delta","delta":" what"}
 
-            data: {"type":"transcript.text.delta","delta":" a","logprobs":[{"token":" a","logprob":-3.1281633e-7,"bytes":[32,97]}]}
+            data: {"type":"transcript.text.delta","delta":" a"}
 
-            data: {"type":"transcript.text.delta","delta":" wonderful","logprobs":[{"token":" wonderful","logprob":-2.1008714e-6,"bytes":[32,119,111,110,100,101,114,102,117,108]}]}
+            data: {"type":"transcript.text.delta","delta":" wonderful"}
 
-            data: {"type":"transcript.text.delta","delta":" world","logprobs":[{"token":" world","logprob":-8.180258e-6,"bytes":[32,119,111,114,108,100]}]}
+            data: {"type":"transcript.text.delta","delta":" world"}
 
-            data: {"type":"transcript.text.delta","delta":".","logprobs":[{"token":".","logprob":-0.014231676,"bytes":[46]}]}
+            data: {"type":"transcript.text.delta","delta":"."}
 
-            data: {"type":"transcript.text.done","text":"I see skies of blue and clouds of white, the bright blessed days, the dark sacred nights, and I think to myself, what a wonderful world.","logprobs":[{"token":"I","logprob":-0.00007588794,"bytes":[73]},{"token":" see","logprob":-3.1281633e-7,"bytes":[32,115,101,101]},{"token":" skies","logprob":-2.3392786e-6,"bytes":[32,115,107,105,101,115]},{"token":" of","logprob":-3.1281633e-7,"bytes":[32,111,102]},{"token":" blue","logprob":-1.0280384e-6,"bytes":[32,98,108,117,101]},{"token":" and","logprob":-0.0005108566,"bytes":[32,97,110,100]},{"token":" clouds","logprob":-1.9361265e-7,"bytes":[32,99,108,111,117,100,115]},{"token":" of","logprob":-1.9361265e-7,"bytes":[32,111,102]},{"token":" white","logprob":-7.89631e-7,"bytes":[32,119,104,105,116,101]},{"token":",","logprob":-0.0014890312,"bytes":[44]},{"token":" the","logprob":-0.0110956915,"bytes":[32,116,104,101]},{"token":" bright","logprob":0.0,"bytes":[32,98,114,105,103,104,116]},{"token":" blessed","logprob":-0.000045848617,"bytes":[32,98,108,101,115,115,101,100]},{"token":" days","logprob":-0.000010802739,"bytes":[32,100,97,121,115]},{"token":",","logprob":-0.00001700133,"bytes":[44]},{"token":" the","logprob":-0.0000118755715,"bytes":[32,116,104,101]},{"token":" dark","logprob":-5.5122365e-7,"bytes":[32,100,97,114,107]},{"token":" sacred","logprob":-5.4385737e-6,"bytes":[32,115,97,99,114,101,100]},{"token":" nights","logprob":-4.00813e-6,"bytes":[32,110,105,103,104,116,115]},{"token":",","logprob":-0.0036910512,"bytes":[44]},{"token":" and","logprob":-0.0031903093,"bytes":[32,97,110,100]},{"token":" I","logprob":-1.504853e-6,"bytes":[32,73]},{"token":" think","logprob":-4.3202e-7,"bytes":[32,116,104,105,110,107]},{"token":" to","logprob":-1.9361265e-7,"bytes":[32,116,111]},{"token":" myself","logprob":-1.7432603e-6,"bytes":[32,109,121,115,101,108,102]},{"token":",","logprob":-0.29254505,"bytes":[44]},{"token":" what","logprob":-0.016815351,"bytes":[32,119,104,97,116]},{"token":" a","logprob":-3.1281633e-7,"bytes":[32,97]},{"token":" wonderful","logprob":-2.1008714e-6,"bytes":[32,119,111,110,100,101,114,102,117,108]},{"token":" world","logprob":-8.180258e-6,"bytes":[32,119,111,114,108,100]},{"token":".","logprob":-0.014231676,"bytes":[46]}],"usage":{"input_tokens":14,"input_token_details":{"text_tokens":0,"audio_tokens":14},"output_tokens":45,"total_tokens":59}}
+            data: {"type":"transcript.text.done","text":"I see skies of blue and clouds of white, the bright blessed days, the dark sacred nights, and I think to myself, what a wonderful world.","languages":[{"code":"en"}],"usage":{"type":"tokens","input_tokens":14,"input_token_details":{"text_tokens":0,"audio_tokens":14},"output_tokens":45,"total_tokens":59}}
         - title: Logprobs
           request:
             curl: |
@@ -2319,7 +2319,7 @@ paths:
                 {
                   "object": "chat.completion",
                   "id": "chatcmpl-AyPNinnUqUDYo9SAdA52NobMflmj2",
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "created": 1738960610,
                   "request_id": "req_ded8ab984ec4bf840f37566c1011c417",
                   "tool_choice": null,
@@ -2388,6 +2388,11 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateChatCompletionRequest'
+            example:
+              model: gpt-6.2-astra
+              messages:
+              - role: user
+                content: Say hello in one sentence.
       responses:
         '200':
           description: |
@@ -2468,7 +2473,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "messages": [
                     {
                       "role": "developer",
@@ -2485,7 +2490,7 @@ paths:
               client = OpenAI()
 
               completion = client.chat.completions.create(
-                model="gpt-6-astra",
+                model="gpt-6.2-astra",
                 messages=[
                   {"role": "developer", "content": "You are a helpful assistant."},
                   {"role": "user", "content": "Hello!"}
@@ -2501,7 +2506,7 @@ paths:
               async function main() {
                 const completion = await openai.chat.completions.create({
                   messages: [{ role: "developer", content: "You are a helpful assistant." }],
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   store: true,
                 });
 
@@ -2516,7 +2521,7 @@ paths:
               using OpenAI.Chat;
 
               ChatClient client = new(
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
@@ -2534,7 +2539,7 @@ paths:
               "id": "chatcmpl-B9MBs8CjcvOU2jLn4n570S5qMJKcT",
               "object": "chat.completion",
               "created": 1741569952,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "choices": [
                 {
                   "index": 0,
@@ -2572,7 +2577,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "messages": [
                     {
                       "role": "user",
@@ -2598,7 +2603,7 @@ paths:
               client = OpenAI()
 
               response = client.chat.completions.create(
-                  model="gpt-6-astra",
+                  model="gpt-6.2-astra",
                   messages=[
                       {
                           "role": "user",
@@ -2624,7 +2629,7 @@ paths:
 
               async function main() {
                 const response = await openai.chat.completions.create({
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   messages: [
                     {
                       role: "user",
@@ -2650,7 +2655,7 @@ paths:
               using OpenAI.Chat;
 
               ChatClient client = new(
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
@@ -2671,7 +2676,7 @@ paths:
               "id": "chatcmpl-B9MHDbslfkBeAs8l4bebGdFOJ6PeG",
               "object": "chat.completion",
               "created": 1741570283,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "choices": [
                 {
                   "index": 0,
@@ -2709,7 +2714,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "messages": [
                     {
                       "role": "developer",
@@ -2727,7 +2732,7 @@ paths:
               client = OpenAI()
 
               completion = client.chat.completions.create(
-                model="gpt-6-astra",
+                model="gpt-6.2-astra",
                 messages=[
                   {"role": "developer", "content": "You are a helpful assistant."},
                   {"role": "user", "content": "Hello!"}
@@ -2744,7 +2749,7 @@ paths:
 
               async function main() {
                 const completion = await openai.chat.completions.create({
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   messages: [
                     {"role": "developer", "content": "You are a helpful assistant."},
                     {"role": "user", "content": "Hello!"}
@@ -2767,7 +2772,7 @@ paths:
               using OpenAI.Chat;
 
               ChatClient client = new(
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
@@ -2787,13 +2792,13 @@ paths:
                   }
               }
           response: |+
-            data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1694268190,"model":"gpt-6-astra", "system_fingerprint": "fp_44709d6fcb", "choices":[{"index":0,"delta":{"role":"assistant","content":""},"logprobs":null,"finish_reason":null}]}
+            data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1694268190,"model":"gpt-6.2-astra", "system_fingerprint": "fp_44709d6fcb", "choices":[{"index":0,"delta":{"role":"assistant","content":""},"logprobs":null,"finish_reason":null}]}
 
-            data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1694268190,"model":"gpt-6-astra", "system_fingerprint": "fp_44709d6fcb", "choices":[{"index":0,"delta":{"content":"Hello"},"logprobs":null,"finish_reason":null}]}
+            data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1694268190,"model":"gpt-6.2-astra", "system_fingerprint": "fp_44709d6fcb", "choices":[{"index":0,"delta":{"content":"Hello"},"logprobs":null,"finish_reason":null}]}
 
             : Intermediate chat completion chunks omitted.
 
-            data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1694268190,"model":"gpt-6-astra", "system_fingerprint": "fp_44709d6fcb", "choices":[{"index":0,"delta":{},"logprobs":null,"finish_reason":"stop"}]}
+            data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1694268190,"model":"gpt-6.2-astra", "system_fingerprint": "fp_44709d6fcb", "choices":[{"index":0,"delta":{},"logprobs":null,"finish_reason":"stop"}]}
 
             data: [DONE]
 
@@ -2804,7 +2809,7 @@ paths:
               -H "Content-Type: application/json" \
               -H "Authorization: Bearer $OPENAI_API_KEY" \
               -d '{
-                "model": "gpt-6-astra",
+                "model": "gpt-5.6-terra",
                 "messages": [
                   {
                     "role": "user",
@@ -2834,7 +2839,8 @@ paths:
                     }
                   }
                 ],
-                "tool_choice": "auto"
+                "tool_choice": "auto",
+                "reasoning_effort": "none"
               }'
             python: |
               from openai import OpenAI
@@ -2862,10 +2868,11 @@ paths:
               ]
               messages = [{"role": "user", "content": "What's the weather like in Boston today?"}]
               completion = client.chat.completions.create(
-                model="gpt-6-astra",
+                model="gpt-5.6-terra",
                 messages=messages,
                 tools=tools,
-                tool_choice="auto"
+                tool_choice="auto",
+                reasoning_effort="none"
               )
 
               print(completion)
@@ -2898,10 +2905,11 @@ paths:
                 ];
 
                 const response = await openai.chat.completions.create({
-                  model: "gpt-6-astra",
+                  model: "gpt-5.6-terra",
                   messages: messages,
                   tools: tools,
                   tool_choice: "auto",
+                  reasoning_effort: "none",
                 });
 
                 console.log(response);
@@ -2915,7 +2923,7 @@ paths:
               using OpenAI.Chat;
 
               ChatClient client = new(
-                  model: "gpt-6-astra",
+                  model: "gpt-5.6-terra",
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
@@ -2952,6 +2960,7 @@ paths:
                       getCurrentWeatherTool
                   },
                   ToolChoice = ChatToolChoice.CreateAutoChoice(),
+                  ReasoningEffortLevel = ChatReasoningEffortLevel.None,
               };
 
               ChatCompletion completion = client.CompleteChat(messages, options);
@@ -2960,7 +2969,7 @@ paths:
               "id": "chatcmpl-abc123",
               "object": "chat.completion",
               "created": 1699896916,
-              "model": "gpt-6-astra",
+              "model": "gpt-5.6-terra",
               "choices": [
                 {
                   "index": 0,
@@ -3318,7 +3327,7 @@ paths:
             {
               "object": "chat.completion",
               "id": "chatcmpl-abc123",
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "created": 1738960610,
               "request_id": "req_ded8ab984ec4bf840f37566c1011c417",
               "tool_choice": null,
@@ -3427,7 +3436,7 @@ paths:
             {
               "object": "chat.completion",
               "id": "chatcmpl-AyPNinnUqUDYo9SAdA52NobMflmj2",
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "created": 1738960610,
               "request_id": "req_ded8ab984ec4bf840f37566c1011c417",
               "tool_choice": null,
@@ -5165,7 +5174,7 @@ paths:
                       "name": "Push Notification Summary Grader",
                       "id": "Push Notification Summary Grader-9b876f24-4762-4be9-aff4-db7a9b31c673",
                       "type": "label_model",
-                      "model": "o3-mini",
+                      "model": "gpt-4.1-mini-2025-04-14",
                       "input": [
                         {
                           "type": "message",
@@ -5255,7 +5264,7 @@ paths:
                       "testing_criteria": [
                         {
                           "type": "label_model",
-                          "model": "o3-mini",
+                          "model": "gpt-4.1-mini-2025-04-14",
                           "input": [
                             {
                               "role": "developer",
@@ -5291,7 +5300,7 @@ paths:
                 testing_criteria=[
                   {
                     "type": "label_model",
-                    "model": "o3-mini",
+                    "model": "gpt-4.1-mini-2025-04-14",
                     "input": [
                       {"role": "developer", "content": "Classify the sentiment of the following statement as one of 'positive', 'neutral', or 'negative'"},
                       {"role": "user", "content": "Statement: {{item.input}}"}
@@ -5317,7 +5326,7 @@ paths:
                 testing_criteria: [
                   {
                     type: "label_model",
-                    model: "o3-mini",
+                    model: "gpt-4.1-mini-2025-04-14",
                     input: [
                       { role: "developer", content: "Classify the sentiment of the following statement as one of 'positive', 'neutral', or 'negative'" },
                       { role: "user", content: "Statement: {{item.input}}" }
@@ -5358,7 +5367,7 @@ paths:
                 {
                   "name": "Example label grader",
                   "type": "label_model",
-                  "model": "o3-mini",
+                  "model": "gpt-4.1-mini-2025-04-14",
                   "input": [
                     {
                       "type": "message",
@@ -5793,8 +5802,8 @@ paths:
                   "eval_id": "eval_67e0c726d560819083f19a957c4c640b",
                   "report_url": "https://platform.openai.com/evaluations/eval_67e0c726d560819083f19a957c4c640b",
                   "status": "completed",
-                  "model": "o3-mini",
-                  "name": "bulk_with_negative_examples_o3-mini",
+                  "model": "gpt-4.1-mini-2025-04-14",
+                  "name": "bulk_with_negative_examples_gpt-4.1-mini-2025-04-14",
                   "created_at": 1742784467,
                   "result_counts": {
                     "total": 1,
@@ -5804,7 +5813,7 @@ paths:
                   },
                   "per_model_usage": [
                     {
-                      "model_name": "o3-mini",
+                      "model_name": "gpt-4.1-mini-2025-04-14",
                       "invocation_count": 1,
                       "prompt_tokens": 563,
                       "completion_tokens": 874,
@@ -5852,7 +5861,7 @@ paths:
                         }
                       ]
                     },
-                    "model": "o3-mini"
+                    "model": "gpt-4.1-mini-2025-04-14"
                   },
                   "error": null,
                   "metadata": {}
@@ -5918,14 +5927,14 @@ paths:
                 -X POST \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -H "Content-Type: application/json" \
-                -d '{"name":"gpt-6-astra","data_source":{"type":"completions","input_messages":{"type":"template","template":[{"role":"developer","content":"Categorize a given news headline into one of the following topics: Technology, Markets, World, Business, or Sports.\n\n# Steps\n\n1. Analyze the content of the news headline to understand its primary focus.\n2. Extract the subject matter, identifying any key indicators or keywords.\n3. Use the identified indicators to determine the most suitable category out of the five options: Technology, Markets, World, Business, or Sports.\n4. Ensure only one category is selected per headline.\n\n# Output Format\n\nRespond with the chosen category as a single word. For instance: \"Technology\", \"Markets\", \"World\", \"Business\", or \"Sports\".\n\n# Examples\n\n**Input**: \"Apple Unveils New iPhone Model, Featuring Advanced AI Features\"  \n**Output**: \"Technology\"\n\n**Input**: \"Global Stocks Mixed as Investors Await Central Bank Decisions\"  \n**Output**: \"Markets\"\n\n**Input**: \"War in Ukraine: Latest Updates on Negotiation Status\"  \n**Output**: \"World\"\n\n**Input**: \"Microsoft in Talks to Acquire Gaming Company for $2 Billion\"  \n**Output**: \"Business\"\n\n**Input**: \"Manchester United Secures Win in Premier League Football Match\"  \n**Output**: \"Sports\" \n\n# Notes\n\n- If the headline appears to fit into more than one category, choose the most dominant theme.\n- Keywords or phrases such as \"stocks\", \"company acquisition\", \"match\", or technological brands can be good indicators for classification.\n"} , {"role":"user","content":"{{item.input}}"}]} ,"sampling_params":{"max_completions_tokens":2048},"model":"gpt-6-astra","source":{"type":"file_content","content":[{"item":{"input":"Tech Company Launches Advanced Artificial Intelligence Platform","ground_truth":"Technology"}}]}}}'
+                -d '{"name":"gpt-4.1-mini-2025-04-14","data_source":{"type":"completions","input_messages":{"type":"template","template":[{"role":"developer","content":"Categorize a given news headline into one of the following topics: Technology, Markets, World, Business, or Sports.\n\n# Steps\n\n1. Analyze the content of the news headline to understand its primary focus.\n2. Extract the subject matter, identifying any key indicators or keywords.\n3. Use the identified indicators to determine the most suitable category out of the five options: Technology, Markets, World, Business, or Sports.\n4. Ensure only one category is selected per headline.\n\n# Output Format\n\nRespond with the chosen category as a single word. For instance: \"Technology\", \"Markets\", \"World\", \"Business\", or \"Sports\".\n\n# Examples\n\n**Input**: \"Apple Unveils New iPhone Model, Featuring Advanced AI Features\"  \n**Output**: \"Technology\"\n\n**Input**: \"Global Stocks Mixed as Investors Await Central Bank Decisions\"  \n**Output**: \"Markets\"\n\n**Input**: \"War in Ukraine: Latest Updates on Negotiation Status\"  \n**Output**: \"World\"\n\n**Input**: \"Microsoft in Talks to Acquire Gaming Company for $2 Billion\"  \n**Output**: \"Business\"\n\n**Input**: \"Manchester United Secures Win in Premier League Football Match\"  \n**Output**: \"Sports\" \n\n# Notes\n\n- If the headline appears to fit into more than one category, choose the most dominant theme.\n- Keywords or phrases such as \"stocks\", \"company acquisition\", \"match\", or technological brands can be good indicators for classification.\n"} , {"role":"user","content":"{{item.input}}"}]} ,"sampling_params":{"max_completions_tokens":2048},"model":"gpt-4.1-mini-2025-04-14","source":{"type":"file_content","content":[{"item":{"input":"Tech Company Launches Advanced Artificial Intelligence Platform","ground_truth":"Technology"}}]}}}'
             python: |
               from openai import OpenAI
               client = OpenAI()
 
               run = client.evals.runs.create(
                 "eval_67e579652b548190aaa83ada4b125f47",
-                name="gpt-6-astra",
+                name="gpt-4.1-mini-2025-04-14",
                 data_source={
                   "type": "completions",
                   "input_messages": {
@@ -5944,7 +5953,7 @@ paths:
                   "sampling_params": {
                     "max_completions_tokens": 2048
                   },
-                  "model": "gpt-6-astra",
+                  "model": "gpt-4.1-mini-2025-04-14",
                   "source": {
                     "type": "file_content",
                     "content": [
@@ -5967,7 +5976,7 @@ paths:
               const run = await openai.evals.runs.create(
                 "eval_67e579652b548190aaa83ada4b125f47",
                 {
-                  name: "gpt-6-astra",
+                  name: "gpt-4.1-mini-2025-04-14",
                   data_source: {
                     type: "completions",
                     input_messages: {
@@ -5986,7 +5995,7 @@ paths:
                     sampling_params: {
                       max_completions_tokens: 2048
                     },
-                    model: "gpt-6-astra",
+                    model: "gpt-4.1-mini-2025-04-14",
                     source: {
                       type: "file_content",
                       content: [
@@ -6009,8 +6018,8 @@ paths:
               "eval_id": "eval_67e579652b548190aaa83ada4b125f47",
               "report_url": "https://platform.openai.com/evaluations/eval_67e579652b548190aaa83ada4b125f47&run_id=evalrun_67e57965b480819094274e3a32235e4c",
               "status": "queued",
-              "model": "gpt-6-astra",
-              "name": "gpt-6-astra",
+              "model": "gpt-4.1-mini-2025-04-14",
+              "name": "gpt-4.1-mini-2025-04-14",
               "created_at": 1743092069,
               "result_counts": {
                 "total": 0,
@@ -6054,7 +6063,7 @@ paths:
                     }
                   ]
                 },
-                "model": "gpt-6-astra",
+                "model": "gpt-4.1-mini-2025-04-14",
                 "sampling_params": {
                   "max_completions_tokens": 2048
                 }
@@ -6139,8 +6148,8 @@ paths:
               "eval_id": "eval_67abd54d9b0081909a86353f6fb9317a",
               "report_url": "https://platform.openai.com/evaluations/eval_67abd54d9b0081909a86353f6fb9317a?run_id=evalrun_67abd54d60ec8190832b46859da808f7",
               "status": "queued",
-              "model": "gpt-6-astra",
-              "name": "gpt-6-astra",
+              "model": "gpt-4.1-mini-2025-04-14",
+              "name": "gpt-4.1-mini-2025-04-14",
               "created_at": 1743092069,
               "result_counts": {
                 "total": 0,
@@ -6268,7 +6277,7 @@ paths:
                     }
                   ]
                 },
-                "model": "gpt-6-astra",
+                "model": "gpt-4.1-mini-2025-04-14",
                 "sampling_params": {
                   "max_completions_tokens": 2048
                 }
@@ -6428,8 +6437,8 @@ paths:
               "eval_id": "eval_67abd54d9b0081909a86353f6fb9317a",
               "report_url": "https://platform.openai.com/evaluations/eval_67abd54d9b0081909a86353f6fb9317a?run_id=evalrun_67abd54d60ec8190832b46859da808f7",
               "status": "canceled",
-              "model": "gpt-6-astra",
-              "name": "gpt-6-astra",
+              "model": "gpt-4.1-mini-2025-04-14",
+              "name": "gpt-4.1-mini-2025-04-14",
               "created_at": 1743092069,
               "result_counts": {
                 "total": 0,
@@ -6557,7 +6566,7 @@ paths:
                     }
                   ]
                 },
-                "model": "gpt-6-astra",
+                "model": "gpt-4.1-mini-2025-04-14",
                 "sampling_params": {
                   "max_completions_tokens": 2048
                 }
@@ -6720,7 +6729,7 @@ paths:
                       }
                     ],
                     "finish_reason": "stop",
-                    "model": "gpt-6-astra",
+                    "model": "gpt-4.1-mini-2025-04-14",
                     "usage": {
                       "total_tokens": 325,
                       "completion_tokens": 2,
@@ -6867,7 +6876,7 @@ paths:
                   }
                 ],
                 "finish_reason": "stop",
-                "model": "gpt-6-astra",
+                "model": "gpt-4.1-mini-2025-04-14",
                 "usage": {
                   "total_tokens": 325,
                   "completion_tokens": 2,
@@ -7375,7 +7384,7 @@ paths:
                         ]
                       }
                     ],
-                    "model": "gpt-5-mini",
+                    "model": "gpt-4.1-mini-2025-04-14",
                     "sampling_params": {
                       "temperature": 1,
                       "top_p": 1,
@@ -7406,7 +7415,7 @@ paths:
                       ],
                     }
                   ],
-                  "model": "gpt-5-mini",
+                  "model": "gpt-4.1-mini-2025-04-14",
                   "sampling_params": {"temperature": 1, "top_p": 1, "seed": 42},
                 },
                 item={"reference_answer": "fuzzy wuzzy was a bear"},
@@ -7433,7 +7442,7 @@ paths:
                       ],
                     },
                   ],
-                  model: "gpt-5-mini",
+                  model: "gpt-4.1-mini-2025-04-14",
                   sampling_params: { temperature: 1, top_p: 1, seed: 42 },
                 },
                 item: { reference_answer: "fuzzy wuzzy was a bear" },
@@ -7470,11 +7479,11 @@ paths:
                   "completion_tokens": 134,
                   "cached_tokens": 0
                 },
-                "sampled_model_name": "gpt-5-mini"
+                "sampled_model_name": "gpt-4.1-mini-2025-04-14"
               },
               "sub_rewards": {},
               "model_grader_token_usage_per_model": {
-                "gpt-5-mini": {
+                "gpt-4.1-mini-2025-04-14": {
                   "prompt_tokens": 190,
                   "total_tokens": 324,
                   "completion_tokens": 134,
@@ -7509,7 +7518,7 @@ paths:
                         ]
                       }
                     ],
-                    "model": "gpt-5-mini",
+                    "model": "gpt-4.1-mini-2025-04-14",
                     "sampling_params": {
                       "temperature": 0.2
                     }
@@ -7693,7 +7702,7 @@ paths:
         examples:
           request:
             curl: |
-              curl https://api.openai.com/v1/fine_tuning/checkpoints/ft:gpt-4o-mini-2024-07-18:org:weather:B7R9VjQd/permissions \
+              curl https://api.openai.com/v1/fine_tuning/checkpoints/ft:gpt-4.1-mini-2025-04-14:org:weather:B7R9VjQd/permissions \
                 -H "Authorization: Bearer $OPENAI_API_KEY"
           response: |
             {
@@ -7731,7 +7740,7 @@ paths:
         required: true
         schema:
           type: string
-          example: ft:gpt-4o-mini-2024-07-18:org:weather:B7R9VjQd
+          example: ft:gpt-4.1-mini-2025-04-14:org:weather:B7R9VjQd
         description: |
           The ID of the fine-tuned model checkpoint to create a permission for.
       requestBody:
@@ -7770,7 +7779,7 @@ paths:
         examples:
           request:
             curl: |
-              curl https://api.openai.com/v1/fine_tuning/checkpoints/ft:gpt-4o-mini-2024-07-18:org:weather:B7R9VjQd/permissions \
+              curl https://api.openai.com/v1/fine_tuning/checkpoints/ft:gpt-4.1-mini-2025-04-14:org:weather:B7R9VjQd/permissions \
                 -H "Authorization: Bearer $OPENAI_API_KEY"
                 -d '{"project_ids": ["proj_abGMw1llN8IrBb6SvvY5A1iH"]}'
           response: |
@@ -7804,7 +7813,7 @@ paths:
         required: true
         schema:
           type: string
-          example: ft:gpt-4o-mini-2024-07-18:org:weather:B7R9VjQd
+          example: ft:gpt-4.1-mini-2025-04-14:org:weather:B7R9VjQd
         description: |
           The ID of the fine-tuned model checkpoint to delete a permission for.
       - in: path
@@ -7845,7 +7854,7 @@ paths:
         examples:
           request:
             curl: |
-              curl https://api.openai.com/v1/fine_tuning/checkpoints/ft:gpt-4o-mini-2024-07-18:org:weather:B7R9VjQd/permissions/cp_zc4Q7MP6XxulcVzj4MZdwsAB \
+              curl https://api.openai.com/v1/fine_tuning/checkpoints/ft:gpt-4.1-mini-2025-04-14:org:weather:B7R9VjQd/permissions/cp_zc4Q7MP6XxulcVzj4MZdwsAB \
                 -H "Authorization: Bearer $OPENAI_API_KEY"
           response: |
             {
@@ -7901,7 +7910,7 @@ paths:
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
                   "training_file": "file-BK7bzQj3FfZFXr7DbL6xJwfo",
-                  "model": "gpt-4o-mini"
+                  "model": "gpt-4.1-mini-2025-04-14"
                 }'
             python: |
               from openai import OpenAI
@@ -7909,7 +7918,7 @@ paths:
 
               client.fine_tuning.jobs.create(
                 training_file="file-abc123",
-                model="gpt-4o-mini"
+                model="gpt-4.1-mini-2025-04-14"
               )
             javascript: |
               import OpenAI from "openai";
@@ -7933,7 +7942,7 @@ paths:
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
                   "training_file": "file-abc123",
-                  "model": "gpt-4o-mini",
+                  "model": "gpt-4.1-mini-2025-04-14",
                   "method": {
                     "type": "supervised",
                     "supervised": {
@@ -7951,7 +7960,7 @@ paths:
 
               client.fine_tuning.jobs.create(
                 training_file="file-abc123",
-                model="gpt-4o-mini",
+                model="gpt-4.1-mini-2025-04-14",
                 method={
                   "type": "supervised",
                   "supervised": SupervisedMethod(
@@ -7970,7 +7979,7 @@ paths:
               async function main() {
                 const fineTune = await openai.fineTuning.jobs.create({
                   training_file: "file-abc123",
-                  model: "gpt-4o-mini",
+                  model: "gpt-4.1-mini-2025-04-14",
                   method: {
                     type: "supervised",
                     supervised: {
@@ -7994,7 +8003,7 @@ paths:
                 -d '{
                   "training_file": "file-abc123",
                   "validation_file": "file-abc123",
-                  "model": "gpt-4o-mini",
+                  "model": "gpt-4.1-mini-2025-04-14",
                   "method": {
                     "type": "dpo",
                     "dpo": {
@@ -8013,7 +8022,7 @@ paths:
               client.fine_tuning.jobs.create(
                 training_file="file-abc",
                 validation_file="file-123",
-                model="gpt-4o-mini",
+                model="gpt-4.1-mini-2025-04-14",
                 method={
                   "type": "dpo",
                   "dpo": DpoMethod(
@@ -8021,7 +8030,7 @@ paths:
                   )
                 }
               )
-        - title: Reinforcement
+        - title: Reinforcement (historical)
           request:
             curl: |
               curl https://api.openai.com/v1/fine_tuning/jobs \
@@ -8047,7 +8056,34 @@ paths:
                     }
                   }
                 }'
-            python: "from openai import OpenAI\nfrom openai.types.fine_tuning import ReinforcementMethod, ReinforcementHyperparameters\nfrom openai.types.graders import StringCheckGrader\n\nclient = OpenAI()\n\nclient.fine_tuning.jobs.create(\n  training_file=\"file-abc\",\n  validation_file=\"file-123\",\n  model=\"o4-mini\",\n  method={\n    \"type\": \"reinforcement\",\n    \"reinforcement\": ReinforcementMethod(\n      grader=StringCheckGrader(\n        name=\"Example string check grader\",\n        type=\"string_check\",\n        input=\"{{item.label}}\",\n        operation=\"eq\",\n        reference=\"{{sample.output_text}}\"\n      ),\n      hyperparameters=ReinforcementHyperparameters(\n          reasoning_effort=\"medium\",\n      )\n    )\n  }, \n  seed=42,\n)\n"
+            python: |
+              from openai import OpenAI
+              from openai.types.fine_tuning import ReinforcementMethod, ReinforcementHyperparameters
+              from openai.types.graders import StringCheckGrader
+
+              client = OpenAI()
+
+              client.fine_tuning.jobs.create(
+                training_file="file-abc",
+                validation_file="file-123",
+                model="o4-mini",
+                method={
+                  "type": "reinforcement",
+                  "reinforcement": ReinforcementMethod(
+                    grader=StringCheckGrader(
+                      name="Example string check grader",
+                      type="string_check",
+                      input="{{item.label}}",
+                      operation="eq",
+                      reference="{{sample.output_text}}"
+                    ),
+                    hyperparameters=ReinforcementHyperparameters(
+                        reasoning_effort="medium",
+                    )
+                  )
+                },
+                seed=42,
+              )
         - title: Validation file
           request:
             curl: |
@@ -8057,7 +8093,7 @@ paths:
                 -d '{
                   "training_file": "file-abc123",
                   "validation_file": "file-abc123",
-                  "model": "gpt-4o-mini"
+                  "model": "gpt-4.1-mini-2025-04-14"
                 }'
             python: |
               from openai import OpenAI
@@ -8066,7 +8102,7 @@ paths:
               client.fine_tuning.jobs.create(
                 training_file="file-abc123",
                 validation_file="file-def456",
-                model="gpt-4o-mini"
+                model="gpt-4.1-mini-2025-04-14"
               )
             javascript: |
               import OpenAI from "openai";
@@ -8092,7 +8128,7 @@ paths:
                 -d '{
                   "training_file": "file-abc123",
                   "validation_file": "file-abc123",
-                  "model": "gpt-4o-mini",
+                  "model": "gpt-4.1-mini-2025-04-14",
                   "integrations": [
                     {
                       "type": "wandb",
@@ -8193,7 +8229,7 @@ paths:
                 {
                   "object": "fine_tuning.job",
                   "id": "ftjob-abc123",
-                  "model": "gpt-4o-mini-2024-07-18",
+                  "model": "gpt-4.1-mini-2025-04-14",
                   "created_at": 1721764800,
                   "fine_tuned_model": null,
                   "organization_id": "org-123",
@@ -8424,7 +8460,7 @@ paths:
                   "object": "fine_tuning.job.checkpoint",
                   "id": "ftckpt_zc4Q7MP6XxulcVzj4MZdwsAB",
                   "created_at": 1721764867,
-                  "fine_tuned_model_checkpoint": "ft:gpt-4o-mini-2024-07-18:my-org:custom-suffix:96olL566:ckpt-step-2000",
+                  "fine_tuned_model_checkpoint": "ft:gpt-4.1-mini-2025-04-14:my-org:custom-suffix:96olL566:ckpt-step-2000",
                   "metrics": {
                     "full_valid_loss": 0.134,
                     "full_valid_mean_token_accuracy": 0.874
@@ -8436,7 +8472,7 @@ paths:
                   "object": "fine_tuning.job.checkpoint",
                   "id": "ftckpt_enQCFmOTGj3syEpYVhBRLTSy",
                   "created_at": 1721764800,
-                  "fine_tuned_model_checkpoint": "ft:gpt-4o-mini-2024-07-18:my-org:custom-suffix:7q8mpxmy:ckpt-step-1000",
+                  "fine_tuned_model_checkpoint": "ft:gpt-4.1-mini-2025-04-14:my-org:custom-suffix:7q8mpxmy:ckpt-step-1000",
                   "metrics": {
                     "full_valid_loss": 0.167,
                     "full_valid_mean_token_accuracy": 0.781
@@ -8551,7 +8587,7 @@ paths:
                   "id": "ft-event-tyiGuB72evQncpH87xe505Sv",
                   "created_at": 1721764800,
                   "level": "info",
-                  "message": "New fine-tuned model created: ft:gpt-4o-mini:openai::7p4lURel",
+                  "message": "New fine-tuned model created: ft:gpt-4.1-mini-2025-04-14:openai::7p4lURel",
                   "data": null,
                   "type": "message"
                 }
@@ -8701,6 +8737,12 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/CreateImageEditRequest'
+            example:
+              model: gpt-image-2.6-flare
+              prompt: Add a watercolor effect to this image
+              image: <binary image file>
+              size: 1024x1024
+              quality: high
       responses:
         '200':
           description: OK
@@ -8749,7 +8791,7 @@ paths:
                 -o >(jq -r '.data[0].b64_json' | base64 --decode > gift-basket.png) \
                 -X POST "https://api.openai.com/v1/images/edits" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
-                -F "model=gpt-image-1.5" \
+                -F "model=gpt-image-2.6-flare" \
                 -F "image[]=@body-lotion.png" \
                 -F "image[]=@bath-bomb.png" \
                 -F "image[]=@incense-kit.png" \
@@ -8767,7 +8809,7 @@ paths:
               """
 
               result = client.images.edit(
-                  model="gpt-image-1.5",
+                  model="gpt-image-2.6-flare",
                   image=[
                       open("body-lotion.png", "rb"),
                       open("bath-bomb.png", "rb"),
@@ -8805,7 +8847,7 @@ paths:
               );
 
               const rsp = await client.images.edit({
-                  model: "gpt-image-1.5",
+                  model: "gpt-image-2.6-flare",
                   image: images,
                   prompt: "Create a lovely gift basket with these four items in it",
               });
@@ -8819,7 +8861,7 @@ paths:
             curl: |
               curl -s -N -X POST "https://api.openai.com/v1/images/edits" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
-                -F "model=gpt-image-1.5" \
+                -F "model=gpt-image-2.6-flare" \
                 -F "image[]=@body-lotion.png" \
                 -F "image[]=@bath-bomb.png" \
                 -F "image[]=@incense-kit.png" \
@@ -8838,7 +8880,7 @@ paths:
               """
 
               stream = client.images.edit(
-                  model="gpt-image-1.5",
+                  model="gpt-image-2.6-flare",
                   image=[
                       open("body-lotion.png", "rb"),
                       open("bath-bomb.png", "rb"),
@@ -8873,7 +8915,7 @@ paths:
               );
 
               const stream = await client.images.edit({
-                  model: "gpt-image-1.5",
+                  model: "gpt-image-2.6-flare",
                   image: images,
                   prompt: "Create a lovely gift basket with these four items in it",
                   stream: true,
@@ -8902,6 +8944,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateImageRequest'
+            example:
+              model: gpt-image-2.6-flare
+              prompt: A cute baby sea otter
       responses:
         '200':
           description: OK
@@ -8950,7 +8995,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-image-2.5-flare",
+                  "model": "gpt-image-2.6-flare",
                   "prompt": "A cute baby sea otter",
                   "n": 1,
                   "size": "1024x1024"
@@ -8961,7 +9006,7 @@ paths:
               client = OpenAI()
 
               img = client.images.generate(
-                  model="gpt-image-2.5-flare",
+                  model="gpt-image-2.6-flare",
                   prompt="A cute baby sea otter",
                   n=1,
                   size="1024x1024"
@@ -8977,7 +9022,7 @@ paths:
               const client = new OpenAI();
 
               const img = await client.images.generate({
-                model: "gpt-image-2.5-flare",
+                model: "gpt-image-2.6-flare",
                 prompt: "A cute baby sea otter",
                 n: 1,
                 size: "1024x1024"
@@ -9010,7 +9055,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-image-2.5-flare",
+                  "model": "gpt-image-2.6-flare",
                   "prompt": "A cute baby sea otter",
                   "n": 1,
                   "size": "1024x1024",
@@ -9023,7 +9068,7 @@ paths:
               client = OpenAI()
 
               stream = client.images.generate(
-                  model="gpt-image-2.5-flare",
+                  model="gpt-image-2.6-flare",
                   prompt="A cute baby sea otter",
                   n=1,
                   size="1024x1024",
@@ -9038,7 +9083,7 @@ paths:
               const client = new OpenAI();
 
               const stream = await client.images.generate({
-                model: "gpt-image-2.5-flare",
+                model: "gpt-image-2.6-flare",
                 prompt: "A cute baby sea otter",
                 n: 1,
                 size: "1024x1024",
@@ -9610,7 +9655,7 @@ paths:
         required: true
         schema:
           type: string
-          example: gpt-6-astra
+          example: gpt-6.2-astra
         description: The ID of the model to use for this request
       responses:
         '200':
@@ -9636,20 +9681,20 @@ paths:
         examples:
           request:
             curl: |
-              curl https://api.openai.com/v1/models/gpt-6-astra \
+              curl https://api.openai.com/v1/models/gpt-6.2-astra \
                 -H "Authorization: Bearer $OPENAI_API_KEY"
             python: |
               from openai import OpenAI
               client = OpenAI()
 
-              client.models.retrieve("gpt-6-astra")
+              client.models.retrieve("gpt-6.2-astra")
             javascript: |-
               import OpenAI from "openai";
 
               const openai = new OpenAI();
 
               async function main() {
-                const model = await openai.models.retrieve("gpt-6-astra");
+                const model = await openai.models.retrieve("gpt-6.2-astra");
 
                 console.log(model);
               }
@@ -9669,7 +9714,7 @@ paths:
               Console.WriteLine(model.Value.Id);
           response: |
             {
-              "id": "gpt-6-astra",
+              "id": "gpt-6.2-astra",
               "object": "model",
               "created": 1686935002,
               "owned_by": "openai",
@@ -9687,7 +9732,7 @@ paths:
         required: true
         schema:
           type: string
-          example: ft:gpt-4o-mini:acemeco:suffix:abc123
+          example: ft:gpt-4.1-mini-2025-04-14:acemeco:suffix:abc123
         description: The model to delete
       responses:
         '200':
@@ -9713,15 +9758,15 @@ paths:
         examples:
           request:
             curl: |
-              curl https://api.openai.com/v1/models/ft:gpt-4o-mini:acemeco:suffix:abc123 \
+              curl https://api.openai.com/v1/models/ft:gpt-4.1-mini-2025-04-14:acemeco:suffix:abc123 \
                 -X DELETE \
                 -H "Authorization: Bearer $OPENAI_API_KEY"
             python: |
               from openai import OpenAI
               client = OpenAI()
 
-              client.models.delete("ft:gpt-4o-mini:acemeco:suffix:abc123")
-            javascript: "import OpenAI from \"openai\";\n\nconst openai = new OpenAI();\n\nasync function main() {\n  const model = await openai.models.delete(\"ft:gpt-4o-mini:acemeco:suffix:abc123\");\n  \n  console.log(model);\n}\nmain();"
+              client.models.delete("ft:gpt-4.1-mini-2025-04-14:acemeco:suffix:abc123")
+            javascript: "import OpenAI from \"openai\";\n\nconst openai = new OpenAI();\n\nasync function main() {\n  const model = await openai.models.delete(\"ft:gpt-4.1-mini-2025-04-14:acemeco:suffix:abc123\");\n  \n  console.log(model);\n}\nmain();"
             csharp: |
               using System;
               using System.ClientModel;
@@ -9732,11 +9777,11 @@ paths:
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
-              ClientResult success = client.DeleteModel("ft:gpt-4o-mini:acemeco:suffix:abc123");
+              ClientResult success = client.DeleteModel("ft:gpt-4.1-mini-2025-04-14:acemeco:suffix:abc123");
               Console.WriteLine(success);
           response: |
             {
-              "id": "ft:gpt-4o-mini:acemeco:suffix:abc123",
+              "id": "ft:gpt-4.1-mini-2025-04-14:acemeco:suffix:abc123",
               "object": "model",
               "deleted": true
             }
@@ -10229,10 +10274,8 @@ paths:
                     example: key_abc
                   object:
                     type: string
-                    enum:
-                    - organization.admin_api_key.deleted
+                    const: organization.admin_api_key.deleted
                     example: organization.admin_api_key.deleted
-                    x-stainless-const: true
                   deleted:
                     type: boolean
                     example: true
@@ -11037,7 +11080,7 @@ paths:
             type: string
       - name: line_items
         in: query
-        description: Return only costs for these exact line item names. Each value must match the complete `line_item` value, for example `gpt-6-astra, input_tokens`.
+        description: Return only costs for these exact line item names. Each value must match the complete `line_item` value, for example `gpt-6.2-astra, input_tokens`.
         required: false
         schema:
           type: array
@@ -14158,8 +14201,8 @@ paths:
                 "object": "project.model_permissions",
                 "mode": "allow_list",
                 "model_ids": [
-                    "gpt-6-astra",
-                    "o3"
+                    "gpt-6.2-astra",
+                    "gpt-6.2-sol"
                 ]
             }
     post:
@@ -14226,7 +14269,7 @@ paths:
                 -d '{
                     "mode": "deny_list",
                     "model_ids": [
-                        "o3"
+                        "gpt-6.2-sol"
                     ]
                 }'
           response: |
@@ -14234,7 +14277,7 @@ paths:
                 "object": "project.model_permissions",
                 "mode": "deny_list",
                 "model_ids": [
-                    "o3"
+                    "gpt-6.2-sol"
                 ]
             }
     delete:
@@ -19555,7 +19598,7 @@ paths:
               curl -X POST https://api.openai.com/v1/realtime/calls \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -F "sdp=<offer.sdp;type=application/sdp" \
-                -F 'session={"type":"realtime","model":"gpt-realtime"};type=application/json'
+                -F 'session={"type":"realtime","model":"gpt-realtime-2.1"};type=application/json'
           response: |-
             v=0
             o=- 4227147428 1719357865 IN IP4 127.0.0.1
@@ -19637,7 +19680,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -d '{
                       "type": "realtime",
-                      "model": "gpt-realtime",
+                      "model": "gpt-realtime-2.1",
                       "instructions": "You are Alex, a friendly concierge for Example Corp.",
                     }'
   /realtime/calls/{call_id}/hangup:
@@ -19851,7 +19894,7 @@ paths:
                   },
                   "session": {
                     "type": "realtime",
-                    "model": "gpt-realtime",
+                    "model": "gpt-realtime-2.1",
                     "instructions": "You are a friendly assistant."
                   }
                 }'
@@ -19863,7 +19906,7 @@ paths:
                 "type": "realtime",
                 "object": "realtime.session",
                 "id": "sess_C9CiUVUzUzYIssh3ELY1d",
-                "model": "gpt-realtime",
+                "model": "gpt-realtime-2.1",
                 "output_modalities": [
                   "audio"
                 ],
@@ -20113,6 +20156,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateResponse'
+            example:
+              model: gpt-6.2-astra
+              input: Write a one-sentence bedtime story about a unicorn.
       responses:
         '200':
           description: OK
@@ -20150,7 +20196,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "input": "Tell me a three sentence bedtime story about a unicorn."
                 }'
             javascript: |
@@ -20159,7 +20205,7 @@ paths:
               const openai = new OpenAI();
 
               const response = await openai.responses.create({
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   input: "Tell me a three sentence bedtime story about a unicorn."
               });
 
@@ -20170,7 +20216,7 @@ paths:
               client = OpenAI()
 
               response = client.responses.create(
-                model="gpt-6-astra",
+                model="gpt-6.2-astra",
                 input="Tell me a three sentence bedtime story about a unicorn."
               )
 
@@ -20180,7 +20226,7 @@ paths:
               using OpenAI.Responses;
 
               OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
@@ -20199,7 +20245,7 @@ paths:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "type": "message",
@@ -20255,7 +20301,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "input": [
                     {
                       "role": "user",
@@ -20275,7 +20321,7 @@ paths:
               const openai = new OpenAI();
 
               const response = await openai.responses.create({
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   input: [
                       {
                           role: "user",
@@ -20298,7 +20344,7 @@ paths:
               client = OpenAI()
 
               response = client.responses.create(
-                  model="gpt-6-astra",
+                  model="gpt-6.2-astra",
                   input=[
                       {
                           "role": "user",
@@ -20321,7 +20367,7 @@ paths:
               using OpenAI.Responses;
 
               OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
@@ -20350,7 +20396,7 @@ paths:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "type": "message",
@@ -20406,7 +20452,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "input": [
                     {
                       "role": "user",
@@ -20427,7 +20473,7 @@ paths:
               const openai = new OpenAI();
 
               const response = await openai.responses.create({
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   input: [
                       {
                           role: "user",
@@ -20450,7 +20496,7 @@ paths:
               client = OpenAI()
 
               response = client.responses.create(
-                  model="gpt-6-astra",
+                  model="gpt-6.2-astra",
                   input=[
                       {
                           "role": "user",
@@ -20481,7 +20527,7 @@ paths:
               "instructions": null,
               "max_output_tokens": null,
               "max_tool_calls": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "id": "msg_686eef60d3e081a29283bdcbc4322fd90e34c516d176ff86",
@@ -20539,7 +20585,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "tools": [{ "type": "web_search_preview" }],
                   "input": "What was a positive news story from today?"
                 }'
@@ -20549,7 +20595,7 @@ paths:
               const openai = new OpenAI();
 
               const response = await openai.responses.create({
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   tools: [{ type: "web_search_preview" }],
                   input: "What was a positive news story from today?",
               });
@@ -20561,7 +20607,7 @@ paths:
               client = OpenAI()
 
               response = client.responses.create(
-                  model="gpt-6-astra",
+                  model="gpt-6.2-astra",
                   tools=[{ "type": "web_search_preview" }],
                   input="What was a positive news story from today?",
               )
@@ -20573,7 +20619,7 @@ paths:
               using OpenAI.Responses;
 
               OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
@@ -20602,7 +20648,7 @@ paths:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "type": "web_search_call",
@@ -20698,7 +20744,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "tools": [{
                     "type": "file_search",
                     "vector_store_ids": ["vs_1234567890"],
@@ -20712,7 +20758,7 @@ paths:
               const openai = new OpenAI();
 
               const response = await openai.responses.create({
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   tools: [{
                     type: "file_search",
                     vector_store_ids: ["vs_1234567890"],
@@ -20728,7 +20774,7 @@ paths:
               client = OpenAI()
 
               response = client.responses.create(
-                  model="gpt-6-astra",
+                  model="gpt-6.2-astra",
                   tools=[{
                     "type": "file_search",
                     "vector_store_ids": ["vs_1234567890"],
@@ -20744,7 +20790,7 @@ paths:
               using OpenAI.Responses;
 
               OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
@@ -20776,7 +20822,7 @@ paths:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "type": "file_search_call",
@@ -20903,7 +20949,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "instructions": "You are a helpful assistant.",
                   "input": "Hello!",
                   "stream": true
@@ -20914,7 +20960,7 @@ paths:
               client = OpenAI()
 
               response = client.responses.create(
-                model="gpt-6-astra",
+                model="gpt-6.2-astra",
                 instructions="You are a helpful assistant.",
                 input="Hello!",
                 stream=True
@@ -20928,7 +20974,7 @@ paths:
               const openai = new OpenAI();
 
               const response = await openai.responses.create({
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   instructions: "You are a helpful assistant.",
                   input: "Hello!",
                   stream: true,
@@ -20945,7 +20991,7 @@ paths:
               using OpenAI.Responses;
 
               OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
@@ -20967,10 +21013,10 @@ paths:
               }
           response: |+
             event: response.created
-            data: {"type":"response.created","response":{"id":"resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654","object":"response","access_programs":null,"created_at":1741290958,"status":"in_progress","error":null,"incomplete_details":null,"instructions":"You are a helpful assistant.","max_output_tokens":null,"model":"gpt-6-astra","output":[],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[],"top_p":1.0,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":0}
+            data: {"type":"response.created","response":{"id":"resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654","object":"response","access_programs":null,"created_at":1741290958,"status":"in_progress","error":null,"incomplete_details":null,"instructions":"You are a helpful assistant.","max_output_tokens":null,"model":"gpt-6.2-astra","output":[],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[],"top_p":1.0,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":0}
 
             event: response.in_progress
-            data: {"type":"response.in_progress","response":{"id":"resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654","object":"response","access_programs":null,"created_at":1741290958,"status":"in_progress","error":null,"incomplete_details":null,"instructions":"You are a helpful assistant.","max_output_tokens":null,"model":"gpt-6-astra","output":[],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[],"top_p":1.0,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":1}
+            data: {"type":"response.in_progress","response":{"id":"resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654","object":"response","access_programs":null,"created_at":1741290958,"status":"in_progress","error":null,"incomplete_details":null,"instructions":"You are a helpful assistant.","max_output_tokens":null,"model":"gpt-6.2-astra","output":[],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[],"top_p":1.0,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":1}
 
             event: response.output_item.added
             data: {"type":"response.output_item.added","output_index":0,"item":{"id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","type":"message","status":"in_progress","role":"assistant","content":[]},"sequence_number":2}
@@ -20993,7 +21039,7 @@ paths:
             data: {"type":"response.output_item.done","output_index":0,"item":{"id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","type":"message","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Hi there! How can I assist you today?","annotations":[],"logprobs":[]}]},"sequence_number":12}
 
             event: response.completed
-            data: {"type":"response.completed","response":{"id":"resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654","object":"response","access_programs":null,"created_at":1741290958,"status":"completed","error":null,"incomplete_details":null,"instructions":"You are a helpful assistant.","max_output_tokens":null,"model":"gpt-6-astra","output":[{"id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","type":"message","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Hi there! How can I assist you today?","annotations":[],"logprobs":[]}]}],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[],"top_p":1.0,"truncation":"disabled","usage":{"input_tokens":37,"output_tokens":11,"output_tokens_details":{"reasoning_tokens":0},"total_tokens":48,"input_tokens_details":{"cached_tokens":0,"cache_write_tokens":0}},"user":null,"metadata":{}},"sequence_number":13}
+            data: {"type":"response.completed","response":{"id":"resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654","object":"response","access_programs":null,"created_at":1741290958,"status":"completed","error":null,"incomplete_details":null,"instructions":"You are a helpful assistant.","max_output_tokens":null,"model":"gpt-6.2-astra","output":[{"id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","type":"message","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Hi there! How can I assist you today?","annotations":[],"logprobs":[]}]}],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[],"top_p":1.0,"truncation":"disabled","usage":{"input_tokens":37,"output_tokens":11,"output_tokens_details":{"reasoning_tokens":0},"total_tokens":48,"input_tokens_details":{"cached_tokens":0,"cache_write_tokens":0}},"user":null,"metadata":{}},"sequence_number":13}
 
         - title: Functions
           request:
@@ -21002,7 +21048,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "input": "What is the weather like in Boston today?",
                   "tools": [
                     {
@@ -21052,7 +21098,7 @@ paths:
               ]
 
               response = client.responses.create(
-                model="gpt-6-astra",
+                model="gpt-6.2-astra",
                 tools=tools,
                 input="What is the weather like in Boston today?",
                 tool_choice="auto"
@@ -21084,7 +21130,7 @@ paths:
               ];
 
               const response = await openai.responses.create({
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   tools: tools,
                   input: "What is the weather like in Boston today?",
                   tool_choice: "auto",
@@ -21096,7 +21142,7 @@ paths:
               using OpenAI.Responses;
 
               OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
@@ -21143,7 +21189,7 @@ paths:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "type": "function_call",
@@ -21220,7 +21266,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "input": "How much wood would a woodchuck chuck?",
                   "reasoning": {
                     "effort": "high"
@@ -21231,7 +21277,7 @@ paths:
               const openai = new OpenAI();
 
               const response = await openai.responses.create({
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   input: "How much wood would a woodchuck chuck?",
                   reasoning: {
                     effort: "high"
@@ -21244,7 +21290,7 @@ paths:
               client = OpenAI()
 
               response = client.responses.create(
-                  model="gpt-6-astra",
+                  model="gpt-6.2-astra",
                   input="How much wood would a woodchuck chuck?",
                   reasoning={
                       "effort": "high"
@@ -21257,7 +21303,7 @@ paths:
               using OpenAI.Responses;
 
               OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
@@ -21286,7 +21332,7 @@ paths:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "type": "message",
@@ -21437,7 +21483,7 @@ paths:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "type": "message",
@@ -21604,7 +21650,7 @@ paths:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "type": "message",
@@ -26736,7 +26782,7 @@ paths:
               "created_at": 1787659200,
               "request_id": "req_123",
               "response_id": "resp_123",
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "request_paused": true,
               "error_type": "potentially_unintended_data_access",
               "reason": "Potentially unintended data access."
@@ -29685,7 +29731,7 @@ paths:
                   -H "Content-Type: application/json" \
                   -H "Authorization: Bearer $OPENAI_API_KEY" \
                   -d '{
-                    "model": "gpt-6-astra",
+                    "model": "gpt-6.2-astra",
                     "input": "Tell me a joke."
                   }'
             javascript: |
@@ -29694,7 +29740,7 @@ paths:
               const client = new OpenAI();
 
               const response = await client.responses.inputTokens.count({
-                model: "gpt-6-astra",
+                model: "gpt-6.2-astra",
                 input: "Tell me a joke.",
               });
 
@@ -29705,7 +29751,7 @@ paths:
               client = OpenAI()
 
               response = client.responses.input_tokens.count(
-                  model="gpt-6-astra",
+                  model="gpt-6.2-astra",
                   input="Tell me a joke."
               )
               print(response.input_tokens)
@@ -29723,7 +29769,7 @@ paths:
               func main() {
                 client := openai.NewClient()
                 response, err := client.Responses.InputTokens.Count(context.TODO(), responses.InputTokenCountParams{
-                  Model: "gpt-6-astra",
+                  Model: "gpt-6.2-astra",
                   Input: "Tell me a joke.",
                 })
                 if err != nil {
@@ -29736,7 +29782,7 @@ paths:
 
               openai = OpenAI::Client.new
 
-              response = openai.responses.input_tokens.count(model: "gpt-6-astra", input: "Tell me a joke.")
+              response = openai.responses.input_tokens.count(model: "gpt-6.2-astra", input: "Tell me a joke.")
 
               puts(response)
             java: |
@@ -29754,7 +29800,7 @@ paths:
                       OpenAIClient client = OpenAIOkHttpClient.fromEnv();
 
                       InputTokenCountParams params = InputTokenCountParams.builder()
-                          .model("gpt-6-astra")
+                          .model("gpt-6.2-astra")
                           .input("Tell me a joke.")
                           .build();
 
@@ -29808,7 +29854,7 @@ paths:
                   -H "Content-Type: application/json" \
                   -H "Authorization: Bearer $OPENAI_API_KEY" \
                   -d '{
-                    "model": "gpt-6-astra",
+                    "model": "gpt-6.2-astra",
                     "input": [
                       {
                         "role": "user",
@@ -29837,7 +29883,7 @@ paths:
 
               // Compact the previous response if you are running out of tokens
               const compactedResponse = await openai.responses.compact({
-                model: "gpt-6-astra",
+                model: "gpt-6.2-astra",
                 input: [
                   {
                     role: "user",
@@ -29869,7 +29915,7 @@ paths:
               client = OpenAI()
 
               compacted_response = client.responses.compact(
-                  model="gpt-6-astra",
+                  model="gpt-6.2-astra",
                   input=[
                   {
                       "role": "user",
@@ -34183,7 +34229,7 @@ paths:
     post:
       operationId: updateAgentSession
       summary: Update an agent session
-      description: Updates session tools, metadata, model, reasoning effort, service tier, or the default prompt cache lifetime. Model settings apply to subsequent turns. Omitted fields are unchanged. See [managing sessions](https://developers.openai.com/api/docs/guides/agents-api/sessions/manage).
+      description: Updates session tools, vaults, metadata, model, reasoning effort, service tier, or the default prompt cache lifetime. Model settings apply to subsequent turns. Omitted fields are unchanged. See [managing sessions](https://developers.openai.com/api/docs/guides/agents-api/sessions/manage).
       tags:
       - Agents
       parameters:
@@ -34723,7 +34769,7 @@ paths:
           type: string
           minLength: 1
           maxLength: 256
-        description: An optional client-generated key that makes retries of submitted messages idempotent.
+        description: An optional client-generated key for message submissions. Retry the same message with the same key and identical input within the 24-hour replay window; a retry replays the original outcome if it is available. After the window expires, a key whose outcome is unavailable may return 409. After a timeout or server error, inspect the session history and items before resubmitting. Use a new key for a new message, or only after confirming the earlier message did not execute.
       requestBody:
         content:
           application/json:
@@ -35871,7 +35917,8 @@ paths:
             schema:
               $ref: '#/components/schemas/RotateVaultCredentialParams'
             example:
-              metadata: {}
+              metadata:
+                environment: staging
         required: true
       responses:
         '200':
@@ -36299,6 +36346,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/BetaCreateResponse'
+            example:
+              model: gpt-6.2-astra
+              input: Write a one-sentence bedtime story about a unicorn.
       responses:
         '200':
           description: OK
@@ -36336,7 +36386,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "input": "Tell me a three sentence bedtime story about a unicorn."
                 }'
             javascript: |
@@ -36345,7 +36395,7 @@ paths:
               const openai = new OpenAI();
 
               const response = await openai.responses.create({
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   input: "Tell me a three sentence bedtime story about a unicorn."
               });
 
@@ -36356,7 +36406,7 @@ paths:
               client = OpenAI()
 
               response = client.responses.create(
-                model="gpt-6-astra",
+                model="gpt-6.2-astra",
                 input="Tell me a three sentence bedtime story about a unicorn."
               )
 
@@ -36366,7 +36416,7 @@ paths:
               using OpenAI.Responses;
 
               OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
@@ -36385,7 +36435,7 @@ paths:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "type": "message",
@@ -36441,7 +36491,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "input": [
                     {
                       "role": "user",
@@ -36461,7 +36511,7 @@ paths:
               const openai = new OpenAI();
 
               const response = await openai.responses.create({
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   input: [
                       {
                           role: "user",
@@ -36484,7 +36534,7 @@ paths:
               client = OpenAI()
 
               response = client.responses.create(
-                  model="gpt-6-astra",
+                  model="gpt-6.2-astra",
                   input=[
                       {
                           "role": "user",
@@ -36507,7 +36557,7 @@ paths:
               using OpenAI.Responses;
 
               OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
@@ -36536,7 +36586,7 @@ paths:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "type": "message",
@@ -36592,7 +36642,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "input": [
                     {
                       "role": "user",
@@ -36613,7 +36663,7 @@ paths:
               const openai = new OpenAI();
 
               const response = await openai.responses.create({
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   input: [
                       {
                           role: "user",
@@ -36636,7 +36686,7 @@ paths:
               client = OpenAI()
 
               response = client.responses.create(
-                  model="gpt-6-astra",
+                  model="gpt-6.2-astra",
                   input=[
                       {
                           "role": "user",
@@ -36667,7 +36717,7 @@ paths:
               "instructions": null,
               "max_output_tokens": null,
               "max_tool_calls": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "id": "msg_686eef60d3e081a29283bdcbc4322fd90e34c516d176ff86",
@@ -36725,7 +36775,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "tools": [{ "type": "web_search_preview" }],
                   "input": "What was a positive news story from today?"
                 }'
@@ -36735,7 +36785,7 @@ paths:
               const openai = new OpenAI();
 
               const response = await openai.responses.create({
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   tools: [{ type: "web_search_preview" }],
                   input: "What was a positive news story from today?",
               });
@@ -36747,7 +36797,7 @@ paths:
               client = OpenAI()
 
               response = client.responses.create(
-                  model="gpt-6-astra",
+                  model="gpt-6.2-astra",
                   tools=[{ "type": "web_search_preview" }],
                   input="What was a positive news story from today?",
               )
@@ -36759,7 +36809,7 @@ paths:
               using OpenAI.Responses;
 
               OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
@@ -36788,7 +36838,7 @@ paths:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "type": "web_search_call",
@@ -36884,7 +36934,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "tools": [{
                     "type": "file_search",
                     "vector_store_ids": ["vs_1234567890"],
@@ -36898,7 +36948,7 @@ paths:
               const openai = new OpenAI();
 
               const response = await openai.responses.create({
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   tools: [{
                     type: "file_search",
                     vector_store_ids: ["vs_1234567890"],
@@ -36914,7 +36964,7 @@ paths:
               client = OpenAI()
 
               response = client.responses.create(
-                  model="gpt-6-astra",
+                  model="gpt-6.2-astra",
                   tools=[{
                     "type": "file_search",
                     "vector_store_ids": ["vs_1234567890"],
@@ -36930,7 +36980,7 @@ paths:
               using OpenAI.Responses;
 
               OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
@@ -36962,7 +37012,7 @@ paths:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "type": "file_search_call",
@@ -37089,7 +37139,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "instructions": "You are a helpful assistant.",
                   "input": "Hello!",
                   "stream": true
@@ -37100,7 +37150,7 @@ paths:
               client = OpenAI()
 
               response = client.responses.create(
-                model="gpt-6-astra",
+                model="gpt-6.2-astra",
                 instructions="You are a helpful assistant.",
                 input="Hello!",
                 stream=True
@@ -37114,7 +37164,7 @@ paths:
               const openai = new OpenAI();
 
               const response = await openai.responses.create({
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   instructions: "You are a helpful assistant.",
                   input: "Hello!",
                   stream: true,
@@ -37131,7 +37181,7 @@ paths:
               using OpenAI.Responses;
 
               OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
@@ -37153,10 +37203,10 @@ paths:
               }
           response: |+
             event: response.created
-            data: {"type":"response.created","response":{"id":"resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654","object":"response","access_programs":null,"created_at":1741290958,"status":"in_progress","error":null,"incomplete_details":null,"instructions":"You are a helpful assistant.","max_output_tokens":null,"model":"gpt-6-astra","output":[],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[],"top_p":1.0,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":0}
+            data: {"type":"response.created","response":{"id":"resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654","object":"response","access_programs":null,"created_at":1741290958,"status":"in_progress","error":null,"incomplete_details":null,"instructions":"You are a helpful assistant.","max_output_tokens":null,"model":"gpt-6.2-astra","output":[],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[],"top_p":1.0,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":0}
 
             event: response.in_progress
-            data: {"type":"response.in_progress","response":{"id":"resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654","object":"response","access_programs":null,"created_at":1741290958,"status":"in_progress","error":null,"incomplete_details":null,"instructions":"You are a helpful assistant.","max_output_tokens":null,"model":"gpt-6-astra","output":[],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[],"top_p":1.0,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":1}
+            data: {"type":"response.in_progress","response":{"id":"resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654","object":"response","access_programs":null,"created_at":1741290958,"status":"in_progress","error":null,"incomplete_details":null,"instructions":"You are a helpful assistant.","max_output_tokens":null,"model":"gpt-6.2-astra","output":[],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[],"top_p":1.0,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":1}
 
             event: response.output_item.added
             data: {"type":"response.output_item.added","output_index":0,"item":{"id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","type":"message","status":"in_progress","role":"assistant","content":[]},"sequence_number":2}
@@ -37179,7 +37229,7 @@ paths:
             data: {"type":"response.output_item.done","output_index":0,"item":{"id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","type":"message","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Hi there! How can I assist you today?","annotations":[],"logprobs":[]}]},"sequence_number":12}
 
             event: response.completed
-            data: {"type":"response.completed","response":{"id":"resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654","object":"response","access_programs":null,"created_at":1741290958,"status":"completed","error":null,"incomplete_details":null,"instructions":"You are a helpful assistant.","max_output_tokens":null,"model":"gpt-6-astra","output":[{"id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","type":"message","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Hi there! How can I assist you today?","annotations":[],"logprobs":[]}]}],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[],"top_p":1.0,"truncation":"disabled","usage":{"input_tokens":37,"output_tokens":11,"output_tokens_details":{"reasoning_tokens":0},"total_tokens":48,"input_tokens_details":{"cached_tokens":0,"cache_write_tokens":0}},"user":null,"metadata":{}},"sequence_number":13}
+            data: {"type":"response.completed","response":{"id":"resp_67c9fdcecf488190bdd9a0409de3a1ec07b8b0ad4e5eb654","object":"response","access_programs":null,"created_at":1741290958,"status":"completed","error":null,"incomplete_details":null,"instructions":"You are a helpful assistant.","max_output_tokens":null,"model":"gpt-6.2-astra","output":[{"id":"msg_67c9fdcf37fc8190ba82116e33fb28c507b8b0ad4e5eb654","type":"message","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Hi there! How can I assist you today?","annotations":[],"logprobs":[]}]}],"parallel_tool_calls":true,"previous_response_id":null,"reasoning":{"effort":null,"summary":null},"store":true,"temperature":1.0,"text":{"format":{"type":"text"}},"tool_choice":"auto","tools":[],"top_p":1.0,"truncation":"disabled","usage":{"input_tokens":37,"output_tokens":11,"output_tokens_details":{"reasoning_tokens":0},"total_tokens":48,"input_tokens_details":{"cached_tokens":0,"cache_write_tokens":0}},"user":null,"metadata":{}},"sequence_number":13}
 
         - title: Functions
           request:
@@ -37188,7 +37238,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "input": "What is the weather like in Boston today?",
                   "tools": [
                     {
@@ -37238,7 +37288,7 @@ paths:
               ]
 
               response = client.responses.create(
-                model="gpt-6-astra",
+                model="gpt-6.2-astra",
                 tools=tools,
                 input="What is the weather like in Boston today?",
                 tool_choice="auto"
@@ -37270,7 +37320,7 @@ paths:
               ];
 
               const response = await openai.responses.create({
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   tools: tools,
                   input: "What is the weather like in Boston today?",
                   tool_choice: "auto",
@@ -37282,7 +37332,7 @@ paths:
               using OpenAI.Responses;
 
               OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
@@ -37329,7 +37379,7 @@ paths:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "type": "function_call",
@@ -37406,7 +37456,7 @@ paths:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d '{
-                  "model": "gpt-6-astra",
+                  "model": "gpt-6.2-astra",
                   "input": "How much wood would a woodchuck chuck?",
                   "reasoning": {
                     "effort": "high"
@@ -37417,7 +37467,7 @@ paths:
               const openai = new OpenAI();
 
               const response = await openai.responses.create({
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   input: "How much wood would a woodchuck chuck?",
                   reasoning: {
                     effort: "high"
@@ -37430,7 +37480,7 @@ paths:
               client = OpenAI()
 
               response = client.responses.create(
-                  model="gpt-6-astra",
+                  model="gpt-6.2-astra",
                   input="How much wood would a woodchuck chuck?",
                   reasoning={
                       "effort": "high"
@@ -37443,7 +37493,7 @@ paths:
               using OpenAI.Responses;
 
               OpenAIResponseClient client = new(
-                  model: "gpt-6-astra",
+                  model: "gpt-6.2-astra",
                   apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")
               );
 
@@ -37472,7 +37522,7 @@ paths:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "type": "message",
@@ -37650,7 +37700,7 @@ paths:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "type": "message",
@@ -37843,7 +37893,7 @@ paths:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "type": "message",
@@ -37936,7 +37986,7 @@ paths:
                   -H "Content-Type: application/json" \
                   -H "Authorization: Bearer $OPENAI_API_KEY" \
                   -d '{
-                    "model": "gpt-6-astra",
+                    "model": "gpt-6.2-astra",
                     "input": [
                       {
                         "role": "user",
@@ -37965,7 +38015,7 @@ paths:
 
               // Compact the previous response if you are running out of tokens
               const compactedResponse = await openai.responses.compact({
-                model: "gpt-6-astra",
+                model: "gpt-6.2-astra",
                 input: [
                   {
                     role: "user",
@@ -37997,7 +38047,7 @@ paths:
               client = OpenAI()
 
               compacted_response = client.responses.compact(
-                  model="gpt-6-astra",
+                  model="gpt-6.2-astra",
                   input=[
                   {
                       "role": "user",
@@ -38229,7 +38279,7 @@ paths:
                   -H "Content-Type: application/json" \
                   -H "Authorization: Bearer $OPENAI_API_KEY" \
                   -d '{
-                    "model": "gpt-6-astra",
+                    "model": "gpt-6.2-astra",
                     "input": "Tell me a joke."
                   }'
             javascript: |
@@ -38238,7 +38288,7 @@ paths:
               const client = new OpenAI();
 
               const response = await client.responses.inputTokens.count({
-                model: "gpt-6-astra",
+                model: "gpt-6.2-astra",
                 input: "Tell me a joke.",
               });
 
@@ -38249,7 +38299,7 @@ paths:
               client = OpenAI()
 
               response = client.responses.input_tokens.count(
-                  model="gpt-6-astra",
+                  model="gpt-6.2-astra",
                   input="Tell me a joke."
               )
               print(response.input_tokens)
@@ -38267,7 +38317,7 @@ paths:
               func main() {
                 client := openai.NewClient()
                 response, err := client.Responses.InputTokens.Count(context.TODO(), responses.InputTokenCountParams{
-                  Model: "gpt-6-astra",
+                  Model: "gpt-6.2-astra",
                   Input: "Tell me a joke.",
                 })
                 if err != nil {
@@ -38280,7 +38330,7 @@ paths:
 
               openai = OpenAI::Client.new
 
-              response = openai.responses.input_tokens.count(model: "gpt-6-astra", input: "Tell me a joke.")
+              response = openai.responses.input_tokens.count(model: "gpt-6.2-astra", input: "Tell me a joke.")
 
               puts(response)
             java: |
@@ -38298,7 +38348,7 @@ paths:
                       OpenAIClient client = OpenAIOkHttpClient.fromEnv();
 
                       InputTokenCountParams params = InputTokenCountParams.builder()
-                          .model("gpt-6-astra")
+                          .model("gpt-6.2-astra")
                           .input("Tell me a joke.")
                           .build();
 
@@ -38766,10 +38816,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - organization.admin_api_key
+          const: organization.admin_api_key
           description: The object type, which is always `organization.admin_api_key`
-          x-stainless-const: true
         id:
           type: string
           example: key_abc
@@ -38875,10 +38923,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - list
+          const: list
           example: list
-          x-stainless-const: true
         data:
           type: array
           items:
@@ -39428,6 +39474,7 @@ components:
       type: object
       properties:
         model:
+          example: gpt-transcribe
           description: |
             The model used for transcription. Current options are `whisper-1`, `gpt-transcribe`, `gpt-live-transcribe`, `gpt-4o-mini-transcribe`, `gpt-4o-mini-transcribe-2025-12-15`, `gpt-4o-transcribe`, `gpt-4o-transcribe-diarize`, and `gpt-realtime-whisper`.
           anyOf:
@@ -40558,7 +40605,7 @@ components:
         model:
           type: string
           description: |
-            Model ID used to process the batch, like `gpt-6-astra`. OpenAI
+            Model ID used to process the batch, like `gpt-6.2-astra`. OpenAI
             offers a wide range of models with different capabilities, performance
             characteristics, and price points. Refer to the [model
             guide](https://developers.openai.com/api/docs/models) to browse and compare available models.
@@ -40693,7 +40740,7 @@ components:
             "id": "batch_abc123",
             "object": "batch",
             "endpoint": "/v1/chat/completions",
-            "model": "gpt-6-astra",
+            "model": "gpt-6.2-astra",
             "errors": null,
             "input_file_id": "file-abc123",
             "completion_window": "24h",
@@ -40989,7 +41036,7 @@ components:
               {
                 "object": "chat.completion",
                 "id": "chatcmpl-AyPNinnUqUDYo9SAdA52NobMflmj2",
-                "model": "gpt-6-astra",
+                "model": "gpt-6.2-astra",
                 "created": 1738960610,
                 "request_id": "req_ded8ab984ec4bf840f37566c1011c417",
                 "tool_choice": null,
@@ -42816,7 +42863,7 @@ components:
                 "value": 0.06,
                 "currency": "usd"
               },
-              "line_item": "gpt-6-astra, input_tokens",
+              "line_item": "gpt-6.2-astra, input_tokens",
               "project_id": "proj_abc",
               "quantity": 10000,
               "quantity_unit": "tokens"
@@ -43021,7 +43068,10 @@ components:
           - /v1/images/generations
           - /v1/images/edits
           - /v1/videos
-          description: The endpoint to be used for all requests in the batch. Currently `/v1/responses`, `/v1/chat/completions`, `/v1/embeddings`, `/v1/completions`, `/v1/moderations`, `/v1/images/generations`, `/v1/images/edits`, and `/v1/videos` are supported. Note that `/v1/embeddings` batches are also restricted to a maximum of 50,000 embedding inputs across all requests in the batch.
+          x-openai-enum-deprecations:
+            /v1/videos:
+              message: The Videos API shut down on September 24, 2026. Batch creation no longer accepts this endpoint.
+          description: The endpoint to be used for all requests in the batch. Currently `/v1/responses`, `/v1/chat/completions`, `/v1/embeddings`, `/v1/completions`, `/v1/moderations`, `/v1/images/generations`, and `/v1/images/edits` are supported. Note that `/v1/embeddings` batches are also restricted to a maximum of 50,000 embedding inputs across all requests in the batch.
         completion_window:
           type: string
           enum:
@@ -43050,7 +43100,7 @@ components:
               $ref: '#/components/schemas/ChatCompletionRequestMessage'
           model:
             description: |
-              Model ID used to generate the response, like `gpt-6-astra` or `o3`. OpenAI
+              Model ID used to generate the response, like `gpt-6.2-astra`. OpenAI
               offers a wide range of models with different capabilities, performance
               characteristics, and price points. Refer to the [model guide](https://developers.openai.com/api/docs/models)
               to browse and compare available models.
@@ -43257,7 +43307,7 @@ components:
             maximum: 128
             default: 1
             example: 1
-            description: How many chat completion choices to generate for each input message. Note that you will be charged based on the number of generated tokens across all of the choices. Keep `n` as `1` to minimize costs.
+            description: How many chat completion choices to generate for each input message. Omit `n` to generate one choice. Newer models reject an explicit `n`, even `n=1`. When requesting multiple choices, you are billed for generated tokens across all choices.
           prediction:
             description: |
               Configuration for a [Predicted Output](https://developers.openai.com/api/docs/guides/predicted-outputs),
@@ -43452,7 +43502,7 @@ components:
             "id": "chatcmpl-B9MHDbslfkBeAs8l4bebGdFOJ6PeG",
             "object": "chat.completion",
             "created": 1741570283,
-            "model": "gpt-6-astra",
+            "model": "gpt-6.2-astra",
             "choices": [
               {
                 "index": 0,
@@ -43605,7 +43655,7 @@ components:
       - id: chatcmpl-123
         object: chat.completion.chunk
         created: 1694268190
-        model: gpt-6-astra
+        model: gpt-6.2-astra
         system_fingerprint: fp_44709d6fcb
         choices:
         - index: 0
@@ -43617,7 +43667,7 @@ components:
         name: The chat completion chunk object
         group: chat
         example: |
-          {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1694268190,"model":"gpt-6-astra", "system_fingerprint": "fp_44709d6fcb", "choices":[{"index":0,"delta":{"role":"assistant","content":""},"logprobs":null,"finish_reason":null}],"obfuscation":"r4N7vQ2m"}
+          {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1694268190,"model":"gpt-6.2-astra", "system_fingerprint": "fp_44709d6fcb", "choices":[{"index":0,"delta":{"role":"assistant","content":""},"logprobs":null,"finish_reason":null}],"obfuscation":"r4N7vQ2m"}
     CreateCompletionRequest:
       type: object
       properties:
@@ -43738,7 +43788,7 @@ components:
           default: 1
           example: 1
           description: |
-            How many completions to generate for each prompt.
+            How many completions to generate for each prompt. Omit `n` to generate one completion per prompt. Newer models reject an explicit `n`, even `n=1`.
 
             **Note:** Because this parameter generates many completions, it can quickly consume your token quota. Use carefully and ensure that you have reasonable settings for `max_tokens` and `stop`.
         presence_penalty:
@@ -44183,7 +44233,7 @@ components:
                 $ref: '#/components/schemas/ChatCompletionTool'
         model:
           type: string
-          description: The name of the model to use for generating completions (e.g. "o3-mini").
+          description: The model to use to sample outputs with the Chat Completions API.
         source:
           description: Determines what populates the `item` namespace in this run's data source.
           anyOf:
@@ -44205,10 +44255,10 @@ components:
               "type": "item_reference",
               "item_reference": "item.input"
             },
-            "model": "gpt-6-astra",
+            "model": "gpt-6.2-astra",
             "source": {
               "type": "stored_completions",
-              "model": "gpt-6-astra"
+              "model": "gpt-6.2-astra"
             }
           }
     CreateEvalCustomDataSourceConfig:
@@ -44354,7 +44404,7 @@ components:
         example: |
           {
             "type": "label_model",
-            "model": "gpt-4o-2024-08-06",
+            "model": "gpt-4.1-mini-2025-04-14",
             "input": [
               {
                 "role": "system",
@@ -44541,7 +44591,7 @@ components:
                   $ref: '#/components/schemas/TextResponseFormatConfiguration'
         model:
           type: string
-          description: The name of the model to use for generating completions (e.g. "o3-mini").
+          description: The model to use to sample outputs with the Responses API.
         source:
           description: Determines what populates the `item` namespace in this run's data source.
           anyOf:
@@ -44563,10 +44613,10 @@ components:
               "type": "item_reference",
               "item_reference": "item.input"
             },
-            "model": "gpt-6-astra",
+            "model": "gpt-6.2-astra",
             "source": {
               "type": "responses",
-              "model": "gpt-6-astra"
+              "model": "gpt-6.2-astra"
             }
           }
     CreateEvalRunRequest:
@@ -44661,11 +44711,12 @@ components:
           description: |
             The name of the model to fine-tune. You can select one of the
             [supported models](https://developers.openai.com/api/docs/guides/model-optimization#fine-tuning-methods).
-          example: gpt-4o-mini
+          example: gpt-4.1-mini-2025-04-14
           anyOf:
           - type: string
           - type: string
             enum:
+            - gpt-4.1-mini-2025-04-14
             - babbage-002
             - davinci-002
             - gpt-3.5-turbo
@@ -44731,7 +44782,7 @@ components:
           description: |
             A string of up to 64 characters that will be added to your fine-tuned model name.
 
-            For example, a `suffix` of "custom-model-name" would produce a model name like `ft:gpt-4o-mini:openai:custom-model-name:7p4lURel`.
+            For example, a `suffix` of "custom-model-name" would produce a model name like `ft:gpt-4.1-mini-2025-04-14:openai:custom-model-name:7p4lURel`.
           type:
           - string
           - 'null'
@@ -44940,9 +44991,8 @@ components:
                 message: GPT Image 1 was shut down on October 23, 2026. Use gpt-image-2.5-sunburst or gpt-image-2.5-flare instead.
               dall-e-2:
                 message: This model was retired on May 12, 2026. Use a GPT image model instead.
-            x-stainless-const: true
           x-oaiTypeLabel: string
-          example: gpt-image-1.5
+          example: gpt-image-2.6-flare
           description: |
             The GPT image model to use for image editing
             (`gpt-image-1-mini`, `gpt-image-1.5`, `gpt-image-2`,
@@ -45110,7 +45160,7 @@ components:
                 message: This model was retired on May 12, 2026. Use a GPT image model instead.
             x-stainless-nominal: false
           x-oaiTypeLabel: string
-          example: gpt-image-2.5-flare
+          example: gpt-image-2.6-flare
           description: |
             The GPT image model to use for image generation. Specify a model explicitly.
             Supported models include `gpt-image-1-mini`, `gpt-image-1.5`, `gpt-image-2`,
@@ -45881,6 +45931,12 @@ components:
               description: |
                 Configuration for running moderation on the input and output of this response.
             - type: 'null'
+          background_options:
+            $ref: '#/components/schemas/BackgroundOptionsParam'
+            description: |
+              Options for background execution on HTTP requests. The `2h` and `8h`
+              completion windows require `background: true`, Standard processing,
+              and `stream: false` or omitted.
           stream:
             anyOf:
             - description: |
@@ -45916,12 +45972,6 @@ components:
               type: integer
               minimum: 16
             - type: 'null'
-          background_options:
-            $ref: '#/components/schemas/BackgroundOptionsParam'
-            description: |
-              Options for background execution on HTTP requests. The `2h` and `8h`
-              completion windows require `background: true`, Standard processing,
-              and `stream: false` or omitted.
     CreateRunRequest:
       type: object
       additionalProperties: false
@@ -46438,7 +46488,7 @@ components:
         model:
           description: |
             ID of the model to use. The options are `gpt-transcribe`, `gpt-4o-transcribe`, `gpt-4o-mini-transcribe`, `gpt-4o-mini-transcribe-2025-12-15`, `whisper-1` (which is powered by our open source Whisper V2 model), and `gpt-4o-transcribe-diarize`.
-          example: gpt-4o-transcribe
+          example: gpt-transcribe
           anyOf:
           - type: string
           - type: string
@@ -46460,7 +46510,6 @@ components:
                 message: 'Announced shutdown date: 2027-02-26. See https://developers.openai.com/api/docs/deprecations for details and recommended replacements.'
               gpt-4o-transcribe-diarize:
                 message: 'Announced shutdown date: 2027-02-26. See https://developers.openai.com/api/docs/deprecations for details and recommended replacements.'
-            x-stainless-const: true
             x-stainless-nominal: false
           x-oaiTypeLabel: string
         language:
@@ -47492,14 +47541,13 @@ components:
                 message: GPT Image 1 was shut down on October 23, 2026. Use gpt-image-2.5-sunburst or gpt-image-2.5-flare instead.
           - type: 'null'
           x-oaiTypeLabel: string
-          default: gpt-image-2.5-sunburst
-          example: gpt-image-2.5-sunburst
+          default: gpt-image-2.6-sunburst
           description: |
             The GPT image model to use for image editing, including `gpt-image-2`, its dated
             snapshot `gpt-image-2-2026-04-21`, `gpt-image-2.5-sunburst`,
             `gpt-image-2.5-sunburst-2026-09-08`, `gpt-image-2.5-flare`,
             `gpt-image-2.5-flare-2026-09-08`, `gpt-image-2.6-sunburst`, and `gpt-image-2.6-flare`.
-            Defaults to `gpt-image-2.5-sunburst`.
+            Defaults to `gpt-image-2.6-sunburst`.
 
             `gpt-image-1` was shut down on October 23, 2026. Use
             `gpt-image-2.5-sunburst` or `gpt-image-2.5-flare` instead.
@@ -47724,7 +47772,7 @@ components:
         Like:
          - Improve the quality of my chatbot
          - See how well my chatbot handles customer support
-         - Check if o4-mini is better at my usecase than gpt-6-astra
+         - Compare how different models perform on the same task
       properties:
         object:
           type: string
@@ -48374,7 +48422,7 @@ components:
         example: |
           {
             "type": "responses",
-            "model": "gpt-6-astra",
+            "model": "gpt-6.2-astra",
             "users": ["user1", "user2"],
             "tools": ["tool1", "tool2"],
             "instructions_search": "You are a coding assistant"
@@ -48527,8 +48575,8 @@ components:
             "eval_id": "eval_67e579652b548190aaa83ada4b125f47",
             "report_url": "https://platform.openai.com/evaluations/eval_67e579652b548190aaa83ada4b125f47?run_id=evalrun_67e57965b480819094274e3a32235e4c",
             "status": "queued",
-            "model": "gpt-6-astra",
-            "name": "gpt-6-astra",
+            "model": "gpt-4.1-mini-2025-04-14",
+            "name": "gpt-4.1-mini-2025-04-14",
             "created_at": 1743092069,
             "result_counts": {
               "total": 0,
@@ -48656,7 +48704,7 @@ components:
                   }
                 ]
               },
-              "model": "gpt-6-astra",
+              "model": "gpt-4.1-mini-2025-04-14",
               "sampling_params": {
                 "max_completions_tokens": 2048
               }
@@ -48712,7 +48760,7 @@ components:
                 "eval_id": "eval_67b7fa9a81a88190ab4aa417e397ea21",
                 "report_url": "https://platform.openai.com/evaluations/eval_67b7fa9a81a88190ab4aa417e397ea21?run_id=evalrun_67b7fbdad46c819092f6fe7a14189620",
                 "status": "completed",
-                "model": "o3-mini",
+                "model": "gpt-4.1-mini-2025-04-14",
                 "name": "Academic Assistant",
                 "created_at": 1740110812,
                 "result_counts": {
@@ -48760,7 +48808,7 @@ components:
                       }
                     ]
                   },
-                  "model": "o3-mini"
+                  "model": "gpt-4.1-mini-2025-04-14"
                 }
               }
             ],
@@ -48946,7 +48994,7 @@ components:
                 }
               ],
               "finish_reason": "stop",
-              "model": "gpt-6-astra",
+              "model": "gpt-4.1-mini-2025-04-14",
               "usage": {
                 "total_tokens": 521,
                 "completion_tokens": 2,
@@ -49040,7 +49088,7 @@ components:
                     }
                   ],
                   "finish_reason": "stop",
-                  "model": "gpt-6-astra",
+                  "model": "gpt-4.1-mini-2025-04-14",
                   "usage": {
                     "total_tokens": 521,
                     "completion_tokens": 2,
@@ -49156,7 +49204,7 @@ components:
         model:
           anyOf:
           - type: string
-            description: An optional model to filter by (e.g., 'gpt-6-astra').
+            description: An optional model to filter by (e.g., 'gpt-4.1-mini-2025-04-14').
           - type: 'null'
         created_after:
           anyOf:
@@ -49181,7 +49229,7 @@ components:
         example: |
           {
             "type": "stored_completions",
-            "model": "gpt-6-astra",
+            "model": "gpt-4.1-mini-2025-04-14",
             "created_after": 1668124800,
             "created_before": 1668124900,
             "limit": 100,
@@ -49840,7 +49888,7 @@ components:
             "object": "fine_tuning.job.checkpoint",
             "id": "ftckpt_qtZ5Gyk4BLq1SfLFWp3RtO3P",
             "created_at": 1712211699,
-            "fine_tuned_model_checkpoint": "ft:gpt-4o-mini-2024-07-18:my-org:custom_suffix:9ABel2dg:ckpt-step-88",
+            "fine_tuned_model_checkpoint": "ft:gpt-4.1-mini-2025-04-14:my-org:custom_suffix:9ABel2dg:ckpt-step-88",
             "fine_tuning_job_id": "ftjob-fpbNQ3H1GrMehXRf8cO97xTN",
             "metrics": {
               "step": 88,
@@ -50141,7 +50189,7 @@ components:
           {
             "name": "First label grader",
             "type": "label_model",
-            "model": "gpt-4o-2024-08-06",
+            "model": "gpt-4.1-mini-2025-04-14",
             "input": [
               {
                 "type": "message",
@@ -50329,13 +50377,12 @@ components:
                       ]
                   }
               ],
-              "model": "gpt-5-mini",
+              "model": "gpt-4.1-mini-2025-04-14",
               "sampling_params": {
                   "temperature": 1,
                   "top_p": 1,
                   "seed": 42,
-                  "max_completions_tokens": 32768,
-                  "reasoning_effort": "medium"
+                  "max_completions_tokens": 32768
               }
           }
     GraderStringCheck:
@@ -50832,9 +50879,7 @@ components:
           type: string
           description: |
             The type of the event. Always `image_edit.completed`.
-          enum:
-          - image_edit.completed
-          x-stainless-const: true
+          const: image_edit.completed
         b64_json:
           type: string
           description: |
@@ -50924,9 +50969,7 @@ components:
           type: string
           description: |
             The type of the event. Always `image_edit.partial_image`.
-          enum:
-          - image_edit.partial_image
-          x-stainless-const: true
+          const: image_edit.partial_image
         b64_json:
           type: string
           description: |
@@ -51021,9 +51064,7 @@ components:
           type: string
           description: |
             The type of the event. Always `image_generation.completed`.
-          enum:
-          - image_generation.completed
-          x-stainless-const: true
+          const: image_generation.completed
         b64_json:
           type: string
           description: |
@@ -51113,9 +51154,7 @@ components:
           type: string
           description: |
             The type of the event. Always `image_generation.partial_image`.
-          enum:
-          - image_generation.partial_image
-          x-stainless-const: true
+          const: image_generation.partial_image
         b64_json:
           type: string
           description: |
@@ -51660,10 +51699,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - organization.invite
+          const: organization.invite
           description: The object type, which is always `organization.invite`
-          x-stainless-const: true
         id:
           type: string
           description: The identifier, which can be referenced in API endpoints
@@ -51749,10 +51786,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - organization.invite.deleted
+          const: organization.invite.deleted
           description: The object type, which is always `organization.invite.deleted`
-          x-stainless-const: true
         id:
           type: string
         deleted:
@@ -51766,10 +51801,8 @@ components:
       properties:
         object:
           type: string
-          enum:
-          - list
+          const: list
           description: The object type, which is always `list`
-          x-stainless-const: true
         data:
           type: array
           items:
@@ -53958,7 +53991,7 @@ components:
         name: The model object
         example: |
           {
-            "id": "gpt-6-astra",
+            "id": "gpt-6.2-astra",
             "object": "model",
             "created": 1686935002,
             "owned_by": "openai",
@@ -53973,7 +54006,7 @@ components:
       - $ref: '#/components/schemas/ModelIdsResponses'
       - type: string
       - type: 'null'
-      description: Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide range of models with different capabilities, performance characteristics, and price points. Refer to the [model guide](https://developers.openai.com/api/docs/models) to browse and compare available models.
+      description: Model ID used to generate the response, like `gpt-6.2-astra`. OpenAI offers a wide range of models with different capabilities, performance characteristics, and price points. Refer to the [model guide](https://developers.openai.com/api/docs/models) to browse and compare available models.
     ModelIdsLive:
       description: The Live model. Required in the session configuration for every transport; do not pass it as a URL query parameter.
       example: gpt-live-1.1
@@ -53985,7 +54018,7 @@ components:
         - gpt-live-1
         - gpt-live-1.1
     ModelIdsResponses:
-      example: gpt-6-astra
+      example: gpt-6.2-astra
       anyOf:
       - $ref: '#/components/schemas/ModelIdsShared'
       - type: string
@@ -54044,7 +54077,7 @@ components:
           gpt-5-pro:
             message: 'Announced shutdown date: 2026-12-11. See https://developers.openai.com/api/docs/deprecations for details and recommended replacements.'
     ModelIdsShared:
-      example: gpt-6-astra
+      example: gpt-6.2-astra
       anyOf:
       - type: string
       - $ref: '#/components/schemas/ChatModel'
@@ -55377,8 +55410,8 @@ components:
               "object": "project.model_permissions",
               "mode": "allow_list",
               "model_ids": [
-                  "gpt-6-astra",
-                  "o3"
+                  "gpt-6.2-astra",
+                  "gpt-6.2-sol"
               ]
           }
     ProjectModelPermissionsDeleteResponse:
@@ -63273,6 +63306,7 @@ components:
             - text
             - audio
         model:
+          example: gpt-realtime-2.1
           anyOf:
           - type: string
           - type: string
@@ -63348,7 +63382,8 @@ components:
                     strength:
                       $ref: '#/components/schemas/RealtimeNoiseReductionStrength'
                   description: |
-                    Configuration for input audio noise reduction. This can be set to `null` to turn off.
+                    When you supply a `noise_reduction` object, you must set `type` to `near_field` or `far_field`.
+                    Set `noise_reduction` to `null` to turn off input audio noise reduction.
                     Noise reduction filters audio added to the input audio buffer before it is sent to VAD and the model.
                     Filtering the audio can improve VAD and turn detection accuracy (reducing false positives) and model performance by improving perception of the input audio.
                 turn_detection:
@@ -63721,6 +63756,7 @@ components:
             - text
             - audio
         model:
+          example: gpt-realtime-2.1
           anyOf:
           - type: string
           - type: string
@@ -64226,22 +64262,14 @@ components:
             "type": "transcription",
             "object": "realtime.transcription_session",
             "expires_at": 1742188264,
-            "include": ["item.input_audio_transcription.logprobs"],
             "audio": {
               "input": {
                 "format": {"type": "audio/pcm", "rate": 24000},
                 "transcription": {
-                  "model": "gpt-4o-transcribe",
-                  "language": null,
-                  "prompt": ""
+                  "model": "gpt-live-transcribe"
                 },
                 "noise_reduction": null,
-                "turn_detection": {
-                  "type": "server_vad",
-                  "threshold": 0.5,
-                  "prefix_padding_ms": 300,
-                  "silence_duration_ms": 200
-                }
+                "turn_detection": null
               }
             }
           }
@@ -65731,7 +65759,7 @@ components:
               "input": [],
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "id": "msg_123",
@@ -66002,7 +66030,7 @@ components:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [],
               "parallel_tool_calls": true,
               "previous_response_id": null,
@@ -66245,7 +66273,7 @@ components:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [],
               "previous_response_id": null,
               "reasoning_effort": null,
@@ -66757,7 +66785,7 @@ components:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [],
               "parallel_tool_calls": true,
               "previous_response_id": null,
@@ -66826,7 +66854,7 @@ components:
               },
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [],
               "previous_response_id": null,
               "reasoning_effort": null,
@@ -67411,7 +67439,7 @@ components:
           - type: 'null'
         model:
           description: |
-            Model ID used to generate the response, like `gpt-6-astra`. OpenAI
+            Model ID used to generate the response, like `gpt-6.2-astra`. OpenAI
             offers a wide range of models with different capabilities, performance
             characteristics, and price points. Refer to the [model guide](https://developers.openai.com/api/docs/models)
             to browse and compare available models.
@@ -67474,7 +67502,7 @@ components:
               "error": null,
               "incomplete_details": null,
               "instructions": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [],
               "parallel_tool_calls": true,
               "temperature": 1,
@@ -68842,7 +68870,7 @@ components:
           {
             "type": "response.create",
             "stream_id": "agent_1",
-            "model": "gpt-6-astra",
+            "model": "gpt-6.2-astra",
             "input": "Say hello."
           }
     ResponsesServerEvent:
@@ -71260,7 +71288,7 @@ components:
       - static
     StopConfiguration:
       description: |
-        Not supported with latest reasoning models `o3` and `o4-mini`.
+        Not supported with reasoning models `o3` and `o4-mini`.
 
         Up to 4 sequences where the API will stop generating further tokens. The
         returned text will not contain the stop sequence.
@@ -72544,7 +72572,7 @@ components:
               "project_id": "proj_abc",
               "user_id": "user-abc",
               "api_key_id": "key_abc",
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "batch": false,
               "service_tier": "default"
           }
@@ -72906,7 +72934,7 @@ components:
               "project_id": "proj_abc",
               "user_id": "user-abc",
               "api_key_id": "key_abc",
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "context_level": "medium"
           }
     User:
@@ -77388,7 +77416,7 @@ components:
             - $ref: '#/components/schemas/InlineSkillParam'
           type: array
           maxItems: 200
-          description: An optional list of skills referenced by id or inline data.
+          description: An optional list of skills referenced by id or inline data. Across all inline skills in this list, decoded ZIP data must total at most 50 MiB and Base64 text must total at most 70,254,592 characters, including line breaks. Skill references do not count toward these limits.
       type: object
       required:
       - type
@@ -79900,7 +79928,7 @@ components:
           - type: 'null'
         skills:
           anyOf:
-          - description: An optional list of skills referenced by id or inline data.
+          - description: An optional list of skills referenced by id or inline data. Across all inline skills in this list, decoded ZIP data must total at most 50 MiB and Base64 text must total at most 70,254,592 characters, including line breaks. Skill references do not count toward these limits.
             type: array
             items:
               discriminator:
@@ -79996,6 +80024,46 @@ components:
           - image_generation
       required:
       - type
+    LiveMCPToolFilterParam:
+      type: object
+      properties:
+        tool_names:
+          anyOf:
+          - description: A list of tool names to match against.
+            type: array
+            items:
+              type: string
+          - type: 'null'
+        read_only:
+          anyOf:
+          - description: Whether to allow only read-only tools for matching entries.
+            type: boolean
+          - type: 'null'
+      required: []
+    LiveMCPRequireApprovalFilterParam:
+      type: object
+      properties:
+        always:
+          anyOf:
+          - description: A filter that forces approval for matching tools.
+            $ref: '#/components/schemas/LiveMCPToolFilterParam'
+          - type: 'null'
+        never:
+          anyOf:
+          - description: A filter that skips approval for matching tools.
+            $ref: '#/components/schemas/LiveMCPToolFilterParam'
+          - type: 'null'
+      required: []
+    LiveMCPRequireApprovalApiEnum:
+      type: string
+      enum:
+      - always
+      - never
+    LiveCallableToolAllowedCaller:
+      type: string
+      enum:
+      - direct
+      - programmatic
     LiveMCPToolInputParam:
       type: object
       properties:
@@ -80990,6 +81058,27 @@ components:
           x-stainless-go-json: omitzero
       required:
       - data_channel
+    LiveSpeechWakePolicyParam:
+      description: Starts inference when microphone speech is detected.
+      type: object
+      properties:
+        type:
+          description: The wake policy type, always `speech`.
+          default: speech
+          x-stainless-const: true
+          type: string
+          enum:
+          - speech
+        vad_threshold:
+          description: The speech detection threshold for the first wake and each later wake, from 0 to 1 inclusive. Defaults to 0.5. Higher values require stronger evidence of speech. This setting is independent of active turn detection.
+          type: number
+      required:
+      - type
+    idle_timeout_s:
+      description: Whole seconds of inactivity after which a Live WebRTC session with a speech wake policy pauses inference. The connection and conversation history are retained. Omit to keep inference active after the first wake until the session ends.
+      type: integer
+      minimum: 5
+      maximum: 60
     session:
       type: object
       description: The newly created Live session. Use its ID for session controls and sideband connections.
@@ -81123,6 +81212,102 @@ components:
         URI that should appear in the SIP Refer-To header. Supports values like
         `tel:+14155550123` or `sip:agent@example.com`.
       example: tel:+14155550123
+    CSAMCategoryFlags:
+      additionalProperties: false
+      properties:
+        likely-csam:
+          title: Likely-Csam
+          type: boolean
+        likely-csam/gen-ai:
+          title: Likely-Csam/Gen-Ai
+          type: boolean
+      required:
+      - likely-csam
+      - likely-csam/gen-ai
+      title: CSAMCategoryFlags
+      type: object
+    CSAMCategoryScores:
+      additionalProperties: false
+      properties:
+        likely-csam:
+          title: Likely-Csam
+          type: number
+        likely-csam/gen-ai:
+          title: Likely-Csam/Gen-Ai
+          type: number
+      required:
+      - likely-csam
+      - likely-csam/gen-ai
+      title: CSAMCategoryScores
+      type: object
+    CSAMCategoryAppliedInputTypes:
+      additionalProperties: false
+      properties:
+        likely-csam:
+          items:
+            const: image
+            type: string
+          maxItems: 1
+          minItems: 1
+          title: Likely-Csam
+          type: array
+        likely-csam/gen-ai:
+          items:
+            const: image
+            type: string
+          maxItems: 1
+          minItems: 1
+          title: Likely-Csam/Gen-Ai
+          type: array
+      required:
+      - likely-csam
+      - likely-csam/gen-ai
+      title: CSAMCategoryAppliedInputTypes
+      type: object
+    CSAMModerationResult:
+      properties:
+        flagged:
+          description: Whether either CSAM category was flagged.
+          title: Flagged
+          type: boolean
+        categories:
+          $ref: '#/components/schemas/CSAMCategoryFlags'
+          description: Whether the image was flagged in each category.
+        category_scores:
+          $ref: '#/components/schemas/CSAMCategoryScores'
+          description: The classifier score for each category.
+        category_applied_input_types:
+          $ref: '#/components/schemas/CSAMCategoryAppliedInputTypes'
+          description: The input types evaluated for each category.
+      required:
+      - flagged
+      - categories
+      - category_scores
+      - category_applied_input_types
+      title: CSAMModerationResult
+      type: object
+    CreateCSAMModerationResponse:
+      properties:
+        id:
+          title: Id
+          type: string
+        model:
+          const: omni-moderation-csam-latest
+          title: Model
+          type: string
+        results:
+          items:
+            $ref: '#/components/schemas/CSAMModerationResult'
+          maxItems: 1
+          minItems: 1
+          title: Results
+          type: array
+      required:
+      - id
+      - model
+      - results
+      title: CreateCSAMModerationResponse
+      type: object
     AwsExternalStorageProviderResponse:
       properties:
         type:
@@ -81374,6 +81559,23 @@ components:
         enum:
         - standard
         - pro
+    BackgroundCompletionWindowEnum:
+      type: string
+      enum:
+      - soonest
+      - 2h
+      - 8h
+    BackgroundOptionsParam:
+      properties:
+        completion_window:
+          $ref: '#/components/schemas/BackgroundCompletionWindowEnum'
+          description: The completion window for background execution. Defaults to `soonest`; `2h` and `8h` select discounted background execution.
+        continuation_id:
+          type: string
+          description: A customer-provided opaque identifier used to prioritize related background requests. It does not add prior history to the input.
+      type: object
+      required: []
+      description: Options for background execution.
     ConversationParam-2:
       properties:
         id:
@@ -83243,6 +83445,26 @@ components:
       required:
       - status
       description: The current enforcement state of a hard spend limit.
+    EmailNotificationChannel:
+      properties:
+        type:
+          type: string
+          enum:
+          - email
+          default: email
+          x-stainless-const: true
+        recipients:
+          items:
+            type: string
+          type: array
+        subject_prefix:
+          anyOf:
+          - type: string
+          - type: 'null'
+      type: object
+      required:
+      - type
+      - recipients
     OrganizationSpendLimitResource:
       properties:
         object:
@@ -83272,6 +83494,28 @@ components:
       - interval
       - enforcement
       description: Represents a hard spend limit configured at the organization level.
+    SpendLimitEmailNotificationChannelParams:
+      properties:
+        type:
+          type: string
+          enum:
+          - email
+          default: email
+          x-stainless-const: true
+        recipients:
+          items:
+            type: string
+          type: array
+          description: Additional email recipients. Omit to keep them unchanged; send [] to clear them.
+          x-openai-go-public-type: pointer_collection
+        subject_prefix:
+          anyOf:
+          - type: string
+            description: Email subject prefix. Omit to keep it unchanged; send null or an empty string to clear it.
+          - type: 'null'
+      type: object
+      required:
+      - type
     UpdateOrganizationSpendLimitBody:
       properties:
         threshold_amount:
@@ -83288,6 +83532,14 @@ components:
           enum:
           - month
           description: The time interval for evaluating spend against the threshold. Currently, only `month` is supported.
+        notification_channel:
+          anyOf:
+          - discriminator:
+              propertyName: type
+            description: Configure email notifications when the spend limit is reached. Leave this out to keep the current settings, or send null to reset to owner-only notifications.
+            anyOf:
+            - $ref: '#/components/schemas/SpendLimitEmailNotificationChannelParams'
+          - type: 'null'
       type: object
       required:
       - threshold_amount
@@ -83356,6 +83608,14 @@ components:
           enum:
           - month
           description: The time interval for evaluating spend against the threshold. Currently, only `month` is supported.
+        notification_channel:
+          anyOf:
+          - discriminator:
+              propertyName: type
+            description: Configure email notifications when the spend limit is reached. Leave this out to keep the current settings, or send null to reset to owner-only notifications.
+            anyOf:
+            - $ref: '#/components/schemas/SpendLimitEmailNotificationChannelParams'
+          - type: 'null'
       type: object
       required:
       - threshold_amount
@@ -91502,6 +91762,7 @@ components:
       - context_length_exceeded
       - max_output_tokens
       - usage_limit_exceeded
+      - api_key_spend_limit_exceeded
       - project_spend_limit_exceeded
       - organization_spend_limit_exceeded
       - organization_usage_limit_exceeded
@@ -91526,6 +91787,7 @@ components:
       - The request exceeds the model's context window.
       - The model reached its output token limit before finishing the response.
       - The organization has reached a usage, plan, or billing limit.
+      - The API key has reached its enforced spend limit.
       - The project has reached its enforced spend limit.
       - The organization has reached its enforced spend limit.
       - The organization has reached its OpenAI-assigned usage limit.
@@ -95479,6 +95741,17 @@ components:
           - $ref: '#/components/schemas/PromptCacheOptionsParam-2'
           - type: 'null'
           description: Default prompt cache lifetime for future turns. Send null to clear the session default.
+        vault_ids:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+            minLength: 0
+            maxLength: 1048576
+          minItems: 0
+          maxItems: 16384
+          description: Replaces the session's referenced vaults. Omit to retain them; null or [] clears them.
         review:
           $ref: '#/components/schemas/SessionReviewParam'
           description: Default action review for new root turns. Existing turns and their subagents keep their review mode.
@@ -98777,7 +99050,7 @@ components:
           delegation:
             type: responses
             responses:
-              model: gpt-6-astra
+              model: gpt-6.2-astra
               instructions: Check restaurant availability. Ask before confirming a booking.
               max_output_tokens: 1024
               tools: []
@@ -98823,10 +99096,62 @@ components:
             delegation:
               type: responses
               responses:
-                model: gpt-6-astra
+                model: gpt-6.2-astra
                 instructions: Check restaurant availability. Ask before confirming a booking.
                 max_output_tokens: 1024
                 tools: []
+    LiveSessionResumed:
+      description: Sent when speech wakes inference and it is ready for audio in a Live WebRTC session. This occurs on the first wake and after each later wake. Delivered to the sideband and, when permitted by its event settings, the data channel.
+      example:
+        type: session.resumed
+        event_id: evt_resumed_001
+      type: object
+      properties:
+        event_id:
+          description: The unique ID of the Live server event.
+          type: string
+        client_event_id:
+          description: The event_id of the client command associated with this server event, when supplied.
+          type: string
+        type:
+          default: session.resumed
+          x-stainless-const: true
+          type: string
+          enum:
+          - session.resumed
+      required:
+      - event_id
+      - type
+      x-oaiMeta:
+        example:
+          type: session.resumed
+          event_id: evt_resumed_001
+    LiveSessionPaused:
+      description: Sent when the idle timeout pauses inference in a Live WebRTC session. The WebRTC connection, sideband, and session ID persist. Delivered to the sideband and, when permitted by its event settings, the data channel.
+      example:
+        type: session.paused
+        event_id: evt_paused_001
+      type: object
+      properties:
+        event_id:
+          description: The unique ID of the Live server event.
+          type: string
+        client_event_id:
+          description: The event_id of the client command associated with this server event, when supplied.
+          type: string
+        type:
+          default: session.paused
+          x-stainless-const: true
+          type: string
+          enum:
+          - session.paused
+      required:
+      - event_id
+      - type
+      x-oaiMeta:
+        example:
+          type: session.paused
+          event_id: evt_paused_001
     LiveInputAudioMuted:
       description: Acknowledges a session.input_audio.mute command. An independent input mute sends silence to the model and preserves sideband audio reflection. Fixture playback does not emit this event.
       example:
@@ -99876,79 +100201,6 @@ components:
             delta: An outdoor table is available at 7 PM.
             sequence_number: 3
             logprobs: []
-    LiveSpeechWakePolicyParam:
-      description: Inference starts when the Live WebRTC session connects. After an idle pause, microphone speech resumes inference.
-      type: object
-      properties:
-        type:
-          description: The wake policy type, always `speech`.
-          default: speech
-          x-stainless-const: true
-          type: string
-          enum:
-          - speech
-        vad_threshold:
-          description: The speech detection threshold for resuming paused inference, from 0 to 1 inclusive. Defaults to 0.5. Higher values require stronger evidence of speech. This setting is independent of active turn detection.
-          type: number
-      required:
-      - type
-    idle_timeout_s:
-      description: Whole seconds of inactivity after which a Live WebRTC session with a speech wake policy pauses inference. The connection and conversation history are retained. Omit to keep inference active until the session ends.
-      type: integer
-      minimum: 5
-      maximum: 60
-    LiveSessionResumed:
-      description: Sent when speech resumes paused inference and it is ready for audio in a Live WebRTC session. Delivered to the sideband and, when permitted by its event settings, the data channel.
-      example:
-        type: session.resumed
-        event_id: evt_resumed_001
-      type: object
-      properties:
-        event_id:
-          description: The unique ID of the Live server event.
-          type: string
-        client_event_id:
-          description: The event_id of the client command associated with this server event, when supplied.
-          type: string
-        type:
-          default: session.resumed
-          x-stainless-const: true
-          type: string
-          enum:
-          - session.resumed
-      required:
-      - event_id
-      - type
-      x-oaiMeta:
-        example:
-          type: session.resumed
-          event_id: evt_resumed_001
-    LiveSessionPaused:
-      description: Sent when the idle timeout pauses inference in a Live WebRTC session. The WebRTC connection, sideband, and session ID persist. Delivered to the sideband and, when permitted by its event settings, the data channel.
-      example:
-        type: session.paused
-        event_id: evt_paused_001
-      type: object
-      properties:
-        event_id:
-          description: The unique ID of the Live server event.
-          type: string
-        client_event_id:
-          description: The event_id of the client command associated with this server event, when supplied.
-          type: string
-        type:
-          default: session.paused
-          x-stainless-const: true
-          type: string
-          enum:
-          - session.paused
-      required:
-      - event_id
-      - type
-      x-oaiMeta:
-        example:
-          type: session.paused
-          event_id: evt_paused_001
     LiveSessionUsage:
       description: Cumulative billable duration for a Live session. Eligible WebRTC sessions also report the active and paused breakdown. Do not sum values across usage events.
       type: object
@@ -100038,7 +100290,7 @@ components:
           delegation:
             type: client
         usage:
-          seconds: 45
+          seconds: 45.8
       type: object
       properties:
         event_id:
@@ -100115,7 +100367,7 @@ components:
             delegation:
               type: client
           usage:
-            seconds: 45
+            seconds: 45.8
     LiveLiveError:
       description: Details of an error encountered by the Live session, including the affected parameter or client command when available.
       type: object
@@ -101540,7 +101792,7 @@ components:
             - $ref: '#/components/schemas/BetaInlineSkillParam'
           type: array
           maxItems: 200
-          description: An optional list of skills referenced by id or inline data.
+          description: An optional list of skills referenced by id or inline data. Across all inline skills in this list, decoded ZIP data must total at most 50 MiB and Base64 text must total at most 70,254,592 characters, including line breaks. Skill references do not count toward these limits.
       type: object
       required:
       - type
@@ -106126,9 +106378,9 @@ components:
       - $ref: '#/components/schemas/BetaModelIdsResponses'
       - type: string
       - type: 'null'
-      description: Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide range of models with different capabilities, performance characteristics, and price points. Refer to the [model guide](https://developers.openai.com/api/docs/models) to browse and compare available models.
+      description: Model ID used to generate the response, like `gpt-6.2-astra`. OpenAI offers a wide range of models with different capabilities, performance characteristics, and price points. Refer to the [model guide](https://developers.openai.com/api/docs/models) to browse and compare available models.
     BetaModelIdsResponses:
-      example: gpt-6-astra
+      example: gpt-6.2-astra
       anyOf:
       - $ref: '#/components/schemas/BetaModelIdsShared'
       - type: string
@@ -106187,7 +106439,7 @@ components:
           gpt-5-pro:
             message: 'Announced shutdown date: 2026-12-11. See https://developers.openai.com/api/docs/deprecations for details and recommended replacements.'
     BetaModelIdsShared:
-      example: gpt-6-astra
+      example: gpt-6.2-astra
       anyOf:
       - type: string
       - $ref: '#/components/schemas/ChatModel'
@@ -107807,7 +108059,7 @@ components:
               "error": null,
               "incomplete_details": null,
               "instructions": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [],
               "parallel_tool_calls": true,
               "temperature": 1,
@@ -108481,7 +108733,7 @@ components:
           - type: 'null'
         model:
           description: |
-            Model ID used to generate the response, like `gpt-6-astra`. OpenAI
+            Model ID used to generate the response, like `gpt-6.2-astra`. OpenAI
             offers a wide range of models with different capabilities, performance
             characteristics, and price points. Refer to the [model guide](https://developers.openai.com/api/docs/models)
             to browse and compare available models.
@@ -109983,7 +110235,7 @@ components:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [],
               "parallel_tool_calls": true,
               "previous_response_id": null,
@@ -110499,7 +110751,7 @@ components:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [],
               "parallel_tool_calls": true,
               "previous_response_id": null,
@@ -110688,7 +110940,7 @@ components:
               "input": [],
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [
                 {
                   "id": "msg_123",
@@ -111142,7 +111394,7 @@ components:
               },
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [],
               "previous_response_id": null,
               "reasoning_effort": null,
@@ -111210,7 +111462,7 @@ components:
               "incomplete_details": null,
               "instructions": null,
               "max_output_tokens": null,
-              "model": "gpt-6-astra",
+              "model": "gpt-6.2-astra",
               "output": [],
               "previous_response_id": null,
               "reasoning_effort": null,
@@ -113074,7 +113326,7 @@ components:
           {
             "type": "response.create",
             "stream_id": "agent_1",
-            "model": "gpt-6-astra",
+            "model": "gpt-6.2-astra",
             "input": "Say hello."
           }
     BetaCreateResponse:
@@ -113163,6 +113415,12 @@ components:
               description: |
                 Configuration for running moderation on the input and output of this response.
             - type: 'null'
+          background_options:
+            $ref: '#/components/schemas/BetaBackgroundOptionsParam'
+            description: |
+              Options for background execution on HTTP requests. The `2h` and `8h`
+              completion windows require `background: true`, Standard processing,
+              and `stream: false` or omitted.
           stream:
             anyOf:
             - description: |
@@ -113205,12 +113463,6 @@ components:
             - type: 'null'
             x-openai-go-legacy-bool-fields:
             - enabled
-          background_options:
-            $ref: '#/components/schemas/BetaBackgroundOptionsParam'
-            description: |
-              Options for background execution on HTTP requests. The `2h` and `8h`
-              completion windows require `background: true`, Standard processing,
-              and `stream: false` or omitted.
     BetaMultiAgentParam:
       properties:
         enabled:
@@ -113258,6 +113510,23 @@ components:
               false to optimize for bandwidth if you trust the network links between
               your application and the OpenAI API.
       - type: 'null'
+    BetaBackgroundOptionsParam:
+      properties:
+        completion_window:
+          $ref: '#/components/schemas/BetaBackgroundCompletionWindowEnum'
+          description: The completion window for background execution. Defaults to `soonest`; `2h` and `8h` select discounted background execution.
+        continuation_id:
+          type: string
+          description: A customer-provided opaque identifier used to prioritize related background requests. It does not add prior history to the input.
+      type: object
+      required: []
+      description: Options for background execution.
+    BetaBackgroundCompletionWindowEnum:
+      type: string
+      enum:
+      - soonest
+      - 2h
+      - 8h
     BetaModerationParam:
       properties:
         model:
@@ -113413,176 +113682,6 @@ components:
       - $ref: '#/components/schemas/BetaResponseCustomToolCallInputDoneEvent'
       discriminator:
         propertyName: type
-    BackgroundOptionsParam:
-      properties:
-        completion_window:
-          $ref: '#/components/schemas/BackgroundCompletionWindowEnum'
-          description: The completion window for background execution. Defaults to `soonest`; `2h` and `8h` select discounted background execution.
-        continuation_id:
-          type: string
-          description: A customer-provided opaque identifier used to prioritize related background requests. It does not add prior history to the input.
-      type: object
-      required: []
-      description: Options for background execution.
-    BackgroundCompletionWindowEnum:
-      type: string
-      enum:
-      - soonest
-      - 2h
-      - 8h
-    BetaBackgroundOptionsParam:
-      properties:
-        completion_window:
-          $ref: '#/components/schemas/BetaBackgroundCompletionWindowEnum'
-          description: The completion window for background execution. Defaults to `soonest`; `2h` and `8h` select discounted background execution.
-        continuation_id:
-          type: string
-          description: A customer-provided opaque identifier used to prioritize related background requests. It does not add prior history to the input.
-      type: object
-      required: []
-      description: Options for background execution.
-    BetaBackgroundCompletionWindowEnum:
-      type: string
-      enum:
-      - soonest
-      - 2h
-      - 8h
-    LiveCallableToolAllowedCaller:
-      type: string
-      enum:
-      - direct
-      - programmatic
-    LiveMCPRequireApprovalApiEnum:
-      type: string
-      enum:
-      - always
-      - never
-    LiveMCPRequireApprovalFilterParam:
-      type: object
-      properties:
-        always:
-          anyOf:
-          - description: A filter that forces approval for matching tools.
-            $ref: '#/components/schemas/LiveMCPToolFilterParam'
-          - type: 'null'
-        never:
-          anyOf:
-          - description: A filter that skips approval for matching tools.
-            $ref: '#/components/schemas/LiveMCPToolFilterParam'
-          - type: 'null'
-      required: []
-    LiveMCPToolFilterParam:
-      type: object
-      properties:
-        tool_names:
-          anyOf:
-          - description: A list of tool names to match against.
-            type: array
-            items:
-              type: string
-          - type: 'null'
-        read_only:
-          anyOf:
-          - description: Whether to allow only read-only tools for matching entries.
-            type: boolean
-          - type: 'null'
-      required: []
-    CSAMCategoryAppliedInputTypes:
-      additionalProperties: false
-      properties:
-        likely-csam:
-          items:
-            const: image
-            type: string
-          maxItems: 1
-          minItems: 1
-          title: Likely-Csam
-          type: array
-        likely-csam/gen-ai:
-          items:
-            const: image
-            type: string
-          maxItems: 1
-          minItems: 1
-          title: Likely-Csam/Gen-Ai
-          type: array
-      required:
-      - likely-csam
-      - likely-csam/gen-ai
-      title: CSAMCategoryAppliedInputTypes
-      type: object
-    CSAMCategoryFlags:
-      additionalProperties: false
-      properties:
-        likely-csam:
-          title: Likely-Csam
-          type: boolean
-        likely-csam/gen-ai:
-          title: Likely-Csam/Gen-Ai
-          type: boolean
-      required:
-      - likely-csam
-      - likely-csam/gen-ai
-      title: CSAMCategoryFlags
-      type: object
-    CSAMCategoryScores:
-      additionalProperties: false
-      properties:
-        likely-csam:
-          title: Likely-Csam
-          type: number
-        likely-csam/gen-ai:
-          title: Likely-Csam/Gen-Ai
-          type: number
-      required:
-      - likely-csam
-      - likely-csam/gen-ai
-      title: CSAMCategoryScores
-      type: object
-    CSAMModerationResult:
-      properties:
-        flagged:
-          description: Whether either CSAM category was flagged.
-          title: Flagged
-          type: boolean
-        categories:
-          $ref: '#/components/schemas/CSAMCategoryFlags'
-          description: Whether the image was flagged in each category.
-        category_scores:
-          $ref: '#/components/schemas/CSAMCategoryScores'
-          description: The classifier score for each category.
-        category_applied_input_types:
-          $ref: '#/components/schemas/CSAMCategoryAppliedInputTypes'
-          description: The input types evaluated for each category.
-      required:
-      - flagged
-      - categories
-      - category_scores
-      - category_applied_input_types
-      title: CSAMModerationResult
-      type: object
-    CreateCSAMModerationResponse:
-      properties:
-        id:
-          title: Id
-          type: string
-        model:
-          const: omni-moderation-csam-latest
-          title: Model
-          type: string
-        results:
-          items:
-            $ref: '#/components/schemas/CSAMModerationResult'
-          maxItems: 1
-          minItems: 1
-          title: Results
-          type: array
-      required:
-      - id
-      - model
-      - results
-      title: CreateCSAMModerationResponse
-      type: object
     DecisionPromptCacheBreakpoint:
       type: object
       properties:

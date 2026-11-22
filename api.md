@@ -1564,6 +1564,10 @@ Methods:
 
 ### SpendLimit
 
+Params Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SpendLimitEmailNotificationChannelParam">SpendLimitEmailNotificationChannelParam</a>
+
 Response Types:
 
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#OrganizationSpendLimit">OrganizationSpendLimit</a>

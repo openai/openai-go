@@ -29,7 +29,7 @@ func TestFineTuningCheckpointPermissionNew(t *testing.T) {
 	)
 	_, err := client.FineTuning.Checkpoints.Permissions.New(
 		context.TODO(),
-		"ft:gpt-4o-mini-2024-07-18:org:weather:B7R9VjQd",
+		"ft:gpt-4.1-mini-2025-04-14:org:weather:B7R9VjQd",
 		openai.FineTuningCheckpointPermissionNewParams{
 			ProjectIDs: []string{"string"},
 		},
@@ -125,7 +125,7 @@ func TestFineTuningCheckpointPermissionDelete(t *testing.T) {
 	)
 	_, err := client.FineTuning.Checkpoints.Permissions.Delete(
 		context.TODO(),
-		"ft:gpt-4o-mini-2024-07-18:org:weather:B7R9VjQd",
+		"ft:gpt-4.1-mini-2025-04-14:org:weather:B7R9VjQd",
 		"cp_zc4Q7MP6XxulcVzj4MZdwsAB",
 	)
 	if err != nil {

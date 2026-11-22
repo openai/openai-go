@@ -10453,7 +10453,7 @@ type AdminOrganizationUsageCostsParams struct {
 	// Any of "project_id", "user_id", "line_item", "api_key_id", "api_source".
 	GroupBy []string `query:"group_by,omitzero" json:"-"`
 	// Return only costs for these exact line item names. Each value must match the
-	// complete `line_item` value, for example `gpt-6-astra, input_tokens`.
+	// complete `line_item` value, for example `gpt-6.2-astra, input_tokens`.
 	LineItems []string `query:"line_items,omitzero" json:"-"`
 	// Return only costs for these projects.
 	ProjectIDs []string `query:"project_ids,omitzero" json:"-"`

@@ -125,7 +125,9 @@ func TestBetaAgentVaultCredentialUpdateWithOptionalParams(t *testing.T) {
 					},
 				},
 			},
-			Metadata: map[string]string{},
+			Metadata: map[string]string{
+				"environment": "staging",
+			},
 		},
 	)
 	if err != nil {

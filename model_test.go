@@ -27,7 +27,7 @@ func TestModelGet(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
-	_, err := client.Models.Get(context.TODO(), "gpt-6-astra")
+	_, err := client.Models.Get(context.TODO(), "gpt-6.2-astra")
 	if err != nil {
 		var apierr *openai.Error
 		if errors.As(err, &apierr) {
@@ -75,7 +75,7 @@ func TestModelDelete(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
-	_, err := client.Models.Delete(context.TODO(), "ft:gpt-4o-mini:acemeco:suffix:abc123")
+	_, err := client.Models.Delete(context.TODO(), "ft:gpt-4.1-mini-2025-04-14:acemeco:suffix:abc123")
 	if err != nil {
 		var apierr *openai.Error
 		if errors.As(err, &apierr) {

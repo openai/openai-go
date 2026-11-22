@@ -30,14 +30,14 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{{
-			OfDeveloper: &openai.ChatCompletionDeveloperMessageParam{
-				Content: openai.ChatCompletionDeveloperMessageParamContentUnion{
-					OfString: openai.String("string"),
+			OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("Say hello in one sentence."),
 				},
 				Name: openai.String("name"),
 			},
 		}},
-		Model: shared.ChatModelGPT6Astra,
+		Model: shared.ChatModelGPT6_2Astra,
 		Audio: openai.ChatCompletionAudioParam{
 			Format: openai.ChatCompletionAudioParamFormatWAV,
 			Voice: openai.ChatCompletionAudioParamVoiceUnion{

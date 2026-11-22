@@ -1353,7 +1353,10 @@ type BetaContainerAuto struct {
 	MemoryLimit BetaContainerAutoMemoryLimit `json:"memory_limit" api:"nullable"`
 	// Network access policy for the container.
 	NetworkPolicy BetaContainerAutoNetworkPolicyUnion `json:"network_policy"`
-	// An optional list of skills referenced by id or inline data.
+	// An optional list of skills referenced by id or inline data. Across all inline
+	// skills in this list, decoded ZIP data must total at most 50 MiB and Base64 text
+	// must total at most 70,254,592 characters, including line breaks. Skill
+	// references do not count toward these limits.
 	Skills []BetaContainerAutoSkillUnion `json:"skills"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -1545,7 +1548,10 @@ type BetaContainerAutoParam struct {
 	FileIDs []string `json:"file_ids,omitzero"`
 	// Network access policy for the container.
 	NetworkPolicy BetaContainerAutoNetworkPolicyUnionParam `json:"network_policy,omitzero"`
-	// An optional list of skills referenced by id or inline data.
+	// An optional list of skills referenced by id or inline data. Across all inline
+	// skills in this list, decoded ZIP data must total at most 50 MiB and Base64 text
+	// must total at most 70,254,592 characters, including line breaks. Skill
+	// references do not count toward these limits.
 	Skills []BetaContainerAutoSkillUnionParam `json:"skills,omitzero"`
 	// Automatically creates a container for this request
 	//
@@ -4455,9 +4461,9 @@ type BetaResponse struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata map[string]string `json:"metadata" api:"required"`
-	// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
-	// range of models with different capabilities, performance characteristics, and
-	// price points. Refer to the
+	// Model ID used to generate the response, like `gpt-6.2-astra`. OpenAI offers a
+	// wide range of models with different capabilities, performance characteristics,
+	// and price points. Refer to the
 	// [model guide](https://developers.openai.com/api/docs/models) to browse and
 	// compare available models.
 	Model BetaResponseModel `json:"model" api:"required"`
@@ -4793,9 +4799,9 @@ func (r *BetaResponseInstructionsUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
-// range of models with different capabilities, performance characteristics, and
-// price points. Refer to the
+// Model ID used to generate the response, like `gpt-6.2-astra`. OpenAI offers a
+// wide range of models with different capabilities, performance characteristics,
+// and price points. Refer to the
 // [model guide](https://developers.openai.com/api/docs/models) to browse and
 // compare available models.
 type BetaResponseModel string
@@ -36698,9 +36704,9 @@ type BetaResponsesClientEventResponseCreateParam struct {
 	//   - [Conversation state](https://developers.openai.com/api/docs/guides/conversation-state)
 	//   - [Function calling](https://developers.openai.com/api/docs/guides/function-calling)
 	Input BetaResponsesClientEventResponseCreateInputUnionParam `json:"input,omitzero"`
-	// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
-	// range of models with different capabilities, performance characteristics, and
-	// price points. Refer to the
+	// Model ID used to generate the response, like `gpt-6.2-astra`. OpenAI offers a
+	// wide range of models with different capabilities, performance characteristics,
+	// and price points. Refer to the
 	// [model guide](https://developers.openai.com/api/docs/models) to browse and
 	// compare available models.
 	Model BetaResponsesClientEventResponseCreateModel `json:"model,omitzero"`
@@ -36916,9 +36922,9 @@ func (u *BetaResponsesClientEventResponseCreateInputUnionParam) asAny() any {
 	return nil
 }
 
-// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
-// range of models with different capabilities, performance characteristics, and
-// price points. Refer to the
+// Model ID used to generate the response, like `gpt-6.2-astra`. OpenAI offers a
+// wide range of models with different capabilities, performance characteristics,
+// and price points. Refer to the
 // [model guide](https://developers.openai.com/api/docs/models) to browse and
 // compare available models.
 type BetaResponsesClientEventResponseCreateModel = string
@@ -45142,9 +45148,9 @@ type BetaResponseNewParams struct {
 	//   - [Conversation state](https://developers.openai.com/api/docs/guides/conversation-state)
 	//   - [Function calling](https://developers.openai.com/api/docs/guides/function-calling)
 	Input BetaResponseNewParamsInputUnion `json:"input,omitzero"`
-	// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
-	// range of models with different capabilities, performance characteristics, and
-	// price points. Refer to the
+	// Model ID used to generate the response, like `gpt-6.2-astra`. OpenAI offers a
+	// wide range of models with different capabilities, performance characteristics,
+	// and price points. Refer to the
 	// [model guide](https://developers.openai.com/api/docs/models) to browse and
 	// compare available models.
 	Model BetaResponseNewParamsModel `json:"model,omitzero"`
@@ -45337,9 +45343,9 @@ func (u *BetaResponseNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
-// range of models with different capabilities, performance characteristics, and
-// price points. Refer to the
+// Model ID used to generate the response, like `gpt-6.2-astra`. OpenAI offers a
+// wide range of models with different capabilities, performance characteristics,
+// and price points. Refer to the
 // [model guide](https://developers.openai.com/api/docs/models) to browse and
 // compare available models.
 type BetaResponseNewParamsModel string
@@ -46205,9 +46211,9 @@ type BetaResponseCancelParams struct {
 }
 
 type BetaResponseCompactParams struct {
-	// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
-	// range of models with different capabilities, performance characteristics, and
-	// price points. Refer to the
+	// Model ID used to generate the response, like `gpt-6.2-astra`. OpenAI offers a
+	// wide range of models with different capabilities, performance characteristics,
+	// and price points. Refer to the
 	// [model guide](https://developers.openai.com/api/docs/models) to browse and
 	// compare available models.
 	Model BetaResponseCompactParamsModel `json:"model,omitzero" api:"required"`
@@ -46273,9 +46279,9 @@ func (r *BetaResponseCompactParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
-// range of models with different capabilities, performance characteristics, and
-// price points. Refer to the
+// Model ID used to generate the response, like `gpt-6.2-astra`. OpenAI offers a
+// wide range of models with different capabilities, performance characteristics,
+// and price points. Refer to the
 // [model guide](https://developers.openai.com/api/docs/models) to browse and
 // compare available models.
 type BetaResponseCompactParamsModel string

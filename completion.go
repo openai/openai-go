@@ -310,7 +310,8 @@ type CompletionNewParams struct {
 	// [Example Python code](https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken)
 	// for counting tokens.
 	MaxTokens param.Opt[int64] `json:"max_tokens,omitzero"`
-	// How many completions to generate for each prompt.
+	// How many completions to generate for each prompt. Omit `n` to generate one
+	// completion per prompt. Newer models reject an explicit `n`, even `n=1`.
 	//
 	// **Note:** Because this parameter generates many completions, it can quickly
 	// consume your token quota. Use carefully and ensure that you have reasonable
@@ -363,7 +364,7 @@ type CompletionNewParams struct {
 	// As an example, you can pass `{"50256": -100}` to prevent the <|endoftext|> token
 	// from being generated.
 	LogitBias map[string]int64 `json:"logit_bias,omitzero"`
-	// Not supported with latest reasoning models `o3` and `o4-mini`.
+	// Not supported with reasoning models `o3` and `o4-mini`.
 	//
 	// Up to 4 sequences where the API will stop generating further tokens. The
 	// returned text will not contain the stop sequence.

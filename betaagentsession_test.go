@@ -158,7 +158,8 @@ func TestBetaAgentSessionUpdateWithOptionalParams(t *testing.T) {
 			PromptCacheOptions: openai.BetaAgentSessionUpdateParamsPromptCacheOptions{
 				Ttl: "30m",
 			},
-			Review: openai.BetaAgentSessionUpdateParamsReviewNone,
+			Review:   openai.BetaAgentSessionUpdateParamsReviewNone,
+			VaultIDs: []string{"string"},
 		},
 	)
 	if err != nil {

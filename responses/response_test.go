@@ -50,7 +50,7 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		},
 		Include: []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
 		Input: responses.ResponseNewParamsInputUnion{
-			OfString: openai.String("string"),
+			OfString: openai.String("Write a one-sentence bedtime story about a unicorn."),
 		},
 		Instructions:    openai.String("instructions"),
 		MaxOutputTokens: openai.Int(16),
@@ -58,7 +58,7 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		Metadata: shared.Metadata{
 			"foo": "string",
 		},
-		Model: shared.ResponsesModel("gpt-6-astra"),
+		Model: shared.ResponsesModel("gpt-6.2-astra"),
 		Moderation: responses.ResponseNewParamsModeration{
 			Model: "model",
 			Policy: responses.ResponseNewParamsModerationPolicy{
