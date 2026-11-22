@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.106.0](https://github.com/openai/openai-go/compare/v3.105.0...v3.106.0) (2026-11-22)
+
+
+### Features
+
+* **api:** add agent session spending controls ([#1289](https://github.com/openai/openai-go/issues/1289)) ([29c2c82](https://github.com/openai/openai-go/commit/29c2c82c3282b75818bd0e1c3d449b38921ec238))
+* **api:** add spend limit notification settings ([#1287](https://github.com/openai/openai-go/issues/1287)) ([34bdddb](https://github.com/openai/openai-go/commit/34bdddb850628926a698740290cabb0839f4a8a9))
+
 ## [3.105.0](https://github.com/openai/openai-go/compare/v3.104.0...v3.105.0) (2026-11-19)
 
 
