@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.107.0](https://github.com/openai/openai-go/compare/v3.106.0...v3.107.0) (2026-11-24)
+
+
+### Features
+
+* **api:** add healthcare model IDs for Responses ([#1294](https://github.com/openai/openai-go/issues/1294)) ([2bac9a9](https://github.com/openai/openai-go/commit/2bac9a921e5c3335cbac2d2e050d427f9e14d468))
+
 ## [3.106.0](https://github.com/openai/openai-go/compare/v3.105.0...v3.106.0) (2026-11-22)
 
 
