@@ -5181,6 +5181,10 @@ const (
 	BetaResponseModelGPTRosalindResearch   BetaResponseModel = "gpt-rosalind-research"
 	BetaResponseModelGPT6Rosalind          BetaResponseModel = "gpt-6-rosalind"
 	BetaResponseModelGPT6_2AstraLaw        BetaResponseModel = "gpt-6.2-astra-law"
+	BetaResponseModelGPT6AstraHealthcare   BetaResponseModel = "gpt-6-astra-healthcare"
+	BetaResponseModelGPT6_1SolHealthcare   BetaResponseModel = "gpt-6.1-sol-healthcare"
+	BetaResponseModelGPT6_2AstraHealthcare BetaResponseModel = "gpt-6.2-astra-healthcare"
+	BetaResponseModelGPT6_2SolHealthcare   BetaResponseModel = "gpt-6.2-sol-healthcare"
 )
 
 // BetaResponseToolChoiceUnion contains all possible properties and values from
@@ -37304,6 +37308,10 @@ const (
 	BetaResponsesClientEventResponseCreateModelGPTRosalindResearch   BetaResponsesClientEventResponseCreateModel = "gpt-rosalind-research"
 	BetaResponsesClientEventResponseCreateModelGPT6Rosalind          BetaResponsesClientEventResponseCreateModel = "gpt-6-rosalind"
 	BetaResponsesClientEventResponseCreateModelGPT6_2AstraLaw        BetaResponsesClientEventResponseCreateModel = "gpt-6.2-astra-law"
+	BetaResponsesClientEventResponseCreateModelGPT6AstraHealthcare   BetaResponsesClientEventResponseCreateModel = "gpt-6-astra-healthcare"
+	BetaResponsesClientEventResponseCreateModelGPT6_1SolHealthcare   BetaResponsesClientEventResponseCreateModel = "gpt-6.1-sol-healthcare"
+	BetaResponsesClientEventResponseCreateModelGPT6_2AstraHealthcare BetaResponsesClientEventResponseCreateModel = "gpt-6.2-astra-healthcare"
+	BetaResponsesClientEventResponseCreateModelGPT6_2SolHealthcare   BetaResponsesClientEventResponseCreateModel = "gpt-6.2-sol-healthcare"
 )
 
 // Configuration for running moderation on the input and output of this response.
@@ -45725,6 +45733,10 @@ const (
 	BetaResponseNewParamsModelGPTRosalindResearch   BetaResponseNewParamsModel = "gpt-rosalind-research"
 	BetaResponseNewParamsModelGPT6Rosalind          BetaResponseNewParamsModel = "gpt-6-rosalind"
 	BetaResponseNewParamsModelGPT6_2AstraLaw        BetaResponseNewParamsModel = "gpt-6.2-astra-law"
+	BetaResponseNewParamsModelGPT6AstraHealthcare   BetaResponseNewParamsModel = "gpt-6-astra-healthcare"
+	BetaResponseNewParamsModelGPT6_1SolHealthcare   BetaResponseNewParamsModel = "gpt-6.1-sol-healthcare"
+	BetaResponseNewParamsModelGPT6_2AstraHealthcare BetaResponseNewParamsModel = "gpt-6.2-astra-healthcare"
+	BetaResponseNewParamsModelGPT6_2SolHealthcare   BetaResponseNewParamsModel = "gpt-6.2-sol-healthcare"
 )
 
 // Configuration for running moderation on the input and output of this response.
@@ -46661,6 +46673,10 @@ const (
 	BetaResponseCompactParamsModelGPTRosalindResearch   BetaResponseCompactParamsModel = "gpt-rosalind-research"
 	BetaResponseCompactParamsModelGPT6Rosalind          BetaResponseCompactParamsModel = "gpt-6-rosalind"
 	BetaResponseCompactParamsModelGPT6_2AstraLaw        BetaResponseCompactParamsModel = "gpt-6.2-astra-law"
+	BetaResponseCompactParamsModelGPT6AstraHealthcare   BetaResponseCompactParamsModel = "gpt-6-astra-healthcare"
+	BetaResponseCompactParamsModelGPT6_1SolHealthcare   BetaResponseCompactParamsModel = "gpt-6.1-sol-healthcare"
+	BetaResponseCompactParamsModelGPT6_2AstraHealthcare BetaResponseCompactParamsModel = "gpt-6.2-astra-healthcare"
+	BetaResponseCompactParamsModelGPT6_2SolHealthcare   BetaResponseCompactParamsModel = "gpt-6.2-sol-healthcare"
 )
 
 // Request level image options.

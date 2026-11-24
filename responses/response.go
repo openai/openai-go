@@ -38418,6 +38418,10 @@ const (
 	ResponseCompactParamsModelGPTRosalindResearch   ResponseCompactParamsModel = "gpt-rosalind-research"
 	ResponseCompactParamsModelGPT6Rosalind          ResponseCompactParamsModel = "gpt-6-rosalind"
 	ResponseCompactParamsModelGPT6_2AstraLaw        ResponseCompactParamsModel = "gpt-6.2-astra-law"
+	ResponseCompactParamsModelGPT6AstraHealthcare   ResponseCompactParamsModel = "gpt-6-astra-healthcare"
+	ResponseCompactParamsModelGPT6_1SolHealthcare   ResponseCompactParamsModel = "gpt-6.1-sol-healthcare"
+	ResponseCompactParamsModelGPT6_2AstraHealthcare ResponseCompactParamsModel = "gpt-6.2-astra-healthcare"
+	ResponseCompactParamsModelGPT6_2SolHealthcare   ResponseCompactParamsModel = "gpt-6.2-sol-healthcare"
 )
 
 // Request level image options.
