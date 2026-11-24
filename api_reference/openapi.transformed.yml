@@ -31442,6 +31442,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -31569,6 +31575,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -31635,6 +31647,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current session state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -31708,6 +31726,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -31767,6 +31791,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current session state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -31835,6 +31865,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -31899,6 +31935,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -31959,6 +32001,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current session state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -32089,6 +32137,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -32162,6 +32216,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current session state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -32251,6 +32311,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current environment state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded a rate or capacity limit.
           content:
             application/json:
               schema:
@@ -32396,6 +32462,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -32496,6 +32568,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -32566,7 +32644,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '429':
-          description: The Files API rate limit for your user has been exceeded.
+          description: The Files API rate limit for your user has been exceeded. This status also applies to the endpoint rate limit.
           content:
             application/json:
               schema:
@@ -32699,6 +32777,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -32768,6 +32852,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current session state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -32866,6 +32956,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current session state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -32969,6 +33065,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -33046,6 +33148,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current session state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -33156,6 +33264,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -33239,6 +33353,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -33295,6 +33415,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current session state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -33364,6 +33490,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -33429,6 +33561,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current session state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -33642,6 +33780,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -33719,6 +33863,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -33769,6 +33919,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '404':
           description: The requested environment definition was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -33828,6 +33984,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '404':
           description: The requested environment definition was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -33901,6 +34063,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -33961,6 +34129,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current environment state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -34075,6 +34249,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -34139,7 +34319,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '429':
-          description: The Files API rate limit for your user has been exceeded.
+          description: The Files API rate limit for your user has been exceeded. This status also applies to the endpoint rate limit.
           content:
             application/json:
               schema:
@@ -34208,6 +34388,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current session state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -34281,6 +34467,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -34341,6 +34533,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current session state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -34446,6 +34644,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -34519,6 +34723,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -34587,6 +34797,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current session state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -34665,6 +34881,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -34726,6 +34948,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current session state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -34802,6 +35030,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current session state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -34892,6 +35126,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current session state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -34987,6 +35227,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -35078,6 +35324,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -35147,6 +35399,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current session state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -35245,6 +35503,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current session state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -35356,6 +35620,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -35412,6 +35682,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current vault state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -35477,6 +35753,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current vault state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -35553,6 +35835,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -35613,6 +35901,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current vault state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -35732,6 +36026,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -35797,6 +36097,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current vault state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -35870,6 +36176,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current vault state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -35955,6 +36267,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
         '500':
           description: An internal error occurred.
           content:
@@ -36023,6 +36341,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse-2'
         '409':
           description: The request conflicted with the current vault state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse-2'
+        '429':
+          description: The request exceeded this endpoint's rate limit.
           content:
             application/json:
               schema:
@@ -80142,10 +80466,8 @@ components:
       properties:
         type:
           default: transport.dtmf.send
-          x-stainless-const: true
           type: string
-          enum:
-          - transport.dtmf.send
+          const: transport.dtmf.send
         event_id:
           type: string
         event:
@@ -80985,7 +81307,7 @@ components:
       required:
       - type
     idle_timeout_s:
-      description: Whole seconds of inactivity after which a Live WebRTC session with a speech wake policy pauses inference. The connection and conversation history are retained. Omit to keep inference active after the first wake until the session ends.
+      description: Whole seconds of inactivity after which a Live WebRTC or SIP session with a speech wake policy pauses inference. The connection and conversation history are retained. Omit to keep inference active after the first wake until the session ends.
       type: integer
       minimum: 5
       maximum: 60
@@ -84333,6 +84655,12 @@ components:
               When used along with `previous_response_id`, the instructions from a previous response will not be carried over to the next response. This makes it simple to swap out system (or developer) messages in new responses.
             deprecated: true
           - type: 'null'
+        safety_identifier:
+          anyOf:
+          - type: string
+            maxLength: 128
+            description: A stable identifier used for safety monitoring and abuse detection.
+          - type: 'null'
         image:
           $ref: '#/components/schemas/ImageOptionsParam'
           description: Request level image options.
@@ -84411,6 +84739,11 @@ components:
           description: The object type. Always `response.compaction`.
           default: response.compaction
           x-stainless-const: true
+        safety_identifier:
+          anyOf:
+          - type: string
+            description: A stable identifier that was used for safety monitoring and abuse detection.
+          - type: 'null'
         output:
           type: array
           description: The compacted list of output items. This is a list of all user messages, followed by a single compaction item.
@@ -84420,6 +84753,9 @@ components:
           type: integer
           format: unixtime
           description: Unix timestamp (in seconds) when the compacted conversation was created.
+        service_tier:
+          type: string
+          description: The service tier used for compaction, when reported.
         usage:
           $ref: '#/components/schemas/ResponseUsage'
           description: Token accounting for the compaction pass, including cached, reasoning, and total tokens.
@@ -100508,10 +100844,8 @@ components:
       properties:
         type:
           default: transport.dtmf.sent
-          x-stainless-const: true
           type: string
-          enum:
-          - transport.dtmf.sent
+          const: transport.dtmf.sent
         event_id:
           type: string
         event:
@@ -106287,6 +106621,12 @@ components:
               When used along with `previous_response_id`, the instructions from a previous response will not be carried over to the next response. This makes it simple to swap out system (or developer) messages in new responses.
             deprecated: true
           - type: 'null'
+        safety_identifier:
+          anyOf:
+          - type: string
+            maxLength: 128
+            description: A stable identifier used for safety monitoring and abuse detection.
+          - type: 'null'
         image:
           $ref: '#/components/schemas/BetaImageOptionsParam'
           description: Request level image options.
@@ -107733,6 +108073,11 @@ components:
           description: The object type. Always `response.compaction`.
           default: response.compaction
           x-stainless-const: true
+        safety_identifier:
+          anyOf:
+          - type: string
+            description: A stable identifier that was used for safety monitoring and abuse detection.
+          - type: 'null'
         output:
           type: array
           description: The compacted list of output items. This is a list of all user messages, followed by a single compaction item.
@@ -107742,6 +108087,9 @@ components:
           type: integer
           format: unixtime
           description: Unix timestamp (in seconds) when the compacted conversation was created.
+        service_tier:
+          type: string
+          description: The service tier used for compaction, when reported.
         usage:
           $ref: '#/components/schemas/BetaResponseUsage'
           description: Token accounting for the compaction pass, including cached, reasoning, and total tokens.
