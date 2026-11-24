@@ -86,6 +86,10 @@ const (
 	AllModelsGPTRosalindResearch   AllModels = "gpt-rosalind-research"
 	AllModelsGPT6Rosalind          AllModels = "gpt-6-rosalind"
 	AllModelsGPT6_2AstraLaw        AllModels = "gpt-6.2-astra-law"
+	AllModelsGPT6AstraHealthcare   AllModels = "gpt-6-astra-healthcare"
+	AllModelsGPT6_1SolHealthcare   AllModels = "gpt-6.1-sol-healthcare"
+	AllModelsGPT6_2AstraHealthcare AllModels = "gpt-6.2-astra-healthcare"
+	AllModelsGPT6_2SolHealthcare   AllModels = "gpt-6.2-sol-healthcare"
 	// Or some ...[ChatModel]
 )
 
@@ -2078,5 +2082,9 @@ const (
 	ResponsesModelGPTRosalindResearch   ResponsesModel = "gpt-rosalind-research"
 	ResponsesModelGPT6Rosalind          ResponsesModel = "gpt-6-rosalind"
 	ResponsesModelGPT6_2AstraLaw        ResponsesModel = "gpt-6.2-astra-law"
+	ResponsesModelGPT6AstraHealthcare   ResponsesModel = "gpt-6-astra-healthcare"
+	ResponsesModelGPT6_1SolHealthcare   ResponsesModel = "gpt-6.1-sol-healthcare"
+	ResponsesModelGPT6_2AstraHealthcare ResponsesModel = "gpt-6.2-astra-healthcare"
+	ResponsesModelGPT6_2SolHealthcare   ResponsesModel = "gpt-6.2-sol-healthcare"
 	// Or some ...[ChatModel]
 )
