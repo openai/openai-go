@@ -448,8 +448,7 @@ type Thread struct {
 	// The Unix timestamp (in seconds) for when the thread was created.
 	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
+	// for storing additional information about the object in a structured format.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
@@ -562,8 +561,7 @@ func (r *ThreadDeleted) UnmarshalJSON(data []byte) error {
 
 type BetaThreadNewParams struct {
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
+	// for storing additional information about the object in a structured format.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
@@ -604,8 +602,7 @@ type BetaThreadNewParamsMessage struct {
 	// A list of files attached to the message, and the tools they should be added to.
 	Attachments []BetaThreadNewParamsMessageAttachment `json:"attachments,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
+	// for storing additional information about the object in a structured format.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
@@ -773,8 +770,7 @@ func (r *BetaThreadNewParamsToolResourcesFileSearch) UnmarshalJSON(data []byte) 
 
 type BetaThreadNewParamsToolResourcesFileSearchVectorStore struct {
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
+	// for storing additional information about the object in a structured format.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
@@ -905,8 +901,7 @@ func (r *BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategySt
 
 type BetaThreadUpdateParams struct {
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
+	// for storing additional information about the object in a structured format.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
@@ -1013,8 +1008,7 @@ type BetaThreadNewAndRunParams struct {
 	// during tool use.
 	ParallelToolCalls param.Opt[bool] `json:"parallel_tool_calls,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
+	// for storing additional information about the object in a structured format.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
@@ -1083,8 +1077,7 @@ func (r *BetaThreadNewAndRunParams) UnmarshalJSON(data []byte) error {
 // an empty thread will be created.
 type BetaThreadNewAndRunParamsThread struct {
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
+	// for storing additional information about the object in a structured format.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
@@ -1125,8 +1118,7 @@ type BetaThreadNewAndRunParamsThreadMessage struct {
 	// A list of files attached to the message, and the tools they should be added to.
 	Attachments []BetaThreadNewAndRunParamsThreadMessageAttachment `json:"attachments,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
+	// for storing additional information about the object in a structured format.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
@@ -1294,8 +1286,7 @@ func (r *BetaThreadNewAndRunParamsThreadToolResourcesFileSearch) UnmarshalJSON(d
 
 type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore struct {
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
+	// for storing additional information about the object in a structured format.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
