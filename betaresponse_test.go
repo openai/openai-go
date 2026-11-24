@@ -268,6 +268,7 @@ func TestBetaResponseCompactWithOptionalParams(t *testing.T) {
 			Ttl:  "30m",
 		},
 		PromptCacheRetention: openai.BetaResponseCompactParamsPromptCacheRetentionInMemory,
+		SafetyIdentifier:     openai.String("safety_identifier"),
 		ServiceTier:          openai.BetaResponseCompactParamsServiceTierAuto,
 		Betas:                []string{"responses_multi_agent=v1"},
 	})

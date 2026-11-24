@@ -263,16 +263,19 @@ type BetaCompactedResponse struct {
 	// tokens.
 	Usage BetaResponseUsage          `json:"usage" api:"required"`
 	Image BetaCompactedResponseImage `json:"image"`
+	// A stable identifier that was used for safety monitoring and abuse detection.
+	SafetyIdentifier string `json:"safety_identifier" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		CreatedAt   respjson.Field
-		Object      respjson.Field
-		Output      respjson.Field
-		Usage       respjson.Field
-		Image       respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID               respjson.Field
+		CreatedAt        respjson.Field
+		Object           respjson.Field
+		Output           respjson.Field
+		Usage            respjson.Field
+		Image            respjson.Field
+		SafetyIdentifier respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 
@@ -5181,10 +5184,6 @@ const (
 	BetaResponseModelGPTRosalindResearch   BetaResponseModel = "gpt-rosalind-research"
 	BetaResponseModelGPT6Rosalind          BetaResponseModel = "gpt-6-rosalind"
 	BetaResponseModelGPT6_2AstraLaw        BetaResponseModel = "gpt-6.2-astra-law"
-	BetaResponseModelGPT6AstraHealthcare   BetaResponseModel = "gpt-6-astra-healthcare"
-	BetaResponseModelGPT6_1SolHealthcare   BetaResponseModel = "gpt-6.1-sol-healthcare"
-	BetaResponseModelGPT6_2AstraHealthcare BetaResponseModel = "gpt-6.2-astra-healthcare"
-	BetaResponseModelGPT6_2SolHealthcare   BetaResponseModel = "gpt-6.2-sol-healthcare"
 )
 
 // BetaResponseToolChoiceUnion contains all possible properties and values from
@@ -37308,10 +37307,6 @@ const (
 	BetaResponsesClientEventResponseCreateModelGPTRosalindResearch   BetaResponsesClientEventResponseCreateModel = "gpt-rosalind-research"
 	BetaResponsesClientEventResponseCreateModelGPT6Rosalind          BetaResponsesClientEventResponseCreateModel = "gpt-6-rosalind"
 	BetaResponsesClientEventResponseCreateModelGPT6_2AstraLaw        BetaResponsesClientEventResponseCreateModel = "gpt-6.2-astra-law"
-	BetaResponsesClientEventResponseCreateModelGPT6AstraHealthcare   BetaResponsesClientEventResponseCreateModel = "gpt-6-astra-healthcare"
-	BetaResponsesClientEventResponseCreateModelGPT6_1SolHealthcare   BetaResponsesClientEventResponseCreateModel = "gpt-6.1-sol-healthcare"
-	BetaResponsesClientEventResponseCreateModelGPT6_2AstraHealthcare BetaResponsesClientEventResponseCreateModel = "gpt-6.2-astra-healthcare"
-	BetaResponsesClientEventResponseCreateModelGPT6_2SolHealthcare   BetaResponsesClientEventResponseCreateModel = "gpt-6.2-sol-healthcare"
 )
 
 // Configuration for running moderation on the input and output of this response.
@@ -45733,10 +45728,6 @@ const (
 	BetaResponseNewParamsModelGPTRosalindResearch   BetaResponseNewParamsModel = "gpt-rosalind-research"
 	BetaResponseNewParamsModelGPT6Rosalind          BetaResponseNewParamsModel = "gpt-6-rosalind"
 	BetaResponseNewParamsModelGPT6_2AstraLaw        BetaResponseNewParamsModel = "gpt-6.2-astra-law"
-	BetaResponseNewParamsModelGPT6AstraHealthcare   BetaResponseNewParamsModel = "gpt-6-astra-healthcare"
-	BetaResponseNewParamsModelGPT6_1SolHealthcare   BetaResponseNewParamsModel = "gpt-6.1-sol-healthcare"
-	BetaResponseNewParamsModelGPT6_2AstraHealthcare BetaResponseNewParamsModel = "gpt-6.2-astra-healthcare"
-	BetaResponseNewParamsModelGPT6_2SolHealthcare   BetaResponseNewParamsModel = "gpt-6.2-sol-healthcare"
 )
 
 // Configuration for running moderation on the input and output of this response.
@@ -46241,6 +46232,8 @@ type BetaResponseCompactParams struct {
 	PreviousResponseID param.Opt[string] `json:"previous_response_id,omitzero"`
 	// A key to use when reading from or writing to the prompt cache.
 	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
+	// A stable identifier used for safety monitoring and abuse detection.
+	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response
 	Input BetaResponseCompactParamsInputUnion `json:"input,omitzero"`
 	// Options for prompt caching. Supported for `gpt-5.6` and later models. By
@@ -46673,10 +46666,6 @@ const (
 	BetaResponseCompactParamsModelGPTRosalindResearch   BetaResponseCompactParamsModel = "gpt-rosalind-research"
 	BetaResponseCompactParamsModelGPT6Rosalind          BetaResponseCompactParamsModel = "gpt-6-rosalind"
 	BetaResponseCompactParamsModelGPT6_2AstraLaw        BetaResponseCompactParamsModel = "gpt-6.2-astra-law"
-	BetaResponseCompactParamsModelGPT6AstraHealthcare   BetaResponseCompactParamsModel = "gpt-6-astra-healthcare"
-	BetaResponseCompactParamsModelGPT6_1SolHealthcare   BetaResponseCompactParamsModel = "gpt-6.1-sol-healthcare"
-	BetaResponseCompactParamsModelGPT6_2AstraHealthcare BetaResponseCompactParamsModel = "gpt-6.2-astra-healthcare"
-	BetaResponseCompactParamsModelGPT6_2SolHealthcare   BetaResponseCompactParamsModel = "gpt-6.2-sol-healthcare"
 )
 
 // Request level image options.

@@ -236,16 +236,19 @@ type CompactedResponse struct {
 	// tokens.
 	Usage ResponseUsage          `json:"usage" api:"required"`
 	Image CompactedResponseImage `json:"image"`
+	// A stable identifier that was used for safety monitoring and abuse detection.
+	SafetyIdentifier string `json:"safety_identifier" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		CreatedAt   respjson.Field
-		Object      respjson.Field
-		Output      respjson.Field
-		Usage       respjson.Field
-		Image       respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID               respjson.Field
+		CreatedAt        respjson.Field
+		Object           respjson.Field
+		Output           respjson.Field
+		Usage            respjson.Field
+		Image            respjson.Field
+		SafetyIdentifier respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 
@@ -37988,6 +37991,8 @@ type ResponseCompactParams struct {
 	PreviousResponseID param.Opt[string] `json:"previous_response_id,omitzero"`
 	// A key to use when reading from or writing to the prompt cache.
 	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
+	// A stable identifier used for safety monitoring and abuse detection.
+	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response
 	Input ResponseCompactParamsInputUnion `json:"input,omitzero"`
 	// Options for prompt caching. Supported for `gpt-5.6` and later models. By
@@ -38418,10 +38423,6 @@ const (
 	ResponseCompactParamsModelGPTRosalindResearch   ResponseCompactParamsModel = "gpt-rosalind-research"
 	ResponseCompactParamsModelGPT6Rosalind          ResponseCompactParamsModel = "gpt-6-rosalind"
 	ResponseCompactParamsModelGPT6_2AstraLaw        ResponseCompactParamsModel = "gpt-6.2-astra-law"
-	ResponseCompactParamsModelGPT6AstraHealthcare   ResponseCompactParamsModel = "gpt-6-astra-healthcare"
-	ResponseCompactParamsModelGPT6_1SolHealthcare   ResponseCompactParamsModel = "gpt-6.1-sol-healthcare"
-	ResponseCompactParamsModelGPT6_2AstraHealthcare ResponseCompactParamsModel = "gpt-6.2-astra-healthcare"
-	ResponseCompactParamsModelGPT6_2SolHealthcare   ResponseCompactParamsModel = "gpt-6.2-sol-healthcare"
 )
 
 // Request level image options.

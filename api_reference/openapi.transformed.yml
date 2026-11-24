@@ -54027,10 +54027,6 @@ components:
         - gpt-rosalind-research
         - gpt-6-rosalind
         - gpt-6.2-astra-law
-        - gpt-6-astra-healthcare
-        - gpt-6.1-sol-healthcare
-        - gpt-6.2-astra-healthcare
-        - gpt-6.2-sol-healthcare
         x-openai-enum-deprecations:
           o1-pro:
             message: 'Announced shutdown date: 2026-10-23. See https://developers.openai.com/api/docs/deprecations for details and recommended replacements.'
@@ -80142,10 +80138,8 @@ components:
       properties:
         type:
           default: transport.dtmf.send
-          x-stainless-const: true
           type: string
-          enum:
-          - transport.dtmf.send
+          const: transport.dtmf.send
         event_id:
           type: string
         event:
@@ -84333,6 +84327,12 @@ components:
               When used along with `previous_response_id`, the instructions from a previous response will not be carried over to the next response. This makes it simple to swap out system (or developer) messages in new responses.
             deprecated: true
           - type: 'null'
+        safety_identifier:
+          anyOf:
+          - type: string
+            maxLength: 128
+            description: A stable identifier used for safety monitoring and abuse detection.
+          - type: 'null'
         image:
           $ref: '#/components/schemas/ImageOptionsParam'
           description: Request level image options.
@@ -84411,6 +84411,11 @@ components:
           description: The object type. Always `response.compaction`.
           default: response.compaction
           x-stainless-const: true
+        safety_identifier:
+          anyOf:
+          - type: string
+            description: A stable identifier that was used for safety monitoring and abuse detection.
+          - type: 'null'
         output:
           type: array
           description: The compacted list of output items. This is a list of all user messages, followed by a single compaction item.
@@ -100508,10 +100513,8 @@ components:
       properties:
         type:
           default: transport.dtmf.sent
-          x-stainless-const: true
           type: string
-          enum:
-          - transport.dtmf.sent
+          const: transport.dtmf.sent
         event_id:
           type: string
         event:
@@ -106287,6 +106290,12 @@ components:
               When used along with `previous_response_id`, the instructions from a previous response will not be carried over to the next response. This makes it simple to swap out system (or developer) messages in new responses.
             deprecated: true
           - type: 'null'
+        safety_identifier:
+          anyOf:
+          - type: string
+            maxLength: 128
+            description: A stable identifier used for safety monitoring and abuse detection.
+          - type: 'null'
         image:
           $ref: '#/components/schemas/BetaImageOptionsParam'
           description: Request level image options.
@@ -106401,10 +106410,6 @@ components:
         - gpt-rosalind-research
         - gpt-6-rosalind
         - gpt-6.2-astra-law
-        - gpt-6-astra-healthcare
-        - gpt-6.1-sol-healthcare
-        - gpt-6.2-astra-healthcare
-        - gpt-6.2-sol-healthcare
         x-openai-enum-deprecations:
           o1-pro:
             message: 'Announced shutdown date: 2026-10-23. See https://developers.openai.com/api/docs/deprecations for details and recommended replacements.'
@@ -107733,6 +107738,11 @@ components:
           description: The object type. Always `response.compaction`.
           default: response.compaction
           x-stainless-const: true
+        safety_identifier:
+          anyOf:
+          - type: string
+            description: A stable identifier that was used for safety monitoring and abuse detection.
+          - type: 'null'
         output:
           type: array
           description: The compacted list of output items. This is a list of all user messages, followed by a single compaction item.
