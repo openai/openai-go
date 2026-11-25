@@ -23,7 +23,7 @@ func TestBedrockEndpointResolution(t *testing.T) {
 		endpoint Endpoint
 		baseURL  string
 	}{
-		{"Mantle default", Config{APIKey: "token", AWSRegion: "us-east-1"}, EndpointMantle, "https://bedrock-mantle.us-east-1.api.aws/openai/v1/"},
+		{"Mantle default", Config{APIKey: "token", AWSRegion: "us-east-1"}, EndpointMantle, "https://bedrock-mantle.us-east-1.api.aws/v1/"},
 		{"custom SigV4 Mantle default", Config{AWSRegion: "us-east-1", AWSAccessKeyID: "access", AWSSecretAccessKey: "secret", BaseURL: "https://proxy.example/openai/v1"}, EndpointMantle, "https://proxy.example/openai/v1/"},
 		{"custom SigV4 Runtime", Config{Endpoint: EndpointRuntime, AWSRegion: "us-east-1", AWSAccessKeyID: "access", AWSSecretAccessKey: "secret", BaseURL: "https://proxy.example/openai/v1"}, EndpointRuntime, "https://proxy.example/openai/v1/"},
 		{"Runtime standard", Config{Endpoint: EndpointRuntime, APIKey: "token", AWSRegion: "us-east-1"}, EndpointRuntime, "https://bedrock-runtime.us-east-1.amazonaws.com/openai/v1/"},
