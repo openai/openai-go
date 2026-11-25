@@ -44,6 +44,7 @@ func TestConversationNewWithOptionalParams(t *testing.T) {
 		Metadata: shared.Metadata{
 			"foo": "string",
 		},
+		SafetyIdentifier: openai.String("safety_identifier"),
 	})
 	if err != nil {
 		var apierr *openai.Error

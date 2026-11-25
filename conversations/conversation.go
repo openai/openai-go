@@ -531,6 +531,8 @@ func (r *TextContent) UnmarshalJSON(data []byte) error {
 }
 
 type ConversationNewParams struct {
+	// A stable identifier used for safety monitoring and abuse detection.
+	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
 	// Initial items to include in the conversation context. You may add up to 20 items
 	// at a time.
 	Items []responses.ResponseInputItemUnionParam `json:"items,omitzero"`

@@ -675,11 +675,11 @@
     },
     "conversations/conversation.go": {
       "mode": "100644",
-      "sha256": "644eabd208e0bede8678881677d0302ac74ec403f12c831f8cfeec3983bee7f8"
+      "sha256": "14ec956298a64347e7e2f6324c88e0428ca98e7ac1bfef62d7ea7bc7f97dc33c"
     },
     "conversations/conversation_test.go": {
       "mode": "100644",
-      "sha256": "510c0263f85101df374ed1a3e1731ebc6fbbf22f07243e457e47022f4a0fe504"
+      "sha256": "b0bac8b2aef1393c81ea0c90ac17a2b72d1ace7667ac2cba6487c680de5ecfad"
     },
     "conversations/item.go": {
       "mode": "100644",
