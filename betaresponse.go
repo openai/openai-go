@@ -263,16 +263,22 @@ type BetaCompactedResponse struct {
 	// tokens.
 	Usage BetaResponseUsage          `json:"usage" api:"required"`
 	Image BetaCompactedResponseImage `json:"image"`
+	// A stable identifier that was used for safety monitoring and abuse detection.
+	SafetyIdentifier string `json:"safety_identifier" api:"nullable"`
+	// The service tier used for compaction, when reported.
+	ServiceTier string `json:"service_tier"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		CreatedAt   respjson.Field
-		Object      respjson.Field
-		Output      respjson.Field
-		Usage       respjson.Field
-		Image       respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID               respjson.Field
+		CreatedAt        respjson.Field
+		Object           respjson.Field
+		Output           respjson.Field
+		Usage            respjson.Field
+		Image            respjson.Field
+		SafetyIdentifier respjson.Field
+		ServiceTier      respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 
@@ -46238,6 +46244,8 @@ type BetaResponseCompactParams struct {
 	PreviousResponseID param.Opt[string] `json:"previous_response_id,omitzero"`
 	// A key to use when reading from or writing to the prompt cache.
 	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
+	// A stable identifier used for safety monitoring and abuse detection.
+	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response
 	Input BetaResponseCompactParamsInputUnion `json:"input,omitzero"`
 	// Options for prompt caching. Supported for `gpt-5.6` and later models. By

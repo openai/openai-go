@@ -5268,9 +5268,10 @@ type MediaSessionConfigParam struct {
 	// A stable identifier for your end user, used for safety monitoring and abuse
 	// detection.
 	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
-	// Whole seconds of inactivity after which a Live WebRTC session with a speech wake
-	// policy pauses inference. The connection and conversation history are retained.
-	// Omit to keep inference active after the first wake until the session ends.
+	// Whole seconds of inactivity after which a Live WebRTC or SIP session with a
+	// speech wake policy pauses inference. The connection and conversation history are
+	// retained. Omit to keep inference active after the first wake until the session
+	// ends.
 	IdleTimeoutS param.Opt[int64] `json:"idle_timeout_s,omitzero"`
 	// Whether to store the session for later forking and recording download. Defaults
 	// to false for new sessions.

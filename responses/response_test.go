@@ -252,6 +252,7 @@ func TestResponseCompactWithOptionalParams(t *testing.T) {
 			Ttl:  "30m",
 		},
 		PromptCacheRetention: responses.ResponseCompactParamsPromptCacheRetentionInMemory,
+		SafetyIdentifier:     openai.String("safety_identifier"),
 		ServiceTier:          responses.ResponseCompactParamsServiceTierAuto,
 	})
 	if err != nil {
