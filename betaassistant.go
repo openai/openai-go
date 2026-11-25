@@ -144,8 +144,7 @@ type Assistant struct {
 	// characters.
 	Instructions string `json:"instructions" api:"required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
+	// for storing additional information about the object in a structured format.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
@@ -1785,8 +1784,7 @@ type BetaAssistantNewParams struct {
 	// We generally recommend altering this or temperature but not both.
 	TopP param.Opt[float64] `json:"top_p,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
+	// for storing additional information about the object in a structured format.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
@@ -1899,8 +1897,7 @@ func (r *BetaAssistantNewParamsToolResourcesFileSearch) UnmarshalJSON(data []byt
 
 type BetaAssistantNewParamsToolResourcesFileSearchVectorStore struct {
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
+	// for storing additional information about the object in a structured format.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
@@ -2048,8 +2045,7 @@ type BetaAssistantUpdateParams struct {
 	// We generally recommend altering this or temperature but not both.
 	TopP param.Opt[float64] `json:"top_p,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
+	// for storing additional information about the object in a structured format.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.

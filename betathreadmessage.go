@@ -860,8 +860,7 @@ type Message struct {
 	// On an incomplete message, details about why the message is incomplete.
 	IncompleteDetails MessageIncompleteDetails `json:"incomplete_details" api:"required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
+	// for storing additional information about the object in a structured format.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
@@ -1517,8 +1516,7 @@ type BetaThreadMessageNewParams struct {
 	// A list of files attached to the message, and the tools they should be added to.
 	Attachments []BetaThreadMessageNewParamsAttachment `json:"attachments,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
+	// for storing additional information about the object in a structured format.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
@@ -1637,8 +1635,7 @@ func (r *BetaThreadMessageNewParamsAttachmentToolFileSearch) UnmarshalJSON(data 
 
 type BetaThreadMessageUpdateParams struct {
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
+	// for storing additional information about the object in a structured format.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
