@@ -219,8 +219,7 @@ type FineTuningJob struct {
 	// A list of integrations to enable for this fine-tuning job.
 	Integrations []FineTuningJobWandbIntegrationObject `json:"integrations" api:"nullable"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
+	// for storing additional information about the object in a structured format.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
@@ -632,8 +631,7 @@ type FineTuningJobNewParams struct {
 	// A list of integrations to enable for your fine-tuning job.
 	Integrations []FineTuningJobNewParamsIntegration `json:"integrations,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
+	// for storing additional information about the object in a structured format.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
