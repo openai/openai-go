@@ -88804,7 +88804,7 @@ components:
             $ref: '#/components/schemas/AgentToolConfigParam'
           minItems: 0
           maxItems: 16384
-          description: Tools available to the agent. Omit to inherit, or pass null to clear them. The resolved tool list must fit within 3 MiB (3,145,728 bytes) of compact UTF-8 JSON.
+          description: Tools available to the agent. Omit to inherit, or pass null to clear them. The resolved tool list must fit within 8 MiB (8,388,608 bytes) of compact UTF-8 JSON.
       additionalProperties: false
       description: Agent configuration for a session. Omitted fields inherit from `agent_id` when supplied. Supplied objects and arrays replace the whole field, except experimental settings, which merge by key. Null resets nullable fields.
     EnvironmentParamNone:

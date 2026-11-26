@@ -371,7 +371,7 @@
     },
     "betaagentautomation.go": {
       "mode": "100644",
-      "sha256": "5a89602ce00a46c1e031c820ec3feed3fc537c92760a7141d8b2ccfa702226ed"
+      "sha256": "8c60edba6f905dab9578a410cf9b5a6899e256175b5d3c23ae3e66fff7d574da"
     },
     "betaagentautomation_test.go": {
       "mode": "100644",
@@ -411,7 +411,7 @@
     },
     "betaagentsession.go": {
       "mode": "100644",
-      "sha256": "590094aeed40c7b98433a6cde7c23d2a0a94b2020e4d3a36377691d518976d6f"
+      "sha256": "5ebea7027d089ca4fae9ca784c70ef4b5f329c78d2d79e4916c1bdeae61021cb"
     },
     "betaagentsession_test.go": {
       "mode": "100644",

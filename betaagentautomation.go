@@ -1446,7 +1446,7 @@ type AutomationTargetParamNewSessionAgent struct {
 	// Any of "auto", "default", "flex", "priority", "fast", "ultrafast".
 	ServiceTier string `json:"service_tier,omitzero"`
 	// Tools available to the agent. Omit to inherit, or pass null to clear them. The
-	// resolved tool list must fit within 3 MiB (3,145,728 bytes) of compact UTF-8
+	// resolved tool list must fit within 8 MiB (8,388,608 bytes) of compact UTF-8
 	// JSON.
 	Tools []AgentToolParamUnion `json:"tools,omitzero"`
 	// Experimental settings to merge by key. Omitted settings keep their current
