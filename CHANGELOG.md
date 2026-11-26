@@ -1,5 +1,28 @@
 # Changelog
 
+## [3.108.0](https://github.com/openai/openai-go/compare/v3.107.0...v3.108.0) (2026-11-26)
+
+
+### Features
+
+* **api:** add conversation safety identifiers ([#1302](https://github.com/openai/openai-go/issues/1302)) ([2e115ac](https://github.com/openai/openai-go/commit/2e115ac210b95e346a7c671ab43641d19366946a))
+* **api:** add response compaction safety metadata ([#1297](https://github.com/openai/openai-go/issues/1297)) ([31b04a5](https://github.com/openai/openai-go/commit/31b04a56681e10efb9a46d83bcd6430dfae557d2))
+
+
+### Bug Fixes
+
+* **api:** correct metadata documentation ([#1301](https://github.com/openai/openai-go/issues/1301)) ([ef3f526](https://github.com/openai/openai-go/commit/ef3f526362f26524899c2eb27f3f0aa31a4ea1ea))
+* **api:** document metadata querying support ([#1300](https://github.com/openai/openai-go/issues/1300)) ([888de71](https://github.com/openai/openai-go/commit/888de71bc42d7e68bbedd8a5421c771fb51517dc))
+* **api:** document the increased agent tool configuration limit ([#1306](https://github.com/openai/openai-go/issues/1306)) ([55f3f78](https://github.com/openai/openai-go/commit/55f3f788173738598a2e80b3438ff5ae5d5fb9cc))
+* **api:** express fixed schema values with const ([#1305](https://github.com/openai/openai-go/issues/1305)) ([429a67b](https://github.com/openai/openai-go/commit/429a67baac9004b64aa67b0d586aa8612a5aafef))
+* **api:** represent assistant event discriminators as constants ([#1303](https://github.com/openai/openai-go/issues/1303)) ([ad647f6](https://github.com/openai/openai-go/commit/ad647f631df317800b8076e94748eb6fc7eff250))
+* **api:** use const for fixed OpenAPI schema values ([#1304](https://github.com/openai/openai-go/issues/1304)) ([93d82c8](https://github.com/openai/openai-go/commit/93d82c891ba9d4a86b0777e02cddbf8c727377e6))
+
+
+### Chores
+
+* **api:** correct metadata documentation ([#1298](https://github.com/openai/openai-go/issues/1298)) ([5955b06](https://github.com/openai/openai-go/commit/5955b0651da5d0369cb573beee14c575f24db34f))
+
 ## [3.107.0](https://github.com/openai/openai-go/compare/v3.106.0...v3.107.0) (2026-11-24)
 
 
