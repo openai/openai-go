@@ -54029,9 +54029,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.message.created
-            x-stainless-const: true
+            const: thread.message.created
           data:
             $ref: '#/components/schemas/MessageObject'
         required:
@@ -54044,9 +54042,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.message.in_progress
-            x-stainless-const: true
+            const: thread.message.in_progress
           data:
             $ref: '#/components/schemas/MessageObject'
         required:
@@ -54059,9 +54055,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.message.delta
-            x-stainless-const: true
+            const: thread.message.delta
           data:
             $ref: '#/components/schemas/MessageDeltaObject'
         required:
@@ -54074,9 +54068,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.message.completed
-            x-stainless-const: true
+            const: thread.message.completed
           data:
             $ref: '#/components/schemas/MessageObject'
         required:
@@ -54089,9 +54081,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.message.incomplete
-            x-stainless-const: true
+            const: thread.message.incomplete
           data:
             $ref: '#/components/schemas/MessageObject'
         required:
@@ -70864,9 +70854,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.run.step.created
-            x-stainless-const: true
+            const: thread.run.step.created
           data:
             $ref: '#/components/schemas/RunStepObject'
         required:
@@ -70879,9 +70867,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.run.step.in_progress
-            x-stainless-const: true
+            const: thread.run.step.in_progress
           data:
             $ref: '#/components/schemas/RunStepObject'
         required:
@@ -70894,9 +70880,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.run.step.delta
-            x-stainless-const: true
+            const: thread.run.step.delta
           data:
             $ref: '#/components/schemas/RunStepDeltaObject'
         required:
@@ -70909,9 +70893,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.run.step.completed
-            x-stainless-const: true
+            const: thread.run.step.completed
           data:
             $ref: '#/components/schemas/RunStepObject'
         required:
@@ -70924,9 +70906,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.run.step.failed
-            x-stainless-const: true
+            const: thread.run.step.failed
           data:
             $ref: '#/components/schemas/RunStepObject'
         required:
@@ -70939,9 +70919,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.run.step.cancelled
-            x-stainless-const: true
+            const: thread.run.step.cancelled
           data:
             $ref: '#/components/schemas/RunStepObject'
         required:
@@ -70954,9 +70932,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.run.step.expired
-            x-stainless-const: true
+            const: thread.run.step.expired
           data:
             $ref: '#/components/schemas/RunStepObject'
         required:
@@ -70973,9 +70949,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.run.created
-            x-stainless-const: true
+            const: thread.run.created
           data:
             $ref: '#/components/schemas/RunObject'
         required:
@@ -70988,9 +70962,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.run.queued
-            x-stainless-const: true
+            const: thread.run.queued
           data:
             $ref: '#/components/schemas/RunObject'
         required:
@@ -71003,9 +70975,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.run.in_progress
-            x-stainless-const: true
+            const: thread.run.in_progress
           data:
             $ref: '#/components/schemas/RunObject'
         required:
@@ -71018,9 +70988,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.run.requires_action
-            x-stainless-const: true
+            const: thread.run.requires_action
           data:
             $ref: '#/components/schemas/RunObject'
         required:
@@ -71033,9 +71001,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.run.completed
-            x-stainless-const: true
+            const: thread.run.completed
           data:
             $ref: '#/components/schemas/RunObject'
         required:
@@ -71048,9 +71014,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.run.incomplete
-            x-stainless-const: true
+            const: thread.run.incomplete
           data:
             $ref: '#/components/schemas/RunObject'
         required:
@@ -71063,9 +71027,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.run.failed
-            x-stainless-const: true
+            const: thread.run.failed
           data:
             $ref: '#/components/schemas/RunObject'
         required:
@@ -71078,9 +71040,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.run.cancelling
-            x-stainless-const: true
+            const: thread.run.cancelling
           data:
             $ref: '#/components/schemas/RunObject'
         required:
@@ -71093,9 +71053,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.run.cancelled
-            x-stainless-const: true
+            const: thread.run.cancelled
           data:
             $ref: '#/components/schemas/RunObject'
         required:
@@ -71108,9 +71066,7 @@ components:
         properties:
           event:
             type: string
-            enum:
-            - thread.run.expired
-            x-stainless-const: true
+            const: thread.run.expired
           data:
             $ref: '#/components/schemas/RunObject'
         required:
@@ -71505,9 +71461,7 @@ components:
             description: Whether to enable input audio transcription.
           event:
             type: string
-            enum:
-            - thread.created
-            x-stainless-const: true
+            const: thread.created
           data:
             $ref: '#/components/schemas/ThreadObject'
         required:
